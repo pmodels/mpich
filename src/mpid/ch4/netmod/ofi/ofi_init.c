@@ -949,8 +949,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ---------------------------------- */
     /* Initialize Active Message          */
     /* ---------------------------------- */
-    mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
-    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
@@ -1085,8 +1083,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
     fi_freeinfo(MPIDI_OFI_global.prov_use);
-
-    MPIDIG_finalize();
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 

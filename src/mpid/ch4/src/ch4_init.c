@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "mpidch4r.h"
+#include "ch4i_comm.h"
 #include "datatype.h"
 #include "mpidu_init_shm.h"
 
@@ -86,6 +87,8 @@ static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
 static int init_av_table(int world_rank, int world_size);
 static void finalize_av_table(void);
+static int init_builtin_comms(int world_rank, int world_size);
+static void finalize_builtin_comms(void);
 static void print_runtime_configurations(void);
 #ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name);
@@ -239,6 +242,57 @@ static int init_av_table(int world_rank, int world_size)
     return avtid;
 }
 
+static int init_builtin_comms(int world_rank, int world_size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* ---------------------------------- */
+    /* Initialize MPI_COMM_SELF           */
+    /* ---------------------------------- */
+    MPIR_Process.comm_self->rank = 0;
+    MPIR_Process.comm_self->remote_size = 1;
+    MPIR_Process.comm_self->local_size = 1;
+
+    /* ---------------------------------- */
+    /* Initialize MPI_COMM_WORLD          */
+    /* ---------------------------------- */
+    MPIR_Process.comm_world->rank = world_rank;
+    MPIR_Process.comm_world->remote_size = world_size;
+    MPIR_Process.comm_world->local_size = world_size;
+
+    /* initialize rank_map */
+    MPIDI_COMM(MPIR_Process.comm_world, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
+    MPIDI_COMM(MPIR_Process.comm_world, map).avtid = 0;
+    MPIDI_COMM(MPIR_Process.comm_world, map).size = world_size;
+    MPIDI_COMM(MPIR_Process.comm_world, local_map).mode = MPIDI_RANK_MAP_NONE;
+    MPIDIU_avt_add_ref(0);
+
+    MPIDI_COMM(MPIR_Process.comm_self, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
+    MPIDI_COMM(MPIR_Process.comm_self, map).avtid = 0;
+    MPIDI_COMM(MPIR_Process.comm_self, map).size = 1;
+    MPIDI_COMM(MPIR_Process.comm_self, map).reg.offset = world_rank;
+    MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
+    MPIDIU_avt_add_ref(0);
+
+#ifdef MPL_USE_DBG_LOGGING
+    int counter_;
+    if (world_size < 16) {
+        for (counter_ = 0; counter_ < world_size; ++counter_) {
+            MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, counter_);
+        }
+    }
+#endif
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
+}
+
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
@@ -298,50 +352,14 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         print_runtime_configurations();
 
     avtid = init_av_table(rank, size);
-    /* ---------------------------------- */
-    /* Initialize MPI_COMM_SELF           */
-    /* ---------------------------------- */
-    MPIR_Process.comm_self->rank = 0;
-    MPIR_Process.comm_self->remote_size = 1;
-    MPIR_Process.comm_self->local_size = 1;
 
-    /* ---------------------------------- */
-    /* Initialize MPI_COMM_WORLD          */
-    /* ---------------------------------- */
-    MPIR_Process.comm_world->rank = rank;
-    MPIR_Process.comm_world->remote_size = size;
-    MPIR_Process.comm_world->local_size = size;
-
-    /* initialize rank_map */
-    MPIDI_COMM(MPIR_Process.comm_world, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
-    MPIDI_COMM(MPIR_Process.comm_world, map).avtid = 0;
-    MPIDI_COMM(MPIR_Process.comm_world, map).size = size;
-    MPIDI_COMM(MPIR_Process.comm_world, local_map).mode = MPIDI_RANK_MAP_NONE;
-    MPIDIU_avt_add_ref(0);
-
-    MPIDI_COMM(MPIR_Process.comm_self, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
-    MPIDI_COMM(MPIR_Process.comm_self, map).avtid = 0;
-    MPIDI_COMM(MPIR_Process.comm_self, map).size = 1;
-    MPIDI_COMM(MPIR_Process.comm_self, map).reg.offset = rank;
-    MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
-    MPIDIU_avt_add_ref(0);
-
-#ifdef MPL_USE_DBG_LOGGING
-    int counter_;
-    if (size < 16) {
-        for (counter_ = 0; counter_ < size; ++counter_) {
-            MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, counter_);
-        }
-    }
-#endif
-
+    mpi_errno = MPIDIG_init(1);
+    MPIR_ERR_CHECK(mpi_errno);
     /* setup receive queue statistics */
     mpi_errno = MPIDIG_recvq_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
+    mpi_errno = init_builtin_comms(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
@@ -443,6 +461,12 @@ static void finalize_av_table(void)
         }
     }
     MPIDIU_avt_destroy();
+}
+
+static void finalize_builtin_comms(void)
+{
+    MPIR_Comm_release_always(MPIR_Process.comm_world);
+    MPIR_Comm_release_always(MPIR_Process.comm_self);
 }
 
 int MPID_Finalize(void)
