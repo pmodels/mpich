@@ -143,6 +143,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* create fine-grained mutexes */
     MPIR_Thread_CS_Init();
 
+    /* connect to remote processes is has parent */
+    if (MPIR_Process.has_parent) {
+        mpi_errno = MPID_Init_spawn();
+    }
+
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
