@@ -80,6 +80,8 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         int *node_roots, num_nodes;
+        int *rank_map, recv_bc_len;
+        void *table;
 
         MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
@@ -91,6 +93,26 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPL_free(node_roots);
+        /* if this is MPI_COMM_WORLD, finish bc exchange */
+
+        MPIDU_bc_allgather(MPIDI_UCX_global.if_address, (int) MPIDI_UCX_global.addrname_len, FALSE,
+                           (void **) &table, &rank_map, &recv_bc_len);
+
+        /* insert new addresses, skipping over node roots */
+        int i;
+        for (i = 0; i < MPIR_Process.size; i++) {
+            if (rank_map[i] >= 0) {
+                ucs_status_t ucx_status;
+                ucp_ep_params_t ep_params;
+
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+                ucx_status = ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
+                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
+        }
+        MPIDU_bc_table_destroy();
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
