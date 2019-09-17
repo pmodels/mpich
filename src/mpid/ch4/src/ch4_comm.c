@@ -182,6 +182,9 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
         }
     }
 
+    mpi_errno = MPIDIG_init_comm(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -272,6 +275,9 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    mpi_errno = MPIDIG_destroy_comm(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_FREE_HOOK);
