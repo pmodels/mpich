@@ -191,6 +191,8 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+    mpi_errno = MPIDIG_init_comm(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
 #ifdef HAVE_DEBUGGER_SUPPORT
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE

@@ -27,7 +27,7 @@ int MPIDIG_am_reg_cb(int handler_id,
     return mpi_errno;
 }
 
-int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self)
+int MPIDIG_init()
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT);
@@ -178,12 +178,6 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self)
                                  &MPIDIG_comm_abort_origin_cb, &MPIDIG_comm_abort_target_msg_cb);
     MPIR_ERR_CHECK(mpi_errno);
 
-
-    mpi_errno = MPIDIG_init_comm(comm_world);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDIG_init_comm(comm_self);
-    MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
 
