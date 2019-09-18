@@ -75,17 +75,26 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
 
     MPIR_Assert(subcomm_type <= 3);
     MPIR_Assert(is_localcomm <= 1);
-    MPIR_Assert(MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
+    /* with built-in comms and if MPIDIG_finalize get to it first,
+     * MPIDI_global.comm_req_lists is already freed and set to NULL.
+     * A good refactor  would split out the built-in comm, especially
+     * MPI_COMM_WORLD, from the rest of the comm. This is solution 1.
+     * A solution 2 would make built-in comms the same as regular comm,
+     * i.e. MPI_COMM_WORLD will not be used during init/finalize.
+     */
+    if (MPIDI_global.comm_req_lists) {
+        MPIR_Assert(MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
 
-    if (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
-        MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
-                     posted_list) == NULL);
-        MPIR_Assert(MPIDIG_COMM
-                    (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
-                     unexp_list) == NULL);
+        if (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
+            MPIR_Assert(MPIDIG_COMM
+                        (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                         posted_list) == NULL);
+            MPIR_Assert(MPIDIG_COMM
+                        (MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type],
+                         unexp_list) == NULL);
+        }
+        MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
     }
-    MPIDI_global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);

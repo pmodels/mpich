@@ -211,6 +211,7 @@ void MPIDIG_finalize(void)
     MPIDIU_map_destroy(MPIDI_global.win_map);
     MPIDIU_destroy_buf_pool(MPIDI_global.buf_pool);
     MPL_free(MPIDI_global.comm_req_lists);
+    MPIDI_global.comm_req_lists = NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_FINALIZE);
 }
