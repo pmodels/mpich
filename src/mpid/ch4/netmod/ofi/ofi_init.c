@@ -970,7 +970,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     OPA_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
 
     /* Initalize RMA keys allocator */
-    MPIDI_OFI_mr_key_allocator_init();
+    mpi_errno = MPIDI_OFI_mr_key_allocator_init();
+    MPIR_ERR_CHECK(mpi_errno);
     /* ------------------------------------------------- */
     /* Initialize Connection Manager for Dynamic Tasking */
     /* ------------------------------------------------- */
