@@ -91,15 +91,22 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
 
-    mpi_errno = MPIR_Find_local(MPIR_Process.comm_world, &num_local, &my_local_rank,
-                                /* comm_world rank of each local process */
-                                &MPIDI_POSIX_global.local_procs,
-                                /* local rank of each process in comm_world if it is on the same node */
-                                &MPIDI_POSIX_global.local_ranks);
+    /* mpi_errno = MPIR_Find_local(MPIR_Process.comm_world, &num_local, &my_local_rank, */
+    /*                             /1* comm_world rank of each local process *1/ */
+    /*                             &MPIDI_POSIX_global.local_procs, */
+    /*                             /1* local rank of each process in comm_world if it is on the same node *1/ */
+    /*                             &MPIDI_POSIX_global.local_ranks); */
 
-    local_rank_0 = MPIDI_POSIX_global.local_procs[0];
-    MPIDI_POSIX_global.num_local = num_local;
-    MPIDI_POSIX_global.my_local_rank = my_local_rank;
+    MPIDI_POSIX_global.local_procs = MPIR_Process.node_local_map;
+    MPIDI_POSIX_global.local_ranks = (int *) MPL_malloc(MPIR_Process.size * sizeof(int),
+                                                        MPL_MEM_SHM);
+    memset(MPIDI_POSIX_global.local_ranks, -1, MPIR_Process.size);
+    for (i = 0; i < MPIR_Process.local_size; i++) {
+        MPIDI_POSIX_global.local_ranks[MPIDI_POSIX_global.local_procs[i]] = i;
+    }
+    local_rank_0 = MPIR_Process.node_local_map[0];
+    MPIDI_POSIX_global.num_local = MPIR_Process.local_size;
+    MPIDI_POSIX_global.my_local_rank = MPIR_Process.local_rank;
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
     *n_vcis_provided = 1;
@@ -155,7 +162,7 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIDI_POSIX_global.local_ranks);
-    MPL_free(MPIDI_POSIX_global.local_procs);
+    /* MPL_free(MPIDI_POSIX_global.local_procs); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
