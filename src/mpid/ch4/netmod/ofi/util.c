@@ -42,14 +42,23 @@ typedef struct MPIDI_OFI_mr_key_allocator_t {
 
 static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
 
-void MPIDI_OFI_mr_key_allocator_init()
+int MPIDI_OFI_mr_key_allocator_init(void)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     mr_key_allocator.chunk_size = 128;
     mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
     mr_key_allocator.last_free_mr_key = 0;
     mr_key_allocator.bitmask = MPL_malloc(sizeof(uint64_t) * mr_key_allocator.num_ints,
                                           MPL_MEM_RMA);
+    MPIR_ERR_CHKANDSTMT(mr_key_allocator.bitmask == NULL, mpi_errno,
+                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
     memset(mr_key_allocator.bitmask, 0xFF, sizeof(uint64_t) * mr_key_allocator.num_ints);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #define MPIDI_OFI_INDEX_CALC(val,nval,shift,mask) \
