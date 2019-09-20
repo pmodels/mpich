@@ -337,6 +337,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     }
 #endif
 
+    mpi_errno = MPIDIG_init(MPIR_Process.comm_world, MPIR_Process.comm_self);
+    MPIR_ERR_CHECK(mpi_errno);
+
     mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -446,6 +449,8 @@ int MPID_Finalize(void)
     /* Release builtin comms */
     MPIR_Comm_release_always(MPIR_Process.comm_world);
     MPIR_Comm_release_always(MPIR_Process.comm_self);
+
+    MPIDIG_finalize();
 
     int i;
     int max_n_avts;

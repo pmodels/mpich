@@ -24,8 +24,6 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_send_counters, MPL_MEM_COMM);
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_recv_counters, MPL_MEM_COMM);
 
-    mpi_errno = MPIDIG_init_comm(comm);
-
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
@@ -81,7 +79,6 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
 
-    mpi_errno = MPIDIG_destroy_comm(comm);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
 
