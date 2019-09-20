@@ -73,6 +73,10 @@ typedef enum MPIR_Request_kind_t {
 #endif
 } MPIR_Request_kind_t;
 
+typedef enum MPII_Reqalloc_use_lock {
+    LOCK, NOLOCK
+} MPII_Reqalloc_use_lock_t;
+
 /* This currently defines a single structure type for all requests.
    Eventually, we may want a union type, as used in MPICH-1 */
 /* Typedefs for Fortran generalized requests */
@@ -235,11 +239,17 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
-static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
+                                                     MPII_Reqalloc_use_lock_t use_lock)
 {
     MPIR_Request *req;
 
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    if (use_lock == LOCK)
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
+    if (use_lock == LOCK)
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+
     if (req != NULL) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
@@ -291,6 +301,22 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         MPL_DBG_MSG(MPIR_DBG_REQUEST, TYPICAL, "unable to allocate a request");
     }
 
+    return req;
+}
+
+/* Thread-safe version for request creation */
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+{
+    MPIR_Request *req;
+    req = MPIR_Request_create_impl(kind, LOCK);
+    return req;
+}
+
+/* Thread-unsafe version for request creation */
+static inline MPIR_Request *MPIR_Request_create_unsafe(MPIR_Request_kind_t kind)
+{
+    MPIR_Request *req;
+    req = MPIR_Request_create_impl(kind, NOLOCK);
     return req;
 }
 
