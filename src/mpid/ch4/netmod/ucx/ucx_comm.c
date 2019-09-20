@@ -20,8 +20,6 @@ int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
 
-    mpi_errno = MPIDIG_init_comm(comm);
-
     /* if this is MPI_COMM_WORLD, finish bc exchange */
     if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         ucs_status_t ucx_status;
@@ -68,7 +66,6 @@ int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
 
-    mpi_errno = MPIDIG_destroy_comm(comm);
 #ifdef HAVE_LIBHCOLL
     hcoll_comm_destroy(comm, NULL);
 #endif
