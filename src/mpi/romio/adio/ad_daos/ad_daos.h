@@ -33,6 +33,7 @@ struct adio_daos_hdl {
     d_list_t		entry;
     uuid_t		uuid;
     daos_handle_t	open_hdl;
+    dfs_t		*dfs;
     int			ref;
     int			type;
 };
@@ -162,8 +163,8 @@ void adio_daos_poh_release(struct adio_daos_hdl *hdl);
 struct adio_daos_hdl *adio_daos_coh_lookup(const uuid_t uuid);
 int adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh,
                          struct adio_daos_hdl **hdl);
-int adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
-                                 struct adio_daos_hdl **hdl);
+int adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
+                                bool create, struct adio_daos_hdl **hdl);
 void adio_daos_coh_release(struct adio_daos_hdl *hdl);
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state);

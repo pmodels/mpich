@@ -221,17 +221,19 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
 {
     bool use_duns = false;
     char *uuid_str;
+    struct duns_attr_t attr;
     int rc;
 
     d_getenv_bool("DAOS_USE_DUNS", &use_duns);
 
     if (use_duns) {
-        struct duns_attr_t attr;
-
+        /* TODO: This works only for the DAOS pool/container info on the direct
+         * parent dir. we still don't support nested dirs in the UNS. */
         rc = duns_resolve_path(path, &attr);
         if (rc) {
-            PRINT_MSG(stderr, "Failed to resolve DAOS Namespace Properties\n");
-            return rc;
+            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s\n",
+                      path, rc);
+            return -DER_INVAL; 
         }
 
         if (attr.da_type != DAOS_PROP_CO_LAYOUT_POSIX) {
@@ -241,23 +243,34 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
 
         uuid_copy(*puuid, attr.da_puuid);
         uuid_copy(*cuuid, attr.da_cuuid);
-        *oclass = (attr.da_oclass == OC_UNKNOWN) ? OC_SX : attr.da_oclass;
+        *oclass = (attr.da_oclass_id == OC_UNKNOWN) ? OC_SX : attr.da_oclass_id;
         *chunk_size = attr.da_chunk_size;
-
-        return 0;
     }
 
+    /* use the env variables to retrieve the pool and container */
     uuid_str = getenv ("DAOS_POOL");
-    if (uuid_str != NULL) {
-        if (uuid_parse(uuid_str, *puuid) < 0) {
-            PRINT_MSG(stderr, "Failed to parse pool uuid\n");
+    if (uuid_str == NULL) {
+        PRINT_MSG(stderr, "Can't retrieve DAOS pool uuid\n");
+        return -DER_INVAL;
+    }
+    if (uuid_parse(uuid_str, *puuid) < 0) {
+        PRINT_MSG(stderr, "Failed to parse pool uuid\n");
+        return -DER_INVAL;
+    }
+
+    uuid_str = getenv ("DAOS_CONT");
+    if (uuid_str == NULL) {
+        /* TODO: remove this later and fail in this case. */
+        /* Hash container name to create uuid */
+        duuid_hash128(path, cuuid, NULL, NULL);
+    } else {
+        if (uuid_parse(uuid_str, *cuuid) < 0) {
+            PRINT_MSG(stderr, "Failed to parse container uuid\n");
             return -DER_INVAL;
         }
     }
 
-    /* Hash container name to create uuid */
-    duuid_hash128(path, cuuid, NULL, NULL);
-    *oclass = OC_SX;
+    *oclass = OC_UNKNOWN;
     *chunk_size = 0;
 
     return 0;
@@ -307,7 +320,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     cont->poh = cont->p->open_hdl;
 
-    rc = adio_daos_coh_lookup_create(cont->poh, cont->cuuid,
+    rc = adio_daos_coh_lookup_create(cont->poh, cont->cuuid, O_RDWR,
                                      (fd->access_mode & ADIO_CREATE),
                                      &cont->c);
     if (rc) {
@@ -316,17 +329,18 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     }
 
     cont->coh = cont->c->open_hdl;
-    if (cont->amode == DAOS_COO_RW)
-        amode = O_RDWR;
-    else
-        amode = O_RDONLY;
 
-    /* Mount a DFS namespace on the container */
-    rc = dfs_mount(cont->p->open_hdl, cont->coh, amode, &cont->dfs);
-    if (rc) {
-        PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
-        *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
-        goto err_cont;
+    if (cont->c->dfs == NULL) {
+        /* Mount a DFS namespace on the container */
+        rc = dfs_mount(cont->p->open_hdl, cont->coh, O_RDWR, &cont->dfs);
+        if (rc) {
+            PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
+            *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
+            goto err_cont;
+        }
+        cont->c->dfs = cont->dfs;
+    } else {
+        cont->dfs = cont->c->dfs;
     }
 
     /* Set file access flags */
@@ -356,7 +370,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
                   cont->obj_class, cont->chunk_size, NULL, &cont->obj);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
-        goto err_dfs;
+        goto err_cont;
     }
 
     rc = dfs_get_file_oh(cont->obj, &cont->oh);
@@ -372,8 +386,6 @@ err_obj:
     dfs_release(cont->obj);
     if (fd->access_mode & ADIO_CREATE)
         dfs_remove(cont->dfs, NULL, cont->obj_name, true, NULL);
-err_dfs:
-    dfs_umount(cont->dfs);
 err_cont:
     adio_daos_coh_release(cont->c);
     cont->c = NULL;
@@ -567,31 +579,32 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
         return;
     }
 
-    rc = adio_daos_coh_lookup_create(p->open_hdl, cuuid, false, &c);
+    rc = adio_daos_coh_lookup_create(p->open_hdl, cuuid, O_RDWR, false, &c);
     if (rc || c == NULL) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         goto out_pool;
     }
 
-    /* Mount a flat namespace on the container */
-    rc = dfs_mount(p->open_hdl, c->open_hdl, O_RDWR, &dfs);
+    if (c->dfs == NULL) {
+        /* Mount a flat namespace on the container */
+        rc = dfs_mount(p->open_hdl, c->open_hdl, O_RDWR, &dfs);
+        if (rc) {
+            PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
+            *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
+            goto out_cont;
+        }
+        c->dfs = dfs;
+    }
+
+    /* Remove the file from the flat namespace */
+    rc = dfs_remove(c->dfs, NULL, obj_name, true, NULL);
     if (rc) {
-        PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
         *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
         goto out_cont;
     }
 
-    /* Remove the file from the flat namespace */
-    rc = dfs_remove(dfs, NULL, obj_name, true, NULL);
-    if (rc) {
-        *error_code = ADIOI_DAOS_err(myname, obj_name, __LINE__, rc);
-        goto out_dfs;
-    }
-
     *error_code = MPI_SUCCESS;
 
-out_dfs:
-    dfs_umount(dfs);
 out_cont:
     adio_daos_coh_release(c);
 out_pool:

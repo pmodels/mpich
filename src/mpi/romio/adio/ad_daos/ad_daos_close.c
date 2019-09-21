@@ -26,16 +26,8 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     if (rank == 0) {
         /* release the dfs object handle for the file. */
         rc = dfs_release(cont->obj);
-        if (rc) {
+        if (rc)
             PRINT_MSG(stderr, "dfs_release() failed (%d)\n", rc);
-            goto bcast_rc;
-        }
-
-        rc = dfs_umount(cont->dfs);
-        if (rc) {
-            PRINT_MSG(stderr, "dfs_umount() failed (%d)\n", rc);
-            goto bcast_rc;
-        }
     }
 
 bcast_rc:
