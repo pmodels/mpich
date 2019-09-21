@@ -169,7 +169,7 @@ fi
 
 if [ $daos_pool = 1 ] ; then
 echo '**** Creating DAOS Pool ****'
-pool=`mpirun -np 1 dmg create --size=1GB`
+pool=`dmg create --size=1GB`
 value=$pool
 echo $value
 OLDIFS=$IFS
@@ -178,6 +178,9 @@ read -a array <<< "$(printf "%s" "$value")"
 IFS=$OLDIFS
 export DAOS_POOL=${array[0]}
 export DAOS_SVCL=${array[1]}
+export DAOS_CONT=`uuidgen`
+echo '**** Creating DAOS Container ****'
+daos cont create --pool=$DAOS_POOL --svc=$DAOS_SVCL --cont=$DAOS_CONT --type=POSIX
 fi
 
 testfiles=""

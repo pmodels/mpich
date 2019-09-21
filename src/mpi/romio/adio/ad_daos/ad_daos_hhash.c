@@ -64,8 +64,11 @@ rec_free(struct d_hash_table *htable, d_list_t *rlink)
 
     if (hdl->type == DAOS_POOL)
         daos_pool_disconnect(hdl->open_hdl, NULL);
-    else if (hdl->type == DAOS_CONT)
+    else if (hdl->type == DAOS_CONT) {
+        if (hdl->dfs)
+            dfs_umount(hdl->dfs);
         daos_cont_close(hdl->open_hdl, NULL);
+    }
     else
         assert(0);
     ADIOI_Free(hdl);
@@ -244,6 +247,7 @@ adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **hdl)
         co_hdl->type = DAOS_CONT;
 	uuid_copy(co_hdl->uuid, uuid);
         co_hdl->open_hdl.cookie = coh.cookie;
+        co_hdl->dfs = NULL;
 
         rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
                                &co_hdl->entry, true);
@@ -263,8 +267,8 @@ err_coh:
 }
 
 int
-adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
-                             struct adio_daos_hdl **hdl)
+adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
+                            bool create, struct adio_daos_hdl **hdl)
 {
 	struct adio_daos_hdl *co_hdl;
 	int rc;
@@ -288,20 +292,28 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
                             NULL, NULL);
 	/* If fails with NOEXIST we can create it then reopen if create mode */
 	if (rc == -DER_NONEXIST && create) {
-            rc = daos_cont_create(poh, uuid, NULL, NULL);
-		if (rc == 0)
-			rc = daos_cont_open(poh, uuid, DAOS_COO_RW,
-					    &co_hdl->open_hdl, NULL, NULL);
-	}
-
-	if (rc != 0)
-		goto free_coh;
+            rc = dfs_cont_create(poh, uuid, NULL, &co_hdl->open_hdl,
+                                 &co_hdl->dfs);
+            if (rc) {
+                PRINT_MSG(stderr, "Failed to create DFS container\n", rc);
+                goto free_coh;
+            }
+	} else if (rc == 0) {
+            /* Mount a DFS namespace on the container */
+            rc = dfs_mount(poh, co_hdl->open_hdl, amode, &co_hdl->dfs);
+            if (rc) {
+                PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
+                goto err_cont;
+            }
+        } else {
+                goto free_coh;
+        }
 
         rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
                                &co_hdl->entry, true);
 	if (rc) {
 		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable\n", rc);
-		goto err_cont;
+		goto err_dfs;
 	}
 
         d_hash_rec_addref(coh_hash, &co_hdl->entry);
@@ -309,6 +321,8 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, bool create,
 
 	return 0;
 
+err_dfs:
+        dfs_umount(co_hdl->dfs);
 err_cont:
 	daos_cont_close(co_hdl->open_hdl, NULL);
 free_coh:
