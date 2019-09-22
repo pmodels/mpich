@@ -136,7 +136,7 @@ adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh, struct adio_daos_hdl **hdl)
     rc = d_hash_rec_insert(poh_hash, phdl->uuid, sizeof(uuid_t), &phdl->entry,
                            true);
     if (rc) {
-        PRINT_MSG(stderr, "Failed to add phdl to hashtable\n", rc);
+        PRINT_MSG(stderr, "Failed to add phdl to hashtable (%d)\n", rc);
         goto free_hdl;
     }
 
@@ -199,7 +199,7 @@ adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
     rc = d_hash_rec_insert(poh_hash, phdl->uuid, sizeof(uuid_t), &phdl->entry,
                            true);
     if (rc) {
-        PRINT_MSG(stderr, "Failed to add phdl to hashtable\n", rc);
+        PRINT_MSG(stderr, "Failed to add phdl to hashtable (%d)\n", rc);
         goto err_pool;
     }
 
@@ -252,7 +252,7 @@ adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **hdl)
         rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
                                &co_hdl->entry, true);
 	if (rc) {
-		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable\n", rc);
+		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable (%d)\n", rc);
 		goto err_coh;
 	}
 
@@ -295,7 +295,7 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
             rc = dfs_cont_create(poh, uuid, NULL, &co_hdl->open_hdl,
                                  &co_hdl->dfs);
             if (rc) {
-                PRINT_MSG(stderr, "Failed to create DFS container\n", rc);
+                PRINT_MSG(stderr, "Failed to create DFS container (%d)\n", rc);
                 goto free_coh;
             }
 	} else if (rc == 0) {
@@ -312,7 +312,7 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
         rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t),
                                &co_hdl->entry, true);
 	if (rc) {
-		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable\n", rc);
+		PRINT_MSG(stderr, "Failed to add co_hdl to hashtable (%d)\n", rc);
 		goto err_dfs;
 	}
 

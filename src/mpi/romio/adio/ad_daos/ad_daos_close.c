@@ -30,7 +30,6 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
             PRINT_MSG(stderr, "dfs_release() failed (%d)\n", rc);
     }
 
-bcast_rc:
     /* bcast the return code to the other ranks */
     MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
     if (rc != 0) {
