@@ -86,26 +86,23 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                          MPI_Request *request, int rw_type, int *error_code)
 {
     ADIOI_Flatlist_node *flat_buf, *flat_file;
-    int i, j, k, bwr_size, fwr_size=0, st_index=0;
+    int i, j, k, fwr_size=0, st_index=0;
     int sum, n_etypes_in_filetype, size_in_filetype;
     MPI_Count bufsize;
     int n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
     MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint filetype_extent, buftype_extent;
-    int buf_count, buftype_is_contig, filetype_is_contig;
+    int buftype_is_contig, filetype_is_contig;
     ADIO_Offset off, disp, start_off;
     int flag, st_fwr_size, st_n_filetypes;
-    int mem_list_count, file_list_count;
-    int64_t * mem_offsets;
-    int64_t *file_offsets;
-    int *mem_lengths;
+    int mem_list_count;
     int64_t file_length;
     int total_blks_to_write;
     int f_data_wrote;
     int n_write_lists;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-    struct ADIO_DAOS_req *aio_req;
+    struct ADIO_DAOS_req *aio_req = NULL;
     static char myname[] = "ADIOI_DAOS_StridedListIO";
     int err_flag=0, ret;
     int mpi_rank;
@@ -415,8 +412,6 @@ void ADIOI_DAOS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                                 ADIO_Offset offset, ADIO_Status *status,
                                 int *error_code)
 {
-    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-
     MPI_Barrier(fd->comm);
     ADIOI_GEN_ReadStridedColl(fd, buf, count, datatype, file_ptr_type,
                               offset, status, error_code);
@@ -428,8 +423,6 @@ void ADIOI_DAOS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                                  ADIO_Offset offset, ADIO_Status *status,
                                  int *error_code)
 {
-    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-
     ADIOI_GEN_WriteStridedColl(fd, buf, count, datatype, file_ptr_type,
                                offset, status, error_code);
     MPI_Barrier(fd->comm);
@@ -441,8 +434,6 @@ void ADIOI_DAOS_IreadStridedColl(ADIO_File fd, void *buf, int count,
                                  ADIO_Offset offset, ADIO_Request *request,
                                  int *error_code)
 {
-    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-
     MPI_Barrier(fd->comm);
     ADIOI_DAOS_StridedListIO(fd, buf, count, datatype, file_ptr_type,
                              offset, NULL, request, DAOS_READ, error_code);
@@ -454,8 +445,6 @@ void ADIOI_DAOS_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
                                   ADIO_Offset offset, MPI_Request *request,
                                   int *error_code)
 {
-    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-
     ADIOI_DAOS_StridedListIO(fd, (void *)buf, count, datatype, file_ptr_type,
                              offset, NULL, request, DAOS_WRITE, error_code);
     MPI_Barrier(fd->comm);

@@ -174,25 +174,52 @@ duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
     return;
 } /* end duuid_hash128() */
 
-static void
+static int
 parse_filename(const char *path, char **_obj_name, char **_cont_name)
 {
-    char *f1 = ADIOI_Strdup(path);
-    char *f2 = ADIOI_Strdup(path);
-    char *fname = basename(f1);
-    char *cont_name = dirname(f2);
-    
-    if (cont_name[0] == '.' || cont_name[0] != '/') {
-        char cwd[1024];
+    char *f1;
+    char *f2;
+    char *fname;
+    char *cont_name;
+    int rc = 0;
 
-        getcwd(cwd, 1024);
+    f1 = ADIOI_Strdup(path);
+    if (f1 == NULL)
+        return ENOMEM;
+
+    f2 = ADIOI_Strdup(path);
+    if (f2 == NULL) {
+        ADIOI_Free(f1);
+        return ENOMEM;
+    }
+
+    fname = basename(f1);
+    cont_name = dirname(f2);
+
+    if (cont_name[0] == '.' || cont_name[0] != '/') {
+        char *ptr;
+        char cwd[PATH_MAX];
+
+        ptr = getcwd(cwd, PATH_MAX);
+        if (ptr == NULL) {
+            rc = errno;
+            goto out;
+        }
 
         if (strcmp(cont_name, ".") == 0) {
             cont_name = ADIOI_Strdup(cwd);
-        }
-        else {
+            if (cont_name == NULL) {
+                rc = ENOMEM;
+                goto out;
+            }
+        } else {
             char *new_dir = ADIOI_Calloc(strlen(cwd) + strlen(cont_name) + 1,
                                          sizeof(char));
+
+            if (new_dir == NULL) {
+                rc = ENOMEM;
+                goto out; 
+            }
 
             strcpy(new_dir, cwd);
             if (cont_name[0] == '.')
@@ -204,15 +231,24 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
             cont_name = new_dir;
         }
         *_cont_name = cont_name;
-    }
-    else {
+    } else {
         *_cont_name = ADIOI_Strdup(cont_name);
+        if (*_cont_name == NULL) {
+            rc = ENOMEM;
+            goto out; 
+        }
     }
    
     *_obj_name = ADIOI_Strdup(fname);
+    if (*_obj_name == NULL) {
+        rc = ENOMEM;
+        goto out; 
+    }
 
+out:
     ADIOI_Free(f1);
     ADIOI_Free(f2);
+    return rc;
 }
 
 int
@@ -487,7 +523,12 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 
     fd->access_mode = access_mode;
     cont->amode = amode;
-    parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
+    rc = parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
+    if (rc) {
+        *error_code = MPI_ERR_NO_MEM;
+	return;
+    }
+
     cont->p = NULL;
     cont->c = NULL;
     fd->fs_ptr = cont;
@@ -566,6 +607,11 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
         return;
 
     parse_filename(filename, &obj_name, &cont_name);
+    if (rc) {
+        *error_code = MPI_ERR_NO_MEM;
+	return;
+    }
+
     rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass, &chunk_size);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
@@ -576,7 +622,7 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     if (rc || p == NULL) {
         PRINT_MSG(stderr, "Failed to connect to pool\n");
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
-        return;
+        goto out_free;
     }
 
     rc = adio_daos_coh_lookup_create(p->open_hdl, cuuid, O_RDWR, false, &c);

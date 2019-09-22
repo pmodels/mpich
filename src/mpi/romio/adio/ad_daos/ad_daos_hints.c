@@ -17,9 +17,7 @@
 
 void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
-    char *value;
-    int flag, tmp_value;
-    static char myname[] = "ADIOI_DAOS_SETINFO";
+    static	char myname[] = "ADIOI_DAOS_SETINFO";
 
     if ((fd->info) == MPI_INFO_NULL) {
 	/* part of the open call */
