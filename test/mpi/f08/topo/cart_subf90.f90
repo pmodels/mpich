@@ -37,6 +37,9 @@ call MPI_Cart_coords(comm_cart, rank, 2, coords)
 call MPI_Cart_sub(comm_cart, remain_dims, comm_new)
 call MPI_Comm_size(comm_new, size)
 
+call MPI_Comm_free(comm_cart)
+call MPI_Comm_free(comm_new)
+
 call MTEST_Finalize(errs)
 
 end program
