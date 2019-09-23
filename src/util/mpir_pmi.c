@@ -188,7 +188,7 @@ int MPIR_pmi_kvs_put(char *key, char *val)
     pmix_value_t value;
     value.type = PMIX_STRING;
     value.data.string = val;
-    pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
+    pmi_errno = PMIx_Put(PMIX_GLOBAL, key, &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
     pmi_errno = PMIx_Commit();
