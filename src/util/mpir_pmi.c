@@ -565,3 +565,38 @@ static int build_locality(void)
 
     return MPI_SUCCESS;
 }
+
+/* similar to functions in mpl/src/str/mpl_argstr.c, but much simpler */
+static int hex(unsigned char c)
+{
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        return 10 + c - 'a';
+    } else if (c >= 'A' && c <= 'F') {
+        return 10 + c - 'A';
+    } else {
+        MPIR_Assert(0);
+        return -1;
+    }
+}
+
+static void encode(int size, const char *src, char *dest)
+{
+    int i;
+    for (i = 0; i < size; i++) {
+        MPL_snprintf(dest, 3, "%02X", (unsigned char) *src);
+        src++;
+        dest += 2;
+    }
+}
+
+static void decode(int size, const char *src, char *dest)
+{
+    int i;
+    for (i = 0; i < size; i++) {
+        *dest = (char) (hex(src[0]) << 4) + hex(src[1]);
+        src += 2;
+        dest++;
+    }
+}
