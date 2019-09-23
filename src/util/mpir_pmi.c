@@ -313,6 +313,387 @@ int MPIR_pmi_barrier_local(void)
 #endif
 }
 
+/* declare static functions used in bcast/allgather */
+static void encode(int size, const char *src, char *dest);
+static void decode(int size, const char *src, char *dest);
+
+/* is_local is a hint that we optimize for node local access when we can */
+static int optimized_put(const char *key, const char *val, int is_local)
+{
+    int mpi_errno = MPI_SUCCESS;
+#if defined(USE_PMI1_API)
+    mpi_errno = MPIR_pmi_kvs_put(key, val);
+#elif defined(USE_PMI2_API)
+    if (!is_local) {
+        mpi_errno = MPIR_pmi_kvs_put(key, val);
+    } else {
+        int pmi_errno = PMI2_Info_PutNodeAttr(key, val);
+        MPIR_ERR_CHKANDJUMP(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**pmi_putnodeattr");
+    }
+#elif defined(USE_PMIX_API)
+    int pmi_errno;
+    pmix_value_t value;
+    value.type = PMIX_STRING;
+    value.data.string = (char *) val;
+    pmi_errno = PMIx_Put(is_local ? PMIX_LOCAL : PMIX_GLOBAL, key, &value);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_put", "**pmix_put %d", pmi_errno);
+    pmi_errno = PMIx_Commit();
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_commit", "**pmix_commit %d", pmi_errno);
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int optimized_get(int src, const char *key, char *val, int valsize, int is_local)
+{
+#if defined(USE_PMI1_API)
+    return MPIR_pmi_kvs_get(src, key, val, valsize);
+#elif defined(USE_PMI2_API)
+    if (is_local) {
+        int mpi_errno = MPI_SUCCESS;
+        int found;
+        int pmi_errno = PMI2_Info_GetNodeAttr(key, val, valsize, &found, TRUE);
+        if (pmi_errno != PMI2_SUCCESS) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**pmi_getnodeattr");
+        } else if (!found) {
+            MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**pmi_getnodeattr");
+        }
+        return mpi_errno;
+    } else {
+        return MPIR_pmi_kvs_get(src, key, val, valsize);
+    }
+#else
+    return MPIR_pmi_kvs_get(src, key, val, valsize);
+#endif
+}
+
+/* higher-level binary put/get:
+ * 1. binary encoding/decoding
+ * 2. chops long values into multiple segments
+ * 3. uses optimized_put/get for the case of node-level access
+ */
+static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
+{
+    int mpi_errno = MPI_SUCCESS;
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    int segsize = (pmi_max_val_size - 1) / 2;
+    if (bufsize < segsize) {
+        encode(bufsize, buf, val);
+        mpi_errno = optimized_put(key, val, is_local);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        int num_segs = bufsize / segsize;
+        if (bufsize % segsize > 0) {
+            num_segs++;
+        }
+        MPL_snprintf(val, pmi_max_val_size, "segments=%d", num_segs);
+        mpi_errno = MPIR_pmi_kvs_put(key, val);
+        MPIR_ERR_CHECK(mpi_errno);
+        int i;
+        for (i = 0; i < num_segs; i++) {
+            char seg_key[50];
+            sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
+            encode(bufsize, buf, val);
+            mpi_errno = optimized_put(key, val, is_local);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+#elif defined(USE_PMIX_API)
+    int n = bufsize * 2 + 1;
+    char *val = MPL_malloc(n, MPL_MEM_OTHER);
+    encode(bufsize, buf, val);
+    mpi_errno = optimized_put(key, val, is_local);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+  fn_exit:
+    MPL_free(val);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
+    int segsize = (pmi_max_val_size - 1) / 2;
+
+    MPIR_Assert(p_size);
+    MPIR_Assert(*p_size > 0);
+    int bufsize = *p_size;
+    int got_size;
+
+    mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (strncmp(val, "segments=", 9) == 0) {
+        int num_segs = atoi(val + 9);
+        int i;
+        got_size = 0;
+        for (i = 0; i < num_segs; i++) {
+            char seg_key[50];
+            sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
+            mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (i < num_segs - 1) {
+                decode(segsize, val, (char *) buf + i * segsize);
+                got_size += segsize;
+            } else {
+                int n = strlen(val) / 2;        /* 2-to-1 decode */
+                decode(n, val, (char *) buf + i * segsize);
+                got_size += n;
+            }
+        }
+    } else {
+        int n = strlen(val) / 2;        /* 2-to-1 decode */
+        decode(n, val, (char *) buf);
+        got_size = n;
+    }
+    MPIR_Assert(got_size <= bufsize);
+    if (got_size < bufsize) {
+        ((char *) buf)[got_size] = '\0';
+    }
+
+    *p_size = got_size;
+
+  fn_exit:
+    MPL_free(val);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int optional_bcast_barrier(MPIR_PMI_DOMAIN domain)
+{
+#if defined(USE_PMI1_API)
+    /* unless bcast is skipped alltogether */
+    if (domain == MPIR_PMI_DOMAIN_ALL && MPIR_Process.size == 1) {
+        return MPI_SUCCESS;
+    } else if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS && MPIR_Process.num_nodes == 1) {
+        return MPI_SUCCESS;
+    } else if (domain == MPIR_PMI_DOMAIN_LOCAL && MPIR_Process.size == MPIR_Process.num_nodes) {
+        return MPI_SUCCESS;
+    }
+#elif defined(USE_PMI2_API)
+    if (domain == MPIR_PMI_DOMAIN_ALL && MPIR_Process.size == 1) {
+        return MPI_SUCCESS;
+    } else if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS && MPIR_Process.num_nodes == 1) {
+        return MPI_SUCCESS;
+    } else if (domain == MPIR_PMI_DOMAIN_LOCAL) {
+        /* PMI2 local uses Put/GetNodeAttr, no need for barrier */
+        return MPI_SUCCESS;
+    }
+#elif defined(USE_PMIx_API)
+    /* PMIx will block/wait, so barrier unnecessary */
+    return MPI_SUCCESS;
+#endif
+    return MPIR_pmi_barrier();
+}
+
+int MPIR_pmi_bcast(void *buf, int bufsize, MPIR_PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int rank = MPIR_Process.rank;
+    int local_node_id = MPIR_Process.node_map[rank];
+    int node_root = MPIR_Process.node_root_map[local_node_id];
+    int is_node_root = (node_root == rank);
+
+    int in_domain, is_root, is_local, bcast_size;
+    if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS && !is_node_root) {
+        in_domain = 0;
+    } else {
+        in_domain = 1;
+    }
+    if (rank == 0 || (domain == MPIR_PMI_DOMAIN_LOCAL && is_node_root)) {
+        is_root = 1;
+    } else {
+        is_root = 0;
+    }
+    is_local = (domain == MPIR_PMI_DOMAIN_LOCAL);
+
+    bcast_size = MPIR_Process.size;
+    if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
+        bcast_size = MPIR_Process.num_nodes;
+    } else if (domain == MPIR_PMI_DOMAIN_LOCAL) {
+        bcast_size = MPIR_Process.local_size;
+    }
+    if (bcast_size == 1) {
+        in_domain = 0;
+    }
+
+    char key[50];
+    int root;
+    static int bcast_seq = 0;
+
+    if (in_domain) {
+        MPIR_Assert(buf);
+        MPIR_Assert(bufsize > 0);
+
+        bcast_seq++;
+
+        root = 0;
+        if (domain == MPIR_PMI_DOMAIN_LOCAL) {
+            root = node_root;
+        }
+        /* add root to the key since potentially we may have multiple root(s)
+         * on a single node due to odd-even-cliques */
+        sprintf(key, "-bcast-%d-%d", bcast_seq, root);
+    }
+
+    if (in_domain) {
+        if (is_root) {
+            mpi_errno = put_ex(key, buf, bufsize, is_local);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+    /* PMI_Barrier may require all process to participate */
+    mpi_errno = optional_bcast_barrier(domain);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (in_domain) {
+        if (!is_root) {
+            int got_size = bufsize;
+            mpi_errno = get_ex(root, key, buf, &got_size, is_local);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int recvsize,
+                       MPIR_PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(domain != MPIR_PMI_DOMAIN_LOCAL);
+
+    int local_node_id = MPIR_Process.node_map[MPIR_Process.rank];
+    int is_node_root = (MPIR_Process.node_root_map[local_node_id] == MPIR_Process.rank);
+    int in_domain = 1;
+    if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS && !is_node_root) {
+        in_domain = 0;
+    }
+
+    static int allgather_seq = 0;
+    allgather_seq++;
+
+    char key[50];
+    sprintf(key, "-allgather-%d-%d", allgather_seq, MPIR_Process.rank);
+
+    if (in_domain) {
+        mpi_errno = put_ex(key, sendbuf, sendsize, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+#ifndef USE_PMIX_API
+    /* PMIx will wait, so barrier unnecessary */
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+    if (in_domain) {
+        int domain_size = MPIR_Process.size;
+        if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
+            domain_size = MPIR_Process.num_nodes;
+        }
+        int i;
+        for (i = 0; i < domain_size; i++) {
+            int rank = i;
+            if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
+                rank = MPIR_Process.node_root_map[i];
+            }
+            sprintf(key, "-allgather-%d-%d", allgather_seq, rank);
+            int got_size = recvsize;
+            mpi_errno = get_ex(rank, key, (unsigned char *) recvbuf + i * recvsize, &got_size, 0);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* This version assumes shm_buf is shared across local procs. Each process
+ * participate in the gather part by distributing the task over local procs.
+ *
+ * NOTE: the behavior is different with MPIR_pmi_allgather when domain is
+ * MPIR_PMI_DOMAIN_NODE_ROOTS. With MPIR_pmi_allgather, only the root_nodes participate.
+ */
+int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int recvsize,
+                           MPIR_PMI_DOMAIN domain)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+
+    MPIR_Assert(domain != MPIR_PMI_DOMAIN_LOCAL);
+
+    int rank = MPIR_Process.rank;
+    int size = MPIR_Process.size;
+    int local_size = MPIR_Process.local_size;
+    int local_rank = MPIR_Process.local_rank;
+    int local_node_id = MPIR_Process.node_map[rank];
+    int node_root = MPIR_Process.node_root_map[local_node_id];
+    int is_node_root = (node_root == MPIR_Process.rank);
+
+    static int allgather_shm_seq = 0;
+    allgather_shm_seq++;
+
+    char key[50];
+    sprintf(key, "-allgather-shm-%d-%d", allgather_shm_seq, rank);
+
+    /* in roots-only, non-roots would skip the put */
+    if (domain != MPIR_PMI_DOMAIN_NODE_ROOTS || is_node_root) {
+        mpi_errno = put_ex(key, (unsigned char *) sendbuf, sendsize, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Each rank need get val from "size" ranks, divide the task evenly over local ranks */
+    if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
+        size = MPIR_Process.num_nodes;
+    }
+    int per_local_rank = size / local_size;
+    if (per_local_rank * local_size < size) {
+        per_local_rank++;
+    }
+    int start = local_rank * per_local_rank;
+    int end = start + per_local_rank;
+    if (end > size) {
+        end = size;
+    }
+    for (i = start; i < end; i++) {
+        int src = i;
+        if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
+            src = MPIR_Process.node_root_map[i];
+        }
+        sprintf(key, "-allgather-shm-%d-%d", allgather_shm_seq, src);
+        int got_size = recvsize;
+        mpi_errno = get_ex(src, key, (unsigned char *) shm_buf + i * recvsize, &got_size, 0);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(got_size <= recvsize);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* ---- static functions ---- */
 
 /* The following static function declares are only for build_nodemap() */
