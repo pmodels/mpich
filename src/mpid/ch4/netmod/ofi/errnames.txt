@@ -99,3 +99,5 @@
 **ofid_stx_ctx_close %s %d %s %s:OFI stx context close failed (%s:%d:%s:%s)
 **ofi_provider_mismatch:OFI Provider name does not match configure-time provider name
 **ofi_provider_mismatch %s %d %s %s:OFI Provider name does not match configure-time provider name (%s:%d:%s:%s)
+**ofid_cancel:OFI cancel failed
+**ofid_cancel %s %d %s %s:OFI cancel failed (%s:%d:%s:%s)
