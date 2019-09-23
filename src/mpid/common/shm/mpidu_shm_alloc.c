@@ -314,7 +314,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
         /* we still need to call barrier
          * (for the case when node_local != clique_local, although fixable) */
-        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        mpi_errno = MPIR_pmi_barrier_local();
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         pmix_proc_t proc, *procs;
@@ -366,7 +366,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                                  "**pmix_commit", "**pmix_commit %d", pmi_errno);
         }
 
-        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        mpi_errno = MPIR_pmi_barrier_local();
         MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank != 0) {
@@ -432,7 +432,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         memory->symmetrical = 0;
 
         /* we still need to call barrier */
-        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        mpi_errno = MPIR_pmi_barrier_local();
         MPIR_ERR_CHECK(mpi_errno);
 
         /* must come before barrier_init since we use OPA in that function */
@@ -490,7 +490,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_LOCAL);
+        mpi_errno = MPIR_pmi_barrier_local();
         MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank > 0) {

@@ -155,7 +155,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_UCX_global.worker != NULL)
