@@ -281,26 +281,27 @@ int MPIR_pmi_barrier_local(void)
 {
 #if defined(USE_PMIX_API)
     int mpi_errno = MPI_SUCCESS;
-    /* FIXME: we could simply construct the proc set from MPIR_Process.node_local_map */
-    pmix_proc_t *procs;
-    size_t nprocs;
-    pmix_value_t *pvalue = NULL;
+    int pmi_errno;
+    int local_size = MPIR_Process.local_size;
+    pmix_proc_t *procs = MPL_malloc(local_size * sizeof(pmix_proc_t), MPL_MEM_OTHER);
+    int i;
+    for (i = 0; i < local_size; i++) {
+        PMIX_PROC_CONSTRUCT(&procs[i]);
+        strncpy(procs[i].nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
+        procs[i].rank = MPIR_Process.node_local_map[i];
+    }
 
-    pmi_errno = PMIx_Get(&pmix_proc, PMIX_HOSTNAME, NULL, 0, &pvalue);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
-                         "**pmix_get %d", pmi_errno);
-    const char *nodename = (const char *) pvalue->data.string;
+    pmix_info_t *info;
+    int flag = 1;
+    PMIX_INFO_CREATE(info, 1);
+    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
-    pmi_errno = PMIx_Resolve_peers(nodename, pmix_proc.nspace, &procs, &nprocs);
-    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                         "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
-
-    pmi_errno = PMIx_Fence(procs, nprocs, info, 1);
+    pmi_errno = PMIx_Fence(procs, local_size, info, 1);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
                          "**pmix_fence %d", pmi_errno);
 
-    PMIX_VALUE_RELEASE(pvalue);
-    PMIX_PROC_FREE(procs, nprocs);
+    PMIX_INFO_FREE(info, 1);
+    MPL_free(procs);
 
   fn_exit:
     return mpi_errno;
