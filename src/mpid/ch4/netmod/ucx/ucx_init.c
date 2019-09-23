@@ -33,7 +33,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
-    size_t *bc_indices;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
@@ -71,11 +70,12 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_UCX_CHK_STATUS(ucx_status);
     MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
 
-    mpi_errno =
-        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
-                              (int) MPIDI_UCX_global.addrname_len, FALSE,
-                              MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                              (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+    void *table;
+    int recv_bc_len;
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      MPIDI_UCX_global.if_address,
+                                      (int) MPIDI_UCX_global.addrname_len, FALSE,
+                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
@@ -84,7 +84,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
@@ -94,13 +94,13 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
-        MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
+        MPIDU_bc_table_destroy();
     }
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
