@@ -119,23 +119,16 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                          MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-    int pmi_errno;
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     int ret;
     int ipc_lock_offset;
     OPA_emulation_ipl_t *ipc_lock;
 #endif
-    int key_max_sz;
-    int val_max_sz;
-    char *key;
-    char *val;
-    char kvs_name[256];
-    char *serialized_hnd = NULL;
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
     size_t size_left;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
@@ -181,7 +174,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
     memory->segment_len = segment_len;
 
-#ifdef USE_PMI2_API
+    char *serialized_hnd = NULL;
+    int serialized_hnd_size = 0;
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1) {
         char *addr;
@@ -195,32 +189,29 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
 
+
         /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
         ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
-
         mpi_errno =
             MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        MPIR_CHKLMEM_MALLOC(key, char *, PMI2_MAX_KEYLEN, mpi_errno, "key", MPL_MEM_SHM);
-        int node_id = MPIR_Process.node_map[MPIR_Process.rank];
-        MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename[%d]-%d", node_id, num_segments);
-
         if (local_rank == 0) {
-            mpl_err =
-                MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              (void **) &(memory->base_addr), 0);
+            /* root prepare shm segment */
+            mpl_err = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
+                                                    (void **) &(memory->base_addr), 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-            /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
 
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+            serialized_hnd_size = strlen(serialized_hnd);
+            MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
 
             /* must come before barrier_init since we use OPA in that function */
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
@@ -231,276 +222,22 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
             mpi_errno =
                 MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            /* The opa and barrier initializations must come before we (the
-             * leader) put the sharedFilename attribute.  Since this is a
-             * serializing operation with our peers on the local node this
-             * ensures that these initializations have occurred before any peer
-             * attempts to use the resources. */
-            mpi_errno = PMI2_Info_PutNodeAttr(key, serialized_hnd);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            int found = FALSE;
-
-            /* Allocate space for pmi key and val */
-            MPIR_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val", MPL_MEM_SHM);
-
-            /* get name of shared file */
-            mpi_errno = PMI2_Info_GetNodeAttr(key, val, PMI2_MAX_VALLEN, &found, TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
-            MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
-
-            mpl_err = MPL_shm_hnd_deserialize(memory->hnd, val, strlen(val));
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-            mpl_err = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
-                                         (void **) &memory->base_addr, 0);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            MPIR_ERR_CHECK(mpi_errno);
+            /* non-root prepare to recv */
+            serialized_hnd_size = MPIR_pmi_max_val_size();
+            MPIR_CHKLMEM_MALLOC(serialized_hnd, char *, serialized_hnd_size, mpi_errno, "val",
+                                MPL_MEM_OTHER);
         }
-
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (local_rank == 0) {
-            mpl_err = MPL_shm_seg_remove(memory->hnd);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
-        }
-        current_addr = memory->base_addr;
-        memory->symmetrical = 0;
     }
-#elif defined(USE_PMIX_API)
-    /* if there is only one process on this processor, don't use shared memory */
-    if (num_local == 1) {
-        char *addr;
-
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
-
-        memory->base_addr = addr;
-        current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 0;
-
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* we still need to call barrier
-         * (for the case when node_local != clique_local, although fixable) */
-        mpi_errno = MPIR_pmi_barrier_local();
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        pmix_proc_t proc, *procs;
-        char *nodename = NULL;
-        size_t nprocs;
-        pmix_value_t value, *pvalue = NULL;
-        pmix_info_t *info;
-        int flag = 1;
-
-        MPIR_CHKLMEM_MALLOC(key, char *, PMIX_MAX_KEYLEN, mpi_errno, "key", MPL_MEM_SHM);
-        MPL_snprintf(key, PMIX_MAX_KEYLEN, "sharedFilename-%d", num_segments);
-
-        if (local_rank == 0) {
-            mpl_err =
-                MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              (void **) &(memory->base_addr), 0);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-            /* post name of shared file */
-            MPIR_Assert(local_procs_0 == rank);
-
-            mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
-
-            /* The opa and barrier initializations must come before we (the
-             * leader) put the sharedFilename attribute.  Since this is a
-             * serializing operation with our peers on the local node this
-             * ensures that these initializations have occurred before any peer
-             * attempts to use the resources. */
-            value.type = PMIX_STRING;
-            value.data.string = serialized_hnd;
-            pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_put",
-                                 "**pmix_put %d", pmi_errno);
-
-            pmi_errno = PMIx_Commit();
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmix_commit", "**pmix_commit %d", pmi_errno);
-        }
-
-        mpi_errno = MPIR_pmi_barrier_local();
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (local_rank != 0) {
-            /* get name of shared file */
-            PMIX_PROC_CONSTRUCT(&proc);
-            MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
-            proc.rank = local_procs_0;
-            pmi_errno = PMIx_Get(&proc, key, NULL, 0, &pvalue);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
-                                 "**pmix_get %d", pmi_errno);
-
-            mpl_err =
-                MPL_shm_hnd_deserialize(memory->hnd, pvalue->data.string,
-                                        strlen(pvalue->data.string));
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-            PMIX_VALUE_RELEASE(pvalue);
-
-            mpl_err = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
-                                         (void **) &memory->base_addr, 0);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (local_rank == 0) {
-            mpl_err = MPL_shm_seg_remove(memory->hnd);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
-        }
-        current_addr = memory->base_addr;
-        memory->symmetrical = 0;
-    }
-#else /* we are using PMIv1 */
-    /* if there is only one process on this processor, don't use shared memory */
-    if (num_local == 1) {
-        char *addr;
-
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
-
-        memory->base_addr = addr;
-        current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 0;
-
-        /* we still need to call barrier */
-        mpi_errno = MPIR_pmi_barrier_local();
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        /* Allocate space for pmi key and val */
-        pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-        MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key", class);
-
-        pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-        MPIR_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val", class);
-
-        mpi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        if (local_rank == 0) {
-            mpl_err =
-                MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len,
-                                              (void **) &(memory->base_addr), 0);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-            /* post name of shared file */
-            MPIR_Assert(local_procs_0 == rank);
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", rank, num_segments);
-
-            mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
-            MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-            pmi_errno = PMI_KVS_Put(kvs_name, key, serialized_hnd);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
-
-            pmi_errno = PMI_KVS_Commit(kvs_name);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        mpi_errno = MPIR_pmi_barrier_local();
-        MPIR_ERR_CHECK(mpi_errno);
-
+    /* All processes need call MPIR_pmi_bcast. This is because we may need call MPIR_pmi_barrier
+     * inside depend on PMI versions, and all processes need participate.
+     */
+    MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
+    if (num_local > 1) {
         if (local_rank > 0) {
-            /* get name of shared file */
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", local_procs_0, num_segments);
-            pmi_errno = PMI_KVS_Get(kvs_name, key, val, val_max_sz);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
-
-            mpl_err = MPL_shm_hnd_deserialize(memory->hnd, val, strlen(val));
+            /* non-root attach shm segment */
+            mpl_err = MPL_shm_hnd_deserialize(memory->hnd, serialized_hnd, strlen(serialized_hnd));
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             mpl_err = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
@@ -512,6 +249,13 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
             ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
+
+            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
+             * needs to be called by the leader and the current process before use by the
+             * current process.  That is, we don't assume that this collective call is
+             * synchronizing and we don't assume that it requires total external
+             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
+             * this behavior. */
 #endif
 
             mpi_errno =
@@ -523,13 +267,14 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         MPIR_ERR_CHECK(mpi_errno);
 
         if (local_rank == 0) {
+            /* memory->hnd no longer needed */
             mpl_err = MPL_shm_seg_remove(memory->hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**remove_shar_mem");
         }
         current_addr = memory->base_addr;
         memory->symmetrical = 0;
     }
-#endif
+
     num_segments++;
 
     /* assign sections of the shared memory segment to their pointers */
