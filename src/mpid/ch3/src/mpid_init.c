@@ -30,8 +30,6 @@ char *MPIDI_DBG_parent_str = "?";
 
 #include "datatype.h"
 
-int MPIDI_Use_pmi2_api = 0;
-
 static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
@@ -110,20 +108,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /* init group of failed processes, and set finalize callback */
     MPIDI_Failed_procs_group = MPIR_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
-
-    /* FIXME: This is a good place to check for environment variables
-       and command line options that may control the device */
-    MPIDI_Use_pmi2_api = FALSE;
-#ifdef USE_PMI2_API
-    MPIDI_Use_pmi2_api = TRUE;
-#else
-    {
-        int ret;
-        ret = MPL_env2bool("MPICH_USE_PMI2_API", &val);
-        if (ret == 1 && val)
-            MPIDI_Use_pmi2_api = TRUE;
-    }
-#endif
 
     /* Create the string that will cache the last group of failed processes
      * we received from PMI */
