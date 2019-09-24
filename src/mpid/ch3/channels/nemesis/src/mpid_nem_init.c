@@ -10,6 +10,7 @@
 #include <errno.h>
 #include "mpidi_nem_statistics.h"
 #include "mpit.h"
+#include "mpidu_init_shm.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -276,7 +277,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* local procs barrier */
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* find our cell region */
@@ -351,7 +352,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     
     /* local barrier */
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     
@@ -402,11 +403,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPL_free(publish_bc_orig);
 
 
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPID_nem_mpich_init();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 #ifdef ENABLE_CHECKPOINTING
     mpi_errno = MPIDI_nem_ckpt_init();

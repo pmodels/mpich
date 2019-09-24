@@ -13,6 +13,7 @@
 
 #include <mpidimpl.h>
 #include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 #define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))
 #define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
