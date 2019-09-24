@@ -112,9 +112,8 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
    At least one call to MPIDU_SHM_Seg_alloc() must be made before
    calling MPIDU_SHM_Seg_commit().
  */
-int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
-                         int num_local, int local_rank, int local_procs_0, int rank,
-                         MPL_memory_class class)
+int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank,
+                         int local_procs_0, int rank, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
@@ -215,8 +214,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     mpi_errno = check_alloc(memory, num_local, local_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* for now return null pointer for barrier */
-    *barrier = NULL;
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
     /* reset segment_len to zero */
