@@ -128,10 +128,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
 
-    mpi_errno = MPIDU_Init_shm_barrier();
-
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.seg);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
