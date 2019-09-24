@@ -183,7 +183,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
                              MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Set the counter to 0 */

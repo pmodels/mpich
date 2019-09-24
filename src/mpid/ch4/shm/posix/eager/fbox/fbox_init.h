@@ -106,7 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
                sizeof(MPIDI_POSIX_fastbox_t));
     }
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_CHKPMEM_COMMIT();
@@ -128,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
 
     MPIR_ERR_CHECK(mpi_errno);
 

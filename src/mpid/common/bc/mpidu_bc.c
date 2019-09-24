@@ -8,6 +8,7 @@
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
 #include "mpidu_bc.h"
+#include "mpidu_init_shm.h"
 
 /* In case of systems with variable business card lengths,
  *set MPID_MAX_BC_SIZE to maximum possible bc size */
@@ -24,7 +25,7 @@ int MPIDU_bc_table_destroy(void)
 
     int local_size = MPIR_Process.local_size;
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
     MPIR_ERR_CHECK(mpi_errno);
@@ -104,12 +105,12 @@ int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
         recv_bc_len = MPID_MAX_BC_SIZE;
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     memcpy(segment + local_rank * recv_bc_len, bc, bc_len);
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* a 64k memcpy is small (< 1ms), MPI_IN_PLACE not critical here */
@@ -122,7 +123,7 @@ int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
 
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     *bc_table = recv_buf;
@@ -173,7 +174,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         mpi_errno = MPIR_pmi_allgather_shm(bc, bc_len, segment, recv_bc_len, domain);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+        mpi_errno = MPIDU_Init_shm_barrier();
         MPIR_ERR_CHECK(mpi_errno);
     }
 
