@@ -5,6 +5,7 @@
  */
 #include <mpidimpl.h>
 #include "mpl_shm.h"
+#include "mpidu_init_shm.h"
 
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -35,8 +36,7 @@ static struct {
 } allocq = {
 0};
 
-static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
-                       int num_local, int local_rank);
+static int check_alloc(MPIDU_shm_seg_t * memory, int num_local, int local_rank);
 
 #define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
 #define ALLOCQ_EMPTY() GENERIC_Q_EMPTY(allocq)
@@ -44,8 +44,6 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
 #define ALLOCQ_DEQUEUE(epp) GENERIC_Q_DEQUEUE(&allocq, epp, next)
 
 static size_t segment_len = 0;
-
-static int num_segments = 0;
 
 typedef struct asym_check_region {
     void *base_ptr;
@@ -119,16 +117,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
                          MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    int ret;
-    int ipc_lock_offset;
-    OPA_emulation_ipl_t *ipc_lock;
-#endif
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
     size_t size_left;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
@@ -143,34 +135,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-
-    /* Shared memory barrier variables are in the front of the shared
-     * memory region.  We do this here explicitly, rather than use the
-     * Seg_alloc() function because we need to use the barrier inside
-     * this function, before we've assigned the variables to their
-     * regions.  To do this, we add extra space to the segment_len,
-     * initialize the variables as soon as the shared memory region is
-     * allocated/attached, then before we do the assignments of the
-     * pointers provided in Seg_alloc(), we make sure to skip the
-     * region containing the barrier vars. */
-
-    /* add space for local barrier region.  Use a whole cacheline. */
-    MPIR_Assert(MPIDU_SHM_CACHE_LINE_LEN >= sizeof(MPIDU_shm_barrier_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
-
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* We have a similar bootstrapping problem when using OpenPA in
-     * lock-based emulation mode.  We use OPA_* functions during the
-     * check_alloc function but we were previously initializing OpenPA
-     * after return from this function.  So we put the emulation lock
-     * right after the barrier var space. */
-
-    /* offset from memory->base_addr to the start of ipc_lock */
-    ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
-
-    MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
-#endif
 
     memory->segment_len = segment_len;
 
@@ -188,17 +152,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory->symmetrical = 0;
-
-
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        MPIR_ERR_CHECK(mpi_errno);
     } else {
         if (local_rank == 0) {
             /* root prepare shm segment */
@@ -211,61 +164,23 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
             serialized_hnd_size = strlen(serialized_hnd);
-            MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
+            MPIR_Assert(serialized_hnd_size < MPIDU_SHM_MAX_FNAME_LEN);
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIDU_Init_shm_put(serialized_hnd, MPIDU_SHM_MAX_FNAME_LEN);
+            MPIDU_Init_shm_barrier();
         } else {
-            /* non-root prepare to recv */
-            serialized_hnd_size = MPIR_pmi_max_val_size();
-            MPIR_CHKLMEM_MALLOC(serialized_hnd, char *, serialized_hnd_size, mpi_errno, "val",
-                                MPL_MEM_OTHER);
-        }
-    }
-    /* All processes need call MPIR_pmi_bcast. This is because we may need call MPIR_pmi_barrier
-     * inside depend on PMI versions, and all processes need participate.
-     */
-    MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
-    if (num_local != 1) {
-        MPIR_Assert(num_local > 1);
-        if (local_rank > 0) {
-            /* non-root attach shm segment */
+            MPIDU_Init_shm_barrier();
+            MPIDU_Init_shm_query(0, (void **) &serialized_hnd);
+
             mpl_err = MPL_shm_hnd_deserialize(memory->hnd, serialized_hnd, strlen(serialized_hnd));
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
             mpl_err = MPL_shm_seg_attach(memory->hnd, memory->segment_len,
                                          (void **) &memory->base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
-
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIDU_Init_shm_barrier();
 
         if (local_rank == 0) {
             /* memory->hnd no longer needed */
@@ -276,24 +191,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         memory->symmetrical = 0;
     }
 
-    num_segments++;
-
     /* assign sections of the shared memory segment to their pointers */
 
     start_addr = current_addr;
     size_left = segment_len;
-
-    /* reserve room for shared mem barrier (We used a whole cacheline) */
-    current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
-    MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
-    size_left -= MPIDU_SHM_CACHE_LINE_LEN;
-
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* reserve room for the opa emulation lock */
-    current_addr = (char *) current_addr + MPIDU_SHM_CACHE_LINE_LEN;
-    MPIR_Assert(size_left >= MPIDU_SHM_CACHE_LINE_LEN);
-    size_left -= MPIDU_SHM_CACHE_LINE_LEN;
-#endif
 
     do {
         alloc_elem_t *ep;
@@ -311,15 +212,16 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
     }
     while (!ALLOCQ_EMPTY());
 
-    mpi_errno = check_alloc(memory, *barrier, num_local, local_rank);
+    mpi_errno = check_alloc(memory, num_local, local_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* for now return null pointer for barrier */
+    *barrier = NULL;
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
     /* reset segment_len to zero */
     segment_len = 0;
 
-    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
     return mpi_errno;
   fn_fail:
@@ -358,8 +260,7 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
-                       int num_local, int local_rank)
+static int check_alloc(MPIDU_shm_seg_t * memory, int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
@@ -371,16 +272,14 @@ static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
         OPA_store_int(&asym_check_region_p->is_asym, 0);
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDU_Init_shm_barrier();
 
     if (asym_check_region_p->base_ptr != memory->base_addr)
         OPA_store_int(&asym_check_region_p->is_asym, 1);
 
     OPA_read_write_barrier();
 
-    mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDU_Init_shm_barrier();
 
     if (OPA_load_int(&asym_check_region_p->is_asym)) {
         memory->symmetrical = 0;
