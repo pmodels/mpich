@@ -41,7 +41,6 @@ typedef struct {
     MPIR_Request **active_rreq;
 
     MPIDU_shm_seg_t memory;
-    MPIDU_shm_barrier_t *barrier;
 
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */

@@ -98,7 +98,6 @@ typedef struct MPID_nem_mem_region
     MPID_nem_cell_ptr_t         Elements;
     MPID_nem_queue_ptr_t       *FreeQ;
     MPID_nem_queue_ptr_t       *RecvQ;
-    MPIDU_shm_barrier_t        *barrier;
     MPID_nem_queue_ptr_t        my_freeQ;
     MPID_nem_queue_ptr_t        my_recvQ;
     MPID_nem_barrier_vars_t    *barrier_vars;

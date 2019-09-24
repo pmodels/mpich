@@ -80,7 +80,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
-                                     &MPIDI_POSIX_global.barrier,
                                      MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
                                      MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);

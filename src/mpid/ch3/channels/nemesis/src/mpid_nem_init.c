@@ -257,7 +257,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory, &MPID_nem_mem_region.barrier,
+    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory,
                                  num_local, local_rank, MPID_nem_mem_region.local_procs[0],
                                  MPID_nem_mem_region.rank, MPL_MEM_SHM);
     /* check_alloc steps */
