@@ -22,11 +22,9 @@ int MPIDU_bc_table_destroy(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int local_size = MPIR_Process.local_size;
-
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDU_shm_seg_destroy(shm_ptr, local_size);
+    mpi_errno = MPIDU_shm_seg_destroy(shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rank_map) {
@@ -147,11 +145,6 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     int my_size = MPIR_Process.size;
     MPIR_Assert(my_rank == rank);
     MPIR_Assert(my_size == size);
-    int local_rank = MPIR_Process.local_rank;
-    int local_size = MPIR_Process.local_size;
-
-    int node_id = MPIR_Process.node_map[rank];
-    int local_leader = MPIR_Process.node_root_map[node_id];
 
     int recv_bc_len = bc_len;
     if (!same_len) {
@@ -162,8 +155,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
     mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno =
-        MPIDU_shm_seg_commit(&shm_ptr, local_size, local_rank, local_leader, rank, MPL_MEM_ADDRESS);
+    mpi_errno = MPIDU_shm_seg_commit(&shm_ptr, MPL_MEM_ADDRESS);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {

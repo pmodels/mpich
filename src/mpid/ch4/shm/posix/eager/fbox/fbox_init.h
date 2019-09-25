@@ -72,9 +72,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.shm_ptr,
-                                     MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
-                                     MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.shm_ptr, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Allocate table of pointers to fastboxes */
@@ -124,8 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
 
-    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_eager_fbox_control_global.shm_ptr,
-                                      MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
