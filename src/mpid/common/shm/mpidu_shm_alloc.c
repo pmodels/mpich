@@ -46,7 +46,7 @@ typedef struct memory_list {
 static memory_list_t *memory_head = NULL;
 static memory_list_t *memory_tail = NULL;
 
-static int check_alloc(MPIDU_shm_seg_t * memory, int num_local, int local_rank);
+static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank);
 
 #define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
 #define ALLOCQ_EMPTY() GENERIC_Q_EMPTY(allocq)
@@ -107,7 +107,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
     goto fn_exit;
 }
 
-/* MPIDU_shm_seg_commit(ptr, num_local, local_rank)
+/* MPIDU_shm_seg_commit(ptr)
 
    This function allocates a shared memory segment large enough to
    hold all of the regions previously requested by calls to
@@ -127,8 +127,11 @@ int MPIDU_shm_seg_commit(void **ptr, int num_local, int local_rank,
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
-    void *start_addr ATTRIBUTE((unused));
-    size_t size_left;
+    size_t segment_len = len;
+    int rank = MPIR_Process.rank;
+    int local_rank = MPIR_Process.local_rank;
+    int num_local = MPIR_Process.local_size;
+    int local_procs_0 = MPIR_Process.node_local_map[0];
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *memory_node = NULL;
     MPIR_CHKPMEM_DECL(3);
@@ -229,7 +232,7 @@ int MPIDU_shm_seg_commit(void **ptr, int num_local, int local_rank,
     }
     while (!ALLOCQ_EMPTY());
 
-    mpi_errno = check_alloc(memory, num_local, local_rank);
+    mpi_errno = check_alloc(memory, local_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
     memory_node->ptr = *ptr;
@@ -272,7 +275,7 @@ int MPIDU_shm_seg_destroy(void *ptr, int num_local)
         }
     }
 
-    if (num_local == 1)
+    if (MPIR_Process.local_size == 1)
         MPL_free(memory->base_addr);
     else {
         mpl_err = MPL_shm_seg_detach(memory->hnd, (void **) &(memory->base_addr),
@@ -308,14 +311,14 @@ int MPIDU_shm_seg_is_symm(void *ptr)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-static int check_alloc(MPIDU_shm_seg_t * memory, int num_local, int local_rank)
+static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
 
-    if (local_rank == 0) {
+    if (MPIR_Process.local_rank == 0) {
         asym_check_region_p->base_ptr = memory->base_addr;
         OPA_store_int(&asym_check_region_p->is_asym, 0);
     }

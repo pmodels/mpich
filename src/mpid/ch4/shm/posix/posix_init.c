@@ -177,10 +177,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno =
-        MPIDU_shm_seg_commit(&MPIDI_POSIX_global.shm_ptr,
-                             MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
-                             MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_global.shm_ptr, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_Init_shm_barrier();
@@ -205,7 +202,7 @@ int MPIDI_POSIX_coll_finalize(void)
 
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
-    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_global.shm_ptr, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_global.shm_ptr);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);

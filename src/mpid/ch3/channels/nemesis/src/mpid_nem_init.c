@@ -250,9 +250,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.shm_ptr,
-                                 num_local, local_rank, MPID_nem_mem_region.local_procs[0],
-                                 MPID_nem_mem_region.rank, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.shm_ptr, MPL_MEM_SHM);
     /* check_alloc steps */
     if (MPIDU_shm_seg_is_symm(MPID_nem_mem_region.shm_ptr) == 1) {
         MPID_nem_asymm_base_addr = NULL;

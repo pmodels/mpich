@@ -12,9 +12,8 @@
 #define MPIDU_SHM_CACHE_LINE_LEN 64
 
 int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class);
-int MPIDU_shm_seg_commit(void **ptr, int num_local, int local_rank,
-                         int local_procs_0, int rank, MPL_memory_class class);
-int MPIDU_shm_seg_destroy(void *ptr, int num_local);
+int MPIDU_shm_seg_commit(void **ptr, MPL_memory_class class);
+int MPIDU_shm_seg_destroy(void *ptr);
 int MPIDU_shm_seg_is_symm(void *ptr);
 
 #endif /* MPIDU_SHM_H_INCLUDED */
