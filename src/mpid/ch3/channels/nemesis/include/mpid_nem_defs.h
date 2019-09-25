@@ -69,8 +69,6 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a
 typedef struct MPID_nem_mem_region
 {
     void                       *shm_ptr;
-    MPIDU_shm_seg_info_t       *seg;
-    int                         num_seg;
     int                         map_lock;
     int                         num_local;
     int                         num_procs;

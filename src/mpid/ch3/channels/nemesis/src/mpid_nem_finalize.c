@@ -33,7 +33,6 @@ int MPID_nem_finalize(void)
     MPL_free(MPID_nem_mem_region.local_ranks);
     if (MPID_nem_mem_region.ext_procs > 0)
         MPL_free(MPID_nem_mem_region.ext_ranks);
-    MPL_free(MPID_nem_mem_region.seg);
     MPL_free(MPID_nem_mem_region.mailboxes.out);
     MPL_free(MPID_nem_mem_region.mailboxes.in);
 

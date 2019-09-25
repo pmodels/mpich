@@ -48,9 +48,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
 #endif /* MPL_USE_DBG_LOGGING */
 
-    MPIR_CHKPMEM_DECL(4);
+    MPIR_CHKPMEM_DECL(3);
 
-    MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks,
                         int16_t *,
                         sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
@@ -65,12 +64,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     /* The final entry in the cache array is for tracking the fallback place to start looking for
      * messages if all other entries in the cache are empty. */
     MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = 0;
-
-    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.seg,
-                        MPIDU_shm_seg_info_t *,
-                        MPIDI_POSIX_eager_fbox_control_global.num_seg *
-                        sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments",
-                        MPL_MEM_SHM);
 
     /* Create region with one fastbox for every pair of local processes. */
     mpi_errno =
@@ -127,7 +120,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
 
-    MPL_free(MPIDI_POSIX_eager_fbox_control_global.seg);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
