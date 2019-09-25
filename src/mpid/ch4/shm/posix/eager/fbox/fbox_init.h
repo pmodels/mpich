@@ -66,14 +66,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks[i] = 0;
 
     /* Create region with one fastbox for every pair of local processes. */
-    mpi_errno =
-        MPIDU_shm_seg_alloc(MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local *
-                            sizeof(MPIDI_POSIX_fastbox_t), (void **) &fastboxes_p, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
+    size_t len =
+        MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local * sizeof(MPIDI_POSIX_fastbox_t);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.shm_ptr, MPL_MEM_SHM);
+    mpi_errno =
+        MPIDU_shm_seg_alloc(len, &MPIDI_POSIX_eager_fbox_control_global.shm_ptr, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
+
+    fastboxes_p = (MPIDI_POSIX_fastbox_t *) MPIDI_POSIX_eager_fbox_control_global.shm_ptr;
 
     /* Allocate table of pointers to fastboxes */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in,
@@ -122,7 +123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
 
-    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
+    mpi_errno = MPIDU_shm_seg_free(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
