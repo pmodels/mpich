@@ -48,10 +48,6 @@ HYD_status HYD_rmk_query_node_list(const char *rmk, int *node_count, struct HYD_
     else
         status = rmk_query_node_list_fns[i] (node_count, nodes);
 
-  fn_exit:
     HYD_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
