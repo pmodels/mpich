@@ -169,7 +169,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (size == 1) {
         memcpy(segment, bc, bc_len);
     } else {
-        int domain = roots_only ? MPIR_PMI_DOMAIN_NODE_ROOTS : MPIR_PMI_DOMAIN_ALL;
+        MPIR_PMI_DOMAIN domain = roots_only ? MPIR_PMI_DOMAIN_NODE_ROOTS : MPIR_PMI_DOMAIN_ALL;
         mpi_errno = MPIR_pmi_allgather_shm(bc, bc_len, segment, recv_bc_len, domain);
         MPIR_ERR_CHECK(mpi_errno);
 
