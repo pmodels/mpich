@@ -6,7 +6,7 @@
 
 #include "xpmem_impl.h"
 #include "xpmem_noinline.h"
-#include "build_nodemap.h"
+#include "mpir_nodemap.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 
