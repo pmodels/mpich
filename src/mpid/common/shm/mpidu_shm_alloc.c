@@ -234,7 +234,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
      * inside depend on PMI versions, and all processes need participate.
      */
     MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
-    if (num_local > 1) {
+    if (num_local != 1) {
+        MPIR_Assert(num_local > 1);
         if (local_rank > 0) {
             /* non-root attach shm segment */
             mpl_err = MPL_shm_hnd_deserialize(memory->hnd, serialized_hnd, strlen(serialized_hnd));
