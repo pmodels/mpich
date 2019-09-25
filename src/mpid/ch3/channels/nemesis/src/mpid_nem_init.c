@@ -251,11 +251,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Request shared collectives barrier vars region */
-    mpi_errno = MPIDU_shm_seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
-                                     (void **)&MPID_nem_mem_region.barrier_vars, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory,
                                  num_local, local_rank, MPID_nem_mem_region.local_procs[0],
@@ -270,10 +265,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif
     }
 
-    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
-
-    /* init shared collectives barrier region */
-    mpi_errno = MPID_nem_barrier_vars_init(MPID_nem_mem_region.barrier_vars);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* local procs barrier */

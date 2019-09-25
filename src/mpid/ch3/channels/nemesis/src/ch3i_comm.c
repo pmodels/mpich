@@ -18,15 +18,6 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
 
-#ifndef ENABLED_SHM_COLLECTIVES
-    goto fn_exit;
-#endif
-    
-    /* set up intranode barrier iff this is an intranode communicator */
-    if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        comm->dev.ch.barrier_vars = NULL;
-    }
-    
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
     return mpi_errno;
@@ -40,40 +31,9 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
-#ifndef ENABLED_SHM_COLLECTIVES
-    goto fn_exit;
-#endif
-    
-    if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
-            OPA_write_barrier();
-            OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
-        }
-    }
     
  fn_exit: ATTRIBUTE((unused))
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_DESTROY);
-    return mpi_errno;
-}
-
-int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
-    if (MPID_nem_mem_region.local_rank == 0)
-        for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
-        {
-            OPA_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
-            OPA_store_int(&barrier_region[i].usage_cnt, 0);
-            OPA_store_int(&barrier_region[i].cnt, 0);
-            OPA_store_int(&barrier_region[i].sig0, 0);
-            OPA_store_int(&barrier_region[i].sig, 0);
-        }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_BARRIER_VARS_INIT);
     return mpi_errno;
 }
 

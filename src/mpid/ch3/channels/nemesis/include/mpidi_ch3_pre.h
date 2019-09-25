@@ -31,7 +31,6 @@
     MPIDI_NEM_PKT_NETMOD
 
 typedef struct {
-    struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */
     void *netmod_priv;      /* netmod communicator private data */
 } MPIDI_CH3I_CH_comm_t;
     
