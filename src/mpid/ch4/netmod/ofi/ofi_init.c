@@ -1000,8 +1000,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
     int i = 0;
-    int barrier[2] = { 0 };
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FINALIZE);
@@ -1016,11 +1014,12 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    /* Barrier over allreduce, but force non-immediate send */
-    MPIDI_OFI_global.max_buffered_send = 0;
-    mpi_errno =
-        MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM, MPIR_Process.comm_world,
-                       &errflag);
+    /* We need barrier here to ensure all processes are in finalize -- so
+     * none of the process is still in MPI_Recv, for example.
+     * FIXME: for cleaner code, we should call barrier at the beginning of
+     *        MPIR_Finalize
+     */
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
