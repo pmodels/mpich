@@ -110,6 +110,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             } else if (rank == 0) {
+#ifdef HAVE_ERROR_CHECKING
+                /* when error checking is enabled, the amount of data sender sent is retrieved from
+                 * status. If it does not match the expected datasize, mpi_errno is set. The received
+                 * size is placed on shm_buffer, followed by the errflag, followed by actual data
+                 * with an offset of (2*cacheline_size) bytes from the starting address */
+                MPI_Status status;
+                MPI_Aint recv_bytes;
+                mpi_errno =
+                    MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
+                MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
+                MPIR_Memcpy(bcast_data_addr, &recv_bytes, sizeof(int));
+                /* It is necessary to copy the errflag as well to handle the case when non-root
+                 * becomes temporary root as part of compositions (or smp aware colls). These temp
+                 * roots might expect same data as other ranks but different from the actual root.
+                 * So only datasize mismatch handling is not sufficient */
+                MPIR_Memcpy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
+                            sizeof(MPIR_Errflag_t));
+                if ((int) recv_bytes != count) {
+                    /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
+                    *errflag = MPIR_ERR_OTHER;
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
+#else
+                /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
                               MPI_STATUS_IGNORE, errflag);
@@ -121,10 +155,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
+#endif
             }
         } else if (rank == 0) {
+#ifdef HAVE_ERROR_CHECKING
+            /* When error checking is enabled, place the datasize in shm_buf first, followed by the
+             * errflag, followed by the actual data with an offset of (2*cacheline_size) bytes from
+             * the starting address */
+            MPIR_Memcpy(bcast_data_addr, &count, sizeof(int));
+            /* It is necessary to copy the errflag as well to handle the case when non-root
+             * becomes root as part of compositions (or smp aware colls). These roots might
+             * expect same data as other ranks but different from the actual root. So only
+             * datasize mismatch handling is not sufficient */
+            MPIR_Memcpy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
+                        sizeof(MPIR_Errflag_t));
+            mpi_errno =
+                MPIR_Localcopy(local_buf, count, datatype,
+                               (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                               datatype);
+#else
             mpi_errno = MPIR_Localcopy(local_buf, count, datatype,
                                        bcast_data_addr, count, datatype);
+#endif
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_OTHER;
@@ -173,7 +225,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         /* For bcast only non-root ranks copy data from shm buffer to user buffer and in case of
          * allreduce all ranks copy data from shm buffer to their user buffer */
         MPIR_ERR_CHKANDJUMP(!bcast_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+#ifdef HAVE_ERROR_CHECKING
+        if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) && (rank != root)) {
+            /* When error checking is enabled, collective is Bcast, and rank is not root,
+             * datasize is copied out from shm_buffer and compared against the count a rank was
+             * expecting. Also, the errflag is copied out. In case of mismatch mpi_errno is set.
+             * Actual data starts after (2*cacheline_size) bytes */
+            int recv_bytes, recv_errflag;
+            MPIR_Memcpy(&recv_bytes, bcast_data_addr, sizeof(int));
+            MPIR_Memcpy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
+                        sizeof(int));
+            if (recv_bytes != count || recv_errflag != MPI_SUCCESS) {
+                /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
+                *errflag = MPIR_ERR_OTHER;
+                MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch",
+                              "**collective_size_mismatch %d %d", recv_bytes, count);
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+            mpi_errno =
+                MPIR_Localcopy((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                               datatype, local_buf, count, datatype);
+        } else {
+            mpi_errno =
+                MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
+        }
+#else
         mpi_errno = MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
+#endif
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_OTHER;
@@ -184,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -340,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
