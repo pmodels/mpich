@@ -40,7 +40,7 @@ typedef struct {
     /* Active recv requests array */
     MPIR_Request **active_rreq;
 
-    MPIDU_shm_seg_t memory;
+    void *shm_ptr;
 
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */

@@ -10,6 +10,7 @@
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
 #include "mpir_pmi.h"
+#include "mpidu_shm_seg.h"
 
 typedef struct Init_shm_barrier {
     OPA_int_t val;
