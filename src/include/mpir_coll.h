@@ -89,6 +89,9 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
 /* intracomm-only functions */
+int MPIR_Allgatherv_fallback(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, const int *recvcounts, const int *displs,
+                             MPI_Datatype recvtype, MPIR_Comm * comm_pt, MPIR_Errflag_t * errflag);
 int MPIR_Allgatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                void *recvbuf, const int *recvcounts, const int *displs,
                                MPI_Datatype recvtype, MPIR_Comm * comm_pt,

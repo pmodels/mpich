@@ -113,12 +113,12 @@ int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* a 64k memcpy is small (< 1ms), MPI_IN_PLACE not critical here */
-    void *recv_buf = segment + num_nodes * recv_bc_len;
+    void *recv_buf = segment + local_size * recv_bc_len;
     if (rank == node_root) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
         MPIR_Comm *allgather_comm = MPIR_Process.comm_world->node_roots_comm;
-        MPIR_Allgatherv_impl(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
-                             recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
+        MPIR_Allgatherv_fallback(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
+                                 recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
 
     }
 
