@@ -11,11 +11,6 @@
 #define MPIDU_SHM_MAX_FNAME_LEN 256
 #define MPIDU_SHM_CACHE_LINE_LEN 64
 
-typedef struct MPIDU_shm_seg_info {
-    size_t size;
-    char *addr;
-} MPIDU_shm_seg_info_t;
-
 int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class);
 int MPIDU_shm_seg_commit(void **ptr, int num_local, int local_rank,
                          int local_procs_0, int rank, MPL_memory_class class);

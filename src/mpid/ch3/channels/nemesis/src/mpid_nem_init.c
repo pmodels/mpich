@@ -120,7 +120,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_queue_t *recv_queues_p = NULL;
     MPID_nem_queue_t *free_queues_p = NULL;
 
-    MPIR_CHKPMEM_DECL(9);
+    MPIR_CHKPMEM_DECL(8);
 
     /* TODO add compile-time asserts (rather than run-time) and convert most of these */
 
@@ -159,8 +159,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region", MPL_MEM_SHM);
 #endif /* MEM_REGION_IN_HEAP */
 
-    MPID_nem_mem_region.num_seg        = 7;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIDU_shm_seg_info_t *, MPID_nem_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments", MPL_MEM_SHM);
     MPID_nem_mem_region.rank           = pg_rank;
     MPID_nem_mem_region.num_local      = num_local;
     MPID_nem_mem_region.num_procs      = num_procs;
