@@ -252,14 +252,14 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory,
+    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.shm_ptr,
                                  num_local, local_rank, MPID_nem_mem_region.local_procs[0],
                                  MPID_nem_mem_region.rank, MPL_MEM_SHM);
     /* check_alloc steps */
-    if (MPID_nem_mem_region.memory.symmetrical == 1) {
+    if (MPIDU_shm_seg_is_symm(MPID_nem_mem_region.shm_ptr) == 1) {
         MPID_nem_asymm_base_addr = NULL;
     } else {
-        MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;
+        MPID_nem_asymm_base_addr = MPID_nem_mem_region.shm_ptr;
 #ifdef MPID_NEM_SYMMETRIC_QUEUES
         MPIR_ERR_INTERNALANDJUMP(mpi_errno, "queues are not symmetrically allocated as expected");
 #endif

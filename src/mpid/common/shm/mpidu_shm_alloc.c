@@ -6,6 +6,7 @@
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 #include "mpidu_init_shm.h"
+#include "mpidu_shm_seg.h"
 
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -35,6 +36,15 @@ static struct {
     alloc_elem_t *head, *tail;
 } allocq = {
 0};
+
+typedef struct memory_list {
+    void *ptr;
+    MPIDU_shm_seg_t *memory;
+    struct memory_list *next;
+} memory_list_t;
+
+static memory_list_t *memory_head = NULL;
+static memory_list_t *memory_tail = NULL;
 
 static int check_alloc(MPIDU_shm_seg_t * memory, int num_local, int local_rank);
 
@@ -97,7 +107,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
     goto fn_exit;
 }
 
-/* MPIDU_shm_seg_commit(memory, num_local, local_rank)
+/* MPIDU_shm_seg_commit(ptr, num_local, local_rank)
 
    This function allocates a shared memory segment large enough to
    hold all of the regions previously requested by calls to
@@ -112,14 +122,16 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
    At least one call to MPIDU_SHM_Seg_alloc() must be made before
    calling MPIDU_SHM_Seg_commit().
  */
-int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank,
+int MPIDU_shm_seg_commit(void **ptr, int num_local, int local_rank,
                          int local_procs_0, int rank, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
     size_t size_left;
-    MPIR_CHKPMEM_DECL(1);
+    MPIDU_shm_seg_t *memory = NULL;
+    memory_list_t *memory_node = NULL;
+    MPIR_CHKPMEM_DECL(3);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
@@ -131,6 +143,11 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank
     /* allocate an area to check if the segment was allocated symmetrically */
     mpl_err = MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p, class);
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
+
+    MPIR_CHKPMEM_MALLOC(memory, MPIDU_shm_seg_t *, sizeof(*memory), mpi_errno, "memory_handle",
+                        MPL_MEM_OTHER);
+    MPIR_CHKPMEM_MALLOC(memory_node, memory_list_t *, sizeof(*memory_node), mpi_errno,
+                        "memory_node", MPL_MEM_OTHER);
 
     mpl_err = MPL_shm_hnd_init(&(memory->hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
@@ -192,6 +209,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank
 
     /* assign sections of the shared memory segment to their pointers */
 
+    *ptr = current_addr;
     start_addr = current_addr;
     size_left = segment_len;
 
@@ -214,6 +232,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank
     mpi_errno = check_alloc(memory, num_local, local_rank);
     MPIR_ERR_CHECK(mpi_errno);
 
+    memory_node->ptr = *ptr;
+    memory_node->memory = memory;
+    LL_APPEND(memory_head, memory_tail, memory_node);
+
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
     /* reset segment_len to zero */
@@ -231,12 +253,24 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, int num_local, int local_rank
 }
 
 /* MPIDU_SHM_Seg_destroy() free the shared memory segment */
-int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
+int MPIDU_shm_seg_destroy(void *ptr, int num_local)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
+    MPIDU_shm_seg_t *memory = NULL;
+    memory_list_t *el = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
+
+    /* retrieve memory handle for baseaddr */
+    LL_FOREACH(memory_head, el) {
+        if (el->ptr == ptr) {
+            memory = el->memory;
+            LL_DELETE(memory_head, memory_tail, el);
+            MPL_free(el);
+            break;
+        }
+    }
 
     if (num_local == 1)
         MPL_free(memory->base_addr);
@@ -248,10 +282,27 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 
   fn_exit:
     MPL_shm_hnd_finalize(&(memory->hnd));
+    MPL_free(memory);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIDU_shm_seg_is_symm(void *ptr)
+{
+    int ret = -1;
+    memory_list_t *el;
+
+    /* retrieve memory handle for baseaddr */
+    LL_FOREACH(memory_head, el) {
+        if (el->ptr == ptr) {
+            ret = (el->memory->symmetrical) ? 1 : 0;
+            break;
+        }
+    }
+
+    return ret;
 }
 
 /* check_alloc() checks to see whether the shared memory segment is

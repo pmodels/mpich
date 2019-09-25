@@ -14,7 +14,7 @@
  *set MPID_MAX_BC_SIZE to maximum possible bc size */
 #define MPID_MAX_BC_SIZE 4096
 
-static MPIDU_shm_seg_t memory;
+static void *shm_ptr = NULL;
 static char *segment;
 static int *rank_map;
 
@@ -26,7 +26,7 @@ int MPIDU_bc_table_destroy(void)
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDU_shm_seg_destroy(&memory, local_size);
+    mpi_errno = MPIDU_shm_seg_destroy(shm_ptr, local_size);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rank_map) {
@@ -163,7 +163,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno =
-        MPIDU_shm_seg_commit(&memory, local_size, local_rank, local_leader, rank, MPL_MEM_ADDRESS);
+        MPIDU_shm_seg_commit(&shm_ptr, local_size, local_rank, local_leader, rank, MPL_MEM_ADDRESS);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {
