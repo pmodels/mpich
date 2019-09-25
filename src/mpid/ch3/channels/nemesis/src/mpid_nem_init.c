@@ -115,6 +115,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     char  *bc_val          = NULL;
     int    val_max_remaining;
     int    grank;
+    size_t len;
     MPID_nem_fastbox_t *fastboxes_p = NULL;
     MPID_nem_cell_t (*cells_p)[MPID_NEM_NUM_CELLS];
     MPID_nem_queue_t *recv_queues_p = NULL;
@@ -233,24 +234,22 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Request fastboxes region */
-    mpi_errno = MPIDU_shm_seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
-                                     (void **)&fastboxes_p, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
-    
+    size_t fbox_len = MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))),
+                              MPID_NEM_ASYMM_NULL_VAL);
+
     /* Request data cells region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
+    size_t cells_len = num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t);
 
     /* Request free q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
+    size_t freeQ_len = num_local * sizeof(MPID_nem_queue_t);
 
     /* Request recv q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
+    size_t recvQ_len = num_local * sizeof(MPID_nem_queue_t);
+
+    len = fbox_len + cells_len + freeQ_len + recvQ_len;
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.shm_ptr, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_alloc(len, &MPID_nem_mem_region.shm_ptr, MPL_MEM_SHM);
     /* check_alloc steps */
     if (MPIDU_shm_seg_is_symm(MPID_nem_mem_region.shm_ptr) == 1) {
         MPID_nem_asymm_base_addr = NULL;
@@ -262,6 +261,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     }
 
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
+
+    fastboxes_p = (MPID_nem_fastbox_t *) MPID_nem_mem_region.shm_ptr;
+    cells_p = (MPID_nem_cell_t (*)[MPID_NEM_NUM_CELLS])((char *) fastboxes_p + fbox_len);
+    free_queues_p = (MPID_nem_queue_t *)((char *) cells_p + cells_len);
+    recv_queues_p = (MPID_nem_queue_t *)((char *) free_queues_p + freeQ_len);
 
     /* local procs barrier */
     mpi_errno = MPIDU_Init_shm_barrier();

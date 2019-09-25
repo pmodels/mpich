@@ -170,15 +170,11 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
 
-    /* Allocate a shared counter to track the amount of shared memory created per node for
-     * intra-node collectives */
-    mpi_errno =
-        MPIDU_shm_seg_alloc(sizeof(int), (void **) &MPIDI_POSIX_shm_limit_counter, MPL_MEM_SHM);
+    /* Actually allocate the segment and assign regions to the pointers */
+    mpi_errno = MPIDU_shm_seg_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr, MPL_MEM_SHM);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_global.shm_ptr, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
@@ -202,7 +198,7 @@ int MPIDI_POSIX_coll_finalize(void)
 
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
-    mpi_errno = MPIDU_shm_seg_destroy(MPIDI_POSIX_global.shm_ptr);
+    mpi_errno = MPIDU_shm_seg_free(MPIDI_POSIX_global.shm_ptr);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
