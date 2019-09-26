@@ -11,7 +11,7 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = transp_datatype non_zero_root sendrecvl twovec dtpack \
                   allredtrace commcreatep allredtrace commcreatep timer \
-                  manyrma nestvec nestvec2 indexperf
+                  manyrma nestvec nestvec2 indexperf send_latency
 
 # Force all tests to be compiled with optimization 
 AM_CFLAGS        = -O

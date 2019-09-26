@@ -10,3 +10,4 @@ timer 1
 # The commcreatep test looks at how communicator creation scales with group
 # size.
 commcreatep 16
+send_latency 2
