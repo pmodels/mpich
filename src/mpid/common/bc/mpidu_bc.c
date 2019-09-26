@@ -130,7 +130,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_commit");
     }
 
-    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
@@ -234,7 +234,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
     }
 
-    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
@@ -347,7 +347,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
     }
 
-    mpi_errno = MPIR_pmi_barrier(MPIR_PMI_DOMAIN_ALL);
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!roots_only) {
