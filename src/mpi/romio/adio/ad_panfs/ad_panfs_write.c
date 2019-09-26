@@ -18,6 +18,11 @@ void ADIOI_PANFS_WriteContig(ADIO_File fd, const void *buf, int count,
     MPI_Count err = -1, datatype_size, len;
     static char myname[] = "ADIOI_PANFS_WRITECONTIG";
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 

@@ -22,6 +22,11 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
     static char myname[] = "ADIOI_NFS_READCONTIG";
     char *p;
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 
