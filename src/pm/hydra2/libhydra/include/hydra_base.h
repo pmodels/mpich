@@ -148,7 +148,7 @@ typedef enum {
     HYD_ERR_SOCK,
     HYD_ERR_INVALID_PARAM,
     HYD_ERR_INTERNAL,
-    HYD_ERR_PORT_IN_USE,
+    HYD_ERR_PORT_IN_USE
 } HYD_status;
 
 #endif /* HYDRA_BASE_H_INCLUDED */
