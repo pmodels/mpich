@@ -92,10 +92,15 @@ int MPIR_Gatherv_allcomm_linear(const void *sendbuf,
             }
         }
         /* ... then wait for *all* of them to finish: */
+        for(i = reqs-1 ; i>=0; i--){
+            MPIC_Wait(reqarray[i], errflag);
+            printf("gatherv got %d\n", i);
+        }
+        /* 
         mpi_errno = MPIC_Waitall(reqs, reqarray, starray, errflag);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
-
+        */
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < reqs; i++) {

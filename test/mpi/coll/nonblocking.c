@@ -75,6 +75,18 @@ int main(int argc, char **argv)
         types[i] = MPI_INT;
     }
 
+    if (rank ){
+        MPI_Send(sbuf, NUM_INTS, MPI_INT, 0, 1, comm);
+    } else if (rank == 0) {
+        for (i=1;i<size;i++){
+            MPI_Recv(rbuf, NUM_INTS, MPI_INT, i, 1, comm, MPI_STATUS_IGNORE);
+            printf("Received message from %d\n", i);
+        }
+    }
+
+    MPI_Barrier(comm);
+
+    /*
     MPI_Ibarrier(comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
@@ -90,9 +102,14 @@ int main(int argc, char **argv)
         MPI_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPI_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
+    */
+    printf("[ %d ] start MPI_Igatherv\n", rank);
+    MPI_Gatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm);
+    // MPI_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
+    // MPI_Wait(&req, MPI_STATUS_IGNORE);
+    printf("[ %d ] -done MPI_Igatherv\n", rank);
 
+    /*
     if (0 == rank)
         MPI_Igatherv(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, rcounts, rdispls, MPI_INT, 0, comm,
                      &req);
@@ -190,6 +207,7 @@ int main(int argc, char **argv)
     MPI_Iexscan(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    */
     if (sbuf)
         free(sbuf);
     if (rbuf)

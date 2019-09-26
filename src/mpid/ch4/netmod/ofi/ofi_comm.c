@@ -14,6 +14,12 @@
 #include "mpidu_bc.h"
 #include "ofi_noinline.h"
 
+static char t[100];
+char * print_name(unsigned char * s){
+    sprintf(t, "%02x%02x", s[2],s[3]);
+    return t;
+}
+
 int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -34,6 +40,7 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
         void *table;
         int *rank_map;
         int recv_bc_len;
+        printf("[%d] addr = %s\n", comm->rank, print_name(MPIDI_OFI_global.addrname));
         MPIDU_bc_allgather(MPIDI_OFI_global.addrname,
                            MPIDI_OFI_global.addrnamelen, TRUE, &table, &rank_map, &recv_bc_len);
 
@@ -42,6 +49,9 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
             if (rank_map[i] >= 0) {
                 mpi_errno = MPIDI_OFI_av_insert(i, (char *) table + recv_bc_len * rank_map[i]);
                 MPIR_ERR_CHECK(mpi_errno);
+                if (comm->rank==0){
+                    printf("--[%d] inserting addr %d = %s\n", comm->rank, i, print_name((char*)table+recv_bc_len*rank_map[i]));
+                }
             }
         }
         MPIDU_bc_table_destroy();
