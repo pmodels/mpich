@@ -60,13 +60,13 @@ typedef struct {
     int src_rank;
 
     uint64_t src_offset;
-    uint64_t sreq_ptr;
+    MPIR_Request *sreq_ptr;
     uint64_t am_hdr_src;
     uint64_t rma_key;
 } MPIDI_OFI_lmt_msg_payload_t;
 
 typedef struct {
-    uint64_t sreq_ptr;
+    MPIR_Request *sreq_ptr;
 } MPIDI_OFI_ack_msg_payload_t;
 
 typedef struct MPIDI_OFI_am_header_t {
@@ -105,7 +105,7 @@ typedef struct {
     uint64_t lmt_cntr;
     struct fid_mr *lmt_mr;
     void *pack_buffer;
-    void *rreq_ptr;
+    MPIR_Request *rreq_ptr;
     void *am_hdr;
     int (*target_cmpl_cb) (struct MPIR_Request * req);
     uint16_t am_hdr_sz;

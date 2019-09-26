@@ -911,8 +911,8 @@ static int put_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PUT_IOV_TARGET_CMPL_CB);
 
     ack_msg.src_rank = MPIDIG_REQUEST(rreq, rank);
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -948,8 +948,8 @@ static int acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
 
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->areq.req_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -985,8 +985,8 @@ static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_IOV_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_IOV_TARGET_CMPL_CB);
 
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->areq.req_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
