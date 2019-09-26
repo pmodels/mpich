@@ -22,6 +22,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
     static char myname[] = "ADIOI_NFS_WRITECONTIG";
     char *p;
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset) count;
 
