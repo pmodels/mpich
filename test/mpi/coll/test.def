@@ -1,0 +1,6 @@
+include: c/mpi.def
+page: test, mpi_frame
+    module: c
+
+    $print Hello $mpi_id / $mpi_size
+
