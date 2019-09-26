@@ -194,7 +194,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
         MPIDIG_enqueue_posted(rreq, &MPIDIG_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
     } else {
-        MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = (uint64_t) rreq;
+        MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
     }
   fn_exit:

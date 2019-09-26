@@ -69,7 +69,7 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
 #else
     if (type == MPIDIG_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
-        ssend_req.sreq_ptr = (uint64_t) sreq;
+        ssend_req.sreq_ptr = sreq;
 
         /* Increment the completion counter once to account for the extra message that needs to come
          * back from the receiver to indicate completion. */
