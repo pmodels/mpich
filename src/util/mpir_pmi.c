@@ -168,7 +168,7 @@ const char *MPIR_pmi_job_id(void)
 }
 
 /* wrapper functions */
-int MPIR_pmi_kvs_put(char *key, char *val)
+int MPIR_pmi_kvs_put(const char *key, const char *val)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -188,7 +188,7 @@ int MPIR_pmi_kvs_put(char *key, char *val)
     pmix_value_t value;
     value.type = PMIX_STRING;
     value.data.string = val;
-    pmi_errno = PMIx_Put(PMIX_LOCAL, key, &value);
+    pmi_errno = PMIx_Put(PMIX_GLOBAL, key, &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
     pmi_errno = PMIx_Commit();
@@ -203,7 +203,7 @@ int MPIR_pmi_kvs_put(char *key, char *val)
 }
 
 /* NOTE: src is a hint, use src = -1 if not known */
-int MPIR_pmi_kvs_get(int src, char *key, char *val, int val_size)
+int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -245,7 +245,7 @@ int MPIR_pmi_kvs_get(int src, char *key, char *val, int val_size)
 
 /* ---- utils functions ---- */
 
-int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain)
+int MPIR_pmi_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -264,35 +264,10 @@ int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain)
     int flag = 1;
     PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
 
-    if (domain == MPIR_PMI_DOMAIN_LOCAL) {
-        /* use local proc set */
-        /* FIXME: we could simply construct the proc set from MPIR_Process.node_local_map */
-        pmix_proc_t *procs;
-        size_t nprocs;
-        pmix_value_t *pvalue = NULL;
-
-        pmi_errno = PMIx_Get(&pmix_proc, PMIX_HOSTNAME, NULL, 0, &pvalue);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
-                             "**pmix_get %d", pmi_errno);
-        const char *nodename = (const char *) pvalue->data.string;
-
-        pmi_errno = PMIx_Resolve_peers(nodename, pmix_proc.nspace, &procs, &nprocs);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                             "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
-
-        pmi_errno = PMIx_Fence(procs, nprocs, info, 1);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
-                             "**pmix_fence %d", pmi_errno);
-
-        PMIX_VALUE_RELEASE(pvalue);
-        PMIX_PROC_FREE(procs, nprocs);
-
-    } else {
-        /* use global wildcard proc set */
-        pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                             "**pmix_fence", "**pmix_fence %d", pmi_errno);
-    }
+    /* use global wildcard proc set */
+    pmi_errno = PMIx_Fence(&pmix_wcproc, 1, info, 1);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_fence", "**pmix_fence %d", pmi_errno);
     PMIX_INFO_FREE(info, 1);
 #endif
 
@@ -300,6 +275,41 @@ int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_pmi_barrier_local(void)
+{
+#if defined(USE_PMIX_API)
+    int mpi_errno = MPI_SUCCESS;
+    /* FIXME: we could simply construct the proc set from MPIR_Process.node_local_map */
+    pmix_proc_t *procs;
+    size_t nprocs;
+    pmix_value_t *pvalue = NULL;
+
+    pmi_errno = PMIx_Get(&pmix_proc, PMIX_HOSTNAME, NULL, 0, &pvalue);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_get",
+                         "**pmix_get %d", pmi_errno);
+    const char *nodename = (const char *) pvalue->data.string;
+
+    pmi_errno = PMIx_Resolve_peers(nodename, pmix_proc.nspace, &procs, &nprocs);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
+
+    pmi_errno = PMIx_Fence(procs, nprocs, info, 1);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmix_fence",
+                         "**pmix_fence %d", pmi_errno);
+
+    PMIX_VALUE_RELEASE(pvalue);
+    PMIX_PROC_FREE(procs, nprocs);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+#else
+    /* If local barrier is not supported (PMI1 and PMI2), simply fallback */
+    return MPIR_pmi_barrier();
+#endif
 }
 
 /* ---- static functions ---- */
