@@ -168,7 +168,7 @@ const char *MPIR_pmi_job_id(void)
 }
 
 /* wrapper functions */
-int MPIR_pmi_kvs_put(char *key, char *val)
+int MPIR_pmi_kvs_put(const char *key, const char *val)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -203,7 +203,7 @@ int MPIR_pmi_kvs_put(char *key, char *val)
 }
 
 /* NOTE: src is a hint, use src = -1 if not known */
-int MPIR_pmi_kvs_get(int src, char *key, char *val, int val_size)
+int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;

@@ -48,9 +48,9 @@ const char *MPIR_pmi_job_id(void);
 /* * barrier or kvs fence. "domain" is a hint for efficiency (eg PMIx) */
 int MPIR_pmi_barrier(MPIR_PMI_DOMAIN domain);
 /* * put, to global domain */
-int MPIR_pmi_kvs_put(char *key, char *val);
+int MPIR_pmi_kvs_put(const char *key, const char *val);
 /* * get. src in [0..size-1] or -1 for anysrc. val_size <= MPIR_pmi_max_val_size(). */
-int MPIR_pmi_kvs_get(int src, char *key, char *val, int val_size);
+int MPIR_pmi_kvs_get(int src, const char *key, char *val, int val_size);
 
 /* * bcast from rank 0 to ALL or NODE_ROOTS processes. Both are collective over ALL */
 int MPIR_pmi_bcast(void *buf, int size, MPIR_PMI_DOMAIN domain);
