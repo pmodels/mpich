@@ -281,7 +281,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     lmt_info = &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_info);
     lmt_info->context_id = comm->context_id;
     lmt_info->src_rank = comm->rank;
-    lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data;     /* MR_BASIC */
+    lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) (uintptr_t) data; /* MR_BASIC */
     lmt_info->sreq_ptr = sreq;
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         lmt_info->rma_key = MPIDI_OFI_mr_key_alloc();
