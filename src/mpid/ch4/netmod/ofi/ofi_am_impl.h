@@ -282,7 +282,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     lmt_info->context_id = comm->context_id;
     lmt_info->src_rank = comm->rank;
     lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data;     /* MR_BASIC */
-    lmt_info->sreq_ptr = (uint64_t) sreq;
+    lmt_info->sreq_ptr = sreq;
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         lmt_info->rma_key = MPIDI_OFI_mr_key_alloc();
     } else {
@@ -407,7 +407,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
         MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
         lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = (uint64_t) sreq;
+        lreq_hdr.sreq_ptr = sreq;
         MPIDIG_REQUEST(sreq, req->lreq).src_buf = buf;
         MPIDIG_REQUEST(sreq, req->lreq).count = count;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);

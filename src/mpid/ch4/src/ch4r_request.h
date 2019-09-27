@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_request_copy(MPIR_Request * dest, MPIR_Requ
 #endif
 
     MPIDIG_REQUEST(dest, req) = MPIDIG_REQUEST(src, req);;
-    MPIDIG_REQUEST(dest, req->rreq.request) = (uint64_t) dest;
+    MPIDIG_REQUEST(dest, req->rreq.request) = dest;
     MPIDIG_REQUEST(dest, datatype) = MPIDIG_REQUEST(src, datatype);
     MPIDIG_REQUEST(dest, buffer) = MPIDIG_REQUEST(src, buffer);
     MPIDIG_REQUEST(dest, count) = MPIDIG_REQUEST(src, count);

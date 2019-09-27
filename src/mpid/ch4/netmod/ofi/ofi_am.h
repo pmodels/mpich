@@ -176,7 +176,7 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_RECV);
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = (uint64_t) req;
+    msg.rreq_ptr = req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
     mpi_errno =
         MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
