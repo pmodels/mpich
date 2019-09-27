@@ -830,7 +830,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     resultv.count = 1;
     comparev.addr = (void *) compare_addr;
     comparev.count = 1;
-    targetv.addr = (uint64_t) tbuffer;
+    targetv.addr = (uint64_t) (uintptr_t) tbuffer;
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);;
 
@@ -1364,7 +1364,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     originv.count = 1;
     resultv.addr = (void *) rbuffer;
     resultv.count = 1;
-    targetv.addr = (uint64_t) tbuffer;
+    targetv.addr = (uint64_t) (uintptr_t) tbuffer;
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
 
