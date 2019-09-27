@@ -34,7 +34,7 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_
     }
 
     MPIDIG_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
-    MPIDIG_REQUEST(req, req->request) = (uint64_t) req;
+    MPIDIG_REQUEST(req, req->request) = req;
     /* MPIDI_CS_ENTER(); */
     DL_APPEND(MPIDI_global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
