@@ -249,7 +249,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     len = fbox_len + cells_len + freeQ_len + recvQ_len;
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_alloc(len, &MPID_nem_mem_region.shm_ptr, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_alloc(len, &MPID_nem_mem_region.shm_ptr);
     /* check_alloc steps */
     if (MPIDU_shm_seg_is_symm(MPID_nem_mem_region.shm_ptr) == 1) {
         MPID_nem_asymm_base_addr = NULL;

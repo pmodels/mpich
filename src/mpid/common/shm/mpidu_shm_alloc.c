@@ -47,7 +47,7 @@ static asym_check_region *asym_check_region_p = NULL;
 
    This function allocates a shared memory segment
  */
-int MPIDU_shm_seg_alloc(size_t len, void **ptr, MPL_memory_class class)
+int MPIDU_shm_seg_alloc(size_t len, void **ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
@@ -85,7 +85,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr, MPL_memory_class class)
         char *addr;
 
         MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment", class);
+                            "segment", MPL_MEM_SHM);
 
         memory->base_addr = addr;
         current_addr =

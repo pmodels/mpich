@@ -70,8 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
         MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local * sizeof(MPIDI_POSIX_fastbox_t);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno =
-        MPIDU_shm_seg_alloc(len, &MPIDI_POSIX_eager_fbox_control_global.shm_ptr, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_alloc(len, &MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     fastboxes_p = (MPIDI_POSIX_fastbox_t *) MPIDI_POSIX_eager_fbox_control_global.shm_ptr;

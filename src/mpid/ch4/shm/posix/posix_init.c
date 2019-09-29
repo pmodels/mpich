@@ -171,7 +171,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_shm_seg_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
