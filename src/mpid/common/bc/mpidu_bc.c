@@ -152,7 +152,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         *ret_bc_len = recv_bc_len;
     }
 
-    mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment, MPL_MEM_ADDRESS);
+    mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {
