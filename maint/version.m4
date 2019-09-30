@@ -29,8 +29,8 @@ m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 #     3. If any interfaces have been added since the last public
 #     release, then increment age.
 #
-#     4. If any interfaces have been removed since the last public
-#     release, then set age to 0.
+#     4. If any interfaces have been removed or changed since the last
+#     public release, then set age to 0.
 
 # libmpi so version only includes functionality defined in the MPI
 # standard, and does not include MPIX_ functions and C++ bindings.
