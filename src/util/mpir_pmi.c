@@ -187,7 +187,7 @@ int MPIR_pmi_kvs_put(const char *key, const char *val)
 #elif defined(USE_PMIX_API)
     pmix_value_t value;
     value.type = PMIX_STRING;
-    value.data.string = val;
+    value.data.string = (char *) val;
     pmi_errno = PMIx_Put(PMIX_GLOBAL, key, &value);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmix_put", "**pmix_put %d", pmi_errno);
