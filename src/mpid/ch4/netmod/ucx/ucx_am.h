@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
         MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
         lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = (uint64_t) sreq;
+        lreq_hdr.sreq_ptr = sreq;
         MPIDIG_REQUEST(sreq, req->lreq).src_buf = data;
         MPIDIG_REQUEST(sreq, req->lreq).count = count;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -415,7 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = (uint64_t) req;
+    msg.rreq_ptr = req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
     mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
                                            MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,

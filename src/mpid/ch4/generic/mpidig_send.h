@@ -57,7 +57,7 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
 
         /* Increment the completion counter once to account for the extra message that needs to come
          * back from the receiver to indicate completion. */
-        ssend_req.sreq_ptr = (uint64_t) sreq;
+        ssend_req.sreq_ptr = sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
         mpi_errno = MPIDI_NM_am_isend(rank, comm, type,
