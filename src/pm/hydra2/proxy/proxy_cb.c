@@ -437,7 +437,7 @@ HYD_status proxy_process_stderr_cb(int fd, HYD_dmx_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status proxy_send_pids_upstream()
+HYD_status proxy_send_pids_upstream(void)
 {
     HYD_status status = HYD_SUCCESS;
     struct MPX_cmd cmd;
@@ -493,7 +493,7 @@ HYD_status proxy_send_pids_upstream()
     goto fn_exit;
 }
 
-HYD_status proxy_send_exitcodes_upstream()
+HYD_status proxy_send_exitcodes_upstream(void)
 {
     HYD_status status = HYD_SUCCESS;
     struct MPX_cmd cmd;
