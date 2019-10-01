@@ -574,6 +574,7 @@ typedef enum {
 #define MPIDI_MAX_REQUEST_CACHE_COUNT 1*1024
  /* VCI */
 typedef struct MPIDI_vci {
+    char padding[64];           /* cache-alignment */
     MPID_Thread_mutex_t lock;   /* lock to protect the objects in this VCI */
     struct MPIR_Request *lw_req; /* pre-allocated completed request for this VCI */
     struct MPIR_Request *request_cache[MPIDI_MAX_REQUEST_CACHE_COUNT]; /* a cache to store requests from the global pool */
