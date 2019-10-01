@@ -13,8 +13,10 @@
 
 #define MPIDI_UCX_KVSAPPSTRLEN 4096
 
-typedef struct {
-    void *req;
+typedef union {
+    MPIR_Request *req;
+    MPI_Status *status;
+    void *buf;
 } MPIDI_UCX_ucp_request_t;
 
 typedef struct {

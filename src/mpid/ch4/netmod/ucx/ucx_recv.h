@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
         mrecv_status = &rreq->status;
     } else {
         mrecv_status = MPL_malloc(sizeof(MPI_Status), MPL_MEM_BUFFER);
-        ucp_request->req = mrecv_status;
+        ucp_request->status = mrecv_status;
     }
 
     /* populate status fields */
@@ -196,11 +196,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     }
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
-    if (ucp_request->req) {
-        message->status = *(ucp_request->req);
-        MPL_free(ucp_request->req);
+
+    if (ucp_request->status) {
+        message->status = *(ucp_request->status);
+        MPL_free(ucp_request->status);
         MPIDIU_request_complete(message);
-        ucp_request->req = NULL;
+        ucp_request->status = NULL;
         ucp_request_release(ucp_request);
     } else {
         MPIDI_UCX_REQ(message).a.ucp_request = ucp_request;
