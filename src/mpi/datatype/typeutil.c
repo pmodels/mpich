@@ -107,6 +107,12 @@ static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_INTEGER16),
 #endif
 
+    /* C++ types */
+    type_name_entry(MPI_CXX_BOOL),
+    type_name_entry(MPI_CXX_FLOAT_COMPLEX),
+    type_name_entry(MPI_CXX_DOUBLE_COMPLEX),
+    type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX),
+
     /* This entry is a guaranteed end-of-list item */
     {(MPI_Datatype) - 1, ""}
 };
