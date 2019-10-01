@@ -295,12 +295,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int rank, void *addrname)
     fi_addr_t addr;
     MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, addrname, 1, &addr, 0ULL, NULL), avmap);
     MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest = addr;
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
-#else
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
-#endif
 #endif
 
   fn_exit:
