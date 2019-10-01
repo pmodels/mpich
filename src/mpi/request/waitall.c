@@ -192,7 +192,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                     continue;
                 rc = MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
                 if (!MPIR_Request_is_persistent(request_ptrs[i])) {
-                    MPIR_Request_free(request_ptrs[i]);
+                    MPID_Request_free_safe(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
                 }
                 if (rc != MPI_SUCCESS) {
@@ -208,7 +208,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 continue;
             rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
             if (!MPIR_Request_is_persistent(request_ptrs[i])) {
-                MPIR_Request_free(request_ptrs[i]);
+                MPID_Request_free_safe(request_ptrs[i]);
                 array_of_requests[i] = MPI_REQUEST_NULL;
             }
 

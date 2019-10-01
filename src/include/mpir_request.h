@@ -417,7 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
     /* the completion path for SEND and RECV is the same at this time, modulo
      * the SENDQ hook above */
     mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_free(request_ptr);
+    MPID_Request_free_safe(request_ptr);
     *request = MPI_REQUEST_NULL;
 
     return mpi_errno;

@@ -135,7 +135,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
         MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_free(request_ptr);
+    MPID_Request_free_safe(request_ptr);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

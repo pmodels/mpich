@@ -363,21 +363,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
 
+    vci = MPIDI_vci_get(comm, rank, tag);
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_Request *rreq = MPID_Request_create_safe(MPIR_REQUEST_KIND__RECV, vci);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = rreq;
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = MPI_ANY_TAG;
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        MPIDIU_request_complete(rreq);
+        MPIDIU_request_complete_safe(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
     mpi_errno =
         MPIDI_recv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, status, request, vci);
 
@@ -532,21 +533,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
+    vci = MPIDI_vci_get(comm, rank, tag);
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_Request *rreq = MPID_Request_create_safe(MPIR_REQUEST_KIND__RECV, vci);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = rreq;
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = MPI_ANY_TAG;
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        MPIDIU_request_complete(rreq);
+        MPIDIU_request_complete_safe(rreq);
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
     mpi_errno =
         MPIDI_irecv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
 

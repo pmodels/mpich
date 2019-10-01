@@ -22,8 +22,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
 
     if (ucp_request->req)
         rreq = ucp_request->req;
-    else
-        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+    else {
+        /* Got here before returning from ucp_tag_recv_nb.
+         * Need to extract VCI information from match bits.
+         * TODO: make the solution more generic for different
+         * kinds of mapping. Right now it is hardcoded for
+         * the COMM_ONLY mapping.*/
+        int context_id, vci;
+        MPIR_Comm *comm_ptr;
+
+        context_id = MPIDI_UCX_get_context_id(info->sender_tag);
+        comm_ptr = MPIDIG_context_id_to_comm(context_id);
+        vci = MPIDI_COMM_VCI(comm_ptr); 
+        /* Does not require safety since we are at ucp_tag_recv_nb */
+        rreq = MPID_Request_create_unsafe(MPIR_REQUEST_KIND__RECV, vci);
+        MPIDI_REQUEST(rreq, vci) = vci;
+    }
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -148,13 +162,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             OPA_read_write_barrier();
 #endif
             MPIR_cc_set(&req->cc, 0);
-            MPIR_Request_free((MPIR_Request *) ucp_request->req);
+            MPID_Request_free_unsafe((MPIR_Request *) ucp_request->req);
         }
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
         if (req == NULL)
-            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+            req = MPID_Request_create_unsafe(MPIR_REQUEST_KIND__RECV, vci);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;

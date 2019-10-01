@@ -75,6 +75,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
     return ((int) ((match_bits & MPIDI_UCX_SOURCE_MASK) >> MPIDI_UCX_TAG_SHIFT));
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_context_id(uint64_t match_bits)
+{
+    return ((int) ((match_bits >> MPIDI_UCX_TAG_SHIFT) >> MPIDI_UCX_SOURCE_SHIFT));
+}
+
 #define MPIDI_UCX_CHK_STATUS(STATUS)                                    \
     do {                                                                \
         MPIR_ERR_CHKANDJUMP4((STATUS!=UCS_OK && STATUS!=UCS_INPROGRESS), \

@@ -238,6 +238,10 @@ typedef struct {
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_unsafe(int kind, int vci);
+MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_safe(int kind, int vci);
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_unsafe(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_safe(struct MPIR_Request *req);
 
 typedef struct MPIDIG_win_shared_info {
     uint32_t disp_unit;
@@ -565,9 +569,12 @@ typedef enum {
     MPIDI_VCI_TYPE__EXCLUSIVE = 0x2,    /* VCI will be used by only one object */
 } MPIDI_vci_type_t;
 
+#define MPIDI_MAX_REQUEST_CACHE_COUNT 1*1024
  /* VCI */
 typedef struct MPIDI_vci {
     MPID_Thread_mutex_t lock;   /* lock to protect the objects in this VCI */
+    struct MPIR_Request *request_cache[MPIDI_MAX_REQUEST_CACHE_COUNT]; /* a cache to store requests from the global pool */
+    int request_cache_count;    /* index of the next available Request */
     int ref_count;              /* number of objects referring to this VCI */
     int is_free;                /* flag to check if this VCI is free or not */
     int vni;                    /* index to the VNI in the netmod's pool */

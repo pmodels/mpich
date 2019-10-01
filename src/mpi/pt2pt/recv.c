@@ -147,7 +147,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_extract_status(request_ptr, status);
-    MPIR_Request_free(request_ptr);
+    MPID_Request_free_safe(request_ptr);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
