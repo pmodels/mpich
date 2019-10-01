@@ -24,14 +24,6 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
 static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
 
-/* Call this routine to associate a MPIR_Datatype with each predefined
-   datatype.  We do this with lazy initialization because many MPI
-   programs do not require anything except the predefined datatypes, and
-   all of the necessary information about those is stored within the
-   MPI_Datatype handle.  However, if the user wants to change the name
-   (character string, set with MPI_Type_set_name) associated with a
-   predefined name, then the structures must be allocated.
-*/
 /* FIXME does the order of this list need to correspond to anything in
    particular?  There are several lists of predefined types sprinkled throughout
    the codebase and it's unclear which (if any) of them must match exactly.
@@ -197,70 +189,58 @@ static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
     return 0;
 }
 
-/* Called ONLY from MPIR_Datatype_init_names (type_get_name.c).
-   That routine calls it from within a single-init section to
-   ensure thread-safety. */
-
+/* Call this routine to associate a MPIR_Datatype with each predefined
+   datatype. */
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned int i;
     MPIR_Datatype *dptr;
     MPI_Datatype d = MPI_DATATYPE_NULL;
-    static int is_init = 0;
 
-    /* FIXME: This is actually an error, since this routine
-     * should only be called once */
-    if (is_init) {
-        return MPI_SUCCESS;
-    }
+    /* If the datatype is -1, we're at the end of mpi_dtypes */
+    for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i] != -1; i++) {
+        /* Compute the index from the value of the handle */
+        d = mpi_dtypes[i];
 
-    if (!is_init) {
-        /* If the datatype is -1, we're at the end of mpi_dtypes */
-        for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i] != -1; i++) {
-            /* Compute the index from the value of the handle */
-            d = mpi_dtypes[i];
+        /* Some of the size-specific types may be null, as might be types
+         * based on 'long long' and 'long double' if those types were
+         * disabled at configure time.  skip those cases. */
+        if (d == MPI_DATATYPE_NULL)
+            continue;
 
-            /* Some of the size-specific types may be null, as might be types
-             * based on 'long long' and 'long double' if those types were
-             * disabled at configure time.  skip those cases. */
-            if (d == MPI_DATATYPE_NULL)
-                continue;
-
-            MPIR_Datatype_get_ptr(d, dptr);
-            /* --BEGIN ERROR HANDLING-- */
-            if (dptr < MPIR_Datatype_builtin ||
-                dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
-                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_FATAL, __func__,
-                                                 __LINE__, MPI_ERR_INTERN,
-                                                 "**typeinitbadmem", "**typeinitbadmem %d", i);
-                return mpi_errno;
-            }
-            /* --END ERROR HANDLING-- */
-
-            /* dptr will point into MPIR_Datatype_builtin */
-            dptr->handle = d;
-            dptr->is_contig = 1;
-            MPIR_Object_set_ref(dptr, 1);
-            MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
-            dptr->extent = dptr->size;
-            dptr->ub = dptr->size;
-            dptr->true_ub = dptr->size;
-            dptr->contents = NULL;      /* should never get referenced? */
-        }
+        MPIR_Datatype_get_ptr(d, dptr);
         /* --BEGIN ERROR HANDLING-- */
-        if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
-            /* We did not hit the end-of-list */
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             __func__, __LINE__,
-                                             MPI_ERR_INTERN, "**typeinitfail",
-                                             "**typeinitfail %d", i - 1);
+        if (dptr < MPIR_Datatype_builtin || dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                             MPIR_ERR_FATAL, __func__,
+                                             __LINE__, MPI_ERR_INTERN,
+                                             "**typeinitbadmem", "**typeinitbadmem %d", i);
             return mpi_errno;
         }
         /* --END ERROR HANDLING-- */
-        is_init = 1;
+
+        /* dptr will point into MPIR_Datatype_builtin */
+        dptr->handle = d;
+        dptr->is_contig = 1;
+        MPIR_Object_set_ref(dptr, 1);
+        MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
+        dptr->extent = dptr->size;
+        dptr->ub = dptr->size;
+        dptr->true_ub = dptr->size;
+        dptr->contents = NULL;  /* should never get referenced? */
     }
+    /* --BEGIN ERROR HANDLING-- */
+    if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
+        /* We did not hit the end-of-list */
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                         __func__, __LINE__,
+                                         MPI_ERR_INTERN, "**typeinitfail",
+                                         "**typeinitfail %d", i - 1);
+        return mpi_errno;
+    }
+    /* --END ERROR HANDLING-- */
+
     return mpi_errno;
 }
 
