@@ -62,35 +62,32 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
                                                       ucp_tag_recv_info_t * info)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
+    MPI_Status *mrecv_status;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 
+    /* complete the request if we have it, or allocate a status object */
     if (ucp_request->req) {
         MPIR_Request *rreq = ucp_request->req;
         MPIDIU_request_complete(rreq);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
-
-        if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-            rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-            rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
-            rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-            rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-            MPIR_STATUS_SET_COUNT(rreq->status, info->length);
-        }
+        mrecv_status = &rreq->status;
     } else {
-        if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
-            /* FIXME: we have no way of passing the tag bits back in this case */
-            ucp_request->req = (void *) UCS_ERR_MESSAGE_TRUNCATED;
-        } else {
-            ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t), MPL_MEM_BUFFER);
-            memcpy(ucp_request->req, info, sizeof(ucp_tag_recv_info_t));
-        }
+        mrecv_status = MPL_malloc(sizeof(MPI_Status), MPL_MEM_BUFFER);
+        ucp_request->req = mrecv_status;
     }
+
+    /* populate status fields */
+    if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
+        mrecv_status->MPI_ERROR = MPI_ERR_TRUNCATE;
+    } else {
+        mrecv_status->MPI_ERROR = MPI_SUCCESS;
+        MPIR_STATUS_SET_COUNT(*mrecv_status, info->length);
+    }
+    mrecv_status->MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
+    mrecv_status->MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
@@ -200,16 +197,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
-        if (unlikely((uint64_t) ucp_request->req == (uint64_t) UCS_ERR_MESSAGE_TRUNCATED)) {
-            message->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            ucp_tag_recv_info_t *info = ucp_request->req;
-            message->status.MPI_ERROR = MPI_SUCCESS;
-            message->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-            message->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-            MPIR_STATUS_SET_COUNT(message->status, info->length);
-            MPL_free(ucp_request->req);
-        }
+        message->status = *(ucp_request->req);
+        MPL_free(ucp_request->req);
         MPIDIU_request_complete(message);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
