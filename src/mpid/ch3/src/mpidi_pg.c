@@ -86,18 +86,7 @@ int MPIDI_PG_Finalize(void)
     /* FIXME - straighten out the use of PMI_Finalize - no use after 
        PG_Finalize */
     if (pg_world->connData) {
-#ifdef USE_PMI2_API
-        mpi_errno = PMI2_Finalize();
-        if (mpi_errno) MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3|pmi_finalize");
-#else
-	int rc;
-	rc = PMI_Finalize();
-	if (rc) {
-	    MPIR_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
-			  "**ch3|pmi_finalize", 
-			  "**ch3|pmi_finalize %d", rc);
-	}
-#endif
+        MPIR_pmi_finalize();
     }
 
     /* Free the storage associated with the process groups */

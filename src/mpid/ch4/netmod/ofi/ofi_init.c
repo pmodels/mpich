@@ -864,10 +864,12 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                   &MPIDI_OFI_global.addrnamelen), getname);
         MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
+        int ret_bc_len;
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                           &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                                          TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
+                                          TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &ret_bc_len);
         MPIR_ERR_CHECK(mpi_errno);
+        /* MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen); */
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -909,7 +911,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 #endif
             }
             MPL_free(mapped_table);
-            MPIDU_bc_table_destroy(table);
+            MPIDU_bc_table_destroy();
         }
     }
 
