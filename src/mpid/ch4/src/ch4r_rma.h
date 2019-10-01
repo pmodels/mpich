@@ -235,7 +235,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->greq.addr) = (uint64_t) ((char *) origin_addr);
+    MPIDIG_REQUEST(sreq, req->greq.addr) = origin_addr;
     MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
@@ -922,7 +922,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->creq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->creq.addr) = (uint64_t) ((char *) result_addr);
+    MPIDIG_REQUEST(sreq, req->creq.addr) = result_addr;
     MPIDIG_REQUEST(sreq, req->creq.datatype) = datatype;
     MPIDIG_REQUEST(sreq, req->creq.result_addr) = result_addr;
     MPIDIG_REQUEST(sreq, req->creq.data) = p_data;

@@ -117,7 +117,7 @@ typedef struct MPIDIG_put_req_t {
 typedef struct MPIDIG_get_req_t {
     MPIR_Win *win_ptr;
     MPIR_Request *greq_ptr;
-    uint64_t addr;
+    void *addr;
     MPI_Datatype datatype;
     int count;
     int n_iov;
@@ -127,7 +127,7 @@ typedef struct MPIDIG_get_req_t {
 typedef struct MPIDIG_cswap_req_t {
     MPIR_Win *win_ptr;
     MPIR_Request *creq_ptr;
-    uint64_t addr;
+    void *addr;
     MPI_Datatype datatype;
     void *data;
     void *result_addr;
