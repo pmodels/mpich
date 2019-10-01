@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
         req = (MPIR_Request *) MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
-        MPIDI_UCX_REQ(req).a.message_handler = message_h;
+        MPIDI_UCX_REQ(req).message_handler = message_h;
 
         if (status != MPI_STATUS_IGNORE) {
             status->MPI_SOURCE = MPIDI_UCX_get_source(info.sender_tag);
