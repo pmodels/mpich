@@ -153,15 +153,6 @@ int MPIR_Datatype_init_names(void)
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     if (needsInit) {
-        /* Make sure that the basics have datatype structures allocated
-         * and filled in for them.  They are just integers prior to this
-         * call.
-         */
-        mpi_errno = MPIR_Datatype_builtin_fillin();
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POPFATAL(mpi_errno);
-        }
-
         /* For each predefined type, ensure that there is a corresponding
          * object and that the object's name is set */
         for (i = 0; mpi_names[i].name != 0; i++) {

@@ -117,6 +117,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_Group_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize builtin datatype structures */
+    mpi_errno = MPIR_Datatype_builtin_fillin();
+    MPIR_ERR_CHECK(mpi_errno);
+
     int thread_provided = 0;
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
