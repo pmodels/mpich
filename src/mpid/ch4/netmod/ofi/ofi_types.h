@@ -139,15 +139,10 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
  * whether we're using scalable endpoints or not. */
 static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
 {
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    return (av)->ep_idx;
-#else /* This is necessary for older GCC compilers that don't properly do this
-       * detection when using elif */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return (av)->ep_idx;
 #else
     return 0;
-#endif
 #endif
 }
 
@@ -156,15 +151,10 @@ static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
  * whether we're using scalable endpoints or not. */
 static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 {
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
-#else /* This is necessary for older GCC compilers that don't properly do this
-       * detection when using elif */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
 #else
     return 0;
-#endif
 #endif
 }
 
