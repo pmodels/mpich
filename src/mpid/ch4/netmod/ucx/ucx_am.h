@@ -35,8 +35,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 
-    MPL_free(ucp_request->req);
-    ucp_request->req = NULL;
+    MPL_free(ucp_request->buf);
+    ucp_request->buf = NULL;
     ucp_request_release(ucp_request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
         /* inject is done */
         MPL_free(send_buf);
     } else {
-        ucp_request->req = send_buf;
+        ucp_request->buf = send_buf;
     }
 
   fn_exit:
@@ -396,7 +396,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
         /* inject is done */
         MPL_free(send_buf);
     } else {
-        ucp_request->req = send_buf;
+        ucp_request->buf = send_buf;
     }
 
   fn_exit:
