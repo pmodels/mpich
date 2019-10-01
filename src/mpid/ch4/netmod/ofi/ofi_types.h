@@ -26,6 +26,10 @@
      ? strrchr(__FILE__,'/')+1                  \
      : __FILE__                                 \
 )
+
+/* TODO: make it a configure option */
+#define MPIDI_OFI_MAX_CONTEXTS                  16
+
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
@@ -341,13 +345,10 @@ typedef struct {
     size_t max_order_war;
     size_t max_order_waw;
 
-    /* Mutexex and endpoints */
+    /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
-#else
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS];
-#endif
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_CONTEXTS];
+    int num_ctx;
 
     /* Window/RMA Globals */
     void *win_map;
