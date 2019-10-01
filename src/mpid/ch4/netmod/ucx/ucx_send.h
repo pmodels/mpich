@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     } else if (req != NULL) {
         MPIR_cc_set(&req->cc, 0);
     } else if (have_request) {
-        req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        req = MPID_Request_create_complete_unsafe(MPIR_REQUEST_KIND__SEND, vci);
     }
     *request = req;
 

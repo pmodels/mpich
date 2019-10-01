@@ -125,6 +125,32 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_unsafe(MPIR_Request * req)
     }
 }
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete_safe(int kind, int vci)
+{
+    MPIR_Request *req;
+    
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+    
+    req = MPID_Request_create_complete_unsafe(kind, vci);
+    
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    
+    return req;
+}
+
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPID_Request_create_complete_unsafe(int kind, int vci)
+{
+    MPIR_Request *req;
+#ifdef HAVE_DEBUGGER_SUPPORT
+    req = MPIR_Request_create(kind);
+    MPIR_cc_set(&req->cc, 0);
+#else
+    req = MPIDI_VCI(vci).lw_req;
+    MPIR_Request_add_ref(req);
+#endif
+    return req;
+}
+
 /*
   Device override hooks for asynchronous progress threads
 */

@@ -49,6 +49,13 @@ int MPIDI_vci_pool_alloc(int num_vnis)
             MPIR_ERR_POP(mpi_errno);
         }
 
+        /* A SEND request covers all possible use-cases */
+        MPIDI_VCI(i).lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+        MPIR_ERR_CHKANDSTMT(MPIDI_VCI(i).lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        MPIDI_REQUEST(MPIDI_VCI(i).lw_req, vci) = i;
+        MPIR_cc_set(&MPIDI_VCI(i).lw_req->cc, 0);
+
         /* Fill up the request cache for this VCI */
         for (req_i = 0; req_i < MPIDI_MAX_REQUEST_CACHE_COUNT; req_i++) {
             MPIDI_VCI(i).request_cache[req_i] = MPIR_Handle_obj_alloc(&MPIR_Request_mem);

@@ -242,6 +242,8 @@ MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_unsafe(int kin
 MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_safe(int kind, int vci);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_unsafe(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_safe(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_complete_unsafe(int kind, int vci);
+MPL_STATIC_INLINE_PREFIX struct MPIR_Request *MPID_Request_create_complete_safe(int kind, int vci);
 
 typedef struct MPIDIG_win_shared_info {
     uint32_t disp_unit;
@@ -573,6 +575,7 @@ typedef enum {
  /* VCI */
 typedef struct MPIDI_vci {
     MPID_Thread_mutex_t lock;   /* lock to protect the objects in this VCI */
+    struct MPIR_Request *lw_req; /* pre-allocated completed request for this VCI */
     struct MPIR_Request *request_cache[MPIDI_MAX_REQUEST_CACHE_COUNT]; /* a cache to store requests from the global pool */
     int request_cache_count;    /* index of the next available Request */
     int ref_count;              /* number of objects referring to this VCI */

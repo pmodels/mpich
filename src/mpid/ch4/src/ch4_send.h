@@ -332,15 +332,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
 
+    vci = MPIDI_vci_get(comm, rank, tag); 
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        *request = MPID_Request_create_complete_safe(MPIR_REQUEST_KIND__SEND, vci);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag); 
     mpi_errno = MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
 
     if (mpi_errno != MPI_SUCCESS) {
@@ -367,15 +368,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND);
 
+    vci = MPIDI_vci_get(comm, rank, tag);
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        *request = MPID_Request_create_complete_safe(MPIR_REQUEST_KIND__SEND, vci);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
     mpi_errno =
         MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
 
@@ -410,15 +412,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
 
+    vci = MPIDI_vci_get(comm, rank, tag);
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        *request = MPID_Request_create_complete_safe(MPIR_REQUEST_KIND__SEND, vci);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
     mpi_errno = MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
 
     if (mpi_errno != MPI_SUCCESS) {
@@ -451,15 +454,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRSEND);
 
+    vci = MPIDI_vci_get(comm, rank, tag);
+    
     if (unlikely(rank == MPI_PROC_NULL)) {
-        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        *request = MPID_Request_create_complete_safe(MPIR_REQUEST_KIND__SEND, vci);
         MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         goto fn_exit;
     }
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
-    vci = MPIDI_vci_get(comm, rank, tag);
     mpi_errno =
         MPIDI_isend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request, vci);
 
