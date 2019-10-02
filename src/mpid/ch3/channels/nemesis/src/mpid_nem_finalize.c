@@ -11,6 +11,7 @@
 #endif
 
 #include "mpidi_nem_statistics.h"
+#include "mpidu_init_shm.h"
 
 int MPID_nem_finalize(void)
 {
