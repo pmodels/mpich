@@ -563,9 +563,11 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
 
 static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int vci, mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
+
+    vci = MPIDI_COMM_VCI(win->comm_ptr);
 
     /* Check window lock epoch.
      * PROC_NULL does not update per-target epoch. */
@@ -595,9 +597,9 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     }
 
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     } while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
   fn_exit:
@@ -783,13 +785,15 @@ static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
 
 static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, vci;
     int all_remote_completed = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
+    vci = MPIDI_COMM_VCI(win->comm_ptr);    
+    
     /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
@@ -803,9 +807,9 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(MPIDI_VCI_ROOT).lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
         /* FIXME: now we simply set per-target counters for lockall in case
          * user flushes per target, but this should be optimized. */
