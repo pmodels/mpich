@@ -567,7 +567,7 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
 
-    vci = MPIDI_COMM_VCI(win->comm_ptr);
+    /* vci = MPIDI_COMM_VCI(win->comm_ptr); */
 
     /* Check window lock epoch.
      * PROC_NULL does not update per-target epoch. */
@@ -596,11 +596,12 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    //do {
+        /*MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIDIU_PROGRESS();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-    } while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
+        */
+    //} while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
@@ -792,7 +793,7 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 
     MPIDIG_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
-    vci = MPIDI_COMM_VCI(win->comm_ptr);    
+    /* vci = MPIDI_COMM_VCI(win->comm_ptr); */
     
     /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
@@ -806,15 +807,16 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 #endif
 
     /* Ensure completion of AM operations */
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+    //do {
+        /*MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         MPIDIU_PROGRESS();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-
+        */
         /* FIXME: now we simply set per-target counters for lockall in case
          * user flushes per target, but this should be optimized. */
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
-    } while (all_remote_completed != 1);
+    //    MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
+    //} while (all_remote_completed != 1);
+    
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
