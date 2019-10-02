@@ -136,8 +136,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
+        int vni = MPIDI_VCI(MPIDI_COMM_VCI(win->comm_ptr)).vni;
         /* maybe we just flush all eps here? More efficient for smaller communicators... */
-        ucp_status = ucp_worker_flush(MPIDI_UCX_VNI(0).worker);
+        ucp_status = ucp_worker_flush(MPIDI_UCX_VNI(vni).worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_win_unset_sync(win);
     }
@@ -189,7 +190,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
 
         ucs_status_t ucp_status;
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank, 0);
+        int vni = MPIDI_VCI(MPIDI_COMM_VCI(win->comm_ptr)).vni;
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank, vni);
         /* only flush the endpoint */
         ucp_status = ucp_ep_flush(ep);
         MPIDI_UCX_CHK_STATUS(ucp_status);
