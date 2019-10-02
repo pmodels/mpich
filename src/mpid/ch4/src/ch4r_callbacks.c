@@ -86,11 +86,17 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
 
-    /* Check if this message has already been claimed by a probe. */
+    /* Check if this message has already been claimed by mprobe. */
     /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_DQUED) {
+        /* This request has been claimed by mprobe */
         if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXP_CLAIMED) {
+            /* mrecv has been already called */
             MPIDIG_handle_unexp_mrecv(rreq);
+        } else {
+            /* mrecv has not been called yet -- just take out the busy flag so that
+             * mrecv in future knows this request is ready */
+            MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_BUSY;
         }
         /* MPIDI_CS_EXIT(); */
         goto fn_exit;
@@ -361,6 +367,19 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+    if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_LONG_RTS) &&
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
+        /* This block is executed only when the receive is enqueued (trylock/handoff) &&
+         * receive was matched with an unexpected long RTS message.
+         * `rreq` is the unexpected message received and `sigreq` is the message
+         * that came from CH4 (e.g. MPIDI_recv_safe) */
+        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        sigreq->status = rreq->status;
+        MPIR_Request_add_ref(sigreq);
+        MPID_Request_complete(sigreq);
+        /* Free the unexpected request on behalf of the user */
+        MPIR_Request_free(rreq);
+    }
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDIG_progress_compl_list();
@@ -419,6 +438,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
     if (root_comm) {
+      root_comm_retry:
         /* MPIDI_CS_ENTER(); */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
         rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
@@ -473,14 +493,33 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
-        /* MPIDI_CS_ENTER(); */
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);
             MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
         } else {
+            MPIR_Comm *root_comm_again;
+            /* This branch means that last time we checked, there was no communicator
+             * associated with the arriving message.
+             * In a multi-threaded environment, it is possible that the communicator
+             * has been created since we checked root_comm last time.
+             * If that is the case, the new message must be put into a queue in
+             * the new communicator. Otherwise that message will be lost forever.
+             * Here that strategy is to query root_comm again, and if found,
+             * simply re-execute the per-communicator enqueue logic above. */
+            root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
+            if (unlikely(root_comm_again != NULL)) {
+                MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+                MPL_free(MPIDIG_REQUEST(rreq, buffer));
+                MPIR_Request_free(rreq);
+                MPID_Request_complete(rreq);
+                rreq = NULL;
+                root_comm = root_comm_again;
+                goto root_comm_retry;
+            }
             MPIDIG_enqueue_unexp(rreq, MPIDIG_context_id_to_uelist(hdr->context_id));
         }
-        /* MPIDI_CS_EXIT(); */
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
         /* rreq != NULL <=> root_comm != NULL */
         MPIR_Assert(root_comm);
@@ -530,6 +569,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
 
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
+  root_comm_retry:
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -578,15 +618,34 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
 
-        /* MPIDI_CS_ENTER(); */
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);
             MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
         } else {
+            MPIR_Comm *root_comm_again;
+            /* This branch means that last time we checked, there was no communicator
+             * associated with the arriving message.
+             * In a multi-threaded environment, it is possible that the communicator
+             * has been created since we checked root_comm last time.
+             * If that is the case, the new message must be put into a queue in
+             * the new communicator. Otherwise that message will be lost forever.
+             * Here that strategy is to query root_comm again, and if found,
+             * simply re-execute the per-communicator enqueue logic above. */
+            root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
+            if (unlikely(root_comm_again != NULL)) {
+                MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+                MPL_free(MPIDIG_REQUEST(rreq, buffer));
+                MPIR_Request_free(rreq);
+                MPID_Request_complete(rreq);
+                rreq = NULL;
+                root_comm = root_comm_again;
+                goto root_comm_retry;
+            }
             MPIDIG_enqueue_unexp(rreq,
                                  MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id)));
         }
-        /* MPIDI_CS_EXIT(); */
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
         /* Matching receive was posted, tell the netmod */
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
@@ -596,6 +655,9 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+        /* Mark `match_req` as NULL so that we know nothing else to complete when
+         * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_REQUEST(rreq, is_local))
