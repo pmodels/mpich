@@ -229,6 +229,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     /*fprintf(stderr,"[%i] -- address shift ok \n",pg_rank); */
 #endif  /*FORCE_ASYM */
 
+    /* Initialize core shared memory segment */
+    mpi_errno = MPIDU_Init_shm_init(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.node_map);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Request fastboxes region */
     mpi_errno = MPIDU_shm_seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
                                      (void **)&fastboxes_p, MPL_MEM_SHM);
@@ -417,6 +421,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
+    mpi_errno = MPIDU_Init_shm_finalize();
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
