@@ -247,7 +247,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_mr_key_allocator_init(void);
+int MPIDI_OFI_mr_key_allocator_init(void);
 uint64_t MPIDI_OFI_mr_key_alloc(void);
 void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
