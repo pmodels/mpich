@@ -312,6 +312,7 @@ cvars:
 static int get_ofi_version(void);
 static int open_fabric(void);
 static int create_vni_context(int vni);
+static int destroy_vni_context(int vni);
 
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
 static int conn_manager_init(void);
@@ -750,29 +751,15 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIDI_OFI_PROGRESS();
     MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        for (i = 0; i < MPIDI_OFI_global.num_ctx; i++) {
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].tx), epclose);
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].rx), epclose);
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[i].cq), cqclose);
-        }
+    /* Tearing down endpoints */
+    for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
+        mpi_errno = destroy_vni_context(i);
+        MPIR_ERR_CHECK(mpi_errno);
     }
+    /* 0th ctx is special, synonymous to global context */
+    mpi_errno = destroy_vni_context(0);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    /* Close RMA scalable EP. */
-    if (MPIDI_OFI_global.rma_sep) {
-        /* All transmit contexts on RMA must be closed. */
-        MPIR_Assert(utarray_len(MPIDI_OFI_global.rma_sep_idx_array) ==
-                    MPIDI_OFI_global.max_rma_sep_tx_cnt);
-        utarray_free(MPIDI_OFI_global.rma_sep_idx_array);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_sep->fid), epclose);
-    }
-    if (MPIDI_OFI_global.rma_stx_ctx != NULL)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_stx_ctx->fid), stx_ctx_close);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.av->fid), avclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.p2p_cq->fid), cqclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_cmpl_cntr->fid), cntrclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.domain->fid), domainclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.fabric->fid), fabricclose);
 
     fi_freeinfo(MPIDI_OFI_global.prov_use);
@@ -1165,6 +1152,47 @@ bool match_global_settings(struct fi_info *prov);
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list);
+
+static int destroy_vni_context(int vni)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].tx), epclose);
+        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].rx), epclose);
+        if (vni > 0) {
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].cq), cqclose);
+        }
+    }
+
+    if (vni == 0) {
+        /* FIXME: need ensure all vni > 0 has been closed */
+
+        /* Close RMA scalable EP. */
+        if (MPIDI_OFI_global.rma_sep) {
+            /* All transmit contexts on RMA must be closed. */
+            MPIR_Assert(utarray_len(MPIDI_OFI_global.rma_sep_idx_array) ==
+                        MPIDI_OFI_global.max_rma_sep_tx_cnt);
+            utarray_free(MPIDI_OFI_global.rma_sep_idx_array);
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_sep->fid), epclose);
+        }
+        if (MPIDI_OFI_global.rma_stx_ctx != NULL) {
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_stx_ctx->fid), stx_ctx_close);
+        }
+
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.av->fid), avclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.p2p_cq->fid), cqclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_cmpl_cntr->fid), cntrclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.domain->fid), domainclose);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 static int open_fabric(void)
 {
