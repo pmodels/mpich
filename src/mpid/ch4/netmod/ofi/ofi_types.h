@@ -326,6 +326,8 @@ typedef struct {
     struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
     struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
+    int got_named_av;
+
     /* Queryable limits */
     uint64_t max_buffered_send;
     uint64_t max_buffered_write;
@@ -339,7 +341,6 @@ typedef struct {
     size_t tx_iov_limit;
     size_t rx_iov_limit;
     size_t rma_iov_limit;
-    int max_ch4_vcis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
