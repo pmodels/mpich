@@ -128,7 +128,7 @@ typedef int (*MPIDI_NM_mpi_put_t) (const void *origin_addr, int origin_count,
                                    MPI_Datatype origin_datatype, int target_rank,
                                    MPI_Aint target_disp, int target_count,
                                    MPI_Datatype target_datatype, MPIR_Win * win,
-                                   MPIDI_av_entry_t * addr);
+                                   MPIDI_av_entry_t * addr, int vci);
 typedef int (*MPIDI_NM_mpi_win_start_t) (MPIR_Group * group, int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_mpi_win_complete_t) (MPIR_Win * win);
 typedef int (*MPIDI_NM_mpi_win_post_t) (MPIR_Group * group, int assert, MPIR_Win * win);
@@ -142,7 +142,7 @@ typedef int (*MPIDI_NM_mpi_get_t) (void *origin_addr, int origin_count,
                                    MPI_Datatype origin_datatype, int target_rank,
                                    MPI_Aint target_disp, int target_count,
                                    MPI_Datatype target_datatype, MPIR_Win * win,
-                                   MPIDI_av_entry_t * addr);
+                                   MPIDI_av_entry_t * addr, int vci);
 typedef int (*MPIDI_NM_mpi_win_free_t) (MPIR_Win ** win_ptr);
 typedef int (*MPIDI_NM_mpi_win_fence_t) (int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_mpi_win_create_t) (void *base, MPI_Aint length, int disp_unit,
@@ -814,7 +814,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr, int origi
                                               MPI_Datatype origin_datatype, int target_rank,
                                               MPI_Aint target_disp, int target_count,
                                               MPI_Datatype target_datatype, MPIR_Win * win,
-                                              MPIDI_av_entry_t * addr) MPL_STATIC_INLINE_SUFFIX;
+                                              MPIDI_av_entry_t * addr, int vci) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert,
                                                     MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
@@ -835,7 +835,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr, int origin_coun
                                               MPI_Datatype origin_datatype, int target_rank,
                                               MPI_Aint target_disp, int target_count,
                                               MPI_Datatype target_datatype, MPIR_Win * win,
-                                              MPIDI_av_entry_t * addr) MPL_STATIC_INLINE_SUFFIX;
+                                              MPIDI_av_entry_t * addr, int vci) MPL_STATIC_INLINE_SUFFIX;
 int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr);
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert,
                                                     MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
