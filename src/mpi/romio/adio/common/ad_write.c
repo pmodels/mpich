@@ -41,8 +41,8 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 #endif
 
     if (count == 0) {
-        *error_code = MPI_SUCCESS;
-        return;
+        err = 0;
+        goto fn_exit;
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
@@ -106,6 +106,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
         gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MPIO_RW] += (MPI_Wtime() - io_time);
 #endif
 
+  fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
     /* bytes_xfered could be larger than int */
     if (err != -1 && status)
