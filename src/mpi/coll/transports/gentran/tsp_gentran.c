@@ -61,22 +61,50 @@ int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
         ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {
         MPIR_ERR_CHKANDJUMP(vtx == NULL, mpi_errno, MPI_ERR_OTHER, "**nullvertex");
-        if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
-            MPL_free(vtx->u.imcast.req);
-            utarray_free(vtx->u.imcast.dests);
-        } else if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__SCHED) {
-            /* In normal case, sub schedule is free'ed when it is done
-             * only when the sub-scheduler is persistent */
-            if (vtx->u.sched.is_persistent) {
-                MPIR_TSP_sched_free(vtx->u.sched.sched);
-            }
-        } else if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
-            MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
-            MPIR_Assert(type != NULL);
-            if (type->free_fn != NULL) {
-                mpi_errno = type->free_fn(vtx->u.generic.data);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+        switch (vtx->vtx_kind) {
+            case MPII_GENUTIL_VTX_KIND__ISEND:
+                MPIR_Comm_release(vtx->u.isend.comm);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.isend.dt);
+                break;
+            case MPII_GENUTIL_VTX_KIND__ISSEND:
+                MPIR_Comm_release(vtx->u.issend.comm);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.issend.dt);
+                break;
+            case MPII_GENUTIL_VTX_KIND__IRECV:
+                MPIR_Comm_release(vtx->u.irecv.comm);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.irecv.dt);
+                break;
+            case MPII_GENUTIL_VTX_KIND__IRECV_STATUS:
+                MPIR_Comm_release(vtx->u.irecv_status.comm);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.irecv_status.dt);
+                break;
+            case MPII_GENUTIL_VTX_KIND__IMCAST:
+                MPIR_Comm_release(vtx->u.imcast.comm);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.imcast.dt);
+                MPL_free(vtx->u.imcast.req);
+                utarray_free(vtx->u.imcast.dests);
+                break;
+            case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:
+                MPIR_Op_release_if_not_builtin(vtx->u.reduce_local.op);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.reduce_local.datatype);
+                break;
+            case MPII_GENUTIL_VTX_KIND__LOCALCOPY:
+                MPIR_Datatype_release_if_not_builtin(vtx->u.localcopy.sendtype);
+                MPIR_Datatype_release_if_not_builtin(vtx->u.localcopy.recvtype);
+                break;
+            case MPII_GENUTIL_VTX_KIND__SCHED:
+                /* sub schedule is free'ed when it is done */
+                break;
+            default:
+                if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
+                    MPII_Genutil_vtx_type_t *type =
+                        vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
+                    MPIR_Assert(type != NULL);
+                    if (type->free_fn != NULL) {
+                        mpi_errno = type->free_fn(vtx->u.generic.data);
+                        MPIR_ERR_CHECK(mpi_errno);
+                    }
+                }
         }
     }
 
@@ -110,8 +138,9 @@ int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn
     vtype = ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < utarray_len(&sched->generic_types); i++) {
         if (vtype->issue_fn == issue_fn && vtype->complete_fn == complete_fn &&
-            vtype->free_fn == free_fn)
+            vtype->free_fn == free_fn) {
             return MPII_GENUTIL_VTX_KIND__LAST + i + 1;
+        }
         vtype++;
     }
 
@@ -176,6 +205,12 @@ int MPIR_TSP_sched_isend(const void *buf,
     vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
 
+    /* the user may free the comm & type after initiating but before the
+     * underlying send is actually posted, so we must add a reference here and
+     * release it at entry completion time */
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIR_Datatype_add_ref_if_not_builtin(dt);
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", *vtx_id));
 
@@ -208,6 +243,9 @@ int MPIR_TSP_sched_irecv(void *buf,
     vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
 
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIR_Datatype_add_ref_if_not_builtin(dt);
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", *vtx_id));
 
@@ -239,6 +277,9 @@ int MPIR_TSP_sched_irecv_status(void *buf,
     vtxp->u.irecv_status.tag = tag;
     vtxp->u.irecv_status.comm = comm_ptr;
     vtxp->u.irecv_status.status = status;
+
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIR_Datatype_add_ref_if_not_builtin(dt);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv_status", *vtx_id));
@@ -279,6 +320,9 @@ int MPIR_TSP_sched_imcast(const void *buf,
                                             MPL_MEM_COLL);
     vtxp->u.imcast.last_complete = -1;
 
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIR_Datatype_add_ref_if_not_builtin(dt);
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", *vtx_id));
     return mpi_errno;
@@ -308,6 +352,9 @@ int MPIR_TSP_sched_issend(const void *buf,
     vtxp->u.issend.tag = tag;
     vtxp->u.issend.comm = comm_ptr;
 
+    MPIR_Comm_add_ref(comm_ptr);
+    MPIR_Datatype_add_ref_if_not_builtin(dt);
+
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] issend", *vtx_id));
 
@@ -333,6 +380,9 @@ int MPIR_TSP_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
     vtxp->u.reduce_local.count = count;
     vtxp->u.reduce_local.datatype = datatype;
     vtxp->u.reduce_local.op = op;
+
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIR_Op_add_ref_if_not_builtin(op);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local", *vtx_id));
@@ -361,6 +411,9 @@ int MPIR_TSP_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Dataty
     vtxp->u.localcopy.recvbuf = recvbuf;
     vtxp->u.localcopy.recvcount = recvcount;
     vtxp->u.localcopy.recvtype = recvtype;
+
+    MPIR_Datatype_add_ref_if_not_builtin(sendtype);
+    MPIR_Datatype_add_ref_if_not_builtin(recvtype);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy", *vtx_id));
