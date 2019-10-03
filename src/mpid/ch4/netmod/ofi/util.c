@@ -501,9 +501,13 @@ static inline void create_dt_map()
 
 static inline void add_index(MPI_Datatype datatype, int *idx)
 {
-    MPIR_Datatype *dt_ptr;
-    MPIR_Datatype_get_ptr(datatype, dt_ptr);
-    MPIDI_OFI_DATATYPE(dt_ptr).index = *idx;
+    /* MPICH sets predefined datatype handles to MPI_DATATYPE_NULL if they are not supported
+     * on the target platform */
+    if (datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIDI_OFI_DATATYPE(dt_ptr).index = *idx;
+    }
     (*idx)++;
 }
 
@@ -581,11 +585,7 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_INTEGER2, &idx);
     add_index(MPI_INTEGER4, &idx);
     add_index(MPI_INTEGER8, &idx);
-
-    if (MPI_INTEGER16 == MPI_DATATYPE_NULL)
-        idx++;
-    else
-        add_index(MPI_INTEGER16, &idx);
+    add_index(MPI_INTEGER16, &idx);
 
 #endif
     add_index(MPI_FLOAT_INT, &idx);
