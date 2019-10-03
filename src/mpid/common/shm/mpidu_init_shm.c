@@ -11,11 +11,69 @@
 #include "mpidu_shm.h"
 #include "mpir_pmi.h"
 
+typedef struct Init_shm_barrier {
+    OPA_int_t val;
+    OPA_int_t wait;
+} Init_shm_barrier_t;
+
 static int local_size;
 static int my_local_rank;
 static MPIDU_shm_seg_t memory;
-static MPIDU_shm_barrier_t *barrier;
+static Init_shm_barrier_t *barrier;
 static void *baseaddr;
+
+static int sense;
+static int barrier_init = 0;
+
+static int Init_shm_barrier_init(int init_values)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER_INIT);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER_INIT);
+
+    barrier = (Init_shm_barrier_t *) memory.base_addr;
+    if (init_values) {
+        OPA_store_int(&barrier->val, 0);
+        OPA_store_int(&barrier->wait, 0);
+        OPA_write_barrier();
+    }
+    sense = 0;
+    barrier_init = 1;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_SHM_BARRIER_INIT);
+
+    return MPI_SUCCESS;
+}
+
+/* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
+static int Init_shm_barrier()
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER);
+
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER);
+
+    if (local_size == 1)
+        goto fn_exit;
+
+    MPIR_ERR_CHKINTERNAL(!barrier_init, mpi_errno, "barrier not initialized");
+
+    if (OPA_fetch_and_incr_int(&barrier->val) == local_size - 1) {
+        OPA_store_int(&barrier->val, 0);
+        OPA_store_int(&barrier->wait, 1 - sense);
+        OPA_write_barrier();
+    } else {
+        /* wait */
+        while (OPA_load_int(&barrier->wait) == sense)
+            MPL_sched_yield();  /* skip */
+    }
+    sense = 1 - sense;
+
+  fn_fail:
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_SHM_BARRIER);
+    return mpi_errno;
+}
 
 int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
 {
@@ -76,8 +134,7 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
-        mpi_errno =
-            MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory.base_addr, &barrier, TRUE);
+        mpi_errno = Init_shm_barrier_init(TRUE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         if (my_local_rank == 0) {
@@ -99,8 +156,7 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
             ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory.base_addr, &barrier, TRUE);
+            mpi_errno = Init_shm_barrier_init(TRUE);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
             /* non-root prepare to recv */
@@ -138,12 +194,11 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
              * this behavior. */
 #endif
 
-            mpi_errno =
-                MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory.base_addr, &barrier, FALSE);
+            mpi_errno = Init_shm_barrier_init(FALSE);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+        mpi_errno = Init_shm_barrier();
         MPIR_ERR_CHECK(mpi_errno);
 
         if (my_local_rank == 0) {
@@ -156,7 +211,7 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
         memory.symmetrical = 0;
     }
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = Init_shm_barrier();
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
@@ -175,7 +230,7 @@ int MPIDU_Init_shm_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (local_size == 1)
@@ -200,7 +255,7 @@ int MPIDU_Init_shm_barrier(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
-    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    mpi_errno = Init_shm_barrier();
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
