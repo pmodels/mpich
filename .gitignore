@@ -604,3 +604,7 @@ Makefile.am-stamp
 
 # /test/util/timer/
 /test/util/timer/timertest
+
+# DAOS
+_topdir/
+pristine/

@@ -31,6 +31,7 @@ RUN if ! grep "^#includedir /etc/sudoers.d" /etc/sudoers; then              \
         echo "#includedir /etc/sudoers.d" >> /etc/sudoers;                  \
     fi;                                                                     \
     echo "build ALL=(ALL) NOPASSWD: /usr/bin/build" > /etc/sudoers.d/build; \
+    echo "build ALL=(ALL) NOPASSWD: /bin/rpm" >> /etc/sudoers.d/build;      \
     chmod 0440 /etc/sudoers.d/build;                                        \
     visudo -c;                                                              \
     sudo -l -U build
