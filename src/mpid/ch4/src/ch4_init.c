@@ -411,11 +411,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
     init_av_table();
 
-    /* setup receive queue statistics */
-    mpi_errno = MPIDIG_recvq_init();
+    mpi_errno = MPIDIG_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDIG_init();
+    /* setup receive queue statistics */
+    mpi_errno = MPIDIG_recvq_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = create_init_comm(&init_comm);
