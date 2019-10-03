@@ -20,17 +20,8 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT_COMM);
 
-    /*
-     * Prevents double initialization of some special communicators.
-     *
-     * comm_world and comm_self may exhibit this function twice, first during MPIDIG_init
-     * and the second during MPIR_Comm_commit in MPID_Init.
-     * If there is an early arrival of an unexpected message before the second visit,
-     * the following code will wipe out the unexpected queue andthe message is lost forever.
-     */
-    if (unlikely(MPIDI_global.is_ch4u_initialized &&
-                 (comm == MPIR_Process.comm_world || comm == MPIR_Process.comm_self)))
-        goto fn_exit;
+    MPIR_Assert(MPIDI_global.is_ch4u_initialized);
+
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
