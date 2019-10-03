@@ -415,8 +415,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits,
-                                           MPIR_Process.comm_world, MPIR_Process.comm_self,
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm,
                                            &n_nm_vcis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
