@@ -378,7 +378,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     int i;
-    for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
+    for (i = 0; i < size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
     MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
@@ -386,16 +386,15 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
 
-    for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
+    for (i = 0; i < size; i++) {
         MPIDI_av_table0->table[i].is_local =
-            (MPIDI_global.node_map[0][i] ==
-             MPIDI_global.node_map[0][MPIR_Process.comm_world->rank]) ? 1 : 0;
+            (MPIDI_global.node_map[0][i] == MPIDI_global.node_map[0][rank]) ? 1 : 0;
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
                          MPIDI_av_table0->table[i].is_local ? "is" : "is not"));
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_global.node_map[0][i],
-                         MPIDI_global.node_map[0][MPIR_Process.comm_world->rank]));
+                         MPIDI_global.node_map[0][rank]));
     }
 #endif
 
