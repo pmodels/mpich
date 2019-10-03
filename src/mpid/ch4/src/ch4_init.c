@@ -338,7 +338,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     }
 #endif
 
-    mpi_errno = MPIDIG_init(MPIR_Process.comm_world, MPIR_Process.comm_self);
+    mpi_errno = MPIDIG_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDU_Init_shm_init();
