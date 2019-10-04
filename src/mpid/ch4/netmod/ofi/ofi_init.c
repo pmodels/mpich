@@ -939,6 +939,10 @@ int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
     return 0;
 }
 
+/* ---- static functions for vni contexts ---- */
+static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av);
+static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_stx_ctx);
+
 static int create_vni_context(int vni)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -951,7 +955,6 @@ static int create_vni_context(int vni)
     struct fid_domain *domain;
     struct fid_av *av;
     struct fid_cntr *rma_cmpl_cntr;
-    struct fid_stx *rma_stx_ctx;
     if (vni == 0) {
         /* shared objects (regardless MPIDI_OFI_ENABLE_SHARED_CONTEXTS)
          *   -- may change depend on scheme
@@ -964,80 +967,40 @@ static int create_vni_context(int vni)
         cntr_attr.wait_obj = FI_WAIT_UNSPEC;
         MPIDI_OFI_CALL(fi_cntr_open(domain, &cntr_attr, &rma_cmpl_cntr, NULL), openct);
 
-        struct fi_av_attr av_attr;
-        memset(&av_attr, 0, sizeof(av_attr));
-        if (MPIDI_OFI_ENABLE_AV_TABLE) {
-            av_attr.type = FI_AV_TABLE;
-        } else {
-            av_attr.type = FI_AV_MAP;
-        }
-        av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-
-        /* ------------------------------------------------------------------------ */
-        /* Attempt to open a shared address vector read-only. The open will fail if */
-        /* the address vector does not exist, otherwise the location of the mapped  */
-        /* fi_addr_t array will be returned in the 'map_addr' field of the address  */
-        /* vector attribute structure.                                              */
-        /* ------------------------------------------------------------------------ */
-        char av_name[128];
-        MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
-        av_attr.name = av_name;
-        av_attr.flags = FI_READ;
-        av_attr.map_addr = 0;
-
-        if (0 == fi_av_open(domain, &av_attr, &av, NULL)) {
+        /* ----
+         * Attempt to open a shared address vector read-only.
+         * The open will fail if the address vector does not exist.
+         * Otherwise, set MPIDI_OFI_global.got_named_av and
+         * copy the map_addr.
+         */
+        /* TODO: only try that when MULTI-VCI is not configured */
+        if (try_open_shared_av(domain, &av)) {
             MPIDI_OFI_global.got_named_av = 1;
+        }
 
-            /* TODO - the copy from the pre-existing av map into the 'MPIDI_OFI_AV' */
-            /* is wasteful and should be changed so that the 'MPIDI_OFI_AV' object  */
-            /* directly references the mapped fi_addr_t array instead               */
-            fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
-            for (int i = 0; i < MPIR_Process.size; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                                (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
-                                 i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
+        if (!MPIDI_OFI_global.got_named_av) {
+            struct fi_av_attr av_attr;
+            memset(&av_attr, 0, sizeof(av_attr));
+            if (MPIDI_OFI_ENABLE_AV_TABLE) {
+                av_attr.type = FI_AV_TABLE;
+            } else {
+                av_attr.type = FI_AV_MAP;
             }
-        } else {
+            av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
+
             av_attr.name = NULL;
             av_attr.flags = 0;
             MPIDI_OFI_CALL(fi_av_open(domain, &av_attr, &av, NULL), avopen);
         }
 
-        /* ------------------------------------------------------------------------ */
-        /* Construct:  Shared TX Context for RMA                                    */
-        /* ------------------------------------------------------------------------ */
-        if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
-            int ret;
-            struct fi_tx_attr tx_attr;
-            memset(&tx_attr, 0, sizeof(tx_attr));
-            /* A shared transmit context’s attributes must be a union of all associated
-             * endpoints' transmit capabilities. */
-            tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-            tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-            tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
-            MPIDI_OFI_CALL_RETURN(fi_stx_context(domain, &tx_attr, &rma_stx_ctx, NULL), ret);
-            if (ret < 0) {
-                MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            "Failed to create shared TX context for RMA, "
-                            "falling back to global EP/counter scheme");
-                rma_stx_ctx = NULL;
-            }
-        }
-
         MPIDI_OFI_global.domain = domain;
         MPIDI_OFI_global.av = av;
         MPIDI_OFI_global.rma_cmpl_cntr = rma_cmpl_cntr;
-        MPIDI_OFI_global.rma_stx_ctx = rma_stx_ctx;
     } else {
         /* for vni > 0, shared objects already created */
         domain = MPIDI_OFI_global.domain;
         av = MPIDI_OFI_global.av;
         rma_cmpl_cntr = MPIDI_OFI_global.rma_cmpl_cntr;
-        rma_stx_ctx = MPIDI_OFI_global.rma_stx_ctx;
     }
 
     struct fid_cq *cq;
@@ -1128,6 +1091,14 @@ static int create_vni_context(int vni)
         MPIDI_OFI_global.ctx[vni].cq = cq;
     }
 
+    /* ------------------------------------------------------------------------ */
+    /* Construct:  Shared TX Context for RMA                                    */
+    /* ------------------------------------------------------------------------ */
+    if (vni == 0) {
+        mpi_errno = create_rma_stx_ctx(domain, &MPIDI_OFI_global.rma_stx_ctx);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
     return mpi_errno;
@@ -1189,6 +1160,71 @@ static int destroy_vni_context(int vni)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
+{
+    struct fi_av_attr av_attr;
+    memset(&av_attr, 0, sizeof(av_attr));
+    if (MPIDI_OFI_ENABLE_AV_TABLE) {
+        av_attr.type = FI_AV_TABLE;
+    } else {
+        av_attr.type = FI_AV_MAP;
+    }
+    av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
+
+    char av_name[128];
+    MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
+    av_attr.name = av_name;
+    av_attr.flags = FI_READ;
+    av_attr.map_addr = 0;
+
+    if (0 == fi_av_open(domain, &av_attr, p_av, NULL)) {
+        /* TODO - the copy from the pre-existing av map into the 'MPIDI_OFI_AV' */
+        /* is wasteful and should be changed so that the 'MPIDI_OFI_AV' object  */
+        /* directly references the mapped fi_addr_t array instead               */
+        fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
+        for (int i = 0; i < MPIR_Process.size; i++) {
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
+                            (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
+                             i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
+        }
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_stx_ctx)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
+        int ret;
+        struct fi_tx_attr tx_attr;
+        memset(&tx_attr, 0, sizeof(tx_attr));
+        /* A shared transmit context’s attributes must be a union of all associated
+         * endpoints' transmit capabilities. */
+        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
+        MPIDI_OFI_CALL_RETURN(fi_stx_context(domain, &tx_attr, p_rma_stx_ctx, NULL), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to create shared TX context for RMA, "
+                        "falling back to global EP/counter scheme");
+            *p_rma_stx_ctx = NULL;
+        }
+    }
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
