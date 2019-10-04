@@ -13,6 +13,7 @@
 #define POSIX_TYPES_H_INCLUDED
 
 #include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 enum {
     MPIDI_POSIX_OK,
@@ -39,8 +40,7 @@ typedef struct {
     /* Active recv requests array */
     MPIR_Request **active_rreq;
 
-    MPIDU_shm_seg_t memory;
-    MPIDU_shm_barrier_t *barrier;
+    void *shm_ptr;
 
     /* Keep track of all of the local processes in MPI_COMM_WORLD and what their original rank was
      * in that communicator. */
