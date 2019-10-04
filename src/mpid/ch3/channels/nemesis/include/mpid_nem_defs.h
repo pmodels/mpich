@@ -66,26 +66,9 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a
 #define MPID_NEM_IS_LOCAL(grank) (MPID_nem_mem_region.local_ranks[grank] != MPID_NEM_NON_LOCAL)
 #define MPID_NEM_LOCAL_RANK(grank) (MPID_nem_mem_region.local_ranks[grank])
 
-#define MPID_NEM_NUM_BARRIER_VARS 16
-typedef struct MPID_nem_barrier_vars
-{
-    OPA_int_t context_id;
-    OPA_int_t usage_cnt;
-    OPA_int_t cnt;
-#if MPID_NEM_CACHE_LINE_LEN != SIZEOF_INT
-    char padding0[MPID_NEM_CACHE_LINE_LEN - sizeof(int)];
-#endif
-    OPA_int_t sig0;
-    OPA_int_t sig;
-    char padding1[MPID_NEM_CACHE_LINE_LEN - 2* sizeof(int)];
-}
-MPID_nem_barrier_vars_t;
-
 typedef struct MPID_nem_mem_region
 {
-    MPIDU_shm_seg_t             memory;
-    MPIDU_shm_seg_info_t       *seg;
-    int                         num_seg;
+    void                       *shm_ptr;
     int                         map_lock;
     int                         num_local;
     int                         num_procs;
@@ -98,10 +81,8 @@ typedef struct MPID_nem_mem_region
     MPID_nem_cell_ptr_t         Elements;
     MPID_nem_queue_ptr_t       *FreeQ;
     MPID_nem_queue_ptr_t       *RecvQ;
-    MPIDU_shm_barrier_t        *barrier;
     MPID_nem_queue_ptr_t        my_freeQ;
     MPID_nem_queue_ptr_t        my_recvQ;
-    MPID_nem_barrier_vars_t    *barrier_vars;
     int                         rank;
     struct MPID_nem_mem_region *next;
 } MPID_nem_mem_region_t, *MPID_nem_mem_region_ptr_t;
