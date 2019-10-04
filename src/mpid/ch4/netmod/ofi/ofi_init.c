@@ -1010,10 +1010,6 @@ static int create_vni_context(int vni)
     cq_attr.format = FI_CQ_FORMAT_TAGGED;
     MPIDI_OFI_CALL(fi_cq_open(domain, &cq_attr, &cq, NULL), opencq);
 
-    if (vni == 0) {
-        MPIDI_OFI_global.p2p_cq = cq;
-    }
-
     struct fid_ep *ep;
     struct fid_ep *tx;
     struct fid_ep *rx;
@@ -1131,9 +1127,7 @@ static int destroy_vni_context(int vni)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].tx), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].rx), epclose);
-        if (vni > 0) {
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].cq), cqclose);
-        }
+        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].cq), cqclose);
     }
 
     if (vni == 0) {
@@ -1153,7 +1147,6 @@ static int destroy_vni_context(int vni)
 
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ep->fid), epclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.av->fid), avclose);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.p2p_cq->fid), cqclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.rma_cmpl_cntr->fid), cntrclose);
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.domain->fid), domainclose);
     }
