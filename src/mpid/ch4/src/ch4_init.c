@@ -341,7 +341,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = MPIDIG_init(MPIR_Process.comm_world, MPIR_Process.comm_self);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
+    mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     {

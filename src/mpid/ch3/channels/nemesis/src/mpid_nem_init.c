@@ -230,7 +230,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif  /*FORCE_ASYM */
 
     /* Initialize core shared memory segment */
-    mpi_errno = MPIDU_Init_shm_init(MPIR_Process.rank, MPIR_Process.size, MPIR_Process.node_map);
+    mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Request fastboxes region */
