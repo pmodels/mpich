@@ -199,7 +199,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
      * that all registered memory regions must be backed by physical memory
      * pages at the time the registration call is made. */
     if ((!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) || base) {
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,       /* In:  Domain Object       */
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
                                  base,  /* In:  Lower memory address */
                                  win->size,     /* In:  Length              */
                                  FI_REMOTE_READ | FI_REMOTE_WRITE,      /* In:  Expose MR for read  */
@@ -270,9 +270,9 @@ static int win_set_per_win_sync(MPIR_Win * win)
     memset(&cntr_attr, 0, sizeof(cntr_attr));
     cntr_attr.events = FI_CNTR_EVENTS_COMP;
     cntr_attr.wait_obj = FI_WAIT_UNSPEC;
-    MPIDI_OFI_CALL_RETURN(fi_cntr_open(MPIDI_OFI_global.domain, /* In:  Domain Object        */
+    MPIDI_OFI_CALL_RETURN(fi_cntr_open(MPIDI_OFI_global.ctx[0].domain,  /* In:  Domain Object */
                                        &cntr_attr,      /* In:  Configuration object */
-                                       &MPIDI_OFI_WIN(win).cmpl_cntr,   /* Out: Counter Object       */
+                                       &MPIDI_OFI_WIN(win).cmpl_cntr,   /* Out: Counter Object */
                                        NULL), ret);     /* Context: counter events   */
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to open completion counter.\n");
@@ -331,8 +331,8 @@ static int win_init_sep(MPIR_Win * win)
         finfo->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_rma_sep_tx_cnt;
 
         MPIDI_OFI_CALL_RETURN(fi_scalable_ep
-                              (MPIDI_OFI_global.domain, finfo, &MPIDI_OFI_global.rma_sep, NULL),
-                              ret);
+                              (MPIDI_OFI_global.ctx[0].domain, finfo, &MPIDI_OFI_global.rma_sep,
+                               NULL), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to create scalable endpoint.\n");
             MPIDI_OFI_global.rma_sep = NULL;
@@ -341,7 +341,8 @@ static int win_init_sep(MPIR_Win * win)
         }
 
         MPIDI_OFI_CALL_RETURN(fi_scalable_ep_bind
-                              (MPIDI_OFI_global.rma_sep, &(MPIDI_OFI_global.av->fid), 0), ret);
+                              (MPIDI_OFI_global.rma_sep, &(MPIDI_OFI_global.ctx[0].av->fid), 0),
+                              ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to bind scalable endpoint to address vector.\n");
@@ -453,7 +454,7 @@ static int win_init_stx(MPIR_Win * win)
 
     finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT;     /* Request a shared context */
     finfo->ep_attr->rx_ctx_cnt = 0;     /* We don't need RX contexts */
-    MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_OFI_global.domain,
+    MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_OFI_global.ctx[0].domain,
                                       finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -484,7 +485,8 @@ static int win_init_stx(MPIR_Win * win)
             goto fn_fail;
         }
 
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_global.av->fid, 0), ret);
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind
+                              (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_global.ctx[0].av->fid, 0), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to bind endpoint to address vector.\n");
@@ -527,7 +529,7 @@ static int win_init_global(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
     MPIDI_OFI_WIN(win).ep = MPIDI_OFI_global.ctx[0].tx;
-    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.rma_cmpl_cntr;
+    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_OFI_global.ctx[0].rma_cmpl_cntr;
     MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_global.rma_issued_cntr;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
@@ -828,7 +830,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win)
         }
         if (MPIDI_OFI_WIN(win).ep != MPIDI_OFI_global.ctx[0].tx)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
-        if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_OFI_global.rma_cmpl_cntr)
+        if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_OFI_global.ctx[0].rma_cmpl_cntr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
         if (MPIDI_OFI_WIN(win).mr)
             MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);

@@ -584,7 +584,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* the socket to the KVS              */
         /* ---------------------------------- */
         MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ep, MPIDI_OFI_global.addrname,
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname,
                                   &MPIDI_OFI_global.addrnamelen), getname);
         MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
@@ -605,7 +605,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
-                           (MPIDI_OFI_global.av, table, num_nodes, mapped_table, 0ULL, NULL),
+                           (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
                            avmap);
 
             for (i = 0; i < num_nodes; i++) {
@@ -620,14 +620,16 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
             for (i = 0; i < MPIR_Process.size; i++) {
                 if (rank_map[i] >= 0) {
-                    mpi_errno = MPIDI_OFI_av_insert(i, (char *) table + recv_bc_len * rank_map[i]);
+                    mpi_errno =
+                        MPIDI_OFI_av_insert(0, i, (char *) table + recv_bc_len * rank_map[i]);
                     MPIR_ERR_CHECK(mpi_errno);
                 }
             }
             MPIDU_bc_table_destroy();
         } else {
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, size, mapped_table, 0ULL, NULL),
+            MPIDI_OFI_CALL(fi_av_insert
+                           (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL),
                            avmap);
 
             for (i = 0; i < size; i++) {
@@ -828,7 +830,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
-        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
+        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
                                     &temp_buf[i * MPIDI_OFI_global.addrnamelen],
                                     &(*local_upid_size)[i]), avlookup);
         total_size += (*local_upid_size)[i];
@@ -883,7 +885,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
                 sz = MPIDI_OFI_global.addrnamelen;
-                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.av, MPIDI_OFI_TO_PHYS(k, j),
+                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_TO_PHYS(k, j),
                                             &tbladdr, &sz), avlookup);
                 if (sz == remote_upid_size[i]
                     && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
@@ -909,7 +911,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, new_upids[i],
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
                                         1,
                                         (fi_addr_t *) &
                                         MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
