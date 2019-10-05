@@ -24,84 +24,91 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
 static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
 
+typedef struct mpi_names_t {
+    MPI_Datatype dtype;
+    const char *name;
+} mpi_names_t;
+#define type_name_entry(x_) { x_, #x_ }
+
 /* FIXME does the order of this list need to correspond to anything in
    particular?  There are several lists of predefined types sprinkled throughout
    the codebase and it's unclear which (if any) of them must match exactly.
    [goodell@ 2009-03-17] */
-static MPI_Datatype mpi_dtypes[] = {
-    MPI_CHAR,
-    MPI_UNSIGNED_CHAR,
-    MPI_SIGNED_CHAR,
-    MPI_BYTE,
-    MPI_WCHAR,
-    MPI_SHORT,
-    MPI_UNSIGNED_SHORT,
-    MPI_INT,
-    MPI_UNSIGNED,
-    MPI_LONG,
-    MPI_UNSIGNED_LONG,
-    MPI_FLOAT,
-    MPI_DOUBLE,
-    MPI_LONG_DOUBLE,
-    MPI_LONG_LONG,
-    MPI_UNSIGNED_LONG_LONG,
-    MPI_PACKED,
-    MPI_LB,
-    MPI_UB,
-    MPI_2INT,
+static mpi_names_t mpi_dtypes[] = {
+    type_name_entry(MPI_CHAR),
+    type_name_entry(MPI_UNSIGNED_CHAR),
+    type_name_entry(MPI_SIGNED_CHAR),
+    type_name_entry(MPI_BYTE),
+    type_name_entry(MPI_WCHAR),
+    type_name_entry(MPI_SHORT),
+    type_name_entry(MPI_UNSIGNED_SHORT),
+    type_name_entry(MPI_INT),
+    type_name_entry(MPI_UNSIGNED),
+    type_name_entry(MPI_LONG),
+    type_name_entry(MPI_UNSIGNED_LONG),
+    type_name_entry(MPI_FLOAT),
+    type_name_entry(MPI_DOUBLE),
+    type_name_entry(MPI_LONG_DOUBLE),
+    type_name_entry(MPI_LONG_LONG_INT),
+    type_name_entry(MPI_UNSIGNED_LONG_LONG),
+    type_name_entry(MPI_PACKED),
+    type_name_entry(MPI_LB),
+    type_name_entry(MPI_UB),
+    type_name_entry(MPI_2INT),
 
     /* C99 types */
-    MPI_INT8_T,
-    MPI_INT16_T,
-    MPI_INT32_T,
-    MPI_INT64_T,
-    MPI_UINT8_T,
-    MPI_UINT16_T,
-    MPI_UINT32_T,
-    MPI_UINT64_T,
-    MPI_C_BOOL,
-    MPI_C_FLOAT_COMPLEX,
-    MPI_C_DOUBLE_COMPLEX,
-    MPI_C_LONG_DOUBLE_COMPLEX,
+    type_name_entry(MPI_INT8_T),
+    type_name_entry(MPI_INT16_T),
+    type_name_entry(MPI_INT32_T),
+    type_name_entry(MPI_INT64_T),
+    type_name_entry(MPI_UINT8_T),
+    type_name_entry(MPI_UINT16_T),
+    type_name_entry(MPI_UINT32_T),
+    type_name_entry(MPI_UINT64_T),
+    type_name_entry(MPI_C_BOOL),
+    type_name_entry(MPI_C_COMPLEX),
+    type_name_entry(MPI_C_DOUBLE_COMPLEX),
+    type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
 
     /* address/offset/count types */
-    MPI_AINT,
-    MPI_OFFSET,
-    MPI_COUNT,
+    type_name_entry(MPI_AINT),
+    type_name_entry(MPI_OFFSET),
+    type_name_entry(MPI_COUNT),
 
     /* Fortran types */
-    MPI_COMPLEX,
-    MPI_DOUBLE_COMPLEX,
-    MPI_LOGICAL,
-    MPI_REAL,
-    MPI_DOUBLE_PRECISION,
-    MPI_INTEGER,
-    MPI_2INTEGER,
+    type_name_entry(MPI_COMPLEX),
+    type_name_entry(MPI_DOUBLE_COMPLEX),
+    type_name_entry(MPI_LOGICAL),
+    type_name_entry(MPI_REAL),
+    type_name_entry(MPI_DOUBLE_PRECISION),
+    type_name_entry(MPI_INTEGER),
+    type_name_entry(MPI_2INTEGER),
 #ifdef MPICH_DEFINE_2COMPLEX
-    MPI_2COMPLEX,
-    MPI_2DOUBLE_COMPLEX,
+    type_name_entry(MPI_2COMPLEX),
+    type_name_entry(MPI_2DOUBLE_COMPLEX),
 #endif
-    MPI_2REAL,
-    MPI_2DOUBLE_PRECISION,
-    MPI_CHARACTER,
+    type_name_entry(MPI_2REAL),
+    type_name_entry(MPI_2DOUBLE_PRECISION),
+    type_name_entry(MPI_CHARACTER),
 #ifdef HAVE_FORTRAN_BINDING
     /* Size-specific types; these are in section 10.2.4 (Extended Fortran
      * Support) as well as optional in MPI-1
      */
-    MPI_REAL4,
-    MPI_REAL8,
-    MPI_REAL16,
-    MPI_COMPLEX8,
-    MPI_COMPLEX16,
-    MPI_COMPLEX32,
-    MPI_INTEGER1,
-    MPI_INTEGER2,
-    MPI_INTEGER4,
-    MPI_INTEGER8,
-    MPI_INTEGER16,
+    type_name_entry(MPI_REAL4),
+    type_name_entry(MPI_REAL8),
+    type_name_entry(MPI_REAL16),
+    type_name_entry(MPI_COMPLEX8),
+    type_name_entry(MPI_COMPLEX16),
+    type_name_entry(MPI_COMPLEX32),
+    type_name_entry(MPI_INTEGER1),
+    type_name_entry(MPI_INTEGER2),
+    type_name_entry(MPI_INTEGER4),
+    type_name_entry(MPI_INTEGER8),
+    type_name_entry(MPI_INTEGER16),
 #endif
+
     /* This entry is a guaranteed end-of-list item */
-    (MPI_Datatype) - 1,
+    {(MPI_Datatype) - 1, ""}
 };
 
 /*
@@ -121,13 +128,13 @@ static MPI_Datatype mpi_dtypes[] = {
     these types could be terribly difficult to track down!)
 
  */
-static MPI_Datatype mpi_pairtypes[] = {
-    MPI_FLOAT_INT,
-    MPI_DOUBLE_INT,
-    MPI_LONG_INT,
-    MPI_SHORT_INT,
-    MPI_LONG_DOUBLE_INT,
-    (MPI_Datatype) - 1
+static mpi_names_t mpi_pairtypes[] = {
+    type_name_entry(MPI_FLOAT_INT),
+    type_name_entry(MPI_DOUBLE_INT),
+    type_name_entry(MPI_LONG_INT),
+    type_name_entry(MPI_SHORT_INT),
+    type_name_entry(MPI_LONG_DOUBLE_INT),
+    {(MPI_Datatype) - 1, ""}
 };
 
 int MPII_create_pairtypes(void)
@@ -139,11 +146,11 @@ int MPII_create_pairtypes(void)
     MPIR_Assert(MPIR_Datatype_mem.initialized == 0);
     MPIR_Assert(MPIR_DATATYPE_PREALLOC >= 5);
 
-    for (i = 0; mpi_pairtypes[i] != (MPI_Datatype) - 1; ++i) {
+    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; ++i) {
         /* types based on 'long long' and 'long double', may be disabled at
          * configure time, and their values set to MPI_DATATYPE_NULL.  skip any
          * such types. */
-        if (mpi_pairtypes[i] == MPI_DATATYPE_NULL)
+        if (mpi_pairtypes[i].dtype == MPI_DATATYPE_NULL)
             continue;
         /* XXX: this allocation strategy isn't right if one or more of the
          * pairtypes is MPI_DATATYPE_NULL.  in fact, the assert below will
@@ -159,13 +166,14 @@ int MPII_create_pairtypes(void)
         ptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
 
         MPIR_Assert(ptr);
-        MPIR_Assert(ptr->handle == mpi_pairtypes[i]);
+        MPIR_Assert(ptr->handle == mpi_pairtypes[i].dtype);
         /* this is a redundant alternative to the previous statement */
         MPIR_Assert((void *) ptr ==
-                    (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
+                    (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i].dtype)));
 
-        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i], (MPIR_Datatype *) ptr);
+        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) ptr);
         MPIR_ERR_CHECK(mpi_errno);
+        MPL_strncpy(ptr->name, mpi_pairtypes[i].name, MPI_MAX_OBJECT_NAME);
     }
 
     MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
@@ -179,11 +187,11 @@ static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
     int i;
     MPIR_Datatype *dptr;
 
-    for (i = 0; mpi_pairtypes[i] != (MPI_Datatype) - 1; i++) {
-        if (mpi_pairtypes[i] != MPI_DATATYPE_NULL) {
-            MPIR_Datatype_get_ptr(mpi_pairtypes[i], dptr);
+    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; i++) {
+        if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
+            MPIR_Datatype_get_ptr(mpi_pairtypes[i].dtype, dptr);
             MPIR_Datatype_ptr_release(dptr);
-            mpi_pairtypes[i] = MPI_DATATYPE_NULL;
+            mpi_pairtypes[i].dtype = MPI_DATATYPE_NULL;
         }
     }
     return 0;
@@ -199,9 +207,9 @@ int MPIR_Datatype_builtin_fillin(void)
     MPI_Datatype d = MPI_DATATYPE_NULL;
 
     /* If the datatype is -1, we're at the end of mpi_dtypes */
-    for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i] != -1; i++) {
+    for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i].dtype != -1; i++) {
         /* Compute the index from the value of the handle */
-        d = mpi_dtypes[i];
+        d = mpi_dtypes[i].dtype;
 
         /* Some of the size-specific types may be null, as might be types
          * based on 'long long' and 'long double' if those types were
@@ -224,14 +232,15 @@ int MPIR_Datatype_builtin_fillin(void)
         dptr->handle = d;
         dptr->is_contig = 1;
         MPIR_Object_set_ref(dptr, 1);
-        MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
+        MPIR_Datatype_get_size_macro(mpi_dtypes[i].dtype, dptr->size);
         dptr->extent = dptr->size;
         dptr->ub = dptr->size;
         dptr->true_ub = dptr->size;
         dptr->contents = NULL;  /* should never get referenced? */
+        MPL_strncpy(dptr->name, mpi_dtypes[i].name, MPI_MAX_OBJECT_NAME);
     }
     /* --BEGIN ERROR HANDLING-- */
-    if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
+    if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i].dtype != -1) {
         /* We did not hit the end-of-list */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
                                          __func__, __LINE__,
