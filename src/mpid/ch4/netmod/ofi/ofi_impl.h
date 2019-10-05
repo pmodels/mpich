@@ -289,14 +289,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int rank, void *addrname)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrname)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t addr;
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, addrname, 1, &addr, 0ULL, NULL), avmap);
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest = addr;
+    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni].av, addrname, 1, &addr, 0ULL, NULL),
+                   avmap);
+    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).dest = addr;
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
+    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).ep_idx = 0;
 #endif
 
   fn_exit:

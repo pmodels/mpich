@@ -295,7 +295,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
     MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
                 MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-    MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,
+    MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
                              data,
                              data_sz,
                              FI_REMOTE_READ,
