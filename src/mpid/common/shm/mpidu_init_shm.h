@@ -14,7 +14,7 @@ typedef struct MPIDU_Init_shm_block {
     char block[MPIDU_SHM_CACHE_LINE_LEN * 16];
 } MPIDU_Init_shm_block_t;
 
-int MPIDU_Init_shm_init(int rank, int size, int *nodemap);
+int MPIDU_Init_shm_init(void);
 int MPIDU_Init_shm_finalize(void);
 int MPIDU_Init_shm_barrier(void);
 int MPIDU_Init_shm_put(void *orig, size_t len);

@@ -5,7 +5,6 @@
  */
 #include <mpidimpl.h>
 #include "mpidu_init_shm.h"
-#include "mpir_nodemap.h"
 #include "mpl_shm.h"
 #include "mpidimpl.h"
 #include "mpidu_shm.h"
@@ -76,10 +75,11 @@ static int Init_shm_barrier()
     return mpi_errno;
 }
 
-int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
+int MPIDU_Init_shm_init(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int local_leader;
+    int rank;
 #ifdef OPA_USE_LOCK_BASE_PRIMITIVES
     int ret;
     int ipc_lock_offset;
@@ -93,7 +93,10 @@ int MPIDU_Init_shm_init(int rank, int size, int *nodemap)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_INIT);
 
-    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &my_local_rank, &local_leader);
+    rank = MPIR_Process.rank;
+    local_size = MPIR_Process.local_size;
+    my_local_rank = MPIR_Process.local_rank;
+    local_leader = MPIR_Process.node_local_map[0];
 
     char *serialized_hnd = NULL;
     int serialized_hnd_size = 0;
