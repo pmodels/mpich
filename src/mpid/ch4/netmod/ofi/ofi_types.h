@@ -246,6 +246,11 @@ typedef struct {
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
+    struct fid_domain *domain;
+    struct fid_av *av;
+    struct fid_ep *ep;
+    struct fid_cntr *rma_cmpl_cntr;
+
     struct fid_ep *tx;
     struct fid_ep *rx;
     struct fid_cq *cq;
@@ -317,11 +322,8 @@ typedef struct {
     /* OFI objects */
     int avtid;
     struct fi_info *prov_use;
-    struct fid_domain *domain;
     struct fid_fabric *fabric;
-    struct fid_av *av;
-    struct fid_ep *ep;
-    struct fid_cntr *rma_cmpl_cntr;
+
     struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
     struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 

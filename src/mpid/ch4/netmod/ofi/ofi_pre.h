@@ -25,6 +25,11 @@
 
 /* Defines */
 
+#define MPIDI_OFI_VCI_USE_DOMAIN       1
+#ifndef MPIDI_OFI_VCI_USE_DOMAIN
+#define MPIDI_OFI_VCI_USE_SEPCTX       1
+#endif
+
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
