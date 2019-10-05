@@ -483,8 +483,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
         /* There are more processes in the subset than requested within the node.
          * Split further inside each node */
         if (num_processes_at_node[node_index] > subcomm_min_size && node_index == color &&
-            ((node_index < (node_index - 1) ||
-              num_processes_at_node[node_index] < subcomm_min_size))) {
+            num_processes_at_node[node_index] < subcomm_min_size) {
             MPIR_Comm *node_comm;
             int subcomm_rank;
             int tree_depth;
