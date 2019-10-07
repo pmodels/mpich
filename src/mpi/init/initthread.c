@@ -118,9 +118,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize predefined datatype structures */
-    mpi_errno = MPIR_Datatype_builtin_fillin();
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPII_create_pairtypes();
+    mpi_errno = MPIR_Datatype_init_predefined();
     MPIR_ERR_CHECK(mpi_errno);
 
     int thread_provided = 0;
