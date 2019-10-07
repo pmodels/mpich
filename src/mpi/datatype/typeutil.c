@@ -253,6 +253,29 @@ int MPIR_Datatype_builtin_fillin(void)
     return mpi_errno;
 }
 
+int MPIR_Datatype_commit_pairtypes(void)
+{
+    /* commit pairtypes */
+    for (int i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; i++) {
+        if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
+            int err;
+
+            err = MPIR_Type_commit(&mpi_pairtypes[i].dtype);
+
+            /* --BEGIN ERROR HANDLING-- */
+            if (err) {
+                return MPIR_Err_create_code(MPI_SUCCESS,
+                                            MPIR_ERR_RECOVERABLE,
+                                            "MPIR_Type_commit",
+                                            __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+            }
+            /* --END ERROR HANDLING-- */
+        }
+    }
+
+    return MPI_SUCCESS;
+}
+
 /* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
