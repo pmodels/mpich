@@ -79,9 +79,9 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        int *node_roots, num_nodes;
+        int *node_roots = MPIR_Process.node_root_map;
+        int num_nodes = MPIR_Process.num_nodes;
 
-        MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
             ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
@@ -90,7 +90,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
-        MPL_free(node_roots);
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
