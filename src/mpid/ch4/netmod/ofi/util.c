@@ -513,11 +513,7 @@ static inline void add_index(MPI_Datatype datatype, int *idx)
 
 void MPIDI_OFI_index_datatypes()
 {
-    static bool needs_init = true;
     int idx = 0;
-
-    if (!needs_init)
-        return;
 
     add_index(MPI_CHAR, &idx);
     add_index(MPI_UNSIGNED_CHAR, &idx);
@@ -600,7 +596,4 @@ void MPIDI_OFI_index_datatypes()
     /* do not generate map when atomics are not enabled */
     if (MPIDI_OFI_ENABLE_ATOMICS)
         create_dt_map();
-
-    /* only need to do this once */
-    needs_init = false;
 }
