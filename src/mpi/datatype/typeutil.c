@@ -111,23 +111,6 @@ static mpi_names_t mpi_dtypes[] = {
     {(MPI_Datatype) - 1, ""}
 };
 
-/*
-  MPII_create_pairtypes()
-
-  The purpose of this function is to set up the following pair types:
-  - MPI_FLOAT_INT
-  - MPI_DOUBLE_INT
-  - MPI_LONG_INT
-  - MPI_SHORT_INT
-  - MPI_LONG_DOUBLE_INT
-
-  The assertions in this code ensure that:
-  - this function is called before other types are allocated
-  - there are enough spaces in the direct block to hold our types
-  - we actually get the values we expect (otherwise errors regarding
-    these types could be terribly difficult to track down!)
-
- */
 static mpi_names_t mpi_pairtypes[] = {
     type_name_entry(MPI_FLOAT_INT),
     type_name_entry(MPI_DOUBLE_INT),
@@ -136,51 +119,6 @@ static mpi_names_t mpi_pairtypes[] = {
     type_name_entry(MPI_LONG_DOUBLE_INT),
     {(MPI_Datatype) - 1, ""}
 };
-
-int MPII_create_pairtypes(void)
-{
-    int i;
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Datatype *ptr;
-
-    MPIR_Assert(MPIR_Datatype_mem.initialized == 0);
-    MPIR_Assert(MPIR_DATATYPE_PREALLOC >= 5);
-
-    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; ++i) {
-        /* types based on 'long long' and 'long double', may be disabled at
-         * configure time, and their values set to MPI_DATATYPE_NULL.  skip any
-         * such types. */
-        if (mpi_pairtypes[i].dtype == MPI_DATATYPE_NULL)
-            continue;
-        /* XXX: this allocation strategy isn't right if one or more of the
-         * pairtypes is MPI_DATATYPE_NULL.  in fact, the assert below will
-         * fail if any type other than the las in the list is equal to
-         * MPI_DATATYPE_NULL.  obviously, this should be fixed, but I need
-         * to talk to Rob R. first. -- BRT */
-        /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
-         * only one that is ever optional and it comes last */
-
-        /* we use the _unsafe version because we are still in MPI_Init, before
-         * multiple threads are permitted and possibly before support for
-         * critical sections is entirely setup */
-        ptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
-
-        MPIR_Assert(ptr);
-        MPIR_Assert(ptr->handle == mpi_pairtypes[i].dtype);
-        /* this is a redundant alternative to the previous statement */
-        MPIR_Assert((void *) ptr ==
-                    (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i].dtype)));
-
-        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPL_strncpy(ptr->name, mpi_pairtypes[i].name, MPI_MAX_OBJECT_NAME);
-    }
-
-    MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
-
-  fn_fail:
-    return mpi_errno;
-}
 
 static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 {
@@ -199,7 +137,7 @@ static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 
 /* Call this routine to associate a MPIR_Datatype with each predefined
    datatype. */
-int MPIR_Datatype_builtin_fillin(void)
+int MPIR_Datatype_init_predefined(void)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned int i;
@@ -250,6 +188,48 @@ int MPIR_Datatype_builtin_fillin(void)
     }
     /* --END ERROR HANDLING-- */
 
+    /* Setup pairtypes. The following assertions ensure that:
+     * - this function is called before other types are allocated
+     * - there are enough spaces in the direct block to hold our types
+     * - we actually get the values we expect (otherwise errors regarding
+     *   these types could be terribly difficult to track down!)
+     */
+    MPIR_Assert(MPIR_Datatype_mem.initialized == 0);
+    MPIR_Assert(MPIR_DATATYPE_PREALLOC >= 5);
+
+    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; ++i) {
+        /* types based on 'long long' and 'long double', may be disabled at
+         * configure time, and their values set to MPI_DATATYPE_NULL.  skip any
+         * such types. */
+        if (mpi_pairtypes[i].dtype == MPI_DATATYPE_NULL)
+            continue;
+        /* XXX: this allocation strategy isn't right if one or more of the
+         * pairtypes is MPI_DATATYPE_NULL.  in fact, the assert below will
+         * fail if any type other than the las in the list is equal to
+         * MPI_DATATYPE_NULL.  obviously, this should be fixed, but I need
+         * to talk to Rob R. first. -- BRT */
+        /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
+         * only one that is ever optional and it comes last */
+
+        /* we use the _unsafe version because we are still in MPI_Init, before
+         * multiple threads are permitted and possibly before support for
+         * critical sections is entirely setup */
+        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
+
+        MPIR_Assert(dptr);
+        MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);
+        /* this is a redundant alternative to the previous statement */
+        MPIR_Assert((void *) dptr ==
+                    (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i].dtype)));
+
+        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) dptr);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPL_strncpy(dptr->name, mpi_pairtypes[i].name, MPI_MAX_OBJECT_NAME);
+    }
+
+    MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+
+  fn_fail:
     return mpi_errno;
 }
 
