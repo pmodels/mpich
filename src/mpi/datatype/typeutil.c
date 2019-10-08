@@ -108,9 +108,6 @@ static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_CXX_FLOAT_COMPLEX),
     type_name_entry(MPI_CXX_DOUBLE_COMPLEX),
     type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX),
-
-    /* This entry is a guaranteed end-of-list item */
-    {(MPI_Datatype) - 1, ""}
 };
 
 static mpi_names_t mpi_pairtypes[] = {
@@ -119,7 +116,6 @@ static mpi_names_t mpi_pairtypes[] = {
     type_name_entry(MPI_LONG_INT),
     type_name_entry(MPI_SHORT_INT),
     type_name_entry(MPI_LONG_DOUBLE_INT),
-    {(MPI_Datatype) - 1, ""}
 };
 
 static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
@@ -127,7 +123,7 @@ static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
     int i;
     MPIR_Datatype *dptr;
 
-    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; i++) {
+    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
         if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
             MPIR_Datatype_get_ptr(mpi_pairtypes[i].dtype, dptr);
             MPIR_Datatype_ptr_release(dptr);
@@ -146,8 +142,7 @@ int MPIR_Datatype_init_predefined(void)
     MPIR_Datatype *dptr;
     MPI_Datatype d = MPI_DATATYPE_NULL;
 
-    /* If the datatype is -1, we're at the end of mpi_dtypes */
-    for (i = 0; i < MPIR_DATATYPE_N_BUILTIN && mpi_dtypes[i].dtype != -1; i++) {
+    for (i = 0; i < sizeof(mpi_dtypes) / sizeof(mpi_dtypes[0]); i++) {
         /* Compute the index from the value of the handle */
         d = mpi_dtypes[i].dtype;
 
@@ -179,16 +174,6 @@ int MPIR_Datatype_init_predefined(void)
         dptr->contents = NULL;  /* should never get referenced? */
         MPL_strncpy(dptr->name, mpi_dtypes[i].name, MPI_MAX_OBJECT_NAME);
     }
-    /* --BEGIN ERROR HANDLING-- */
-    if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i].dtype != -1) {
-        /* We did not hit the end-of-list */
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                         __func__, __LINE__,
-                                         MPI_ERR_INTERN, "**typeinitfail",
-                                         "**typeinitfail %d", i - 1);
-        return mpi_errno;
-    }
-    /* --END ERROR HANDLING-- */
 
     /* Setup pairtypes. The following assertions ensure that:
      * - this function is called before other types are allocated
@@ -199,7 +184,7 @@ int MPIR_Datatype_init_predefined(void)
     MPIR_Assert(MPIR_Datatype_mem.initialized == 0);
     MPIR_Assert(MPIR_DATATYPE_PREALLOC >= 5);
 
-    for (i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; ++i) {
+    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); ++i) {
         /* types based on 'long long' and 'long double', may be disabled at
          * configure time, and their values set to MPI_DATATYPE_NULL.  skip any
          * such types. */
@@ -238,7 +223,7 @@ int MPIR_Datatype_init_predefined(void)
 int MPIR_Datatype_commit_pairtypes(void)
 {
     /* commit pairtypes */
-    for (int i = 0; mpi_pairtypes[i].dtype != (MPI_Datatype) - 1; i++) {
+    for (int i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
         if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
             int err;
 
