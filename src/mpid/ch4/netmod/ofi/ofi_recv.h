@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t max_pipe = INT64_MAX;
+    size_t max_pipe = SIZE_MAX;
     size_t omax = MPIDI_OFI_global.rx_iov_limit;
     size_t countp =
         MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), data_sz, max_pipe);

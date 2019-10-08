@@ -334,7 +334,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                            int handler_id,
                                            const void *am_hdr,
                                            size_t am_hdr_sz,
-                                           const void *data, MPI_Count count, MPIR_Request * sreq)
+                                           const void *data, size_t data_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -345,13 +345,13 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
-    MPIR_Assert((uint64_t) count < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
+    MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = am_hdr_sz;
-    msg_hdr->data_sz = count;
+    msg_hdr->data_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
@@ -366,7 +366,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     iov[1].iov_len = am_hdr_sz;
 
     iov[2].iov_base = (void *) data;
-    iov[2].iov_len = count;
+    iov[2].iov_len = data_sz;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
