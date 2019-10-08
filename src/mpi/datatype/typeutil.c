@@ -30,10 +30,6 @@ typedef struct mpi_names_t {
 } mpi_names_t;
 #define type_name_entry(x_) { x_, #x_ }
 
-/* FIXME does the order of this list need to correspond to anything in
-   particular?  There are several lists of predefined types sprinkled throughout
-   the codebase and it's unclear which (if any) of them must match exactly.
-   [goodell@ 2009-03-17] */
 static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_CHAR),
     type_name_entry(MPI_UNSIGNED_CHAR),
