@@ -274,7 +274,7 @@ MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
@@ -449,7 +449,7 @@ static MPI_Op mpi_ops[] = {
   _TBL.field2 = atomic_count;                  \
     }
 
-static inline void create_dt_map()
+static void create_dt_map()
 {
     int i, j;
     size_t dtsize[FI_DATATYPE_LAST];
@@ -499,7 +499,7 @@ static inline void create_dt_map()
         }
 }
 
-static inline void add_index(MPI_Datatype datatype, int *idx)
+static void add_index(MPI_Datatype datatype, int *idx)
 {
     /* MPICH sets predefined datatype handles to MPI_DATATYPE_NULL if they are not supported
      * on the target platform */
