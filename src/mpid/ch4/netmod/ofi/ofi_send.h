@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t countp =
-        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, INT64_MAX);
+        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, SIZE_MAX);
     size_t omax = MPIDI_OFI_global.tx_iov_limit;
     size_t o_size = sizeof(struct iovec);
     size_t cur_o = 0;
