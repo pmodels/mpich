@@ -101,11 +101,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_update_node_info(MPIDI_XPMEM_seg
     int rheight = node->right == NULL ? 0 : node->right->height;
     node->height = (lheight < rheight ? rheight : lheight) + 1;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_UPDATE_NODE_INFO);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_right_rotation(MPIDI_XPMEM_seg_t * parent,
@@ -424,11 +421,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_init(MPIDI_XPMEM_segtree_t * tr
     tree->tree_size = 0;
     MPID_Thread_mutex_create(&tree->lock, &ret);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEGTREE_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Deletes all registered segments in the segment cache.
@@ -560,11 +554,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_deregist(MPIDI_XPMEM_seg_t * seg)
     MPIR_cc_decr(&seg->refcount, &c);
     XPMEM_TRACE("seg: deregister segment %p(refcount %d) vaddr=%p\n", seg,
                 MPIR_cc_get(seg->refcount), seg->vaddr);
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* XPMEM_SEG_H_INCLUDED */
