@@ -206,8 +206,7 @@ int MPIR_Datatype_init_predefined(void)
         MPIR_Assert(dptr);
         MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);
         /* this is a redundant alternative to the previous statement */
-        MPIR_Assert((void *) dptr ==
-                    (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i].dtype)));
+        MPIR_Assert(HANDLE_INDEX(mpi_pairtypes[i].dtype) == i);
 
         mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) dptr);
         MPIR_ERR_CHECK(mpi_errno);
