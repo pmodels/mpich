@@ -48,7 +48,8 @@ int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP);
 
-    ret = MPIR_NODEMAP_build_nodemap(sz, myrank, out_nodemap, sz_out);
+    /* The nodemap is built in MPIR_pmi_init. Runtime rebuilding node_map not supported */
+    MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP);
     return ret;
