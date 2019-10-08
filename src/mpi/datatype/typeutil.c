@@ -167,7 +167,7 @@ int MPIR_Datatype_init_predefined(void)
         dptr->handle = d;
         dptr->is_contig = 1;
         MPIR_Object_set_ref(dptr, 1);
-        MPIR_Datatype_get_size_macro(mpi_dtypes[i].dtype, dptr->size);
+        dptr->size = MPIR_Datatype_get_basic_size(d);
         dptr->extent = dptr->size;
         dptr->ub = dptr->size;
         dptr->true_ub = dptr->size;
