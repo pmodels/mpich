@@ -849,18 +849,14 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int *out_nodemap;
-    out_nodemap = (int *) MPL_malloc(pg->size * sizeof(int), MPL_MEM_ADDRESS);
-
-    mpi_errno = MPIR_NODEMAP_build_nodemap(pg->size, our_pg_rank, out_nodemap, &g_max_node_id);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(g_max_node_id >= 0);
+    out_nodemap = MPIR_Process.node_map;
+    g_max_node_id = MPIR_Process.size - 1;
 
     for (i = 0; i < pg->size; i++) {
         pg->vct[i].node_id = out_nodemap[i];
     }
 
 fn_exit:
-    MPL_free(out_nodemap);
     return mpi_errno;
 fn_fail:
     goto fn_exit;

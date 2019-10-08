@@ -875,9 +875,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Table is constructed.  Map it    */
         /* -------------------------------- */
         if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-            int *node_roots, num_nodes;
-
-            MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
+            int num_nodes = MPIR_Process.num_nodes;
+            int *node_roots = MPIR_Process.node_root_map;
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
                            (MPIDI_OFI_global.av, table, num_nodes, mapped_table, 0ULL, NULL),
@@ -894,7 +893,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 #endif
             }
             MPL_free(mapped_table);
-            MPL_free(node_roots);
         } else {
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, size, mapped_table, 0ULL, NULL),
