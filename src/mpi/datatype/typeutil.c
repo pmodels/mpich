@@ -86,7 +86,6 @@ static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_2REAL),
     type_name_entry(MPI_2DOUBLE_PRECISION),
     type_name_entry(MPI_CHARACTER),
-#ifdef HAVE_FORTRAN_BINDING
     /* Size-specific types; these are in section 10.2.4 (Extended Fortran
      * Support) as well as optional in MPI-1
      */
@@ -101,7 +100,6 @@ static mpi_names_t mpi_dtypes[] = {
     type_name_entry(MPI_INTEGER4),
     type_name_entry(MPI_INTEGER8),
     type_name_entry(MPI_INTEGER16),
-#endif
 
     /* C++ types */
     type_name_entry(MPI_CXX_BOOL),
