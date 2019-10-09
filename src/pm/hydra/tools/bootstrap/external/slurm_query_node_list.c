@@ -95,31 +95,31 @@ static HYD_status list_to_nodes(char *str)
 
     /* compile group-0 regex for old format: "[h00-h12,h14] | h00-h12 | h14" */
     regcomp(&gmatch_old[0],
-            "(,|^)(\\[[-,a-zA-Z0-9]+\\]|[a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)(,|$)",
-            REG_EXTENDED);
+            "(,|^)(\\[[-,a-z0-9]+\\]|[a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)(,|$)",
+            REG_EXTENDED | REG_ICASE);
 
     /* compile group-1 regex for old format: "h00-h12 | h14" */
     regcomp(&gmatch_old[1],
-            "([[,]|^)([a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)([],]|$)", REG_EXTENDED);
+            "([[,]|^)([a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)([],]|$)", REG_EXTENDED | REG_ICASE);
 
     /* compile range regex for old format: "h00-h12" */
-    regcomp(&rmatch_old, "([a-zA-Z]+)([0-9]+)-([a-zA-Z]+)([0-9]+)", REG_EXTENDED);
+    regcomp(&rmatch_old, "([a-z]+)([0-9]+)-([a-z]+)([0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile element regex for old format: "h14" */
-    regcomp(&ematch_old, "([a-zA-Z]+[0-9]+)", REG_EXTENDED);
+    regcomp(&ematch_old, "([a-z]+[0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile group-0 regex for new format: "h00-[00-12,14] | h00[00-12,14] | h00-14 | h0014" */
-    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z0-9][\\.a-zA-Z0-9-]+)(\\[[-,0-9]+\\])?(,|$)",
-            REG_EXTENDED);
+    regcomp(&gmatch_new[0], "(,|^)([a-z0-9][\\.a-z0-9-]+)(\\[[-,0-9]+\\])?(,|$)",
+            REG_EXTENDED | REG_ICASE);
 
     /* compile group-1 regex for new format: "00-12 | 14" */
-    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED);
+    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED | REG_ICASE);
 
     /* compile range regex for new format: "00-12" */
-    regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED);
+    regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile element regex for new format: "14" */
-    regcomp(&ematch_new, "([0-9]+)", REG_EXTENDED);
+    regcomp(&ematch_new, "([0-9]+)", REG_EXTENDED | REG_ICASE);
 
     gpattern[0] = string;
 
