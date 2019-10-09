@@ -207,8 +207,8 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
     if (non_io_ancestor) {
         uint32_t depth = (uint32_t) MPIR_Node_get_obj_depth(non_io_ancestor);
-        int index = MPIR_Node_get_obj_index(non_io_ancestor);
-        color = (int) ((depth << 16) + index);
+        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
+        color = (int) ((depth << 16) + idx);
     } else {
         color = MPI_UNDEFINED;
     }
@@ -233,8 +233,8 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
     non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
     if (non_io_ancestor) {
         MPIR_Node_obj_type type = MPIR_Node_get_obj_type(non_io_ancestor);
-        int index = MPIR_Node_get_obj_index(non_io_ancestor);
-        color = ((type << (sizeof(int) * 4)) + index);
+        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
+        color = ((type << (sizeof(int) * 4)) + idx);
     } else {
         color = MPI_UNDEFINED;
     }
@@ -337,6 +337,7 @@ static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_
     subset_size = 0;
     current_comm_color = 0;
     prev_comm_color = -1;
+    color = prev_comm_color;
 
     for (i = 0; i < bitmap_size; i++) {
         if (subset_size >= min_size) {
@@ -441,23 +442,22 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                     for (j = 0; j < cube_size; j++) {
                         int *coordinate = (int *) MPL_calloc(torus_dim,
                                                              sizeof(int), MPL_MEM_OTHER);
-                        int index = j;
+                        int idx = j;
                         int k;
                         int current_dim = 0;
                         while (current_dim < torus_dim) {
-                            coordinate[current_dim++] = index % partition[j];
-                            index = index / partition[j];
+                            coordinate[current_dim++] = idx % partition[j];
+                            idx = idx / partition[j];
                         }
-                        index = 0;
+                        idx = 0;
                         for (k = 0; k < torus_dim; k++) {
-                            index =
-                                index * (partition[j] + offset_along_dimension[i]) + coordinate[k];
+                            idx = idx * (partition[j] + offset_along_dimension[i]) + coordinate[k];
                         }
-                        if (index == node_index) {
+                        if (idx == node_index) {
                             node_covered = 1;
                             break;
                         }
-                        num_processes += num_processes_at_node[index];
+                        num_processes += num_processes_at_node[idx];
                         MPL_free(coordinate);
                     }
                     if (num_processes >= subcomm_min_size) {
