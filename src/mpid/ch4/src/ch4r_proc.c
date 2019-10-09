@@ -43,7 +43,7 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP);
@@ -52,7 +52,7 @@ int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap,
     MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP);
-    return ret;
+    return mpi_errno;
 }
 
 int MPIDIU_get_n_avts(void)
