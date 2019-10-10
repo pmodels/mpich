@@ -162,6 +162,11 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 }
 
 /* getters for internal constants */
+int MPIR_pmi_max_key_size(void)
+{
+    return pmi_max_key_size;
+}
+
 int MPIR_pmi_max_val_size(void)
 {
     return pmi_max_val_size;
