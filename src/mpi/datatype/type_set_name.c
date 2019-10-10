@@ -49,7 +49,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
-    static int setup = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,13 +91,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    /* If this is the first call, initialize all of the predefined names.
-     * Note that type_get_name must also make the same call */
-    if (!setup) {
-        MPIR_Datatype_init_names();
-        setup = 1;
-    }
 
     /* Include the null in MPI_MAX_OBJECT_NAME */
     MPL_strncpy(datatype_ptr->name, type_name, MPI_MAX_OBJECT_NAME);

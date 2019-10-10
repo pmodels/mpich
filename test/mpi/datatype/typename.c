@@ -108,6 +108,13 @@ static mpi_names_t mpi_names[] = {
      * this ifdef allows the test to be built and run. */
     {MPI_INTEGER16, "MPI_INTEGER16"},
 #endif
+
+    /* C++ types */
+    {MPI_CXX_BOOL, "MPI_CXX_BOOL"},
+    {MPI_CXX_FLOAT_COMPLEX, "MPI_CXX_FLOAT_COMPLEX"},
+    {MPI_CXX_DOUBLE_COMPLEX, "MPI_CXX_DOUBLE_COMPLEX"},
+    {MPI_CXX_LONG_DOUBLE_COMPLEX, "MPI_CXX_LONG_DOUBLE_COMPLEX"},
+
     /* Semi-optional types - if the compiler doesn't support long double
      * or long long, these might be MPI_DATATYPE_NULL */
     {MPI_LONG_DOUBLE, "MPI_LONG_DOUBLE"},
