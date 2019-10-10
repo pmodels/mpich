@@ -10,9 +10,8 @@
 #include "mpiimpl.h"
 
 /* Definitions private to the datatype code */
-extern int MPII_create_pairtypes(void);
-extern int MPIR_Datatype_builtin_fillin(void);
-extern int MPIR_Datatype_init_names(void);
+extern int MPIR_Datatype_init_predefined(void);
+extern int MPIR_Datatype_commit_pairtypes(void);
 extern void MPIR_Datatype_iscontig(MPI_Datatype, int *);
 
 /* LB/UB calculation helper macros */

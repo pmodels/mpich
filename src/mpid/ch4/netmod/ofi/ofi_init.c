@@ -978,6 +978,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     mpi_errno = MPIR_Comm_register_hint("eagain", set_eagain, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* index datatypes for RMA atomics */
+    MPIDI_OFI_index_datatypes();
+
   fn_exit:
 
     /* -------------------------------- */
