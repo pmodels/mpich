@@ -6,11 +6,6 @@
 
 #include "mpidimpl.h"
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 #if defined(HAVE_LIMITS_H)
 #include <limits.h>
 #endif
@@ -22,7 +17,6 @@
 #endif
 #include <ctype.h>
 
-#include "mpir_nodemap.h"
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
