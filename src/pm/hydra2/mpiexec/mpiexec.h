@@ -7,6 +7,7 @@
 #ifndef MPIEXEC_H_INCLUDED
 #define MPIEXEC_H_INCLUDED
 
+#include "hydra_timeout.h"
 #include "uthash.h"
 
 #define MPIEXEC_USIZE__UNSET     (0)
@@ -54,7 +55,7 @@ struct mpiexec_params_s {
     int ppn;
     int print_all_exitcodes;
 
-    int timeout;
+    struct timeout_s timeout;
 
     enum {
         MPIEXEC_ENVPROP__UNSET = 0,

@@ -27,3 +27,4 @@ include libhydra/hostfile/Makefile.mk
 include libhydra/rmk/Makefile.mk
 include libhydra/hash/Makefile.mk
 include libhydra/debugger/Makefile.mk
+include libhydra/timeout/Makefile.mk
