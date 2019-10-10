@@ -204,8 +204,9 @@ static HYD_status list_to_nodes(char *str)
                 gpattern[0] += gmatch[0][0].rm_eo;
                 continue;
             } else {
-                fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist\n",
-                        basename);
+                fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist.\n"
+                        "Use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
+                        "format and report bugs\n", basename);
                 break;
             }
         }
@@ -262,7 +263,9 @@ static HYD_status list_to_nodes(char *str)
     /* if nodelist format not recognized throw an error message and abort */
     if (global_node_list == NULL) {
         fprintf(stdout,
-                "Error: node list format not recognized. Try using '-hosts {node list}'.\n");
+                "Error: node list format not recognized. Try using '-hosts {node list}' or\n"
+                "use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
+                "format and report bugs\n");
         fflush(stdout);
         abort();
     }
