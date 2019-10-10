@@ -956,7 +956,7 @@ static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *
 /* FIXME: migrate the function */
 static int build_nodemap_fallback(int *nodemap, int sz, int *p_max_node_id)
 {
-    return MPIR_NODEMAP_build_nodemap(sz, MPIR_Process.rank, nodemap, p_max_node_id);
+    return MPIR_NODEMAP_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap, p_max_node_id);
 }
 
 /* build nodemap using PMI1 process_mapping or fallback with hostnames */

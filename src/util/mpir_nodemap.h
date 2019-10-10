@@ -322,13 +322,84 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
 
    Each process kvs_puts its hostname and stores the total number of
    processes (g_num_global).  Each process determines maximum node id
-   (g_max_node_id) and assigns a node id to each process (g_node_ids[]):
+   and assigns a node id to each process (g_node_ids[]):
 
      For each hostname the process seaches the list of unique nodes
      names (node_names[]) for a match.  If a match is found, the node id
      is recorded for that matching process.  Otherwise, the hostname is
      added to the list of node names.
 */
+
+/* TODO: make the fallback routine general, ie works across all PMI versions */
+#ifdef USE_PMI1_API
+static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *out_nodemap,
+                                                      int *out_max_node_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int key_max_sz = MPIR_pmi_max_key_size();
+    char *key = MPL_malloc(key_max_sz, MPL_MEM_OTHER);
+    char **node_names = MPL_malloc(sz * sizeof(char *), MPL_MEM_OTHER);
+    char *node_name_buf = MPL_malloc(sz * key_max_sz, MPL_MEM_OTHER);
+
+    for (int i = 0; i < sz; ++i) {
+        node_names[i] = &node_name_buf[i * key_max_sz];
+        node_names[i][0] = '\0';
+    }
+
+    mpi_errno = MPIR_NODEMAP_publish_node_id(sz, myrank);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    int max_node_id = -1;
+
+    for (int i = 0; i < sz; ++i) {
+        MPIR_Assert(max_node_id < sz);
+        if (i == myrank) {
+            /* This is us, no need to perform a get */
+            int ret;
+            char *hostname = (char *) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN, MPL_MEM_ADDRESS);
+            ret = gethostname(hostname, MAX_HOSTNAME_LEN);
+            MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost",
+                                 "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
+            hostname[MAX_HOSTNAME_LEN - 1] = '\0';
+            MPL_snprintf(node_names[max_node_id + 1], key_max_sz, "%s", hostname);
+            MPL_free(hostname);
+        } else {
+            memset(key, 0, key_max_sz);
+            MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
+
+            const char *kvs_name = MPIR_pmi_job_id();
+            int pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[max_node_id + 1], key_max_sz);
+            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                 "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+        }
+
+        /* Find the node_id for this process, or create a new one */
+        /* FIXME:need a better algorithm -- this one does O(N^2) strncmp()s! */
+        /* The right fix is to get all this information from the process
+         * manager, rather than bother with this hostname hack at all. */
+        int j;
+        for (j = 0; j < max_node_id + 1; ++j) {
+            if (strncmp(node_names[j], node_names[max_node_id + 1], key_max_sz) == 0)
+                break;
+        }
+        if (j == max_node_id + 1)
+            ++max_node_id;
+        else
+            node_names[max_node_id + 1][0] = '\0';
+        out_nodemap[i] = j;
+    }
+
+  fn_exit:
+    MPL_free(key);
+    MPL_free(node_names);
+    MPL_free(node_name_buf);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif
+
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
                                              int myrank, int *out_nodemap, int *out_max_node_id)
 {
