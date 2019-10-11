@@ -10,6 +10,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/util
 mpi_core_sources +=   \
     src/util/mpir_assert.c     \
     src/util/mpir_cvars.c      \
+    src/util/mpir_pmi.c        \
     src/util/mpir_handlemem.c  \
     src/util/mpir_strerror.c   \
     src/util/mpir_localproc.c

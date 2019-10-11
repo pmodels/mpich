@@ -11,17 +11,17 @@
 #ifndef RELEASE_GATHER_H_INCLUDED
 #define RELEASE_GATHER_H_INCLUDED
 
-extern zm_atomic_uint_t *MPIDI_POSIX_shm_limit_counter;
+extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 extern MPL_shm_hnd_t shm_limit_handle;
 extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
     MPIDI_POSIX_Reduce_tree_type;
 
-/*Blocking wait implementation*/
-/* zm_memord_acquire makes sure no writes/reads are reordered before this load */
+/* Blocking wait implementation */
+/* "acquire" makes sure no writes/reads are reordered before this load */
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
     do {                                                           \
         int spin_count = 0;                                        \
-        while (zm_atomic_load(ptr, zm_memord_acquire) < (value)) { \
+        while (MPL_atomic_acquire_load_uint64(ptr) < (value))    { \
             if (++spin_count >= 10000) {                           \
                 /* Call progress only after waiting for a while */ \
                 MPID_Progress_test();                              \
@@ -30,16 +30,16 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
         }                                                          \
     }                                                              \
     while (0)
-#define MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE (sizeof(zm_atomic_uint_t))
+#define MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE (sizeof(MPL_atomic_uint64_t))
 /* 1 cache_line each for gather and release flag */
 #define MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK (MPIDU_SHM_CACHE_LINE_LEN * 2)
 #define MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_OFFSET (0)
 #define MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_OFFSET (MPIDU_SHM_CACHE_LINE_LEN)
 #define MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(rank)                                    \
-    (((zm_atomic_uint_t *)release_gather_info_ptr->flags_addr) +  \
+    (((MPL_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
     ((rank * MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK + MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_OFFSET)/(MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE)))
 #define MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(rank)                                   \
-    (((zm_atomic_uint_t *)release_gather_info_ptr->flags_addr) +  \
+    (((MPL_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
     ((rank * MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK + MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_OFFSET)/(MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE)))
 #define MPIDI_POSIX_RELEASE_GATHER_BCAST_DATA_ADDR(buf)                           \
     (char *) release_gather_info_ptr->bcast_buf_addr + \
@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
-    volatile zm_atomic_uint_t *parent_flag_addr;
+    MPL_atomic_uint64_t *parent_flag_addr;
     /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
@@ -110,6 +110,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             } else if (rank == 0) {
+#ifdef HAVE_ERROR_CHECKING
+                /* when error checking is enabled, the amount of data sender sent is retrieved from
+                 * status. If it does not match the expected datasize, mpi_errno is set. The received
+                 * size is placed on shm_buffer, followed by the errflag, followed by actual data
+                 * with an offset of (2*cacheline_size) bytes from the starting address */
+                MPI_Status status;
+                MPI_Aint recv_bytes;
+                mpi_errno =
+                    MPIC_Recv((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                              datatype, root, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
+                MPIR_Get_count_impl(&status, MPI_BYTE, &recv_bytes);
+                MPIR_Memcpy(bcast_data_addr, &recv_bytes, sizeof(int));
+                /* It is necessary to copy the errflag as well to handle the case when non-root
+                 * becomes temporary root as part of compositions (or smp aware colls). These temp
+                 * roots might expect same data as other ranks but different from the actual root.
+                 * So only datasize mismatch handling is not sufficient */
+                MPIR_Memcpy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
+                            sizeof(MPIR_Errflag_t));
+                if ((int) recv_bytes != count) {
+                    /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
+                    *errflag = MPIR_ERR_OTHER;
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
+#else
+                /* When error checking is disabled, MPI_STATUS_IGNORE is used */
                 mpi_errno =
                     MPIC_Recv(bcast_data_addr, count, datatype, root, MPIR_BCAST_TAG, comm_ptr,
                               MPI_STATUS_IGNORE, errflag);
@@ -121,10 +155,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
+#endif
             }
         } else if (rank == 0) {
+#ifdef HAVE_ERROR_CHECKING
+            /* When error checking is enabled, place the datasize in shm_buf first, followed by the
+             * errflag, followed by the actual data with an offset of (2*cacheline_size) bytes from
+             * the starting address */
+            MPIR_Memcpy(bcast_data_addr, &count, sizeof(int));
+            /* It is necessary to copy the errflag as well to handle the case when non-root
+             * becomes root as part of compositions (or smp aware colls). These roots might
+             * expect same data as other ranks but different from the actual root. So only
+             * datasize mismatch handling is not sufficient */
+            MPIR_Memcpy((char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN, errflag,
+                        sizeof(MPIR_Errflag_t));
+            mpi_errno =
+                MPIR_Localcopy(local_buf, count, datatype,
+                               (char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                               datatype);
+#else
             mpi_errno = MPIR_Localcopy(local_buf, count, datatype,
                                        bcast_data_addr, count, datatype);
+#endif
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_OTHER;
@@ -142,10 +194,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
     if (rank == 0) {
         /* Rank 0 updates its flag when it arrives and data is ready in shm buffer (if bcast) */
-        /* zm_memord_release makes sure that the write of data does not get reordered after this
+        /* "release" makes sure that the write of data does not get reordered after this
          * store */
-        zm_atomic_store((release_gather_info_ptr->release_flag_addr),
-                        release_gather_info_ptr->release_state, zm_memord_release);
+        MPL_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
+                                        release_gather_info_ptr->release_state);
     } else {
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
             parent_flag_addr =
@@ -162,10 +214,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                         release_gather_info_ptr->release_state -
                                                         relaxation);
         /* Update its own flag */
-        /* zm_memord_release makes sure that the read of parent's flag does not get reordered after
+        /* "release" makes sure that the read of parent's flag does not get reordered after
          * this store */
-        zm_atomic_store((release_gather_info_ptr->release_flag_addr),
-                        release_gather_info_ptr->release_state, zm_memord_release);
+        MPL_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
+                                        release_gather_info_ptr->release_state);
     }
 
     if (((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) && (rank != root)) ||
@@ -173,7 +225,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         /* For bcast only non-root ranks copy data from shm buffer to user buffer and in case of
          * allreduce all ranks copy data from shm buffer to their user buffer */
         MPIR_ERR_CHKANDJUMP(!bcast_data_addr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+#ifdef HAVE_ERROR_CHECKING
+        if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) && (rank != root)) {
+            /* When error checking is enabled, collective is Bcast, and rank is not root,
+             * datasize is copied out from shm_buffer and compared against the count a rank was
+             * expecting. Also, the errflag is copied out. In case of mismatch mpi_errno is set.
+             * Actual data starts after (2*cacheline_size) bytes */
+            int recv_bytes, recv_errflag;
+            MPIR_Memcpy(&recv_bytes, bcast_data_addr, sizeof(int));
+            MPIR_Memcpy(&recv_errflag, (char *) bcast_data_addr + MPIDU_SHM_CACHE_LINE_LEN,
+                        sizeof(int));
+            if (recv_bytes != count || recv_errflag != MPI_SUCCESS) {
+                /* It is OK to compare with count because datatype is always MPI_BYTE for Bcast */
+                *errflag = MPIR_ERR_OTHER;
+                MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**collective_size_mismatch",
+                              "**collective_size_mismatch %d %d", recv_bytes, count);
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+            mpi_errno =
+                MPIR_Localcopy((char *) bcast_data_addr + 2 * MPIDU_SHM_CACHE_LINE_LEN, count,
+                               datatype, local_buf, count, datatype);
+        } else {
+            mpi_errno =
+                MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
+        }
+#else
         mpi_errno = MPIR_Localcopy(bcast_data_addr, count, datatype, local_buf, count, datatype);
+#endif
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_OTHER;
@@ -184,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -207,9 +285,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
-    volatile void *child_data_addr;
-    volatile zm_atomic_uint_t child_gather_flag, *child_flag_addr;
-    volatile void *reduce_data_addr = NULL;
+    void *child_data_addr;
+    MPL_atomic_uint64_t *child_flag_addr;
+    void *reduce_data_addr = NULL;
     int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     bool skip_checking = false;
     /* Set the relaxation to 0 because in Reduce, release step is "relaxed" to make sure multiple
@@ -218,7 +296,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     const int relaxation =
         (operation ==
          MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) ? MPIR_CVAR_BCAST_INTRANODE_NUM_CELLS - 1 : 0;
-    zm_atomic_uint_t min_gather;
+    uint64_t min_gather, child_gather_flag;
     UT_array *children;
 
     release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr)->release_gather;
@@ -256,9 +334,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     }
 
     /* Avoid checking for availabilty of next buffer if it is guaranteed to be available */
-    /* zm_memord_acquire makes sure no writes/reads are reordered before this load */
+    /* "acquire" makes sure no writes/reads are reordered before this load */
     if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) &&
-        (zm_atomic_load(release_gather_info_ptr->gather_flag_addr, zm_memord_acquire)) >=
+        (MPL_atomic_acquire_load_uint64(release_gather_info_ptr->gather_flag_addr)) >=
         (release_gather_info_ptr->gather_state - relaxation)) {
         skip_checking = true;
     }
@@ -296,12 +374,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             }
             /* Read child_flag_addr which 'may' be larger than the strongest waiting condition
              * so, it is safe */
-            child_gather_flag = *child_flag_addr;
+            child_gather_flag = MPL_atomic_acquire_load_uint64(child_flag_addr);
             min_gather = MPL_MIN(child_gather_flag, min_gather);
         }
-        /* zm_memord_release makes sure that the write of data (reduce_local) does not get
+        /* "release" makes sure that the write of data (reduce_local) does not get
          * reordered after this store */
-        zm_atomic_store((release_gather_info_ptr->gather_flag_addr), min_gather, zm_memord_release);
+        MPL_atomic_release_store_uint64((release_gather_info_ptr->gather_flag_addr), min_gather);
     }
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
@@ -340,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }

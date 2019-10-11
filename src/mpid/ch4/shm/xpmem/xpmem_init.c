@@ -6,15 +6,14 @@
 
 #include "xpmem_impl.h"
 #include "xpmem_noinline.h"
-#include "build_nodemap.h"
+#include "mpir_nodemap.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, my_local_rank = -1, num_local = 0;
-    int local_rank_0 = -1;
+    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
@@ -31,10 +30,9 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIR_ERR_CHKANDJUMP(MPIDI_XPMEM_global.segid == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_make");
     XPMEM_TRACE("init: make segid: 0x%lx\n", (uint64_t) MPIDI_XPMEM_global.segid);
 
-    MPIR_NODEMAP_get_local_info(rank, size, MPIDI_global.node_map[0], &num_local,
-                                &my_local_rank, &local_rank_0);
+    int num_local = MPIR_Process.local_size;
     MPIDI_XPMEM_global.num_local = num_local;
-    MPIDI_XPMEM_global.local_rank = my_local_rank;
+    MPIDI_XPMEM_global.local_rank = MPIR_Process.local_rank;
     MPIDI_XPMEM_global.node_group_ptr = NULL;
 
     MPIDU_Init_shm_put(&MPIDI_XPMEM_global.segid, sizeof(xpmem_segid_t));

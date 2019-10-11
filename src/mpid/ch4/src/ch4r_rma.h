@@ -79,7 +79,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     am_hdr.target_disp = target_disp;
     am_hdr.count = target_count;
     am_hdr.datatype = target_datatype;
-    am_hdr.preq_ptr = (uint64_t) sreq;
+    am_hdr.preq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
 
     /* Increase local and remote completion counters and set the local completion
@@ -235,7 +235,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->greq.addr) = (uint64_t) ((char *) origin_addr);
+    MPIDIG_REQUEST(sreq, req->greq.addr) = origin_addr;
     MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
@@ -246,7 +246,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     am_hdr.target_disp = target_disp;
     am_hdr.count = target_count;
     am_hdr.datatype = target_datatype;
-    am_hdr.greq_ptr = (uint64_t) sreq;
+    am_hdr.greq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
@@ -372,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
-    am_hdr.req_ptr = (uint64_t) sreq;
+    am_hdr.req_ptr = sreq;
     am_hdr.origin_count = origin_count;
 
     if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
@@ -566,7 +566,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     /* TODO: have common routine for accumulate/get_accumulate */
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
-    am_hdr.req_ptr = (uint64_t) sreq;
+    am_hdr.req_ptr = sreq;
     am_hdr.origin_count = origin_count;
 
     if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
@@ -922,7 +922,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     MPIDIG_REQUEST(sreq, req->creq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->creq.addr) = (uint64_t) ((char *) result_addr);
+    MPIDIG_REQUEST(sreq, req->creq.addr) = result_addr;
     MPIDIG_REQUEST(sreq, req->creq.datatype) = datatype;
     MPIDIG_REQUEST(sreq, req->creq.result_addr) = result_addr;
     MPIDIG_REQUEST(sreq, req->creq.data) = p_data;
@@ -932,7 +932,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
     am_hdr.datatype = datatype;
-    am_hdr.req_ptr = (uint64_t) sreq;
+    am_hdr.req_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);

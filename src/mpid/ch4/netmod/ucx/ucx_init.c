@@ -33,7 +33,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
-    size_t *bc_indices;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
@@ -71,39 +70,37 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_UCX_CHK_STATUS(ucx_status);
     MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
 
-    mpi_errno =
-        MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0], MPIDI_UCX_global.if_address,
-                              (int) MPIDI_UCX_global.addrname_len, FALSE,
-                              MPIR_CVAR_CH4_ROOTS_ONLY_PMI,
-                              (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
+    void *table;
+    int recv_bc_len;
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      MPIDI_UCX_global.if_address,
+                                      (int) MPIDI_UCX_global.addrname_len, FALSE,
+                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        int *node_roots, num_nodes;
+        int *node_roots = MPIR_Process.node_root_map;
+        int num_nodes = MPIR_Process.num_nodes;
 
-        MPIR_NODEMAP_get_node_roots(MPIDI_global.node_map[0], size, &node_roots, &num_nodes);
         for (i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
-        MPL_free(node_roots);
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) & MPIDI_UCX_global.pmi_addr_table[bc_indices[i]];
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
-        MPIDU_bc_table_destroy(MPIDI_UCX_global.pmi_addr_table);
+        MPIDU_bc_table_destroy();
     }
-
-    MPIDIG_init(comm_world, comm_self, *n_vcis_provided);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
@@ -123,7 +120,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
 int MPIDI_UCX_mpi_finalize_hook(void)
 {
-    int mpi_errno = MPI_SUCCESS, pmi_errno;
+    int mpi_errno = MPI_SUCCESS;
     int i, p = 0, completed;
     MPIR_Comm *comm;
     ucs_status_ptr_t ucp_request;
@@ -157,42 +154,14 @@ int MPIDI_UCX_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-#ifdef USE_PMIX_API
-    pmix_value_t value;
-    pmix_info_t *info;
-    int flag = 1;
-
-    PMIX_INFO_CREATE(info, 1);
-    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-    pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
-    if (pmi_errno != PMIX_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
-                             pmi_errno);
-    }
-    PMIX_INFO_FREE(info, 1);
-#elif defined(USE_PMI2_API)
-    pmi_errno = PMI2_KVS_Fence();
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
-    }
-#else
-    pmi_errno = PMI_Barrier();
-    MPIDI_UCX_PMI_ERROR(pmi_errno);
-#endif
-
+    mpi_errno = MPIR_pmi_barrier();
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIDI_UCX_global.worker != NULL)
         ucp_worker_destroy(MPIDI_UCX_global.worker);
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
-
-    MPIR_Comm_release_always(comm);
-
-    comm = MPIR_Process.comm_self;
-    MPIR_Comm_release_always(comm);
-
-    MPIDIG_finalize();
 
   fn_exit:
     MPL_free(pending);

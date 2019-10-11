@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL, *originv_huge = NULL;
     size_t countp =
-        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, INT64_MAX);
+        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), data_sz, SIZE_MAX);
     size_t omax = MPIDI_OFI_global.tx_iov_limit;
     size_t o_size = sizeof(struct iovec);
     size_t cur_o = 0;
@@ -368,8 +368,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl.tag = tag;
 
         /* Send information about the memory region here to get the lmt going. */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                               (&ctrl, send_buf, data_sz, dst_rank, comm, sreq));
+        mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

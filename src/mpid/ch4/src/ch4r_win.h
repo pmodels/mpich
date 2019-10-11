@@ -398,7 +398,8 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
+    } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0);
 
     if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
         target_ptr->sync.lock.locked = 0;
@@ -467,7 +468,8 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0);
+    } while (MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0 ||
+             MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0);
     MPIDIG_EPOCH_FENCE_EVENT(win, massert);
 
     /*
@@ -574,7 +576,9 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
+    } while (target_ptr &&
+             (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+              MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);

@@ -11,7 +11,8 @@
 
 HYD_status HYDI_dmx_poll_wait_for_event(int wtime)
 {
-    int total_fds, i, events, ret, work_done;
+    int total_fds, i, ret, work_done;
+    HYD_dmx_event_t events;
     struct HYDI_dmx_callback *run, *tmp;
     struct pollfd *pollfds = NULL;
     HYD_status status = HYD_SUCCESS;

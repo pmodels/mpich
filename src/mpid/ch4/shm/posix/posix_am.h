@@ -436,7 +436,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
     MPIDIG_send_long_ack_msg_t msg;
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = (uint64_t) req;
+    msg.rreq_ptr = req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
 
     mpi_errno =

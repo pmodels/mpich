@@ -68,9 +68,9 @@
 **pmi_jobdisconnect: PMI2 Job_Disconnect failed
 **pmi_jobdisconnect %s: PMI2 Job_Disconnect failed: %s
 **pmi_kvsput: PMI2 KVS_Put failed
-**pmi_kvsput %s: PMI2 KVS_Put failed: %s
+**pmi_kvsput %d: PMI2 KVS_Put failed: %d
 **pmi_kvsfence: PMI2 KVS_Fence failed
-**pmi_kvsfence %s: PMI2 KVS_Fence failed: %s
+**pmi_kvsfence %d: PMI2 KVS_Fence failed: %d
 **pmi_kvsget: PMI2 KVS_Get failed
 **pmi_kvsget %s: PMI2 KVS_Get failed: %s
 **pmi_kvsget %d: PMI2 KVS_Get failed: %d
@@ -81,13 +81,15 @@
 **pmi_putnodeattr: PMI2 PutNodeAttr failed
 **pmi_putnodeattr %s: PMI2 PutNodeAttr failed: %s
 **pmi_getjobattr: PMI2 GetJobAttr failed
-**pmi_getjobattr %s: PMI2 GetJobAttr failed: %s
+**pmi_getjobattr %d: PMI2 GetJobAttr failed: %d
 **pmi_nameservpublish: PMI2 Nameserv_publish failed
 **pmi_nameservpublish %s: PMI2 Nameserv_publish failed: %s
 **connect_to_pm: Unable to connect process manager
 **connect_to_pm %s %d: Unable to connect process manager at host %s port %d
 **pmi_port: Unable to decide hostport from PMI_PORT
 **pmi_port %s: Unable to decide hostport from \"%s\"
+**pmi2_info_getjobattr: PMI2_Info_GetJobAttr failed
+**pmi2_info_getjobattr %d: PMI2_Info_GetJobAttr returned %d
 #
 # PMIx
 #

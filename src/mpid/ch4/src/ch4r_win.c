@@ -351,6 +351,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
     /* All local outstanding OPs should have been completed. */
     MPIR_Assert(MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) == 0);
     MPIR_Assert(MPIR_cc_get(MPIDIG_WIN(win, remote_cmpl_cnts)) == 0);
+    MPIR_Assert(MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) == 0);
 
     /* Make progress till all OPs have been completed */
     do {
@@ -366,6 +367,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
          * window. */
         all_completed = (MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) == 0) &&
             (MPIR_cc_get(MPIDIG_WIN(win, remote_cmpl_cnts)) == 0) &&
+            (MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) == 0) &&
             all_local_completed && all_remote_completed;
     } while (all_completed != 1);
 

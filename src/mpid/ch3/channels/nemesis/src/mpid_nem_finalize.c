@@ -11,6 +11,7 @@
 #endif
 
 #include "mpidi_nem_statistics.h"
+#include "mpidu_init_shm.h"
 
 int MPID_nem_finalize(void)
 {
@@ -32,7 +33,6 @@ int MPID_nem_finalize(void)
     MPL_free(MPID_nem_mem_region.local_ranks);
     if (MPID_nem_mem_region.ext_procs > 0)
         MPL_free(MPID_nem_mem_region.ext_ranks);
-    MPL_free(MPID_nem_mem_region.seg);
     MPL_free(MPID_nem_mem_region.mailboxes.out);
     MPL_free(MPID_nem_mem_region.mailboxes.in);
 
@@ -46,7 +46,7 @@ int MPID_nem_finalize(void)
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* free the shared memory segment */
-    mpi_errno = MPIDU_shm_seg_destroy(&MPID_nem_mem_region.memory, MPID_nem_mem_region.num_local);
+    mpi_errno = MPIDU_shm_seg_free(MPID_nem_mem_region.shm_ptr);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
 #ifdef PAPI_MONITOR

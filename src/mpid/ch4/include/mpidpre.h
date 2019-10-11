@@ -96,16 +96,16 @@ typedef struct MPIDIG_rreq_t {
     MPI_Datatype mrcv_datatype;
 
     uint64_t ignore;
-    uint64_t peer_req_ptr;
-    uint64_t match_req;
-    uint64_t request;
+    MPIR_Request *peer_req_ptr;
+    MPIR_Request *match_req;
+    MPIR_Request *request;
 
     struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
 
 typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
-    uint64_t preq_ptr;
+    MPIR_Request *preq_ptr;
     void *dt_iov;
     void *origin_addr;
     int origin_count;
@@ -116,8 +116,8 @@ typedef struct MPIDIG_put_req_t {
 
 typedef struct MPIDIG_get_req_t {
     MPIR_Win *win_ptr;
-    uint64_t greq_ptr;
-    uint64_t addr;
+    MPIR_Request *greq_ptr;
+    void *addr;
     MPI_Datatype datatype;
     int count;
     int n_iov;
@@ -126,8 +126,8 @@ typedef struct MPIDIG_get_req_t {
 
 typedef struct MPIDIG_cswap_req_t {
     MPIR_Win *win_ptr;
-    uint64_t creq_ptr;
-    uint64_t addr;
+    MPIR_Request *creq_ptr;
+    void *addr;
     MPI_Datatype datatype;
     void *data;
     void *result_addr;
@@ -135,7 +135,7 @@ typedef struct MPIDIG_cswap_req_t {
 
 typedef struct MPIDIG_acc_req_t {
     MPIR_Win *win_ptr;
-    uint64_t req_ptr;
+    MPIR_Request *req_ptr;
     MPI_Datatype origin_datatype;
     MPI_Datatype target_datatype;
     int origin_count;
@@ -166,7 +166,7 @@ typedef struct MPIDIG_req_ext_t {
     struct iovec *iov;
     void *target_cmpl_cb;
     uint64_t seq_no;
-    uint64_t request;
+    MPIR_Request *request;
     uint64_t status;
     struct MPIDIG_req_ext_t *next, *prev;
 
@@ -232,8 +232,15 @@ typedef struct {
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDIG_REQUEST(req,field)       (((req)->dev.ch4.am).field)
-#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 #define MPIDI_PREQUEST(req,field)       (((req)->dev.ch4.preq).field)
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+/* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
+ * the operations are enqueued with trylock/handoff models. */
+#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req && ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS))
+#else
+#define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
+#endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)

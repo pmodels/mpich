@@ -41,9 +41,6 @@ void MPII_init_thread_and_enter_cs(int thread_required)
 
 void MPII_init_thread_and_exit_cs(int thread_provided)
 {
-    /* create the rest of the mutexes */
-    MPIR_Thread_CS_Init();
-
     /* need to ensure consistency here */
     int save_is_threaded = MPIR_ThreadInfo.isThreaded;
     MPIR_ThreadInfo.isThreaded = required_is_threaded;
@@ -59,15 +56,28 @@ void MPII_init_thread_failed_exit_cs(void)
     MPIR_Assert(err == 0);
 }
 
-/* called in MPI_Finalize after exiting critical section */
-void MPII_finalize_thread_cs(void)
+/* similar set of functions for finalize. */
+void MPII_finalize_thread_and_enter_cs(void)
 {
-    /* destroy (all) mutex locks */
-    MPIR_Thread_CS_Finalize();
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+}
 
-    int thread_err;
-    MPL_thread_finalize(&thread_err);
-    MPIR_Assert(thread_err == 0);
+void MPII_finalize_thread_and_exit_cs(void)
+{
+    int err;
+
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPL_thread_finalize(&err);
+    MPIR_Assert(err == 0);
+}
+
+void MPII_finalize_thread_failed_exit_cs(void)
+{
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 /* All the other mutexes that depend on the configured thread granularity */
@@ -92,13 +102,12 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 /* These routine handle any thread initialization that my be required */
 void MPIR_Thread_CS_Init(void)
 {
-    int err;
-
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
     /* Use the single MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX for all MPI calls */
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     /* MPICH_THREAD_GRANULARITY__POBJ: Multiple locks */
+    int err;
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
@@ -111,6 +120,7 @@ void MPIR_Thread_CS_Init(void)
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int err;
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
@@ -128,31 +138,12 @@ void MPIR_Thread_CS_Init(void)
 
     MPID_THREADPRIV_KEY_CREATE;
 
-    {
-        /*
-         * Hack to workaround an Intel compiler bug on macOS. Touching
-         * MPIR_Per_thread in this file forces the compiler to allocate it as TLS.
-         * See https://github.com/pmodels/mpich/issues/3437.
-         */
-        MPIR_Per_thread_t *per_thread = NULL;
-
-        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                     MPIR_Per_thread, per_thread, &err);
-        MPIR_Assert(err == 0);
-        memset(per_thread, 0, sizeof(MPIR_Per_thread_t));
-    }
-
     MPL_DBG_MSG(MPIR_DBG_INIT, TYPICAL, "Created global mutex and private storage");
 }
 
 void MPIR_Thread_CS_Finalize(void)
 {
-    int err;
-
     MPL_DBG_MSG(MPIR_DBG_INIT, TYPICAL, "Freeing global mutex and private storage");
-    /* Always need destroy MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX */
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIR_Assert(err == 0);
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
     /* A single, global lock, held for the duration of an MPI call */
@@ -160,6 +151,7 @@ void MPIR_Thread_CS_Finalize(void)
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     /* MPICH_THREAD_GRANULARITY__POBJ: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
+    int err;
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
@@ -172,6 +164,7 @@ void MPIR_Thread_CS_Finalize(void)
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int err;
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
@@ -194,7 +187,7 @@ void MPIR_Thread_CS_Finalize(void)
 
 #else
 /* not MPICH_IS_THREADED, empty stubs */
-void MPII_init_thread_and_enter_cs(void)
+void MPII_init_thread_and_enter_cs(int thread_required)
 {
 }
 
@@ -206,7 +199,15 @@ void MPII_init_thread_failed_exit_cs(void)
 {
 }
 
-void MPII_finalize_thread_cs(void)
+void MPII_finalize_thread_and_enter_cs(void)
+{
+}
+
+void MPII_finalize_thread_and_exit_cs(void)
+{
+}
+
+void MPII_finalize_thread_failed_exit_cs(void)
 {
 }
 

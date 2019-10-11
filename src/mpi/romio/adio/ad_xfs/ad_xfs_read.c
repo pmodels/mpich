@@ -24,6 +24,11 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
     void *newbuf;
     static char myname[] = "ADIOI_XFS_READCONTIG";
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 

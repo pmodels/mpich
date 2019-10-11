@@ -82,13 +82,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#ifdef USE_PMI2_API
-/* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
-   CH3 uses jobid_size=MAX_JOBID_LEN=1024 when calling
-   PMI2_Job_GetId. */
-#define MPIDI_MAX_JOBID_LEN PMI2_MAX_VALLEN
-#endif
-
 static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
@@ -209,14 +202,11 @@ static int set_runtime_configurations(void)
 
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
-    int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
+    int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
     int avtid;
     int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vcis_provided;
-#endif
-#ifndef USE_PMI2_API
-    int max_pmi_name_length;
 #endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
@@ -245,91 +235,18 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 #endif
 
     choose_netmod();
-#ifdef USE_PMI2_API
-    pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
-    }
+    mpi_errno = MPIR_pmi_init();
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
-    pmi_errno = PMI2_Job_GetId(MPIDI_global.jobid, MPIDI_MAX_JOBID_LEN);
-    if (pmi_errno != PMI2_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
-                             "**pmi_job_getid %d", pmi_errno);
-    }
-#elif defined(USE_PMIX_API)
-    {
-        pmix_value_t *pvalue = NULL;
-
-        pmi_errno = PMIx_Init(&MPIR_Process.pmix_proc, NULL, 0);
-        if (pmi_errno != PMIX_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_init", "**pmix_init %d",
-                                 pmi_errno);
-        }
-        rank = MPIR_Process.pmix_proc.rank;
-
-        PMIX_PROC_CONSTRUCT(&MPIR_Process.pmix_wcproc);
-        MPL_strncpy(MPIR_Process.pmix_wcproc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
-        MPIR_Process.pmix_wcproc.rank = PMIX_RANK_WILDCARD;
-
-        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
-        if (pmi_errno != PMIX_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
-                                 pmi_errno);
-        }
-        size = pvalue->data.uint32;
-        PMIX_VALUE_RELEASE(pvalue);
-
-        /* appnum, has_parent is not set for now */
-        appnum = 0;
-        has_parent = 0;
-    }
-#else
-    pmi_errno = PMI_Init(&has_parent);
-
-    if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
-    }
-
-    pmi_errno = PMI_Get_rank(&rank);
-
-    if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_rank",
-                             "**pmi_get_rank %d", pmi_errno);
-    }
-
-    pmi_errno = PMI_Get_size(&size);
-
-    if (pmi_errno != 0) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
-                             "**pmi_get_size %d", pmi_errno);
-    }
-
-    pmi_errno = PMI_Get_appnum(&appnum);
-
-    if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
-                             "**pmi_get_appnum %d", pmi_errno);
-    }
-
-    pmi_errno = PMI_KVS_Get_name_length_max(&max_pmi_name_length);
-    if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
-                             "**pmi_kvs_get_name_length_max %d", pmi_errno);
-    }
-
-    MPIDI_global.jobid = (char *) MPL_malloc(max_pmi_name_length, MPL_MEM_OTHER);
-    pmi_errno = PMI_KVS_Get_my_name(MPIDI_global.jobid, max_pmi_name_length);
-    if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
-                             "**pmi_kvs_get_my_name %d", pmi_errno);
-    }
-#endif
+    rank = MPIR_Process.rank;
+    size = MPIR_Process.size;
+    appnum = MPIR_Process.appnum;
 
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
 
     MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &mpi_errno);
     if (mpi_errno != MPI_SUCCESS) {
@@ -367,7 +284,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIDI_av_table[0]->size = size;
     MPIR_Object_set_ref(MPIDI_av_table[0], 1);
 
-    MPIDIU_alloc_globals_for_avtid(avtid);
+    MPIDI_global.node_map[0] = MPIR_Process.node_map;
 
     MPIDI_av_table0 = MPIDI_av_table[0];
 
@@ -403,10 +320,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
-    mpi_errno = MPIDIU_build_nodemap(MPIR_Process.comm_world->rank, MPIR_Process.comm_world,
-                                     MPIR_Process.comm_world->local_size,
-                                     MPIDI_global.node_map[0], &MPIDI_global.max_node_id);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_global.max_node_id = MPIR_Process.num_nodes - 1;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_global.max_node_id = %d", MPIDI_global.max_node_id));
@@ -424,7 +338,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     }
 #endif
 
-    mpi_errno = MPIDU_Init_shm_init(rank, size, MPIDI_global.node_map[0]);
+    mpi_errno = MPIDIG_init(MPIR_Process.comm_world, MPIR_Process.comm_self);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     {
@@ -461,18 +378,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (has_parent) {
-        pmi_errno = PMI_KVS_Get(MPIDI_global.jobid, MPIDI_PARENT_PORT_KVSKEY,
-                                MPIDI_global.parent_port, MPIDI_MAX_KVS_VALUE_LEN);
-        if (pmi_errno != PMI_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_parent_port",
-                                 "**pmi_kvs_get_parent_port %d", pmi_errno);
-        }
-        MPID_Comm_connect(MPIDI_global.parent_port, NULL, 0, MPIR_Process.comm_world,
-                          &MPIR_Process.comm_parent);
-        MPIR_Assert(MPIR_Process.comm_parent != NULL);
-        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-    }
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */
@@ -500,6 +405,26 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     goto fn_exit;
 }
 
+int MPID_Init_spawn(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char parent_port[MPI_MAX_PORT_NAME];
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
+
+    mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
+    MPIR_Assert(MPIR_Process.comm_parent != NULL);
+    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_InitCompleted(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
@@ -522,6 +447,12 @@ int MPID_Finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    /* Release builtin comms */
+    MPIR_Comm_release_always(MPIR_Process.comm_world);
+    MPIR_Comm_release_always(MPIR_Process.comm_self);
+
+    MPIDIG_finalize();
+
     int i;
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
@@ -532,15 +463,8 @@ int MPID_Finalize(void)
     }
 
     MPIDIU_avt_destroy();
-    MPL_free(MPIDI_global.jobid);
 
-#ifdef USE_PMIX_API
-    PMIx_Finalize(NULL, 0);
-#elif defined(USE_PMI2_API)
-    PMI2_Finalize();
-#else
-    PMI_Finalize();
-#endif
+    MPIR_pmi_finalize();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
@@ -562,6 +486,8 @@ int MPID_CS_finalize(void)
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
+    MPIR_Assert(thr_err == 0);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
     MPIR_Assert(thr_err == 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);

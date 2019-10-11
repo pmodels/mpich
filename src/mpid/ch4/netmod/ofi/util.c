@@ -42,14 +42,23 @@ typedef struct MPIDI_OFI_mr_key_allocator_t {
 
 static MPIDI_OFI_mr_key_allocator_t mr_key_allocator;
 
-void MPIDI_OFI_mr_key_allocator_init()
+int MPIDI_OFI_mr_key_allocator_init(void)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     mr_key_allocator.chunk_size = 128;
     mr_key_allocator.num_ints = mr_key_allocator.chunk_size;
     mr_key_allocator.last_free_mr_key = 0;
     mr_key_allocator.bitmask = MPL_malloc(sizeof(uint64_t) * mr_key_allocator.num_ints,
                                           MPL_MEM_RMA);
+    MPIR_ERR_CHKANDSTMT(mr_key_allocator.bitmask == NULL, mpi_errno,
+                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
     memset(mr_key_allocator.bitmask, 0xFF, sizeof(uint64_t) * mr_key_allocator.num_ints);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #define MPIDI_OFI_INDEX_CALC(val,nval,shift,mask) \
@@ -265,7 +274,7 @@ MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
     return valid_flag;
 }
 
-static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
+static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;
     *fi_op = FI_ATOMIC_OP_LAST;
@@ -440,7 +449,7 @@ static MPI_Op mpi_ops[] = {
   _TBL.field2 = atomic_count;                  \
     }
 
-static inline void create_dt_map()
+static void create_dt_map()
 {
     int i, j;
     size_t dtsize[FI_DATATYPE_LAST];
@@ -490,21 +499,21 @@ static inline void create_dt_map()
         }
 }
 
-static inline void add_index(MPI_Datatype datatype, int *idx)
+static void add_index(MPI_Datatype datatype, int *idx)
 {
-    MPIR_Datatype *dt_ptr;
-    MPIR_Datatype_get_ptr(datatype, dt_ptr);
-    MPIDI_OFI_DATATYPE(dt_ptr).index = *idx;
+    /* MPICH sets predefined datatype handles to MPI_DATATYPE_NULL if they are not supported
+     * on the target platform */
+    if (datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIDI_OFI_DATATYPE(dt_ptr).index = *idx;
+    }
     (*idx)++;
 }
 
 void MPIDI_OFI_index_datatypes()
 {
-    static bool needs_init = true;
     int idx = 0;
-
-    if (!needs_init)
-        return;
 
     add_index(MPI_CHAR, &idx);
     add_index(MPI_UNSIGNED_CHAR, &idx);
@@ -572,11 +581,7 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_INTEGER2, &idx);
     add_index(MPI_INTEGER4, &idx);
     add_index(MPI_INTEGER8, &idx);
-
-    if (MPI_INTEGER16 == MPI_DATATYPE_NULL)
-        idx++;
-    else
-        add_index(MPI_INTEGER16, &idx);
+    add_index(MPI_INTEGER16, &idx);
 
 #endif
     add_index(MPI_FLOAT_INT, &idx);
@@ -591,7 +596,4 @@ void MPIDI_OFI_index_datatypes()
     /* do not generate map when atomics are not enabled */
     if (MPIDI_OFI_ENABLE_ATOMICS)
         create_dt_map();
-
-    /* only need to do this once */
-    needs_init = false;
 }

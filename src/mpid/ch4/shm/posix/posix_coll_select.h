@@ -29,7 +29,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
     if (MPIR_CVAR_ENUM_IS(BCAST_POSIX_INTRA_ALGORITHM, release_gather)) {
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
          * and MPICH is not multi-threaded */
-#ifdef ENABLE_IZEM_ATOMIC
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */
@@ -39,10 +38,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
         /* MPICH not configured with threading support */
         return &MPIDI_POSIX_Bcast_intra_release_gather_cnt;
 #endif /* MPICH_IS_THREADED */
-#else
-        /* release_gather algo is chosen through CVAR but izem is not built */
-        return &MPIDI_POSIX_Bcast_intra_invalid_cnt;
-#endif /* ENABLE_IZEM_ATOMIC */
     }
 
     /* Choose from pt2pt based algorithms */
@@ -84,7 +79,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
          * and MPICH is not multi-threaded. Also when the message size is less than the threshold (for
          * performance reasons) and op is commutative */
-#ifdef ENABLE_IZEM_ATOMIC
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */
@@ -94,10 +88,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
         /* MPICH not configured with threading support */
         return &MPIDI_POSIX_Allreduce_intra_release_gather_cnt;
 #endif /* MPICH_IS_THREADED */
-#else
-        /* release_gather algo is chosen through CVAR but izem is not built */
-        return &MPIDI_POSIX_Allreduce_intra_invalid_cnt;
-#endif /* ENABLE_IZEM_ATOMIC */
     }
 
     /* Choose from pt2pt based algorithms */
@@ -129,7 +119,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
         MPIR_Op_is_commutative(op)) {
         /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
          * and MPICH is not multi-threaded. Also when the op is commutative */
-#ifdef ENABLE_IZEM_ATOMIC
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */
@@ -139,10 +128,6 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
         /* MPICH not configured with threading support */
         return &MPIDI_POSIX_Reduce_intra_release_gather_cnt;
 #endif /* MPICH_IS_THREADED */
-#else
-        /* release_gather algo is chosen through CVAR but izem is not built */
-        return &MPIDI_POSIX_Reduce_intra_invalid_cnt;
-#endif /* ENABLE_IZEM_ATOMIC */
     }
 
     /* Choose from pt2pt based algorithms */

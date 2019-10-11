@@ -30,8 +30,6 @@ char *MPIDI_DBG_parent_str = "?";
 
 #include "datatype.h"
 
-int MPIDI_Use_pmi2_api = 0;
-
 static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
@@ -110,20 +108,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /* init group of failed processes, and set finalize callback */
     MPIDI_Failed_procs_group = MPIR_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
-
-    /* FIXME: This is a good place to check for environment variables
-       and command line options that may control the device */
-    MPIDI_Use_pmi2_api = FALSE;
-#ifdef USE_PMI2_API
-    MPIDI_Use_pmi2_api = TRUE;
-#else
-    {
-        int ret;
-        ret = MPL_env2bool("MPICH_USE_PMI2_API", &val);
-        if (ret == 1 && val)
-            MPIDI_Use_pmi2_api = TRUE;
-    }
-#endif
 
     /* Create the string that will cache the last group of failed processes
      * we received from PMI */
@@ -269,59 +253,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = MPIR_Comm_commit(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
-    
-    /*
-     * If this process group was spawned by a MPI application, then
-     * form the MPI_COMM_PARENT inter-communicator.
-     */
 
-    /*
-     * FIXME: The code to handle the parent case should be in a separate 
-     * routine and should not rely on #ifdefs
-     */
-#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
-    if (has_parent) {
-	char * parent_port;
+    MPIR_Process.has_parent = has_parent;
 
-	/* FIXME: To allow just the "root" process to 
-	   request the port and then use MPIR_Bcast_intra_auto to
-	   distribute it to the rest of the processes,
-	   we need to perform the Bcast after MPI is
-	   otherwise initialized.  We could do this
-	   by adding another MPID call that the MPI_Init(_thread)
-	   routine would make after the rest of MPI is 
-	   initialized, but before MPI_Init returns.
-	   In fact, such a routine could be used to 
-	   perform various checks, including parameter
-	   consistency value (e.g., all processes have the
-	   same environment variable values). Alternately,
-	   we could allow a few routines to operate with 
-	   predefined parameter choices (e.g., bcast, allreduce)
-	   for the purposes of initialization. */
-	mpi_errno = MPIDI_CH3_GetParentPort(&parent_port);
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, 
-				"**ch3|get_parent_port");
-	}
-	MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Parent port is %s", parent_port);
-	    
-	mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, 
-				      MPIR_Process.comm_world, &comm);
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
-				 "**ch3|conn_parent", 
-				 "**ch3|conn_parent %s", parent_port);
-	}
-
-	MPIR_Process.comm_parent = comm;
-	MPIR_Assert(MPIR_Process.comm_parent != NULL);
-	MPL_strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-        
-	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
-	   if not already freed.  */
-    }
-#endif	
-    
     /*
      * Set provided thread level
      */
@@ -368,9 +302,8 @@ int MPID_InitCompleted( void )
  */
 static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
 {
-    int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-    int pg_rank, pg_size, appnum, pg_id_sz;
+    int pg_rank, pg_size, appnum;
     int usePMI=1;
     char *pg_id;
     MPIDI_PG_t *pg = 0;
@@ -405,89 +338,24 @@ static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPI
 	 * and get rank and size information about our process group
 	 */
 
-#ifdef USE_PMI2_API
-        mpi_errno = PMI2_Init(has_parent, &pg_size, &pg_rank, &appnum);
+        mpi_errno = MPIR_pmi_init();
         MPIR_ERR_CHECK(mpi_errno);
-#else
-	pmi_errno = PMI_Init(has_parent);
-	if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_init",
-			     "**pmi_init %d", pmi_errno);
-	}
 
-	pmi_errno = PMI_Get_rank(&pg_rank);
-	if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_rank",
-			     "**pmi_get_rank %d", pmi_errno);
-	}
+        *has_parent = MPIR_Process.has_parent;
+        pg_rank = MPIR_Process.rank;
+        pg_size = MPIR_Process.size;
+        appnum = MPIR_Process.appnum;
 
-	pmi_errno = PMI_Get_size(&pg_size);
-	if (pmi_errno != 0) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_size",
-			     "**pmi_get_size %d", pmi_errno);
-	}
-	
-	pmi_errno = PMI_Get_appnum(&appnum);
-	if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_appnum",
-				 "**pmi_get_appnum %d", pmi_errno);
-	}
-#endif
 	/* Note that if pmi is not availble, the value of MPI_APPNUM is 
 	   not set */
 	if (appnum != -1) {
 	    MPIR_Process.attrs.appnum = appnum;
 	}
-
-#ifdef USE_PMI2_API
         
-        /* This memory will be freed by the PG_Destroy if there is an error */
-	pg_id = MPL_malloc(MAX_JOBID_LEN, MPL_MEM_STRINGS);
-	if (pg_id == NULL) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
-				 MAX_JOBID_LEN);
-	}
-
-        mpi_errno = PMI2_Job_GetId(pg_id, MAX_JOBID_LEN);
-        MPIR_ERR_CHECK(mpi_errno);
-        
-
-#else
-	/* Now, initialize the process group information with PMI calls */
-	/*
-	 * Get the process group id
-	 */
-	pmi_errno = PMI_KVS_Get_name_length_max(&pg_id_sz);
-	if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
-				 "**pmi_get_id_length_max", 
-				 "**pmi_get_id_length_max %d", pmi_errno);
-	}
-
-	/* This memory will be freed by the PG_Destroy if there is an error */
-	pg_id = MPL_malloc(pg_id_sz + 1, MPL_MEM_OTHER);
-	if (pg_id == NULL) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
-				 pg_id_sz+1);
-	}
-
-	/* Note in the singleton init case, the pg_id is a dummy.
-	   We'll want to replace this value if we join an 
-	   Process manager */
-	pmi_errno = PMI_KVS_Get_my_name(pg_id, pg_id_sz);
-	if (pmi_errno != PMI_SUCCESS) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_id",
-				 "**pmi_get_id %d", pmi_errno);
-	}
-#endif
+        pg_id = MPL_strdup(MPIR_pmi_job_id());
     }
     else {
-	/* Create a default pg id */
-	pg_id = MPL_malloc(2, MPL_MEM_OTHER);
-	if (pg_id == NULL) {
-	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
-	}
-	MPL_strncpy( pg_id, "0", 2 );
+	pg_id = MPL_strdup("0");
     }
 
     /*
@@ -597,7 +465,7 @@ static int pg_compare_ids(void * id1, void * id2)
 static int pg_destroy(MPIDI_PG_t * pg)
 {
     MPL_free(pg->id);
-    
+
     return MPI_SUCCESS;
 }
 

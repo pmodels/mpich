@@ -117,12 +117,16 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_Group_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize predefined datatype structures */
+    mpi_errno = MPIR_Datatype_init_predefined();
+    MPIR_ERR_CHECK(mpi_errno);
+
     int thread_provided = 0;
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* create pairtypes after MPID_Init because MPID_Type_commit_hook is used */
-    mpi_errno = MPII_create_pairtypes();
+    /* Commit pairtypes after device hooks are activated */
+    mpi_errno = MPIR_Datatype_commit_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Initialize collectives infrastructure */
@@ -139,6 +143,14 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* dup comm_self and creates progress thread (if needed) */
     mpi_errno = MPII_init_async(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* create fine-grained mutexes */
+    MPIR_Thread_CS_Init();
+
+    /* connect to remote processes is has parent */
+    if (MPIR_Process.has_parent) {
+        mpi_errno = MPID_Init_spawn();
+    }
 
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();

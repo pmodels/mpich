@@ -8,11 +8,5 @@
 
 HYD_status HYDI_bstrap_ll_finalize(void)
 {
-    HYD_status status = HYD_SUCCESS;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return HYD_SUCCESS;
 }

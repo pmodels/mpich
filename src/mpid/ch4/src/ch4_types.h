@@ -132,25 +132,25 @@ typedef struct MPIDIG_hdr_t {
 typedef struct MPIDIG_send_long_req_mst_t {
     MPIDIG_hdr_t hdr;
     size_t data_sz;             /* Message size in bytes */
-    uint64_t sreq_ptr;          /* Pointer value of the request object at the sender side */
+    MPIR_Request *sreq_ptr;     /* Pointer value of the request object at the sender side */
 } MPIDIG_send_long_req_mst_t;
 
 typedef struct MPIDIG_send_long_ack_msg_t {
-    uint64_t sreq_ptr;
-    uint64_t rreq_ptr;
+    MPIR_Request *sreq_ptr;
+    MPIR_Request *rreq_ptr;
 } MPIDIG_send_long_ack_msg_t;
 
 typedef struct MPIDIG_send_long_lmt_msg_t {
-    uint64_t rreq_ptr;
+    MPIR_Request *rreq_ptr;
 } MPIDIG_send_long_lmt_msg_t;
 
 typedef struct MPIDIG_ssend_req_msg_t {
     MPIDIG_hdr_t hdr;
-    uint64_t sreq_ptr;
+    MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_req_msg_t;
 
 typedef struct MPIDIG_ssend_ack_msg_t {
-    uint64_t sreq_ptr;
+    MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_ack_msg_t;
 
 typedef struct MPIDIG_win_cntrl_msg_t {
@@ -162,7 +162,7 @@ typedef struct MPIDIG_win_cntrl_msg_t {
 typedef struct MPIDIG_put_msg_t {
     int src_rank;
     uint64_t win_id;
-    uint64_t preq_ptr;
+    MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
     uint64_t count;
     MPI_Datatype datatype;
@@ -171,26 +171,26 @@ typedef struct MPIDIG_put_msg_t {
 
 typedef struct MPIDIG_put_iov_ack_msg_t {
     int src_rank;
-    uint64_t target_preq_ptr;
-    uint64_t origin_preq_ptr;
+    MPIR_Request *target_preq_ptr;
+    MPIR_Request *origin_preq_ptr;
 } MPIDIG_put_iov_ack_msg_t;
 typedef MPIDIG_put_iov_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
 typedef MPIDIG_put_iov_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
 
 typedef struct MPIDIG_put_dat_msg_t {
-    uint64_t preq_ptr;
+    MPIR_Request *preq_ptr;
 } MPIDIG_put_dat_msg_t;
 typedef MPIDIG_put_dat_msg_t MPIDIG_acc_dat_msg_t;
 typedef MPIDIG_put_dat_msg_t MPIDIG_get_acc_dat_msg_t;
 
 typedef struct MPIDIG_put_ack_msg_t {
-    uint64_t preq_ptr;
+    MPIR_Request *preq_ptr;
 } MPIDIG_put_ack_msg_t;
 
 typedef struct MPIDIG_get_msg_t {
     int src_rank;
     uint64_t win_id;
-    uint64_t greq_ptr;
+    MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
     uint64_t count;
     MPI_Datatype datatype;
@@ -198,25 +198,25 @@ typedef struct MPIDIG_get_msg_t {
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
-    uint64_t greq_ptr;
+    MPIR_Request *greq_ptr;
 } MPIDIG_get_ack_msg_t;
 
 typedef struct MPIDIG_cswap_req_msg_t {
     int src_rank;
     uint64_t win_id;
-    uint64_t req_ptr;
+    MPIR_Request *req_ptr;
     MPI_Aint target_disp;
     MPI_Datatype datatype;
 } MPIDIG_cswap_req_msg_t;
 
 typedef struct MPIDIG_cswap_ack_msg_t {
-    uint64_t req_ptr;
+    MPIR_Request *req_ptr;
 } MPIDIG_cswap_ack_msg_t;
 
 typedef struct MPIDIG_acc_req_msg_t {
     int src_rank;
     uint64_t win_id;
-    uint64_t req_ptr;
+    MPIR_Request *req_ptr;
     int origin_count;
     MPI_Datatype origin_datatype;
     int target_count;
@@ -230,7 +230,7 @@ typedef struct MPIDIG_acc_req_msg_t {
 typedef struct MPIDIG_acc_req_msg_t MPIDIG_get_acc_req_msg_t;
 
 typedef struct MPIDIG_acc_ack_msg_t {
-    uint64_t req_ptr;
+    MPIR_Request *req_ptr;
 } MPIDIG_acc_ack_msg_t;
 
 typedef MPIDIG_acc_ack_msg_t MPIDIG_get_acc_ack_msg_t;
@@ -292,9 +292,8 @@ typedef struct MPIDI_CH4_Global_t {
     int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-    MPID_Thread_mutex_t m[3];
+    MPID_Thread_mutex_t m[4];
     MPIDIU_map_t *win_map;
-    char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_rreq_t *posted_list;
     MPIDIG_rreq_t *unexp_list;
@@ -326,5 +325,7 @@ extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #define MPIDIU_THREAD_PROGRESS_MUTEX  MPIDI_global.m[0]
 #define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX  MPIDI_global.m[1]
 #define MPIDIU_THREAD_UTIL_MUTEX  MPIDI_global.m[2]
+/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
+#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX  MPIDI_global.m[3]
 
 #endif /* CH4_TYPES_H_INCLUDED */

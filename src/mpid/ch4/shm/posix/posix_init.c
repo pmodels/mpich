@@ -32,9 +32,7 @@ cvars:
 
 #include "posix_eager.h"
 #include "posix_noinline.h"
-#ifdef ENABLE_IZEM_ATOMIC
-extern zm_atomic_uint_t *MPIDI_POSIX_shm_limit_counter;
-#endif
+extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
 static int choose_posix_eager(void);
 
@@ -172,26 +170,17 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
 
-#ifdef ENABLE_IZEM_ATOMIC
-    /* Allocate a shared counter to track the amount of shared memory created per node for
-     * intra-node collectives */
-    mpi_errno =
-        MPIDU_shm_seg_alloc(sizeof(int), (void **) &MPIDI_POSIX_shm_limit_counter, MPL_MEM_SHM);
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno =
-        MPIDU_shm_seg_commit(&MPIDI_POSIX_global.memory, &MPIDI_POSIX_global.barrier,
-                             MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
-                             MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
+    mpi_errno = MPIDU_shm_seg_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
+
+    mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Set the counter to 0 */
-    zm_atomic_store(MPIDI_POSIX_shm_limit_counter, 0, zm_memord_relaxed);
-#endif
+    MPL_atomic_relaxed_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_INIT);
@@ -207,11 +196,9 @@ int MPIDI_POSIX_coll_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
 
-#ifdef ENABLE_IZEM_ATOMIC
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
-    mpi_errno = MPIDU_shm_seg_destroy(&MPIDI_POSIX_global.memory, MPIDI_POSIX_global.num_local);
-#endif
+    mpi_errno = MPIDU_shm_seg_free(MPIDI_POSIX_global.shm_ptr);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
