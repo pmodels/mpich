@@ -886,7 +886,7 @@ do {                                                                    \
 
 #define MPIDU_THREADPRIV_KEY_CREATE                                     \
     do {                                                                \
-        int err_ = 0;                                                   \
+        int err_ ATTRIBUTE((unused)) = 0;                               \
         MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_, MPL_MEM_THREAD); \
         MPIR_Assert(err_ == 0);                                         \
     } while (0)
@@ -894,7 +894,7 @@ do {                                                                    \
 #define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
 #define MPIDU_THREADPRIV_KEY_DESTROY                            \
     do {                                                        \
-        int err_ = 0;                                           \
+        int err_ ATTRIBUTE((unused)) = 0;                       \
         MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
         MPIR_Assert(err_ == 0);                                 \
     } while (0)
