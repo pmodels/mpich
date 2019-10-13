@@ -63,7 +63,7 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
      * node with that bit set and combine (as long as that node is within the
      * group)
      *
-     * Note that by receiving with source selection, we guarentee that we get
+     * Note that by receiving with source selection, we guarantee that we get
      * the same bits with the same input.  If we allowed the parent to receive
      * the children in any order, then timing differences could cause different
      * results (roundoff error, over/underflows in some cases, etc).
