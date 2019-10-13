@@ -104,10 +104,9 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr)
 
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-            serialized_hnd_size = strlen(serialized_hnd);
-            MPIR_Assert(serialized_hnd_size < MPIDU_SHM_MAX_FNAME_LEN);
+            serialized_hnd_size = strlen(serialized_hnd) + 1;   /* add 1 for null char */
 
-            MPIDU_Init_shm_put(serialized_hnd, MPIDU_SHM_MAX_FNAME_LEN);
+            MPIDU_Init_shm_put(serialized_hnd, serialized_hnd_size);
             MPIDU_Init_shm_barrier();
         } else {
             MPIDU_Init_shm_barrier();
