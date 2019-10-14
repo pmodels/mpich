@@ -29,24 +29,6 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     /* eagain defaults to off */
     MPIDI_OFI_COMM(comm).eagain = FALSE;
 
-    /* if this is MPI_COMM_WORLD, finish bc exchange */
-    if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        void *table;
-        int *rank_map;
-        int recv_bc_len;
-        MPIDU_bc_allgather(MPIDI_OFI_global.addrname,
-                           MPIDI_OFI_global.addrnamelen, TRUE, &table, &rank_map, &recv_bc_len);
-
-        int i;
-        for (i = 0; i < MPIR_Process.size; i++) {
-            if (rank_map[i] >= 0) {
-                mpi_errno = MPIDI_OFI_av_insert(i, (char *) table + recv_bc_len * rank_map[i]);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        }
-        MPIDU_bc_table_destroy();
-    }
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CREATE_HOOK);
     return mpi_errno;

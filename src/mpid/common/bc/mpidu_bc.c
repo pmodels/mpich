@@ -37,7 +37,7 @@ int MPIDU_bc_table_destroy(void)
 }
 
 /* allgather (local_size - 1) bc over node roots */
-int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
+int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int same_len,
                        void **bc_table, int **bc_ranks, int *ret_bc_len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -113,7 +113,6 @@ int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
     void *recv_buf = segment + local_size * recv_bc_len;
     if (rank == node_root) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        MPIR_Comm *allgather_comm = MPIR_Process.comm_world->node_roots_comm;
         MPIR_Allgatherv_fallback(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
                                  recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
 
