@@ -277,6 +277,13 @@ typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
 
+#define MPIDIU_THREAD_PROGRESS_MUTEX MPIDI_global.m[0]
+#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX MPIDI_global.m[1]
+#define MPIDIU_THREAD_UTIL_MUTEX MPIDI_global.m[2]
+/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
+#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[3]
+#define MAX_CH4_MUTEXES 4
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -292,7 +299,7 @@ typedef struct MPIDI_CH4_Global_t {
     int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-    MPID_Thread_mutex_t m[4];
+    MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDIG_rreq_t *posted_list;
@@ -322,10 +329,5 @@ extern MPL_dbg_class MPIDI_CH4_DBG_MAP;
 extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif
-#define MPIDIU_THREAD_PROGRESS_MUTEX  MPIDI_global.m[0]
-#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX  MPIDI_global.m[1]
-#define MPIDIU_THREAD_UTIL_MUTEX  MPIDI_global.m[2]
-/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
-#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX  MPIDI_global.m[3]
 
 #endif /* CH4_TYPES_H_INCLUDED */
