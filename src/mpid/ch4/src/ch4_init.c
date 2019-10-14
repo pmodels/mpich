@@ -557,16 +557,6 @@ int MPID_Finalize(void)
     goto fn_exit;
 }
 
-int MPID_CS_finalize(void)
-{
-    int mpi_errno = MPI_SUCCESS, thr_err;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
-    return mpi_errno;
-}
-
 int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
