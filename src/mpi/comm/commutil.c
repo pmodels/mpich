@@ -321,17 +321,15 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_Assert(comm->node_roots_comm == NULL);
 
     /* Notify device of communicator creation */
-    if (comm != MPIR_Process.comm_world) {
-        mpi_errno = MPID_Comm_create_hook(comm);
-        MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPID_Comm_create_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        /* Create collectives-specific infrastructure */
-        mpi_errno = MPIR_Coll_comm_init(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+    /* Create collectives-specific infrastructure */
+    mpi_errno = MPIR_Coll_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-        MPIR_Comm_map_free(comm);
-    }
+    MPIR_Comm_map_free(comm);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
 
@@ -450,18 +448,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     }
 
   fn_exit:
-    if (comm == MPIR_Process.comm_world) {
-        mpi_errno = MPID_Comm_create_hook(comm);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* Create collectives-specific infrastructure */
-        mpi_errno = MPIR_Coll_comm_init(comm);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        MPIR_Comm_map_free(comm);
-    }
-
     MPL_free(external_procs);
     MPL_free(local_procs);
 
