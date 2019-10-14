@@ -121,6 +121,7 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_OFI_global.mutexes[1].m
 #define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_OFI_global.mutexes[2].m
 #define MPIDI_OFI_THREAD_SPAWN_MUTEX    MPIDI_OFI_global.mutexes[3].m
+#define MAX_OFI_MUTEXES 4
 
 /* Field accessor macros */
 #define MPIDI_OFI_OBJECT_HEADER_SIZE       offsetof(MPIDI_OFI_offset_checker_t,  pad)
@@ -349,7 +350,7 @@ typedef struct {
     size_t max_order_waw;
 
     /* Mutexex and endpoints */
-    MPIDI_OFI_cacheline_mutex_t mutexes[4];
+    MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
 #else
