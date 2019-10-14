@@ -13,7 +13,7 @@
 struct HYDI_bstrap_cmd {
     enum {
         HYDI_BSTRAP_CMD__PROXY_ID = 0,
-        HYDI_BSTRAP_CMD__HOSTLIST,
+        HYDI_BSTRAP_CMD__HOSTLIST
     } type;
 
     union {

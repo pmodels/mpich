@@ -453,16 +453,12 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win,
-                                                                  origin_count,
-                                                                  target_count,
-                                                                  target_rank,
-                                                                  origin_datatype,
-                                                                  target_datatype,
-                                                                  origin_bytes,
-                                                                  target_bytes,
-                                                                  MPIDI_OFI_global.max_msg_size,
-                                                                  &req, &flags, &ep, sigreq));
+    mpi_errno =
+        MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
+                                               origin_datatype, target_datatype, origin_bytes,
+                                               target_bytes, MPIDI_OFI_global.max_msg_size, &req,
+                                               &flags, &ep, sigreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
@@ -631,12 +627,12 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto fn_exit;
     }
 
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count,
-                                                                  target_rank,
-                                                                  origin_datatype, target_datatype,
-                                                                  origin_bytes, target_bytes,
-                                                                  MPIDI_OFI_global.max_msg_size,
-                                                                  &req, &flags, &ep, sigreq));
+    mpi_errno =
+        MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
+                                               origin_datatype, target_datatype, origin_bytes,
+                                               target_bytes, MPIDI_OFI_global.max_msg_size, &req,
+                                               &flags, &ep, sigreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
     req->event_id = MPIDI_OFI_EVENT_ABORT;
@@ -834,7 +830,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     resultv.count = 1;
     comparev.addr = (void *) compare_addr;
     comparev.count = 1;
-    targetv.addr = (uint64_t) tbuffer;
+    targetv.addr = (uint64_t) (uintptr_t) tbuffer;
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);;
 
@@ -925,10 +921,12 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         goto am_fallback;
     /* Accumulate is WRITE. */
     MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR));
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
-                           (win, origin_count, target_count, target_rank, origin_datatype,
-                            target_datatype, origin_bytes, target_bytes, max_size, &req, &flags,
-                            &ep, sigreq));
+    mpi_errno =
+        MPIDI_OFI_allocate_win_request_accumulate(win, origin_count, target_count, target_rank,
+                                                  origin_datatype, target_datatype, origin_bytes,
+                                                  target_bytes, max_size, &req, &flags, &ep,
+                                                  sigreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -1076,10 +1074,13 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         MPIDIG_wait_am_acc(win, target_rank,
                            (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW));
     }
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
-                           (win, origin_count, target_count, result_count, target_rank, op,
-                            origin_datatype, target_datatype, result_datatype, origin_bytes,
-                            target_bytes, result_bytes, max_size, &req, &flags, &ep, sigreq));
+    mpi_errno =
+        MPIDI_OFI_allocate_win_request_get_accumulate(win, origin_count, target_count, result_count,
+                                                      target_rank, op, origin_datatype,
+                                                      target_datatype, result_datatype,
+                                                      origin_bytes, target_bytes, result_bytes,
+                                                      max_size, &req, &flags, &ep, sigreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
     req->event_id = MPIDI_OFI_EVENT_RMA_DONE;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -1363,7 +1364,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     originv.count = 1;
     resultv.addr = (void *) rbuffer;
     resultv.count = 1;
-    targetv.addr = (uint64_t) tbuffer;
+    targetv.addr = (uint64_t) (uintptr_t) tbuffer;
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
 

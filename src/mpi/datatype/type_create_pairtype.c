@@ -69,7 +69,7 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */
     MPIR_Object_set_ref(new_dtp, 1);
-    new_dtp->is_committed = 1;  /* predefined types are pre-committed */
+    new_dtp->is_committed = 0;
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
@@ -156,29 +156,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
 
     new_dtp->is_contig = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
     new_dtp->max_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
-
-    /* fill in typereps -- only case where we precreate typereps
-     *
-     * this is necessary because these types aren't committed by the
-     * user, which is the other place where we create typereps. so
-     * if the user uses one of these w/out building some more complex
-     * type and then committing it, then the typerep will be missing.
-     */
-
-    MPIR_Typerep_create(type, &(new_dtp->typerep));
-
-    int err = MPID_Type_commit_hook(new_dtp);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (err) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE,
-                                         "MPID_Type_commit_hook",
-                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
-        return mpi_errno;
-
-    }
-    /* --END ERROR HANDLING-- */
 
     return mpi_errno;
 }

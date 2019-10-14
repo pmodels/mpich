@@ -34,6 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     MPI_Aint lb, true_lb, true_extent, extent, type_size;
     void *ori_buffer = buffer;
     MPI_Datatype ori_datatype = datatype;
+    int cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE;
 
     /* If there is only one process or no data, return */
     if (count == 0 || (MPIR_Comm_size(comm_ptr) == 1)) {
@@ -46,6 +47,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     if (mpi_errno) {
         /* Fall back to other algo as release_gather based bcast cannot be used */
         mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+        if (mpi_errno) {
+            *errflag = MPIR_ERR_OTHER;
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
         goto fn_exit;
     }
 
@@ -85,19 +91,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
             }
         }
     }
+#ifdef HAVE_ERROR_CHECKING
+    /* When error checking is enabled, only (cellsize-(2*cacheline_size)) bytes are reserved for data.
+     * Initial 2 cacheline_size bytes are reserved to put the amount of data being placed and the
+     * errflag respectively */
+    cellsize = MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE - (2 * MPIDU_SHM_CACHE_LINE_LEN);
+#endif
 
     /* Calculate chunking information for pipelining */
     /* Chunking information is calculated in terms of bytes (not type_size), so we may copy only
      * half a datatype in one chunk, but that is fine */
-    MPIR_Algo_calculate_pipeline_chunk_info(MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE, 1,
-                                            count * type_size, &num_chunks, &chunk_count_floor,
-                                            &chunk_count_ceil);
+    MPIR_Algo_calculate_pipeline_chunk_info(cellsize, 1, count * type_size, &num_chunks,
+                                            &chunk_count_floor, &chunk_count_ceil);
     /* Print chunking information */
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Bcast shmgr pipeline info: segsize=%d count=%d num_chunks=%d chunk_count_floor=%d chunk_count_ceil=%d \n",
-                                             MPIDI_POSIX_RELEASE_GATHER_BCAST_CELLSIZE,
-                                             (int) (count * type_size), num_chunks,
+/* *INDENT-OFF* */
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Bcast shmgr pipeline info: segsize=%d\
+                                             count=%d num_chunks=%d chunk_count_floor=%d\
+                                             chunk_count_ceil=%d \n",
+                                             cellsize, (int) (count * type_size), num_chunks,
                                              chunk_count_floor, chunk_count_ceil));
+/* *INDENT-ON* */
 
     /* Do pipelined release-gather */
     for (i = 0; i < num_chunks; i++) {
@@ -150,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BCAST_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -268,7 +281,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
 }
@@ -380,7 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
-    return mpi_errno;
+    return mpi_errno_ret;
 }
 
 #endif /* POSIX_COLL_RELEASE_GATHER_H_INCLUDED */

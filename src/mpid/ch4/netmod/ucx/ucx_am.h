@@ -35,8 +35,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 
-    MPL_free(ucp_request->req);
-    ucp_request->req = NULL;
+    MPL_free(ucp_request->buf);
+    ucp_request->buf = NULL;
     ucp_request_release(ucp_request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
         MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
         lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = (uint64_t) sreq;
+        lreq_hdr.sreq_ptr = sreq;
         MPIDIG_REQUEST(sreq, req->lreq).src_buf = data;
         MPIDIG_REQUEST(sreq, req->lreq).count = count;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
         /* inject is done */
         MPL_free(send_buf);
     } else {
-        ucp_request->req = send_buf;
+        ucp_request->buf = send_buf;
     }
 
   fn_exit:
@@ -396,7 +396,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
         /* inject is done */
         MPL_free(send_buf);
     } else {
-        ucp_request->req = send_buf;
+        ucp_request->buf = send_buf;
     }
 
   fn_exit:
@@ -415,7 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = (uint64_t) req;
+    msg.rreq_ptr = req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
     mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
                                            MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,

@@ -92,8 +92,8 @@ HYD_status proxy_process_pmi_cb(int fd, HYD_dmx_event_t events, void *userp);
 HYD_status proxy_barrier_in(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_barrier_out(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_pmi_kvcache_out(int num_blocks, int *kvlen, char *kvcache, int buflen);
-HYD_status proxy_send_pids_upstream();
-HYD_status proxy_send_exitcodes_upstream();
+HYD_status proxy_send_pids_upstream(void);
+HYD_status proxy_send_exitcodes_upstream(void);
 
 struct proxy_pmi_handle {
     const char *cmd;

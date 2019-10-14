@@ -73,10 +73,14 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
 
     if (message_sz > count * dt_sz) {
-        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
+                                                      MPIR_ERR_RECOVERABLE, __FUNCTION__, __LINE__,
+                                                      MPI_ERR_TRUNCATE, "**truncate",
+                                                      "**truncate %d %d %d %d",
+                                                      rreq->status.MPI_SOURCE, rreq->status.MPI_TAG,
+                                                      dt_sz * count, message_sz);
         nbytes = dt_sz * count;
     } else {
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
         nbytes = message_sz;
     }
 

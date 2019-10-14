@@ -13,7 +13,6 @@
 #define RELEASE_GATHER_TYPES_H_INCLUDED
 
 #include "treealgo_types.h"
-#include "common/zm_common.h"
 
 typedef enum {
     MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST,
@@ -33,9 +32,9 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
     int flags_shm_size;
     uint64_t gather_state, release_state;
 
-    volatile void *flags_addr, *bcast_buf_addr, *reduce_buf_addr;
-    volatile void **child_reduce_buf_addr;
-    volatile zm_atomic_uint_t *release_flag_addr, *gather_flag_addr;
+    void *flags_addr, *bcast_buf_addr, *reduce_buf_addr;
+    void **child_reduce_buf_addr;
+    MPL_atomic_uint64_t *release_flag_addr, *gather_flag_addr;
 } MPIDI_POSIX_release_gather_comm_t;
 
 #endif /* RELEASE_GATHER_TYPES_H_INCLUDED */

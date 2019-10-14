@@ -21,6 +21,11 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
     ADIOI_PVFS2_fs *pvfs_fs;
     static char myname[] = "ADIOI_PVFS2_WRITECONTIG";
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     pvfs_fs = (ADIOI_PVFS2_fs *) fd->fs_ptr;
 
     MPI_Type_size_x(datatype, &datatype_size);

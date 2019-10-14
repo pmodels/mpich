@@ -43,15 +43,16 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_BUILD_NODEMAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_BUILD_NODEMAP);
 
-    ret = MPIR_NODEMAP_build_nodemap(sz, myrank, out_nodemap, sz_out);
+    /* The nodemap is built in MPIR_pmi_init. Runtime rebuilding node_map not supported */
+    MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP);
-    return ret;
+    return mpi_errno;
 }
 
 int MPIDIU_get_n_avts(void)
@@ -115,7 +116,9 @@ int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
-    MPL_free(MPIDI_global.node_map[avtid]);
+    if (avtid > 0) {
+        MPL_free(MPIDI_global.node_map[avtid]);
+    }
     MPIDI_global.node_map[avtid] = NULL;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     return MPI_SUCCESS;
@@ -237,7 +240,6 @@ int MPIDIU_avt_release_ref(int avtid)
     MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
     if (!in_use) {
         MPIDIU_free_avt(avtid);
-        MPIDIU_free_globals_for_avtid(avtid);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_RELEASE_REF);

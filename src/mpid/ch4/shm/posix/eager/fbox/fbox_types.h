@@ -13,6 +13,7 @@
 
 #include <mpidimpl.h>
 #include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 #define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))
 #define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
@@ -35,9 +36,7 @@ typedef struct MPIDI_POSIX_fbox_arrays {
 
 typedef struct MPIDI_POSIX_eager_fbox_control {
 
-    int num_seg;
-    MPIDU_shm_seg_t memory;
-    MPIDU_shm_seg_info_t *seg;
+    void *shm_ptr;
 
     MPIDI_POSIX_fbox_arrays_t mailboxes;        /* The array of buffers that make up the total collection
                                                  * of mailboxes */

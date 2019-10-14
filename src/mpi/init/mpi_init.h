@@ -46,7 +46,9 @@ int MPIR_Init_thread(int *, char ***, int, int *);
 void MPII_init_thread_and_enter_cs(int thread_required);
 void MPII_init_thread_and_exit_cs(int thread_provided);
 void MPII_init_thread_failed_exit_cs(void);
-void MPII_finalize_thread_cs(void);
+void MPII_finalize_thread_and_enter_cs(void);
+void MPII_finalize_thread_and_exit_cs(void);
+void MPII_finalize_thread_failed_exit_cs(void);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
@@ -75,17 +77,12 @@ static inline void MPII_pre_init_memory_tracing(void)
 
 static inline void MPII_post_init_memory_tracing(void)
 {
-    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
 #ifdef MPICH_IS_THREADED
     MPL_trconfig(MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded);
 #else
     MPL_trconfig(MPIR_Process.comm_world->rank, 0);
 #endif
-    /* Indicate that we are near the end of the init step; memory
-     * allocated already will have an id of zero; this helps
-     * separate memory leaks in the initialization code from
-     * leaks in the "active" code */
 #endif
 }
 

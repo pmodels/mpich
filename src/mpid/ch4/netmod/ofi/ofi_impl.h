@@ -112,13 +112,6 @@ int MPIDI_OFI_progress(int vci, int blocking);
             (_ret) = FUNC;                                              \
         } while (0)
 
-#define MPIDI_OFI_MPI_CALL_POP(FUNC)                               \
-  do                                                                 \
-    {                                                                \
-      mpi_errno = FUNC;                                              \
-      MPIR_ERR_CHECK(mpi_errno); \
-    } while (0)
-
 #define MPIDI_OFI_STR_CALL(FUNC,STR)                                   \
   do                                                            \
     {                                                           \
@@ -254,7 +247,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_mr_key_allocator_init(void);
+int MPIDI_OFI_mr_key_allocator_init(void);
 uint64_t MPIDI_OFI_mr_key_alloc(void);
 void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
@@ -294,6 +287,26 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
         MPL_free(req->noncontig);
         MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
     }
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int rank, void *addrname)
+{
+    int mpi_errno = MPI_SUCCESS;
+    fi_addr_t addr;
+    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, addrname, 1, &addr, 0ULL, NULL), avmap);
+    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest = addr;
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
+#endif
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)

@@ -22,6 +22,7 @@
   rc MPID_##fcnname(__VA_ARGS__)
 
 MPIDI_CH4I_API_NOINLINE(int, Init, int *, char ***, int, int *);
+MPIDI_CH4I_API_NOINLINE(int, Init_spawn, void);
 MPIDI_CH4I_API_NOINLINE(int, InitCompleted, void);
 MPIDI_CH4I_API(int, Cancel_recv, MPIR_Request *);
 MPIDI_CH4I_API(int, Cancel_send, MPIR_Request *);

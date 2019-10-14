@@ -38,9 +38,6 @@ int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPIR_Request *rreq);
         OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.header.source]->mpich.flag.value, 0); \
     } while (0)
 
-/* initialize shared-memory MPI_Barrier variables */
-int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);
-
 /* assumes value!=0 means the fbox is full.  Contains acquire barrier to
  * ensure that later operations that are dependent on this check don't
  * escape earlier than this check. */

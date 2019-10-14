@@ -22,6 +22,11 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
     static char myname[] = "ADIOI_NFS_WRITECONTIG";
     char *p;
 
+    if (count == 0) {
+        err = 0;
+        goto fn_exit;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset) count;
 
@@ -63,6 +68,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         fd->fp_ind += bytes_xfered;
     }
+
+  fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
     MPIR_Status_set_bytes(status, datatype, bytes_xfered);
 #endif
@@ -327,7 +334,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                 userbuf_off = j * buftype_extent + flat_buf->indices[i];
                 req_off = off;
                 req_len = flat_buf->blocklens[i];
-                ADIOI_BUFFERED_WRITE_WITHOUT_READ off += flat_buf->blocklens[i];
+                ADIOI_BUFFERED_WRITE_WITHOUT_READ;
+                off += flat_buf->blocklens[i];
             }
 
         /* write the buffer out finally */
@@ -536,7 +544,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                     req_off = off;
                     req_len = fwr_size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_WRITE}
+                    ADIOI_BUFFERED_WRITE;
+                }
                 i_offset += fwr_size;
 
                 if (off + fwr_size < disp + flat_file->indices[j] +
@@ -578,7 +587,8 @@ void ADIOI_NFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                     req_off = off;
                     req_len = size;
                     userbuf_off = i_offset;
-                ADIOI_BUFFERED_WRITE}
+                    ADIOI_BUFFERED_WRITE;
+                }
 
                 new_fwr_size = fwr_size;
                 new_bwr_size = bwr_size;

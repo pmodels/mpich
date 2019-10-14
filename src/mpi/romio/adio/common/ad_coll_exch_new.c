@@ -382,7 +382,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
                     client_file_view_state_arr[i].sz, client_file_view_state_arr[i].ext);
         }
 
-        fr_node_p = ADIOI_Flatten_and_find(fd->file_realm_types[fd->my - cb_nodes_index]);
+        fr_node_p = ADIOI_Flatten_and_find(fd->file_realm_types[fd->my_cb_nodes_index]);
         assert(fr_node_p != NULL);
 
         fprintf(stderr, "my file realm (idx=%d,st_off=%Ld) ",

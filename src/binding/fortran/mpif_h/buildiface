@@ -1136,7 +1136,7 @@ sub print_header {
 	print $OUTFD $extra;
     }
     &print_profiling_block( $out_prefix, $routine_name, $lcname, $args );
-    &print_name_map_block( $out_prefix, $routine_name, $lcname );
+    &print_name_map_block( $out_prefix, $routine_name, $lcname, $args );
 
     my $fn = "HelperFor" . $routine_name ;
     if (defined(&$fn)) {
@@ -1289,6 +1289,7 @@ sub print_name_map_block {
     my $out_prefix = shift;
     my $routine_name = shift;
     my $lcname = shift;
+    my $args = shift;
     my $ucname = uc($lcname);
     my $lcprefix = lc($out_prefix);
     my $ucprefix = uc($out_prefix);
@@ -3568,23 +3569,6 @@ sub FileToFint_out_arg {
 # Check for the null datarep functions
 sub checkdatarep_in_decl {
     my $count = $_[0];
-#     if ($count == 2) {
-# print $OUTFD "
-# #ifndef HAVE_MPI_CONVERSION_DEFN
-# #define HAVE_MPI_CONVERSION_DEFN
-# #ifdef F77_NAME_UPPER
-# #define mpi_conversion_fn_null_ MPI_CONVERSION_FN_NULL
-# #elif defined(F77_NAME_LOWER_2USCORE)
-# #define mpi_conversion_fn_null_ mpi_conversion_fn_null__
-# #elif !defined(F77_NAME_LOWER_USCORE)
-# #define mpi_conversion_fn_null_ mpi_conversion_fn_null
-# /* Else leave name alone */
-# #endif
-# /* Add the prototype so the routine knows what this is */
-# extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-# #endif
-# ";
-#     }
 }
 sub checkdatarep_in_arg {
     my $count = $_[0];
@@ -4413,7 +4397,7 @@ MPII_Comm_copy_attr_f77_proxy(
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
-    ((F77_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
+    ((F77_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPII_FROM_FLOG(fflag);
     *new_value = (void *)fnew;
@@ -4442,7 +4426,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     MPI_Aint fvalue = (MPI_Aint)value;
     MPI_Aint *fextra = (MPI_Aint *)extra_state;
 
-    ((F77_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
+    ((F77_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
     return (int)ierr;
 }
 
@@ -5306,6 +5290,7 @@ sub specialInitStatement {
 sub HelperForRegister_datarep {
     my $OUTFD = $_[0]; 
 
+    my $proto_params = "void *v1, MPI_Datatype v2, int v3, void *v4, MPI_Offset v5, void *v6";
     print $OUTFD "\
     /* There is a dummy routine, mpi_conversion_fn_null, that is available 
        for use as the conversion function for MPI_Register_datarep.  
@@ -5315,11 +5300,11 @@ sub HelperForRegister_datarep {
 #if defined(USE_WEAK_SYMBOLS)
 
 /* Add the prototype so the routine knows what this is */
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( $proto_params );
 
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( $proto_params );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( $proto_params );
+extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( $proto_params );
 
 #if defined(HAVE_MULTIPLE_PRAGMA_WEAK) && !defined(MPICH_MPI_FROM_PMPI) /* If support multiple #pragma weak */
 #pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
@@ -5354,17 +5339,17 @@ extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2
 #endif
 
 #elif defined(HAVE_WEAK_ATTRIBUTE) /* If support weak attribute */
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( $proto_params )
 #ifndef MPICH_MPI_FROM_PMPI
 __attribute__((weak,alias(\"mpi_conversion_fn_null_\")))
 #endif
 ;
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( $proto_params )
 #ifndef MPICH_MPI_FROM_PMPI
 __attribute__((weak,alias(\"mpi_conversion_fn_null_\")))
 #endif
 ;
-extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( $proto_params )
 #ifndef MPICH_MPI_FROM_PMPI
 __attribute__((weak,alias(\"mpi_conversion_fn_null_\")))
 #endif
@@ -5383,12 +5368,12 @@ __attribute__((weak,alias(\"mpi_conversion_fn_null_\")))
 #endif /* End of test on name mapping without weak symbol support */
 
 /* Add the prototype so the routine knows what this is */
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( $proto_params );
 
 #endif
 
 /* This isn't a callable function */
-FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
+FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( $proto_params ) {
     return 0;
 }
 
@@ -5426,7 +5411,7 @@ MPIR_Type_copy_attr_f90_proxy(
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
-    ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
+    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPII_FROM_FLOG(fflag);
     *new_value = (void *)fnew;
@@ -5455,7 +5440,7 @@ MPIR_Type_delete_attr_f90_proxy(
     MPI_Aint fvalue = (MPI_Aint)value;
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
-    ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
+    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
     return (int)ierr;
 }\n";
 }
@@ -5490,7 +5475,7 @@ MPII_Comm_copy_attr_f90_proxy(
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
-    ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
+    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPII_FROM_FLOG(fflag);
     *new_value = (void *)fnew;
@@ -5519,7 +5504,7 @@ MPIR_Comm_delete_attr_f90_proxy(
     MPI_Aint fvalue = (MPI_Aint)value;
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
-    ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
+    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
     return (int)ierr;
 }\n";
 }
@@ -5554,7 +5539,7 @@ MPIR_Win_copy_attr_f90_proxy(
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
-    ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
+    ((F90_CopyFunction*)(void*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPII_FROM_FLOG(fflag);
     *new_value = (void *)fnew;
@@ -5583,7 +5568,7 @@ MPIR_Win_delete_attr_f90_proxy(
     MPI_Aint fvalue = (MPI_Aint)value;
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
-    ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
+    ((F90_DeleteFunction*)(void*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
     return (int)ierr;
 }\n";
 }

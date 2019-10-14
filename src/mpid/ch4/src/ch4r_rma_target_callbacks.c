@@ -798,14 +798,13 @@ static int get_target_cmpl_cb(MPIR_Request * req)
     MPIDIG_get_ack_msg_t get_ack;
     struct iovec *iov;
     char *p_data;
-    uintptr_t base;
     MPIR_Win *win;
     MPIR_Context_id_t context_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
 
-    base = MPIDIG_REQUEST(req, req->greq.addr);
+    uintptr_t base = (uintptr_t) MPIDIG_REQUEST(req, req->greq.addr);
 
     MPIR_cc_incr(req->cc_ptr, &c);
     get_ack.greq_ptr = MPIDIG_REQUEST(req, req->greq.greq_ptr);
@@ -911,8 +910,8 @@ static int put_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PUT_IOV_TARGET_CMPL_CB);
 
     ack_msg.src_rank = MPIDIG_REQUEST(rreq, rank);
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->preq.preq_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -948,8 +947,8 @@ static int acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
 
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->areq.req_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -985,8 +984,8 @@ static int get_acc_iov_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_IOV_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_IOV_TARGET_CMPL_CB);
 
-    ack_msg.origin_preq_ptr = (uint64_t) MPIDIG_REQUEST(rreq, req->areq.req_ptr);
-    ack_msg.target_preq_ptr = (uint64_t) rreq;
+    ack_msg.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
+    ack_msg.target_preq_ptr = rreq;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -1807,8 +1806,6 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     MPIR_Request *rreq = NULL;
     size_t data_sz;
     MPIR_Win *win;
-    uintptr_t base;
-    size_t offset;
 
     int dt_contig;
     void *p_data;
@@ -1834,13 +1831,13 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDIG_win_base_at_target(win);
-    offset = win->disp_unit * msg_hdr->target_disp;
+    uintptr_t base = MPIDIG_win_base_at_target(win);
+    size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(*req, req->creq.win_ptr) = win;
     MPIDIG_REQUEST(*req, req->creq.creq_ptr) = msg_hdr->req_ptr;
     MPIDIG_REQUEST(*req, req->creq.datatype) = msg_hdr->datatype;
-    MPIDIG_REQUEST(*req, req->creq.addr) = offset + base;
+    MPIDIG_REQUEST(*req, req->creq.addr) = (char *) base + offset;
     MPIDIG_REQUEST(*req, rank) = msg_hdr->src_rank;
 
     MPIR_Assert(dt_contig == 1);
@@ -1869,8 +1866,6 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     void *p_data = NULL;
     struct iovec *iov, *dt_iov;
     MPIR_Win *win;
-    uintptr_t base;
-    size_t offset;
     int i;
 
     MPIDIG_acc_req_msg_t *msg_hdr = (MPIDIG_acc_req_msg_t *) am_hdr;
@@ -1903,8 +1898,8 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDIG_win_base_at_target(win);
-    offset = win->disp_unit * msg_hdr->target_disp;
+    uintptr_t base = MPIDIG_win_base_at_target(win);
+    size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(*req, req->areq.win_ptr) = win;
     MPIDIG_REQUEST(*req, req->areq.req_ptr) = msg_hdr->req_ptr;
@@ -1912,7 +1907,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     MPIDIG_REQUEST(*req, req->areq.target_datatype) = msg_hdr->target_datatype;
     MPIDIG_REQUEST(*req, req->areq.origin_count) = msg_hdr->origin_count;
     MPIDIG_REQUEST(*req, req->areq.target_count) = msg_hdr->target_count;
-    MPIDIG_REQUEST(*req, req->areq.target_addr) = (void *) (offset + base);
+    MPIDIG_REQUEST(*req, req->areq.target_addr) = (char *) base + offset;
     MPIDIG_REQUEST(*req, req->areq.op) = msg_hdr->op;
     MPIDIG_REQUEST(*req, req->areq.data) = p_data;
     MPIDIG_REQUEST(*req, req->areq.n_iov) = msg_hdr->n_iov;
@@ -2057,8 +2052,6 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     MPIDIG_get_msg_t *msg_hdr = (MPIDIG_get_msg_t *) am_hdr;
     struct iovec *iov;
     MPIR_Win *win;
-    uintptr_t base;
-    size_t offset;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_TARGET_MSG_CB);
@@ -2076,12 +2069,12 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
-    base = MPIDIG_win_base_at_target(win);
+    uintptr_t base = MPIDIG_win_base_at_target(win);
+    size_t offset = win->disp_unit * msg_hdr->target_disp;
 
-    offset = win->disp_unit * msg_hdr->target_disp;
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;
     MPIDIG_REQUEST(rreq, req->greq.n_iov) = msg_hdr->n_iov;
-    MPIDIG_REQUEST(rreq, req->greq.addr) = offset + base;
+    MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
     MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->count;
     MPIDIG_REQUEST(rreq, req->greq.datatype) = msg_hdr->datatype;
     MPIDIG_REQUEST(rreq, req->greq.dt_iov) = NULL;
@@ -2142,7 +2135,7 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
 
     if (dt_contig) {
         *p_data_sz = data_sz;
-        *data = (char *) (MPIDIG_REQUEST(get_req, req->greq.addr) + dt_true_lb);
+        *data = (char *) MPIDIG_REQUEST(get_req, req->greq.addr) + dt_true_lb;
     } else {
         MPIR_Typerep_iov_len((void *) MPIDIG_REQUEST(get_req, req->greq.addr),
                              MPIDIG_REQUEST(get_req, req->greq.count),

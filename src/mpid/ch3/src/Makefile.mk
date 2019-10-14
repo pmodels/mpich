@@ -43,6 +43,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_improbe.c                        \
     src/mpid/ch3/src/mpid_imrecv.c                         \
     src/mpid/ch3/src/mpid_init.c                           \
+    src/mpid/ch3/src/mpid_init_spawn.c                     \
     src/mpid/ch3/src/mpid_iprobe.c                         \
     src/mpid/ch3/src/mpid_irecv.c                          \
     src/mpid/ch3/src/mpid_irsend.c                         \

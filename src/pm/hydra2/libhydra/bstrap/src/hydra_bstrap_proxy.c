@@ -331,7 +331,9 @@ int main(int argc, char **argv)
     /* if we did not already get an upstream fd, we should have gotten
      * a hostname and port; connect to it. */
     if (upstream_fd == -1) {
-        status = HYD_sock_connect(upstream_host, upstream_port, &upstream_fd, 0, HYD_CONNECT_DELAY);
+        status =
+            HYD_sock_connect(upstream_host, (uint16_t) upstream_port, &upstream_fd, 0,
+                             HYD_CONNECT_DELAY);
         HYD_ERR_POP(status, "unable to connect to server %s at port %d (check for firewalls!)\n",
                     upstream_host, upstream_port);
     }

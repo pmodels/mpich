@@ -62,7 +62,7 @@ types=$(echo $types | tr "," " ")
 seed=1
 
 while read -r line ; do
-    if [ ! `echo $line | head -c 1` = "#" ] ; then
+    if [ ! `echo $line | cut -c 1` = "#" ] ; then
         # the line is not a comment
         pathname=`echo $line | cut -f1 -d':'`
         args=`echo $line | cut -f2 -d':'`
@@ -134,6 +134,7 @@ while read -r line ; do
             else
                 testsize=$((testsize * count / sendcount))
                 if [ $testsize -lt $mintestsize ] ; then testsize=$mintestsize; fi
+                if [ $testsize -gt $maxtestsize ] ; then testsize=$maxtestsize; fi
             fi
 
             if [ $testdir = "pt2pt" ] ; then # only send/recv comm can use types from different pools

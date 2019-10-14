@@ -373,9 +373,10 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             recv_elem->wc.len = recv_elem->cur_offset;
             recv_elem->done_fn(&recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
-            MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                                   (&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                    recv_elem->comm_ptr, recv_elem->remote_info.ackreq));
+            mpi_errno =
+                MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
+                                          recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
+            MPIR_ERR_CHECK(mpi_errno);
 
             MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);
             MPL_free(recv_elem);
@@ -773,7 +774,8 @@ int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
 
     for (i = 0; i < num; i++) {
         req = MPIDI_OFI_context_to_request(wc[i].op_context);
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_dispatch_function(&wc[i], req));
+        mpi_errno = MPIDI_OFI_dispatch_function(&wc[i], req);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

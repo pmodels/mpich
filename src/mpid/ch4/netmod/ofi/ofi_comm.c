@@ -17,14 +17,11 @@
 int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_CREATE_HOOK);
 
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_send_counters, MPL_MEM_COMM);
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_recv_counters, MPL_MEM_COMM);
-
-    mpi_errno = MPIDIG_init_comm(comm);
 
     /* no connection for non-dynamic or non-root-rank of intercomm */
     MPIDI_OFI_COMM(comm).conn_id = -1;
@@ -35,40 +32,22 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     /* if this is MPI_COMM_WORLD, finish bc exchange */
     if (comm == MPIR_Process.comm_world && MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         void *table;
-        fi_addr_t *mapped_table;
-        size_t rem_bcs, num_nodes = MPIDI_global.max_node_id + 1;
-        int i, curr, node;
+        int *rank_map;
+        int recv_bc_len;
+        MPIDU_bc_allgather(MPIDI_OFI_global.addrname,
+                           MPIDI_OFI_global.addrnamelen, TRUE, &table, &rank_map, &recv_bc_len);
 
-        MPIR_Assert(MPII_Comm_is_node_consecutive(comm));
-        rem_bcs = MPIR_Comm_size(comm) - num_nodes;
-        MPIDU_bc_allgather(comm, MPIDI_global.node_map[0], &MPIDI_OFI_global.addrname,
-                           MPIDI_OFI_global.addrnamelen, TRUE, &table, NULL);
-        MPIR_CHKLMEM_MALLOC(mapped_table, fi_addr_t *, rem_bcs * sizeof(fi_addr_t),
-                            mpi_errno, "mapped_table", MPL_MEM_ADDRESS);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, table, rem_bcs, mapped_table, 0ULL, NULL),
-                       avmap);
-
-        /* insert new addresses, skipping over node roots */
-        for (i = 1, curr = 0, node = 0; i < MPIR_Comm_size(comm); i++) {
-            if (comm->internode_table[i] == node + 1) {
-                node++;
-                continue;
+        int i;
+        for (i = 0; i < MPIR_Process.size; i++) {
+            if (rank_map[i] >= 0) {
+                mpi_errno = MPIDI_OFI_av_insert(i, (char *) table + recv_bc_len * rank_map[i]);
+                MPIR_ERR_CHECK(mpi_errno);
             }
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[curr];
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#else
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
-#endif
-            curr++;
         }
-        MPIDU_bc_table_destroy(table);
+        MPIDU_bc_table_destroy();
     }
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
@@ -81,7 +60,6 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_COMM_FREE_HOOK);
 
-    mpi_errno = MPIDIG_destroy_comm(comm);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
 

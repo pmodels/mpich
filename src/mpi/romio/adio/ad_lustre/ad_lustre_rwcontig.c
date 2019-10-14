@@ -157,6 +157,11 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
     static char myname[] = "ADIOI_LUSTRE_IOCONTIG";
     char *p;
 
+    if (count == 0) {
+        *error_code = MPI_SUCCESS;
+        return;
+    }
+
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 

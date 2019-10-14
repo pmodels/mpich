@@ -1002,15 +1002,17 @@ sub CleanUpAfterRun {
     @stillRunning = &FindRunning( $programname );
 
     if ($#stillRunning > -1) {
-        print STDERR "Some programs ($programname) may still be running:\npids = ";
-        for (my $i=0; $i <= $#stillRunning; $i++ ) {
-            print STDERR $stillRunning[$i] . " ";
+        if ($verbose) {
+            print STDERR "Some programs ($programname) may still be running:\npids = ";
+            for (my $i=0; $i <= $#stillRunning; $i++ ) {
+                print STDERR $stillRunning[$i] . " ";
+            }
+            print STDERR "\n";
+            # Remind the user that the executable remains; we leave it around
+            # to allow the programmer to debug the running program, for which
+            # the executable is needed.
+            print STDERR "The executable ($programname) will not be removed.\n";
         }
-        print STDERR "\n";
-        # Remind the user that the executable remains; we leave it around
-        # to allow the programmer to debug the running program, for which
-        # the executable is needed.
-        print STDERR "The executable ($programname) will not be removed.\n";
     }
     else {
         if ($remove_this_pgm && $clean_pgms) {
