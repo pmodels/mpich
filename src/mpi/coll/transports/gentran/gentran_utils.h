@@ -16,7 +16,7 @@
 #include "tsp_gentran.h"
 #include "utarray.h"
 
-extern MPII_Coll_queue_t coll_queue;
+extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* vertex copy function, required by utarray */
