@@ -16,6 +16,13 @@
 #ifndef MPIIMPL_H_INCLUDED
 #define MPIIMPL_H_INCLUDED
 
+#ifdef MPIR_GLOBAL
+/* inside globals.c, instatiate globals */
+#define MPIR_EXTERN
+#else
+#define MPIR_EXTERN extern
+#endif
+
 #include "mpichconfconst.h"
 #include "mpichconf.h"
 
