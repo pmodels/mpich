@@ -57,7 +57,7 @@
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
 #define MPIR_TSP_sched_free                MPII_Genutil_sched_free
 
-extern MPII_Coll_queue_t coll_queue;
+extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* Transport function to initialize a new schedule */
