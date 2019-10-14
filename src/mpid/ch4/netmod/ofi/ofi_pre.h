@@ -25,7 +25,7 @@
 
 /* Defines */
 
-#define MPIDI_OFI_VCI_USE_DOMAIN       1
+/* configure option --enable-ofi-domain */
 #ifndef MPIDI_OFI_VCI_USE_DOMAIN
 #define MPIDI_OFI_VCI_USE_SEPCTX       1
 #endif
