@@ -80,6 +80,20 @@ void MPII_finalize_thread_failed_exit_cs(void)
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
+/* ************************************************* */
+/* use MPIR_Add_mutex to register mutex, they will be created/destroyed together
+ * at init/finalize */
+
+#define MAX_MUTEX_COUNT 64
+static MPID_Thread_mutex_t *mutex_list[MAX_MUTEX_COUNT];
+static int mutex_count = 0;
+
+void MPIR_Add_mutex(MPID_Thread_mutex_t * p_mutex)
+{
+    MPIR_Assert(mutex_count < MAX_MUTEX_COUNT);
+    mutex_list[mutex_count++] = p_mutex;
+}
+
 /* All the other mutexes that depend on the configured thread granularity */
 /* FIXME: we currently have  various mutexes scattered throughout the code
  * and their logic interweaved between thread model and objects/features.
@@ -107,22 +121,14 @@ void MPIR_Thread_CS_Init(void)
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
     /* MPICH_THREAD_GRANULARITY__POBJ: Multiple locks */
-    int err;
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_MSGQ_MUTEX);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_COMPLETION_MUTEX);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_CTX_MUTEX);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_PMI_MUTEX);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    int err;
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIR_Assert(err == 0);
+    MPIR_Add_mutex(&MPIR_THREAD_POBJ_HANDLE_MUTEX);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without
@@ -135,6 +141,12 @@ void MPIR_Thread_CS_Init(void)
 #else
 #error Unrecognized thread granularity
 #endif
+
+    int err;
+    for (int i = 0; i < mutex_count; i++) {
+        MPID_Thread_mutex_create(mutex_list[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
     MPID_THREADPRIV_KEY_CREATE;
 
@@ -145,40 +157,11 @@ void MPIR_Thread_CS_Finalize(void)
 {
     MPL_DBG_MSG(MPIR_DBG_INIT, TYPICAL, "Freeing global mutex and private storage");
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-    /* A single, global lock, held for the duration of an MPI call */
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-    /* MPICH_THREAD_GRANULARITY__POBJ: There are multiple locks,
-     * one for each logical class (e.g., each type of object) */
     int err;
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
-    MPIR_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    int err;
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIR_Assert(err == 0);
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
-/* Updates to shared data and access to shared services is handled without
-   locks where ever possible. */
-#error lock-free not yet implemented
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE
-/* No thread support, make all operations a no-op */
-
-#else
-#error Unrecognized thread granularity
-#endif
+    for (int i = 0; i < mutex_count; i++) {
+        MPID_Thread_mutex_destroy(mutex_list[i], &err);
+        MPIR_Assert(err == 0);
+    }
 
     MPID_CS_finalize();
 
