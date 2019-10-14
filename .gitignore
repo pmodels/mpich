@@ -611,3 +611,7 @@ Makefile.am-stamp
 /test/mpi/pt2pt/testlist.dtp
 /test/mpi/coll/testlist.dtp
 /test/mpi/rma/testlist.dtp
+
+# DAOS
+_topdir/
+pristine/
