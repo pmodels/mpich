@@ -77,8 +77,6 @@ void MPIR_Thread_CS_Finalize(void)
         MPIR_Assert(err == 0);
     }
 
-    MPID_CS_finalize();
-
     MPID_THREADPRIV_KEY_DESTROY;
 }
 
