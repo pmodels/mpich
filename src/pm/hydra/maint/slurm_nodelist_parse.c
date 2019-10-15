@@ -1,56 +1,48 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/*
- *  (C) 2009 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "hydra.h"
-#include "bsci.h"
-#include "bscu.h"
-#include "slurm.h"
-
-#if defined(HAVE_SLURM_SLURM_H)
-#include <slurm/slurm.h>        /* for slurm_hostlist_create */
-#elif defined(HAVE_POSIX_REGCOMP)
 #include <regex.h>      /* for POSIX regular expressions */
 
 #define MAX_GMATCH 5    /* max number of atoms in group matches + 1 */
 #define MAX_RMATCH 5    /* max number of atoms in range matches + 1 */
 #define MAX_EMATCH 2    /* max number of atoms in element matches + 1 */
 #define MAX_NNODES_STRLEN 8     /* max string len for node # incl. '\0' */
-#endif
+#define MAX_HOSTNAME_LEN 64
+#define MAX_NODELIST_LEN 8192
 
-static int *tasks_per_node = NULL;
-static struct HYD_node *global_node_list = NULL;
+struct list {
+    char *hostname;
+    struct list *next;
+};
 
-#if defined(HAVE_LIBSLURM)
-static HYD_status list_to_nodes(char *str)
+void add_to_node_list(char *string, struct list **node_list)
 {
-    hostlist_t hostlist;
-    char *host;
-    int k = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    if ((hostlist = slurm_hostlist_create(str)) == NULL) {
-        status = HYD_FAILURE;
-        goto fn_fail;
+    if (*node_list) {
+        add_to_node_list(string, &(*node_list)->next);
+    } else {
+        (*node_list) = malloc(sizeof(struct list));
+        (*node_list)->hostname = strdup(string);
+        (*node_list)->next = NULL;
     }
-
-    for (host = slurm_hostlist_shift(hostlist); host; host = slurm_hostlist_shift(hostlist)) {
-        status = HYDU_add_to_node_list(host, tasks_per_node[k++], &global_node_list);
-        HYDU_ERR_POP(status, "unable to add to node list\n");
-    }
-
-    slurm_hostlist_destroy(hostlist);
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
-#elif defined(HAVE_POSIX_REGCOMP)
-static HYD_status list_to_nodes(char *str)
+
+void cleanup_node_list(struct list **node_list)
+{
+    if (!(*node_list))
+        return;
+
+    struct list *tmp = *node_list;
+    struct list *next = tmp->next;
+
+    *node_list = NULL;
+    free(tmp->hostname);
+    free(tmp);
+
+    cleanup_node_list(&next);
+}
+
+void list_to_nodes(char *str, struct list **node_list)
 {
     regex_t gmatch_old[2];
     regex_t gmatch_new[2];
@@ -71,27 +63,10 @@ static HYD_status list_to_nodes(char *str)
     char *string;
     char tmp[2];
     int j, begin, end, k = 0;
-    HYD_status status = HYD_SUCCESS;
 
-    string = MPL_strdup(str);
+    string = strdup(str);
 
-    /* compile regex patterns for nodelist matching:
-     *
-     * From RFC952:
-     * 1. A "name" (Net, Host, Gateway, or Domain name) is a text string up
-     * to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
-     * sign (-), and period (.).  Note that periods are only allowed when
-     * they serve to delimit components of "domain style names". (See
-     * RFC-921, "Domain Name System Implementation Schedule", for
-     * background).  No blank or space characters are permitted as part of a
-     * name. No distinction is made between upper and lower case.  The first
-     * character must be an alpha character.  The last character must not be
-     * a minus sign or period. [...] Single character names or nicknames are
-     * not allowed.
-     *
-     * see https://tools.ietf.org/html/rfc952 and section 2.1 of
-     * https://tools.ietf.org/html/rfc1123 for more details on hostnames
-     * format */
+    /* compile regex patterns for nodelist matching */
 
     /* compile group-0 regex for old format: "[h00-h12,h14] | h00-h12 | h14" */
     regcomp(&gmatch_old[0],
@@ -157,16 +132,13 @@ static HYD_status list_to_nodes(char *str)
                 for (j = begin; j <= end; j++) {
                     snprintf(hostname, MAX_HOSTNAME_LEN, "%s%.*d",
                              basename, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j);
-                    status =
-                        HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
-                    HYDU_ERR_POP(status, "unable to add to node list\n");
+                    add_to_node_list(hostname, node_list);
                 }
             } else if (regexec(&ematch_old, epattern, MAX_EMATCH, ematch, 0) == 0) {
                 /* matched element: (h14) */
                 snprintf(hostname, MAX_HOSTNAME_LEN, "%.*s",
                          (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so);
-                status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
-                HYDU_ERR_POP(status, "unable to add to node list\n");
+                add_to_node_list(hostname, node_list);
             }
 
             /* unbound group-1 and move to next group-1: h00-h12\0 -> h00-h12, | h14\0 -> h14] */
@@ -199,14 +171,13 @@ static HYD_status list_to_nodes(char *str)
             /* hostname must end with a letter or a digit */
             if ((trail >= 'a' && trail <= 'z') ||
                 (trail >= 'A' && trail <= 'Z') || (trail >= '0' && trail <= '9')) {
-                status = HYDU_add_to_node_list(basename, tasks_per_node[k++], &global_node_list);
+                add_to_node_list(basename, node_list);
                 *(gpattern[0] + gmatch[0][0].rm_eo) = tmp[0];
                 gpattern[0] += gmatch[0][0].rm_eo;
                 continue;
             } else {
-                fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist.\n"
-                        "Use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
-                        "format and report bugs\n", basename);
+                fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist\n",
+                        basename);
                 break;
             }
         }
@@ -237,17 +208,14 @@ static HYD_status list_to_nodes(char *str)
                 for (j = begin; j <= end; j++) {
                     snprintf(hostname, MAX_HOSTNAME_LEN, "%s%.*d",
                              basename, (int) (rmatch[1].rm_eo - rmatch[1].rm_so), j);
-                    status =
-                        HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
-                    HYDU_ERR_POP(status, "unable to add to node list\n");
+                    add_to_node_list(hostname, node_list);
                 }
             } else if (regexec(&ematch_new, epattern, MAX_EMATCH, ematch, 0) == 0) {
                 /* matched element: (14) */
                 snprintf(rbegin, MAX_NNODES_STRLEN, "%.*s",
                          (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so);
                 snprintf(hostname, MAX_HOSTNAME_LEN, "%s%s", basename, rbegin);
-                status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
-                HYDU_ERR_POP(status, "unable to add to node list\n");
+                add_to_node_list(hostname, node_list);
             }
 
             /* unbound group-1 and move to next group-1: 00-10\0 -> 00-10, | 14\0 -> 14] */
@@ -261,11 +229,8 @@ static HYD_status list_to_nodes(char *str)
     }
 
     /* if nodelist format not recognized throw an error message and abort */
-    if (global_node_list == NULL) {
-        fprintf(stdout,
-                "Error: node list format not recognized. Try using '-hosts {node list}' or\n"
-                "use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
-                "format and report bugs\n");
+    if (*node_list == NULL) {
+        fprintf(stdout, "Error: node list format not recognized.\n");
         fflush(stdout);
         abort();
     }
@@ -281,211 +246,58 @@ static HYD_status list_to_nodes(char *str)
     regfree(&ematch_new);
 
     /* free local nodelist */
-    MPL_free(string);
+    free(string);
 
   fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-#else
-static HYD_status group_to_nodes(char *str)
-{
-    char *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
-    int start, end, i, j, k = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    for (tmp = str; *tmp != '[' && *tmp != 0; tmp++);
-
-    if (*tmp == 0) {    /* only one node in the group */
-        status = HYDU_add_to_node_list(str, tasks_per_node[k++], &global_node_list);
-        HYDU_ERR_POP(status, "unable to add to node list\n");
-
-        goto fn_exit;
-    }
-
-    /* more than one node in the group */
-    *tmp = 0;
-    nodes = tmp + 1;
-
-    for (tmp = nodes; *tmp != ']' && *tmp != 0; tmp++);
-    *tmp = 0;   /* remove the closing ']' */
-
-    /* Find the number of sets */
-    tnodes = MPL_strdup(nodes);
-    tmp = strtok(tnodes, ",");
-    for (i = 1; tmp; i++)
-        tmp = strtok(NULL, ",");
-
-    HYDU_MALLOC_OR_JUMP(set, char **, i * sizeof(char *), status);
-
-    /* Find the actual node sets */
-    set[0] = strtok(nodes, ",");
-    for (i = 1; set[i - 1]; i++)
-        set[i] = strtok(NULL, ",");
-
-    for (i = 0; set[i]; i++) {
-        start_str = strtok(set[i], "-");
-        if ((end_str = strtok(NULL, "-")) == NULL)
-            end_str = start_str;
-
-        start = atoi(start_str);
-        end = atoi(end_str);
-
-        for (j = start; j <= end; j++) {
-            char *node_str[HYD_NUM_TMP_STRINGS];
-
-            node_str[0] = MPL_strdup(str);
-            node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
-            node_str[2] = NULL;
-
-            status = HYDU_str_alloc_and_join(node_str, &tmp);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-
-            HYDU_free_strlist(node_str);
-
-            status = HYDU_add_to_node_list(tmp, tasks_per_node[k++], &global_node_list);
-            HYDU_ERR_POP(status, "unable to add to node list\n");
-        }
-    }
-
-  fn_exit:
-    return status;
+    return;
 
   fn_fail:
     goto fn_exit;
 }
 
-/* List is a comma separated collection of groups, where each group is
- * of the form "[host001-host012]", "host001-host012", "host009",
- * "[host001-host012,host014-host020]", etc. */
-static HYD_status list_to_nodes(char *str)
+int main(int argc, char *argv[])
 {
-    char *tmp, group[3 * MAX_HOSTNAME_LEN];     /* maximum group size */
-    int nesting, i;
-    HYD_status status = HYD_SUCCESS;
+    int i, errs = 0;
+    char comp[MAX_NODELIST_LEN];
+    char expn[MAX_NODELIST_LEN];
+    char *token;
+    struct list *node_list = NULL;
+    struct list *node_list_ptr;
 
-    tmp = str;
+    fprintf(stdout, "input compressed nodelist: ");
+    fscanf(stdin, "%s", comp);
+
+    token = strdup(comp);
+
+    /* parse nodelist and extract hostname(s) into nodelist */
+    list_to_nodes(token, &node_list);
+
+    /* parse node_list and put hostname(s) into expanded nodelist */
     i = 0;
-    nesting = 0;
+    node_list_ptr = node_list;
+    while (node_list_ptr != NULL) {
+        /* get hostname */
+        char *index = node_list_ptr->hostname;
 
-    while (1) {
-        group[i] = *tmp;
-        if (*tmp == '[')
-            nesting++;
-        if (*tmp == ']')
-            nesting--;
-        if (*tmp == ',' && nesting == 0) {
-            group[i] = 0;
+        /* copy hostname into expanded list */
+        while (*index != '\0')
+            expn[i++] = *(index++);
 
-            status = group_to_nodes(group);
-            HYDU_ERR_POP(status, "unable to split group to nodes\n");
+        /* terminate every hostname in expanded list with ',' */
+        expn[i++] = ',';
 
-            i = -1;
-        }
-        if (*tmp == 0) {
-            group[++i] = 0;
-
-            status = group_to_nodes(group);
-            HYDU_ERR_POP(status, "unable to split group to nodes\n");
-
-            break;
-        }
-
-        i++;
-        tmp++;
+        /* move to next hostname in node_list */
+        node_list_ptr = node_list_ptr->next;
     }
 
-  fn_exit:
-    return status;
+    expn[i - 1] = '\n';
 
-  fn_fail:
-    goto fn_exit;
-}
-#endif
+    /* print expanded nodelist */
+    fprintf(stdout, "expanded nodelist: %s\n", expn);
 
-static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
-{
-    char *task_set, **tmp_core_list = NULL;
-    char *nodes, *cores;
-    int i, j, k, p, count = 0;
-    HYD_status status = HYD_SUCCESS;
+    cleanup_node_list(&node_list);
 
-    HYDU_MALLOC_OR_JUMP(tasks_per_node, int *, nnodes * sizeof(int), status);
-    HYDU_MALLOC_OR_JUMP(tmp_core_list, char **, nnodes * sizeof(char *), status);
+    free(token);
 
-    task_set = strtok(task_list, ",");
-    HYDU_ASSERT(task_set, status);
-    i = 0;
-    do {
-        HYDU_MALLOC_OR_JUMP(tmp_core_list[i], char *, strlen(task_set) + 1, status);
-        MPL_snprintf(tmp_core_list[i], strlen(task_set) + 1, "%s", task_set);
-        i++;
-        task_set = strtok(NULL, ",");
-    } while (task_set);
-    count = i;
-
-    p = 0;
-    for (i = 0; i < count; i++) {
-        cores = strtok(tmp_core_list[i], "(");
-        nodes = strtok(NULL, "(");
-        if (nodes) {
-            nodes[strlen(nodes) - 1] = 0;
-            nodes++;
-            j = atoi(nodes);
-        } else
-            j = 1;
-
-        for (k = 0; k < j; k++)
-            tasks_per_node[p++] = atoi(cores);
-    }
-
-  fn_exit:
-    for (i = 0; i < count; i++)
-        MPL_free(tmp_core_list[i]);
-    MPL_free(tmp_core_list);
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
-{
-    char *list, *dummy, *task_list;
-    int nnodes;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (MPL_env2str("SLURM_NODELIST", (const char **) &list) == 0) {
-        *node_list = NULL;
-        goto fn_exit;
-    }
-
-    if (MPL_env2str("SLURM_NNODES", (const char **) &dummy) == 0) {
-        *node_list = NULL;
-        goto fn_exit;
-    }
-    nnodes = atoi(dummy);
-
-    if (MPL_env2str("SLURM_TASKS_PER_NODE", (const char **) &task_list) == 0) {
-        *node_list = NULL;
-        goto fn_exit;
-    }
-
-    status = extract_tasks_per_node(nnodes, task_list);
-    HYDU_ERR_POP(status, "unable to extract the number of tasks per node\n");
-
-    list_to_nodes(list);
-    *node_list = global_node_list;
-
-  fn_exit:
-    MPL_free(tasks_per_node);
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
+    return EXIT_SUCCESS;
 }

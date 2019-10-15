@@ -1,0 +1,51 @@
+This directory contains maintenance code and utilities for hydra:
+
+= slurm_nodelist_parse.c
+
+$ gcc slurm_nodelist_parse.c -o slurm_nodelist_parse
+
+When ran the test asks for a compressed nodelist of the form: host-[00-03],
+and returns an expanded list of the form: host-00,host-01,host-02,host-03
+if the compressed list format is recognized as valid. Otherwise, the test
+returns an error message.
+
+This test can be used to validate nodelist formats for the slurm resource
+manager and to report bugs in the existing code: src/pm/hydra/tools/boostrap/
+external/slurm_query_node_list.c
+
+Examples:
+
+$ ./slurm_nodelist_parse
+input compressed nodelist: host-[00-10]
+expanded nodelist: host-00,host-01,host-02,host-03,host-04,host-05,host-06,host-07,host-08,host-09,host-10
+
+$ ./slurm_nodelist_parse
+input compressed nodelist: host[00-10,15]
+expanded nodelist: host00,host01,host02,host03,host04,host05,host06,host07,host08,host09,host10,host15
+
+$ ./slurm_nodelist_parse
+input compressed nodelist: 192.168.0.[100-110]
+expanded nodelist: 192.168.0.100,192.168.0.101,192.168.0.102,192.168.0.103,192.168.0.104,192.168.0.105,192.168.0.106,192.168.0.107,192.168.0.108,192.168.0.109,192.168.0.110
+
+The parser is compliant with the DoD specification for internet hostnames
+as defined by RFC952 https://tools.ietf.org/html/rfc952 and RFC1123 section
+2.1 https://tools.ietf.org/html/rfc1123#page-13.
+
+As for the specification:
+    1. A "name" (Net, Host, Gateway, or Domain name) is a text string up
+       to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
+       sign (-), and period (.).  Note that periods are only allowed when
+       they serve to delimit components of "domain style names". (See
+       RFC-921, "Domain Name System Implementation Schedule", for
+       background).  No blank or space characters are permitted as part of a
+       name. No distinction is made between upper and lower case.  The first
+       character must be an alpha character.  The last character must not be
+       a minus sign or period. [...] Single character names or nicknames are
+       not allowed.
+
+Thus the following is not a valid hostname and thus not detected properly:
+
+$ ./slurm_nodelist_parse
+input compressed nodelist: h,host-[00-10]
+Error: node list format not recognized.
+[1]    67717 abort      ./slurm_nodelist_parse
