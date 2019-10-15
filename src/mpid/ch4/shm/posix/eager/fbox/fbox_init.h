@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
                         int16_t *,
                         sizeof(*MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks) *
                         (MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE + 1), mpi_errno,
-                        "fist_poll_local_ranks", MPL_MEM_SHM);
+                        "first_poll_local_ranks", MPL_MEM_SHM);
 
     /* -1 means we aren't looking for anything in particular. */
     for (i = 0; i < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE; i++) {
