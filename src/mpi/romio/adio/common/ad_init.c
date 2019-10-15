@@ -6,6 +6,7 @@
  */
 
 #include "adio.h"
+#include "adio_extern.h"
 
 ADIOI_Datarep *ADIOI_Datarep_head = NULL;
     /* list of datareps registered by the user */
@@ -71,7 +72,6 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     else
         ADIOI_Direct_write = 0;
 #endif
-
 
 #ifdef ADIOI_MPE_LOGGING
     {

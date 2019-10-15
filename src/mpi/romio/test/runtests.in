@@ -14,6 +14,7 @@ MAKE="@MAKE@"
 srcdir=@srcdir@
 check_canrun=0
 subset_only=0
+daos_pool=0
 FILENAME=test
 # Using shifts should remove args from the list.
 for arg in "$@" ; do
@@ -46,6 +47,10 @@ for arg in "$@" ; do
 	shift
 	subset_only=1
 	;;
+	-daos)
+	shift
+	daos_pool=1
+	;;
 	-fname=*)
 	FILENAME=`echo $arg|sed 's/-*fname=//'`
 	;;
@@ -65,6 +70,8 @@ for arg in "$@" ; do
 	echo "is used to check that mpirun can run an MPI program."
 	echo "If -subset is used, we skip tests for atomicity and shared"
 	echo "file pointers which can fail on some distributed file systems" 
+	echo "If -daos is used, a DAOS pool is created before tests are run"
+	echo "and destroyed after."
 	exit 1
 	;;
 	*)
@@ -159,6 +166,23 @@ if [ ! -x simple -a $makeeach = 0 ] ; then
     $MAKE default
 fi
 #
+
+if [ $daos_pool = 1 ] ; then
+echo '**** Creating DAOS Pool ****'
+pool=`dmg create --size=1GB`
+value=$pool
+echo $value
+OLDIFS=$IFS
+IFS=" "
+read -a array <<< "$(printf "%s" "$value")"
+IFS=$OLDIFS
+export DAOS_POOL=${array[0]}
+export DAOS_SVCL=${array[1]}
+export DAOS_CONT=`uuidgen`
+echo '**** Creating DAOS Container ****'
+daos cont create --pool=$DAOS_POOL --svc=$DAOS_SVCL --cont=$DAOS_CONT --type=POSIX
+fi
+
 testfiles=""
 if [ $runtests = 1 ] ; then
 echo '**** Testing I/O functions ****'
@@ -438,6 +462,12 @@ else
 	exit 1
     fi
 fi
+
+if [ $daos_pool = 1 ] ; then
+echo '**** Destroying DAOS Pool ****'
+pool=`mpirun -np 1 dmg destroy --force --pool=${array[0]}`
+fi
+
 #
 # echo '*** Checking for differences from expected output ***'
 # rm -f iotests.diff

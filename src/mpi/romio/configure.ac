@@ -188,7 +188,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime])dnl
+          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs ime])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -777,6 +777,44 @@ if test -n "$FILE_SYSTEM" ; then
    done
 fi
 
+AC_ARG_WITH([cart],
+    [AS_HELP_STRING([--with-cart],
+            [Build DAOS ROMIO driver[default=no]])],,
+    [with_cart=no])
+
+AS_IF([test "x$with_cart" != xno],
+    CART="yes"
+    LDFLAGS="$LDFLAGS -L$with_cart/lib"
+    CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
+    AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
+    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART]))
+
+AC_ARG_WITH([daos],
+    [AS_HELP_STRING([--with-daos],
+	    [Build DAOS ROMIO driver[default=no]])],,
+    [with_daos=no])
+
+AS_IF([test "x$with_daos" != xno],
+    DAOS="yes"
+    LDFLAGS="$LDFLAGS -L$with_daos/lib"
+    CPPFLAGS="$CPPFLAGS -I$with_daos/include"
+    AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
+    AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
+    AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
+    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
+    AC_CHECK_LIB([dfs], [dfs_mount],, [unset DAOS])
+    AC_CHECK_LIB([duns], [duns_resolve_path],, [unset DAOS]))
+
+AS_IF([test "x$CART" != xyes], [unset DAOS])
+
+if test -n "$file_system_daos" ; then
+    if test "x$DAOS" == xyes ; then
+	AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS])
+    else
+	AC_MSG_ERROR([DAOS support requested but not found (--with-daos, --with-cart)])
+    fi
+fi
+
 #############################################
 # This PVFS2 logic is special because it's hard to get it right if it comes
 # before the known_filesystems check loop above.  So we handle it down here,
@@ -985,7 +1023,6 @@ if test -n "$file_system_pvfs2"; then
        		[Define if PVFS_sys_create does not have layout parameter])
        )
 fi
-
 
 AS_IF([test -n "$file_system_gpfs"],
     [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])

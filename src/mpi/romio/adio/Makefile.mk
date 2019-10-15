@@ -23,6 +23,7 @@ noinst_HEADERS +=                      \
     adio/include/mpiu_external32.h     \
     adio/include/hint_fns.h
 
+include $(top_srcdir)/adio/ad_daos/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/bg/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/pe/Makefile.mk
