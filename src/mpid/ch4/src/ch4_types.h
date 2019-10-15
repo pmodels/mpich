@@ -277,12 +277,20 @@ typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
 
-#define MPIDIU_THREAD_PROGRESS_MUTEX MPIDI_global.m[0]
+/* Defining them in the global struct avoids duplicate of declarations and
+ * definitions; However, it makes debugging a bit cryptic */
+#define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
 #define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX MPIDI_global.m[1]
-#define MPIDIU_THREAD_UTIL_MUTEX MPIDI_global.m[2]
-/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
+#define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[2]
 #define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[3]
-#define MAX_CH4_MUTEXES 4
+#define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[4]
+#define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[5]
+#ifdef HAVE_LIBHCOLL
+#define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[6]
+#endif
+/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
+
+#define MAX_CH4_MUTEXES 7
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
