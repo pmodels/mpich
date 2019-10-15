@@ -121,7 +121,6 @@ int main(int argc, char **argv)
         defaults = NULL;
     }
 
-
 /* open the file with MPI_INFO_NULL */
     ret = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
                         MPI_INFO_NULL, &fh);
@@ -412,6 +411,12 @@ int main(int argc, char **argv)
     }
 
     MPI_File_close(&fh);
+
+    /* delete the file */
+    if (!mynod)
+        MPI_File_delete(filename, MPI_INFO_NULL);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     free(filename);
     MPI_Info_free(&info_used);
     MPI_Info_free(&info);
