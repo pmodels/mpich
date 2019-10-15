@@ -16,7 +16,7 @@
 void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 {
     int rank;
-    struct ADIO_DAOS_cont *cont = (struct ADIO_DAOS_cont *)fd->fs_ptr;
+    struct ADIO_DAOS_cont *cont = (struct ADIO_DAOS_cont *) fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_CLOSE";
     int rc;
 
@@ -60,6 +60,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     *error_code = MPI_SUCCESS;
 }
+
 /*
  * vim: ts=8 sts=4 sw=4 noexpandtab
  */

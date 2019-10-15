@@ -19,7 +19,7 @@
 
 #define OID_SEED 5731
 
-#  define UINT64ENCODE(p, n) {						      \
+#define UINT64ENCODE(p, n) {						      \
    uint64_t _n = (n);							      \
    size_t _i;								      \
    uint8_t *_p = (uint8_t*)(p);						      \
@@ -31,7 +31,7 @@
    (p) = (uint8_t*)(p) + 8;						      \
 }
 
-#  define UINT64DECODE(p, n) {						      \
+#define UINT64DECODE(p, n) {						      \
    /* WE DON'T CHECK FOR OVERFLOW! */					      \
    size_t _i;								      \
 									      \
@@ -44,7 +44,7 @@
 
 /* Decode a variable-sized buffer */
 /* (Assumes that the high bits of the integer will be zero) */
-#  define DECODE_VAR(p, n, l) {						      \
+#define DECODE_VAR(p, n, l) {						      \
    size_t _i;								      \
 									      \
    n = 0;								      \
@@ -56,12 +56,12 @@
 
 /* Decode a variable-sized buffer into a 64-bit unsigned integer */
 /* (Assumes that the high bits of the integer will be zero) */
-#  define UINT64DECODE_VAR(p, n, l)     DECODE_VAR(p, n, l)
+#define UINT64DECODE_VAR(p, n, l)     DECODE_VAR(p, n, l)
 
 /* Multiply two 128 bit unsigned integers to yield a 128 bit unsigned integer */
 static void
 duuid_mult128(uint64_t x_lo, uint64_t x_hi, uint64_t y_lo, uint64_t y_hi,
-    uint64_t *ans_lo, uint64_t *ans_hi)
+              uint64_t * ans_lo, uint64_t * ans_hi)
 {
     uint64_t xlyl;
     uint64_t xlyh;
@@ -108,14 +108,13 @@ duuid_mult128(uint64_t x_lo, uint64_t x_hi, uint64_t y_lo, uint64_t y_hi,
     *ans_hi += (x_lo * y_hi) + (x_hi * y_lo);
 
     return;
-} /* end duuid_mult128() */
+}       /* end duuid_mult128() */
 
 /* Implementation of the FNV hash algorithm */
-static void
-duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
+static void duuid_hash128(const char *name, void *hash, uint64_t * hi, uint64_t * lo)
 {
-    const uint8_t *name_p = (const uint8_t *)name;
-    uint8_t *hash_p = (uint8_t *)hash;
+    const uint8_t *name_p = (const uint8_t *) name;
+    uint8_t *hash_p = (uint8_t *) hash;
     uint64_t name_lo;
     uint64_t name_hi;
     /* Initialize hash value in accordance with the FNV algorithm */
@@ -126,31 +125,31 @@ duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
     const uint64_t fnv_prime_hi = 0x1000000;
     size_t name_len_rem = strlen(name);
 
-    while(name_len_rem > 0) {
+    while (name_len_rem > 0) {
         /* "Decode" lower 64 bits of this 128 bit section of the name, so the
          * numberical value of the integer is the same on both little endian and
          * big endian systems */
-        if(name_len_rem >= 8) {
+        if (name_len_rem >= 8) {
             UINT64DECODE(name_p, name_lo)
-            name_len_rem -= 8;
+                name_len_rem -= 8;
         } /* end if */
         else {
             name_lo = 0;
             UINT64DECODE_VAR(name_p, name_lo, name_len_rem)
-            name_len_rem = 0;
-        } /* end else */
+                name_len_rem = 0;
+        }       /* end else */
 
         /* "Decode" second 64 bits */
-        if(name_len_rem > 0) {
-            if(name_len_rem >= 8) {
+        if (name_len_rem > 0) {
+            if (name_len_rem >= 8) {
                 UINT64DECODE(name_p, name_hi)
-                name_len_rem -= 8;
+                    name_len_rem -= 8;
             } /* end if */
             else {
                 name_hi = 0;
                 UINT64DECODE_VAR(name_p, name_hi, name_len_rem)
-                name_len_rem = 0;
-            } /* end else */
+                    name_len_rem = 0;
+            }   /* end else */
         } /* end if */
         else
             name_hi = 0;
@@ -159,23 +158,22 @@ duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
         hash_lo ^= name_lo;
         hash_hi ^= name_hi;
         duuid_mult128(hash_lo, hash_hi, fnv_prime_lo, fnv_prime_hi, &hash_lo, &hash_hi);
-    } /* end while */
+    }   /* end while */
 
     /* "Encode" hash integers to char buffer, so the buffer is the same on both
      * little endian and big endian systems */
     UINT64ENCODE(hash_p, hash_lo)
-    UINT64ENCODE(hash_p, hash_hi)
+        UINT64ENCODE(hash_p, hash_hi)
 
-    if (hi)
+        if (hi)
         *hi = hash_hi;
     if (lo)
         *lo = hash_lo;
 
     return;
-} /* end duuid_hash128() */
+}       /* end duuid_hash128() */
 
-static int
-parse_filename(const char *path, char **_obj_name, char **_cont_name)
+static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
 {
     char *f1;
     char *f2;
@@ -218,7 +216,7 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
 
             if (new_dir == NULL) {
                 rc = ENOMEM;
-                goto out; 
+                goto out;
             }
 
             strcpy(new_dir, cwd);
@@ -235,25 +233,25 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
         *_cont_name = ADIOI_Strdup(cont_name);
         if (*_cont_name == NULL) {
             rc = ENOMEM;
-            goto out; 
+            goto out;
         }
     }
-   
+
     *_obj_name = ADIOI_Strdup(fname);
     if (*_obj_name == NULL) {
         rc = ENOMEM;
-        goto out; 
+        goto out;
     }
 
-out:
+  out:
     ADIOI_Free(f1);
     ADIOI_Free(f2);
     return rc;
 }
 
 int
-get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
-                    daos_oclass_id_t *oclass, daos_size_t *chunk_size)
+get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
+                    daos_oclass_id_t * oclass, daos_size_t * chunk_size)
 {
     bool use_duns = false;
     char *uuid_str;
@@ -267,9 +265,8 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
          * parent dir. we still don't support nested dirs in the UNS. */
         rc = duns_resolve_path(path, &attr);
         if (rc) {
-            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s\n",
-                      path, rc);
-            return -DER_INVAL; 
+            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s\n", path, rc);
+            return -DER_INVAL;
         }
 
         if (attr.da_type != DAOS_PROP_CO_LAYOUT_POSIX) {
@@ -284,7 +281,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
     }
 
     /* use the env variables to retrieve the pool and container */
-    uuid_str = getenv ("DAOS_POOL");
+    uuid_str = getenv("DAOS_POOL");
     if (uuid_str == NULL) {
         PRINT_MSG(stderr, "Can't retrieve DAOS pool uuid\n");
         return -DER_INVAL;
@@ -294,7 +291,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
         return -DER_INVAL;
     }
 
-    uuid_str = getenv ("DAOS_CONT");
+    uuid_str = getenv("DAOS_CONT");
     if (uuid_str == NULL) {
         /* TODO: remove this later and fail in this case. */
         /* Hash container name to create uuid */
@@ -312,8 +309,7 @@ get_pool_cont_uuids(const char *path, uuid_t *puuid, uuid_t *cuuid,
     return 0;
 }
 
-void
-ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
+void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_OPEN";
@@ -357,8 +353,7 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     cont->poh = cont->p->open_hdl;
 
     rc = adio_daos_coh_lookup_create(cont->poh, cont->cuuid, O_RDWR,
-                                     (fd->access_mode & ADIO_CREATE),
-                                     &cont->c);
+                                     (fd->access_mode & ADIO_CREATE), &cont->c);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
         goto err_pool;
@@ -416,23 +411,22 @@ ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         goto err_obj;
     }
 
-out:
+  out:
     return;
-err_obj:
+  err_obj:
     dfs_release(cont->obj);
     if (fd->access_mode & ADIO_CREATE)
         dfs_remove(cont->dfs, NULL, cont->obj_name, true, NULL);
-err_cont:
+  err_cont:
     adio_daos_coh_release(cont->c);
     cont->c = NULL;
-err_pool:
+  err_pool:
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
     goto out;
 }
 
-static int
-cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
+static int cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
 {
     char *uuid_str;
     static char myname[] = "ADIOI_DAOS_OPEN";
@@ -467,15 +461,14 @@ cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
     return rc;
 }
 
-static int
-share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
+static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
 {
     char buf[74];
     int rc;
 
     if (rank == 0) {
         uuid_unparse(cont->puuid, buf);
-        uuid_unparse(cont->cuuid, buf+37);
+        uuid_unparse(cont->cuuid, buf + 37);
     }
     rc = MPI_Bcast(buf, sizeof(buf), MPI_BYTE, 0, comm);
     if (rc != MPI_SUCCESS)
@@ -486,15 +479,14 @@ share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
         if (rc)
             return rc;
 
-        rc = uuid_parse(buf+37, cont->cuuid);
+        rc = uuid_parse(buf + 37, cont->cuuid);
         if (rc)
             return rc;
     }
     return 0;
 }
 
-void
-ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
+void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 {
     struct ADIO_DAOS_cont *cont;
     int amode;
@@ -511,14 +503,14 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 
     amode = 0;
     if (access_mode & ADIO_RDONLY)
-	amode = DAOS_COO_RO;        
+        amode = DAOS_COO_RO;
     else
         amode = DAOS_COO_RW;
 
-    cont = (struct ADIO_DAOS_cont *)ADIOI_Malloc(sizeof(struct ADIO_DAOS_cont));
+    cont = (struct ADIO_DAOS_cont *) ADIOI_Malloc(sizeof(struct ADIO_DAOS_cont));
     if (cont == NULL) {
         *error_code = MPI_ERR_NO_MEM;
-	return;
+        return;
     }
 
     fd->access_mode = access_mode;
@@ -526,7 +518,7 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     rc = parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
     if (rc) {
         *error_code = MPI_ERR_NO_MEM;
-	return;
+        return;
     }
 
     cont->p = NULL;
@@ -534,7 +526,7 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     fd->fs_ptr = cont;
 
     if (rank == 0) {
-        (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
+        (*(fd->fns->ADIOI_xxx_Open)) (fd, error_code);
         MPI_Error_class(*error_code, &rc);
     }
 
@@ -545,8 +537,7 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
             if (rc)
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                    MPIR_ERR_RECOVERABLE, myname,
-                                                   __LINE__, rc,
-                                                   "File Open error", 0);
+                                                   __LINE__, rc, "File Open error", 0);
             else
                 *error_code = MPI_SUCCESS;
         }
@@ -569,12 +560,12 @@ ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
     fd->is_open = 1;
 
 #ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event( ADIOI_MPE_open_b, 0, NULL );
+    MPE_Log_event(ADIOI_MPE_open_b, 0, NULL);
 #endif
 
     return;
 
-err_free:
+  err_free:
     if (cont->obj_name)
         ADIOI_Free(cont->obj_name);
     if (cont->cont_name)
@@ -583,15 +574,13 @@ err_free:
     return;
 }
 
-void
-ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
+void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 {
     MPI_Barrier(fd->comm);
     *error_code = MPI_SUCCESS;
 }
 
-void
-ADIOI_DAOS_Delete(const char *filename, int *error_code)
+void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
     struct adio_daos_hdl *p, *c;
     uuid_t puuid, cuuid;
@@ -609,7 +598,7 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
     parse_filename(filename, &obj_name, &cont_name);
     if (rc) {
         *error_code = MPI_ERR_NO_MEM;
-	return;
+        return;
     }
 
     rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass, &chunk_size);
@@ -651,11 +640,11 @@ ADIOI_DAOS_Delete(const char *filename, int *error_code)
 
     *error_code = MPI_SUCCESS;
 
-out_cont:
+  out_cont:
     adio_daos_coh_release(c);
-out_pool:
+  out_pool:
     adio_daos_poh_release(p);
-out_free:
+  out_free:
     ADIOI_Free(obj_name);
     ADIOI_Free(cont_name);
     return;

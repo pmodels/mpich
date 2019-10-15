@@ -166,7 +166,7 @@ typedef struct ADIOI_AIO_req_str {
     PVFS_Request mem_req;
 #endif
 #ifdef ROMIO_DAOS
-    	daos_event_t daos_event;
+    daos_event_t daos_event;
 #endif
 } ADIOI_AIO_Request;
 

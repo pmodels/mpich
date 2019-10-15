@@ -26,10 +26,10 @@ enum {
 
 static MPIX_Grequest_class ADIOI_DAOS_greq_class = 0;
 
-static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
-			  MPI_Datatype datatype, int file_ptr_type,
-			  ADIO_Offset offset, ADIO_Status *status,
-			  MPI_Request *request, int flag, int *error_code)
+static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
+                          MPI_Datatype datatype, int file_ptr_type,
+                          ADIO_Offset offset, ADIO_Status * status,
+                          MPI_Request * request, int flag, int *error_code)
 {
     MPI_Count datatype_size;
     uint64_t len;
@@ -43,10 +43,10 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     static char myname[] = "ADIOI_DAOS_IOCONTIG";
 
     MPI_Type_size_x(datatype, &datatype_size);
-    len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
+    len = (ADIO_Offset) datatype_size *(ADIO_Offset) count;
 
     if (request) {
-        aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
+        aio_req = (struct ADIO_DAOS_req *) ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
 
         iod = &aio_req->iod;
@@ -64,8 +64,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         memcpy(&(aio_req->req), request, sizeof(MPI_Request));
 
         aio_req->nbytes = len;
-    }
-    else {
+    } else {
         iod = &loc_iod;
         rg = &loc_rg;
         sgl = &loc_sgl;
@@ -76,7 +75,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         goto done;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
-	offset = fd->fp_ind;
+        offset = fd->fp_ind;
     }
 
     /** set memory location */
@@ -94,15 +93,14 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     iod->arr_rgs = rg;
 
 #ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
+    MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
 #endif
 
 #ifdef D_PRINT_IO
     int mpi_rank;
 
     MPI_Comm_rank(fd->comm, &mpi_rank);
-    printf("(%d) CONTIG IO OP %d, Off %llu, Len %zu\n",
-           mpi_rank, flag, offset, len);
+    printf("(%d) CONTIG IO OP %d, Off %llu, Len %zu\n", mpi_rank, flag, offset, len);
 #endif
 
     if (flag == DAOS_WRITE) {
@@ -113,8 +111,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
-    }
-    else if (flag == DAOS_READ) {
+    } else if (flag == DAOS_READ) {
         ret = daos_array_read(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
@@ -123,18 +120,17 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
             return;
         }
     }
-
 #ifdef ADIOI_MPE_LOGGING
-        MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
+    MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
 #endif
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
-	fd->fp_ind += len;
+        fd->fp_ind += len;
     }
 
     fd->fp_sys_posn = offset + len;
 
-done:
+  done:
 #ifdef HAVE_STATUS_SET_BYTES
     if (status)
         MPIR_Status_set_bytes(status, datatype, len);
@@ -144,27 +140,24 @@ done:
 }
 
 void ADIOI_DAOS_ReadContig(ADIO_File fd, void *buf, int count,
-			   MPI_Datatype datatype, int file_ptr_type,
-			   ADIO_Offset offset, ADIO_Status *status,
-			   int *error_code)
+                           MPI_Datatype datatype, int file_ptr_type,
+                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
     DAOS_IOContig(fd, buf, count, datatype, file_ptr_type,
                   offset, status, NULL, DAOS_READ, error_code);
 }
 
 void ADIOI_DAOS_WriteContig(ADIO_File fd, const void *buf, int count,
-			    MPI_Datatype datatype, int file_ptr_type,
-			    ADIO_Offset offset, ADIO_Status *status,
-			    int *error_code)
+                            MPI_Datatype datatype, int file_ptr_type,
+                            ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
-    DAOS_IOContig(fd, (void *)buf, count, datatype, file_ptr_type,
-		  offset, status, NULL, DAOS_WRITE, error_code);
+    DAOS_IOContig(fd, (void *) buf, count, datatype, file_ptr_type,
+                  offset, status, NULL, DAOS_WRITE, error_code);
 }
 
 void ADIOI_DAOS_IReadContig(ADIO_File fd, void *buf, int count,
-			    MPI_Datatype datatype, int file_ptr_type,
-			    ADIO_Offset offset, MPI_Request *request,
-			    int *error_code)
+                            MPI_Datatype datatype, int file_ptr_type,
+                            ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
     DAOS_IOContig(fd, buf, count, datatype, file_ptr_type,
                   offset, NULL, request, DAOS_READ, error_code);
@@ -172,21 +165,20 @@ void ADIOI_DAOS_IReadContig(ADIO_File fd, void *buf, int count,
 
 void ADIOI_DAOS_IWriteContig(ADIO_File fd, const void *buf, int count,
                              MPI_Datatype datatype, int file_ptr_type,
-                             ADIO_Offset offset, MPI_Request *request,
-                             int *error_code)
+                             ADIO_Offset offset, MPI_Request * request, int *error_code)
 {
-    DAOS_IOContig(fd, (void *)buf, count, datatype, file_ptr_type,
+    DAOS_IOContig(fd, (void *) buf, count, datatype, file_ptr_type,
                   offset, NULL, request, DAOS_WRITE, error_code);
 }
 
 int ADIOI_DAOS_aio_free_fn(void *extra_state)
 {
-    struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *)extra_state;
+    struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *) extra_state;
 
-    if(aio_req->iovs)
+    if (aio_req->iovs)
         ADIOI_Free(aio_req->iovs);
 
-    if(aio_req->rgs)
+    if (aio_req->rgs)
         ADIOI_Free(aio_req->rgs);
 
     ADIOI_Free(aio_req);
@@ -194,9 +186,9 @@ int ADIOI_DAOS_aio_free_fn(void *extra_state)
     return MPI_SUCCESS;
 }
 
-int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
+int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status * status)
 {
-    struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *)extra_state;;
+    struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *) extra_state;;
     int ret;
     bool flag;
 
@@ -206,13 +198,12 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
         return MPI_UNDEFINED;
 
     if (flag)
-	MPI_Grequest_complete(aio_req->req);
+        MPI_Grequest_complete(aio_req->req);
     else
         return MPI_UNDEFINED;
 
     if (aio_req->daos_event.ev_error != 0)
-        ret = ADIOI_DAOS_err("ADIOI_DAOS_aio_poll_fn", "DAOS Event Error",
-                             __LINE__, ret);
+        ret = ADIOI_DAOS_err("ADIOI_DAOS_aio_poll_fn", "DAOS Event Error", __LINE__, ret);
     else
         ret = MPI_SUCCESS;
 
@@ -220,22 +211,21 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
 }
 
 /* wait for multiple requests to complete */
-int ADIOI_DAOS_aio_wait_fn(int count, void ** array_of_states,
-                           double timeout, MPI_Status *status)
+int ADIOI_DAOS_aio_wait_fn(int count, void **array_of_states, double timeout, MPI_Status * status)
 {
 
     struct ADIO_DAOS_req **aio_reqlist;
     int i, nr_complete, ret;
 
-    aio_reqlist = (struct ADIO_DAOS_req **)array_of_states;
+    aio_reqlist = (struct ADIO_DAOS_req **) array_of_states;
 
     nr_complete = 0;
-    while(nr_complete < count) {
+    while (nr_complete < count) {
         for (i = 0; i < count; i++) {
             bool flag;
 
             ret = daos_event_test(&aio_reqlist[i]->daos_event,
-                                  (timeout > 0) ? (int64_t)timeout : DAOS_EQ_WAIT, &flag);
+                                  (timeout > 0) ? (int64_t) timeout : DAOS_EQ_WAIT, &flag);
             if (ret != 0)
                 return MPI_UNDEFINED;
 
