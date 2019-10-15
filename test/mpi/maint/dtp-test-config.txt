@@ -4,7 +4,10 @@
 # This file is used by autogen.sh to generate multiple binary files for datatype testing.
 # Every line must have the format:
 #
-# <test pathname>:<ssv args>:<ssv counts>:timeLimit=<seconds>:<procs#>:<mintestsize>:<maxtestsize>:<maxbufsize>
+# <test pathname>:<ssv args>:<ssv counts>:<passthru args>:<procs#>:<mintestsize>:<maxtestsize>:<maxbufsize>
+#
+# <passthru args> are space separated arguments that directly passed to testlist files.
+# It can be used to add attributes such as "timeLimit=<seconds>" and "mem=<GB>".
 #
 # The autogen.sh script generates a single binary for every line. Each binary will appear in
 # the testlist file multiple times, corresponding to different combinations of basic datatypes
