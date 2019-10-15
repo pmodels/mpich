@@ -556,6 +556,11 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
 
     MPI_CHECK(MPI_File_close(&fh));
 
+    /* delete the file */
+    if (!mynod)
+        MPI_File_delete(filename, info);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MPI_Type_free(&newtype);
     free(buf);
     if (info != MPI_INFO_NULL)

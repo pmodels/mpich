@@ -82,13 +82,16 @@
 #define EXFS_SUPER_MAGIC 0x45584653
 #endif
 
-
 #if !defined(PVFS2_SUPER_MAGIC)
 #define PVFS2_SUPER_MAGIC (0x20030528)
 #endif
 
 #if defined(ROMIO_GPFS) && !defined(GPFS_SUPER_MAGIC)
 #define GPFS_SUPER_MAGIC 0x47504653
+#endif
+
+#if !defined(DAOS_SUPER_MAGIC)
+#define DAOS_SUPER_MAGIC (0xDA05AD10)
 #endif
 
 #ifdef ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE
@@ -162,6 +165,9 @@ static struct ADIO_FSTypes fstypes[] = {
 #endif
 #ifdef ROMIO_LUSTRE
     {&ADIO_LUSTRE_operations, ADIO_LUSTRE, "lustre:"},
+#endif
+#ifdef ROMIO_DAOS
+    {&ADIO_DAOS_operations, ADIO_DAOS, "daos:"},
 #endif
 #ifdef ROMIO_TESTFS
     {&ADIO_TESTFS_operations, ADIO_TESTFS, "testfs:"},
@@ -420,6 +426,13 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif
     if (fsbuf.f_type == LL_SUPER_MAGIC) {
         *fstype = ADIO_LUSTRE;
+        return;
+    }
+#endif
+
+#ifdef DAOS_SUPER_MAGIC
+    if (fsbuf.f_type == DAOS_SUPER_MAGIC) {
+        *fstype = ADIO_DAOS;
         return;
     }
 #endif

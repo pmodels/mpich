@@ -53,6 +53,10 @@ struct ADIOI_Hints_struct {
     int *ranklist;
     union {
         struct {
+            int chunk_size;
+            int obj_class;
+        } daos;
+        struct {
             int listio_read;
             int listio_write;
         } pvfs;
@@ -88,7 +92,6 @@ struct ADIOI_Hints_struct {
             int numbridges;     /* total number of bridges */
         } bg;
     } fs_hints;
-
 };
 
 typedef struct ADIOI_Datarep {
@@ -143,6 +146,10 @@ typedef struct ADIOI_Fl_node {
 #ifdef ROMIO_PVFS2
 #include <pvfs2.h>
 #endif
+#ifdef ROMIO_DAOS
+#include <daos_types.h>
+#endif
+
 typedef struct ADIOI_AIO_req_str {
     /* very weird: if this MPI_Request is a pointer, some C++ compilers
      * will clobber it when the MPICH C++ bindings are used */
@@ -157,6 +164,9 @@ typedef struct ADIOI_AIO_req_str {
     PVFS_sysresp_io resp_io;
     PVFS_Request file_req;
     PVFS_Request mem_req;
+#endif
+#ifdef ROMIO_DAOS
+    daos_event_t daos_event;
 #endif
 } ADIOI_AIO_Request;
 

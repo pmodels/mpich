@@ -229,6 +229,11 @@ int main(int argc, char **argv)
 
     MPI_CHECK(MPI_File_close(&fh));
 
+    /* delete the file */
+    if (!mynod)
+        MPI_File_delete(filename, MPI_INFO_NULL);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (mynod == 0) {
         if (toterrs > 0) {
