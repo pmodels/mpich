@@ -229,72 +229,85 @@ int main(int argc, char *argv[])
 
 void RunAccFence(MPI_Win win, int destRank, int cnt, int sz)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Win_fence(0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Accumulate(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
+            MPI_Accumulate(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
             j += sz;
         }
         MPI_Win_fence(0, win);
     }
+
+    free(buf);
 }
 
 void RunAccLock(MPI_Win win, int destRank, int cnt, int sz)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Win_lock(MPI_LOCK_SHARED, destRank, 0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Accumulate(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
+            MPI_Accumulate(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
             j += sz;
         }
         MPI_Win_unlock(destRank, win);
     }
+
+    free(buf);
 }
 
 void RunPutFence(MPI_Win win, int destRank, int cnt, int sz)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Win_fence(0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Put(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
+            MPI_Put(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
             j += sz;
         }
         MPI_Win_fence(0, win);
     }
+
+    free(buf);
 }
 
 void RunPutLock(MPI_Win win, int destRank, int cnt, int sz)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Win_lock(MPI_LOCK_SHARED, destRank, 0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Put(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
+            MPI_Put(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
             j += sz;
         }
         MPI_Win_unlock(destRank, win);
     }
+
+    free(buf);
 }
 
 void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
                 MPI_Group exposureGroup, MPI_Group accessGroup)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
@@ -302,18 +315,21 @@ void RunPutPSCW(MPI_Win win, int destRank, int cnt, int sz,
         MPI_Win_start(accessGroup, 0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Put(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
+            MPI_Put(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, win);
             j += sz;
         }
         MPI_Win_complete(win);
         MPI_Win_wait(win);
     }
+
+    free(buf);
 }
 
 void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
                 MPI_Group exposureGroup, MPI_Group accessGroup)
 {
-    int k, i, j, one = 1;
+    int k, i, j;
+    int *buf = malloc(sz * sizeof(int));
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
@@ -321,10 +337,12 @@ void RunAccPSCW(MPI_Win win, int destRank, int cnt, int sz,
         MPI_Win_start(accessGroup, 0, win);
         j = 0;
         for (i = 0; i < cnt; i++) {
-            MPI_Accumulate(&one, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
+            MPI_Accumulate(buf, sz, MPI_INT, destRank, j, sz, MPI_INT, MPI_SUM, win);
             j += sz;
         }
         MPI_Win_complete(win);
         MPI_Win_wait(win);
     }
+
+    free(buf);
 }
