@@ -13,7 +13,7 @@
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
                           int roots_only, void **bc_table, int *ret_bc_len);
 int MPIDU_bc_table_destroy(void);
-int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
+int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int same_len,
                        void **bc_table, int **rank_map, int *ret_bc_len);
 
 #endif /* MPIDU_BC_H_INCLUDED */
