@@ -131,6 +131,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_AGREE);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
@@ -168,6 +169,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_COMM_AGREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:
