@@ -782,16 +782,20 @@ sub RunMPIProgram {
     }
 
     # acquire lock if requested
-    my $lockfile="/tmp/runtests-mem.lock";
+    my ($lockfile, $got_lock);
     my ($lock_sh, $lock_ex) = (1, 2);
-    my $got_lock;
     if ($test_opt->{lock}) {
-        if ($test_opt->{lock} eq "shared") {
+        # explict lock by setting "lock=[shared|name]" on testline directly
+        my $name = $test_opt->{lock};
+        $lockfile = "/tmp/runtests-$name.lock"
+        if ($name eq "shared") {
             $got_lock = get_lock($lockfile, $lock_sh);
         } else {
             $got_lock = get_lock($lockfile, $lock_ex);
         }
     } elsif ($test_opt->{mem}) {
+        # implicit lock by checking memory annotation
+        $lockfile="/tmp/runtests-mem.lock";
         if ($test_opt->{mem} > $g_opt->{memory_total}) {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
@@ -805,7 +809,6 @@ sub RunMPIProgram {
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
-
     # Save and restore the environment if necessary before running mpiexec.
     my %saveEnv;
     if ($test_opt->{envs}) {    
@@ -1376,14 +1379,16 @@ sub InitQuickTimeout {
 # ----------------------------------------------------------------------------
 # util routines
 
+# file locking using flock: the lock is acquired while the file is open and
+#     released when file is closed (or process is terminated and OS closes the file)
 sub get_lock {
     my ($lockfile, $lock_type) = @_;
     if ($verbose) {
         print "Taking lock [$lockfile], type $lock_type\n";
     }
     if(open LOCK, ">$lockfile"){
+        # flock blocks until the lock is taken
         flock(LOCK, $lock_type);
-        print LOCK "$$\n";
         return 1;
     }
     else{
