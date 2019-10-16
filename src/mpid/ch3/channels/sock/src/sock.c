@@ -1510,9 +1510,9 @@ int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set *sock_set)
  compatibility until it is determined that we can always use explicit addrs
  needed in setting up the socket instead of character strings.
  */
-int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set * sock_set, void * user_ptr,
+int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
                                         MPL_sockaddr_t * p_addr, int port,
-                                        struct MPIDI_CH3I_Sock ** sockp)
+                                        struct MPIDI_CH3I_Sock **sockp)
 {
     struct MPIDI_CH3I_Sock *sock = NULL;
     struct pollfd *pollfd;
@@ -1595,15 +1595,15 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr(struct MPIDI_CH3I_Sock_set * sock_set, v
     /*
      * Attempt to establish the connection
      */
-    MPL_DBG_STMT(MPIDI_CH3I_DBG_SOCK_CONNECT,TYPICAL,{
-	char addrString[64];
-        MPL_sockaddr_to_str(p_addr, addrString, 64);
-	MPL_DBG_MSG_FMT(MPIDI_CH3I_DBG_SOCK_CONNECT,TYPICAL,(MPL_DBG_FDEST,
-			      "Connecting to %s:%d", addrString, port ));
-	})
+    MPL_DBG_STMT(MPIDI_CH3I_DBG_SOCK_CONNECT, TYPICAL, {
+                 char addrString[64];
+                 MPL_sockaddr_to_str(p_addr, addrString, 64);
+                 MPL_DBG_MSG_FMT(MPIDI_CH3I_DBG_SOCK_CONNECT, TYPICAL, (MPL_DBG_FDEST,
+                                                                        "Connecting to %s:%d",
+                                                                        addrString, port));
+                 })
 
-    do
-    {
+        do {
         rc = MPL_connect(fd, p_addr, port);
     }
     while (rc == -1 && errno == EINTR);
@@ -1698,13 +1698,12 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set *sock_set, void *use
     ret = MPL_get_sockaddr(host_description, &addr);
     /* --BEGIN ERROR HANDLING-- */
     if (ret) {
-	/* FIXME: Set error */
-	goto fn_exit;
+        /* FIXME: Set error */
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
-    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
-						    &addr, port, sockp);
- fn_exit:
+    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr, &addr, port, sockp);
+  fn_exit:
     return mpi_errno;
 }
 
@@ -1795,8 +1794,10 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
      * Set and verify the socket buffer size
      * (originally this is set after bind and before listen).
      */
-    mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize( fd, 1 );
-    if (mpi_errno) { MPIR_ERR_POP( mpi_errno ); }
+    mpi_errno = MPIDI_CH3I_Sock_SetSockBufferSize(fd, 1);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
     /*
      * Bind the socket to all interfaces and the specified port.  The port specified by the calling routine may be 0, indicating
@@ -1805,30 +1806,32 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set *sock_set, void *user_ptr,
     if (*port == 0) {
         unsigned short portnum;
 
-	/* see if we actually want to find values within a range */
-        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 || MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+        /* see if we actually want to find values within a range */
+        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
+                            MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
+                            MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
-        if (MPIR_CVAR_CH3_PORT_RANGE.low == 0){
+        if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
             rc = MPL_listen_anyport(fd, &portnum);
-        }
-        else {
-            rc = MPL_listen_portrange(fd, &portnum, MPIR_CVAR_CH3_PORT_RANGE.low, MPIR_CVAR_CH3_PORT_RANGE.high);
+        } else {
+            rc = MPL_listen_portrange(fd, &portnum, MPIR_CVAR_CH3_PORT_RANGE.low,
+                                      MPIR_CVAR_CH3_PORT_RANGE.high);
         }
         *port = portnum;
-    }
-    else {
+    } else {
         rc = MPL_listen(fd, *port);
     }
     /*
      * listening for incoming connections...
      */
     /* --BEGIN ERROR HANDLING-- */
-    if (rc)
-    {
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPIDI_CH3I_SOCK_ERR_FAIL,
-					 "**sock|poll|listen", "**sock|poll|listen %d %s", errno, MPIR_Strerror(errno));
-	goto fn_fail;
+    if (rc) {
+        mpi_errno =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPIDI_CH3I_SOCK_ERR_FAIL, "**sock|poll|listen",
+                                 "**sock|poll|listen %d %s", errno, MPIR_Strerror(errno));
+        goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
 

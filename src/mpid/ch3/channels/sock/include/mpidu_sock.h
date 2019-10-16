@@ -459,7 +459,7 @@ int MPIDI_CH3I_Sock_post_connect(MPIDI_CH3I_Sock_set_t set, void *user_ptr, char
   This is the basic routine.  MPIDI_CH3I_Sock_post_connect converts the
   host description into the ifaddr and calls this routine.
   @*/
-int MPIDI_CH3I_Sock_post_connect_ifaddr(MPIDI_CH3I_Sock_set_t sock_set, void * user_ptr, 
+int MPIDI_CH3I_Sock_post_connect_ifaddr(MPIDI_CH3I_Sock_set_t sock_set, void *user_ptr,
                                         MPL_sockaddr_t * p_addr, int port,
                                         MPIDI_CH3I_Sock_t * sockp);
 
