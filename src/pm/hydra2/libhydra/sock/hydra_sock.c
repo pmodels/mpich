@@ -155,7 +155,7 @@ static void insert_delay(unsigned long delay)
 HYD_status HYD_sock_connect(const char *host, uint16_t port, int *fd, int retries,
                             unsigned long delay)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int ret;
     int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;

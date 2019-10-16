@@ -56,8 +56,8 @@ static int dbg_ifname = -1;
  *             and the type (e.g., AF_INET or AF_INET6).
  */
 
-int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
-				     struct sockaddr_storage *p_addr )
+int MPIDU_CH3U_GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
+				    MPL_sockaddr_t * p_addr)
 {
     char *ifname_string;
     int mpi_errno = MPI_SUCCESS;
