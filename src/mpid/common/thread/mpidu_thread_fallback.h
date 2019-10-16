@@ -95,8 +95,63 @@ typedef MPL_thread_func_t MPIDU_Thread_func_t;
 - _context - A context (typically an object) of the critical section
 
 M*/
-#define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 
+/*M MPIDU_THREAD_CS_TRYENTER - Try enter a named critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+- _cs_acq  - A flag that indicates whether the critical section was acquired
+
+M*/
+
+/*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+
+/*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
+    to other threads
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+
+/* MPIDU_THREAD_CS_ENTER_ST - Stateful version of CS_ENTER
+ * It takes a MPIDU_thread_state_t variable to pass the state between ENTER and EXIT.
+ */
+
+/* MPIDU_THREAD_CS_EXIT_ST - Stateful version of CS_EXIT
+ * It takes a MPIDU_thread_state_t variable to pass the state between ENTER and EXIT.
+ */
+
+/* NOTE: Stateful CS_{ENTER,EXIT} currently is only used by ch3:sock and only with
+ * GRANULARITY_GLOBAL */
+
+#if defined(MPICH_IS_THREADED)
+#define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
+#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq) MPIDUI_THREAD_CS_TRYENTER_##name(mutex, cs_acq)
+#define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
+#define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
+#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st) MPIDUI_THREAD_CS_ENTER_ST_##name(mutex,st)
+#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st) MPIDUI_THREAD_CS_EXIT_ST_##name(mutex,st)
+
+#else
+#define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
+#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq)   /* NOOP */
+#define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
+#define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
+#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st)       /* NOOP */
+#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st)        /* NOOP */
+
+#endif
+
+/* ***************************************** */
 #if defined(MPICH_IS_THREADED)
 
 #define MPIDUI_THREAD_CS_ENTER_NREC(mutex)                              \
@@ -130,107 +185,7 @@ M*/
         }                                                               \
     } while (0)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL    MPIDUI_THREAD_CS_ENTER_REC
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
-#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_NREC(mutex)
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL MPIDUI_THREAD_CS_ENTER_REC
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) do {} while (0)
-
-#endif /* MPICH_IS_THREADED */
-
-/* Stateful non-recursive version of CS_ENTER.
- * It takes a MPIDU_thread_state_t variable to pass the state between
- * ENTER and EXIT. */
-
-#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st) MPIDUI_THREAD_CS_ENTER_ST_##name(mutex,st)
-
-#if defined(MPICH_IS_THREADED)
-
-#define MPIDUI_THREAD_CS_ENTER_ST(mutex, st)                            \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_;                                                   \
-            MPIR_Assert(st.owner != 0);                                 \
-            MPIR_Assert(st.count > 0);                                  \
-            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
-            MPIR_Assert(err_ == 0);                                     \
-            MPIR_Assert(mutex.count == 0);                              \
-            /* restore mutex state */                                   \
-            mutex.owner = st.owner;                                     \
-            mutex.count = st.count;                                     \
-        }                                                               \
-    } while (0)
-
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL    MPIDUI_THREAD_CS_ENTER_ST
-#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_ST(mutex)
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL MPIDUI_THREAD_CS_ENTER_ST
-#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) MPIDUI_THREAD_CS_ENTER_ST(mutex)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
-
-#endif /* MPICH_IS_THREADED */
-
-
-/*M MPIDU_THREAD_CS_TRYENTER - Try enter a named critical section
-
-  Input Parameters:
-+ _name - name of the critical section
-- _context - A context (typically an object) of the critical section
-- cs_acqt  - A flag that indicades whether the critical section was acquired
-
-M*/
-#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq) MPIDUI_THREAD_CS_TRYENTER_##name(mutex, cs_acq)
-
-#if defined(MPICH_IS_THREADED)
-
-#define MPIDUI_THREAD_CS_TRYENTER_NREC(mutex, cs_req)                   \
+#define MPIDUI_THREAD_CS_TRYENTER_NREC(mutex, cs_acq)                   \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
@@ -242,14 +197,14 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_TRYENTER_REC(mutex, cs_req)                    \
+#define MPIDUI_THREAD_CS_TRYENTER_REC(mutex, cs_acq)                    \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int equal_ = 0;                                             \
             MPL_thread_id_t self_;                                      \
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
-            if (!equal_) {                                               \
+            if (!equal_) {                                              \
                 int err_ = 0;                                           \
                 MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);     \
                 MPIR_Assert(err_ == 0);                                 \
@@ -264,52 +219,6 @@ M*/
             }                                                           \
         }                                                               \
     } while (0)
-
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-
-#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI_GLOBAL(mutex, cs_acq)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex, cs_acq)
-
-#endif /* MPICH_IS_THREADED */
-
-
-/*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
-
-  Input Parameters:
-+ _name - cname of the critical section
-- _context - A context (typically an object) of the critical section
-
-M*/
-#define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
-#define MPIDU_THREAD_CS_EXIT_REC   MPIDUI_THREAD_CS_EXIT_REC
-#define MPIDU_THREAD_CS_EXIT_NREC  MPIDUI_THREAD_CS_EXIT_NREC
-
-#if defined(MPICH_IS_THREADED)
 
 #define MPIDUI_THREAD_CS_EXIT_NREC(mutex)                               \
     do {                                                                \
@@ -337,45 +246,49 @@ M*/
         }                                                               \
     } while (0)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDUI_THREAD_CS_YIELD_NREC(mutex)                              \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding mutex"); \
+            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
+            MPIDU_Thread_yield(&mutex, &err_);                          \
+            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
 
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL    MPIDUI_THREAD_CS_EXIT_REC
-#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
-#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_REC(mutex)                               \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_ = 0, equal_ = 0;                                   \
+            MPL_thread_id_t self_;                                      \
+            MPL_thread_self(&self_);                                    \
+            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
+            if (equal_ && mutex.count > 0) {                            \
+                MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive yielding mutex"); \
+                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
+                MPIDU_Thread_yield(&mutex, &err_);                          \
+                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+                MPIR_Assert(err_ == 0);                                 \
+            }                                                           \
+        }                                                               \
+    } while (0)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_EXIT_POBJ      MPIDUI_THREAD_CS_EXIT_NREC
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL MPIDUI_THREAD_CS_EXIT_REC
-#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) do {} while (0)
-
-#endif /* MPICH_IS_THREADED */
-
-/* Stateful non-recursive version of CS_EXIT.
- * It takes a MPIDU_thread_mutex_state_t variable to pass the state between
- * ENTER and EXIT. */
-
-#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st) MPIDUI_THREAD_CS_EXIT_ST_##name(mutex,st)
-
-#if defined(MPICH_IS_THREADED)
+#define MPIDUI_THREAD_CS_ENTER_ST(mutex, st)                            \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_;                                                   \
+            MPIR_Assert(st.owner != 0);                                 \
+            MPIR_Assert(st.count > 0);                                  \
+            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
+            MPIR_Assert(err_ == 0);                                     \
+            MPIR_Assert(mutex.count == 0);                              \
+            /* restore mutex state */                                   \
+            mutex.owner = st.owner;                                     \
+            mutex.count = st.count;                                     \
+        }                                                               \
+    } while (0)
 
 #define MPIDUI_THREAD_CS_EXIT_ST(mutex, st)                             \
     do {                                                                \
@@ -394,117 +307,53 @@ M*/
             /* silence warnings: -Wmaybe-uninitialized */               \
             st.owner = 0;                                               \
             st.count = 0;                                               \
-        } \
+        }                                                               \
     } while (0)
 
+/* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
+
+/* GLOBAL is only enabled with MPICH_THREAD_GRANULARITY__GLOBAL */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)  MPIDUI_THREAD_CS_ENTER_REC(mutex)
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)   MPIDUI_THREAD_CS_EXIT_REC(mutex)
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD_REC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex, st)    MPIDUI_THREAD_CS_ENTER_ST(mutex, st)
+#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex, st)     MPIDUI_THREAD_CS_EXIT_ST(mutex, st)
+#else
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)    /* NOOP */
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)     /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)    /* NOOP */
+#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex, st)     /* NOOP */
+#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex, st)      /* NOOP */
+#endif
 
-#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL    MPIDUI_THREAD_CS_EXIT_ST
-#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) do {} while (0)
+/* POBJ is only enabled with GRANULARITY__POBJ */
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_NREC(mutex)
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)   MPIDUI_THREAD_CS_EXIT_NREC(mutex)
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD_NREC(mutex)
+#else
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)      /* NOOP */
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)       /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)      /* NOOP */
+#endif
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex)  MPIDUI_THREAD_CS_EXIT_ST(mutex)
-#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL MPIDUI_THREAD_CS_EXIT_ST
-#define MPIDUI_THREAD_CS_EXIT_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ST_VCI(mutex) MPIDUI_THREAD_CS_EXIT_ST(mutex)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_POBJ(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ST_VCI(mutex) do {} while (0)
+/* VCI is only enabled with MPICH_THREAD_GRANULARITY__VCI */
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
+#define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD_REC(mutex)
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
+#else
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_VCI(mutex)       /* NOOP */
+#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)     /* NOOP */
+#endif
 
 #endif /* MPICH_IS_THREADED */
 
-/*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
-    to other threads
-
-  Input Parameters:
-+ _name - cname of the critical section
-- _context - A context (typically an object) of the critical section
-
-  M*/
-#define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
-
-#if defined(MPICH_IS_THREADED)
-
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-
-#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)                            \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_YIELD_VCI_GLOBAL(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
-#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-
-#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)                              \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding POBJ mutex"); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
-
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-
-#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)                            \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0, equal_ = 0;                                   \
-            MPL_thread_id_t self_;                                      \
-            MPL_thread_self(&self_);                                    \
-            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
-            if (equal_ && mutex.count > 0) {                            \
-                MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
-                MPIDU_Thread_yield(&mutex, &err_);                          \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
-                MPIR_Assert(err_ == 0);                                 \
-            }                                                           \
-        }                                                               \
-    } while (0)
-#define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
-#define MPIDUI_THREAD_CS_YIELD_VCI_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
-
-#endif /* MPICH_THREAD_GRANULARITY */
-
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
-
-#endif /* MPICH_IS_THREADED */
-
-
-
-
+/* ***************************************** */
 /*@
   MPIDU_Thread_create - create a new thread
 
@@ -613,7 +462,7 @@ do {                                                                    \
     } else {                                                            \
         MPIR_Assert(prio_ == MPL_THREAD_PRIO_LOW)               \
         *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                      \
-    }
+    }                                                                   \
 } while (0)
 
 #define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
