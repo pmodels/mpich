@@ -115,7 +115,7 @@ static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ?
 
 MPL_dbg_class MPIDI_NEM_TCP_DBG_DET;
 
-int MPID_nem_tcp_listen (int sockfd);
+int MPID_nem_tcp_listen(int sockfd);
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -133,7 +133,8 @@ static int set_up_listener(void)
 
     MPID_nem_tcp_g_lstn_plfd.events = POLLIN;
     mpi_errno = MPID_nem_tcp_listen(MPID_nem_tcp_g_lstn_sc.fd);
-    MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d", MPIR_Strerror(errno), errno);
+    MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d",
+                         MPIR_Strerror(errno), errno);
     MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
     MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
 
@@ -301,13 +302,13 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
     /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
     if (MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE) {
         char s[100];
-	int len;
+        int len;
         mpi_errno = MPL_get_sockaddr_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, p_addr);
-        MPIR_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
+        MPIR_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**iface_notfound",
+                             "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
 
         MPL_sockaddr_to_str(p_addr, s, 100);
-        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPL_DBG_FDEST,
-                                                "ifaddrFound: %s", s));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPL_DBG_FDEST, "ifaddrFound: %s", s));
 
         /* In this case, ifname is only used for debugging purposes */
         mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len);
@@ -348,13 +349,13 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
          * directly from the available interfaces, if that is supported on
          * this platform.  Otherwise, we'll drop into the next step that uses
          * the ifname */
-	mpi_errno = MPL_get_sockaddr_iface( NULL, p_addr);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPL_get_sockaddr_iface(NULL, p_addr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         ifaddrFound = 1;
-    }
-    else {
-	/* Copy this name into the output name */
-	MPL_strncpy( ifname, ifname_string, maxIfname );
+    } else {
+        /* Copy this name into the output name */
+        MPL_strncpy(ifname, ifname_string, maxIfname);
     }
 
     /* If we don't have an IP address, try to get it from the name */
@@ -383,12 +384,14 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
-    
+
     mpi_errno = GetSockInterfaceAddr(my_rank, ifname, sizeof(ifname), &addr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    
-    
-    str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+
+    str_errno =
+        MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname);
     if (str_errno) {
         MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
@@ -399,16 +402,17 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     MPIR_ERR_CHKANDJUMP1(ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s",
                          MPIR_Strerror(errno));
 
-    str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, MPL_sockaddr_port(&sock_id));
+    str_errno =
+        MPL_str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY,
+                            MPL_sockaddr_port(&sock_id));
     if (str_errno) {
         MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    
-    if (addr.ss_family == AF_INET)
-    {
+
+    if (addr.ss_family == AF_INET) {
         MPL_sockaddr_to_str(&addr, ifname, MAX_HOST_DESCRIPTION_LEN);
-        MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
+        MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT, VERBOSE, "ifname = %s", ifname);
         str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
             MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER,
@@ -565,7 +569,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 /* MPID_nem_tcp_listen -- if MPICH_PORT_RANGE is set, this
    binds the socket to an available port number in the range.
    Otherwise, it binds it to any addr and any port */
-int MPID_nem_tcp_listen (int sockfd)
+int MPID_nem_tcp_listen(int sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -580,17 +584,18 @@ int MPID_nem_tcp_listen (int sockfd)
 
     /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    if (MPIR_CVAR_CH3_PORT_RANGE.low==0){
+    if (MPIR_CVAR_CH3_PORT_RANGE.low == 0) {
         ret = MPL_listen_anyport(sockfd, &port);
-    }
-    else {
-        ret = MPL_listen_portrange(sockfd, &port, MPIR_CVAR_CH3_PORT_RANGE.low, MPIR_CVAR_CH3_PORT_RANGE.high);
+    } else {
+        ret =
+            MPL_listen_portrange(sockfd, &port, MPIR_CVAR_CH3_PORT_RANGE.low,
+                                 MPIR_CVAR_CH3_PORT_RANGE.high);
     }
     if (ret == -2) {
         /* check if an available port was found */
-        MPIR_ERR_CHKANDJUMP3 (1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind", "**sock|poll|bind %d %d %s", port-1, errno, MPIR_Strerror (errno));
-    }
-    else if (ret) {
+        MPIR_ERR_CHKANDJUMP3(1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind",
+                             "**sock|poll|bind %d %d %s", port - 1, errno, MPIR_Strerror(errno));
+    } else if (ret) {
         /* check for real error */
         MPIR_ERR_CHKANDJUMP3(errno != EADDRINUSE &&
                              errno != EADDRNOTAVAIL, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind",
