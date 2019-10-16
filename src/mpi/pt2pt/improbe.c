@@ -56,7 +56,7 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IMPROBE);
 
-    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IMPROBE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -114,7 +114,7 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IMPROBE);
-    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

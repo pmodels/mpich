@@ -64,7 +64,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(MPID_STATE_MPI_ISEND);
 
     /* Validate handle parameters needing to be converted */
@@ -146,7 +146,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
   fn_exit:
     MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_ISEND);
-    MPID_THREAD_CS_EXIT(VCI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:
