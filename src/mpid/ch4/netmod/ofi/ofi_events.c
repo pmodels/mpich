@@ -144,11 +144,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         uint64_t ss_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_REQUEST(rreq, util_id),
                                                   rreq->status.MPI_TAG,
                                                   MPIDI_OFI_SYNC_SEND_ACK);
-        MPIR_Comm *c = MPIDI_OFI_REQUEST(rreq, util_comm);
+        MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
                                             0 /* len */ ,
-                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
+                                            MPIR_Comm_rank(c),
                                             MPIDI_OFI_comm_to_phys(c, r),
                                             ss_bits), tinjectdata, FALSE /* eagain */);
     }
@@ -180,7 +180,7 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         return recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
     }
 
-    comm_ptr = MPIDI_OFI_REQUEST(rreq, util_comm);
+    comm_ptr = rreq->comm;
 
     /* Check to see if the tracker is already in the unexpected list.
      * Otherwise, allocate one. */
@@ -288,7 +288,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         void *ptr;
         struct fid_mr *huge_send_mr;
 
-        comm = MPIDI_OFI_REQUEST(sreq, util_comm);
+        comm = sreq->comm;
 
         /* Look for the memory region using the sreq handle */
         ptr = MPIDIU_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
