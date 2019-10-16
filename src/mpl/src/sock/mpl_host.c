@@ -37,7 +37,7 @@ static void init_lhost_list(void)
 #if defined(MPL_HAVE_GETIFADDRS) && defined (MPL_HAVE_INET_NTOP)
     char tmp_lhost[MAX_HOSTNAME_LEN];
     int ret;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     struct ifaddrs *ifaddr, *ifa;
     char buf[MAX_HOSTNAME_LEN];
 
@@ -64,8 +64,7 @@ static void init_lhost_list(void)
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
         /* FIXME: IPv4 only local addresses */
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
-            ret = MPL_sockaddr_to_str((struct sockaddr_storage *) ifa->ifa_addr,
-                                      buf, MAX_HOSTNAME_LEN);
+            ret = MPL_sockaddr_to_str((MPL_sockaddr_t *) ifa->ifa_addr, buf, MAX_HOSTNAME_LEN);
             if (ret == 0)
                 append_lhost(buf);
         }

@@ -102,7 +102,7 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
                              unsigned long delay)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -447,7 +447,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
     int ret;
 
 #if defined(HAVE_GETIFADDRS)
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     ret = MPL_get_sockaddr_iface(iface, &addr);
     if (ret)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n", iface);

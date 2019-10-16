@@ -16,7 +16,7 @@
  *    simplify logic.
  *    TCP only, no UDP or unix domain sockets.
  *
- *    Application use struct sockaddr_storage exclusively.
+ *    Application use struct sockaddr_storage (typedefed to MPL_sockaddr_t) exclusively.
  *            MPL_get_sockaddr for hostname
  *            MPL_get_sockaddr_iface for network interface
  *            MPL_get_sockaddr_direct for listening socket on ANY or LOOPBACK
@@ -34,6 +34,7 @@
  *                            unsigend short ss_family;
  *                            char padding[126];
  *                    };
+ *            Since we use typedef MPL_sockaddr_t, there is no need for code change.
  *            Only the ss_family field is directly accessed. All the other fields are
  *        always accessed by casting to either struct sockaddr_in or struct
  *        sockaddr_in6.
@@ -69,7 +70,7 @@ void MPL_sockaddr_set_aftype(int type)
     af_type = type;
 }
 
-int MPL_get_sockaddr(const char *s_hostname, struct sockaddr_storage *p_addr)
+int MPL_get_sockaddr(const char *s_hostname, MPL_sockaddr_t * p_addr)
 {
     struct addrinfo ai_hint;
     struct addrinfo *ai_list;
@@ -103,7 +104,7 @@ int MPL_get_sockaddr(const char *s_hostname, struct sockaddr_storage *p_addr)
     return 0;
 }
 
-int MPL_get_sockaddr_direct(int type, struct sockaddr_storage *p_addr)
+int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr)
 {
     memset(p_addr, 0, sizeof(*p_addr));
     assert(type == MPL_SOCKADDR_ANY || type == MPL_SOCKADDR_LOOPBACK);
@@ -132,7 +133,7 @@ int MPL_get_sockaddr_direct(int type, struct sockaddr_storage *p_addr)
     }
 }
 
-int MPL_get_sockaddr_iface(const char *s_iface, struct sockaddr_storage *p_addr)
+int MPL_get_sockaddr_iface(const char *s_iface, MPL_sockaddr_t * p_addr)
 {
     struct ifaddrs *ifaddr;
     int ret;
@@ -176,7 +177,7 @@ int MPL_socket()
     return socket(af_type, SOCK_STREAM, IPPROTO_TCP);
 }
 
-int MPL_connect(int socket, struct sockaddr_storage *p_addr, unsigned short port)
+int MPL_connect(int socket, MPL_sockaddr_t * p_addr, unsigned short port)
 {
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) p_addr)->sin_port = htons(port);
@@ -197,7 +198,7 @@ void MPL_set_listen_attr(int use_loopback, int max_conn)
 
 int MPL_listen(int socket, unsigned short port)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int ret;
 
     if (_use_loopback) {
@@ -222,7 +223,7 @@ int MPL_listen(int socket, unsigned short port)
 
 int MPL_listen_anyport(int socket, unsigned short *p_port)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int ret;
 
     if (_use_loopback) {
@@ -257,7 +258,7 @@ int MPL_listen_anyport(int socket, unsigned short *p_port)
 
 int MPL_listen_portrange(int socket, unsigned short *p_port, int low_port, int high_port)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int i;
     int ret;
 
@@ -283,7 +284,7 @@ int MPL_listen_portrange(int socket, unsigned short *p_port, int low_port, int h
     return listen(socket, _max_conn);
 }
 
-int MPL_sockaddr_to_str(struct sockaddr_storage *p_addr, char *str, int maxlen)
+int MPL_sockaddr_to_str(MPL_sockaddr_t * p_addr, char *str, int maxlen)
 {
     unsigned char *p;
 
@@ -301,7 +302,7 @@ int MPL_sockaddr_to_str(struct sockaddr_storage *p_addr, char *str, int maxlen)
     return 0;
 }
 
-int MPL_sockaddr_port(struct sockaddr_storage *p_addr)
+int MPL_sockaddr_port(MPL_sockaddr_t * p_addr)
 {
     if (p_addr->ss_family == AF_INET) {
         return ntohs(((struct sockaddr_in *) p_addr)->sin_port);
