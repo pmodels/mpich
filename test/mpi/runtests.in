@@ -787,7 +787,7 @@ sub RunMPIProgram {
     if ($test_opt->{lock}) {
         # explict lock by setting "lock=[shared|name]" on testline directly
         my $name = $test_opt->{lock};
-        $lockfile = "/tmp/runtests-$name.lock"
+        $lockfile = "/tmp/runtests-$name.lock";
         if ($name eq "shared") {
             $got_lock = get_lock($lockfile, $lock_sh);
         } else {
