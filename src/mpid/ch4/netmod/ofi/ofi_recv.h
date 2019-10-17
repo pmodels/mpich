@@ -140,7 +140,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
         oout = k;
     }
 
-    MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
+    if (rreq->comm == NULL) {
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+    }
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
@@ -245,7 +248,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
     }
 
-    MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
+    if (rreq->comm == NULL) {
+        rreq->comm = comm;
+        MPIR_Comm_add_ref(comm);
+    }
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
 
     if (unlikely(data_sz > MPIDI_OFI_global.max_msg_size)) {
