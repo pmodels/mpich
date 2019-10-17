@@ -1610,7 +1610,7 @@ int MPIDI_CH3I_Sock_destroy_set(struct MPIDI_CH3I_Sock_set * sock_set)
  */
 int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
 				    void * user_ptr,
-				    struct sockaddr_storage *p_addr, int port,
+				    MPL_sockaddr_t *p_addr, int port,
 				    struct MPIDI_CH3I_Sock ** sockp)
 {
     struct MPIDI_CH3I_Sock * sock = NULL;
@@ -1782,7 +1782,7 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
 
     /*
      * Convert hostname to IP address
@@ -1826,7 +1826,7 @@ int MPIDI_CH3I_Sock_listen(struct MPIDI_CH3I_Sock_set * sock_set, void * user_pt
     int fd = -1;
     long flags;
     int optval;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int rc;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_LISTEN);
@@ -2278,7 +2278,7 @@ int MPIDI_CH3I_Sock_accept(struct MPIDI_CH3I_Sock * listener,
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
     int fd = -1;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     socklen_t addr_len;
     long flags;
     int nodelay;
@@ -4075,7 +4075,7 @@ static int MPIDI_CH3I_Socki_handle_write(struct pollfd * const pollfd, struct po
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Socki_handle_connect(struct pollfd * const pollfd, struct pollinfo * const pollinfo)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     socklen_t addr_len;
     int rc;
     int mpi_errno = MPI_SUCCESS;

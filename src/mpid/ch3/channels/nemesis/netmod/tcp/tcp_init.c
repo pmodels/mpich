@@ -293,7 +293,7 @@ fn_fail:
  */
 
 static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
-                                struct sockaddr_storage *p_addr)
+                                MPL_sockaddr_t *p_addr)
 {
     const char *ifname_string;
     int mpi_errno = MPI_SUCCESS;
@@ -389,10 +389,10 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     char ifname[MAX_HOST_DESCRIPTION_LEN];
     int ret;
-    struct sockaddr_storage sock_id;
+    MPL_sockaddr_t sock_id;
     socklen_t len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 

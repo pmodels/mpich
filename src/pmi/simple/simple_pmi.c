@@ -870,7 +870,7 @@ static int GetResponse(const char request[], const char expectedCmd[], int check
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int ret;
     int fd;
     int optval = 1;
@@ -1236,7 +1236,7 @@ static int PMIi_InitIfSingleton(void)
 static int accept_one_connection(int list_sock)
 {
     int gotit, new_sock;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     socklen_t len;
 
     len = sizeof(addr);

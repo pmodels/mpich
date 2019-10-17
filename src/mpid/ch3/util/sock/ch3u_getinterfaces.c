@@ -61,7 +61,7 @@ static int dbg_ifname = -1;
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
-				     struct sockaddr_storage *p_addr )
+				     MPL_sockaddr_t *p_addr )
 {
     char *ifname_string;
     int mpi_errno = MPI_SUCCESS;

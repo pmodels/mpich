@@ -214,7 +214,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     MPIR_CHKPMEM_DECL(1);
     char host_description[MAX_HOST_DESCRIPTION_LEN];
     int port, port_name_tag;
-    struct sockaddr_storage ifaddr;
+    MPL_sockaddr_t ifaddr;
     int hasIfaddr = 0;
     MPIDI_CH3I_Connection_t * conn;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_CONNECT_TO_ROOT_SOCK);
@@ -334,7 +334,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 				     char *host_description, int maxlen,
-				     int *port, struct sockaddr_storage *ifaddr,
+				     int *port, MPL_sockaddr_t *ifaddr,
 				     int *hasIfaddr )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -419,7 +419,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
-    struct sockaddr_storage ifaddr;
+    MPL_sockaddr_t ifaddr;
     char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
     char *bc_orig = *bc_val_p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
@@ -1141,7 +1141,7 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 {
     char host_description[MAX_HOST_DESCRIPTION_LEN];
-    struct sockaddr_storage ifaddr;
+    MPL_sockaddr_t ifaddr;
     int hasIfaddr = 0, port;
     MPIDI_CH3I_Connection_t * conn = 0;
     int mpi_errno = MPI_SUCCESS;

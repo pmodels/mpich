@@ -464,7 +464,7 @@ int MPIDI_CH3I_Sock_post_connect(MPIDI_CH3I_Sock_set_t set, void * user_ptr, cha
   @*/
 int MPIDI_CH3I_Sock_post_connect_ifaddr( MPIDI_CH3I_Sock_set_t sock_set,
 				    void * user_ptr, 
-				    struct sockaddr_storage *p_addr, int port,
+				    MPL_sockaddr_t *p_addr, int port,
 				    MPIDI_CH3I_Sock_t * sockp);
 
 

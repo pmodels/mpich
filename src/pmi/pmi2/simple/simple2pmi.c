@@ -1735,7 +1735,7 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
     int ret;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     int fd;
     int optval = 1;
     int q_wait = 1;
@@ -1857,7 +1857,7 @@ static int PMIi_InitIfSingleton(void)
 static int accept_one_connection(int list_sock)
 {
     int gotit, new_sock;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     socklen_t len;
 
     len = sizeof(addr);

@@ -79,7 +79,7 @@ static HYD_status create_stdinouterr_sock(int *port)
     HYD_status status = HYD_SUCCESS;
     int ret;
     unsigned short t_port;
-    struct sockaddr_storage addr;
+    MPL_sockaddr_t addr;
     HYDU_FUNC_ENTER();
 
     listen_fd = MPL_socket();
@@ -133,7 +133,7 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
         char *id_p;
         /* wait for a connection */
         do {
-            struct sockaddr_storage rmt_addr;
+            MPL_sockaddr_t rmt_addr;
             socklen_t sa_len = sizeof(rmt_addr);;
             fd = accept(listen_fd, (struct sockaddr *) &rmt_addr, &sa_len);
         } while (fd && errno == EINTR);
