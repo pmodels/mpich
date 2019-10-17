@@ -6,16 +6,15 @@
 
 #include "hydra_sock.h"
 #include "hydra_err.h"
+#include "mpl.h"
 
-HYD_status HYD_sock_listen_on_port(int *listen_fd, uint16_t port)
+static inline HYD_status get_listen_socket(int *listen_fd)
 {
-    struct sockaddr_in sa;
-    int one = 1;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
 
-    *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    *listen_fd = MPL_socket();
     if (*listen_fd < 0)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "cannot open socket (%s)\n", MPL_strerror(errno));
 
@@ -30,23 +29,34 @@ HYD_status HYD_sock_listen_on_port(int *listen_fd, uint16_t port)
     if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "cannot set SO_REUSEADDR\n");
 
-    memset((void *) &sa, 0, sizeof(struct sockaddr_in));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
-    sa.sin_addr.s_addr = INADDR_ANY;
+  fn_exit:
+    HYD_FUNC_EXIT();
+    return status;
 
-    if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in)) < 0) {
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_sock_listen_on_port(int *listen_fd, uint16_t port)
+{
+    int one = 1;
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_FUNC_ENTER();
+
+    status = get_listen_socket(listen_fd);
+    if (status != HYD_SUCCESS) {
+        goto fn_fail;
+    }
+
+    if (MPL_listen(*listen_fd, port) < 0) {
         if (errno == EADDRINUSE) {
             status = HYD_ERR_PORT_IN_USE;
             goto fn_exit;
         } else {
-            HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "bind error on port %d (%s)\n", port,
+            HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "listen error on port %d (%s)\n", port,
                                MPL_strerror(errno));
         }
-    }
-
-    if (listen(*listen_fd, SOMAXCONN) < 0) {
-        HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "listen error (%s)\n", MPL_strerror(errno));
     }
 
   fn_exit:
@@ -59,20 +69,18 @@ HYD_status HYD_sock_listen_on_port(int *listen_fd, uint16_t port)
 
 HYD_status HYD_sock_listen_on_any_port(int *listen_fd, uint16_t * port)
 {
-    struct sockaddr_in sa;
-    socklen_t sinlen = sizeof(struct sockaddr_in);
+    int ret;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
 
-    status = HYD_sock_listen_on_port(listen_fd, 0);
-    HYD_ERR_POP(status, "error listening on port 0\n");
-
-    /* figure out which port we actually got */
-    if (getsockname(*listen_fd, (struct sockaddr *) &sa, &sinlen) < 0) {
-        HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "getsockname error (%s)\n", MPL_strerror(errno));
+    status = get_listen_socket(listen_fd);
+    if (status != HYD_SUCCESS) {
+        goto fn_fail;
     }
-    *port = ntohs(sa.sin_port);
+
+    ret = MPL_listen_anyport(listen_fd, port);
+    HYD_ERR_POP(ret, "error listening on port 0\n");
 
   fn_exit:
     HYD_FUNC_EXIT();
@@ -84,9 +92,9 @@ HYD_status HYD_sock_listen_on_any_port(int *listen_fd, uint16_t * port)
 
 HYD_status HYD_sock_listen_on_port_range(int *listen_fd, const char *port_range, uint16_t * port)
 {
+    int ret;
     uint16_t low_port, high_port;
     char *port_str;
-    uint16_t i;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -107,18 +115,19 @@ HYD_status HYD_sock_listen_on_port_range(int *listen_fd, const char *port_range,
     if (high_port < low_port)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "high port < low port\n");
 
-    for (i = low_port; i <= high_port; i++) {
-        status = HYD_sock_listen_on_port(listen_fd, i);
-        if (status == HYD_ERR_PORT_IN_USE)
-            continue;
-        HYD_ERR_POP(status, "error trying to listen on port %d\n", i);
 
-        *port = i;
-        break;  /* found a port, break out */
+    status = get_listen_socket(listen_fd);
+    if (status != HYD_SUCCESS) {
+        goto fn_fail;
     }
 
-    if (i > high_port)
+    ret = MPL_listen_portrange(*listen_fd, port, low_port, high_port);
+    if (ret == -2)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "no port to bind\n");
+    if (ret) {
+        HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK,
+                           "error trying to listen on port range  %d - %d\n", low_port, high_port);
+    }
 
   fn_exit:
     HYD_FUNC_EXIT();
@@ -146,28 +155,20 @@ static void insert_delay(unsigned long delay)
 HYD_status HYD_sock_connect(const char *host, uint16_t port, int *fd, int retries,
                             unsigned long delay)
 {
-    struct hostent *ht;
-    struct sockaddr_in sa;
+    MPL_sockaddr_t addr;
+    int ret;
     int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
 
-    memset((char *) &sa, 0, sizeof(struct sockaddr_in));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
-
-    /* Get the remote host's IP address. Note that this is not
-     * thread-safe. Since we don't use threads right now, we don't
-     * worry about locking it. */
-    ht = gethostbyname(host);
-    if (ht == NULL)
+    ret = MPL_get_sockaddr(host, &addr);
+    if (ret)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INVALID_PARAM,
                            "unable to get host address for %s (%s)\n", host, HYD_herror(h_errno));
-    memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
     /* Create a socket and set the required options */
-    *fd = socket(AF_INET, SOCK_STREAM, 0);
+    *fd = MPL_socket();
     if (*fd < 0)
         HYD_ERR_SETANDJUMP(status, HYD_ERR_SOCK, "cannot open socket (%s)\n", MPL_strerror(errno));
 
@@ -176,7 +177,7 @@ HYD_status HYD_sock_connect(const char *host, uint16_t port, int *fd, int retrie
      * layer can decide what to do with the return status. */
     retry_count = 0;
     do {
-        ret = connect(*fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in));
+        ret = MPL_connect(*fd, &addr, port);
         if (ret < 0 && (errno == ECONNREFUSED || errno == ETIMEDOUT)) {
             /* connection error; increase retry count and delay */
             retry_count++;
