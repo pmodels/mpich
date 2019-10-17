@@ -14,6 +14,7 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+    bool anyfail = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
@@ -45,10 +46,23 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
                         mpi_errno, "xpmem segmaps", MPL_MEM_SHM);
     for (i = 0; i < num_local; i++) {
         MPIDU_Init_shm_get(i, sizeof(xpmem_segid_t), &MPIDI_XPMEM_global.segmaps[i].remote_segid);
+        if (MPIDI_XPMEM_global.segmaps[i].remote_segid == -1) {
+            anyfail = true;
+        }
         MPIDI_XPMEM_global.segmaps[i].apid = -1;        /* get apid at the first communication  */
 
         /* Init AVL tree based segment cache */
         MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache);
+    }
+
+    /* Check to make sure all processes initialized XPMEM correctly. */
+    if (anyfail) {
+        for (i = 0; i < num_local; i++) {
+            MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache);
+        }
+        /* Not setting an mpi_errno value here because we can handle the failure of XPMEM
+         * gracefully. */
+        goto fn_fail;
     }
 
     /* Initialize other global parameters */
@@ -58,6 +72,16 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
     return mpi_errno;
   fn_fail:
+    if (MPIDI_XPMEM_global.segid != -1) {
+        xpmem_remove(MPIDI_XPMEM_global.segid);
+    }
+
+    /* While this version of MPICH does require libxpmem to link, we don't necessarily require the
+     * kernel module to be loaded at runtime. If XPMEM is not available, disable its use via the
+     * special CVAR value. */
+    XPMEM_TRACE("init: xpmem_make failed. Disabling XPMEM support");
+    MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE = -1;
+
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
