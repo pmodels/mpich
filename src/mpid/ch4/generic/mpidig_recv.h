@@ -258,13 +258,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
     MPIDIG_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
     } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
