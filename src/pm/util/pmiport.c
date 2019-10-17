@@ -87,6 +87,7 @@ typedef unsigned int socklen_t;
 int PMIServGetPort(int *fdout, char *portString, int portLen)
 {
     int fd = -1;
+    /* FIXME: delay IPv6 fix (mpl_sockaddr.c) until the redudancy with pm/hydra/utils/sock/sock.c is resolved. */
     struct sockaddr_in sa;
     int optval = 1;
     int portnum;
