@@ -139,7 +139,6 @@ typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
-    struct MPIR_Comm *util_comm;
     MPI_Datatype datatype;
     union {
         MPIDI_OFI_pack_t *pack;
