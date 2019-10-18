@@ -34,7 +34,7 @@ int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_count)
     return MPI_SUCCESS;
 }
 
-int MPIDI_STUBSHM_progress(int vci, int blocking)
+int MPIDI_STUBSHM_progress(int vsi, int blocking)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS);

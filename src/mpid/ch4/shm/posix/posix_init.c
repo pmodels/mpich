@@ -71,7 +71,7 @@ static int choose_posix_eager(void)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
+int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vsis_provided, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
@@ -105,7 +105,7 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIDI_POSIX_global.my_local_rank = MPIR_Process.local_rank;
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
-    *n_vcis_provided = 1;
+    *n_vsis_provided = 1;
 
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
@@ -210,9 +210,9 @@ int MPIDI_POSIX_coll_finalize(void)
     goto fn_exit;
 }
 
-MPIDI_vci_resource_t MPIDI_POSIX_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_POSIX_vsi_get_resource_info(int vsi)
 {
-    MPIR_Assert(0 <= vci && vci < 1);
+    MPIR_Assert(0 <= vsi && vsi < 1);
     return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 

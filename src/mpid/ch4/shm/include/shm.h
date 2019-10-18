@@ -18,10 +18,10 @@
 
 /* These typedef function definitions are used when not inlining the shared memory module along
  * with the struct of function pointers below. */
-typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vcis_provided, int *tag_bits);
+typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vsis_provided, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
-typedef MPIDI_vci_resource_t(*MPIDI_SHM_vci_get_resource_info_t) (int vci);
-typedef int (*MPIDI_SHM_progress_t) (int vci, int blocking);
+typedef MPIDI_vci_resource_t(*MPIDI_SHM_vsi_get_resource_info_t) (int vsi);
+typedef int (*MPIDI_SHM_progress_t) (int vsi, int blocking);
 typedef int (*MPIDI_SHM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info,
                                              int root, int timeout, MPIR_Comm * comm,
                                              MPIR_Comm ** newcomm_ptr);
@@ -421,7 +421,7 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
 typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_hook_t mpi_init;
     MPIDI_SHM_mpi_finalize_hook_t mpi_finalize;
-    MPIDI_SHM_vci_get_resource_info_t vci_get_resource_info;
+    MPIDI_SHM_vsi_get_resource_info_t vsi_get_resource_info;
     MPIDI_SHM_progress_t progress;
     MPIDI_SHM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_SHM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -570,10 +570,10 @@ typedef struct MPIDI_SHM_native_funcs {
 extern MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs;
 extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 
-int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vsis_provided, int *tag_bits);
 int MPIDI_SHM_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_SHM_vci_get_resource_info(int vci);
-int MPIDI_SHM_progress(int vci, int blocking);
+MPIDI_vci_resource_t MPIDI_SHM_vsi_get_resource_info(int vsi);
+int MPIDI_SHM_progress(int vsi, int blocking);
 int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                                MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm * comm_ptr);
