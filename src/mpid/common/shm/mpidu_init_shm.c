@@ -85,8 +85,6 @@ int MPIDU_Init_shm_init(void)
     int ipc_lock_offset;
     OPA_emulation_ipl_t *ipc_lock;
 #endif
-    size_t segment_len = MPIDU_SHM_CACHE_LINE_LEN + sizeof(MPIDU_Init_shm_block_t);
-
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
@@ -97,6 +95,8 @@ int MPIDU_Init_shm_init(void)
     local_size = MPIR_Process.local_size;
     my_local_rank = MPIR_Process.local_rank;
     local_leader = MPIR_Process.node_local_map[0];
+
+    size_t segment_len = MPIDU_SHM_CACHE_LINE_LEN + sizeof(MPIDU_Init_shm_block_t) * local_size;
 
     char *serialized_hnd = NULL;
     int serialized_hnd_size = 0;
