@@ -76,6 +76,15 @@ int MPL_get_sockaddr(const char *s_hostname, MPL_sockaddr_t * p_addr)
     struct addrinfo *ai_list;
     int ret;
 
+    /* Macos adds .local to hostname when network is unavailable or limited.
+     * This will result in long timeout in getaddrinfo below.
+     * Bypass it by resetting the hostname to "localhost"
+     */
+    int n = strlen(s_hostname);
+    if (n > 6 && strcmp(s_hostname + n - 6, ".local") == 0) {
+        s_hostname = "localhost";
+    }
+
     /* NOTE: there is report that getaddrinfo implementations will call kernel
      * even when s_hostname is entirely numerical string and it may cause
      * problems when host is configured with thousands of ip addresses.
