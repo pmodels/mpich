@@ -1161,7 +1161,7 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
         mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
-        kv[i].key = (const char *) MPL_strdup(key);
+        kv[i].key = MPL_strdup(key);
         kv[i].val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
         MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
     }
