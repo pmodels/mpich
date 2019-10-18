@@ -85,9 +85,9 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win);
 
 /* ofi_init.h */
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided);
+                            int *n_vnis_provided);
 int MPIDI_OFI_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_OFI_vci_get_resource_info(int vci);
+MPIDI_vci_resource_t MPIDI_OFI_vni_get_resource_info(int vni);
 void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_OFI_mpi_free_mem(void *ptr);
 int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids);
@@ -98,7 +98,7 @@ int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
 #ifdef NETMOD_INLINE
 #define MPIDI_NM_mpi_init_hook MPIDI_OFI_mpi_init_hook
 #define MPIDI_NM_mpi_finalize_hook MPIDI_OFI_mpi_finalize_hook
-#define MPIDI_NM_vci_get_resource_info MPIDI_OFI_vci_get_resource_info
+#define MPIDI_NM_vni_get_resource_info MPIDI_OFI_vni_get_resource_info
 #define MPIDI_NM_mpi_alloc_mem MPIDI_OFI_mpi_alloc_mem
 #define MPIDI_NM_mpi_free_mem MPIDI_OFI_mpi_free_mem
 #define MPIDI_NM_get_local_upids MPIDI_OFI_get_local_upids
@@ -114,7 +114,7 @@ int MPIDI_OFI_mpi_type_commit_hook(MPIR_Datatype * datatype_p);
 #define MPIDI_NM_mpi_type_commit_hook MPIDI_OFI_mpi_type_commit_hook
 #endif
 
-int MPIDI_OFI_progress(int vci, int blocking);
+int MPIDI_OFI_progress(int vni, int blocking);
 
 #ifdef NETMOD_INLINE
 #define MPIDI_NM_progress MPIDI_OFI_progress

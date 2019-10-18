@@ -345,14 +345,14 @@ int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win
 }
 
 int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                           int *n_vcis_provided)
+                           int *n_vnis_provided)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
 
-    ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, init_comm, n_vcis_provided);
+    ret = MPIDI_NM_func->mpi_init(rank, size, appnum, tag_bits, init_comm, n_vnis_provided);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_INIT_HOOK);
     return ret;
@@ -371,16 +371,16 @@ int MPIDI_NM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VNI);
 
-    ret = MPIDI_NM_func->vci_get_resource_info(vci);
+    ret = MPIDI_NM_func->vni_get_resource_info(vni);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VNI);
     return ret;
 }
 
@@ -476,14 +476,14 @@ int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
     return ret;
 }
 
-int MPIDI_NM_progress(int vci, int blocking)
+int MPIDI_NM_progress(int vni, int blocking)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
 
-    ret = MPIDI_NM_func->progress(vci, blocking);
+    ret = MPIDI_NM_func->progress(vni, blocking);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
     return ret;

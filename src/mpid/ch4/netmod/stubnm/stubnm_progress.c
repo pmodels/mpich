@@ -11,7 +11,7 @@
 
 #include "mpidimpl.h"
 
-int MPIDI_STUBNM_progress(int vci, int blocking)
+int MPIDI_STUBNM_progress(int vni, int blocking)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

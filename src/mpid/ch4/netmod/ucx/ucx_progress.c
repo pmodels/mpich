@@ -88,7 +88,7 @@ static void handle_am_recv(void *request, ucs_status_t status, ucp_tag_recv_info
     return;
 }
 
-int MPIDI_UCX_progress(int vci, int blocking)
+int MPIDI_UCX_progress(int vni, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;

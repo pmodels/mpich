@@ -17,10 +17,10 @@
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
-                                    MPIR_Comm * init_comm, int *n_vcis_provided);
+                                    MPIR_Comm * init_comm, int *n_vnis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
-typedef MPIDI_vci_resource_t(*MPIDI_NM_vci_get_resource_info_t) (int vci);
-typedef int (*MPIDI_NM_progress_t) (int vci, int blocking);
+typedef MPIDI_vci_resource_t(*MPIDI_NM_vni_get_resource_info_t) (int vni);
+typedef int (*MPIDI_NM_progress_t) (int vni, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                             int timeout, MPIR_Comm * comm,
                                             MPIR_Comm ** newcomm_ptr);
@@ -465,7 +465,7 @@ typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
     MPIDI_NM_mpi_finalize_t mpi_finalize;
-    MPIDI_NM_vci_get_resource_info_t vci_get_resource_info;
+    MPIDI_NM_vni_get_resource_info_t vni_get_resource_info;
     MPIDI_NM_progress_t progress;
     MPIDI_NM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_NM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -641,10 +641,10 @@ extern int MPIDI_num_netmods;
 extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
 int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                           int *n_vcis_provided);
+                           int *n_vnis_provided);
 int MPIDI_NM_mpi_finalize_hook(void);
-MPIDI_vci_resource_t MPIDI_NM_vci_get_resource_info(int vci);
-int MPIDI_NM_progress(int vci, int blocking);
+MPIDI_vci_resource_t MPIDI_NM_vni_get_resource_info(int vni);
+int MPIDI_NM_progress(int vni, int blocking);
 int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root, int timeout,
                               MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr);

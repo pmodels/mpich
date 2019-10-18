@@ -354,7 +354,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
     MPIR_Comm *init_comm = NULL;
-    int n_nm_vcis_provided;
+    int n_vnis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vcis_provided;
 #endif
@@ -435,7 +435,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 #endif
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm,
-                                           &n_nm_vcis_provided);
+                                           &n_vnis_provided);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }

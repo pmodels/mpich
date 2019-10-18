@@ -23,7 +23,7 @@ static void request_init_callback(void *request)
 }
 
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided)
+                            int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -37,7 +37,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
 
-    *n_vcis_provided = 1;
+    *n_vnis_provided = 1;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -188,9 +188,9 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
-MPIDI_vci_resource_t MPIDI_UCX_vci_get_resource_info(int vci)
+MPIDI_vci_resource_t MPIDI_UCX_vni_get_resource_info(int vni)
 {
-    MPIR_Assert(0 <= vci && vci < 1);
+    MPIR_Assert(0 <= vni && vni < 1);
     return MPIDI_VCI_RESOURCE__TX | MPIDI_VCI_RESOURCE__RX;
 }
 

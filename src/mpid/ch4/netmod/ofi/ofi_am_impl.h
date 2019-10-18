@@ -13,7 +13,7 @@
 
 #include "ofi_impl.h"
 
-static inline int MPIDI_OFI_progress_do_queue(int vci_idx);
+static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm * comm,
@@ -69,7 +69,7 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    __LINE__,                            \
                                    __func__,                              \
                                    fi_strerror(-_ret));                 \
-            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vci_idx */);    \
+            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_CHECK(mpi_errno);                               \
         } while (_ret == -FI_EAGAIN);                                   \
@@ -150,7 +150,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
+static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
 {
     int mpi_errno = MPI_SUCCESS, ret;
     struct fi_cq_tagged_entry cq_entry;
@@ -160,13 +160,13 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
-    ret = fi_cq_read(MPIDI_OFI_global.ctx[vci_idx].cq, &cq_entry, 1);
+    ret = fi_cq_read(MPIDI_OFI_global.ctx[vni_idx].cq, &cq_entry, 1);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
 
     if (ret < 0) {
-        mpi_errno = MPIDI_OFI_handle_cq_error_util(vci_idx, ret);
+        mpi_errno = MPIDI_OFI_handle_cq_error_util(vni_idx, ret);
         goto fn_fail;
     }
 
