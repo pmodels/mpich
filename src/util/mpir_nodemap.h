@@ -125,7 +125,7 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
 #define MPIR_NODEMAP_EXPECT_C(_c, _e) do { if (*(_c) != _e) MPIR_NODEMAP_PARSE_ERROR(); } while (0)
 #define MPIR_NODEMAP_EXPECT_AND_SKIP_C(_c, _e) do { MPIR_NODEMAP_EXPECT_C(_c, _e); ++c; } while (0)
 /* give an error iff the first |_m| characters of the string _s are equal to _e */
-#define MPIR_NODEMAP_EXPECT_S(_s, _e) (MPL_strncmp(_s, _e, strlen(_e)) == 0 && !MPIR_NODEMAP_ISIDENT((_s)[strlen(_e)]))
+#define MPIR_NODEMAP_EXPECT_S(_s, _e) (strncmp(_s, _e, strlen(_e)) == 0 && !MPIR_NODEMAP_ISIDENT((_s)[strlen(_e)]))
 
 typedef enum {
     MPIR_NODEMAP_UNKNOWN_MAPPING = -1,
@@ -519,7 +519,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         /* The right fix is to get all this information from the process
          * manager, rather than bother with this hostname hack at all. */
         for (j = 0; j < g_max_node_id + 1; ++j)
-            if (!MPL_strncmp(node_names[j], node_names[g_max_node_id + 1], key_max_sz))
+            if (!strncmp(node_names[j], node_names[g_max_node_id + 1], key_max_sz))
                 break;
         if (j == g_max_node_id + 1)
             ++g_max_node_id;
