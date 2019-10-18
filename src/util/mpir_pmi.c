@@ -759,7 +759,7 @@ char *MPIR_pmi_get_failed_procs(void)
     int out_len;
     pmi_errno = PMI2_KVS_Get(pmi_jobid, PMI2_ID_NULL, "PMI_dead_processes",
                              failed_procs_string, pmi_max_val_size, &out_len);
-    if (pmi_errno != PMI_SUCCESS)
+    if (pmi_errno != PMI2_SUCCESS)
         goto fn_fail;
 #elif defined(USE_PMIX_API)
     goto fn_fail;
@@ -775,8 +775,11 @@ char *MPIR_pmi_get_failed_procs(void)
 }
 
 /* static functions only for MPIR_pmi_spawn_multiple */
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
+/* PMI_keyval_t is only defined in PMI1 or PMI2 */
 static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
 static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
+#endif
 
 /* NOTE: MPIR_pmi_spawn_multiple is to be called by a single root spawning process */
 int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
@@ -831,12 +834,14 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
 #endif
 
   fn_exit:
+#ifdef USE_PMI1_API
     if (info_keyval_vectors) {
         free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
         MPL_free(info_keyval_vectors);
     }
 
     MPL_free(info_keyval_sizes);
+#endif
 
     return mpi_errno;
   fn_fail:
@@ -1132,6 +1137,7 @@ static void decode(int size, const char *src, char *dest)
 }
 
 /* static functions used in MPIR_pmi_spawn_multiple */
+#if defined(USE_PMI1_API) || defined(USE_PMI2_API)
 static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
 {
     char key[MPI_MAX_INFO_KEY];
@@ -1155,7 +1161,7 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
         mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
-        kv[i].key = (const char *) MPL_strdup(key);
+        kv[i].key = MPL_strdup(key);
         kv[i].val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
         MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
     }
@@ -1187,3 +1193,4 @@ static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
 }
+#endif /* USE_PMI1_API or USE_PMI2_API */
