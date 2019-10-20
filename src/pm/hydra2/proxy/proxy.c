@@ -425,7 +425,7 @@ static HYD_status launch_processes(void)
 #define MAPPING_EXPECT_C(_c, _e) do { if (*(_c) != _e) MAPPING_PARSE_ERROR(); } while (0)
 #define MAPPING_EXPECT_AND_SKIP_C(_c, _e) do { MAPPING_EXPECT_C(_c, _e); ++c; } while (0)
 /* give an error iff the first |_m| characters of the string _s are equal to _e */
-#define MAPPING_EXPECT_S(_s, _e) (MPL_strncmp(_s, _e, strlen(_e)) == 0 && !MAPPING_ISIDENT((_s)[strlen(_e)]))
+#define MAPPING_EXPECT_S(_s, _e) (strncmp(_s, _e, strlen(_e)) == 0 && !MAPPING_ISIDENT((_s)[strlen(_e)]))
 
 typedef enum {
     UNKNOWN_MAPPING = -1,
