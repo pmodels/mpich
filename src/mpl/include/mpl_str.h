@@ -28,16 +28,6 @@ int MPL_snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4
 int MPL_strncpy(char *dest, const char *src, size_t n);
 char *MPL_strsep(char **stringp, const char *delim);
 
-#if defined MPL_NEEDS_STRNCMP_DECL
-extern int strncmp(const char *s1, const char *s2, size_t n);
-#endif
-
-#if defined MPL_HAVE_STRNCMP
-#define MPL_strncmp strncmp
-#else
-#error "strncmp is required"
-#endif /* MPL_HAVE_STRNCMP */
-
 #if defined MPL_NEEDS_STRERROR_DECL
 extern char *strerror(int errnum);
 #endif
