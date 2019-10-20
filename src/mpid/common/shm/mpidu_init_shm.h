@@ -10,8 +10,11 @@
 
 #include "mpidu_shm.h"
 
+/* One cache line per process should be enough for all cases */
+#define MPIDU_INIT_SHM_BLOCK_SIZE MPIDU_SHM_CACHE_LINE_LEN
+
 typedef struct MPIDU_Init_shm_block {
-    char block[MPIDU_SHM_CACHE_LINE_LEN * 16];
+    char block[MPIDU_INIT_SHM_BLOCK_SIZE];
 } MPIDU_Init_shm_block_t;
 
 int MPIDU_Init_shm_init(void);
