@@ -47,6 +47,7 @@ use Time::HiRes qw(gettimeofday tv_interval);
 our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
 $g_opt->{memory_total} = 20;      # Total memory in GB
 $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
+$g_opt->{cleanup} = 1;            # Whether to remove the compiled programs
 
 # Total number of tests checked and run
 our $g_total_run = 0;
@@ -113,8 +114,6 @@ $debug = 1;
 $depth = 0;              # This is used to manage multiple open list files
 
 # Build flags
-$remove_this_pgm = 0;
-$clean_pgms      = 1;
 
 my $program_wrapper = '';
 
@@ -154,7 +153,7 @@ if (defined($ENV{"MPITEST_TIMEOUT_MULTIPLIER"})) {
     $defaultTimeLimitMultiplier = $ENV{"MPITEST_TIMEOUT_MULTIPLIER"};
 }
 
-for my $key ("memory_total", "memory_multiplier") {
+for my $key ("memory_total", "memory_multiplier", "cleanup") {
     my $k = "MPITEST_".uc($key);
     if (defined($ENV{$k})) {
         $g_opt->{$key} = $ENV{$k};
@@ -650,7 +649,7 @@ sub RunList {
                     $err_count++;
                 }
                 if ($batchRun == 0) {
-                    &CleanUpAfterRun( $programname );
+                    &CleanUpAfterRun( $programname, $test_opt );
                 }
                 if ($save_dir) {
                     chdir $save_dir;
@@ -730,7 +729,7 @@ sub ProcessImplicitList {
                 $found_error = 1;
                 $err_count++;
             }
-            &CleanUpAfterRun( $programname );
+            &CleanUpAfterRun( $programname, $default_test_opt );
         }
         close PGMS;
     }
@@ -1031,8 +1030,11 @@ sub BuildMPIProgram {
 
     my $rc = 0;
     if ($verbose) { print STDERR "making $programname\n"; }
-    if (! -x $programname) { $remove_this_pgm = 1; }
-    else { $remove_this_pgm = 0; }
+    if (! -x $programname) {
+        $test_opt->{need_remove} = 1;
+    } else {
+        $test_opt->{need_remove} = 0;
+    }
     my $output = `make $programname 2>&1`;
     $rc = $?;
     if ($rc > 255) { $rc >>= 8; }
@@ -1053,7 +1055,7 @@ sub BuildMPIProgram {
 }
 
 sub CleanUpAfterRun {
-    my $programname = $_[0];
+    my ($programname, $test_opt) = @_;
     
     # Check for that this program has exited.  If it is still running,
     # issue a warning and leave the application.  Of course, this
@@ -1075,10 +1077,10 @@ sub CleanUpAfterRun {
         }
     }
     else {
-        if ($remove_this_pgm && $clean_pgms) {
+        if ($test_opt->{need_remove} && $g_opt->{cleanup}) {
             unlink $programname, "$programname.o";
         }
-        $remove_this_pgm = 0;
+        $test_opt->{need_remove} = 0;
     }
 }
 # ----------------------------------------------------------------------------
