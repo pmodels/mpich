@@ -39,8 +39,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     int is_inplace = (sendbuf == MPI_IN_PLACE);
     int max = size - 1;
 
-    size_t sendtype_size, sendtype_extent, sendtype_lb;
-    size_t recvtype_size, recvtype_extent, recvtype_lb;
+    size_t sendtype_extent, sendtype_lb;
+    size_t recvtype_extent, recvtype_lb;
     size_t sendtype_true_extent, recvtype_true_extent;
 
     int delta = 1;
@@ -65,22 +65,20 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     }
 
     /* get datatype info of sendtype and recvtype */
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
-    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "send_type_size: %zu, send_type_extent: %zu, send_count: %d",
-                                             sendtype_size, sendtype_extent, sendcount));
+                                             "send_type_extent: %zu, send_count: %d",
+                                             sendtype_extent, sendcount));
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "recv_type_size: %zu, recv_type_extent: %zu, recv_count: %d",
-                                             recvtype_size, recvtype_extent, recvcount));
+                                             "recv_type_extent: %zu, recv_count: %d",
+                                             recvtype_extent, recvcount));
 
     while (max) {
         nphases++;
