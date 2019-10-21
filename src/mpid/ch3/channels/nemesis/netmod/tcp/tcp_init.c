@@ -122,7 +122,6 @@ int MPID_nem_tcp_listen (int sockfd);
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SET_UP_LISTENER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SET_UP_LISTENER);
