@@ -10,7 +10,7 @@
 
 #include "mpiimpl.h"
 
-int MPII_Stubalgo_init()
+int MPII_Stubalgo_init(void)
 {
     return MPI_SUCCESS;
 }

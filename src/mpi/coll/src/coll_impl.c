@@ -960,7 +960,7 @@ int MPII_Coll_finalize(void)
 
 /* Function used by CH3 progress engine to decide whether to
  * block for a recv operation */
-int MPIR_Coll_safe_to_block()
+int MPIR_Coll_safe_to_block(void)
 {
     return MPII_Gentran_scheds_are_pending() == false;
 }

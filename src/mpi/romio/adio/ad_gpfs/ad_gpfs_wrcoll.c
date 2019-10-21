@@ -45,7 +45,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                  ADIO_Offset * len_list, int contig_access_count, ADIO_Offset
                                  min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                 int *buf_idx, int *error_code);
+                                 MPI_Aint * buf_idx, int *error_code);
 static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf,
                                   ADIOI_Flatlist_node * flat_buf, ADIO_Offset
                                   * offset_list, ADIO_Offset * len_list, int *send_size,
@@ -59,12 +59,12 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
                                   ADIOI_Access * others_req,
                                   int *send_buf_idx, int *curr_to_proc,
                                   int *done_to_proc, int *hole, int iter,
-                                  MPI_Aint buftype_extent, int *buf_idx, int *error_code);
+                                  MPI_Aint buftype_extent, MPI_Aint * buf_idx, int *error_code);
 static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char *write_buf,     /* 1 */
                                             ADIOI_Flatlist_node * flat_buf, ADIO_Offset * offset_list, ADIO_Offset * len_list, int *send_size, int *recv_size, ADIO_Offset off, int size,       /* 2 */
                                             int *count, int *start_pos, int *partial_recv, int *sent_to_proc, int nprocs, int myrank, int buftype_is_contig, int contig_access_count, ADIO_Offset min_st_offset, ADIO_Offset fd_size, ADIO_Offset * fd_start, ADIO_Offset * fd_end, ADIOI_Access * others_req, int *send_buf_idx, int *curr_to_proc,    /* 3 */
                                             int *done_to_proc, int *hole,       /* 4 */
-                                            int iter, MPI_Aint buftype_extent, int *buf_idx,
+                                            int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx,
                                             int *error_code);
 static void ADIOI_Fill_send_buffer(ADIO_File fd, const void *buf, ADIOI_Flatlist_node
                                    * flat_buf, char **send_buf, ADIO_Offset
@@ -120,7 +120,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset *count_sizes;
     int ii;
 
-    int *buf_idx = NULL;
+    MPI_Aint *buf_idx = NULL;
     ADIO_Offset *len_list = NULL;
     GPFSMPIO_T_CIO_RESET(w)
 #ifdef PROFILE
@@ -602,7 +602,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                  ADIO_Offset * len_list, int contig_access_count,
                                  ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                 int *buf_idx, int *error_code)
+                                 MPI_Aint * buf_idx, int *error_code)
 {
 /* Send data to appropriate processes and write in sizes of no more
    than coll_bufsize.
@@ -998,7 +998,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
                                   ADIOI_Access * others_req,
                                   int *send_buf_idx, int *curr_to_proc,
                                   int *done_to_proc, int *hole, int iter,
-                                  MPI_Aint buftype_extent, int *buf_idx, int *error_code)
+                                  MPI_Aint buftype_extent, MPI_Aint * buf_idx, int *error_code)
 {
     int i, j, k, *tmp_len, nprocs_recv, nprocs_send, err;
     char **send_buf = NULL;
@@ -1495,7 +1495,7 @@ static void ADIOI_W_Exchange_data_alltoallv(ADIO_File fd, const void *buf, char 
                                             ADIOI_Flatlist_node * flat_buf, ADIO_Offset * offset_list, ADIO_Offset * len_list, int *send_size, int *recv_size, ADIO_Offset off, int size,       /* 2 */
                                             int *count, int *start_pos, int *partial_recv, int *sent_to_proc, int nprocs, int myrank, int buftype_is_contig, int contig_access_count, ADIO_Offset min_st_offset, ADIO_Offset fd_size, ADIO_Offset * fd_start, ADIO_Offset * fd_end, ADIOI_Access * others_req, int *send_buf_idx, int *curr_to_proc,    /* 3 */
                                             int *done_to_proc, int *hole,       /* 4 */
-                                            int iter, MPI_Aint buftype_extent, int *buf_idx,
+                                            int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx,
                                             int *error_code)
 {
     int i, j, k = 0, nprocs_recv, nprocs_send, *tmp_len, err;

@@ -1734,29 +1734,19 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
-    struct hostent *hp;
-    struct sockaddr_in sa;
+    int ret;
+    MPL_sockaddr_t addr;
     int fd;
     int optval = 1;
     int q_wait = 1;
 
-    hp = gethostbyname(hostname);
-    if (!hp) {
+    ret = MPL_get_sockaddr(hostname, &addr);
+    if (ret) {
         PMI2U_printf(1, "Unable to get host entry for %s\n", hostname);
         return -1;
     }
 
-    memset((void *) &sa, 0, sizeof(sa));
-    /* POSIX might define h_addr_list only and node define h_addr */
-#ifdef HAVE_H_ADDR_LIST
-    PMI2U_Memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
-#else
-    PMI2U_Memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
-#endif
-    sa.sin_family = hp->h_addrtype;
-    sa.sin_port = htons((unsigned short) portnum);
-
-    fd = socket(AF_INET, SOCK_STREAM, TCP);
+    fd = MPL_socket();
     if (fd < 0) {
         PMI2U_printf(1, "Unable to get AF_INET socket\n");
         return -1;
@@ -1766,8 +1756,9 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
         perror("Error calling setsockopt:");
     }
 
+    ret = MPL_connect(fd, &addr, portnum);
     /* We wait here for the connection to succeed */
-    if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+    if (ret) {
         switch (errno) {
             case ECONNREFUSED:
                 PMI2U_printf(1, "connect failed with connection refused\n");
@@ -1866,13 +1857,13 @@ static int PMIi_InitIfSingleton(void)
 static int accept_one_connection(int list_sock)
 {
     int gotit, new_sock;
-    struct sockaddr_in from;
+    MPL_sockaddr_t addr;
     socklen_t len;
 
-    len = sizeof(from);
+    len = sizeof(addr);
     gotit = 0;
     while (!gotit) {
-        new_sock = accept(list_sock, (struct sockaddr *) &from, &len);
+        new_sock = accept(list_sock, (struct sockaddr *) &addr, &len);
         if (new_sock == -1) {
             if (errno == EINTR) /* interrupted? If so, try again */
                 continue;

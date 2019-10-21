@@ -43,7 +43,7 @@ else
 fi
 
 AC_CONFIG_HEADER([include/config.h])
-AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
+AC_CONFIG_COMMANDS([prefix-config],[perl $srcdir/confdb/cmd_prefix_config_h.pl MPL include/config.h include/mplconfig.h])
 
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -737,7 +737,7 @@ AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 if test "${with_thread_package}" != "argobots" ; then
-    AX_TLS([], AC_MSG_WARN([thread-local storage not supported by the compiler.]))
+    PAC_CC_CHECK_TLS
 fi
 
 #######################################################################
@@ -850,7 +850,7 @@ fi
 # fdopen() converts from an fd to a FILE*
 AC_HAVE_FUNCS(fdopen)
 if test "$ac_cv_func_fdopen" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],fdopen)
 fi
 
 AC_CHECK_FUNCS(getpid)

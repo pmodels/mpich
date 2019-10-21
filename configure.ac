@@ -1820,7 +1820,7 @@ if test "$with_cross" != "no" ; then
 	rm -f confcross
 	(set) 2>&1 | grep CROSS_ | \
 	      sed -e 's/^/export /g' -e 's/=.*//g' > confcross
-	. confcross
+	. ./confcross
 	rm -f confcross      
     fi
 fi

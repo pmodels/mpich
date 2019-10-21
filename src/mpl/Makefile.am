@@ -30,6 +30,7 @@ mpl_headers =               \
     include/mpl_trmem.h     \
     include/mpl_msg.h       \
     include/mpl_sock.h      \
+    include/mpl_sockaddr.h  \
     include/mpl_iov.h       \
     include/mpl_bt.h        \
     include/mpl_shm.h

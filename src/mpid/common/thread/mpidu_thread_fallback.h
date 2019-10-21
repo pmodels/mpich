@@ -372,7 +372,7 @@ M*/
 #endif /* MPICH_IS_THREADED */
 
 /* Stateful non-recursive version of CS_EXIT.
- * It takes a MPIDU_thread_state_t variable to pass the state between
+ * It takes a MPIDU_thread_mutex_state_t variable to pass the state between
  * ENTER and EXIT. */
 
 #define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st) MPIDUI_THREAD_CS_EXIT_ST_##name(mutex,st)
@@ -392,7 +392,11 @@ M*/
             mutex.count = 0;                                            \
             MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
             MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
+        } else {                                                        \
+            /* silence warnings: -Wmaybe-uninitialized */               \
+            st.owner = 0;                                               \
+            st.count = 0;                                               \
+        } \
     } while (0)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL

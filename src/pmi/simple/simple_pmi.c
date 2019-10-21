@@ -724,7 +724,7 @@ int PMI_Spawn_multiple(int count,
 /* FIXME: This mixes init with get maxes */
 static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
 {
-    char buf[PMIU_MAXLINE], cmd[PMIU_MAXLINE], errmsg[PMIU_MAXLINE];
+    char buf[PMIU_MAXLINE], cmd[PMIU_MAXLINE];
     int err, rc;
 
     rc = MPL_snprintf(buf, PMIU_MAXLINE,
@@ -748,8 +748,10 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
     PMIU_parse_keyvals(buf);
     cmd[0] = 0;
     PMIU_getval("cmd", cmd, PMIU_MAXLINE);
+
     if (strncmp(cmd, "response_to_init", PMIU_MAXLINE) != 0) {
-        MPL_snprintf(errmsg, PMIU_MAXLINE,
+        char errmsg[PMIU_MAXLINE * 2 + 100];
+        MPL_snprintf(errmsg, sizeof(errmsg),
                      "got unexpected response to init :%s: (full line = %s)", cmd, buf);
         PMI_Abort(-1, errmsg);
     } else {
@@ -758,7 +760,9 @@ static int PMII_getmaxes(int *kvsname_max, int *keylen_max, int *vallen_max)
         if (strncmp(buf, "0", PMIU_MAXLINE) != 0) {
             PMIU_getval("pmi_version", buf, PMIU_MAXLINE);
             PMIU_getval("pmi_subversion", buf1, PMIU_MAXLINE);
-            MPL_snprintf(errmsg, PMIU_MAXLINE,
+
+            char errmsg[PMIU_MAXLINE * 2 + 100];
+            MPL_snprintf(errmsg, sizeof(errmsg),
                          "pmi_version mismatch; client=%d.%d mgr=%s.%s",
                          PMI_VERSION, PMI_SUBVERSION, buf, buf1);
             PMI_Abort(-1, errmsg);
@@ -870,29 +874,19 @@ static int GetResponse(const char request[], const char expectedCmd[], int check
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
-    struct hostent *hp;
-    struct sockaddr_in sa;
+    MPL_sockaddr_t addr;
+    int ret;
     int fd;
     int optval = 1;
     int q_wait = 1;
 
-    hp = gethostbyname(hostname);
-    if (!hp) {
+    ret = MPL_get_sockaddr(hostname, &addr);
+    if (!ret) {
         PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
         return PMI_FAIL;
     }
 
-    memset((void *) &sa, 0, sizeof(sa));
-    /* POSIX might define h_addr_list only and node define h_addr */
-#ifdef HAVE_H_ADDR_LIST
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
-#else
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
-#endif
-    sa.sin_family = hp->h_addrtype;
-    sa.sin_port = htons((unsigned short) portnum);
-
-    fd = socket(AF_INET, SOCK_STREAM, TCP);
+    fd = MPL_socket();
     if (fd < 0) {
         PMIU_printf(1, "Unable to get AF_INET socket\n");
         return PMI_FAIL;
@@ -903,7 +897,8 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
     }
 
     /* We wait here for the connection to succeed */
-    if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+    ret = MPL_connect(fd, &addr, portnum);
+    if (ret < 0) {
         switch (errno) {
             case ECONNREFUSED:
                 PMIU_printf(1, "connect failed with connection refused\n");
@@ -1096,41 +1091,24 @@ static int PMII_singinit(void)
     int singinit_listen_sock, stdin_sock, stdout_sock, stderr_sock;
     const char *newargv[8];
     char charpid[8], port_c[8];
-    struct sockaddr_in sin;
-    socklen_t len;
+    unsigned short port;
 
     /* Create a socket on which to allow an mpiexec to connect back to
      * us */
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = INADDR_ANY;
-    sin.sin_port = htons(0);    /* anonymous port */
-
-    singinit_listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+    singinit_listen_sock = MPL_socket();
     if (singinit_listen_sock == -1) {
         perror("PMII_singinit: socket creation failed");
         return PMI_FAIL;
     }
 
-    rc = bind(singinit_listen_sock, (struct sockaddr *) &sin, sizeof(sin));
-    if (rc == -1) {
-        perror("PMII_singinit: socket bind failed");
-        return PMI_FAIL;
-    }
-
-    len = sizeof(struct sockaddr_in);
-    rc = getsockname(singinit_listen_sock, (struct sockaddr *) &sin, &len);
-    if (rc == -1) {
-        perror("PMII_singinit: getsockname failed");
-        return PMI_FAIL;
-    }
-
-    MPL_snprintf(port_c, sizeof(port_c), "%d", ntohs(sin.sin_port));
-    rc = listen(singinit_listen_sock, 5);
-    if (rc == -1) {
+    MPL_LISTEN_PUSH(0, 5);
+    rc = MPL_listen_anyport(singinit_listen_sock, &port);
+    MPL_LISTEN_POP;
+    if (rc) {
         perror("PMII_singinit: listen failed");
         return PMI_FAIL;
     }
+    MPL_snprintf(port_c, sizeof(port_c), "%d", port);
 
     PMIU_printf(PMI_debug_init, "Starting mpiexec with %s\n", port_c);
 
@@ -1262,13 +1240,13 @@ static int PMIi_InitIfSingleton(void)
 static int accept_one_connection(int list_sock)
 {
     int gotit, new_sock;
-    struct sockaddr_in from;
+    MPL_sockaddr_t addr;
     socklen_t len;
 
-    len = sizeof(from);
+    len = sizeof(addr);
     gotit = 0;
     while (!gotit) {
-        new_sock = accept(list_sock, (struct sockaddr *) &from, &len);
+        new_sock = accept(list_sock, (struct sockaddr *) &addr, &len);
         if (new_sock == -1) {
             if (errno == EINTR) /* interrupted? If so, try again */
                 continue;

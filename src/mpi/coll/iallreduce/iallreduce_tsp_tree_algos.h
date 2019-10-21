@@ -41,7 +41,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which allreduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
-    int sink_id, bcast_recv_id;
+    int sink_id;
     int nvtcs;
     int buffer_per_child = MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
@@ -104,6 +104,9 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
                 child_buffer[i] = child_buffer[0];
             }
         }
+    } else {
+        /* silence warnings */
+        child_buffer = NULL;
     }
 
     /* Set reduce_buffer based on location in the tree */
@@ -199,6 +202,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         sink_id = MPIR_TSP_sched_sink(sched);
 
         /* Receive message from parent */
+        int bcast_recv_id = sink_id;
         if (my_tree.parent != -1) {
             bcast_recv_id =
                 MPIR_TSP_sched_irecv(reduce_address, msgsize, datatype,
@@ -208,11 +212,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         if (num_children) {
             /* Multicast data to the children */
             nvtcs = 1;
-            if (my_tree.parent != -1) {
-                vtcs[0] = bcast_recv_id;
-            } else {
-                vtcs[0] = sink_id;
-            }
+            vtcs[0] = bcast_recv_id;
             MPIR_TSP_sched_imcast(reduce_address, msgsize, datatype,
                                   my_tree.children, num_children, tag, comm, sched, nvtcs, vtcs);
         }

@@ -11,7 +11,7 @@
 #include "mpiimpl.h"
 #include "recexchalgo.h"
 
-int MPII_Recexchalgo_init()
+int MPII_Recexchalgo_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
