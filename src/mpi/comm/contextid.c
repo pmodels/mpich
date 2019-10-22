@@ -6,9 +6,6 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpir_info.h"  /* MPIR_Info_free */
-
-#include "utlist.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
