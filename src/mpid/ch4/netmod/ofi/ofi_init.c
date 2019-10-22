@@ -486,7 +486,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS, i, ofi_version;
-    int thr_err = 0;
     void *table = NULL;
     const char *provname = NULL;
     struct fi_info *hints, *prov = NULL, *prov_use;
@@ -528,10 +527,10 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIR_Context_id_t) * 8 >= MPIDI_OFI_AM_CONTEXT_ID_BITS);
 
-    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_FI_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &thr_err);
+    MPIR_Add_mutex(&MPIDI_OFI_THREAD_UTIL_MUTEX);
+    MPIR_Add_mutex(&MPIDI_OFI_THREAD_PROGRESS_MUTEX);
+    MPIR_Add_mutex(&MPIDI_OFI_THREAD_FI_MUTEX);
+    MPIR_Add_mutex(&MPIDI_OFI_THREAD_SPAWN_MUTEX);
 
     /* ------------------------------------------------------------------------ */
     /* fi_allocinfo: allocate and zero an fi_info structure and all related     */
@@ -1014,7 +1013,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
 int MPIDI_OFI_mpi_finalize_hook(void)
 {
-    int thr_err = 0, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     int i = 0;
     int barrier[2] = { 0 };
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -1090,11 +1089,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
                     MPIDI_OFI_global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
     }
-
-    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_FI_MUTEX, &thr_err);
-    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &thr_err);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FINALIZE);

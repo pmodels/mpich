@@ -352,7 +352,7 @@ static int init_av_table(void)
 
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
-    int mpi_errno = MPI_SUCCESS, rank, size, appnum, thr_err;
+    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
     int n_nm_vcis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -393,15 +393,12 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     size = MPIR_Process.size;
     appnum = MPIR_Process.appnum;
 
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
-    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
+    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+    MPIR_Add_mutex(&MPIDI_global.vci_lock);
 
-    MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &mpi_errno);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
@@ -558,27 +555,6 @@ int MPID_Finalize(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPID_CS_finalize(void)
-{
-    int mpi_errno = MPI_SUCCESS, thr_err;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CS_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CS_FINALIZE);
-
-    MPID_Thread_mutex_destroy(&MPIDI_global.vci_lock, &thr_err);
-    MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &thr_err);
-    MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
-    MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &thr_err);
-    MPIR_Assert(thr_err == 0);
-    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &thr_err);
-    MPIR_Assert(thr_err == 0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CS_FINALIZE);
-    return mpi_errno;
 }
 
 int MPID_Get_universe_size(int *universe_size)
