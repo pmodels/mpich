@@ -17,7 +17,7 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
-    MPIR_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(3);
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_XPMEM_GENERAL = MPL_dbg_class_alloc("SHM_XPMEM", "shm_xpmem");
@@ -49,16 +49,11 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
             anyfail = true;
         }
         MPIDI_XPMEM_global.segmaps[i].apid = -1;        /* get apid at the first communication  */
-
-        /* Init AVL tree based segment cache */
-        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache);
     }
+    MPIDU_Init_shm_barrier();
 
     /* Check to make sure all processes initialized XPMEM correctly. */
     if (anyfail) {
-        for (i = 0; i < num_local; i++) {
-            MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache);
-        }
         /* Not setting an mpi_errno value here because we can handle the failure of XPMEM
          * gracefully. */
         goto fn_fail;
@@ -66,6 +61,42 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 
     /* Initialize other global parameters */
     MPIDI_XPMEM_global.sys_page_sz = (size_t) sysconf(_SC_PAGESIZE);
+
+    /* Initialize coop counter
+     * direct counter obj is attached here and will be used throughout the program.
+     * Once direct obj is used up, indirect counter obj is dynamically allocated in
+     * p2p and attached per counter. We pay one-time attachment overhead and the
+     * attached indirect objs can be reused in later communication. */
+    MPIR_cc_set(&MPIDI_XPMEM_global.num_pending_cnt, 0);
+
+    MPIR_CHKPMEM_MALLOC(MPIDI_XPMEM_global.coop_counter_direct, MPIDI_XPMEM_cnt_t **,
+                        sizeof(MPIDI_XPMEM_cnt_t *) * num_local,
+                        mpi_errno, "xpmem direct counter array", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPIDI_XPMEM_global.coop_counter_seg_direct, MPIDI_XPMEM_seg_t **,
+                        sizeof(MPIDI_XPMEM_seg_t *) * num_local,
+                        mpi_errno, "xpmem direct counter segs", MPL_MEM_SHM);
+
+    uint64_t cnt_mem_addr = (uint64_t) (&MPIDI_XPMEM_cnt_mem_direct);
+    uint64_t remote_cnt_mem_addr;
+
+    MPIDU_Init_shm_put(&cnt_mem_addr, sizeof(uint64_t));
+    MPIDU_Init_shm_barrier();
+    for (i = 0; i < num_local; ++i) {
+        /* Init AVL tree based segment cache */
+        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache);      /* Initialize user buffer tree */
+        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache_cnt);
+        if (i != MPIDI_XPMEM_global.local_rank) {
+            MPIDU_Init_shm_get(i, sizeof(uint64_t), &remote_cnt_mem_addr);
+            mpi_errno =
+                MPIDI_XPMEM_seg_regist(i, sizeof(MPIDI_XPMEM_cnt_t) * MPIDI_XPMEM_CNT_PREALLOC,
+                                       (void *) remote_cnt_mem_addr,
+                                       &MPIDI_XPMEM_global.coop_counter_seg_direct[i],
+                                       (void **) &MPIDI_XPMEM_global.coop_counter_direct[i],
+                                       &MPIDI_XPMEM_global.segmaps[i].segcache_cnt);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
+    MPIDU_Init_shm_barrier();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
@@ -92,10 +123,23 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
 
+    /* Ensure all counter objs are freed at MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb */
+    while (MPIR_cc_get(MPIDI_XPMEM_global.num_pending_cnt))
+        MPIDI_Progress_test(MPIDI_PROGRESS_SHM);
+
+    /* Free pre-attached direct coop counter */
+    for (i = 0; i < MPIDI_XPMEM_global.num_local; ++i) {
+        if (i != MPIDI_XPMEM_global.local_rank)
+            MPIDI_XPMEM_seg_deregist(MPIDI_XPMEM_global.coop_counter_seg_direct[i]);
+    }
+    MPL_free(MPIDI_XPMEM_global.coop_counter_direct);
+    MPL_free(MPIDI_XPMEM_global.coop_counter_seg_direct);
+
     for (i = 0; i < MPIDI_XPMEM_global.num_local; i++) {
         /* should be called before xpmem_release
          * MPIDI_XPMEM_segtree_tree_delete_all will call xpmem_detach */
         MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache);
+        MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache_cnt);
         if (MPIDI_XPMEM_global.segmaps[i].apid != -1) {
             XPMEM_TRACE("finalize: release apid: node_rank %d, 0x%lx\n",
                         i, (uint64_t) MPIDI_XPMEM_global.segmaps[i].apid);
