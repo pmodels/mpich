@@ -826,8 +826,6 @@ AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
     checked_specified_primitive=yes
     AC_MSG_CHECKING([for support for $3])
 
-    PAC_PUSH_FLAG([CFLAGS])
-    CFLAGS="$CFLAGS -I${srcdir}/include -Werror"
     AC_LINK_IFELSE([MPL_ATOMIC_TEST_PROGRAM([$1])],
         [AC_DEFINE([HAVE_$2], [1], [Define to 1 if we have support for $3])]
         [AC_MSG_RESULT([yes])]
@@ -835,11 +833,15 @@ AC_DEFUN([MPL_TRY_ATOMIC_HEADER],[
     ,
         [AC_MSG_RESULT([no])]
     )
-    PAC_POP_FLAG([CFLAGS])
 ])
 
 AC_CHECK_SIZEOF([void *])
 
+PAC_PUSH_FLAG([CFLAGS])
+CFLAGS="$CFLAGS -I${srcdir}/include"
+# Add -Werror to favor the option that does not result in warnings.
+# Do not add the flag if the compiler doesn't accept -Werror
+PAC_C_CHECK_COMPILER_OPTION([-Werror],[CFLAGS="$CFLAGS -Werror"],)
 mpl_atomic_primitives_set=false
 if test "$with_mpl_atomic_primitives" = "auto" \
         -o "$with_mpl_atomic_primitives" = "gcc_sync"; then
@@ -861,6 +863,7 @@ if test "$with_mpl_atomic_primitives" = "auto" \
     MPL_TRY_ATOMIC_HEADER([mpl_atomic_nt_intrinsics.h], [NT_INTRINSICS],
                           [Windows NT atomic intrinsics])
 fi
+PAC_POP_FLAG([CFLAGS])
 
 if test "$with_mpl_atomic_primitives" = "auto" \
         -o "$with_mpl_atomic_primitives" = "lock" ; then
