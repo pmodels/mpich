@@ -48,6 +48,12 @@ our $g_opt = {};   # global options. TODO: migrate global option vars into the h
 $g_opt->{memory_total} = 20;      # Total memory in GB
 $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
 
+# When every tests result in timeout, it means the code has deadlocks or some major issues,
+# waiting for all tests to finish is rather unnecessary. We'll keep a counter for number
+# of timeouts, and abore after too many timeout failure.
+our $g_num_timeout;
+our $g_num_timeout_thresh = 5;
+
 $MPIMajorVersion = "@MPI_VERSION@";
 $MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
@@ -71,7 +77,7 @@ $total_seen = 0;         # Number of programs considered for testing
 $np_default = 2;         # Default number of processes to use
 $np_max     = -1;        # Maximum number of processes to use (overrides any
                          # value in the test list files.  -1 is Infinity
-$defaultTimeLimit = 180; # default timeout
+$defaultTimeLimit = 180; # default timeout in seconds
 $defaultTimeLimitMultiplier = 1.0; # default multiplier for timeout limit
 
 $srcdir = ".";           # Used to set the source dir for testlist files
@@ -454,6 +460,11 @@ sub RunList {
                 print STDERR "Terminating test because stopfile $stopfile found\n";
                 last;
             }
+            if ($g_num_timeout >= $g_num_timeout_thresh) {
+                # Too many timeout failures
+                print STDERR "Terminating test because of too many timeout failures\n";
+                last;
+            }
             # Skip comments
             s/#.*//g;
             # Remove any trailing newlines/returns
@@ -752,6 +763,7 @@ sub RunMPIProgram {
         $timeout = $test_opt->{timeLimit};
     }
     $timeout *= $defaultTimeLimitMultiplier;
+    $test_opt->{_timeout} = $timeout;
     $ENV{"MPIEXEC_TIMEOUT"} = $timeout;
 
     # Handle the ppn (processes per node) option.
@@ -877,8 +889,14 @@ sub RunMPIProgram {
             }
         }
         $rc = close ( MPIOUT );
-        my $end_time = gettimeofday();
+        my $end_time = gettimeofday();  # seconds in floating point
         $runtime = $end_time - $start_time;
+        # count # of timeout when tests are configured with sufficient timeLimit
+        if ($test_opt->{_timeout} > 60) {
+            if ($runtime - $test_opt->{_timeout} >= -10) {
+                $g_num_timeout++;
+            }
+        }
         print STDOUT "Runtime: $runtime\n" if $verbose;
         if ($rc == 0) {
             # Only generate a message if we think that the program
