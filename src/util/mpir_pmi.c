@@ -107,9 +107,6 @@ int MPIR_pmi_init(void)
     appnum = 0;
     has_parent = 0;
 
-    MPIR_Process.pmix_proc = pmix_proc;
-    MPIR_Process.pmix_wcproc = pmix_wcproc;
-
 #endif
     MPIR_Process.has_parent = has_parent;
     MPIR_Process.rank = rank;
@@ -162,6 +159,11 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 }
 
 /* getters for internal constants */
+int MPIR_pmi_max_key_size(void)
+{
+    return pmi_max_key_size;
+}
+
 int MPIR_pmi_max_val_size(void)
 {
     return pmi_max_val_size;
@@ -951,7 +953,7 @@ static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *
 /* FIXME: migrate the function */
 static int build_nodemap_fallback(int *nodemap, int sz, int *p_max_node_id)
 {
-    return MPIR_NODEMAP_build_nodemap(sz, MPIR_Process.rank, nodemap, p_max_node_id);
+    return MPIR_NODEMAP_build_nodemap_fallback(sz, MPIR_Process.rank, nodemap, p_max_node_id);
 }
 
 /* build nodemap using PMI1 process_mapping or fallback with hostnames */
