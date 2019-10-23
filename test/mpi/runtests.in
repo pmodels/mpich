@@ -48,6 +48,9 @@ our $g_opt = {};   # global options. TODO: migrate global option vars into the h
 $g_opt->{memory_total} = 20;      # Total memory in GB
 $g_opt->{memory_multiplier} = 1;  # No of simutaneous jobs
 
+# Total number of tests checked and run
+our $g_total_run = 0;
+our $g_total_seen = 0;
 # When every tests result in timeout, it means the code has deadlocks or some major issues,
 # waiting for all tests to finish is rather unnecessary. We'll keep a counter for number
 # of timeouts, and abore after too many timeout failure.
@@ -72,8 +75,6 @@ $runxfail     = "@RUN_XFAIL@";
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
 $skip_count = 0;         # Number of programs skipped
-$total_run = 0;          # Number of programs tested
-$total_seen = 0;         # Number of programs considered for testing
 $np_default = 2;         # Default number of processes to use
 $np_max     = -1;        # Maximum number of processes to use (overrides any
                          # value in the test list files.  -1 is Infinity
@@ -336,7 +337,7 @@ if ($xmloutput && $closeXMLOutput) {
 }
 
 if ($tapoutput) {
-    print TAPOUT "1..$total_seen\n";
+    print TAPOUT "1..$g_total_seen\n";
     close TAPOUT;
 }
 
@@ -357,7 +358,7 @@ if ($junitoutput) {
     print $JUNITOUTNEW "  <testsuite failures=\"$err_count\"\n";
     print $JUNITOUTNEW "             errors=\"0\"\n";
     print $JUNITOUTNEW "             skipped=\"$skip_count\"\n";
-    print $JUNITOUTNEW "             tests=\"$total_run\"\n";
+    print $JUNITOUTNEW "             tests=\"$g_total_run\"\n";
     print $JUNITOUTNEW "             date=\"${date}\"\n";
     print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
     while( <$JUNITIN> ) {
@@ -375,13 +376,13 @@ if ($batchRun) {
 }
 else {
     if ($err_count) {
-        print "$err_count tests failed out of $total_run\n";
+        print "$err_count tests failed out of $g_total_run\n";
         if ($xmloutput) {
             print "Details in $xmlfullfile\n";
         }
     }
     else {
-        print " All $total_run tests passed!\n";
+        print " All $g_total_run tests passed!\n";
     }
     if ($tapoutput) {
         print "TAP formatted results in $tapfullfile\n";
@@ -570,7 +571,7 @@ sub RunList {
             # criteria for directories as well without counting directories as tests
             # in our XML/TAP output.
             unless (-d $programname) {
-                $total_seen++;
+                $g_total_seen++;
             }
 
             # If a minimum MPI version is specified, check against the
@@ -626,7 +627,7 @@ sub RunList {
                 &ProcessDir( $programname, $listfile );
             }
             else {
-                $total_run++;
+                $g_total_run++;
                 my $save_dir;
                 if ($programname =~/^(\S+)\/(\S+)$/) {
                     $save_dir = `pwd`;
@@ -699,7 +700,7 @@ sub ProcessImplicitList {
             if (-d $programname) { next; }  # Ignore directories
             if ($programname eq "runtests") { next; } # Ignore self
             if (-x $programname) {
-                $total_run++;
+                $g_total_run++;
                 &RunMPIProgram( $programname, $np_default, $default_test_opt);
             }
         }
@@ -719,7 +720,7 @@ sub ProcessImplicitList {
             # Skip messages from ls about no files
             if (! -s $programname) { next; }
             $programname =~ s/\.c//;
-            $total_run++;
+            $g_total_run++;
             if (&BuildMPIProgram( $programname, "") == 0) {
                 &RunMPIProgram( $programname, $np_default, $default_test_opt);
             }
