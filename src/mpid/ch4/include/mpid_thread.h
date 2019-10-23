@@ -44,8 +44,9 @@ do {                                                                    \
 
 #define MPID_THREAD_SAFE_END(name, mutex, cs_acq)                       \
 do {                                                                    \
-    if (cs_acq)                                                         \
+    if (cs_acq) {                                                       \
         MPIDU_THREAD_CS_EXIT(name, mutex);                              \
+    }                                                                   \
 } while (0)
 
 #define MPID_Thread_mutex_create   MPIDU_Thread_mutex_create
