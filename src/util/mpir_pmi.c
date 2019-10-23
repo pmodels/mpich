@@ -107,9 +107,6 @@ int MPIR_pmi_init(void)
     appnum = 0;
     has_parent = 0;
 
-    MPIR_Process.pmix_proc = pmix_proc;
-    MPIR_Process.pmix_wcproc = pmix_wcproc;
-
 #endif
     MPIR_Process.has_parent = has_parent;
     MPIR_Process.rank = rank;
