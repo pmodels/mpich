@@ -11,7 +11,6 @@
 
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
-#include "mpir_nodemap.h"
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {

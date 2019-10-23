@@ -68,11 +68,6 @@ typedef struct MPIR_Process_t {
     MPIR_Netloc_network_attributes network_attr;
 #endif
 
-#ifdef USE_PMIX_API
-    pmix_proc_t pmix_proc;
-    pmix_proc_t pmix_wcproc;
-#endif
-
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */
     int (*dimsCreate) (int, int, int *);
