@@ -461,7 +461,7 @@ sub RunList {
                 print STDERR "Terminating test because stopfile $stopfile found\n";
                 last;
             }
-            if ($g_num_timeout >= $g_num_timeout_thresh) {
+            if ($g_num_timeout >= $g_num_timeout_thresh && $g_num_timeout / $g_total_run > 0.5) {
                 # Too many timeout failures
                 print STDERR "Terminating test because of too many timeout failures\n";
                 last;
