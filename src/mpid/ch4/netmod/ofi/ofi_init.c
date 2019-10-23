@@ -1167,8 +1167,14 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     int n_new_procs = 0;
     int max_n_avts;
     char *curr_upid;
-    new_avt_procs = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
-    new_upids = (char **) MPL_malloc(size * sizeof(char *), MPL_MEM_ADDRESS);
+
+    MPIR_CHKLMEM_DECL(2);
+
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
+                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
+                        MPL_MEM_ADDRESS);
+
     max_n_avts = MPIDIU_get_max_n_avts();
 
     curr_upid = remote_upids;
@@ -1232,8 +1238,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
     }
 
   fn_exit:
-    MPL_free(new_avt_procs);
-    MPL_free(new_upids);
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
