@@ -46,7 +46,8 @@ AM_MAINTAINER_MODE([enable])
 AM_PROG_AR
 
 LT_PREREQ([2.2.6])
-LT_INIT
+LT_INIT([disable-shared])
+
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h limits.h stdint.h sys/types.h],,

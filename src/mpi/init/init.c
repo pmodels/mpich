@@ -90,9 +90,9 @@ The Fortran binding for 'MPI_Init' has only the error return
 @*/
 int MPI_Init(int *argc, char ***argv)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, rc;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
-
+	
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
     MPL_dbg_pre_init(argc, argv, rc);

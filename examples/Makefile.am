@@ -9,7 +9,7 @@
 # all of these?
 MPICHDIR=..
 #CC       = $(MPICHDIR)/bin/mpicc
-AM_CFLAGS   = $(WRAPPER_CFLAGS)
+AM_CFLAGS   = $(WRAPPER_CFLAGS) -fpie -pie -rdynamic
 CXXFLAGS = $(WRAPPER_CXXFLAGS)
 FFLAGS   = $(WRAPPER_FFLAGS)
 FCFLAGS  = $(WRAPPER_FCFLAGS)

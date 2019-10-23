@@ -3,7 +3,7 @@
 # (C) 2018 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
-AM_CPPFLAGS = $(MPI_H_INCLUDE)
+AM_CPPFLAGS = $(MPI_H_INCLUDE) -fpie -pie -rdynamic -pthread
 AM_CPPFLAGS += -DDTP_MPI_DATATYPE=@DTP_DATATYPES@   # Coma separated list of MPI datatypes
 
 noinst_LTLIBRARIES = libdtpools.la
