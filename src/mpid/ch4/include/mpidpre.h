@@ -229,6 +229,7 @@ typedef struct {
         MPIDI_workq_elemt_t command;
 #endif
     } ch4;
+    int lightweight;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_REQUEST(req,field)       (((req)->dev).field)
@@ -519,6 +520,11 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+
+        /* complete recv with preallocated request */
+        int lw_recv;
+        /* two preallocated requests for pt2pt and coll */
+        MPIR_Request *lw_recv_req[2];
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field

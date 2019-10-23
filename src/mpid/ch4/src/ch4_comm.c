@@ -201,6 +201,10 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     MPIDIG_COMM(comm, unexp_head_ptr) = &(MPIDIG_COMM(comm, unexp_list));
 #endif
 #endif
+
+    MPIDI_COMM(comm, lw_recv) = FALSE;
+    MPIDI_COMM(comm, lw_recv_req[0]) = NULL;
+    MPIDI_COMM(comm, lw_recv_req[1]) = NULL;
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATE_HOOK);
     return mpi_errno;
@@ -215,6 +219,14 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_FREE_HOOK);
+
+    if (MPIDI_COMM(comm, lw_recv) == TRUE) {
+        MPIR_Request_free(MPIDI_COMM(comm, lw_recv_req[0]));
+        MPIDI_COMM(comm, lw_recv_req[0]) = NULL;
+        MPIR_Request_free(MPIDI_COMM(comm, lw_recv_req[1]));
+        MPIDI_COMM(comm, lw_recv_req[1]) = NULL;
+    }
+
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_NONE:

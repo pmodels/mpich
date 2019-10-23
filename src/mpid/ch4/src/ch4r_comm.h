@@ -23,4 +23,14 @@ int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut);
 int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size);
 int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut);
 
+static inline int MPIDIU_comm_lw_recv_enabled(MPIR_Comm * comm)
+{
+    return MPIDI_COMM(comm, lw_recv);
+}
+
+static inline MPIR_Request *MPIDIU_comm_get_recv_req(MPIR_Comm * comm, int context_offset)
+{
+    return MPIDI_COMM(comm, lw_recv_req[context_offset]);
+}
+
 #endif /* CH4R_COMM_H_INCLUDED */

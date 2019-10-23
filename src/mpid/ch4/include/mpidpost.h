@@ -24,6 +24,8 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
     MPIDI_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
 #endif
 
+    MPIDI_REQUEST(req, lightweight) = 0;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_CREATE_HOOK);
 }
 
