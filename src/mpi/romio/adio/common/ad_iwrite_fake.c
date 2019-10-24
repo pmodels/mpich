@@ -31,8 +31,7 @@ void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
     ADIOI_Assert(len == (int) len);     /* the count is an int parm */
     ADIO_WriteContig(fd, buf, (int) len, MPI_BYTE, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Get_count(&status, MPI_BYTE, &write_count);
-        nbytes = (MPI_Offset) write_count *(MPI_Offset) typesize;
+        MPI_Get_count(&status, MPI_BYTE, &nbytes);
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 
