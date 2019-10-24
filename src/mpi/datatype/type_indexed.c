@@ -73,7 +73,7 @@ int MPIR_Type_indexed(int count,
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
+    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
 
     if (is_builtin) {
         /* builtins are handled differently than user-defined types because
@@ -330,7 +330,7 @@ int MPI_Type_indexed(int count,
             }
             MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(oldtype)) {
                 MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             }

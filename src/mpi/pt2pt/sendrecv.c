@@ -125,7 +125,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPIR_ERRTEST_DATATYPE(recvtype, "datatype", mpi_errno);
 
             /* Validate datatype objects */
-            if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(sendtype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(sendtype, datatype_ptr);
@@ -136,7 +136,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 if (mpi_errno)
                     goto fn_fail;
             }
-            if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(recvtype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(recvtype, datatype_ptr);

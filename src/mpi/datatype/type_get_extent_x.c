@@ -33,7 +33,7 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Coun
 
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(datatype)) {
         *lb = 0;
         *extent = MPIR_Datatype_get_basic_size(datatype);
     } else {
@@ -90,7 +90,7 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);

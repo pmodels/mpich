@@ -520,7 +520,7 @@ void MPIR_Dataloop_dup(void *old_loop_, void **new_loop_p_)
 
 MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
 {
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(type)) {
         return MPII_Datatype_get_basic_size_external32(type);
     } else {
         MPII_Dataloop *dlp = NULL;

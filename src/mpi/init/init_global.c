@@ -191,7 +191,7 @@ int MPII_finalize_global(void)
      * comm self and comm world
      */
     if (MPIR_Process.comm_world->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+        !(HANDLE_IS_BUILTIN(MPIR_Process.comm_world->errhandler->handle))) {
         int in_use;
         MPIR_Errhandler_release_ref(MPIR_Process.comm_world->errhandler, &in_use);
         if (!in_use) {
@@ -201,7 +201,7 @@ int MPII_finalize_global(void)
         MPIR_Process.comm_world->errhandler = NULL;
     }
     if (MPIR_Process.comm_self->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_self->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+        !(HANDLE_IS_BUILTIN(MPIR_Process.comm_self->errhandler->handle))) {
         int in_use;
         MPIR_Errhandler_release_ref(MPIR_Process.comm_self->errhandler, &in_use);
         if (!in_use) {

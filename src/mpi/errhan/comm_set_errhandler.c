@@ -106,7 +106,7 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
             /* Validate comm_ptr; if comm_ptr is not valid, it will be reset to null */
             MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
 
-            if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(errhandler)) {
                 MPIR_Errhandler_valid_ptr(errhan_ptr, mpi_errno);
             }
             MPIR_ERRTEST_ERRHANDLER(errhandler, mpi_errno);
