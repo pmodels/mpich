@@ -292,6 +292,7 @@ static int init_hints(struct fi_info *hints);
 static struct fi_info *pick_provider(struct fi_info *hints, const char *provname,
                                      struct fi_info *prov_list);
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
+static int set_lw_recv(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
 static int conn_manager_init(void);
 static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
@@ -304,6 +305,55 @@ static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
         MPIDI_OFI_COMM(comm_ptr).eagain = FALSE;
 
     return MPI_SUCCESS;
+}
+
+static int set_lw_recv(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *req = NULL;
+    int i = 0;
+
+    if (!strncmp(info->value, "true", strlen("true"))) {
+        MPIDI_COMM(comm_ptr, lw_recv) = TRUE;
+        /* for each context offset: pt2pt and coll */
+        for (i = 0; i < 2; ++i) {
+            MPIDI_COMM(comm_ptr, lw_recv_req[i]) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+            if (MPIDI_COMM(comm_ptr, lw_recv_req[i]) == NULL) {
+                MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+            }
+            req = MPIDI_COMM(comm_ptr, lw_recv_req[i]);
+            MPIR_cc_set(&req->cc, 0);
+            MPIDI_OFI_REQUEST(req, datatype) = MPI_DATATYPE_NULL;
+            MPIDI_OFI_REQUEST(req, event_id) = MPIDI_OFI_EVENT_RECV;
+            req->comm = comm_ptr;
+            /* preset util_id to context id used in pt2pt and coll ops for two
+             * requests respectively */
+            MPIDI_OFI_REQUEST(req, util_id) = comm_ptr->recvcontext_id + i;
+            MPIDI_OFI_REQUEST(req, noncontig.pack) = NULL;
+            MPIDI_OFI_REQUEST(req, noncontig.nopack) = NULL;
+            req->status.MPI_SOURCE = MPI_UNDEFINED;
+            req->status.MPI_ERROR = MPI_SUCCESS;
+            req->status.MPI_TAG = 0;
+            MPIR_STATUS_SET_COUNT(req->status, 0);
+            MPIDI_REQUEST(req, lightweight) = 1;
+        }
+    }
+    if (!strncmp(info->value, "false", strlen("false"))) {
+        MPIDI_COMM(comm_ptr, lw_recv) = FALSE;
+        if (MPIDI_COMM(comm_ptr, lw_recv_req[0]) != NULL) {
+            MPIR_Request_free(MPIDI_COMM(comm_ptr, lw_recv_req[0]));
+            MPIDI_COMM(comm_ptr, lw_recv_req[0]) = NULL;
+        }
+        if (MPIDI_COMM(comm_ptr, lw_recv_req[1]) != NULL) {
+            MPIR_Request_free(MPIDI_COMM(comm_ptr, lw_recv_req[1]));
+            MPIDI_COMM(comm_ptr, lw_recv_req[1]) = NULL;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int conn_manager_init()
@@ -987,6 +1037,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     conn_manager_init();
 
     mpi_errno = MPIR_Comm_register_hint("eagain", set_eagain, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Comm_register_hint("lw_recv", set_lw_recv, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* index datatypes for RMA atomics */

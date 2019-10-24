@@ -196,7 +196,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
+        if (!flags && MPIDIU_comm_lw_recv_enabled(comm) && HANDLE_IS_BUILTIN(datatype) && dt_contig
+            && data_sz <= MPIDI_OFI_global.max_msg_size) {
+            MPIDI_OFI_RECV_REQUEST_CREATE_LW_CONDITIONAL(rreq, comm, context_offset);
+            *request = rreq;
+            match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
+            recv_buf = (char *) buf + dt_true_lb;
+            goto issue_lw_recv;
+        }
         MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(rreq, MPIR_REQUEST_KIND__RECV);
         /* Need to set the source to UNDEFINED for anysource matching */
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
@@ -211,7 +221,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
 
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
@@ -260,6 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
+  issue_lw_recv:
     if (!flags) /* Branch should compile out */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
                                       recv_buf,

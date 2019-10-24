@@ -85,6 +85,17 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_EVENT);
 
+    if (MPIDI_REQUEST(rreq, lightweight)) {
+        MPIDI_OFI_RECV_REQUEST_COMPLETE_LW_CONDITIONAL(rreq);
+        /* this tag is needed for handling the ack of ssend */
+        if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
+            rreq->status.MPI_SOURCE = cqe_get_source(wc, true);
+            rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
+            goto fastpath_ssend_ack;
+        }
+        goto fastpath;
+    }
+
     rreq->status.MPI_SOURCE = cqe_get_source(wc, true);
     rreq->status.MPI_ERROR = MPIDI_OFI_idata_get_error_bits(wc->data);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
@@ -140,10 +151,10 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
     MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
 
     /* If synchronous, ack and complete when the ack is done */
+  fastpath_ssend_ack:
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
         uint64_t ss_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_REQUEST(rreq, util_id),
-                                                  rreq->status.MPI_TAG,
-                                                  MPIDI_OFI_SYNC_SEND_ACK);
+                                                  rreq->status.MPI_TAG, MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
@@ -153,6 +164,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                             ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
+  fastpath:
     MPIDIU_request_complete(rreq);
 
     /* Polling loop will check for truncation */
