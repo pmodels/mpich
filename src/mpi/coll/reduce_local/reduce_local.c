@@ -150,8 +150,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_fail;
-            }
-            if (HANDLE_IS_BUILTIN(op)) {
+            } else {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_fail;

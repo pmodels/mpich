@@ -441,7 +441,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Op *op_ptr = NULL;
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
-            } else if (HANDLE_IS_BUILTIN(op)) {
+            } else {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
             }
             if (mpi_errno != MPI_SUCCESS)
