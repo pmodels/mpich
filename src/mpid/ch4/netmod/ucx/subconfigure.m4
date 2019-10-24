@@ -55,19 +55,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     AC_SUBST([ucxlib])
 
     ucx_embedded=""
-    dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
-    if test "${with_ucx}" = "embedded" ; then
+    if test $have_ucx = no ; then
         ucx_embedded="yes"
-    elif test -z ${with_ucx} ; then
-        if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/configure ; then
-            ucx_embedded="yes"
-        else
-            ucx_embedded="no"
-        fi
-    else
-        ucx_embedded="no"
     fi
-
+    
     if test "${ucx_embedded}" = "yes" ; then
         PAC_PUSH_FLAG(CPPFLAGS)
         PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
@@ -82,9 +73,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         have_ucp_put_nb=yes
         have_ucp_get_nb=yes
     else
-        PAC_PUSH_FLAG(LIBS)
-        PAC_CHECK_HEADER_LIB_FATAL(ucx, ucp/api/ucp.h, ucp, ucp_config_read)
-        PAC_POP_FLAG(LIBS)
         PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
 
         # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
