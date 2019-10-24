@@ -64,7 +64,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->typerep = NULL;
 
     /* if oldtype is a basic, we build a contiguous typerep of count = 1 */
-    if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         int oldsize = MPIR_Datatype_get_basic_size(oldtype);
 
         new_dtp->size = oldsize;

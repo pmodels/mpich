@@ -780,8 +780,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         }
 #endif
         /* We need to release the error handler */
-        if (comm_ptr->errhandler &&
-            !(HANDLE_GET_KIND(comm_ptr->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+        if (comm_ptr->errhandler && !(HANDLE_IS_BUILTIN(comm_ptr->errhandler->handle))) {
             int errhInuse;
             MPIR_Errhandler_release_ref(comm_ptr->errhandler, &errhInuse);
             if (!errhInuse) {
@@ -797,7 +796,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* Check for predefined communicators - these should not
          * be freed */
-        if (!(HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN))
+        if (!(HANDLE_IS_BUILTIN(comm_ptr->handle)))
             MPIR_Handle_obj_free(&MPIR_Comm_mem, comm_ptr);
     } else {
         /* If the user attribute free function returns an error,

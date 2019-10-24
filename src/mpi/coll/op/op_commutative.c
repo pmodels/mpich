@@ -36,7 +36,7 @@ int MPIR_Op_is_commutative(MPI_Op op)
 {
     MPIR_Op *op_ptr;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         return TRUE;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);

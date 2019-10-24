@@ -86,7 +86,7 @@ int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
     pof2 = comm_ptr->coll.pof2;
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+    MPIR_Assert(HANDLE_IS_BUILTIN(op));
     MPIR_Assert(count >= pof2);
 #endif /* HAVE_ERROR_CHECKING */
 

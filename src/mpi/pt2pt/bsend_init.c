@@ -101,7 +101,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
 
             /* Validate datatype object */
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);

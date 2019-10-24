@@ -179,6 +179,7 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_KIND_SHIFT 30
 #define HANDLE_GET_KIND(a) (((unsigned)(a)&HANDLE_KIND_MASK)>>HANDLE_KIND_SHIFT)
 #define HANDLE_SET_KIND(a,kind) ((a)|((kind)<<HANDLE_KIND_SHIFT))
+#define HANDLE_IS_BUILTIN(a) (HANDLE_GET_KIND((a)) == HANDLE_KIND_BUILTIN)
 
 /* For indirect, the remainder of the handle has a block and index within that
  * block */

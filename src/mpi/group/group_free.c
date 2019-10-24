@@ -99,7 +99,7 @@ int MPI_Group_free(MPI_Group * group)
 
             /* Cannot free the predefined groups, but allow GROUP_EMPTY
              * because otherwise many tests fail */
-            if ((HANDLE_GET_KIND(*group) == HANDLE_KIND_BUILTIN) && *group != MPI_GROUP_EMPTY) {
+            if ((HANDLE_IS_BUILTIN(*group)) && *group != MPI_GROUP_EMPTY) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_GROUP, "**groupperm", 0);
