@@ -390,6 +390,8 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
         out_nodemap[i] = j;
     }
 
+    *out_max_node_id = max_node_id;
+
   fn_exit:
     MPL_free(key);
     MPL_free(node_names);
