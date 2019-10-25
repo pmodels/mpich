@@ -65,6 +65,7 @@ else
 fi
 export ch4_netmods
 export netmod_args
+AC_MSG_NOTICE([CH4 select netmod: $ch4_netmods $netmod_args])
 
 #
 # reset DEVICE so that it (a) always includes the channel name, and (b) does not include channel options
