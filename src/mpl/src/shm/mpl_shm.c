@@ -34,7 +34,11 @@ int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_h
     int rc = MPL_SHM_SUCCESS;
     MPLI_shm_hnd_reset_val(hnd);
     rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
+    if (rc != MPL_SHM_SUCCESS)
+        return rc;
     rc = MPLI_shm_ghnd_set_by_val(hnd, "%s", str_hnd);
+    if (rc != MPL_SHM_SUCCESS)
+        return rc;
     rc = MPL_shm_seg_open(hnd, 0);
     return rc;
 }
