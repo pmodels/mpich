@@ -523,16 +523,6 @@ src/mpid/ch4/src/ch4_coll_globals_default.c
 AM_CONDITIONAL([BUILD_CH4_SHM],[test "$enable_ch4_direct" = "auto"])
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
-# Test for the cpu process set type
-AC_CACHE_CHECK([whether cpu_set_t available],pac_cv_have_cpu_set_t,[
-                AC_TRY_COMPILE( [
-                                 #include <sched.h>],[ cpu_set_t t; ],pac_cv_have_cpu_set_t=yes,pac_cv_have_cpu_set_t=no)])
-if test "${have_hwloc}" = "yes" -a "${pac_cv_have_cpu_set_t}" = "yes" ; then
-   AC_DEFINE(BUILD_TOPOTREES,1,[Define if hwloc, cpu_set and GNU extensions are available])
-fi
-
-AM_CONDITIONAL([BUILD_TOPOTREES], [test x${have_hwloc} = x"yes" -a x${pac_cv_have_cpu_set_t} = x"yes" ])
-
 ])dnl end _BODY
 
 [#] end of __file__

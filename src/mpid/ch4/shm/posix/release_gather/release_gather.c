@@ -138,10 +138,8 @@ cvars:
 
 #include "mpiimpl.h"
 #include "release_gather.h"
-#ifdef BUILD_TOPOTREES
 #include "topotree.h"
 #include "topotree_util.h"
-#endif
 
 #define COMM_FIELD(comm, field)                   \
     MPIDI_POSIX_COMM(comm)->release_gather->field
@@ -308,12 +306,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
-#ifdef BUILD_TOPOTREES
         /* Create bcast_tree and reduce_tree with root of the tree as 0 */
         if (MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES &&
             getenv("HYDRA_USER_PROVIDED_BINDING")) {
             /* Topology aware trees are created only when the user has specified process binding */
-            if (MPIR_Process.bindset_is_valid) {
+            if (MPIR_hw_topo_is_initialized()) {
                 mpi_errno =
                     MPIDI_SHM_topology_tree_init(comm_ptr, 0, MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
                                                  &release_gather_info_ptr->bcast_tree,
@@ -340,7 +337,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             topotree_fail[0] = -1;
             topotree_fail[1] = -1;
         }
-#endif
+
         /* Non-topology aware trees */
         if (topotree_fail[0] != 0) {
             if (topotree_fail[0] == 1)

@@ -60,8 +60,6 @@ void MPII_init_binding_cxx(void);
 void MPII_init_binding_f08(void);
 void MPII_pre_init_dbg_logging(int *argc, char ***argv);
 void MPII_init_dbg_logging(void);
-void MPII_init_topo(void);
-void MPII_finalize_topo(void);
 
 int MPII_init_async(int thread_provided);
 int MPII_finalize_async(void);
