@@ -8,14 +8,6 @@
 #ifndef MPIR_PROCESS_H_INCLUDED
 #define MPIR_PROCESS_H_INCLUDED
 
-#ifdef HAVE_HWLOC
-#include "hwloc.h"
-#endif
-
-#ifdef HAVE_NETLOC
-#include "netloc_util.h"
-#endif
-
 /* Per process data */
 typedef struct PreDefined_attrs {
     int appnum;                 /* Application number provided by mpiexec (MPI-2) */
@@ -55,18 +47,6 @@ typedef struct MPIR_Process_t {
     MPIR_Request *lw_req;       /* A pre-allocated, always complete request */
     PreDefined_attrs attrs;     /* Predefined attribute values */
     int tag_bits;               /* number of tag bits supported */
-
-#ifdef HAVE_HWLOC
-    hwloc_topology_t hwloc_topology;    /* HWLOC topology */
-    hwloc_cpuset_t bindset;     /* process binding */
-    int bindset_is_valid;       /* Flag to indicate if the bind set of the process is valid:
-                                 * 0 if invalid, 1 if valid */
-#endif
-
-#ifdef HAVE_NETLOC
-    netloc_topology_t netloc_topology;
-    MPIR_Netloc_network_attributes network_attr;
-#endif
 
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */

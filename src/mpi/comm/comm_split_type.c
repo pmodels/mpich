@@ -7,14 +7,7 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-
-#ifdef HAVE_HWLOC
-#include "hwloc.h"
-#endif
-
-#ifdef HAVE_NETLOC
-#include "netloc_util.h"
-#endif
+#include "mpir_hw_topo.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -98,49 +91,47 @@ int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key
     goto fn_exit;
 }
 
-#ifdef HAVE_HWLOC
-
 struct shmem_processor_info_table {
     const char *val;
-    hwloc_obj_type_t obj_type;
+    MPIR_Node_obj_type obj_type;
 };
 
-/* hwloc processor object table */
+/* hardware topology node object table */
 static struct shmem_processor_info_table shmem_processor_info[] = {
-    {"machine", HWLOC_OBJ_MACHINE},
-    {"socket", HWLOC_OBJ_PACKAGE},
-    {"package", HWLOC_OBJ_PACKAGE},
-    {"numa", HWLOC_OBJ_NUMANODE},
-    {"core", HWLOC_OBJ_CORE},
-    {"hwthread", HWLOC_OBJ_PU},
-    {"pu", HWLOC_OBJ_PU},
-    {"l1dcache", HWLOC_OBJ_L1CACHE},
-    {"l1ucache", HWLOC_OBJ_L1CACHE},
-    {"l1icache", HWLOC_OBJ_L1ICACHE},
-    {"l1cache", HWLOC_OBJ_L1CACHE},
-    {"l2dcache", HWLOC_OBJ_L2CACHE},
-    {"l2ucache", HWLOC_OBJ_L2CACHE},
-    {"l2icache", HWLOC_OBJ_L2ICACHE},
-    {"l2cache", HWLOC_OBJ_L2CACHE},
-    {"l3dcache", HWLOC_OBJ_L3CACHE},
-    {"l3ucache", HWLOC_OBJ_L3CACHE},
-    {"l3icache", HWLOC_OBJ_L3ICACHE},
-    {"l3cache", HWLOC_OBJ_L3CACHE},
-    {"l4dcache", HWLOC_OBJ_L4CACHE},
-    {"l4ucache", HWLOC_OBJ_L4CACHE},
-    {"l4cache", HWLOC_OBJ_L4CACHE},
-    {"l5dcache", HWLOC_OBJ_L5CACHE},
-    {"l5ucache", HWLOC_OBJ_L5CACHE},
-    {"l5cache", HWLOC_OBJ_L5CACHE},
-    {NULL, HWLOC_OBJ_TYPE_MAX}
+    {"machine", MPIR_NODE_OBJ_TYPE__MACHINE},
+    {"socket", MPIR_NODE_OBJ_TYPE__PACKAGE},
+    {"package", MPIR_NODE_OBJ_TYPE__PACKAGE},
+    {"numa", MPIR_NODE_OBJ_TYPE__NUMANODE},
+    {"core", MPIR_NODE_OBJ_TYPE__CORE},
+    {"hwthread", MPIR_NODE_OBJ_TYPE__PU},
+    {"pu", MPIR_NODE_OBJ_TYPE__PU},
+    {"l1dcache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l1ucache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l1icache", MPIR_NODE_OBJ_TYPE__L1ICACHE},
+    {"l1cache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l2dcache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l2ucache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l2icache", MPIR_NODE_OBJ_TYPE__L2ICACHE},
+    {"l2cache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l3dcache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l3ucache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l3icache", MPIR_NODE_OBJ_TYPE__L3ICACHE},
+    {"l3cache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l4dcache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l4ucache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l4cache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l5dcache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {"l5ucache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {"l5cache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {NULL, MPIR_NODE_OBJ_TYPE__MAX}
 };
 
 static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                 MPIR_Comm ** newcomm_ptr)
 {
     int color;
-    hwloc_obj_t obj_containing_cpuset;
-    hwloc_obj_type_t query_obj_type = HWLOC_OBJ_TYPE_MAX;
+    MPIR_Node_obj obj_containing_cpuset;
+    MPIR_Node_obj_type query_obj_type = MPIR_NODE_OBJ_TYPE__MAX;
     int i, mpi_errno = MPI_SUCCESS;
 
     /* assign the node id as the color, initially */
@@ -155,35 +146,14 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
         }
     }
 
-    if (query_obj_type == HWLOC_OBJ_TYPE_MAX)
+    if (query_obj_type == MPIR_NODE_OBJ_TYPE__MAX)
         goto split_id;
 
-    obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
-    MPIR_Assert(obj_containing_cpuset != NULL);
-    if (obj_containing_cpuset->type == query_obj_type) {
-        color = obj_containing_cpuset->logical_index;
-    } else {
-        hwloc_obj_t hobj = NULL;
-        hwloc_obj_t tmp = NULL;
-        /* hwloc_get_ancestor_of_type call cannot be used here because HWLOC version 2.0 and above do not
-         * treat memory objects (NUMA) as objects in topology tree (Details can be found in
-         * https://www.open-mpi.org/projects/hwloc/doc/v2.0.1/a00327.php#upgrade_to_api_2x_memory_find)
-         */
-        while ((tmp =
-                hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, query_obj_type,
-                                           tmp)) != NULL) {
-            if (hwloc_bitmap_isincluded(obj_containing_cpuset->cpuset, tmp->cpuset) ||
-                hwloc_bitmap_isequal(tmp->cpuset, obj_containing_cpuset->cpuset)) {
-                hobj = tmp;
-                break;
-            }
-        }
-        if (hobj)
-            color = hobj->logical_index;
-        else
-            color = MPI_UNDEFINED;
-    }
+    obj_containing_cpuset = MPIR_Node_get_covering_obj_by_type(query_obj_type);
+    if (obj_containing_cpuset)
+        color = MPIR_Node_get_obj_index(obj_containing_cpuset);
+    else
+        color = MPI_UNDEFINED;
 
   split_id:
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
@@ -199,32 +169,20 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
 static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
                                  const char *hintval, MPIR_Comm ** newcomm_ptr)
 {
-    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    MPIR_Node_obj non_io_ancestor, io_device = NULL;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
-    MPIR_Assert(obj_containing_cpuset != NULL);
-
-    io_device =
-        hwloc_get_pcidev_by_busidstring(MPIR_Process.hwloc_topology, hintval + strlen("pci:"));
-
-    if (io_device != NULL) {
-        hwloc_obj_t non_io_ancestor =
-            hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
-
-        /* An io object will never be the root of the topology and is
-         * hence guaranteed to have a non io ancestor */
-        MPIR_Assert(non_io_ancestor);
-
-        if (hwloc_obj_is_in_subtree
-            (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor)) {
-            color = non_io_ancestor->logical_index;
-        } else
+    io_device = MPIR_Node_get_osdev_obj_by_busidstring(hintval + strlen("pci:"));
+    if (io_device) {
+        non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(io_device);
+        if (non_io_ancestor)
+            color = MPIR_Node_get_obj_index(non_io_ancestor);
+        else
             color = MPI_UNDEFINED;
-    } else
+    } else {
         color = MPI_UNDEFINED;
+    }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -236,68 +194,23 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
     goto fn_exit;
 }
 
-static int io_device_found(const char *resource, const char *devname, hwloc_obj_t io_device,
-                           hwloc_obj_osdev_type_t obj_type)
-{
-    if (!strncmp(resource, devname, strlen(devname))) {
-        /* device type does not match */
-        if (io_device->attr->osdev.type != obj_type)
-            return 0;
-
-        /* device prefix does not match */
-        if (strncmp(io_device->name, devname, strlen(devname)))
-            return 0;
-
-        /* specific device is supplied, but does not match */
-        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
-            return 0;
-    }
-
-    return 1;
-}
-
 static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
                                      const char *hintval, MPIR_Comm ** newcomm_ptr)
 {
-    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    MPIR_Node_obj non_io_ancestor;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
     /* assign the node id as the color, initially */
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
 
-    obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
-    MPIR_Assert(obj_containing_cpuset != NULL);
-
-    color = MPI_UNDEFINED;
-    while ((io_device = hwloc_get_next_osdev(MPIR_Process.hwloc_topology, io_device))) {
-        hwloc_obj_t non_io_ancestor;
-        uint32_t depth;
-
-        if (!io_device_found(hintval, "hfi", io_device, HWLOC_OBJ_OSDEV_OPENFABRICS))
-            continue;
-        if (!io_device_found(hintval, "ib", io_device, HWLOC_OBJ_OSDEV_NETWORK))
-            continue;
-        if (!io_device_found(hintval, "eth", io_device, HWLOC_OBJ_OSDEV_NETWORK) &&
-            !io_device_found(hintval, "en", io_device, HWLOC_OBJ_OSDEV_NETWORK))
-            continue;
-
-        non_io_ancestor = hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
-        while (!hwloc_obj_type_is_normal(non_io_ancestor->type))
-            non_io_ancestor = non_io_ancestor->parent;
-        MPIR_Assert(non_io_ancestor && non_io_ancestor->depth >= 0);
-
-        if (!hwloc_obj_is_in_subtree
-            (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor))
-            continue;
-
-        /* Get a unique ID for the non-IO object.  Use fixed width
-         * unsigned integers, so bit shift operations are well
-         * defined */
-        depth = (uint32_t) non_io_ancestor->depth;
-        color = (int) ((depth << 16) + non_io_ancestor->logical_index);
-        break;
+    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    if (non_io_ancestor) {
+        uint32_t depth = (uint32_t) MPIR_Node_get_obj_depth(non_io_ancestor);
+        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
+        color = (int) ((depth << 16) + idx);
+    } else {
+        color = MPI_UNDEFINED;
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
@@ -313,31 +226,17 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
 static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
                                  const char *hintval, MPIR_Comm ** newcomm_ptr)
 {
-    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    MPIR_Node_obj non_io_ancestor;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
-    MPIR_Assert(obj_containing_cpuset != NULL);
-
-    color = MPI_UNDEFINED;
-    while ((io_device = hwloc_get_next_osdev(MPIR_Process.hwloc_topology, io_device))
-           != NULL) {
-        if (io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_GPU) {
-            if ((*(hintval + strlen("gpu")) != '\0') &&
-                atoi(hintval + strlen("gpu")) != io_device->logical_index)
-                continue;
-            hwloc_obj_t non_io_ancestor =
-                hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
-            MPIR_Assert(non_io_ancestor);
-            if (hwloc_obj_is_in_subtree
-                (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor)) {
-                color =
-                    (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
-                break;
-            }
-        }
+    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    if (non_io_ancestor) {
+        MPIR_Node_obj_type type = MPIR_Node_get_obj_type(non_io_ancestor);
+        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
+        color = ((type << (sizeof(int) * 4)) + idx);
+    } else {
+        color = MPI_UNDEFINED;
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
@@ -349,42 +248,46 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
   fn_fail:
     goto fn_exit;
 }
-#endif /* HAVE_HWLOC */
 
-#ifdef HAVE_NETLOC
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
                                       int switch_level, MPIR_Comm ** newcomm_ptr)
 {
     int i, color;
     int mpi_errno = MPI_SUCCESS;
-    netloc_node_t *network_node;
-    netloc_node_t **traversal_stack;
+    MPIR_Network_node network_node;
+    MPIR_Network_node *traversal_stack;
+    MPIR_Network_topology_type topo_type;
+    int num_nodes;
     int traversal_begin, traversal_end;
 
-    if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
-        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
-        netloc_node_t **switches_at_level;
+    topo_type = MPIR_Net_get_topo_type();
+    num_nodes = MPIR_Net_get_num_nodes();
+
+    if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
+        topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
+        MPIR_Network_node *switches_at_level;
         int switch_count;
         traversal_stack =
-            (netloc_node_t **) MPL_malloc(sizeof(netloc_node_t *) *
-                                          MPIR_Process.netloc_topology->num_nodes, MPL_MEM_OTHER);
+            (MPIR_Network_node *) MPL_malloc(sizeof(MPIR_Network_node) * num_nodes, MPL_MEM_OTHER);
 
-        network_node = MPIR_Process.network_attr.network_endpoint;
+        network_node = MPIR_Net_get_endpoint();
 
         traversal_begin = 0;
         traversal_end = 0;
-        MPIR_Netloc_get_switches_at_level(MPIR_Process.netloc_topology, MPIR_Process.network_attr,
-                                          switch_level, &switches_at_level, &switch_count);
+        MPIR_Net_tree_topo_get_switches_at_level(switch_level, &switches_at_level, &switch_count);
+
         /* Find the switch `switch_level` steps away */
-        MPIR_Assert(traversal_end < MPIR_Process.netloc_topology->num_nodes);
+        MPIR_Assert(traversal_end < num_nodes);
         traversal_stack[traversal_end++] = network_node;
         color = 0;
         while (traversal_end > traversal_begin) {
-            netloc_node_t *current_node = traversal_stack[traversal_begin++];
+            MPIR_Network_node current_node = traversal_stack[traversal_begin++];
             int num_edges;
-            netloc_edge_t **edges;
-            if (current_node->node_type == NETLOC_NODE_TYPE_SWITCH
-                && MPIR_Process.network_attr.u.tree.node_levels[current_node->__uid__]
+            int node_uid = MPIR_Net_get_node_uid(current_node);
+            int *node_levels = MPIR_Net_tree_topo_get_node_levels();
+            MPIR_Network_node_type node_type = MPIR_Net_get_node_type(current_node);
+            MPIR_Network_edge *edges;
+            if (node_type == MPIR_NETWORK_NODE_TYPE__SWITCH && node_levels[node_uid]
                 == switch_level) {
                 for (i = 0; i < switch_count; i++) {
                     if (switches_at_level[i] == current_node) {
@@ -396,10 +299,10 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
                 continue;
             }
             /*find all nodes not visited with an edge from the current node */
-            netloc_get_all_edges(MPIR_Process.netloc_topology, network_node, &num_edges, &edges);
+            MPIR_Net_get_all_edges(network_node, &num_edges, &edges);
             for (i = 0; i < num_edges; i++) {
-                MPIR_Assert(traversal_end < MPIR_Process.netloc_topology->num_nodes);
-                traversal_stack[traversal_end++] = edges[i]->dest_node;
+                MPIR_Assert(traversal_end < num_nodes);
+                traversal_stack[traversal_end++] = MPIR_Net_get_edge_dest_node(edges[i]);
             }
         }
 
@@ -412,6 +315,7 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
     } else {
         color = MPI_UNDEFINED;
     }
+
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -433,6 +337,7 @@ static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_
     subset_size = 0;
     current_comm_color = 0;
     prev_comm_color = -1;
+    color = prev_comm_color;
 
     for (i = 0; i < bitmap_size; i++) {
         if (subset_size >= min_size) {
@@ -461,40 +366,35 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
 {
 
     int mpi_errno = MPI_SUCCESS;
-    int i, color;
+    int i, j, color;
     int comm_size = MPIR_Comm_size(comm_ptr);
-    netloc_node_t *network_node;
+    int node_index;
+    int num_nodes;
+    MPIR_Network_topology_type topo_type;
+
+    num_nodes = MPIR_Net_get_num_nodes();
+    topo_type = MPIR_Net_get_topo_type();
 
     if (subcomm_min_size == 0 || comm_size < subcomm_min_size ||
-        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
-        int node_index, num_nodes, i;
         int *num_processes_at_node = NULL;
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        int subset_size;
-        int current_comm_color;
-        int prev_comm_color;
 
-        network_node = MPIR_Process.network_attr.network_endpoint;
-
-        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
-            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
-            mpi_errno =
-                MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Process.network_attr,
-                                                       MPIR_Process.netloc_topology, network_node,
-                                                       &node_index, &num_nodes);
+        if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
+            topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
+            mpi_errno = MPIR_Net_tree_topo_get_hostnode_index(&node_index, &num_nodes);
 
             MPIR_ERR_CHECK(mpi_errno);
 
             num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
             num_processes_at_node[node_index] = 1;
 
-        } else if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__TORUS) {
-            num_processes_at_node =
-                (int *) MPL_calloc(1, sizeof(int) * MPIR_Process.netloc_topology->num_nodes,
-                                   MPL_MEM_OTHER);
-            num_processes_at_node[MPIR_Process.network_attr.u.torus.node_idx] = 1;
+        } else if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__TORUS) {
+            num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
+            node_index = MPIR_Net_torus_topo_get_node_index();
+            num_processes_at_node[node_index] = 1;
         }
         MPIR_Assert(num_processes_at_node != NULL);
         /* Send the count to processes */
@@ -502,80 +402,74 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
             MPID_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
                            MPI_SUM, comm_ptr, &errflag);
 
-        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
-            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+        if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
+            topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
             color =
                 get_color_from_subset_bitmap(node_index, num_processes_at_node, num_nodes,
                                              subcomm_min_size);
         } else {
-            int *offset_along_dimension =
-                (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension, sizeof(int),
-                                   MPL_MEM_OTHER);
-            int *partition =
-                (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension, sizeof(int),
-                                   MPL_MEM_OTHER);
-            int start_index = offset_along_dimension[0];
+            int torus_dim = MPIR_Net_torus_topo_get_dimension();
+            int *torus_geometry = MPIR_Net_torus_topo_get_geometry();
+            int *offset_along_dimension = (int *) MPL_calloc(torus_dim, sizeof(int),
+                                                             MPL_MEM_OTHER);
+            int *partition = (int *) MPL_calloc(torus_dim, sizeof(int),
+                                                MPL_MEM_OTHER);
             int num_processes = 0, total_num_processes = 0;
-            int j, size;
 
-            for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+            for (i = 0; i < torus_dim; i++) {
                 partition[i] = 1;
             }
 
             while (1) {
                 int node_covered = 0;
                 color = total_num_processes;
-                for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension;
-                     i = (i + 1) % MPIR_Process.network_attr.u.torus.dimension) {
+                for (i = 0; i < torus_dim; i = (i + 1) % torus_dim) {
                     int cube_size;
-                    if (partition[i] - 1 + offset_along_dimension[i] ==
-                        MPIR_Process.network_attr.u.torus.geometry[i]) {
-                        if (i == MPIR_Process.network_attr.u.torus.dimension - 1) {
+                    if (partition[i] - 1 + offset_along_dimension[i] == torus_geometry[i]) {
+                        if (i == torus_dim - 1) {
                             break;
                         }
                         continue;
                     }
                     partition[i]++;
                     cube_size = 0;
-                    for (j = 0; j < MPIR_Process.network_attr.u.torus.dimension; j++) {
+                    for (j = 0; j < torus_dim; j++) {
                         if (partition[j] != 0) {
                             cube_size = cube_size * partition[j];
                         }
                     }
                     num_processes = 0;
                     for (j = 0; j < cube_size; j++) {
-                        int *coordinate =
-                            (int *) MPL_calloc(MPIR_Process.network_attr.u.torus.dimension,
-                                               sizeof(int), MPL_MEM_OTHER);
-                        int index = j;
+                        int *coordinate = (int *) MPL_calloc(torus_dim,
+                                                             sizeof(int), MPL_MEM_OTHER);
+                        int idx = j;
                         int k;
                         int current_dim = 0;
-                        while (current_dim < MPIR_Process.network_attr.u.torus.dimension) {
-                            coordinate[current_dim++] = index % partition[j];
-                            index = index / partition[j];
+                        while (current_dim < torus_dim) {
+                            coordinate[current_dim++] = idx % partition[j];
+                            idx = idx / partition[j];
                         }
-                        index = 0;
-                        for (k = 0; k < MPIR_Process.network_attr.u.torus.dimension; k++) {
-                            index =
-                                index * (partition[j] + offset_along_dimension[i]) + coordinate[k];
+                        idx = 0;
+                        for (k = 0; k < torus_dim; k++) {
+                            idx = idx * (partition[j] + offset_along_dimension[i]) + coordinate[k];
                         }
-                        if (index == MPIR_Process.network_attr.u.torus.node_idx) {
+                        if (idx == node_index) {
                             node_covered = 1;
                             break;
                         }
-                        num_processes += num_processes_at_node[index];
+                        num_processes += num_processes_at_node[idx];
                         MPL_free(coordinate);
                     }
                     if (num_processes >= subcomm_min_size) {
                         total_num_processes += num_processes;
                         num_processes = 0;
-                        for (j = 0; j < MPIR_Process.network_attr.u.torus.dimension; j++) {
+                        for (j = 0; j < torus_dim; j++) {
                             offset_along_dimension[i] += partition[j] + 1;
                         }
                         break;
                     }
                 }
-                if (total_num_processes == MPIR_Process.netloc_topology->num_nodes || node_covered) {
+                if (total_num_processes == num_nodes || node_covered) {
                     break;
                 }
             }
@@ -589,8 +483,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
         /* There are more processes in the subset than requested within the node.
          * Split further inside each node */
         if (num_processes_at_node[node_index] > subcomm_min_size && node_index == color &&
-            ((node_index < (node_index - 1) ||
-              num_processes_at_node[node_index] < subcomm_min_size))) {
+            num_processes_at_node[node_index] < subcomm_min_size) {
             MPIR_Comm *node_comm;
             int subcomm_rank;
             int tree_depth;
@@ -600,11 +493,10 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
             num_procs = num_processes_at_node[node_index];
             node_comm = *newcomm_ptr;
             subcomm_rank = MPIR_Comm_rank(node_comm);
-            hwloc_obj_t obj_containing_cpuset =
-                hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
+            MPIR_Node_obj obj_containing_cpuset = MPIR_Node_get_covering_obj();
 
             /* get depth in topology tree */
-            tree_depth = obj_containing_cpuset->depth;
+            tree_depth = MPIR_Node_get_obj_depth(obj_containing_cpuset);
 
             /* get min tree depth to all processes */
             MPID_Allreduce(&tree_depth, &min_tree_depth, 1, MPI_INT, MPI_MIN, node_comm, &errflag);
@@ -613,9 +505,11 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                 int num_hwloc_objs_at_depth;
                 int *parent_idx = MPL_calloc(num_procs, sizeof(int), MPL_MEM_OTHER);
 
-                while (obj_containing_cpuset->depth != min_tree_depth)
-                    obj_containing_cpuset = obj_containing_cpuset->parent;
-                parent_idx[subcomm_rank] = obj_containing_cpuset->logical_index;
+                while (tree_depth != min_tree_depth) {
+                    obj_containing_cpuset = MPIR_Node_get_parent_obj(obj_containing_cpuset);
+                    tree_depth = MPIR_Node_get_obj_depth(obj_containing_cpuset);
+                }
+                parent_idx[subcomm_rank] = MPIR_Node_get_obj_index(obj_containing_cpuset);
 
                 /* get parent_idx to all processes */
                 MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPI_INT,
@@ -689,22 +583,17 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
 {
 
     int mpi_errno = MPI_SUCCESS;
-    int i, color;
-    netloc_node_t *network_node;
+    MPIR_Network_topology_type topo_type;
 
     /* Get available memory in the node */
-    hwloc_obj_t memory_obj = NULL;
     long total_memory_size = 0;
     int memory_per_process;
 
-    while ((memory_obj =
-            hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, HWLOC_OBJ_NUMANODE,
-                                       memory_obj)) != NULL) {
-        /* Memory size is in bytes here */
-        total_memory_size += memory_obj->total_memory;
-    }
+    total_memory_size = MPIR_Node_get_total_mem();
 
-    if (min_mem_size == 0 || MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+    topo_type = MPIR_Net_get_topo_type();
+
+    if (min_mem_size == 0 || topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
         int num_ranks_node;
@@ -730,17 +619,20 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
 {
     int mpi_errno = MPI_SUCCESS;
     int i, color;
-    int comm_size = MPIR_Comm_size(comm_ptr);
+    int torus_dim;
+    MPIR_Network_topology_type topo_type;
+
+    topo_type = MPIR_Net_get_topo_type();
+    torus_dim = MPIR_Net_torus_topo_get_dimension();
 
     /* Dimension is assumed to be indexed from 0 */
-    if (MPIR_Process.network_attr.type != MPIR_NETLOC_NETWORK_TYPE__TORUS ||
-        dimension >= MPIR_Process.network_attr.u.torus.dimension) {
+    if (topo_type != MPIR_NETWORK_TOPOLOGY_TYPE__TORUS || dimension >= torus_dim) {
         *newcomm_ptr = NULL;
     } else {
-        int node_coordinates = MPIR_Process.network_attr.u.torus.node_idx;
-        int *node_dimensions = MPIR_Process.network_attr.u.torus.geometry;
+        int node_coordinates = MPIR_Net_torus_topo_get_node_index();
+        int *node_dimensions = MPIR_Net_torus_topo_get_geometry();
         color = 0;
-        for (i = 0; i < MPIR_Process.network_attr.u.torus.dimension; i++) {
+        for (i = 0; i < torus_dim; i++) {
             int coordinate_along_dim;
             if (i == dimension) {
                 coordinate_along_dim = 0;
@@ -763,8 +655,6 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
   fn_fail:
     goto fn_exit;
 }
-
-#endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 static const char *NETWORK_INFO_KEY = "network_topo";
@@ -863,9 +753,8 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     if (!info_ptr)
         goto use_node_comm;
 
-#ifdef HAVE_HWLOC
-    /* if our bindset is not valid, skip topology-aware comm split */
-    if (!MPIR_Process.bindset_is_valid)
+    /* if hw topology is not initialized, skip topology-aware comm split */
+    if (!MPIR_hw_topo_is_initialized())
         goto use_node_comm;
 
     if (flag) {
@@ -886,7 +775,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 
         goto fn_exit;
     }
-#endif /* HAVE_HWLOC */
 
   use_node_comm:
     *newcomm_ptr = comm_ptr;
@@ -902,7 +790,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
                                       MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_NETLOC
     if (!strncmp(hintval, ("switch_level:"), strlen("switch_level:"))
         && *(hintval + strlen("switch_level:")) != '\0') {
         int switch_level = atoi(hintval + strlen("switch_level:"));
@@ -921,7 +808,6 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         int dimension = atol(hintval + strlen("torus_dimension:"));
         mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
-#endif
     return mpi_errno;
 }
 

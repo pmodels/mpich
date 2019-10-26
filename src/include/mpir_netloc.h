@@ -5,20 +5,14 @@
  *
  */
 
-#ifndef NETLOC_UTIL_H_INCLUDED
-#define NETLOC_UTIL_H_INCLUDED
+#ifndef MPIR_NETLOC_H_INCLUDED
+#define MPIR_NETLOC_H_INCLUDED
 
 #include "netloc.h"
-
-typedef enum {
-    MPIR_NETLOC_NETWORK_TYPE__FAT_TREE,
-    MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK,
-    MPIR_NETLOC_NETWORK_TYPE__TORUS,
-    MPIR_NETLOC_NETWORK_TYPE__INVALID,
-} MPIR_Netloc_network_topo_type;
+#include "mpir_hw_topo.h"
 
 typedef struct {
-    MPIR_Netloc_network_topo_type type;
+    MPIR_Network_topology_type type;
 
     union {
         struct {
@@ -54,4 +48,4 @@ int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attrib
                                            netloc_node_t * network_endpoint,
                                            int *index, int *num_nodes);
 
-#endif /* NETLOC_UTIL_H_INCLUDED */
+#endif /* MPIR_NETLOC_H_INCLUDED */
