@@ -63,7 +63,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     MPIR_Assert(MPL_is_pof2(comm_size, NULL));
 #endif /* HAVE_ERROR_CHECKING */
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
+    if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
     else {
         MPIR_Datatype_is_contig(datatype, &is_contig);

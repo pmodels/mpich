@@ -137,7 +137,7 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
      * using recursive doubling in that case.) */
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+    MPIR_Assert(HANDLE_IS_BUILTIN(op));
     MPIR_Assert(count >= pof2);
 #endif /* HAVE_ERROR_CHECKING */
 

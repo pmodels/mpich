@@ -12,7 +12,7 @@
 #include "dataloop.h"
 
 #define MPII_DATALOOP_HANDLE_HASLOOP(handle_)                           \
-    ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
+    ((HANDLE_IS_BUILTIN(handle_)) ? 0 : 1)
 
 #define MPII_DATALOOP_FINAL_MASK  0x00000008
 #define MPII_DATALOOP_KIND_MASK   0x00000007

@@ -94,7 +94,7 @@ int MPI_Type_free(MPI_Datatype * datatype)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Check for built-in type */
-            if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) {
+            if (HANDLE_IS_BUILTIN(*datatype)) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
                                                  __func__, __LINE__, MPI_ERR_TYPE, "**dtypeperm",

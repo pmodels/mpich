@@ -80,7 +80,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
             MPIR_Win_valid_ptr(win_ptr, mpi_errno);
             /* If win_ptr is not value, it will be reset to null */
 
-            if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(errhandler)) {
                 MPIR_Errhandler_valid_ptr(errhan_ptr, mpi_errno);
                 /* Also check for a valid errhandler kind */
                 if (!mpi_errno) {

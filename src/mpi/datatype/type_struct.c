@@ -66,7 +66,7 @@ static MPI_Aint MPII_Type_struct_alignsize(int count,
         /* shouldn't be called with an LB or UB, but we'll handle it nicely */
         if (oldtype_array[i] == MPI_LB || oldtype_array[i] == MPI_UB)
             continue;
-        else if (HANDLE_GET_KIND(oldtype_array[i]) == HANDLE_KIND_BUILTIN) {
+        else if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
             tmp_alignsize = MPIR_Datatype_get_basic_size(oldtype_array[i]);
 
 #ifdef HAVE_DOUBLE_ALIGNMENT_EXCEPTION
@@ -192,7 +192,7 @@ int MPIR_Type_struct(int count,
 
     new_dtp->max_contig_blocks = 0;
     for (i = 0; i < count; i++) {
-        int is_builtin = (HANDLE_GET_KIND(oldtype_array[i]) == HANDLE_KIND_BUILTIN);
+        int is_builtin = (HANDLE_IS_BUILTIN(oldtype_array[i]));
         MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
         MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
@@ -508,8 +508,7 @@ int MPI_Type_struct(int count,
                 MPIR_ERRTEST_ARGNEG(array_of_blocklengths[i], "blocklength", mpi_errno);
                 MPIR_ERRTEST_DATATYPE(array_of_types[i], "datatype[i]", mpi_errno);
 
-                if (array_of_types[i] != MPI_DATATYPE_NULL &&
-                    HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
+                if (array_of_types[i] != MPI_DATATYPE_NULL && !HANDLE_IS_BUILTIN(array_of_types[i])) {
                     MPIR_Datatype_get_ptr(array_of_types[i], datatype_ptr);
                     MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 }

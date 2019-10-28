@@ -120,7 +120,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
     if (newrank != -1) {
         if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-            (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+            (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
             /* use recursive doubling */
             mask = 0x1;
             while (mask < pof2) {

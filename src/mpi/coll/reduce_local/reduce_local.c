@@ -44,7 +44,7 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     if (count == 0)
         goto fn_exit;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
         if (mpi_errno != MPI_SUCCESS)
@@ -144,14 +144,13 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
         {
             MPIR_ERRTEST_OP(op, mpi_errno);
 
-            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(op)) {
                 MPIR_Op *op_ptr;
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_fail;
-            }
-            if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+            } else {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
                 if (mpi_errno != MPI_SUCCESS)
                     goto fn_fail;

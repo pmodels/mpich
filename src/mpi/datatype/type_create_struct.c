@@ -128,8 +128,7 @@ int MPI_Type_create_struct(int count,
                 MPIR_ERRTEST_ARGNEG(array_of_blocklengths[j], "blocklen", mpi_errno);
                 MPIR_ERRTEST_DATATYPE(array_of_types[j], "datatype[j]", mpi_errno);
 
-                if (array_of_types[j] != MPI_DATATYPE_NULL &&
-                    HANDLE_GET_KIND(array_of_types[j]) != HANDLE_KIND_BUILTIN) {
+                if (array_of_types[j] != MPI_DATATYPE_NULL && !HANDLE_IS_BUILTIN(array_of_types[j])) {
                     MPIR_Datatype_get_ptr(array_of_types[j], datatype_ptr);
                     MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                     if (mpi_errno != MPI_SUCCESS)

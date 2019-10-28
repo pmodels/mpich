@@ -68,7 +68,7 @@ int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int send
 #endif /* HAVE_ERROR_CHECKING */
 
     recv_dtp = NULL;
-    if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
+    if (!HANDLE_IS_BUILTIN(recvtype)) {
         MPIR_Datatype_get_ptr(recvtype, recv_dtp);
     }
 

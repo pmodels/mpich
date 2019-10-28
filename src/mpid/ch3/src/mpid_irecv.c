@@ -94,7 +94,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 		/* The data is still being transfered across the net.  We'll 
 		   leave it to the progress engine to handle once the
 		   entire message has arrived. */
-		if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+		if (!HANDLE_IS_BUILTIN(datatype))
 		{
 		    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
             MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
@@ -108,7 +108,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	
 	    mpi_errno = vc->rndvRecv_fn( vc, rreq );
 	    if (mpi_errno) MPIR_ERR_POP( mpi_errno );
-	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+	    if (!HANDLE_IS_BUILTIN(datatype))
 	    {
 		MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
         MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
@@ -139,7 +139,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
            information supplied in the arguments. */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated in posted queue");
 	
-	if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+	if (!HANDLE_IS_BUILTIN(datatype))
 	{
 	    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
         MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);

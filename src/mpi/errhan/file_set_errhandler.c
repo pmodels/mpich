@@ -79,7 +79,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(errhandler)) {
                 MPIR_Errhandler_valid_ptr(errhan_ptr, mpi_errno);
                 /* Also check for a valid errhandler kind */
                 if (!mpi_errno) {

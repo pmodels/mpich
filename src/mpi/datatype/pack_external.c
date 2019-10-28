@@ -84,7 +84,7 @@ int MPI_Pack_external(const char datarep[],
 
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);

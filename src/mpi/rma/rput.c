@@ -120,7 +120,7 @@ int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
-            if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(origin_datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(origin_datatype, datatype_ptr);
@@ -132,7 +132,7 @@ int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
                     goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(target_datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(target_datatype, datatype_ptr);

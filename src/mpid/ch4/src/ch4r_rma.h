@@ -87,7 +87,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
     MPIDIG_REQUEST(sreq, rank) = target_rank;
 
-    if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.n_iov = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->preq.dt_iov) = NULL;
@@ -254,7 +254,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
-    if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.n_iov = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->greq.dt_iov) = NULL;
@@ -375,7 +375,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     am_hdr.req_ptr = sreq;
     am_hdr.origin_count = origin_count;
 
-    if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(origin_datatype)) {
         am_hdr.origin_datatype = origin_datatype;
     } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
@@ -398,7 +398,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.n_iov = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->areq.dt_iov) = NULL;
@@ -569,7 +569,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     am_hdr.req_ptr = sreq;
     am_hdr.origin_count = origin_count;
 
-    if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(origin_datatype)) {
         am_hdr.origin_datatype = origin_datatype;
     } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
@@ -594,7 +594,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.n_iov = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->areq.dt_iov) = NULL;

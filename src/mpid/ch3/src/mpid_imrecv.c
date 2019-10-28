@@ -93,7 +93,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
             /* The data is still being transfered across the net.  We'll
                leave it to the progress engine to handle once the
                entire message has arrived. */
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+            if (!HANDLE_IS_BUILTIN(datatype))
             {
                 MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
                 MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
@@ -107,7 +107,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 
         mpi_errno = vc->rndvRecv_fn(vc, rreq);
         MPIR_ERR_CHECK(mpi_errno);
-        if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+        if (!HANDLE_IS_BUILTIN(datatype))
         {
             MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
             MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);

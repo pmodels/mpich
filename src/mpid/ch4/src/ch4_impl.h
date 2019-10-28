@@ -381,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     } while (0)
 
 #define IS_BUILTIN(_datatype)                           \
-    (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
+    (HANDLE_IS_BUILTIN(_datatype))
 
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
 static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
@@ -914,7 +914,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
-    if ((HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN)
+    if ((HANDLE_IS_BUILTIN(acc_op))
         && ((*MPIR_OP_HDL_TO_DTYPE_FN(acc_op)) (source_dtp) == MPI_SUCCESS)) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(acc_op);

@@ -93,7 +93,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
     /* Choose from pt2pt based algorithms */
     pof2 = comm->coll.pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+        (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
         return &MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt;
     } else {
         return &MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_cnt;
@@ -134,7 +134,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm->coll.pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
-        (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
+        (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
         return &MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_cnt;
     } else {
         return &MPIDI_POSIX_Reduce_intra_binomial_cnt;
@@ -379,7 +379,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_scatter_select(const void 
 
     comm_size = comm->local_size;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
@@ -450,7 +450,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_scatter_block_select(const
 
     comm_size = comm->local_size;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
