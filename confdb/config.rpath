@@ -97,7 +97,7 @@ else
             *Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-4]]*)
               wl=
               ;;
-            *Sun\ F* | *Sun*Fortran*)
+            *Sun\ F* | *Sun*Fortran* | *Studio*Fortran*)
               wl='-Wl,'
               ;;
             *Sun\ C*)
