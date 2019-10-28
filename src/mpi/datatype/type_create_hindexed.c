@@ -86,7 +86,7 @@ int MPI_Type_create_hindexed(int count,
 
             MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(oldtype)) {
                 MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS)

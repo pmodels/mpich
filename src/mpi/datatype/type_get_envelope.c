@@ -31,7 +31,7 @@ void MPIR_Type_get_envelope(MPI_Datatype datatype,
                             int *num_integers,
                             int *num_addresses, int *num_datatypes, int *combiner)
 {
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
+    if (HANDLE_IS_BUILTIN(datatype) ||
         datatype == MPI_FLOAT_INT ||
         datatype == MPI_DOUBLE_INT ||
         datatype == MPI_LONG_INT || datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {

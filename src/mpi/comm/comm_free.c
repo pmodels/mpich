@@ -102,7 +102,7 @@ int MPI_Comm_free(MPI_Comm * comm)
             /* If comm_ptr is not valid, it will be reset to null */
 
             /* Cannot free the predefined communicators */
-            if (HANDLE_GET_KIND(*comm) == HANDLE_KIND_BUILTIN) {
+            if (HANDLE_IS_BUILTIN(*comm)) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_COMM, "**commperm", "**commperm %s",

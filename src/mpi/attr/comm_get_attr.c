@@ -85,7 +85,7 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
      * a pointer to a copy */
     /* Note that if we are called from Fortran, we must return the values,
      * not the addresses, of these attributes */
-    if (HANDLE_GET_KIND(comm_keyval) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(comm_keyval)) {
         int attr_idx = comm_keyval & 0x0000000f;
         void **attr_val_p = (void **) attribute_val;
 #ifdef HAVE_FORTRAN_BINDING

@@ -316,7 +316,7 @@ int MPI_Ineighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sen
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(sendtype)) {
                 MPIR_Datatype *sendtype_ptr = NULL;
                 MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                 MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
@@ -327,7 +327,7 @@ int MPI_Ineighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sen
                     goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(recvtype)) {
                 MPIR_Datatype *recvtype_ptr = NULL;
                 MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                 MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);

@@ -24,7 +24,7 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
         goto fn_exit;
     }
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(datatype)) {
         contig = TRUE;
         dt_true_lb = 0;
         data_sz = incount * MPIR_Datatype_get_basic_size(datatype);
@@ -80,7 +80,7 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize,
         goto fn_exit;
     }
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(datatype)) {
         contig = TRUE;
         dt_true_lb = 0;
         data_sz = outcount * MPIR_Datatype_get_basic_size(datatype);

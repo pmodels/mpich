@@ -276,7 +276,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 if (sendbuf != MPI_IN_PLACE) {
                     MPIR_ERRTEST_COUNT(sendcount, mpi_errno);
                     MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
-                    if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+                    if (!HANDLE_IS_BUILTIN(sendtype)) {
                         MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                         MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
                         if (mpi_errno != MPI_SUCCESS)
@@ -295,7 +295,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         MPIR_ERRTEST_COUNT(recvcounts[i], mpi_errno);
                         MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
                     }
-                    if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
+                    if (!HANDLE_IS_BUILTIN(recvtype)) {
                         MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                         MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
                         if (mpi_errno != MPI_SUCCESS)
@@ -335,7 +335,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         MPIR_ERRTEST_COUNT(recvcounts[i], mpi_errno);
                         MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
                     }
-                    if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
+                    if (!HANDLE_IS_BUILTIN(recvtype)) {
                         MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                         MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
                         if (mpi_errno != MPI_SUCCESS)
@@ -354,7 +354,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 } else if (root != MPI_PROC_NULL) {
                     MPIR_ERRTEST_COUNT(sendcount, mpi_errno);
                     MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
-                    if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+                    if (!HANDLE_IS_BUILTIN(sendtype)) {
                         MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                         MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
                         if (mpi_errno != MPI_SUCCESS)

@@ -30,7 +30,7 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr;
 
-    MPIR_Assert(HANDLE_GET_KIND(*datatype_p) != HANDLE_KIND_BUILTIN);
+    MPIR_Assert(!HANDLE_IS_BUILTIN(*datatype_p));
 
     MPIR_Datatype_get_ptr(*datatype_p, datatype_ptr);
 
@@ -52,7 +52,7 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN)
+    if (HANDLE_IS_BUILTIN(*datatype))
         goto fn_exit;
 
     /* pair types stored as real types are a special case */

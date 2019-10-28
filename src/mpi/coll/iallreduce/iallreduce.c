@@ -161,7 +161,7 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
      * using recursive doubling in that case.) */
 
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+        (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
         /* use recursive doubling */
         mpi_errno =
             MPIR_Iallreduce_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
@@ -426,7 +426,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
@@ -437,11 +437,11 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                     goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(op)) {
                 MPIR_Op *op_ptr = NULL;
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
-            } else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+            } else {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
             }
             if (mpi_errno != MPI_SUCCESS)

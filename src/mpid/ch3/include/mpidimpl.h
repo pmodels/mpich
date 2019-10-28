@@ -160,7 +160,7 @@ extern MPIDI_Process_t MPIDI_Process;
    if we can */
 #define MPIDI_Datatype_get_info(count_, datatype_, dt_contig_out_, data_sz_out_, dt_ptr_, dt_true_lb_)\
 {									\
-    if (HANDLE_GET_KIND(datatype_) == HANDLE_KIND_BUILTIN)		\
+    if (HANDLE_IS_BUILTIN(datatype_))		\
     {									\
 	(dt_ptr_) = NULL;						\
 	(dt_contig_out_) = TRUE;					\

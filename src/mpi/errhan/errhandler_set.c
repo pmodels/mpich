@@ -88,7 +88,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
                 goto fn_fail;
             MPIR_ERRTEST_ERRHANDLER(errhandler, mpi_errno);
 
-            if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(errhandler)) {
                 MPIR_Errhandler_valid_ptr(errhan_ptr, mpi_errno);
                 if (mpi_errno)
                     goto fn_fail;
