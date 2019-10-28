@@ -370,33 +370,6 @@ MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type)
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_covering_obj_by_depth(int depth)
-{
-    MPIR_Node_obj ret = NULL;
-
-    if (!hw_topo.bindset_is_valid)
-        goto fn_exit;
-
-#ifdef HAVE_HWLOC
-    hwloc_obj_t tmp = NULL;
-    hwloc_obj_t covering_obj =
-        hwloc_get_obj_covering_cpuset(hw_topo.hwloc_topology, hw_topo.bindset);
-    if (!covering_obj)
-        goto fn_exit;
-
-    while ((tmp = hwloc_get_next_obj_by_depth(hw_topo.hwloc_topology, depth, tmp)) != NULL) {
-        if (hwloc_bitmap_isincluded(covering_obj->cpuset, tmp->cpuset) ||
-            hwloc_bitmap_isequal(tmp->cpuset, covering_obj->cpuset)) {
-            ret = tmp;
-            break;
-        }
-    }
-#endif
-
-  fn_exit:
-    return ret;
-}
-
 MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj)
 {
     MPIR_Node_obj ret = NULL;

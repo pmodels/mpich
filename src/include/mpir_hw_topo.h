@@ -103,11 +103,6 @@ MPIR_Node_obj MPIR_Node_get_covering_obj(void);
 MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type);
 
 /*
- * Return covering object by its depth
- */
-MPIR_Node_obj MPIR_Node_get_covering_obj_by_depth(int depth);
-
-/*
  * Return object parent
  */
 MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj);
