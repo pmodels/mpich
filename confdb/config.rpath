@@ -98,7 +98,7 @@ else
               wl=
               ;;
             *Sun\ F* | *Sun*Fortran* | *Studio*Fortran*)
-              wl='-Wl,'
+              wl='-Qoption ld '
               ;;
             *Sun\ C*)
               wl='-Wl,'
