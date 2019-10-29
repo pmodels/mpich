@@ -117,7 +117,7 @@ uint64_t MPIR_Node_get_total_mem(void);
 /*
  * Return the non I/O ancestor shared by current process and device with dev_name
  */
-MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name);
+MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(const char *dev_name);
 
 /*
  * Return network topology type

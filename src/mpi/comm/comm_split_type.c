@@ -173,7 +173,7 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(hintval);
     if (non_io_ancestor)
         color = MPIR_Node_get_obj_index(non_io_ancestor);
     else
@@ -199,7 +199,7 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     /* assign the node id as the color, initially */
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
 
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(hintval);
     if (non_io_ancestor) {
         uint32_t depth = (uint32_t) MPIR_Node_get_obj_depth(non_io_ancestor);
         int idx = MPIR_Node_get_obj_index(non_io_ancestor);
@@ -225,7 +225,7 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(hintval);
     if (non_io_ancestor) {
         MPIR_Node_obj_type type = MPIR_Node_get_obj_type(non_io_ancestor);
         int idx = MPIR_Node_get_obj_index(non_io_ancestor);
@@ -749,7 +749,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto use_node_comm;
 
     /* if hw topology is not initialized, skip topology-aware comm split */
-    if (!MPIR_hw_topo_is_initialized())
+    if (!MPIR_hwtopo_is_initialized())
         goto use_node_comm;
 
     if (flag) {

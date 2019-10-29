@@ -462,7 +462,7 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 }
 #endif
 
-MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name)
+MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(const char *dev_name)
 {
     MPIR_Node_obj ret = NULL;
 
