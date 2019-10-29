@@ -128,11 +128,6 @@ MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj);
 uint64_t MPIR_Node_get_total_mem(void);
 
 /*
- * Return index of object to which process is bound or -1 if no binding exists
- */
-int MPIR_Node_get_obj_type_affinity(MPIR_Node_obj_type obj_type);
-
-/*
  * Return non I/O ancestor object for dev_obj
  */
 MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj);

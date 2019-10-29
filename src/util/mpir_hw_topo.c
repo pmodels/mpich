@@ -448,38 +448,6 @@ uint64_t MPIR_Node_get_total_mem(void)
     return ret;
 }
 
-int MPIR_Node_get_obj_type_affinity(MPIR_Node_obj_type obj_type)
-{
-    int ret = -1;
-
-    if (!hw_topo.bindset_is_valid)
-        goto fn_exit;
-
-#ifdef HAVE_HWLOC
-    hwloc_obj_type_t hw_obj_type = convert_mpir_node_obj_type_to_hw(obj_type);
-    int nobjs = hwloc_get_nbobjs_by_type(hw_topo.hwloc_topology, hw_obj_type);
-
-    if (nobjs > 0) {
-        int count = 0;
-        hwloc_obj_t tmp = NULL;
-
-        for (int i = 0; i < nobjs && count < 2; i++) {
-            tmp = hwloc_get_obj_by_type(hw_topo.hwloc_topology, hw_obj_type, i);
-            if (hwloc_bitmap_intersects(tmp->cpuset, hw_topo.bindset)) {
-                ret = tmp->logical_index;
-                count++;
-            }
-        }
-
-        if (count > 1)
-            ret = -1;
-    }
-#endif
-
-  fn_exit:
-    return ret;
-}
-
 MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
 {
     MPIR_Node_obj ret = NULL;
