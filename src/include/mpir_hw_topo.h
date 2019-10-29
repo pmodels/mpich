@@ -35,19 +35,6 @@ typedef enum {
 } MPIR_Node_obj_type;
 
 /*
- * Node hardware OS device object types
- */
-typedef enum {
-    MPIR_NODE_OBJ_OSDEV_TYPE__NONE = -1,
-    MPIR_NODE_OBJ_OSDEV_TYPE__BLOCK,
-    MPIR_NODE_OBJ_OSDEV_TYPE__GPU,
-    MPIR_NODE_OBJ_OSDEV_TYPE__NETWORK,
-    MPIR_NODE_OBJ_OSDEV_TYPE__OPENFABRICS,
-    MPIR_NODE_OBJ_OSDEV_TYPE__DMA,
-    MPIR_NODE_OBJ_OSDEV_TYPE__COPROC
-} MPIR_Node_obj_osdev_type;
-
-/*
  * Network topology types
  */
 typedef enum {
@@ -141,11 +128,6 @@ MPIR_Node_obj MPIR_Node_get_osdev_obj_by_busidstring(const char *bus_id_string);
  * Return the non I/O ancestor shared by current process and device with dev_name
  */
 MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name);
-
-/*
- * Return OS device type of dev_obj
- */
-MPIR_Node_obj_osdev_type MPIR_Node_get_osdev_obj_type(MPIR_Node_obj dev_obj);
 
 /*
  * Return network topology type

@@ -181,36 +181,6 @@ static MPIR_Node_obj_type convert_hw_node_obj_type_to_mpir(hwloc_obj_type_t type
 
     return ret;
 }
-
-static MPIR_Node_obj_osdev_type convert_hw_node_osdev_obj_type_to_mpir(hwloc_obj_osdev_type_t type)
-{
-    MPIR_Node_obj_osdev_type ret;
-
-    switch (type) {
-        case HWLOC_OBJ_OSDEV_BLOCK:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__BLOCK;
-            break;
-        case HWLOC_OBJ_OSDEV_GPU:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__GPU;
-            break;
-        case HWLOC_OBJ_OSDEV_NETWORK:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__NETWORK;
-            break;
-        case HWLOC_OBJ_OSDEV_OPENFABRICS:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__OPENFABRICS;
-            break;
-        case HWLOC_OBJ_OSDEV_DMA:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__DMA;
-            break;
-        case HWLOC_OBJ_OSDEV_COPROC:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__COPROC;
-            break;
-        default:
-            ret = MPIR_NODE_OBJ_OSDEV_TYPE__NONE;
-    }
-
-    return ret;
-}
 #endif
 
 #ifdef HAVE_NETLOC
@@ -549,22 +519,6 @@ MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name)
     }
 
     ret = non_io_ancestor;
-#endif
-
-  fn_exit:
-    return ret;
-}
-
-MPIR_Node_obj_osdev_type MPIR_Node_get_osdev_obj_type(MPIR_Node_obj dev_obj)
-{
-    MPIR_Node_obj_osdev_type ret = MPIR_NODE_OBJ_OSDEV_TYPE__NONE;
-
-    if (dev_obj == NULL)
-        goto fn_exit;
-
-#ifdef HAVE_HWLOC
-    hwloc_obj_t tmp = (hwloc_obj_t) dev_obj;
-    ret = convert_hw_node_osdev_obj_type_to_mpir(tmp->attr->osdev.type);
 #endif
 
   fn_exit:
