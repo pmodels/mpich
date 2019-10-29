@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "mpir_hwtopo.h"
 
 #ifdef HAVE_HWLOC
 #include "hwloc.h"
