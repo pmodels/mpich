@@ -17,24 +17,21 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
 {
     ADIO_Status status;
     MPI_Count typesize;
-    MPI_Offset len;
-    int actual_len = 0;
-
-
-    MPI_Type_size_x(datatype, &typesize);
-    len = (MPI_Offset) count *(MPI_Offset) typesize;
+    int read_count;
+    MPI_Offset nbytes;
 
     /* Call the blocking function.  It will create an error code
      * if necessary.
      */
-    ADIOI_Assert(len == (int) len);     /* the count is an int parm */
-    ADIO_ReadContig(fd, buf, (int) len, MPI_BYTE, file_ptr_type, offset, &status, error_code);
-    if (*error_code != MPI_SUCCESS) {
-        len = 0;
+    ADIO_ReadContig(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
+    if (*error_code == MPI_SUCCESS) {
+        MPI_Type_size_x(datatype, &typesize);
+        MPI_Get_count(&status, datatype, &read_count);
+        nbytes = read_count * typesize;
     } else {
-        MPI_Get_count(&status, MPI_BYTE, &actual_len);
+        nbytes = 0;
     }
-    MPIO_Completed_request_create(&fd, actual_len, error_code, request);
+    MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 }
 
 
@@ -47,7 +44,8 @@ void ADIOI_FAKE_IreadStrided(ADIO_File fd, void *buf, int count,
 {
     ADIO_Status status;
     MPI_Count typesize;
-    MPI_Offset nbytes = 0;
+    int read_count;
+    MPI_Offset nbytes;
 
     /* Call the blocking function.  It will create an error code
      * if necessary.
@@ -55,7 +53,10 @@ void ADIOI_FAKE_IreadStrided(ADIO_File fd, void *buf, int count,
     ADIO_ReadStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
         MPI_Type_size_x(datatype, &typesize);
-        nbytes = (MPI_Offset) count *(MPI_Offset) typesize;
+        MPI_Get_count(&status, datatype, &read_count);
+        nbytes = read_count * typesize;
+    } else {
+        nbytes = 0;
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 }
