@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpir_hw_topo.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)

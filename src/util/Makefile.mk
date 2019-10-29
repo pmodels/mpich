@@ -16,7 +16,7 @@ mpi_core_sources +=   \
     src/util/mpir_strerror.c   \
     src/util/mpir_localproc.c  \
     src/util/mpir_netloc.c     \
-    src/util/mpir_hw_topo.c
+    src/util/mpir_hwtopo.c
 
 noinst_HEADERS +=   \
     src/util/mpir_nodemap.h

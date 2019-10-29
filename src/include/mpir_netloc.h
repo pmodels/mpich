@@ -9,7 +9,7 @@
 #define MPIR_NETLOC_H_INCLUDED
 
 #include "netloc.h"
-#include "mpir_hw_topo.h"
+#include "mpir_hwtopo.h"
 
 typedef struct {
     MPIR_Network_topology_type type;

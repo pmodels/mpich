@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef MPIR_HW_TOPO_H_INCLUDED
-#define MPIR_HW_TOPO_H_INCLUDED
+#ifndef MPIR_HWTOPO_H_INCLUDED
+#define MPIR_HWTOPO_H_INCLUDED
 
 /*
  * Node hardware object types
@@ -67,17 +67,17 @@ typedef void *MPIR_Network_edge;
 /*
  * Initialize hardware topology
  */
-int MPII_hw_topo_init(void);
+int MPII_hwtopo_init(void);
 
 /*
  * Finalize hardware topology
  */
-int MPII_hw_topo_finalize(void);
+int MPII_hwtopo_finalize(void);
 
 /*
  * Check whether hardware topology is initialized or not
  */
-bool MPIR_hw_topo_is_initialized(void);
+bool MPIR_hwtopo_is_initialized(void);
 
 /*
  * Return the min level object covering this process
@@ -186,4 +186,4 @@ int *MPIR_Net_torus_topo_get_geometry(void);
  */
 int MPIR_Net_torus_topo_get_node_index(void);
 
-#endif /* MPIR_HW_TOPO_H_INCLUDED */
+#endif /* MPIR_HWTOPO_H_INCLUDED */

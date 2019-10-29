@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpir_hw_topo.h"
+#include "mpir_hwtopo.h"
 
 #ifdef HAVE_HWLOC
 #include "hwloc.h"
@@ -227,7 +227,7 @@ static MPIR_Network_node_type convert hw_net_obj_type_to_mpir(netloc_node_type_t
 }
 #endif
 
-int MPII_hw_topo_init(void)
+int MPII_hwtopo_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -258,7 +258,7 @@ int MPII_hw_topo_init(void)
     return mpi_errno;
 }
 
-int MPII_hw_topo_finalize(void)
+int MPII_hwtopo_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -287,7 +287,7 @@ int MPII_hw_topo_finalize(void)
     return mpi_errno;
 }
 
-bool MPIR_hw_topo_is_initialized(void)
+bool MPIR_hwtopo_is_initialized(void)
 {
     int ret;
 
