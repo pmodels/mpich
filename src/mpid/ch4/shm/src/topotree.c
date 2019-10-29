@@ -444,8 +444,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
     int depth = 0;
     while (depth < topo_depth) {
-        MPIR_Node_obj_type type = MPIR_Node_get_obj_type(obj);
-        shared_region_ptr[rank][depth++] = MPIR_Node_get_obj_type_affinity(type);
+        shared_region_ptr[rank][depth++] = MPIR_Node_get_obj_index(obj);
         obj = MPIR_Node_get_parent_obj(obj);
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
