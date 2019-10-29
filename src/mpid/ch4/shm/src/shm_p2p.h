@@ -30,20 +30,37 @@ cvars:
         then enable XPMEM-based single copy protocol for intranode communication. The
         environment variable is valid only when then XPMEM shmmod is enabled.
 
+    - name        : MPIR_CVAR_CH4_PIP_LMT_MSG_SIZE
+      category    : CH4
+      type        : int
+      default     : 4096
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is larger than MPIR_CVAR_CH4_PIP_LMT_MSG_SIZE (in bytes),
+        then enable PIP-based single copy protocol for intranode communication. The
+        environment variable is valid only when then PIP shmmod is enabled.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 #include <shm.h>
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#if defined(MPIDI_CH4_SHM_ENABLE_XPMEM)
 #include "../xpmem/shm_inline.h"
 #endif
+
+#if defined(MPIDI_CH4_SHM_ENABLE_PIP)
+#include "../pip/shm_inline.h"
+#endif
+
 #include "../posix/shm_inline.h"
 
 #define MPIDI_SHM_PT2PT_DEFAULT 1
 #define MPIDI_SHM_PT2PT_MULTIMODS 2
 
 /* Enable multi-shmmods protocol when more than one shmmod is enabled. */
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#if defined(MPIDI_CH4_SHM_ENABLE_XPMEM) || defined(MPIDI_CH4_SHM_ENABLE_PIP)
 #define MPIDI_SHM_PT2PT_PROT MPIDI_SHM_PT2PT_MULTIMODS
 #else
 #define MPIDI_SHM_PT2PT_PROT MPIDI_SHM_PT2PT_DEFAULT
@@ -89,6 +106,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mmods_try_matched_recv(void *buf,
     goto fn_exit;
   fn_exit:
 #endif /* MPIDI_CH4_SHM_ENABLE_XPMEM */
+
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+    if (MPIDI_SHM_REQUEST(message, status) & MPIDI_SHM_REQ_PIP_SEND_LMT) {
+        /* Matching XPMEM LMT receive is now posted */
+        MPIR_Datatype_add_ref_if_not_builtin(datatype); /* will -1 once completed in handle_lmt_recv */
+        MPIDIG_REQUEST(message, datatype) = datatype;
+        MPIDIG_REQUEST(message, buffer) = (char *) buf;
+        MPIDIG_REQUEST(message, count) = count;
+
+        MPIDI_PIP_am_unexp_rreq_t *unexp_rreq = &MPIDI_PIP_REQUEST(message, unexp_rreq);
+        mpi_errno = MPIDI_PIP_handle_lmt_rts_recv(unexp_rreq->src_offset,
+                                                  unexp_rreq->data_sz, unexp_rreq->sreq_ptr,
+                                                  unexp_rreq->src_lrank, message);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        *recvd_flag = true;
+    }
+  fn_fail:
+    goto fn_exit;
+  fn_exit:
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MMODS_TRY_MATCHED_RECV);
     return mpi_errno;
 }
@@ -172,6 +210,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
         goto fn_exit;
     }
 #endif /* end of MPIDI_CH4_SHM_ENABLE_XPMEM */
+
+/* PIP-based single copy */
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+    bool dt_contig;
+    size_t data_sz;
+
+    MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
+    if (dt_contig && data_sz > MPIR_CVAR_CH4_PIP_LMT_MSG_SIZE) {
+        /* SHM only issues contig large message through XPMEM.
+         * TODO: support noncontig send message */
+        mpi_errno = MPIDI_PIP_lmt_rts_isend(buf, count, datatype, rank, tag, comm,
+                                            context_offset, addr, request);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        goto fn_exit;
+    }
+#endif /* end of MPIDI_CH4_SHM_ENABLE_PIP */
+
     mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
                                       context_offset, addr, request);
     MPIR_ERR_CHECK(mpi_errno);

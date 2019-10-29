@@ -17,6 +17,13 @@
 
 /* shm am status */
 #define MPIDI_SHM_REQ_XPMEM_SEND_LMT (0x1)
+#define MPIDI_SHM_REQ_PIP_SEND_LMT (0x2)
+
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+#define MPIDI_SHM_PIP_REQUEST_AM_DECL MPIDI_PIP_am_request_t pip;
+#else
+#define MPIDI_SHM_PIP_REQUEST_AM_DECL
+#endif
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #define MPIDI_SHM_XPMEM_WIN_DECL MPIDI_XPMEM_win_t xpmem;
@@ -28,6 +35,7 @@
 
 #define MPIDI_SHM_REQUEST_AM_DECL    uint64_t status;                   \
                                      MPIDI_POSIX_am_request_t posix;    \
+                                     MPIDI_SHM_PIP_REQUEST_AM_DECL   	\
                                      MPIDI_SHM_XPMEM_REQUEST_AM_DECL
 #define MPIDI_SHM_REQUEST_DECL       MPIDI_POSIX_request_t posix;
 #define MPIDI_SHM_COMM_DECL          MPIDI_POSIX_comm_t posix;

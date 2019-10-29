@@ -9,19 +9,18 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef SHM_PRE_H_INCLUDED
-#define SHM_PRE_H_INCLUDED
+#include "mpidimpl.h"
+#include "pip_pre.h"
 
-#include <mpi.h>
-
-#include "../posix/posix_pre.h"
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-#include "../xpmem/xpmem_pre.h"
+#ifdef MPL_USE_DBG_LOGGING
+MPL_dbg_class MPIDI_CH4_SHM_PIP_GENERAL;
 #endif
 
-#ifdef MPIDI_CH4_SHM_ENABLE_PIP
-#include "../pip/pip_pre.h"
-#endif
+MPIDI_PIP_global_t MPIDI_PIP_global;
 
-#include "shm_coll_params.h"
-#endif /* SHM_PRE_H_INCLUDED */
+MPIDI_PIP_task_t MPIDI_Task_direct[MPIDI_TASK_PREALLOC] = { 0 };
+
+MPIR_Object_alloc_t MPIDI_Task_mem = {
+    0, 0, 0, 0, MPIR_INTERNAL, sizeof(MPIDI_PIP_task_t), MPIDI_Task_direct,
+    MPIDI_TASK_PREALLOC
+};

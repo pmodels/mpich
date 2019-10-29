@@ -9,6 +9,9 @@
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "../xpmem/xpmem_control.h"
 #endif
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+#include "../pip/pip_control.h"
+#endif
 
 int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
 {
@@ -30,6 +33,15 @@ int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
             break;
         case MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE:
             mpi_errno = MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
+            break;
+#endif
+
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+        case MPIDI_SHM_PIP_SEND_LMT_RTS:
+            mpi_errno = MPIDI_PIP_ctrl_send_lmt_rts_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
+            break;
+        case MPIDI_SHM_PIP_SEND_LMT_SEND_ACK:
+            mpi_errno = MPIDI_PIP_ctrl_send_lmt_send_fin_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
             break;
 #endif
         default:

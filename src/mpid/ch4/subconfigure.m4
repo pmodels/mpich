@@ -409,6 +409,8 @@ AC_ARG_WITH(ch4-shmmods,
                           posix_only   - Only enable POSIX SHM (default)
                           xpmem        - Enable XPMEM SHM for partial communication paths and use
                                          POSIX SHM as fallback for others
+                          pip          - Enable PIP SHM for partial communication paths and use
+                                         POSIX SHM as fallback for others
                  ],
                  [with_ch4_shmmods=$withval],
                  [with_ch4_shmmods=posix_only])

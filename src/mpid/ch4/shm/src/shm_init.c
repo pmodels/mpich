@@ -12,6 +12,10 @@
 #include "../xpmem/xpmem_noinline.h"
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+#include "../pip/pip_noinline.h"
+#endif
+
 int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int ret;
@@ -27,6 +31,11 @@ int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *tag_bits)
         ret = MPIDI_XPMEM_mpi_init_hook(rank, size, tag_bits);
         MPIR_ERR_CHECK(ret);
     }
+#endif
+
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+    ret = MPIDI_PIP_mpi_init_hook(rank, size);
+    MPIR_ERR_CHECK(ret);
 #endif
 
   fn_exit:
@@ -48,6 +57,11 @@ int MPIDI_SHMI_mpi_finalize_hook(void)
         ret = MPIDI_XPMEM_mpi_finalize_hook();
         MPIR_ERR_CHECK(ret);
     }
+#endif
+
+#ifdef MPIDI_CH4_SHM_ENABLE_PIP
+    ret = MPIDI_PIP_mpi_finalize_hook();
+    MPIR_ERR_CHECK(ret);
 #endif
 
     ret = MPIDI_POSIX_mpi_finalize_hook();
