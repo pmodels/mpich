@@ -115,16 +115,6 @@ MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj);
 uint64_t MPIR_Node_get_total_mem(void);
 
 /*
- * Return non I/O ancestor object for dev_obj
- */
-MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj);
-
-/*
- * Return device obj for bus_id_string
- */
-MPIR_Node_obj MPIR_Node_get_osdev_obj_by_busidstring(const char *bus_id_string);
-
-/*
  * Return the non I/O ancestor shared by current process and device with dev_name
  */
 MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name);

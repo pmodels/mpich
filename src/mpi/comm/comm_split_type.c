@@ -169,20 +169,15 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
 static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
                                  const char *hintval, MPIR_Comm ** newcomm_ptr)
 {
-    MPIR_Node_obj non_io_ancestor, io_device = NULL;
+    MPIR_Node_obj non_io_ancestor = NULL;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    io_device = MPIR_Node_get_osdev_obj_by_busidstring(hintval + strlen("pci:"));
-    if (io_device) {
-        non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(io_device);
-        if (non_io_ancestor)
-            color = MPIR_Node_get_obj_index(non_io_ancestor);
-        else
-            color = MPI_UNDEFINED;
-    } else {
+    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    if (non_io_ancestor)
+        color = MPIR_Node_get_obj_index(non_io_ancestor);
+    else
         color = MPI_UNDEFINED;
-    }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);

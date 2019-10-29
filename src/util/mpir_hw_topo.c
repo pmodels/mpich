@@ -418,33 +418,25 @@ uint64_t MPIR_Node_get_total_mem(void)
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
+static MPIR_Node_obj get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
 {
     MPIR_Node_obj ret = NULL;
-
-    if (dev_obj == NULL || !hw_topo.bindset_is_valid)
-        goto fn_exit;
 
 #ifdef HAVE_HWLOC
     ret = hwloc_get_non_io_ancestor_obj(hw_topo.hwloc_topology, (hwloc_obj_t) dev_obj);
 #endif
 
-  fn_exit:
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_osdev_obj_by_busidstring(const char *bus_id_string)
+static MPIR_Node_obj get_osdev_obj_by_busidstring(const char *bus_id_string)
 {
     MPIR_Node_obj ret = NULL;
-
-    if (bus_id_string == NULL || !hw_topo.bindset_is_valid)
-        goto fn_exit;
 
 #ifdef HAVE_HWLOC
     ret = hwloc_get_pcidev_by_busidstring(hw_topo.hwloc_topology, bus_id_string);
 #endif
 
-  fn_exit:
     return ret;
 }
 
@@ -477,6 +469,10 @@ MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name)
     if (dev_name == NULL || !hw_topo.bindset_is_valid)
         goto fn_exit;
 
+    if (!strncmp(dev_name, "pci:", strlen("pci:"))) {
+        MPIR_Node_obj dev_obj = get_osdev_obj_by_busidstring(dev_name + strlen("pci:"));
+        return get_non_io_ancestor_obj(dev_obj);
+    }
 #ifdef HAVE_HWLOC
     hwloc_obj_t obj_containing_cpuset =
         hwloc_get_obj_covering_cpuset(hw_topo.hwloc_topology, hw_topo.bindset);
