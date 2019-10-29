@@ -431,21 +431,6 @@ MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj)
     return ret;
 }
 
-const char *MPIR_Node_get_obj_name(MPIR_Node_obj obj)
-{
-    const char *ret = NULL;
-
-    if (obj == NULL)
-        goto fn_exit;
-
-#ifdef HAVE_HWLOC
-    ret = ((hwloc_obj_t) obj)->name;
-#endif
-
-  fn_exit:
-    return ret;
-}
-
 uint64_t MPIR_Node_get_total_mem(void)
 {
     uint64_t ret = 0;

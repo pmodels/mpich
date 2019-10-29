@@ -123,11 +123,6 @@ int MPIR_Node_get_obj_depth(MPIR_Node_obj obj);
 MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj);
 
 /*
- * Return object name
- */
-const char *MPIR_Node_get_obj_name(MPIR_Node_obj obj);
-
-/*
  * Return node total memory
  */
 uint64_t MPIR_Node_get_total_mem(void);
