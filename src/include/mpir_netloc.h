@@ -12,7 +12,7 @@
 #include "mpir_hwtopo.h"
 
 typedef struct {
-    MPIR_Network_topology_type type;
+    MPIR_hwtopo_net_type_e type;
 
     union {
         struct {

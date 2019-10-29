@@ -424,8 +424,8 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     rank = MPIR_Comm_rank(comm_ptr);
 
     /* Calculate the size of shared memory that would be needed */
-    MPIR_Node_obj obj = MPIR_Node_get_covering_obj();
-    topo_depth = MPIR_Node_get_obj_depth(obj) + 1;
+    MPIR_hwtopo_obj_t obj = MPIR_hwtopo_get_covering_obj();
+    topo_depth = MPIR_hwtopo_get_obj_depth(obj) + 1;
     shm_size = sizeof(int) * topo_depth * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
@@ -444,8 +444,8 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
     int depth = 0;
     while (depth < topo_depth) {
-        shared_region_ptr[rank][depth++] = MPIR_Node_get_obj_index(obj);
-        obj = MPIR_Node_get_parent_obj(obj);
+        shared_region_ptr[rank][depth++] = MPIR_hwtopo_get_obj_index(obj);
+        obj = MPIR_hwtopo_get_parent_obj(obj);
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     if (mpi_errno) {

@@ -50,63 +50,63 @@ static struct {
 0};
 
 #ifdef HAVE_HWLOC
-static hwloc_obj_type_t convert_mpir_node_obj_type_to_hw(MPIR_Node_obj_type type)
+static hwloc_obj_type_t convert_mpir_node_obj_type_to_hw(MPIR_hwtopo_type_e type)
 {
     hwloc_obj_type_t ret;
 
     switch (type) {
-        case MPIR_NODE_OBJ_TYPE__MACHINE:
+        case MPIR_HWTOPO_TYPE__MACHINE:
             ret = HWLOC_OBJ_MACHINE;
             break;
-        case MPIR_NODE_OBJ_TYPE__PACKAGE:
+        case MPIR_HWTOPO_TYPE__PACKAGE:
             ret = HWLOC_OBJ_PACKAGE;
             break;
-        case MPIR_NODE_OBJ_TYPE__CORE:
+        case MPIR_HWTOPO_TYPE__CORE:
             ret = HWLOC_OBJ_CORE;
             break;
-        case MPIR_NODE_OBJ_TYPE__PU:
+        case MPIR_HWTOPO_TYPE__PU:
             ret = HWLOC_OBJ_PU;
             break;
-        case MPIR_NODE_OBJ_TYPE__L1CACHE:
+        case MPIR_HWTOPO_TYPE__L1CACHE:
             ret = HWLOC_OBJ_L1CACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L2CACHE:
+        case MPIR_HWTOPO_TYPE__L2CACHE:
             ret = HWLOC_OBJ_L2CACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L3CACHE:
+        case MPIR_HWTOPO_TYPE__L3CACHE:
             ret = HWLOC_OBJ_L3CACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L4CACHE:
+        case MPIR_HWTOPO_TYPE__L4CACHE:
             ret = HWLOC_OBJ_L4CACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L5CACHE:
+        case MPIR_HWTOPO_TYPE__L5CACHE:
             ret = HWLOC_OBJ_L5CACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L1ICACHE:
+        case MPIR_HWTOPO_TYPE__L1ICACHE:
             ret = HWLOC_OBJ_L1ICACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L2ICACHE:
+        case MPIR_HWTOPO_TYPE__L2ICACHE:
             ret = HWLOC_OBJ_L2ICACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__L3ICACHE:
+        case MPIR_HWTOPO_TYPE__L3ICACHE:
             ret = HWLOC_OBJ_L3ICACHE;
             break;
-        case MPIR_NODE_OBJ_TYPE__GROUP:
+        case MPIR_HWTOPO_TYPE__GROUP:
             ret = HWLOC_OBJ_GROUP;
             break;
-        case MPIR_NODE_OBJ_TYPE__NUMANODE:
+        case MPIR_HWTOPO_TYPE__NUMANODE:
             ret = HWLOC_OBJ_NUMANODE;
             break;
-        case MPIR_NODE_OBJ_TYPE__BRIDGE:
+        case MPIR_HWTOPO_TYPE__BRIDGE:
             ret = HWLOC_OBJ_BRIDGE;
             break;
-        case MPIR_NODE_OBJ_TYPE__PCI_DEVICE:
+        case MPIR_HWTOPO_TYPE__PCI_DEVICE:
             ret = HWLOC_OBJ_PCI_DEVICE;
             break;
-        case MPIR_NODE_OBJ_TYPE__OS_DEVICE:
+        case MPIR_HWTOPO_TYPE__OS_DEVICE:
             ret = HWLOC_OBJ_OS_DEVICE;
             break;
-        case MPIR_NODE_OBJ_TYPE__MISC:
+        case MPIR_HWTOPO_TYPE__MISC:
             ret = HWLOC_OBJ_MISC;
             break;
         default:
@@ -116,67 +116,67 @@ static hwloc_obj_type_t convert_mpir_node_obj_type_to_hw(MPIR_Node_obj_type type
     return ret;
 }
 
-static MPIR_Node_obj_type convert_hw_node_obj_type_to_mpir(hwloc_obj_type_t type)
+static MPIR_hwtopo_type_e convert_hw_node_obj_type_to_mpir(hwloc_obj_type_t type)
 {
-    MPIR_Node_obj_type ret;
+    MPIR_hwtopo_type_e ret;
 
     switch (type) {
         case HWLOC_OBJ_MACHINE:
-            ret = MPIR_NODE_OBJ_TYPE__MACHINE;
+            ret = MPIR_HWTOPO_TYPE__MACHINE;
             break;
         case HWLOC_OBJ_PACKAGE:
-            ret = MPIR_NODE_OBJ_TYPE__PACKAGE;
+            ret = MPIR_HWTOPO_TYPE__PACKAGE;
             break;
         case HWLOC_OBJ_CORE:
-            ret = MPIR_NODE_OBJ_TYPE__CORE;
+            ret = MPIR_HWTOPO_TYPE__CORE;
             break;
         case HWLOC_OBJ_PU:
-            ret = MPIR_NODE_OBJ_TYPE__PU;
+            ret = MPIR_HWTOPO_TYPE__PU;
             break;
         case HWLOC_OBJ_L1CACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L1CACHE;
+            ret = MPIR_HWTOPO_TYPE__L1CACHE;
             break;
         case HWLOC_OBJ_L2CACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L2CACHE;
+            ret = MPIR_HWTOPO_TYPE__L2CACHE;
             break;
         case HWLOC_OBJ_L3CACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L3CACHE;
+            ret = MPIR_HWTOPO_TYPE__L3CACHE;
             break;
         case HWLOC_OBJ_L4CACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L4CACHE;
+            ret = MPIR_HWTOPO_TYPE__L4CACHE;
             break;
         case HWLOC_OBJ_L5CACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L5CACHE;
+            ret = MPIR_HWTOPO_TYPE__L5CACHE;
             break;
         case HWLOC_OBJ_L1ICACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L1ICACHE;
+            ret = MPIR_HWTOPO_TYPE__L1ICACHE;
             break;
         case HWLOC_OBJ_L2ICACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L2ICACHE;
+            ret = MPIR_HWTOPO_TYPE__L2ICACHE;
             break;
         case HWLOC_OBJ_L3ICACHE:
-            ret = MPIR_NODE_OBJ_TYPE__L3ICACHE;
+            ret = MPIR_HWTOPO_TYPE__L3ICACHE;
             break;
         case HWLOC_OBJ_GROUP:
-            ret = MPIR_NODE_OBJ_TYPE__GROUP;
+            ret = MPIR_HWTOPO_TYPE__GROUP;
             break;
         case HWLOC_OBJ_NUMANODE:
-            ret = MPIR_NODE_OBJ_TYPE__NUMANODE;
+            ret = MPIR_HWTOPO_TYPE__NUMANODE;
             break;
         case HWLOC_OBJ_BRIDGE:
-            ret = MPIR_NODE_OBJ_TYPE__BRIDGE;
+            ret = MPIR_HWTOPO_TYPE__BRIDGE;
             break;
         case HWLOC_OBJ_PCI_DEVICE:
-            ret = MPIR_NODE_OBJ_TYPE__PCI_DEVICE;
+            ret = MPIR_HWTOPO_TYPE__PCI_DEVICE;
             break;
         case HWLOC_OBJ_OS_DEVICE:
-            ret = MPIR_NODE_OBJ_TYPE__OS_DEVICE;
+            ret = MPIR_HWTOPO_TYPE__OS_DEVICE;
             break;
         case HWLOC_OBJ_MISC:
-            ret = MPIR_NODE_OBJ_TYPE__MISC;
+            ret = MPIR_HWTOPO_TYPE__MISC;
             break;
         default:
-            ret = MPIR_NODE_OBJ_TYPE__NONE;
+            ret = MPIR_HWTOPO_TYPE__NONE;
     }
 
     return ret;
@@ -184,18 +184,18 @@ static MPIR_Node_obj_type convert_hw_node_obj_type_to_mpir(hwloc_obj_type_t type
 #endif
 
 #ifdef HAVE_NETLOC
-static netloc_node_type_t convert_mpir_net_obj_type_to_hw(MPIR_Network_node_type type)
+static netloc_node_type_t convert_mpir_net_obj_type_to_hw(MPIR_hwtopo_net_node_type_e type)
 {
     netloc_node_type_t ret;
 
     switch (type) {
-        case MPIR_NETWORK_NODE_TYPE__HOST:
+        case MPIR_HWTOPO_NET_NODE_TYPE__HOST:
             ret = NETLOC_NODE_TYPE_HOST;
             break;
-        case MPIR_NETWORK_NODE_TYPE__SWITCH:
+        case MPIR_HWTOPO_NET_NODE_TYPE__SWITCH:
             ret = NETLOC_NODE_TYPE_SWITCH;
             break;
-        case MPIR_NETWORK_NODE_TYPE__INVALID:
+        case MPIR_HWTOPO_NET_NODE_TYPE__INVALID:
             ret = NETLOC_NODE_TYPE_INVALID;
             break;
         default:
@@ -205,19 +205,19 @@ static netloc_node_type_t convert_mpir_net_obj_type_to_hw(MPIR_Network_node_type
     return ret;
 }
 
-static MPIR_Network_node_type convert hw_net_obj_type_to_mpir(netloc_node_type_t type)
+static MPIR_hwtopo_net_node_type_e convert hw_net_obj_type_to_mpir(netloc_node_type_t type)
 {
-    MPIR_Network_node_type ret;
+    MPIR_hwtopo_net_node_type_e ret;
 
     switch (type) {
         case NETLOC_NODE_TYPE_HOST:
-            ret = MPIR_NETWORK_NODE_TYPE__HOST;
+            ret = MPIR_HWTOPO_NET_NODE_TYPE__HOST;
             break;
         case NETLOC_NODE_TYPE_SWITCH:
-            ret = MPIR_NETWORK_NODE_TYPE__SWITCH;
+            ret = MPIR_HWTOPO_NET_NODE_TYPE__SWITCH;
             break;
         case NETLOC_NODE_TYPE_INVALID:
-            ret = MPIR_NETWORK_NODE_TYPE__INVALID;
+            ret = MPIR_HWTOPO_NET_NODE_TYPE__INVALID;
             break;
         default:
             ret = -1;
@@ -247,7 +247,7 @@ int MPII_hwtopo_init(void)
     hw_topo.network_attr.u.tree.node_levels = NULL;
     hw_topo.network_attr.network_endpoint = NULL;
     hw_topo.netloc_topology = NULL;
-    hw_topo.network_attr.type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
+    hw_topo.network_attr.type = MPIR_HWTOPO_NET_TYPE__INVALID;
     if (strlen(MPIR_CVAR_NETLOC_NODE_FILE)) {
         mpi_errno = netloc_parse_topology(&hw_topo.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
         if (mpi_errno == NETLOC_SUCCESS)
@@ -271,12 +271,12 @@ int MPII_hwtopo_finalize(void)
 
 #ifdef HAVE_NETLOC
     switch (hw_topo.network_attr.type) {
-        case MPIR_NETWORK_TOPOLOGY_TYPE__TORUS:
+        case MPIR_HWTOPO_NET_TYPE__TORUS:
             if (hw_topo.network_attr.u.torus.geometry != NULL)
                 MPL_free(hw_topo.network_attr.u.torus.geometry);
             break;
-        case MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE:
-        case MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK:
+        case MPIR_HWTOPO_NET_TYPE__FAT_TREE:
+        case MPIR_HWTOPO_NET_TYPE__CLOS_NETWORK:
         default:
             if (hw_topo.network_attr.u.tree.node_levels != NULL)
                 MPL_free(hw_topo.network_attr.u.tree.node_levels);
@@ -296,9 +296,9 @@ bool MPIR_hwtopo_is_initialized(void)
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_covering_obj(void)
+MPIR_hwtopo_obj_t MPIR_hwtopo_get_covering_obj(void)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -311,9 +311,9 @@ MPIR_Node_obj MPIR_Node_get_covering_obj(void)
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type)
+MPIR_hwtopo_obj_t MPIR_hwtopo_get_covering_obj_by_type(MPIR_hwtopo_type_e obj_type)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -340,9 +340,9 @@ MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type)
     return ret;
 }
 
-MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj)
+MPIR_hwtopo_obj_t MPIR_hwtopo_get_parent_obj(MPIR_hwtopo_obj_t obj)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
     if (obj == NULL)
         goto fn_exit;
@@ -355,7 +355,7 @@ MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj)
     return ret;
 }
 
-int MPIR_Node_get_obj_index(MPIR_Node_obj obj)
+int MPIR_hwtopo_get_obj_index(MPIR_hwtopo_obj_t obj)
 {
     int ret = -1;
 
@@ -370,7 +370,7 @@ int MPIR_Node_get_obj_index(MPIR_Node_obj obj)
     return ret;
 }
 
-int MPIR_Node_get_obj_depth(MPIR_Node_obj obj)
+int MPIR_hwtopo_get_obj_depth(MPIR_hwtopo_obj_t obj)
 {
     int ret = -1;
 
@@ -385,9 +385,9 @@ int MPIR_Node_get_obj_depth(MPIR_Node_obj obj)
     return ret;
 }
 
-MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj)
+MPIR_hwtopo_type_e MPIR_hwtopo_get_obj_type(MPIR_hwtopo_obj_t obj)
 {
-    MPIR_Node_obj_type ret = MPIR_NODE_OBJ_TYPE__NONE;
+    MPIR_hwtopo_type_e ret = MPIR_HWTOPO_TYPE__NONE;
 
     if (obj == NULL)
         goto fn_exit;
@@ -401,7 +401,7 @@ MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj)
     return ret;
 }
 
-uint64_t MPIR_Node_get_total_mem(void)
+uint64_t MPIR_hwtopo_get_total_mem(void)
 {
     uint64_t ret = 0;
 
@@ -418,9 +418,9 @@ uint64_t MPIR_Node_get_total_mem(void)
     return ret;
 }
 
-static MPIR_Node_obj get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
+static MPIR_hwtopo_obj_t get_non_io_ancestor_obj(MPIR_hwtopo_obj_t dev_obj)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
 #ifdef HAVE_HWLOC
     ret = hwloc_get_non_io_ancestor_obj(hw_topo.hwloc_topology, (hwloc_obj_t) dev_obj);
@@ -429,9 +429,9 @@ static MPIR_Node_obj get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
     return ret;
 }
 
-static MPIR_Node_obj get_osdev_obj_by_busidstring(const char *bus_id_string)
+static MPIR_hwtopo_obj_t get_osdev_obj_by_busidstring(const char *bus_id_string)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
 #ifdef HAVE_HWLOC
     ret = hwloc_get_pcidev_by_busidstring(hw_topo.hwloc_topology, bus_id_string);
@@ -462,15 +462,15 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 }
 #endif
 
-MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(const char *dev_name)
+MPIR_hwtopo_obj_t MPIR_hwtopo_get_non_io_ancestor_obj(const char *dev_name)
 {
-    MPIR_Node_obj ret = NULL;
+    MPIR_hwtopo_obj_t ret = NULL;
 
     if (dev_name == NULL || !hw_topo.bindset_is_valid)
         goto fn_exit;
 
     if (!strncmp(dev_name, "pci:", strlen("pci:"))) {
-        MPIR_Node_obj dev_obj = get_osdev_obj_by_busidstring(dev_name + strlen("pci:"));
+        MPIR_hwtopo_obj_t dev_obj = get_osdev_obj_by_busidstring(dev_name + strlen("pci:"));
         return get_non_io_ancestor_obj(dev_obj);
     }
 #ifdef HAVE_HWLOC
@@ -521,9 +521,9 @@ MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(const char *dev_name)
     return ret;
 }
 
-MPIR_Network_topology_type MPIR_Net_get_topo_type(void)
+MPIR_hwtopo_net_type_e MPIR_hwtopo_get_net_type(void)
 {
-    MPIR_Network_topology_type ret = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
+    MPIR_hwtopo_net_type_e ret = MPIR_HWTOPO_NET_TYPE__INVALID;
 
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.type;
@@ -532,9 +532,9 @@ MPIR_Network_topology_type MPIR_Net_get_topo_type(void)
     return ret;
 }
 
-MPIR_Network_node_type MPIR_Net_get_node_type(MPIR_Network_node node)
+MPIR_hwtopo_net_node_type_e MPIR_hwtopo_get_net_node_type(MPIR_hwtopo_net_node_t node)
 {
-    MPIR_Network_node_type ret = MPIR_NETWORK_NODE_TYPE__INVALID;
+    MPIR_hwtopo_net_node_type_e ret = MPIR_HWTOPO_NET_NODE_TYPE__INVALID;
 
     if (node == NULL)
         goto fn_exit;
@@ -547,9 +547,9 @@ MPIR_Network_node_type MPIR_Net_get_node_type(MPIR_Network_node node)
     return ret;
 }
 
-MPIR_Network_node MPIR_Net_get_endpoint(void)
+MPIR_hwtopo_net_node_t MPIR_hwtopo_get_net_endpoint(void)
 {
-    MPIR_Network_node ret = NULL;
+    MPIR_hwtopo_net_node_t ret = NULL;
 
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.network_endpoint;
@@ -558,9 +558,9 @@ MPIR_Network_node MPIR_Net_get_endpoint(void)
     return ret;
 }
 
-MPIR_Network_node MPIR_Net_get_edge_dest_node(MPIR_Network_edge edge)
+MPIR_hwtopo_net_node_t MPIR_hwtopo_get_net_edge_dest_node(MPIR_hwtopo_net_edge_t edge)
 {
-    MPIR_Network_node ret = NULL;
+    MPIR_hwtopo_net_node_t ret = NULL;
 
     if (edge == NULL)
         goto fn_exit;
@@ -573,7 +573,7 @@ MPIR_Network_node MPIR_Net_get_edge_dest_node(MPIR_Network_edge edge)
     return ret;
 }
 
-int MPIR_Net_get_node_uid(MPIR_Network_node node)
+int MPIR_hwtopo_get_net_node_uid(MPIR_hwtopo_net_node_t node)
 {
     int ret = 0;
 
@@ -588,7 +588,7 @@ int MPIR_Net_get_node_uid(MPIR_Network_node node)
     return ret;
 }
 
-int MPIR_Net_get_num_nodes(void)
+int MPIR_hwtopo_get_net_num_nodes(void)
 {
     int ret = 0;
 
@@ -599,7 +599,8 @@ int MPIR_Net_get_num_nodes(void)
     return ret;
 }
 
-int MPIR_Net_get_all_edges(MPIR_Network_node node, int *num_edges, MPIR_Network_edge ** edges)
+int MPIR_hwtopo_get_net_all_edges(MPIR_hwtopo_net_node_t node, int *num_edges,
+                                  MPIR_hwtopo_net_edge_t ** edges)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -618,7 +619,7 @@ int MPIR_Net_get_all_edges(MPIR_Network_node node, int *num_edges, MPIR_Network_
     return mpi_errno;
 }
 
-int *MPIR_Net_tree_topo_get_node_levels(void)
+int *MPIR_hwtopo_tree_get_node_levels(void)
 {
     int *ret = NULL;
 
@@ -629,7 +630,7 @@ int *MPIR_Net_tree_topo_get_node_levels(void)
     return ret;
 }
 
-int MPIR_Net_tree_topo_get_hostnode_index(int *node_index, int *num_nodes)
+int MPIR_hwtopo_tree_get_hostnode_index(int *node_index, int *num_nodes)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -646,9 +647,9 @@ int MPIR_Net_tree_topo_get_hostnode_index(int *node_index, int *num_nodes)
     return mpi_errno;
 }
 
-int MPIR_Net_tree_topo_get_switches_at_level(int switch_level,
-                                             MPIR_Network_node ** switches_at_level,
-                                             int *switch_count)
+int MPIR_hwtopo_tree_get_switches_at_level(int switch_level,
+                                           MPIR_hwtopo_net_node_t ** switches_at_level,
+                                           int *switch_count)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -665,7 +666,7 @@ int MPIR_Net_tree_topo_get_switches_at_level(int switch_level,
     return mpi_errno;
 }
 
-int MPIR_Net_torus_topo_get_dimension(void)
+int MPIR_hwtopo_torus_get_dimension(void)
 {
     int ret = 0;
 
@@ -676,7 +677,7 @@ int MPIR_Net_torus_topo_get_dimension(void)
     return ret;
 }
 
-int *MPIR_Net_torus_topo_get_geometry(void)
+int *MPIR_hwtopo_torus_get_geometry(void)
 {
     int *ret = NULL;
 
@@ -687,7 +688,7 @@ int *MPIR_Net_torus_topo_get_geometry(void)
     return ret;
 }
 
-int MPIR_Net_torus_topo_get_node_index(void)
+int MPIR_hwtopo_torus_get_node_index(void)
 {
     int ret = 0;
 
