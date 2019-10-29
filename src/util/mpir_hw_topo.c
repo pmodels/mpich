@@ -261,9 +261,6 @@ int MPII_hw_topo_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_HW_TOPO_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_HW_TOPO_INIT);
-
     hw_topo.bindset_is_valid = 0;
 
 #ifdef HAVE_HWLOC
@@ -288,16 +285,12 @@ int MPII_hw_topo_init(void)
     }
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_HW_TOPO_INIT);
     return mpi_errno;
 }
 
 int MPII_hw_topo_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_HW_TOPO_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_HW_TOPO_FINALIZE);
 
 #ifdef HAVE_HWLOC
     hwloc_topology_destroy(hw_topo.hwloc_topology);
@@ -321,7 +314,6 @@ int MPII_hw_topo_finalize(void)
     }
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_HW_TOPO_FINALIZE);
     return mpi_errno;
 }
 
@@ -329,21 +321,14 @@ bool MPIR_hw_topo_is_initialized(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_HW_TOPO_IS_INITIALIZED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_HW_TOPO_IS_INITIALIZED);
-
     ret = (hw_topo.bindset_is_valid) ? true : false;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_HW_TOPO_IS_INITIALIZED);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_covering_obj(void)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ);
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -353,16 +338,12 @@ MPIR_Node_obj MPIR_Node_get_covering_obj(void)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_TYPE);
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -386,16 +367,12 @@ MPIR_Node_obj MPIR_Node_get_covering_obj_by_type(MPIR_Node_obj_type obj_type)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_TYPE);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_covering_obj_by_depth(int depth)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_DEPTH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_DEPTH);
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -417,16 +394,12 @@ MPIR_Node_obj MPIR_Node_get_covering_obj_by_depth(int depth)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_COVERING_OBJ_BY_DEPTH);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_PARENT_OBJ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_PARENT_OBJ);
 
     if (obj == NULL)
         goto fn_exit;
@@ -436,16 +409,12 @@ MPIR_Node_obj MPIR_Node_get_parent_obj(MPIR_Node_obj obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_PARENT_OBJ);
     return ret;
 }
 
 int MPIR_Node_get_obj_index(MPIR_Node_obj obj)
 {
     int ret = -1;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OBJ_INDEX);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OBJ_INDEX);
 
     if (obj == NULL)
         goto fn_exit;
@@ -455,16 +424,12 @@ int MPIR_Node_get_obj_index(MPIR_Node_obj obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OBJ_INDEX);
     return ret;
 }
 
 int MPIR_Node_get_obj_depth(MPIR_Node_obj obj)
 {
     int ret = -1;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OBJ_DEPTH);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OBJ_DEPTH);
 
     if (obj == NULL)
         goto fn_exit;
@@ -474,16 +439,12 @@ int MPIR_Node_get_obj_depth(MPIR_Node_obj obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OBJ_DEPTH);
     return ret;
 }
 
 MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj)
 {
     MPIR_Node_obj_type ret = MPIR_NODE_OBJ_TYPE__NONE;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE);
 
     if (obj == NULL)
         goto fn_exit;
@@ -494,16 +455,12 @@ MPIR_Node_obj_type MPIR_Node_get_obj_type(MPIR_Node_obj obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE);
     return ret;
 }
 
 const char *MPIR_Node_get_obj_name(MPIR_Node_obj obj)
 {
     const char *ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OBJ_NAME);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OBJ_NAME);
 
     if (obj == NULL)
         goto fn_exit;
@@ -513,16 +470,12 @@ const char *MPIR_Node_get_obj_name(MPIR_Node_obj obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OBJ_NAME);
     return ret;
 }
 
 uint64_t MPIR_Node_get_total_mem(void)
 {
     uint64_t ret = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_TOTAL_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_TOTAL_MEM);
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -534,16 +487,12 @@ uint64_t MPIR_Node_get_total_mem(void)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_TOTAL_MEM);
     return ret;
 }
 
 int MPIR_Node_get_obj_type_affinity(MPIR_Node_obj_type obj_type)
 {
     int ret = -1;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE_AFFINITY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE_AFFINITY);
 
     if (!hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -570,16 +519,12 @@ int MPIR_Node_get_obj_type_affinity(MPIR_Node_obj_type obj_type)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OBJ_TYPE_AFFINITY);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_NON_IO_ANCESTOR_OBJ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_NON_IO_ANCESTOR_OBJ);
 
     if (dev_obj == NULL || !hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -589,16 +534,12 @@ MPIR_Node_obj MPIR_Node_get_non_io_ancestor_obj(MPIR_Node_obj dev_obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_NON_IO_ANCESTOR_OBJ);
     return ret;
 }
 
 MPIR_Node_obj MPIR_Node_get_osdev_obj_by_busidstring(const char *bus_id_string)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_BY_BUSIDSTRING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_BY_BUSIDSTRING);
 
     if (bus_id_string == NULL || !hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -608,7 +549,6 @@ MPIR_Node_obj MPIR_Node_get_osdev_obj_by_busidstring(const char *bus_id_string)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_BY_BUSIDSTRING);
     return ret;
 }
 
@@ -637,9 +577,6 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name)
 {
     MPIR_Node_obj ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_COMMON_NON_IO_ANCESTOR_OBJ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_COMMON_NON_IO_ANCESTOR_OBJ);
 
     if (dev_name == NULL || !hw_topo.bindset_is_valid)
         goto fn_exit;
@@ -689,16 +626,12 @@ MPIR_Node_obj MPIR_Node_get_common_non_io_ancestor_obj(const char *dev_name)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_COMMON_NON_IO_ANCESTOR_OBJ);
     return ret;
 }
 
 MPIR_Node_obj_osdev_type MPIR_Node_get_osdev_obj_type(MPIR_Node_obj dev_obj)
 {
     MPIR_Node_obj_osdev_type ret = MPIR_NODE_OBJ_OSDEV_TYPE__NONE;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_TYPE);
 
     if (dev_obj == NULL)
         goto fn_exit;
@@ -709,7 +642,6 @@ MPIR_Node_obj_osdev_type MPIR_Node_get_osdev_obj_type(MPIR_Node_obj dev_obj)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NODE_GET_OSDEV_OBJ_TYPE);
     return ret;
 }
 
@@ -717,23 +649,16 @@ MPIR_Network_topology_type MPIR_Net_get_topo_type(void)
 {
     MPIR_Network_topology_type ret = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_TOPO_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_TOPO_TYPE);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.type;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_TOPO_TYPE);
     return ret;
 }
 
 MPIR_Network_node_type MPIR_Net_get_node_type(MPIR_Network_node node)
 {
     MPIR_Network_node_type ret = MPIR_NETWORK_NODE_TYPE__INVALID;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_NODE_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_NODE_TYPE);
 
     if (node == NULL)
         goto fn_exit;
@@ -743,7 +668,6 @@ MPIR_Network_node_type MPIR_Net_get_node_type(MPIR_Network_node node)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_NODE_TYPE);
     return ret;
 }
 
@@ -751,23 +675,16 @@ MPIR_Network_node MPIR_Net_get_endpoint(void)
 {
     MPIR_Network_node ret = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_ENDPOINT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_ENDPOINT);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.network_endpoint;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_ENDPOINT);
     return ret;
 }
 
 MPIR_Network_node MPIR_Net_get_edge_dest_node(MPIR_Network_edge edge)
 {
     MPIR_Network_node ret = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_EDGE_DEST_NODE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_EDGE_DEST_NODE);
 
     if (edge == NULL)
         goto fn_exit;
@@ -777,16 +694,12 @@ MPIR_Network_node MPIR_Net_get_edge_dest_node(MPIR_Network_edge edge)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_EDGE_DEST_NODE);
     return ret;
 }
 
 int MPIR_Net_get_node_uid(MPIR_Network_node node)
 {
     int ret = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_NODE_UID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_NODE_UID);
 
     if (node == NULL)
         goto fn_exit;
@@ -796,7 +709,6 @@ int MPIR_Net_get_node_uid(MPIR_Network_node node)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_NODE_UID);
     return ret;
 }
 
@@ -804,23 +716,16 @@ int MPIR_Net_get_num_nodes(void)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_NUM_NODES);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_NUM_NODES);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.netloc_topology->num_nodes;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_NUM_NODES);
     return ret;
 }
 
 int MPIR_Net_get_all_edges(MPIR_Network_node node, int *num_edges, MPIR_Network_edge ** edges)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_GET_ALL_EDGES);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_GET_ALL_EDGES);
 
     *num_edges = 0;
     *edges = NULL;
@@ -834,7 +739,6 @@ int MPIR_Net_get_all_edges(MPIR_Network_node node, int *num_edges, MPIR_Network_
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_GET_ALL_EDGES);
     return mpi_errno;
 }
 
@@ -842,23 +746,16 @@ int *MPIR_Net_tree_topo_get_node_levels(void)
 {
     int *ret = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TREE_TOPO_GET_NODE_LEVELS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TREE_TOPO_GET_NODE_LEVELS);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.u.tree.node_levels;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TREE_TOPO_GET_NODE_LEVELS);
     return ret;
 }
 
 int MPIR_Net_tree_topo_get_hostnode_index(int *node_index, int *num_nodes)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TREE_TOPO_GET_HOSTNODE_INDEX);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TREE_TOPO_GET_HOSTNODE_INDEX);
 
     *node_index = 0;
     *num_nodes = 0;
@@ -870,7 +767,6 @@ int MPIR_Net_tree_topo_get_hostnode_index(int *node_index, int *num_nodes)
                                                num_nodes);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TREE_TOPO_GET_HOSTNODE_INDEX);
     return mpi_errno;
 }
 
@@ -879,9 +775,6 @@ int MPIR_Net_tree_topo_get_switches_at_level(int switch_level,
                                              int *switch_count)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TREE_TOPO_GET_SWITCHES_AT_LEVEL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TREE_TOPO_GET_SWITCHES_AT_LEVEL);
 
     *switches_at_level = NULL;
     *switch_count = 0;
@@ -893,7 +786,6 @@ int MPIR_Net_tree_topo_get_switches_at_level(int switch_level,
                                           switch_count);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TREE_TOPO_GET_SWITCHES_AT_LEVEL);
     return mpi_errno;
 }
 
@@ -901,14 +793,10 @@ int MPIR_Net_torus_topo_get_dimension(void)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_DIMENSION);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_DIMENSION);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.u.torus.dimension;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_DIMENSION);
     return ret;
 }
 
@@ -916,14 +804,10 @@ int *MPIR_Net_torus_topo_get_geometry(void)
 {
     int *ret = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_GEOMETRY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_GEOMETRY);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.u.torus.geometry;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_GEOMETRY);
     return ret;
 }
 
@@ -931,13 +815,9 @@ int MPIR_Net_torus_topo_get_node_index(void)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_NODE_INDEX);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_NODE_INDEX);
-
 #ifdef HAVE_NETLOC
     ret = hw_topo.network_attr.u.torus.node_index;
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_NET_TORUS_TOPO_GET_NODE_INDEX);
     return ret;
 }
