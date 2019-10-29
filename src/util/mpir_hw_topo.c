@@ -17,6 +17,23 @@
 #endif
 
 /*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NETLOC_NODE_FILE
+      category    : DEBUGGER
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Subnet json file
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+/*
  * Hardwre topology
  */
 static struct {
