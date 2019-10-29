@@ -214,7 +214,7 @@ M*/
                     mutex.count++;                                      \
                 }                                                       \
             } else {                                                    \
-                cs_req = 1;                                             \
+                cs_acq = 1;                                             \
                 mutex.count++;                                          \
             }                                                           \
         }                                                               \

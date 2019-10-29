@@ -1456,6 +1456,9 @@ fi
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPICH_THREAD_GRANULARITY__SINGLE
 thread_refcount=MPICH_REFCOUNT__NONE
+if test "$device_name" = "ch4" ; then
+    enable_thread_cs="per-vci"
+fi
 if test "$enable_threads" = "multiple" ; then
     case $enable_thread_cs in
     global)
