@@ -599,32 +599,40 @@ sub RunList {
             }
             else {
                 $g_total_run++;
-                my $save_dir;
-                if ($programname =~/^(\S+)\/(\S+)$/) {
-                    $save_dir = `pwd`;
-                    chomp $save_dir;
-                    $programname = $2;
-                    chdir $1 or warn "Can't chdir $1\n";
-                }
-                if (&BuildMPIProgram( $programname, $test_opt ) == 0) {
-                    if ($batchRun == 1) {
-                        &AddMPIProgram( $programname, $np, $test_opt );
+                if ($programname =~/^\$(\w+)\/(.*)/) {
+                    # Example: $OSU/pt2pt/osu_latency 2
+                    my $prog = "$ENV{$1}/$2";
+                    # only test for return code
+                    $test_opt->{resultTest} = "TestRC";
+                    RunMPIProgram($prog, $np, $test_opt);
+                } else {
+                    my $save_dir;
+                    if ($programname =~/^(\S+)\/(\S+)$/) {
+                        $save_dir = `pwd`;
+                        chomp $save_dir;
+                        $programname = $2;
+                        chdir $1 or warn "Can't chdir $1\n";
                     }
-                    else {
-                        &RunMPIProgram( $programname, $np, $test_opt );
+                    if (&BuildMPIProgram( $programname, $test_opt ) == 0) {
+                        if ($batchRun == 1) {
+                            &AddMPIProgram( $programname, $np, $test_opt );
+                        }
+                        else {
+                            &RunMPIProgram( $programname, $np, $test_opt );
+                        }
                     }
-                }
-                elsif ($test_opt->{xfail} eq '') {
-                    # We expected to run this program, so failure to build
-                    # is an error
-                    $found_error = 1;
-                    $err_count++;
-                }
-                if ($batchRun == 0) {
-                    &CleanUpAfterRun( $programname, $test_opt );
-                }
-                if ($save_dir) {
-                    chdir $save_dir;
+                    elsif ($test_opt->{xfail} eq '') {
+                        # We expected to run this program, so failure to build
+                        # is an error
+                        $found_error = 1;
+                        $err_count++;
+                    }
+                    if ($batchRun == 0) {
+                        &CleanUpAfterRun( $programname );
+                    }
+                    if ($save_dir) {
+                        chdir $save_dir;
+                    }
                 }
             }
         }
@@ -818,6 +826,7 @@ sub RunMPIProgram {
             TestStatus => \&TestStatus,
             TestStatusNoErrors => \&TestStatusNoErrors,
             TestErrFatal => \&TestErrFatal,
+            TestRC => \&TestRC,
         );
 
         my $F = $test_actions{$test_opt->{resultTest}};
@@ -861,15 +870,6 @@ sub RunMPIProgram {
             }
         }
         $rc = close ( MPIOUT );
-        my $end_time = gettimeofday();  # seconds in floating point
-        $runtime = $end_time - $start_time;
-        # count # of timeout when tests are configured with sufficient timeLimit
-        if ($test_opt->{_timeout} > 60) {
-            if ($runtime - $test_opt->{_timeout} >= -10) {
-                $g_num_timeout++;
-            }
-        }
-        print STDOUT "Runtime: $runtime\n" if $verbose;
         if ($rc == 0) {
             # Only generate a message if we think that the program
             # passed the test.
@@ -891,6 +891,16 @@ sub RunMPIProgram {
     if ($got_lock) {
         relese_lock($lockfile);
     }
+
+    my $end_time = gettimeofday();  # seconds in floating point
+    $runtime = $end_time - $start_time;
+    # count # of timeout when tests are configured with sufficient timeLimit
+    if ($test_opt->{_timeout} > 60) {
+        if ($runtime - $test_opt->{_timeout} >= -10) {
+            $g_num_timeout++;
+        }
+    }
+    print STDOUT "Runtime: $runtime\n" if $verbose;
 
     if ($found_error) {
         &RunTestFailed( $programname, $np, $test_opt, $timeout, $curdir, $inline, $runtime );
@@ -1209,6 +1219,22 @@ sub TestErrFatal {
             $err_count ++;
         }
         $inline .= "$mpiexec returned a zero status but the program returned a nonzero status\n";
+    }
+    return ($found_error,$inline);
+}
+#
+# TestRC reports success when return code is zero
+sub TestRC {
+    my $MPIOUT = $_[0];
+    while (<MPIOUT>) {
+        # leave the output to the console log
+        print;
+    }
+    my $rc = close(MPIOUT);
+    my ($found_error, $inline) = (0, "");
+    if (!$rc) {
+        $found_error = 1;
+        $inline = "Running the program failed\n";
     }
     return ($found_error,$inline);
 }
