@@ -36,16 +36,10 @@
    Currently, this bug only seems to show up when the
    --disable-error-checking flag is passed to configure.
 
- * Intel Compilers - MPICH will fail to build with ICC 18.0.0 on OS/X.
+### PGI compilers
 
-### Solaris compilers
-
- * Compilation on solaris will freeze when MPICH is configured with 
-   "--enable-strict". This is due to a solaris compiler bug related
-   to a specific order of assignments to long long and short variables.
-   See the following ticket for more information:
-
-     https://trac.mpich.org/projects/mpich/ticket/2105
+ * ch3/nemesis will segfault during MPI_Init when built with recent
+   versions of PGI compilers.
 
 ### PathScale compilers
  * Due to bugs in the PathScale compiler suite, some configurations of MPICH
@@ -77,8 +71,6 @@
  * ch3 does not presently support communication across heterogeneous
    platforms (e.g., a big-endian machine communicating with a
    little-endian machine).
-
- * ch3:nemesis:mx does not support dynamic processes at this time.
 
  * Support for "external32" data representation is incomplete. This
    affects the MPI_Pack_external and MPI_Unpack_external routines, as

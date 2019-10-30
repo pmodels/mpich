@@ -1,4 +1,20 @@
 ===============================================================================
+                               Changes in 3.3.2
+===============================================================================
+
+# Add support for struct sockaddr in MPICH, Hydra, and PMI socket
+  code. Works with both IPv4 and IPv6 addresses.
+
+# Fix localhost detection on FreeBSD and macOS, avoiding long delay
+  during startup.
+
+# Fix thread-local storage detection.
+
+# Fix several test program bugs.
+
+# Fix several static analysis and compiler warnings.
+
+===============================================================================
                                Changes in 3.3.1
 ===============================================================================
 
