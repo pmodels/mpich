@@ -176,7 +176,7 @@ static void SendqInit(void);
 static int SendqFreePool(void *);
 
 /*
- * If MPICH is built with the --enable-debugger option, MPI_Init and
+ * If MPICH is built with the --enable-debuginfo option, MPI_Init and
  * MPI_Init_thread will call MPII_Wait_for_debugger.  This ensures both that
  * the debugger can gather information on the MPI job before the MPI_Init
  * returns to the user and that the necessary symbols for providing
