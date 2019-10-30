@@ -77,6 +77,7 @@ typedef enum {
 
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
+    char dummy;                 /* some compilers (suncc) does not like empty struct */
 } MPIDIG_sreq_t;
 
 typedef struct MPIDIG_lreq_t {
