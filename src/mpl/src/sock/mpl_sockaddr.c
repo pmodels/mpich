@@ -186,14 +186,14 @@ int MPL_socket()
     return socket(af_type, SOCK_STREAM, IPPROTO_TCP);
 }
 
-int MPL_connect(int socket, MPL_sockaddr_t * p_addr, unsigned short port)
+int MPL_connect(int sock_fd, MPL_sockaddr_t * p_addr, unsigned short port)
 {
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) p_addr)->sin_port = htons(port);
-        return connect(socket, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in));
+        return connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) p_addr)->sin6_port = htons(port);
-        return connect(socket, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in6));
+        return connect(sock_fd, (const struct sockaddr *) p_addr, sizeof(struct sockaddr_in6));
     } else {
         return -1;
     }
@@ -205,7 +205,7 @@ void MPL_set_listen_attr(int use_loopback, int max_conn)
     _max_conn = max_conn;
 }
 
-int MPL_listen(int socket, unsigned short port)
+int MPL_listen(int sock_fd, unsigned short port)
 {
     MPL_sockaddr_t addr;
     int ret;
@@ -217,20 +217,20 @@ int MPL_listen(int socket, unsigned short port)
     }
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) &addr)->sin_port = htons(port);
-        ret = bind(socket, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) &addr)->sin6_port = htons(port);
-        ret = bind(socket, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
+        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
     } else {
         assert(0);
     }
     if (ret) {
         return ret;
     }
-    return listen(socket, _max_conn);
+    return listen(sock_fd, _max_conn);
 }
 
-int MPL_listen_anyport(int socket, unsigned short *p_port)
+int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
 {
     MPL_sockaddr_t addr;
     int ret;
@@ -242,10 +242,10 @@ int MPL_listen_anyport(int socket, unsigned short *p_port)
     }
     if (af_type == AF_INET) {
         ((struct sockaddr_in *) &addr)->sin_port = 0;
-        ret = bind(socket, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
     } else if (af_type == AF_INET6) {
         ((struct sockaddr_in6 *) &addr)->sin6_port = 0;
-        ret = bind(socket, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
+        ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
     } else {
         assert(0);
     }
@@ -253,7 +253,7 @@ int MPL_listen_anyport(int socket, unsigned short *p_port)
         return ret;
     }
     unsigned int n = sizeof(addr);
-    ret = getsockname(socket, (struct sockaddr *) &addr, &n);
+    ret = getsockname(sock_fd, (struct sockaddr *) &addr, &n);
     if (ret) {
         return ret;
     }
@@ -262,10 +262,10 @@ int MPL_listen_anyport(int socket, unsigned short *p_port)
     } else if (af_type == AF_INET6) {
         *p_port = ntohs(((struct sockaddr_in6 *) &addr)->sin6_port);
     }
-    return listen(socket, _max_conn);
+    return listen(sock_fd, _max_conn);
 }
 
-int MPL_listen_portrange(int socket, unsigned short *p_port, int low_port, int high_port)
+int MPL_listen_portrange(int sock_fd, unsigned short *p_port, int low_port, int high_port)
 {
     MPL_sockaddr_t addr;
     int i;
@@ -277,7 +277,7 @@ int MPL_listen_portrange(int socket, unsigned short *p_port, int low_port, int h
         MPL_get_sockaddr_direct(MPL_SOCKADDR_ANY, &addr);
     }
     for (i = low_port; i <= high_port; i++) {
-        ret = MPL_listen(socket, i);
+        ret = MPL_listen(sock_fd, i);
         if (ret == 0) {
             *p_port = i;
             break;
@@ -290,7 +290,7 @@ int MPL_listen_portrange(int socket, unsigned short *p_port, int low_port, int h
     if (i > high_port) {
         return -2;
     }
-    return listen(socket, _max_conn);
+    return listen(sock_fd, _max_conn);
 }
 
 int MPL_sockaddr_to_str(MPL_sockaddr_t * p_addr, char *str, int maxlen)
