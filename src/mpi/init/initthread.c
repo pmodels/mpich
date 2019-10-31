@@ -138,7 +138,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     MPII_post_init_memory_tracing();
     MPII_init_dbg_logging();
-    MPII_wait_for_debugger();
+    /* if --enable-debuginfo is configured, prepare for debug info data.
+     * if MPIEXEC_DEBUG is set in environment, wait for debugger until MPIR_debug_gate is set to 1.
+     */
+    MPII_Wait_for_debugger();
 
     /* dup comm_self and creates progress thread (if needed) */
     mpi_errno = MPII_init_async(thread_provided);
