@@ -25,6 +25,10 @@ typedef struct {
 #ifdef __SUNPRO_C
 #pragma error_messages (off, E_ARG_INCOMPATIBLE_WITH_ARG_L)
 #endif
+/* Intel compiler won't accept the extra "protected" var list, suppress by pragma */
+#ifdef __ICC
+#pragma warning disable 2206
+#endif
 
 /* Assume that loads/stores are atomic on the current platform, even though this
    may not be true at all. */
@@ -135,6 +139,9 @@ static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 
 #ifdef __SUNPRO_C
 #pragma error_messages (default, E_ARG_INCOMPATIBLE_WITH_ARG_L)
+#endif
+#ifdef __ICC
+#pragma warning enable 2206
 #endif
 
 #include"opa_emulated.h"
