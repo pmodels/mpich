@@ -502,7 +502,7 @@ typedef struct {
             struct fi_ioc *resultv;
         } get_accumulate;
     } iov;
-    char iov_store[0];          /* Flexible array, do not move */
+    char iov_store[];           /* Flexible array, do not move */
 } MPIDI_OFI_win_noncontig_t;
 
 typedef struct MPIDI_OFI_win_request {
