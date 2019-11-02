@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpir_hw_topo.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -28,52 +27,11 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef MPI_Comm_split_type
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
-struct shmem_processor_info_table {
-    const char *val;
-    MPIR_Node_obj_type obj_type;
-};
-
-/* hardware topology node object table */
-static struct shmem_processor_info_table shmem_processor_info[] = {
-    {"machine", MPIR_NODE_OBJ_TYPE__MACHINE},
-    {"socket", MPIR_NODE_OBJ_TYPE__PACKAGE},
-    {"package", MPIR_NODE_OBJ_TYPE__PACKAGE},
-    {"numa", MPIR_NODE_OBJ_TYPE__NUMANODE},
-    {"core", MPIR_NODE_OBJ_TYPE__CORE},
-    {"hwthread", MPIR_NODE_OBJ_TYPE__PU},
-    {"pu", MPIR_NODE_OBJ_TYPE__PU},
-    {"l1dcache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l1ucache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l1icache", MPIR_NODE_OBJ_TYPE__L1ICACHE},
-    {"l1cache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l2dcache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l2ucache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l2icache", MPIR_NODE_OBJ_TYPE__L2ICACHE},
-    {"l2cache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l3dcache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l3ucache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l3icache", MPIR_NODE_OBJ_TYPE__L3ICACHE},
-    {"l3cache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l4dcache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l4ucache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l4cache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l5dcache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {"l5ucache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {"l5cache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {NULL, MPIR_NODE_OBJ_TYPE__MAX}
-};
-
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 static const char *NETWORK_INFO_KEY = "network_topo";
 
-static int node_split_pci_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                 MPIR_Comm ** newcomm_ptr);
-static int node_split_network_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                     MPIR_Comm ** newcomm_ptr);
-static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                 MPIR_Comm ** newcomm_ptr);
-static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                MPIR_Comm ** newcomm_ptr);
+static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                      MPIR_Comm ** newcomm_ptr);
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
                                       int switch_level, MPIR_Comm ** newcomm_ptr);
 static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
@@ -248,21 +206,11 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto use_node_comm;
 
     /* if hw topology is not initialized, skip topology-aware comm split */
-    if (!MPIR_hw_topo_is_initialized())
+    if (!MPIR_hwtopo_is_initialized())
         goto use_node_comm;
 
     if (flag) {
-        if (!strncmp(hint_str, "pci:", strlen("pci:")))
-            mpi_errno = node_split_pci_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else if (!strncmp(hint_str, "ib", strlen("ib")) ||
-                 !strncmp(hint_str, "en", strlen("en")) ||
-                 !strncmp(hint_str, "eth", strlen("eth")) ||
-                 !strncmp(hint_str, "hfi", strlen("hfi")))
-            mpi_errno = node_split_network_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else if (!strncmp(hint_str, "gpu", strlen("gpu")))
-            mpi_errno = node_split_gpu_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else
-            mpi_errno = node_split_processor(comm_ptr, key, hint_str, newcomm_ptr);
+        mpi_errno = node_split(comm_ptr, key, hint_str, newcomm_ptr);
 
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -381,127 +329,16 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     goto fn_exit;
 }
 
-static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                MPIR_Comm ** newcomm_ptr)
+static int node_split(MPIR_Comm * comm_ptr, int key, const char *hint_str, MPIR_Comm ** newcomm_ptr)
 {
-    int color;
-    MPIR_Node_obj obj_containing_cpuset;
-    MPIR_Node_obj_type query_obj_type = MPIR_NODE_OBJ_TYPE__MAX;
-    int i, mpi_errno = MPI_SUCCESS;
-
-    /* assign the node id as the color, initially */
-    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
-
-    /* try to find the info value in the processor object
-     * table */
-    for (i = 0; shmem_processor_info[i].val; i++) {
-        if (!strcmp(shmem_processor_info[i].val, hint_str)) {
-            query_obj_type = shmem_processor_info[i].obj_type;
-            break;
-        }
-    }
-
-    if (query_obj_type == MPIR_NODE_OBJ_TYPE__MAX)
-        goto split_id;
-
-    obj_containing_cpuset = MPIR_Node_get_covering_obj_by_type(query_obj_type);
-    if (obj_containing_cpuset)
-        color = MPIR_Node_get_obj_index(obj_containing_cpuset);
-    else
-        color = MPI_UNDEFINED;
-
-  split_id:
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
-                                 const char *hint_str, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Node_obj non_io_ancestor, io_device = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int color;
+    MPIR_hwtopo_gid_t gid;
 
-    io_device = MPIR_Node_get_osdev_obj_by_busidstring(hint_str + strlen("pci:"));
-    if (io_device) {
-        non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(io_device);
-        if (non_io_ancestor)
-            color = MPIR_Node_get_obj_index(non_io_ancestor);
-        else
-            color = MPI_UNDEFINED;
-    } else {
-        color = MPI_UNDEFINED;
-    }
+    gid = MPIR_hwtopo_get_obj_by_name(hint_str);
 
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, gid, key, newcomm_ptr);
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
-                                     const char *hint_str, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Node_obj non_io_ancestor;
-    int mpi_errno = MPI_SUCCESS;
-    int color;
-
-    /* assign the node id as the color, initially */
-    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
-
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hint_str);
-    if (non_io_ancestor) {
-        uint32_t depth = (uint32_t) MPIR_Node_get_obj_depth(non_io_ancestor);
-        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
-        color = (int) ((depth << 16) + idx);
-    } else {
-        color = MPI_UNDEFINED;
-    }
-
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
-                                 const char *hint_str, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Node_obj non_io_ancestor;
-    int mpi_errno = MPI_SUCCESS;
-    int color;
-
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hint_str);
-    if (non_io_ancestor) {
-        MPIR_Node_obj_type type = MPIR_Node_get_obj_type(non_io_ancestor);
-        int idx = MPIR_Node_get_obj_index(non_io_ancestor);
-        color = ((type << (sizeof(int) * 4)) + idx);
-    } else {
-        color = MPI_UNDEFINED;
-    }
-
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
@@ -748,10 +585,10 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
             num_procs = num_processes_at_node[node_index];
             node_comm = *newcomm_ptr;
             subcomm_rank = MPIR_Comm_rank(node_comm);
-            MPIR_Node_obj obj_containing_cpuset = MPIR_Node_get_covering_obj();
+            MPIR_hwtopo_gid_t obj_containing_cpuset = MPIR_hwtopo_get_leaf();
 
             /* get depth in topology tree */
-            tree_depth = MPIR_Node_get_obj_depth(obj_containing_cpuset);
+            tree_depth = MPIR_hwtopo_get_depth(obj_containing_cpuset);
 
             /* get min tree depth to all processes */
             MPID_Allreduce(&tree_depth, &min_tree_depth, 1, MPI_INT, MPI_MIN, node_comm, &errflag);
@@ -761,10 +598,10 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
                 int *parent_idx = MPL_calloc(num_procs, sizeof(int), MPL_MEM_OTHER);
 
                 while (tree_depth != min_tree_depth) {
-                    obj_containing_cpuset = MPIR_Node_get_parent_obj(obj_containing_cpuset);
-                    tree_depth = MPIR_Node_get_obj_depth(obj_containing_cpuset);
+                    obj_containing_cpuset =
+                        MPIR_hwtopo_get_ancestor(obj_containing_cpuset, --tree_depth);
                 }
-                parent_idx[subcomm_rank] = MPIR_Node_get_obj_index(obj_containing_cpuset);
+                parent_idx[subcomm_rank] = obj_containing_cpuset;
 
                 /* get parent_idx to all processes */
                 MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, parent_idx, 1, MPI_INT,
@@ -844,7 +681,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
     long total_memory_size = 0;
     int memory_per_process;
 
-    total_memory_size = MPIR_Node_get_total_mem();
+    total_memory_size = MPIR_hwtopo_get_node_mem();
 
     topo_type = MPIR_Net_get_topo_type();
 
