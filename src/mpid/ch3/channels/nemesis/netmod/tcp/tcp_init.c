@@ -182,7 +182,9 @@ int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
          * intend to handle SIGPIPE or count on being killed, but I expect
          * such programs are very rare, and I'm not sure what the best
          * solution would be anyway. */
-        void *ret;
+        /* Linux and BSD typedef to sighandler_t and sig_t respectively, which
+         * means we can't use either. Declare directly instead. */
+        void (*ret) (int);
 
         ret = signal(SIGPIPE, SIG_IGN);
         MPIR_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s",
