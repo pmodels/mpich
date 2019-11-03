@@ -1,7 +1,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        3.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -38,7 +38,6 @@ BuildRequires:  python36-devel
 %endif
 BuildRequires:  automake >= 1.15
 BuildRequires:  libtool >= 2.4.4
-BuildRequires:  cart-devel
 BuildRequires:  daos-devel
 BuildRequires:  libuuid-devel
 Provides:       mpi
@@ -300,8 +299,8 @@ make check VERBOSE=1
 %{_libdir}/%{name}/bin/mpirun
 %{_libdir}/%{name}/bin/mpivars
 %{_libdir}/%{name}/bin/parkill
-#%dir %{_mandir}/%{name}-%{_arch}
-#%doc %{_mandir}/%{name}-%{_arch}/man1/
+#dir #{_mandir}/#{name}-#{_arch}
+#doc #{_mandir}/#{name}-#{_arch}/man1/
 %{_sysconfdir}/modulefiles/mpi/
 
 %files autoload
@@ -319,7 +318,7 @@ make check VERBOSE=1
 %{_libdir}/%{name}/bin/mpifort
 %{_fmoddir}/%{name}/
 %{_rpmconfigdir}/macros.d/macros.%{name}
-#%{_mandir}/%{name}-%{_arch}/man3/
+#{_mandir}/#{name}-#{_arch}/man3/
 
 %files doc
 %dir %{_datadir}/%{name}
@@ -334,6 +333,9 @@ make check VERBOSE=1
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Sat Nov 02 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-2
+- Another Update packaging standards
+
 * Fri Aug 30 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-1
 - Update packaging standards
 
