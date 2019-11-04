@@ -372,6 +372,7 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
         debug    - Synonym for dbg
+        log      - Debug logging
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
                    eliminate access warnings from programs like valgrind
@@ -1570,6 +1571,9 @@ for option in $enable_g ; do
 	handle)
             perform_handle=yes
             ;;
+        log)
+            perform_dbglog=yes
+            ;;
 	meminit)
             perform_meminit=yes
             ;;
@@ -1594,6 +1598,7 @@ for option in $enable_g ; do
             perform_mutexnesting=yes
             perform_handlealloc=yes
             perform_handle=yes
+            perform_dbglog=yes
             ;;
 	all)
             perform_memarena=yes
@@ -1604,6 +1609,7 @@ for option in $enable_g ; do
             perform_mutexnesting=yes
             perform_handlealloc=yes
             perform_handle=yes
+            perform_dbglog=yes
             ;;
 	*)
             IFS=$save_IFS
@@ -1643,6 +1649,10 @@ fi
 
 if test -n "$perform_dbgmutex" ; then
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
+fi
+
+if test -n "$perform_dbglog" ; then
+    PAC_C_CHECK_COMPILER_OPTION([-finstrument-functions],[PAC_APPEND_FLAG([-finstrument-functions], [CFLAGS])])
 fi
 
 pac_cross_compiling=no
