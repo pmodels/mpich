@@ -400,8 +400,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs, num_local,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
-        mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* this process may not be a member of the node_roots_comm */
@@ -422,8 +420,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
         MPIR_Comm_map_irregular(comm->node_roots_comm, comm, external_procs, num_external,
                                 MPIR_COMM_MAP_DIR__L2L, NULL);
-        mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
-        MPIR_ERR_CHECK(mpi_errno);
     }
 
     comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
@@ -455,12 +451,20 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_Assert(comm->node_comm == NULL);
     MPIR_Assert(comm->node_roots_comm == NULL);
 
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
+        mpi_errno = MPIR_Comm_create_subcomms(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     /* Notify device of communicator creation */
     mpi_errno = MPIR_Comm_commit_internal(comm);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
-        mpi_errno = MPIR_Comm_create_subcomms(comm);
+    if (comm->node_comm != NULL) {
+        mpi_errno = MPIR_Comm_commit_internal(comm->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno = MPIR_Comm_commit_internal(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
