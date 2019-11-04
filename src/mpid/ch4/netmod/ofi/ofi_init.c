@@ -525,7 +525,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.context));
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));
-    MPL_COMPILE_TIME_ASSERT(sizeof(MPIR_Context_id_t) * 8 >= MPIDI_OFI_AM_CONTEXT_ID_BITS);
 
     MPIR_Add_mutex(&MPIDI_OFI_THREAD_UTIL_MUTEX);
     MPIR_Add_mutex(&MPIDI_OFI_THREAD_PROGRESS_MUTEX);

@@ -30,7 +30,6 @@
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
 #define MPIDI_OFI_AM_DATA_SZ_BITS     48
-#define MPIDI_OFI_AM_CONTEXT_ID_BITS  16
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
