@@ -223,14 +223,11 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
     mapper->dir = dir;
     mapper->src_mapping_size = src_mapping_size;
 
+    MPIR_CHKPMEM_MALLOC(mapper->src_mapping, int *, src_mapping_size * sizeof(int), mpi_errno,
+                        "mapper mapping", MPL_MEM_COMM);
+    mapper->free_mapping = 1;
     if (src_mapping) {
-        mapper->src_mapping = src_mapping;
-        mapper->free_mapping = 0;
-    } else {
-        MPIR_CHKPMEM_MALLOC(mapper->src_mapping, int *,
-                            src_mapping_size * sizeof(int), mpi_errno, "mapper mapping",
-                            MPL_MEM_COMM);
-        mapper->free_mapping = 1;
+        memcpy(mapper->src_mapping, src_mapping, src_mapping_size * sizeof(int));
     }
 
     mapper->next = NULL;
