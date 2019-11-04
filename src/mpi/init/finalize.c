@@ -156,7 +156,8 @@ int MPI_Finalize(void)
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
-    MPII_hw_topo_finalize();
+    MPII_hw_topo_finalize();    /* to be eventually replaced by MPII_hwtopo_finalize() */
+    MPII_hwtopo_finalize();
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
