@@ -212,6 +212,16 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
             fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
                     world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
             break;
+        case 4:
+            /* MPL_DBG_MSG_ENTER/EXIT, xref mpl_dbg_func.c */
+            va_start(list, fmat);
+            p = va_arg(list, void *);
+            void *p2 = va_arg(list, void *);
+            MPL_snprintf(stmp, sizeof(stmp), fmat, p, p2);
+            va_end(list);
+            fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\n",
+                    world_num, world_rank, threadID, pid, class, curtime, stmp);
+            break;
         default:
             break;
     }
@@ -572,6 +582,8 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
             }
         }
     }
+
+    mpl_dbg_init_instrument_function();
 
     dbg_initialized = DBG_INITIALIZED;
 

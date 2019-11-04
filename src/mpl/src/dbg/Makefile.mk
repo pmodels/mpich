@@ -5,4 +5,5 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib@MPLLIBNAME@_la_SOURCES += src/dbg/mpl_dbg.c
+lib@MPLLIBNAME@_la_SOURCES += src/dbg/mpl_dbg.c \
+                              src/dbg/mpl_dbg_func.c
