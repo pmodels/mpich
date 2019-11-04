@@ -310,7 +310,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         if (MPIR_CVAR_ENABLE_INTRANODE_TOPOLOGY_AWARE_TREES &&
             getenv("HYDRA_USER_PROVIDED_BINDING")) {
             /* Topology aware trees are created only when the user has specified process binding */
-            if (MPIR_hw_topo_is_initialized()) {
+            if (MPIR_hwtopo_is_initialized()) {
                 mpi_errno =
                     MPIDI_SHM_topology_tree_init(comm_ptr, 0, MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL,
                                                  &release_gather_info_ptr->bcast_tree,
