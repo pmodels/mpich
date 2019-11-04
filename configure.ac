@@ -1560,56 +1560,56 @@ IFS=","
 for option in $enable_g ; do
     case "$option" in
         debug|dbg)
-        enable_append_g=yes
-	;;
+            enable_append_g=yes
+            ;;
         no|none)
-	;;
-	handlealloc)
-	perform_handlealloc=yes
-	;;
+            ;;
+        handlealloc)
+            perform_handlealloc=yes
+            ;;
 	handle)
-        perform_handle=yes
-	;;
+            perform_handle=yes
+            ;;
 	meminit)
-	perform_meminit=yes
-	;;
+            perform_meminit=yes
+            ;;
 	memarena)
-	perform_memarena=yes
-	perform_memtracing=yes
-	;;
+            perform_memarena=yes
+            perform_memtracing=yes
+            ;;
 	mem)
-	perform_memtracing=yes
-	;;
+            perform_memtracing=yes
+            ;;
 	mutex)
-	perform_dbgmutex=yes
-	;;
+            perform_dbgmutex=yes
+            ;;
 	mutexnesting)
-	perform_mutexnesting=yes
-	;;
+            perform_mutexnesting=yes
+            ;;
         most|yes)
-        perform_memtracing=yes
-        enable_append_g=yes
-        perform_meminit=yes
-        perform_dbgmutex=yes
-        perform_mutexnesting=yes
-        perform_handlealloc=yes
-        perform_handle=yes
-        ;;
+            perform_memtracing=yes
+            enable_append_g=yes
+            perform_meminit=yes
+            perform_dbgmutex=yes
+            perform_mutexnesting=yes
+            perform_handlealloc=yes
+            perform_handle=yes
+            ;;
 	all)
-        perform_memarena=yes
-	perform_memtracing=yes
-	enable_append_g=yes
-	perform_meminit=yes
-	perform_dbgmutex=yes
-	perform_mutexnesting=yes
-	perform_handlealloc=yes
-        perform_handle=yes
-	;;
+            perform_memarena=yes
+            perform_memtracing=yes
+            enable_append_g=yes
+            perform_meminit=yes
+            perform_dbgmutex=yes
+            perform_mutexnesting=yes
+            perform_handlealloc=yes
+            perform_handle=yes
+            ;;
 	*)
-	IFS=$save_IFS
-	AC_MSG_WARN([Unknown value $option for enable-g])
-	IFS=","
-	;;
+            IFS=$save_IFS
+            AC_MSG_WARN([Unknown value $option for enable-g])
+            IFS=","
+            ;;
     esac
 done
 IFS="$save_IFS"
