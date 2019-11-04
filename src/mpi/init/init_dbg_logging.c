@@ -40,12 +40,10 @@ void MPII_init_dbg_logging(void)
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
 #ifdef MPICH_IS_THREADED
-    MPL_dbg_init(NULL, NULL, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
+    MPL_dbg_init(NULL, NULL, TRUE, TRUE, MPIR_Process.has_parent, MPIR_Process.rank,
                  MPIR_ThreadInfo.isThreaded);
 #else
-    MPL_dbg_init(NULL, NULL, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank, 0);
+    MPL_dbg_init(NULL, NULL, TRUE, TRUE, MPIR_Process.has_parent, MPIR_Process.rank, 0);
 #endif
 
     MPIR_DBG_INIT = MPL_dbg_class_alloc("INIT", "init");
