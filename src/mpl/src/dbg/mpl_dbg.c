@@ -60,7 +60,9 @@ static double time_origin = 0.0;
 static int is_threaded = 0;
 
 static int dbg_usage(const char *, const char *);
-static int dbg_openfile(FILE ** dbg_fp);
+static int dbg_openfile(FILE ** dbg_fp) MPL_NOINSTRUMENT;
+static int dbg_open_tmpfile(FILE ** dbg_fp) MPL_NOINSTRUMENT;
+static void find_basename(char *path, char **basename) ATTRIBUTE((unused)) MPL_NOINSTRUMENT;
 static int dbg_set_class(const char *);
 static int dbg_set_level(const char *, const char *(names[]));
 static int dbg_get_filename(char *filename, int len);
@@ -77,7 +79,6 @@ static FILE *dbg_static_fp = 0;
  * More formally: This function sets basename to the character just
  * after the last '/' in path.
 */
-static void find_basename(char *path, char **basename) ATTRIBUTE((unused));
 static void find_basename(char *path, char **basename)
 {
     char *c;
@@ -101,7 +102,7 @@ static int dbg_init_tls(void)
     return err;
 }
 
-static FILE *get_fp(void)
+MPL_NOINSTRUMENT static FILE *get_fp(void)
 {
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;
@@ -119,7 +120,7 @@ static FILE *get_fp(void)
     return dbg_static_fp;
 }
 
-static void set_fp(FILE * fp)
+MPL_NOINSTRUMENT static void set_fp(FILE * fp)
 {
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;

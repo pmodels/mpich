@@ -22,11 +22,11 @@ extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,
 #if defined MPL_HAVE_SNPRINTF
 #define MPL_snprintf snprintf
 #else
-int MPL_snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4)));
+int MPL_snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4))) MPL_NOINSTRUMENT;
 #endif /* MPL_HAVE_SNPRINTF */
 
-int MPL_strncpy(char *dest, const char *src, size_t n);
-char *MPL_strsep(char **stringp, const char *delim);
+int MPL_strncpy(char *dest, const char *src, size_t n) MPL_NOINSTRUMENT;
+char *MPL_strsep(char **stringp, const char *delim) MPL_NOINSTRUMENT;
 
 #if defined MPL_NEEDS_STRERROR_DECL
 extern char *strerror(int errnum);
@@ -34,12 +34,12 @@ extern char *strerror(int errnum);
 #if defined MPL_HAVE_STRERROR
 #define MPL_strerror strerror
 #else
-char *MPL_strerror(int errnum);
+char *MPL_strerror(int errnum) MPL_NOINSTRUMENT;
 #endif /* MPL_HAVE_STRERROR */
 
-int MPL_strnapp(char *dest, const char *src, size_t n);
+int MPL_strnapp(char *dest, const char *src, size_t n) MPL_NOINSTRUMENT;
 void MPL_create_pathname(char *dest_filename, const char *dirname,
-                         const char *prefix, const int is_dir);
+                         const char *prefix, const int is_dir) MPL_NOINSTRUMENT;
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

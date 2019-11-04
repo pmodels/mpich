@@ -115,7 +115,7 @@ typedef @MPL_TIMER_TYPE@ MPL_time_t;
   MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
   version does not accomplish that.
   @*/
-int MPL_wtime(MPL_time_t * timeval);
+int MPL_wtime(MPL_time_t * timeval) MPL_NOINSTRUMENT;
 #endif /* MPLI_WTIME_IS_A_FUNCTION */
 
 /*@
@@ -141,7 +141,7 @@ int MPL_wtime(MPL_time_t * timeval);
   Module:
   Timer
   @*/
-int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff);
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff) MPL_NOINSTRUMENT;
 
 /*@
   MPL_wtime_acc - Accumulate time values
@@ -163,7 +163,7 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff);
   Module:
   Timer
   @*/
-int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3) MPL_NOINSTRUMENT;
 
 /*@
   MPL_wtime_touint - Converts a timestamp to an unsigned int.
@@ -179,7 +179,7 @@ int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
 
 
   @*/
-int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val);
+int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val) MPL_NOINSTRUMENT;
 
 /*@
   MPL_wtime_todouble - Converts a timestamp to a double
@@ -195,7 +195,7 @@ int MPL_wtime_touint(MPL_time_t * timeval, unsigned int *val);
   suitable for 'MPI_Wtime'.
 
   @*/
-int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds);
+int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds) MPL_NOINSTRUMENT;
 
 /*@
   MPL_wtick - Provide the resolution of the 'MPL_wtime' timer
@@ -213,7 +213,7 @@ int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds);
   Module:
   Timer
   @*/
-int MPL_wtick(double *);
+int MPL_wtick(double *) MPL_NOINSTRUMENT;
 
 /*@
   MPL_wtime_init - Initialize the timer
