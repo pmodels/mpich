@@ -13,6 +13,7 @@
 #define MPIDI_XPMEM_SEG_PREALLOC 8      /* Number of segments to preallocate in the "direct" block */
 
 typedef struct MPIDI_XPMEM_seg {
+    MPIR_OBJECT_HEADER;
     /* AVL-tree internal components start */
     struct MPIDI_XPMEM_seg *parent;
     struct MPIDI_XPMEM_seg *left;
@@ -23,7 +24,6 @@ typedef struct MPIDI_XPMEM_seg {
     uint64_t low;               /* page aligned low address of remote seg */
     uint64_t high;              /* page aligned high address of remote seg */
     void *vaddr;                /* virtual address attached in current process */
-    MPIR_cc_t refcount;         /* reference count of this seg */
 } MPIDI_XPMEM_seg_t;
 
 typedef struct MPIDI_XPMEM_segtree {
