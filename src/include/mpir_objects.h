@@ -423,7 +423,7 @@ typedef struct MPIR_Handle_common {
 typedef struct MPIR_Object_alloc_t {
     MPIR_Handle_common *avail;  /* Next available object */
     int initialized;            /* */
-    void *(*indirect)[];        /* Pointer to indirect object blocks */
+    void **indirect;            /* Pointer to indirect object blocks */
     int indirect_size;          /* Number of allocated indirect blocks */
     MPII_Object_kind kind;      /* Kind of object this is for */
     int size;                   /* Size of an individual object */
