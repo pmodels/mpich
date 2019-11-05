@@ -93,6 +93,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     MPII_hw_topo_init();        /* to be eventually replaced by MPII_hwtopo_init() */
     MPII_hwtopo_init();
+    MPII_nettopo_init();
     MPII_init_windows();
     MPII_init_binding_fortran();
     MPII_init_binding_cxx();
