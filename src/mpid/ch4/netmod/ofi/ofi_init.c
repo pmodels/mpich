@@ -667,6 +667,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         }
     }
 
+    /* if using extended context id, check that selected provider can support it */
+    MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
+
     /* Print some debugging output to give the user some hints */
     mpi_errno = application_hints(rank);
     MPIR_ERR_CHECK(mpi_errno);
