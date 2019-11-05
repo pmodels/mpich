@@ -12,6 +12,26 @@ AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
+# check availability of libfabric
+if test x"$with_libfabric" != x"embedded" ; then
+    PAC_SET_HEADER_LIB_PATH(libfabric)
+    PAC_PUSH_FLAG(LIBS)
+    PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
+    PAC_POP_FLAG(LIBS)
+else
+    have_libfabric=no
+fi
+
+# check availability of ucx
+if test x"$with_ucx" != x"embedded" ; then
+    PAC_SET_HEADER_LIB_PATH(ucx)
+    PAC_PUSH_FLAG(LIBS)
+    PAC_CHECK_HEADER_LIB([ucp/api/ucp.h], [ucp], [ucp_config_read], [have_ucx=yes], [have_ucx=no])
+    PAC_POP_FLAG(LIBS)
+else
+    have_ucx=no
+fi
+
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
@@ -24,7 +44,19 @@ MPID_MAX_ERROR_STRING=512
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
-    ch4_netmods="ofi"
+    # need pick a netmod
+    if test $have_libfabric = yes ; then
+        ch4_netmods="ofi"
+    elif test $have_ucx = yes ; then
+        ch4_netmods="ucx"
+    elif test -n $with_libfabric ; then
+        ch4_netmods="ofi"
+    elif test -n $with_ucx ; then
+        ch4_netmods="ucx"
+    else
+        ch4_netmods="ofi"
+        with_libfabric=embedded
+    fi
 else
     changequote(<<,>>)
     netmod_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://' -e 's/,/ /g'`
@@ -33,6 +65,7 @@ else
 fi
 export ch4_netmods
 export netmod_args
+AC_MSG_NOTICE([CH4 select netmod: $ch4_netmods $netmod_args])
 
 #
 # reset DEVICE so that it (a) always includes the channel name, and (b) does not include channel options
