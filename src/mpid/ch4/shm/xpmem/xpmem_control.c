@@ -55,7 +55,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr->xpmem_slmt_rts;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->xpmem_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIR_Request *anysource_partner;
@@ -63,23 +63,23 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
 
-    XPMEM_TRACE("send_lmt_req_cb: received src_offset 0x%lx, data_sz 0x%lx, sreq_ptr 0x%lx, "
+    XPMEM_TRACE("send_lmt_rts_cb: received src_offset 0x%lx, data_sz 0x%lx, sreq_ptr 0x%lx, "
                 "src_lrank %d, match info[src_rank %d, tag %d, context_id 0x%x]\n",
-                slmt_req_hdr->src_offset, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,
-                slmt_req_hdr->src_lrank, slmt_req_hdr->src_rank, slmt_req_hdr->tag,
-                slmt_req_hdr->context_id);
+                slmt_rts_hdr->src_offset, slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr,
+                slmt_rts_hdr->src_lrank, slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                slmt_rts_hdr->context_id);
 
     /* Try to match a posted receive request.
      * root_comm cannot be NULL if a posted receive request exists, because
      * we increase its refcount at enqueue time. */
-    root_comm = MPIDIG_context_id_to_comm(slmt_req_hdr->context_id);
+    root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
     if (root_comm) {
         int continue_matching = 1;
         while (continue_matching) {
             anysource_partner = NULL;
 
-            rreq = MPIDIG_dequeue_posted(slmt_req_hdr->src_rank, slmt_req_hdr->tag,
-                                         slmt_req_hdr->context_id,
+            rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                                         slmt_rts_hdr->context_id,
                                          &MPIDIG_COMM(root_comm, posted_list));
 
             if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
@@ -109,13 +109,13 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     if (rreq) {
         /* Matching receive was posted */
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
-        MPIDIG_REQUEST(rreq, rank) = slmt_req_hdr->src_rank;
-        MPIDIG_REQUEST(rreq, tag) = slmt_req_hdr->tag;
-        MPIDIG_REQUEST(rreq, context_id) = slmt_req_hdr->context_id;
+        MPIDIG_REQUEST(rreq, rank) = slmt_rts_hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = slmt_rts_hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = slmt_rts_hdr->context_id;
 
         /* Complete XPMEM receive */
-        mpi_errno = MPIDI_XPMEM_handle_lmt_recv(slmt_req_hdr->src_offset, slmt_req_hdr->data_sz,
-                                                slmt_req_hdr->sreq_ptr, slmt_req_hdr->src_lrank,
+        mpi_errno = MPIDI_XPMEM_handle_lmt_recv(slmt_rts_hdr->src_offset, slmt_rts_hdr->data_sz,
+                                                slmt_rts_hdr->sreq_ptr, slmt_rts_hdr->src_lrank,
                                                 root_comm, rreq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -126,17 +126,17 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
         /* store CH4 am rreq info */
         MPIDIG_REQUEST(rreq, buffer) = NULL;
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
-        MPIDIG_REQUEST(rreq, count) = slmt_req_hdr->data_sz;
-        MPIDIG_REQUEST(rreq, rank) = slmt_req_hdr->src_rank;
-        MPIDIG_REQUEST(rreq, tag) = slmt_req_hdr->tag;
-        MPIDIG_REQUEST(rreq, context_id) = slmt_req_hdr->context_id;
+        MPIDIG_REQUEST(rreq, count) = slmt_rts_hdr->data_sz;
+        MPIDIG_REQUEST(rreq, rank) = slmt_rts_hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = slmt_rts_hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = slmt_rts_hdr->context_id;
         MPIDI_REQUEST(rreq, is_local) = 1;
 
         /* store XPMEM internal info */
-        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).src_offset = slmt_req_hdr->src_offset;
-        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).data_sz = slmt_req_hdr->data_sz;
-        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_req_hdr->sreq_ptr;
-        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).src_lrank = slmt_req_hdr->src_lrank;
+        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).src_offset = slmt_rts_hdr->src_offset;
+        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).data_sz = slmt_rts_hdr->data_sz;
+        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
+        MPIDI_XPMEM_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
         MPIDI_SHM_REQUEST(rreq, status) |= MPIDI_SHM_REQ_XPMEM_SEND_LMT;
 
         if (root_comm) {
@@ -147,7 +147,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
                                  MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id)));
         }
 
-        XPMEM_TRACE("send_lmt_req_cb: enqueue unexpected, rreq=%p\n", rreq);
+        XPMEM_TRACE("send_lmt_rts_cb: enqueue unexpected, rreq=%p\n", rreq);
     }
 
   fn_exit:
