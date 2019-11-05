@@ -36,22 +36,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     AC_SUBST([ofilib])
 
     ofi_embedded=""
-    dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
-    if test "${with_libfabric}" = "embedded" ; then
+    if test $have_libfabric = no ; then
         ofi_embedded="yes"
-    elif test -z "${with_libfabric}" && test -z "${with_libfabric_lib}" && test -z "${with_libfabric_include}" ; then
-        if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
-            ofi_embedded="yes"
-        else
-            ofi_embedded="no"
-            PAC_SET_HEADER_LIB_PATH(libfabric)
-        fi
-    else
-        ofi_embedded="no"
-        PAC_SET_HEADER_LIB_PATH(libfabric)
-        AC_SUBST([with_libfabric])
     fi
-    AC_SUBST([ofi_embedded])
 
     runtime_capabilities="no"
     no_providers="no"
@@ -270,15 +257,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
         ofilib="src/mpid/ch4/netmod/ofi/libfabric/src/libfabric.la"
     else
-        PAC_PUSH_FLAG(LIBS)
-        PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
-        PAC_POP_FLAG(LIBS)
-        if test "${have_libfabric}" = "yes" ; then
-            AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
-            PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
-        else
-            AC_MSG_ERROR([Provided libfabric installation (--with-libfabric=${with_libfabric}) could not be configured.])
-        fi
+        AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
+        PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
     fi
 
     # check for libfabric depedence libs
