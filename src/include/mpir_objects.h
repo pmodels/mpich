@@ -129,14 +129,9 @@
   MPI handle represents.  It is an enum because only this applies only the
   the MPI and internal MPICH objects.
 
-  The 'MPIR_PROCGROUP' kind is used to manage process groups (different
-  from MPI Groups) that are used to keep track of collections of
-  processes (each 'MPIR_PROCGROUP' corresponds to a group of processes
-  that define an 'MPI_COMM_WORLD'.  This becomes important only
-  when MPI-2 dynamic process features are supported.  'MPIR_VCONN' is
-  a virtual connection; while this is not part of the overall ADI3
-  design, an object that manages connections to other processes is
-  a common need, and 'MPIR_VCONN' may be used for that.
+  'MPIR_VCONN' is a virtual connection; while this is not part of the
+  overall ADI3 design, an object that manages connections to other processes
+  is a common need, and 'MPIR_VCONN' may be used for that.
 
   Module:
   Attribute-DS
@@ -153,11 +148,10 @@ typedef enum MPII_Object_kind {
     MPIR_KEYVAL = 0x9,
     MPIR_ATTR = 0xa,
     MPIR_REQUEST = 0xb,
-    MPIR_PROCGROUP = 0xc,       /* These are internal device objects */
-    MPIR_VCONN = 0xd,
-    MPIR_WORKQ_ELEM = 0xe,      /* Work queue element, currently only meaningful in CH4 */
-    MPIR_GREQ_CLASS = 0xf,
-    MPIR_XPMEM_SEG = 0x10,      /* XPMEM segment, only meaningful in CH4
+    MPIR_VCONN = 0xc,
+    MPIR_WORKQ_ELEM = 0xd,      /* Work queue element, currently only meaningful in CH4 */
+    MPIR_GREQ_CLASS = 0xe,
+    MPIR_XPMEM_SEG = 0xf,       /* XPMEM segment, only meaningful in CH4
                                  * when XPMEM shmmod is enabled */
 } MPII_Object_kind;
 
