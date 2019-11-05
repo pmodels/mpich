@@ -8,9 +8,22 @@
 #ifndef MPIR_CONTEXTID_H_INCLUDED
 #define MPIR_CONTEXTID_H_INCLUDED
 
+#ifdef HAVE_EXTENDED_CONTEXT_BITS
+#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UINT32_T
+typedef uint32_t MPIR_Context_id_t;
+#define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffffffff)
+#define MPIR_CONTEXT_ID_BITS (20)
+#define CONTEXT_ID_FMT PRIu32
+#else
+/* Default context id type is uint16_t. Instead of always using uint32_t, we take a conservative
+ * approach to ensure the smallest possible packet header size for ch3 and ch4 active messages.
+ */
 #define MPIR_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
 typedef uint16_t MPIR_Context_id_t;
 #define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffff)
+#define MPIR_CONTEXT_ID_BITS (16)
+#define CONTEXT_ID_FMT PRIu16
+#endif
 
 /* The following preprocessor macros provide bitfield access information for
  * context ID values.  They follow a uniform naming pattern:
@@ -86,7 +99,6 @@ typedef uint16_t MPIR_Context_id_t;
 
 /* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
 #define MPIR_CONTEXT_INT_BITS (32)
-#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8)      /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
