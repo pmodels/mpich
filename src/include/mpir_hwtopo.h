@@ -59,6 +59,14 @@ bool MPIR_hwtopo_is_initialized(void);
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void);
 
 /*
+ * Return the local id for the object with global id: gid. The local
+ * id corresponds to hwloc logical index for the object. This API is
+ * used by the topotree code, which expects an hwloc logical index to
+ * function correctly.
+ */
+int MPIR_hwtopo_get_lid(MPIR_hwtopo_gid_t gid);
+
+/*
  * Return the depth in the topology tree for the given gid. A gid
  * returned by the topology layer can be passed to this function to
  * query the level of the object in the topology tree. For Normal
