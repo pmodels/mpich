@@ -891,12 +891,6 @@ sub RunMPIProgram {
         $rc = close ( MPIOUT );
         my $end_time = gettimeofday();  # seconds in floating point
         $runtime = $end_time - $start_time;
-        # count # of timeout when tests are configured with sufficient timeLimit
-        if ($test_opt->{_timeout} > 60) {
-            if ($runtime - $test_opt->{_timeout} >= -10) {
-                $g_num_timeout++;
-            }
-        }
         print STDOUT "Runtime: $runtime\n" if $verbose;
         if ($rc == 0) {
             # Only generate a message if we think that the program
@@ -1285,6 +1279,15 @@ sub RunTestFailed {
     my $progArgs = join(' ', @{$test_opt->{args}});
     my $progEnv = join(' ', @{$test_opt->{envs}});
 
+    # count # of timeout when tests are configured with sufficient timeLimit
+    if ($test_opt->{_timeout} > 60) {
+        if ($runtime - $test_opt->{_timeout} >= -10) {
+            $g_num_timeout++;
+            # append load information to output
+            my $uptime = `uptime`;
+            $output .= "\n  uptime:\n$uptime";
+        }
+    }
     if ($xmloutput) {
         my $xout = $output;
         # basic escapes that wreck the XML output
