@@ -162,8 +162,8 @@ const char *MPIR_Handle_get_kind_str(int kind)
             mpiu_name_case_(ATTR);
             mpiu_name_case_(REQUEST);
             mpiu_name_case_(VCONN);
-            mpiu_name_case_(WORKQ_ELEM);
             mpiu_name_case_(GREQ_CLASS);
+            mpiu_name_case_(INTERNAL);
         default:
             return "unknown";
     }

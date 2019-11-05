@@ -149,10 +149,9 @@ typedef enum MPII_Object_kind {
     MPIR_ATTR = 0xa,
     MPIR_REQUEST = 0xb,
     MPIR_VCONN = 0xc,
-    MPIR_WORKQ_ELEM = 0xd,      /* Work queue element, currently only meaningful in CH4 */
-    MPIR_GREQ_CLASS = 0xe,
-    MPIR_XPMEM_SEG = 0xf,       /* XPMEM segment, only meaningful in CH4
-                                 * when XPMEM shmmod is enabled */
+    MPIR_GREQ_CLASS = 0xd,
+    MPIR_INTERNAL = 0xe,        /* used for various MPICH internal objects that
+                                 * do not require a handle */
 } MPII_Object_kind;
 
 
