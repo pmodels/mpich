@@ -161,6 +161,7 @@ void MPIDI_CH3U_Buffer_copy(
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
+    return;
 }
 
 

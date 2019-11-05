@@ -1288,6 +1288,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
+    return;
 }
 
 /* returns non-zero when req has been matched by channel */
