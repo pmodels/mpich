@@ -733,6 +733,9 @@ sub RunMPIProgram {
     my $extraArgs = "";
     my $runtime = 0;
 
+    if ($programname !~ /^[\.\/]/) {
+        $programname = "./$programname";
+    }
     &RunPreMsg( $programname, $np, $test_opt, $curdir );
 
     unlink "err";
@@ -799,7 +802,7 @@ sub RunMPIProgram {
     }
 
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     my %saveEnv;
@@ -815,8 +818,8 @@ sub RunMPIProgram {
         }
     }
     my $start_time = gettimeofday();
-    open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
-        die "Could not run ./$programname\n";
+    open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $programname $progArgs 2>&1 |" ) ||
+        die "Could not run $programname\n";
     if ($test_opt->{envs}) {    
         %ENV = %saveEnv;
     }
@@ -838,7 +841,7 @@ sub RunMPIProgram {
     }
     else {
         if ($verbose) {
-            $inline = "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname\n";
+            $inline = "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $programname\n";
         }
         else {
             $inline = "";
@@ -919,6 +922,9 @@ sub AddMPIProgram {
     my $progEnv = join(' ', @{$test_opt->{envs}});
     my $mpiexecArgs = join(' ', @{$test_opt->{mpiexecargs}});
 
+    if ($programname !~ /^[\.\/]/) {
+        $programname = "./$programname";
+    }
     if (! -x $programname) {
         print STDERR "Could not find $programname!";
         return;
@@ -982,7 +988,7 @@ sub AddMPIProgram {
 
 
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $extraArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$mpiexec $np_arg $np $extraArgs $program_wrapper $programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     if ($progEnv ne "") {
@@ -1001,7 +1007,7 @@ sub AddMPIProgram {
     rename $programname, "$batrundir/$programname";
     print BATOUT "echo \"# $mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $curdir/$programname $progArgs\" > runtests.$testCount.out\n";
     # Some programs expect to run in the same directory as the executable
-    print BATOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs >> runtests.$testCount.out 2>&1\n";
+    print BATOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper $programname $progArgs >> runtests.$testCount.out 2>&1\n";
     print BATOUT "echo \$? > runtests.$testCount.status\n";
 }
 
