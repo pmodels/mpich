@@ -335,6 +335,8 @@ static inline int compile_time_checking()
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
     MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
+    /* unable to support extended context id in current match bit configuration */
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= 16);
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
                 ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
