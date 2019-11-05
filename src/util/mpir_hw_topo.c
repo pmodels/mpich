@@ -267,7 +267,8 @@ int MPII_hw_topo_init(void)
     if (strlen(MPIR_CVAR_NETLOC_NODE_FILE)) {
         mpi_errno = netloc_parse_topology(&hw_topo.netloc_topology, MPIR_CVAR_NETLOC_NODE_FILE);
         if (mpi_errno == NETLOC_SUCCESS)
-            MPIR_Netloc_parse_topology(hw_topo.netloc_topology, &hw_topo.network_attr);
+            MPIR_Netloc_parse_topology(hw_topo.hwloc_topology, hw_topo.netloc_topology,
+                                       &hw_topo.network_attr);
     }
 #endif
 
