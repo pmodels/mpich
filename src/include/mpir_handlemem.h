@@ -58,13 +58,13 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr);
 */
 
 /* This routine is called by finalize when MPI exits */
-static inline int MPIR_Handle_free(void *((*indirect)[]), int indirect_size)
+static inline int MPIR_Handle_free(void **indirect, int indirect_size)
 {
     int i;
 
     /* Remove any allocated storage */
     for (i = 0; i < indirect_size; i++) {
-        MPL_free((*indirect)[i]);
+        MPL_free((indirect)[i]);
     }
     MPL_free(indirect);
     /* This does *not* remove any objects that the user created
@@ -116,8 +116,9 @@ static inline void *MPIR_Handle_direct_init(void *direct,
     return direct;
 }
 
-/* indirect is really a pointer to a pointer to an array of pointers */
-static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
+/* indirect is a pointer to a pointer table of block_ptrs
+ * and a block_ptr points to a block of objects */
+static inline void *MPIR_Handle_indirect_init(void ***indirect,
                                               int *indirect_size,
                                               int indirect_num_blocks,
                                               int indirect_num_indices,
@@ -135,7 +136,7 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
     /* Create the table */
     if (!*indirect) {
         /* printf("Creating indirect table with %d pointers to blocks in it\n", indirect_num_blocks); */
-        *indirect = (void *) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
+        *indirect = (void **) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
         if (!*indirect) {
             return 0;
         }
@@ -170,7 +171,7 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
     /* We're here because avail is null, so there is no need to set
      * the last block ptr to avail */
     /* printf("loc of update is %x\n", &(**indirect)[*indirect_size]);  */
-    (**indirect)[*indirect_size] = block_ptr;
+    (*indirect)[*indirect_size] = block_ptr;
     *indirect_size = *indirect_size + 1;
     return block_ptr;
 }
@@ -409,7 +410,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int handle, MPIR_Object_alloc_t
     {
         char *block_ptr;
         /* Get the pointer to the block */
-        block_ptr = (char *) (*(objmem->indirect))[block_num];
+        block_ptr = (char *) objmem->indirect[block_num];
         /* Get the item */
         block_ptr += index_num * objmem->size;
         return block_ptr;
