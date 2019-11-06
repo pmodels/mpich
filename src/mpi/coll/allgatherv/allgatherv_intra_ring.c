@@ -76,7 +76,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     for (i = 1; i < comm_size; i++)
         if (min > recvcounts[i])
             min = recvcounts[i];
-    if (min * recvtype_extent < MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE)
+    if (min * recvtype_extent > MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE)
         min = MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE / recvtype_extent;
     /* Handle the case where the datatype extent is larger than
      * the pipeline size. */
