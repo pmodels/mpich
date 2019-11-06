@@ -114,21 +114,6 @@ if test "$CC" != "" ; then
 else
    AC_DEFINE_UNQUOTED(HYDRA_CC,"",[C compiler])
 fi
-if test "$CXX" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_CXX,"$CXX $CPPFLAGS $CXXFLAGS $LDFLAGS $LIBS",[C++ compiler])
-else
-   AC_DEFINE_UNQUOTED(HYDRA_CXX,"",[C++ compiler])
-fi
-if test "$F77" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_F77,"$F77 $FFLAGS $LDFLAGS $LIBS",[Fortran 77 compiler])
-else
-   AC_DEFINE_UNQUOTED(HYDRA_F77,"",[Fortran 77 compiler])
-fi
-if test "$FC" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_F90,"$FC $FCFLAGS $LDFLAGS $LIBS",[Fortran 90 compiler])
-else
-   AC_DEFINE_UNQUOTED(HYDRA_F90,"",[Fortran 90 compiler])
-fi
 PAC_POP_ALL_FLAGS
 
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
