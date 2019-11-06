@@ -142,7 +142,7 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     int context_id_offset, mpi_errno = MPI_SUCCESS;
     MPIR_Comm *tmp_comm_ptr = NULL;
     int i = 0;
-    MPIDI_rank_map_mlut_t *mlut = NULL;
+    MPIR_rank_map_mlut_t *mlut = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_CREATE_INTERCOMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_CREATE_INTERCOMM);
@@ -166,58 +166,50 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     /* handle local group */
     /* No ref changes to LUT/MLUT in this step because the localcomm will not
      * be released in the normal way */
-    MPIDI_COMM(tmp_comm_ptr, local_map).mode = MPIDI_COMM(comm_ptr, map).mode;
-    MPIDI_COMM(tmp_comm_ptr, local_map).size = MPIDI_COMM(comm_ptr, map).size;
-    MPIDI_COMM(tmp_comm_ptr, local_map).avtid = MPIDI_COMM(comm_ptr, map).avtid;
-    switch (MPIDI_COMM(comm_ptr, map).mode) {
-        case MPIDI_RANK_MAP_DIRECT:
-        case MPIDI_RANK_MAP_DIRECT_INTRA:
+    tmp_comm_ptr->local_map.mode = comm_ptr->map.mode;
+    tmp_comm_ptr->local_map.size = comm_ptr->map.size;
+    tmp_comm_ptr->local_map.avtid = comm_ptr->map.avtid;
+    switch (comm_ptr->map.mode) {
+        case MPIR_RANK_MAP_DIRECT:
+        case MPIR_RANK_MAP_DIRECT_INTRA:
             break;
-        case MPIDI_RANK_MAP_OFFSET:
-        case MPIDI_RANK_MAP_OFFSET_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.offset = MPIDI_COMM(comm_ptr, map).reg.offset;
+        case MPIR_RANK_MAP_OFFSET:
+        case MPIR_RANK_MAP_OFFSET_INTRA:
+            tmp_comm_ptr->local_map.reg.offset = comm_ptr->map.reg.offset;
             break;
-        case MPIDI_RANK_MAP_STRIDE:
-        case MPIDI_RANK_MAP_STRIDE_INTRA:
-        case MPIDI_RANK_MAP_STRIDE_BLOCK:
-        case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
-                MPIDI_COMM(comm_ptr, map).reg.stride.stride;
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
-                MPIDI_COMM(comm_ptr, map).reg.stride.blocksize;
-            MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
-                MPIDI_COMM(comm_ptr, map).reg.stride.offset;
+        case MPIR_RANK_MAP_STRIDE:
+        case MPIR_RANK_MAP_STRIDE_INTRA:
+        case MPIR_RANK_MAP_STRIDE_BLOCK:
+        case MPIR_RANK_MAP_STRIDE_BLOCK_INTRA:
+            tmp_comm_ptr->local_map.reg.stride.stride = comm_ptr->map.reg.stride.stride;
+            tmp_comm_ptr->local_map.reg.stride.blocksize = comm_ptr->map.reg.stride.blocksize;
+            tmp_comm_ptr->local_map.reg.stride.offset = comm_ptr->map.reg.stride.offset;
             break;
-        case MPIDI_RANK_MAP_LUT:
-        case MPIDI_RANK_MAP_LUT_INTRA:
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
-                MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
+        case MPIR_RANK_MAP_LUT:
+        case MPIR_RANK_MAP_LUT_INTRA:
+            tmp_comm_ptr->local_map.irreg.lut.t = comm_ptr->map.irreg.lut.t;
+            tmp_comm_ptr->local_map.irreg.lut.lpid = comm_ptr->map.irreg.lut.lpid;
             break;
-        case MPIDI_RANK_MAP_MLUT:
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t =
-                MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
-            MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
-                MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
+        case MPIR_RANK_MAP_MLUT:
+            tmp_comm_ptr->local_map.irreg.mlut.t = comm_ptr->map.irreg.mlut.t;
+            tmp_comm_ptr->local_map.irreg.mlut.gpid = comm_ptr->map.irreg.mlut.gpid;
             break;
-        case MPIDI_RANK_MAP_NONE:
+        case MPIR_RANK_MAP_NONE:
             MPIR_Assert(0);
             break;
     }
 
     /* set mapping for remote group */
-    mpi_errno = MPIDIU_alloc_mlut(&mlut, remote_size);
+    mpi_errno = MPIR_alloc_mlut(&mlut, remote_size);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_COMM(tmp_comm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
-    MPIDI_COMM(tmp_comm_ptr, map).size = remote_size;
-    MPIDI_COMM(tmp_comm_ptr, map).avtid = -1;
-    MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.t = mlut;
-    MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid = mlut->gpid;
+    tmp_comm_ptr->map.mode = MPIR_RANK_MAP_MLUT;
+    tmp_comm_ptr->map.size = remote_size;
+    tmp_comm_ptr->map.avtid = -1;
+    tmp_comm_ptr->map.irreg.mlut.t = mlut;
+    tmp_comm_ptr->map.irreg.mlut.gpid = mlut->gpid;
     for (i = 0; i < remote_size; ++i) {
-        MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].avtid =
-            MPIDIU_LUPID_GET_AVTID(remote_lupids[i]);
-        MPIDI_COMM(tmp_comm_ptr, map).irreg.mlut.gpid[i].lpid =
-            MPIDIU_LUPID_GET_LPID(remote_lupids[i]);
+        tmp_comm_ptr->map.irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(remote_lupids[i]);
+        tmp_comm_ptr->map.irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(remote_lupids[i]);
     }
 
     MPIR_Comm_commit(tmp_comm_ptr);

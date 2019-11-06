@@ -306,6 +306,10 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
 
+    /* Creating rank map */
+    mpi_errno = MPIR_Comm_create_rank_map(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_create_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -740,6 +744,8 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
          * destroyed */
         mpi_errno = MPID_Comm_free_hook(comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+
+        MPIR_Comm_destroy_rank_map(comm_ptr);
 
         /* Free info hints */
         if (comm_ptr->info != NULL) {

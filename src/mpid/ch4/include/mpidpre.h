@@ -440,69 +440,6 @@ typedef struct MPIDIG_comm_t {
 #endif
 } MPIDIG_comm_t;
 
-#define MPIDI_CALC_STRIDE(rank, stride, blocksize, offset) \
-    ((rank) / (blocksize) * ((stride) - (blocksize)) + (rank) + (offset))
-
-#define MPIDI_CALC_STRIDE_SIMPLE(rank, stride, offset) \
-    ((rank) * (stride) + (offset))
-
-typedef enum {
-    MPIDI_RANK_MAP_DIRECT,
-    MPIDI_RANK_MAP_DIRECT_INTRA,
-    MPIDI_RANK_MAP_OFFSET,
-    MPIDI_RANK_MAP_OFFSET_INTRA,
-    MPIDI_RANK_MAP_STRIDE,
-    MPIDI_RANK_MAP_STRIDE_INTRA,
-    MPIDI_RANK_MAP_STRIDE_BLOCK,
-    MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA,
-    MPIDI_RANK_MAP_LUT,
-    MPIDI_RANK_MAP_LUT_INTRA,
-    MPIDI_RANK_MAP_MLUT,
-    MPIDI_RANK_MAP_NONE
-} MPIDI_rank_map_mode;
-
-typedef int MPIDI_lpid_t;
-typedef struct {
-    int avtid;
-    int lpid;
-} MPIDI_gpid_t;
-
-typedef struct {
-    MPIR_OBJECT_HEADER;
-    MPIDI_lpid_t lpid[];
-} MPIDI_rank_map_lut_t;
-
-typedef struct {
-    MPIR_OBJECT_HEADER;
-    MPIDI_gpid_t gpid[];
-} MPIDI_rank_map_mlut_t;
-
-typedef struct {
-    MPIDI_rank_map_mode mode;
-    int avtid;
-    int size;
-
-    union {
-        int offset;
-        struct {
-            int offset;
-            int stride;
-            int blocksize;
-        } stride;
-    } reg;
-
-    union {
-        struct {
-            MPIDI_rank_map_lut_t *t;
-            MPIDI_lpid_t *lpid;
-        } lut;
-        struct {
-            MPIDI_rank_map_mlut_t *t;
-            MPIDI_gpid_t *gpid;
-        } mlut;
-    } irreg;
-} MPIDI_rank_map_t;
-
 typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the AM(MPIDIG) apis */
@@ -516,9 +453,6 @@ typedef struct MPIDI_Devcomm_t {
         union {
         MPIDI_SHM_COMM_DECL} shm;
 #endif
-
-        MPIDI_rank_map_t map;
-        MPIDI_rank_map_t local_map;
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
@@ -583,7 +517,7 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPIDI_DYNPROC_MASK                 (0x80000000U)
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) \
-    (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
+    ((comm)->map.avtid == 0 && (comm)->local_map.avtid == 0)
 
 int MPIDI_check_for_failed_procs(void);
 

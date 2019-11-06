@@ -35,6 +35,7 @@ mpi_sources +=                       \
 
 mpi_core_sources += \
     src/mpi/comm/commutil.c \
+    src/mpi/comm/rankmap.c \
     src/mpi/comm/contextid.c
 
 noinst_HEADERS += src/mpi/comm/mpicomm.h

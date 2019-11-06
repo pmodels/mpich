@@ -68,6 +68,78 @@ int MPIR_Comm_map_dup(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
                       MPIR_Comm_map_dir_t dir);
 int MPIR_Comm_map_free(struct MPIR_Comm *comm);
 
+/* Rank map data structure */
+#define MPIR_CALC_STRIDE(rank, stride, blocksize, offset) \
+    ((rank) / (blocksize) * ((stride) - (blocksize)) + (rank) + (offset))
+
+#define MPIR_CALC_STRIDE_SIMPLE(rank, stride, offset) \
+    ((rank) * (stride) + (offset))
+
+typedef enum {
+    MPIR_RANK_MAP_DIRECT,
+    MPIR_RANK_MAP_DIRECT_INTRA,
+    MPIR_RANK_MAP_OFFSET,
+    MPIR_RANK_MAP_OFFSET_INTRA,
+    MPIR_RANK_MAP_STRIDE,
+    MPIR_RANK_MAP_STRIDE_INTRA,
+    MPIR_RANK_MAP_STRIDE_BLOCK,
+    MPIR_RANK_MAP_STRIDE_BLOCK_INTRA,
+    MPIR_RANK_MAP_LUT,
+    MPIR_RANK_MAP_LUT_INTRA,
+    MPIR_RANK_MAP_MLUT,
+    MPIR_RANK_MAP_NONE
+} MPIR_rank_map_mode;
+
+typedef int MPIR_lpid_t;
+typedef struct {
+    int avtid;
+    int lpid;
+} MPIR_gpid_t;
+
+typedef struct {
+    MPIR_OBJECT_HEADER;
+    MPIR_lpid_t lpid[0];
+} MPIR_rank_map_lut_t;
+
+typedef struct {
+    MPIR_OBJECT_HEADER;
+    MPIR_gpid_t gpid[0];
+} MPIR_rank_map_mlut_t;
+
+typedef struct {
+    MPIR_rank_map_mode mode;
+    int avtid;
+    int size;
+
+    union {
+        int offset;
+        struct {
+            int offset;
+            int stride;
+            int blocksize;
+        } stride;
+    } reg;
+
+    union {
+        struct {
+            MPIR_rank_map_lut_t *t;
+            MPIR_lpid_t *lpid;
+        } lut;
+        struct {
+            MPIR_rank_map_mlut_t *t;
+            MPIR_gpid_t *gpid;
+        } mlut;
+    } irreg;
+} MPIR_rank_map_t;
+
+int MPIR_Comm_create_rank_map(MPIR_Comm * comm);
+void MPIR_Comm_destroy_rank_map(MPIR_Comm * comm);
+int MPIR_alloc_lut(MPIR_rank_map_lut_t ** lut, int size);
+int MPIR_release_lut(MPIR_rank_map_lut_t * lut);
+int MPIR_alloc_mlut(MPIR_rank_map_mlut_t ** mlut, int size);
+int MPIR_release_mlut(MPIR_rank_map_mlut_t * mlut);
+
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -186,6 +258,10 @@ struct MPIR_Comm {
      * the device has initialized the comm. */
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
+
+    /* Rankmap */
+    MPIR_rank_map_t map;
+    MPIR_rank_map_t local_map;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
