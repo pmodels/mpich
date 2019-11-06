@@ -782,28 +782,30 @@ AC_ARG_WITH([cart],
             [Build DAOS ROMIO driver[default=no]])],,
     [with_cart=no])
 
-AS_IF([test "x$with_cart" != xno],
+AS_IF([test "x$with_cart" != xno], [
     CART="yes"
     LDFLAGS="$LDFLAGS -L$with_cart/lib"
     CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
     AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
-    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART]))
+    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART])
+])
 
 AC_ARG_WITH([daos],
     [AS_HELP_STRING([--with-daos],
 	    [Build DAOS ROMIO driver[default=no]])],,
     [with_daos=no])
 
-AS_IF([test "x$with_daos" != xno],
+AS_IF([test "x$with_daos" != xno], [
     DAOS="yes"
-    LDFLAGS="$LDFLAGS -L$with_daos/lib"
+    LDFLAGS="$LDFLAGS -L$with_daos/lib -L$with_daos/lib64"
     CPPFLAGS="$CPPFLAGS -I$with_daos/include"
     AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
     AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
     AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
     AC_CHECK_LIB([dfs], [dfs_mount],, [unset DAOS])
-    AC_CHECK_LIB([duns], [duns_resolve_path],, [unset DAOS]))
+    AC_CHECK_LIB([duns], [duns_resolve_path],, [unset DAOS])
+])
 
 AS_IF([test "x$CART" != xyes], [unset DAOS])
 
