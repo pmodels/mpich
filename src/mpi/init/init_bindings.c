@@ -6,6 +6,28 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
+/* ** FORTRAN binding **************/
+
+#ifdef HAVE_FORTRAN_BINDING
+/* Fortran logical values. extern'd in mpiimpl.h */
+/* MPI_Fint MPII_F_TRUE, MPII_F_FALSE; */
+/*
+    # Note that the global variables have values.  This is to work around
+    # a bug in some C environments (e.g., Mac OS/X) that don't load
+    # external symbols that don't have a value assigned at compile time
+    # (so called common symbols)
+*/
+#ifndef F77_USE_BOOLEAN_LITERALS
+#if defined(F77_RUNTIME_VALUES) || !defined(F77_TRUE_VALUE_SET)
+MPI_Fint MPII_F_TRUE = 1, MPII_F_FALSE = 0;
+#else
+const MPI_Fint MPII_F_TRUE = F77_TRUE_VALUE;
+const MPI_Fint MPII_F_FALSE = F77_FALSE_VALUE;
+#endif
+#endif
+
+#endif /* HAVE_FORTRAN_BINDING */
+
 /* ** CXX binding **************/
 void MPII_init_binding_cxx(void)
 {
