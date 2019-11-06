@@ -1044,7 +1044,7 @@ EOT
 
     # The definitions for the Fortran wrappers are special
     print MAKEFD <<EOT;
-mpi_core_sources += src/binding/fortran/mpif_h/fdebug.c \\
+mpi_f77_sources += src/binding/fortran/mpif_h/fdebug.c \\
 		src/binding/fortran/mpif_h/setbot.c \\
 		src/binding/fortran/mpif_h/setbotf.f
 mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h/statusc2f.c
