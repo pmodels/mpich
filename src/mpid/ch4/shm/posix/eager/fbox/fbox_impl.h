@@ -12,6 +12,6 @@
 #define POSIX_EAGER_FBOX_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 #endif /* POSIX_EAGER_FBOX_IMPL_H_INCLUDED */

@@ -6,7 +6,6 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidu_shm.h"
 #include "mpidu_bc.h"
 #include "mpidu_init_shm.h"
 
@@ -23,7 +22,7 @@ int MPIDU_bc_table_destroy(void)
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDU_shm_seg_free((void *) segment);
+    mpi_errno = MPIDU_Init_shm_free((void *) segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rank_map) {
@@ -151,7 +150,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         *ret_bc_len = recv_bc_len;
     }
 
-    mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment);
+    mpi_errno = MPIDU_Init_shm_alloc(recv_bc_len * size, (void **) &segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {

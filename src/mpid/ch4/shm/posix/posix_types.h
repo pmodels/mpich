@@ -12,7 +12,6 @@
 #ifndef POSIX_TYPES_H_INCLUDED
 #define POSIX_TYPES_H_INCLUDED
 
-#include "mpidu_shm.h"
 #include "mpidu_init_shm.h"
 
 enum {
