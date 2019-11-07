@@ -255,7 +255,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If set to positive, this CVAR specifies the maximum number of CH4 VCIs
+        If set to positive, this CVAR specifies the maximum number of CH4 VNIs
         that OFI netmod exposes.
 
     - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
@@ -969,7 +969,7 @@ static int create_vni_context(int vni)
     struct fid_ep *tx;
     struct fid_ep *rx;
 
-#ifdef MPIDI_OFI_VCI_USE_DOMAIN
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     mpi_errno = create_vni_domain(&domain, &av, &rma_cmpl_cntr);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = create_cq(domain, &cq);
@@ -1001,7 +1001,7 @@ static int create_vni_context(int vni)
     MPIDI_OFI_global.ctx[vni].tx = tx;
     MPIDI_OFI_global.ctx[vni].rx = rx;
 
-#else /* MPIDI_OFI_VCI_USE_SEPCTX */
+#else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (vni == 0) {
         mpi_errno = create_vni_domain(&domain, &av, &rma_cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
@@ -1088,7 +1088,7 @@ static int destroy_vni_context(int vni)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_OFI_VCI_USE_DOMAIN
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].tx), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].rx), epclose);
@@ -1106,7 +1106,7 @@ static int destroy_vni_context(int vni)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[vni].domain->fid), domainclose);
     }
 
-#else /* MPIDI_OFI_VCI_USE_SEPCTX */
+#else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].tx), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_global.ctx[vni].rx), epclose);
@@ -1281,7 +1281,7 @@ static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx,
 
 static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
 {
-#ifdef MPIDI_OFI_VCI_USE_DOMAIN
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     /* shared/named av table cannot be used when multiple fi_domain is enabled */
     return 0;
 #else
