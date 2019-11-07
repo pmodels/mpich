@@ -31,7 +31,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_recv(uint64_t src_offset, ui
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_HANDLE_LMT_RECV);
 
     mpi_errno = MPIDI_XPMEM_seg_regist(src_lrank, src_data_sz, (void *) src_offset,
-                                       &seg_ptr, &attached_sbuf);
+                                       &seg_ptr, &attached_sbuf,
+                                       &MPIDI_XPMEM_global.segmaps[src_lrank].segcache);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
