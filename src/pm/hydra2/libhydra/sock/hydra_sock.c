@@ -10,6 +10,7 @@
 
 static inline HYD_status get_listen_socket(int *listen_fd)
 {
+    int one = 1;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -79,7 +80,7 @@ HYD_status HYD_sock_listen_on_any_port(int *listen_fd, uint16_t * port)
         goto fn_fail;
     }
 
-    ret = MPL_listen_anyport(listen_fd, port);
+    ret = MPL_listen_anyport(*listen_fd, port);
     HYD_ERR_POP(ret, "error listening on port 0\n");
 
   fn_exit:
@@ -156,7 +157,6 @@ HYD_status HYD_sock_connect(const char *host, uint16_t port, int *fd, int retrie
                             unsigned long delay)
 {
     MPL_sockaddr_t addr;
-    int ret;
     int one = 1, ret, retry_count;
     HYD_status status = HYD_SUCCESS;
 
