@@ -542,7 +542,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     next_seqno = am_hdr->seqno + 1;
     switch (am_hdr->am_type) {
         case MPIDI_AMTYPE_SHORT_HDR:
-            mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr->payload);
+            mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr + 1 /* payload */);
 
             MPIR_ERR_CHECK(mpi_errno);
 

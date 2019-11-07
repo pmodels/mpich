@@ -744,7 +744,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;
-    fi_addr_t conn = -1;
+    fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
     int get_tag = -1;
 
@@ -764,6 +764,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 
         mpi_errno = get_tag_from_port(port_name, &port_id);
         MPIR_ERR_CHECK(mpi_errno);
+        /* note: conn is a dummy for DYNPROC_RECEIVER (phase 0). */
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
                                  &child_root, &remote_size, &remote_upid_size, &remote_upids,

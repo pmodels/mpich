@@ -44,6 +44,8 @@ typedef struct {
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
         MPIDI_SHM_ctrl_xpmem_send_lmt_req_t xpmem_slmt_req;
         MPIDI_SHM_ctrl_xpmem_send_lmt_ack_t xpmem_slmt_ack;
+#else
+        char dummy;             /* some compilers (suncc) does not like empty struct */
 #endif
     };
 } MPIDI_SHM_ctrl_hdr_t;
