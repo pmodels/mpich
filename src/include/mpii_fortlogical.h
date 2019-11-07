@@ -6,9 +6,24 @@
 #ifndef MPII_FORTLOGICAL_H_INCLUDED
 #define MPII_FORTLOGICAL_H_INCLUDED
 
+#if !defined(F77_TRUE_VALUE_SET)
+#define F77_TRUE_VALUE 1
+#define F77_FALSE_VALUE 0
+#define F77_TRUE_VALUE_SET
+#endif
+
+/* We originally support F77_RUNTIME_VALUES, which I believe it is the
+ * reason we require MPII_F_TRUE/FALSE to be global variables.
+ * Now that F77_RUNTIME_VALUES support has disappeared, let's remove the
+ * global variables and redefine them as boolearn literal. This will remove
+ * the complication of resolving symbols between libmpi.so and libmpifort.so.
+ */
+
+#define MPII_F_TRUE F77_TRUE_VALUE
+#define MPII_F_FALSE F77_FALSE_VALUE
+
 /* Fortran logical values */
 #ifndef _CRAY
-MPICH_API_PUBLIC extern const MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
 
 #define MPII_TO_FLOG(a) ((a) ? MPII_F_TRUE : MPII_F_FALSE)
 /*
