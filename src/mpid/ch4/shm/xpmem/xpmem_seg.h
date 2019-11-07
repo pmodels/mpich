@@ -486,13 +486,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
 
 /* Registers a segment into cache for the specified remote buffer.
  * It internally rounds down the low address and rounds up the size to
- * ensure the cached segment is page aligned.
+ * ensure the cached segment is page aligned. Specific tree is given to
+ * differentiate different cache tree (e.g. user buffer tree used to cache
+ * user buffer, and XPMEM cooperative counter tree used to cache counter
+ * obj)
  *
  * Input parameters:
  * - node_rank:    rank of remote process on local node.
  * - size:         size in bytes of the remote buffer.
  * - remote_vaddr: start virtual address of the remote buffer
- *
+ * - segcache: specific tree we want to insert segment into
  * Output parameters:
  * - seg_ptr: registered segment. It can be a matched existing segment
  *            or a newly created one.
@@ -500,7 +503,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
  *            virtual address space. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
                                                     void *remote_vaddr,
-                                                    MPIDI_XPMEM_seg_t ** seg_ptr, void **vaddr)
+                                                    MPIDI_XPMEM_seg_t ** seg_ptr, void **vaddr,
+                                                    MPIDI_XPMEM_segtree_t * segcache)
 {
     int mpi_errno = MPI_SUCCESS, c = 0;
     MPIDI_XPMEM_segmap_t *segmap = &MPIDI_XPMEM_global.segmaps[node_rank];
@@ -526,7 +530,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
     seg_size = MPL_ROUND_UP_ALIGN(size + (size_t) offset_diff, MPIDI_XPMEM_global.sys_page_sz);
     seg_high = seg_low + seg_size;
     mpi_errno =
-        MPIDI_XPMEM_segtree_do_search_and_insert_safe(&segmap->segcache, seg_low, seg_high,
+        MPIDI_XPMEM_segtree_do_search_and_insert_safe(segcache, seg_low, seg_high,
                                                       segmap->apid, &seg, &voffset);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Object_add_ref(seg);
