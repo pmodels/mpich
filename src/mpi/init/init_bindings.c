@@ -17,14 +17,14 @@
     # external symbols that don't have a value assigned at compile time
     # (so called common symbols)
 */
-#ifndef F77_USE_BOOLEAN_LITERALS
-#if defined(F77_RUNTIME_VALUES) || !defined(F77_TRUE_VALUE_SET)
-MPI_Fint MPII_F_TRUE = 1, MPII_F_FALSE = 0;
-#else
+#if !defined(F77_TRUE_VALUE_SET)
+#define F77_TRUE_VALUE 1
+#define F77_FALSE_VALUE 0
+#define F77_TRUE_VALUE_SET
+#endif
+
 const MPI_Fint MPII_F_TRUE = F77_TRUE_VALUE;
 const MPI_Fint MPII_F_FALSE = F77_FALSE_VALUE;
-#endif
-#endif
 
 #endif /* HAVE_FORTRAN_BINDING */
 
