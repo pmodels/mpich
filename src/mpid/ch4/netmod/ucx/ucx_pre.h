@@ -37,7 +37,7 @@ typedef struct {
 typedef struct MPIDI_UCX_am_header_t {
     uint64_t handler_id;
     uint64_t data_sz;
-    uint64_t payload[0];
+    uint64_t payload[];
 } MPIDI_UCX_am_header_t;
 
 typedef struct MPIDI_UCX_win_info {

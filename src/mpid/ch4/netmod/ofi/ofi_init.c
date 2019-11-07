@@ -425,7 +425,7 @@ static int dynproc_send_disconnect(int conn_id)
     MPIR_Context_id_t context_id = 0xF000;
     MPIDI_OFI_dynamic_process_request_t req;
     uint64_t match_bits = 0;
-    int close_msg = 0xcccccccc;
+    unsigned int close_msg = 0xcccccccc;
     struct fi_msg_tagged msg;
     struct iovec msg_iov;
 

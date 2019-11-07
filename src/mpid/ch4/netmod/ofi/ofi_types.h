@@ -43,9 +43,9 @@
 /* The number of bits in the immediate data field allocated to the error propagation. */
 #define MPIDI_OFI_IDATA_ERROR_BITS (2)
 /* Bit mask for MPIR_ERR_OTHER */
-#define MPIDI_OFI_ERR_OTHER (0x1)
+#define MPIDI_OFI_ERR_OTHER (0x1ULL)
 /* Bit mask for MPIR_PROC_FAILED */
-#define MPIDI_OFI_ERR_PROC_FAILED (0x2)
+#define MPIDI_OFI_ERR_PROC_FAILED (0x2ULL)
 
 /* Set the error bits */
 static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Errflag_t errflag)
@@ -502,7 +502,7 @@ typedef struct {
             struct fi_ioc *resultv;
         } get_accumulate;
     } iov;
-    char iov_store[0];          /* Flexible array, do not move */
+    char iov_store[];           /* Flexible array, do not move */
 } MPIDI_OFI_win_noncontig_t;
 
 typedef struct MPIDI_OFI_win_request {

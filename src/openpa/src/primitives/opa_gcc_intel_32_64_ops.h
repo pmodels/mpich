@@ -32,6 +32,12 @@ typedef struct {
 #define OPA_INT_T_INITIALIZER(val_) { (val_) }
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
 
+/* Oracle Developer Studio (suncc) warns for unused argument in the gcc asm statments
+ * Suppress the error_messages here and reset at the end of this file.
+ */
+#ifdef __SUNPRO_C
+#pragma error_messages (off, E_ASM_UNUSED_PARAM)
+#endif
 /* Aligned loads and stores are atomic on x86(-64). */
 static inline int OPA_load_int(const OPA_int_t * ptr)
 {
@@ -164,5 +170,9 @@ static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 }
 
 #undef OPA_SS
+
+#ifdef __SUNPRO_C
+#pragma error_messages (default, E_ASM_UNUSED_PARAM)
+#endif
 
 #endif /* OPA_GCC_INTEL_32_64_OPS_H_INCLUDED */
