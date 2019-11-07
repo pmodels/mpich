@@ -683,9 +683,6 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYD_PRINT_NOPREFIX(stdout, "    Release Date:                            %s\n",
                        HYDRA_RELEASE_DATE);
     HYD_PRINT_NOPREFIX(stdout, "    CC:                              %s\n", HYDRA_CC);
-    HYD_PRINT_NOPREFIX(stdout, "    CXX:                             %s\n", HYDRA_CXX);
-    HYD_PRINT_NOPREFIX(stdout, "    F77:                             %s\n", HYDRA_F77);
-    HYD_PRINT_NOPREFIX(stdout, "    F90:                             %s\n", HYDRA_F90);
     HYD_PRINT_NOPREFIX(stdout, "    Configure options:                       %s\n",
                        HYDRA_CONFIGURE_ARGS_CLEAN);
     HYD_PRINT_NOPREFIX(stdout, "    Process Manager:                         pmi\n");
