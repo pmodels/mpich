@@ -55,36 +55,6 @@ AC_MSG_RESULT([$pac_result])
 dnl Delete the conftest created by AC_LANG_CONFTEST.
 rm -f conftest.$ac_ext
 
-# gcc 4.2.4 on 32-bit does not complain about the -Wno-type-limits option 
-# even though it doesn't support it.  However, when another warning is 
-# triggered, it gives an error that the option is not recognized.  So we 
-# need to test with a conftest file that will generate warnings.
-# 
-# add an extra switch, pac_c_check_compiler_option_prototest, to
-# disable this test just in case some new compiler does not like it.
-#
-# Linking with a program with an invalid prototype to ensure a compiler warning.
-
-if test "$pac_result" = "yes" \
-     -a "$pac_c_check_compiler_option_prototest" != "no" ; then
-    AC_MSG_CHECKING([whether C compiler option $1 works with an invalid prototype program])
-    AC_LINK_IFELSE([
-        dnl We want a warning, but we don't want to inadvertently disable
-        dnl special warnings like -Werror-implicit-function-declaration (e.g.,
-        dnl in PAC_CC_STRICT) by compiling something that might actually be
-        dnl treated as an error by the compiler.  So we try to elicit an
-        dnl "unused variable" warning and/or an "uninitialized" warning with the
-        dnl test program below.
-        dnl
-        dnl The old sanity program was:
-        dnl   void main() {return 0;}
-        dnl which clang (but not GCC) would treat as an *error*, invalidating
-        dnl the test for any given parameter.
-        AC_LANG_SOURCE([int main(int argc, char **argv){ int foo, bar = 0; foo += 1; return foo; }])
-    ],[pac_result=yes],[pac_result=no])
-    AC_MSG_RESULT([$pac_result])
-fi
-#
 if test "$pac_result" = "yes" ; then
     AC_MSG_CHECKING([whether routines compiled with $pac_opt can be linked with ones compiled without $pac_opt])
     pac_result=unknown
