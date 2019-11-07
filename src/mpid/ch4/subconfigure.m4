@@ -526,14 +526,6 @@ fi
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 
-gl_FUNC_RANDOM_R
-if test "$HAVE_RANDOM_R" = "1" -a "$HAVE_STRUCT_RANDOM_DATA" = "1" ; then
-    AC_DEFINE(USE_SYM_HEAP,1,[Define if we can use a symmetric heap])
-    AC_MSG_NOTICE([Using a symmetric heap])
-else
-    AC_MSG_NOTICE([Using a non-symmetric heap])
-fi
-
 AC_CHECK_FUNCS(gethostname)
 if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
