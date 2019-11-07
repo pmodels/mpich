@@ -9,6 +9,7 @@
 #define MPIR_NETLOC_H_INCLUDED
 
 #include "netloc.h"
+#include "hwloc.h"
 #include "mpir_hw_topo.h"
 
 typedef struct {
@@ -32,7 +33,7 @@ typedef struct {
     netloc_node_t *network_endpoint;
 } MPIR_Netloc_network_attributes;
 
-int MPIR_Netloc_parse_topology(netloc_topology_t topology,
+int MPIR_Netloc_parse_topology(hwloc_topology_t hwloc_topology, netloc_topology_t topology,
                                MPIR_Netloc_network_attributes * network_attr);
 
 int MPIR_Netloc_get_network_end_point(MPIR_Netloc_network_attributes,

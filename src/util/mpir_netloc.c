@@ -26,7 +26,7 @@ typedef struct tree {
     int num_edges;
 } tree;
 
-static int get_tree_attributes(netloc_topology_t topology,
+static int get_tree_attributes(hwloc_topology_t hwloc_topology, netloc_topology_t topology,
                                MPIR_Netloc_network_attributes * network_attr)
 {
     int i, j, k, l;
@@ -292,11 +292,10 @@ static int get_tree_attributes(netloc_topology_t topology,
                     network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE;
                 }
 
-                errno = MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
-                                                          MPIR_Process.netloc_topology,
-                                                          MPIR_Process.hwloc_topology,
-                                                          &MPIR_Process.
-                                                          network_attr.network_endpoint);
+                errno = MPIR_Netloc_get_network_end_point(network_attr,
+                                                          topology,
+                                                          hwloc_topology,
+                                                          &network_attr->network_endpoint);
                 if (errno != MPI_SUCCESS) {
                     network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
                 }
@@ -842,7 +841,7 @@ static void find_maximum_matching(netloc_topology_t topology, netloc_node_t *** 
     return;
 }
 
-static int get_torus_attributes(netloc_topology_t topology,
+static int get_torus_attributes(hwloc_topology_t hwloc_topology, netloc_topology_t topology,
                                 MPIR_Netloc_network_attributes * network_attr)
 {
     netloc_dt_lookup_table_t *nodes;
@@ -1414,16 +1413,15 @@ static int get_torus_attributes(netloc_topology_t topology,
             }
 
             /* Identify the network node corresponding to the current rank's node */
-            errno = MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
-                                                      MPIR_Process.netloc_topology,
-                                                      MPIR_Process.hwloc_topology,
-                                                      &MPIR_Process.network_attr.network_endpoint);
+            errno = MPIR_Netloc_get_network_end_point(network_attr,
+                                                      topology,
+                                                      hwloc_topology,
+                                                      &network_attr->network_endpoint);
             if (errno != MPI_SUCCESS) {
                 network_attr->type = MPIR_NETWORK_TOPOLOGY_TYPE__INVALID;
             } else {
                 /* Flatten computed coordinates into a long value for the current node */
-                coordinates =
-                    temp_coordinate_map[MPIR_Process.network_attr.network_endpoint->__uid__];
+                coordinates = temp_coordinate_map[network_attr->network_endpoint->__uid__];
                 node_index = coordinates[0];
                 for (j = 1; j < path_graph_insert; j++) {
                     node_index = (node_index * network_attr->u.torus.geometry[j]) + coordinates[j];
@@ -1454,15 +1452,15 @@ static int get_torus_attributes(netloc_topology_t topology,
     goto fn_exit;
 }
 
-int MPIR_Netloc_parse_topology(netloc_topology_t netloc_topology,
+int MPIR_Netloc_parse_topology(hwloc_topology_t hwloc_topology, netloc_topology_t netloc_topology,
                                MPIR_Netloc_network_attributes * network_attr)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpi_errno = get_tree_attributes(MPIR_Process.netloc_topology, network_attr);
+    mpi_errno = get_tree_attributes(hwloc_topology, netloc_topology, network_attr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (network_attr->type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
-        mpi_errno = get_torus_attributes(MPIR_Process.netloc_topology, network_attr);
+        mpi_errno = get_torus_attributes(hwloc_topology, netloc_topology, network_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
