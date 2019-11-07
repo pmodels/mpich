@@ -26,8 +26,8 @@
 /* Defines */
 
 /* configure option --enable-ofi-domain */
-#ifndef MPIDI_OFI_VCI_USE_DOMAIN
-#define MPIDI_OFI_VCI_USE_SEPCTX       1
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+#define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128

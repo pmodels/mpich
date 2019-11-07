@@ -294,7 +294,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     ],,enable_ofi_domain=yes)
 
     if test "$enable_ofi_domain" = "yes"; then
-        AC_DEFINE(MPIDI_OFI_VCI_USE_DOMAIN, 1, [CH4/OFI should use domain for vci contexts])
+        AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vci contexts])
     fi
 
     AC_ARG_ENABLE(legacy-ofi,
