@@ -23,8 +23,6 @@
 extern int mkstemp(char *t);
 #endif
 
-#include "mpidimpl.h"
-
 typedef struct memory_list {
     void *ptr;
     MPIDU_shm_seg_t *memory;
