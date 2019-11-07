@@ -7,6 +7,16 @@
 #ifndef MPL_ATOMIC_C11_H_INCLUDED
 #define MPL_ATOMIC_C11_H_INCLUDED
 
+#ifdef __INTEL_COMPILER
+/*
+ * Function prototypes of C11 atomic functions in ICC 19.0.4 are different from
+ * the C11 standard, causing countless "dropping qualifiers" warnings.
+ * The following pragmas are to suppress these warnings.
+ */
+#pragma warning(push)
+#pragma warning(disable: 2330)
+#endif
+
 #include <stdint.h>
 #include <stdatomic.h>
 
@@ -114,5 +124,9 @@ static inline void MPL_atomic_compiler_barrier(void)
     /* atomic_signal_fence performs a compiler barrier without any overhead */
     atomic_signal_fence(memory_order_acq_rel);
 }
+
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 #endif /* MPL_ATOMIC_C11_H_INCLUDED */
