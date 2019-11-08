@@ -303,8 +303,17 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
 static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Info *lw_recv_info;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
+
+    /* apply lw_recv hint if no other info */
+    if (comm->info == NULL) {
+        MPIR_Info_alloc(&lw_recv_info);
+        MPIR_Info_set_impl(lw_recv_info, "lw_recv", "true");
+        comm->info = lw_recv_info;
+        MPII_Comm_apply_hints(comm, comm->info);
+    }
 
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_create_hook(comm);
