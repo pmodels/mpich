@@ -550,7 +550,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_ERR_CHECK(mpi_errno);
 
     /* ------------------------------------------------------------------------ */
-    /* Create a transport level communication contexts.                         */
+    /* Create transport level communication contexts.                           */
     /* ------------------------------------------------------------------------ */
 
     int num_vnis = 1;
@@ -578,16 +578,21 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    /* ------------------------------------------------------------------------ */
+    /* Address exchange (essentially activating the vnis)                       */
+    /* ------------------------------------------------------------------------ */
+
     if (!MPIDI_OFI_global.got_named_av) {
-        /* ---------------------------------- */
-        /* Get our endpoint name and publish  */
-        /* the socket to the KVS              */
-        /* ---------------------------------- */
+        /* No pre-published address table, need do address exchange. */
+        /* First, each get its own name */
         MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
         MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname,
                                   &MPIDI_OFI_global.addrnamelen), getname);
         MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
 
+        /* Second, exchange names using PMI */
+        /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
+         * Otherwise, we collect a table of everyone. */
         int ret_bc_len;
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
                                           &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
@@ -595,14 +600,14 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIR_ERR_CHECK(mpi_errno);
         /* MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen); */
 
-        /* -------------------------------- */
-        /* Table is constructed.  Map it    */
-        /* -------------------------------- */
+        /* Third, each fi_av_insert those addresses */
         if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+            /* if "ROOTS_ONLY", we do a two stage bootstrapping ... */
             int num_nodes = MPIR_Process.num_nodes;
             int *node_roots = MPIR_Process.node_root_map;
             int *rank_map, recv_bc_len;
 
+            /* First, insert address of node-roots, init_comm become useful */
             mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
                            (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
@@ -615,9 +620,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 #endif
             }
             MPL_free(mapped_table);
+            /* Then, allgather all address names using init_comm */
             MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
                                TRUE, &table, &rank_map, &recv_bc_len);
 
+            /* Insert the rest of the addresses */
             for (i = 0; i < MPIR_Process.size; i++) {
                 if (rank_map[i] >= 0) {
                     mpi_errno =
@@ -627,6 +634,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             }
             MPIDU_bc_table_destroy();
         } else {
+            /* not "ROOTS_ONLY", we already have everyone's address name, insert all of them */
             mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
             MPIDI_OFI_CALL(fi_av_insert
                            (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL),
@@ -960,6 +968,21 @@ static int create_vni_context(int vni)
 
     struct fi_info *prov_use = MPIDI_OFI_global.prov_use;
 
+    /* Each VNI context consists of domain, av, cq, cntr, etc.
+     *
+     * If MPIDI_OFI_VNI_USE_DOMAIN is true, each context is a separate domain,
+     * within which are each separate av, cq, cntr, ..., everything. Within the
+     * VNI context, it still can use either simple endpoint or scalable endpoint.
+     *
+     * If MPIDI_OFI_VNI_USE_DOMAIN is false, then all the VNI contexts will share
+     * the same domain and av, and use a single scalable endpoint. Separate VNI
+     * context will have its separate cq and separate tx and rx with the SEP.
+     *
+     * To accomodate both configurations, each context structure will have all fields
+     * including domain, av, cq, ... For "VNI_USE_DOMAIN", they are not shared.
+     * When not "VNI_USE_DOMAIN" or "VNI_USE_SEPCTX", domain, av, and ep are shared
+     * with the root (or 0th) VNI context.
+     */
     struct fid_domain *domain;
     struct fid_av *av;
     struct fid_cntr *rma_cmpl_cntr;
