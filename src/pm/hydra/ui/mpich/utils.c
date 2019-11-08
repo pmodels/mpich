@@ -1239,9 +1239,6 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYDU_dump_noprefix(stdout,
                        "    Release Date:                            %s\n", HYDRA_RELEASE_DATE);
     HYDU_dump_noprefix(stdout, "    CC:                              %s\n", HYDRA_CC);
-    HYDU_dump_noprefix(stdout, "    CXX:                             %s\n", HYDRA_CXX);
-    HYDU_dump_noprefix(stdout, "    F77:                             %s\n", HYDRA_F77);
-    HYDU_dump_noprefix(stdout, "    F90:                             %s\n", HYDRA_F90);
     HYDU_dump_noprefix(stdout,
                        "    Configure options:                       %s\n",
                        HYDRA_CONFIGURE_ARGS_CLEAN);
