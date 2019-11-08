@@ -396,7 +396,9 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
     int mpi_errno = MPI_SUCCESS;
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-    int segsize = (pmi_max_val_size - 1) / 2;
+    /* reserve some spaces for '\0' and maybe newlines
+     * (depends on pmi implementations, and may not be sufficient) */
+    int segsize = (pmi_max_val_size - 2) / 2;
     if (bufsize < segsize) {
         encode(bufsize, buf, val);
         mpi_errno = optimized_put(key, val, is_local);
@@ -413,8 +415,8 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         for (i = 0; i < num_segs; i++) {
             char seg_key[50];
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
-            encode(bufsize, buf, val);
-            mpi_errno = optimized_put(key, val, is_local);
+            encode(segsize, (char *) buf + i * segsize, val);
+            mpi_errno = optimized_put(seg_key, val, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -452,7 +454,7 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
         for (i = 0; i < num_segs; i++) {
             char seg_key[50];
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
-            mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
+            mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
             if (i < num_segs - 1) {
                 decode(segsize, val, (char *) buf + i * segsize);
