@@ -59,8 +59,8 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
-                              MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_by_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                                 MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -723,7 +723,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     int info_args_are_equal;
     *newcomm_ptr = NULL;
 
-    mpi_errno = MPIR_Comm_split_type_node(user_comm_ptr, split_type, key, &comm_ptr);
+    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, split_type, key, &comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm_ptr == NULL) {
