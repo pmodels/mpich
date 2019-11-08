@@ -57,7 +57,7 @@ typedef struct MPIDI_XPMEM_segtree {
 typedef struct {
     xpmem_segid_t remote_segid;
     xpmem_apid_t apid;
-    MPIDI_XPMEM_segtree_t segcache;     /* AVL tree based segment cache for user buffer */
+    MPIDI_XPMEM_segtree_t segcache_ubuf;        /* AVL tree based segment cache for user buffer */
     MPIDI_XPMEM_segtree_t segcache_cnt; /* AVL tree based segment cache for XPMEM counter buffer */
 } MPIDI_XPMEM_segmap_t;
 

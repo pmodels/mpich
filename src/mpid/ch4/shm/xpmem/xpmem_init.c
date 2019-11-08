@@ -83,7 +83,7 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIDU_Init_shm_barrier();
     for (i = 0; i < num_local; ++i) {
         /* Init AVL tree based segment cache */
-        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache);      /* Initialize user buffer tree */
+        MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache_ubuf); /* Initialize user buffer tree */
         MPIDI_XPMEM_segtree_init(&MPIDI_XPMEM_global.segmaps[i].segcache_cnt);
         if (i != MPIDI_XPMEM_global.local_rank) {
             MPIDU_Init_shm_get(i, sizeof(uint64_t), &remote_cnt_mem_addr);
@@ -138,7 +138,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     for (i = 0; i < MPIDI_XPMEM_global.num_local; i++) {
         /* should be called before xpmem_release
          * MPIDI_XPMEM_segtree_tree_delete_all will call xpmem_detach */
-        MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache);
+        MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache_ubuf);
         MPIDI_XPMEM_segtree_delete_all(&MPIDI_XPMEM_global.segmaps[i].segcache_cnt);
         if (MPIDI_XPMEM_global.segmaps[i].apid != -1) {
             XPMEM_TRACE("finalize: release apid: node_rank %d, 0x%lx\n",

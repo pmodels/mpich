@@ -123,7 +123,8 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
                                                remote_vaddr,
                                                &xpmem_win->regist_segs[i],
                                                &shared_table[i].shm_base_addr,
-                                               &MPIDI_XPMEM_global.segmaps[node_rank].segcache);
+                                               &MPIDI_XPMEM_global.
+                                               segmaps[node_rank].segcache_ubuf);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (shared_table[i].size == 0)
             shared_table[i].shm_base_addr = NULL;

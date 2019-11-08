@@ -180,7 +180,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     mpi_errno =
         MPIDI_XPMEM_seg_regist(slmt_cts_hdr->dest_lrank, slmt_cts_hdr->data_sz,
                                (void *) slmt_cts_hdr->dest_offset, &seg_ptr, &dest_buf,
-                               &MPIDI_XPMEM_global.segmaps[slmt_cts_hdr->dest_lrank].segcache);
+                               &MPIDI_XPMEM_global.segmaps[slmt_cts_hdr->dest_lrank].segcache_ubuf);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_Datatype_check_size_lb(MPIDIG_REQUEST(sreq, datatype), MPIDIG_REQUEST(sreq, count),
