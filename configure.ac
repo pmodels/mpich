@@ -347,6 +347,12 @@ AC_ARG_ENABLE(tag-error-bits,
         no        - No bits are taken from the user tag (this could cause deadlock if an error is detected during a collective).
 ],,enable_tag_error_bits=yes)
 
+AC_ARG_ENABLE(extended-context-bits,
+[  --enable-extended-context-bits=yes|no - Enable wider context id space. (experimental)
+        yes       - 20 bits
+        no        - 16 bits (default)
+],,enable_extended_context_bits=no)
+
 AC_ARG_ENABLE(timing,
 [  --enable-timing=level - Control the amount of timing information
                            collected by the MPICH implementation.
@@ -973,6 +979,11 @@ AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable e
 #error-tags
 if test "$enable_tag_error_bits" = "yes" ; then
     AC_DEFINE([HAVE_TAG_ERROR_BITS],[1],[Define to enable tag error bits])
+fi
+
+# context bits
+if test "$enable_extended_context_bits" = "yes" ; then
+    AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
 # MPL

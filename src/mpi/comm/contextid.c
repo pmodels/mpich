@@ -489,7 +489,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %hd", *context_id);
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
+                          *context_id);
 
             st.own_eager_mask = 0;
             eager_in_use = 0;
@@ -509,7 +510,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %hd", *context_id);
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
+                          *context_id);
 
             mask_in_use = 0;
 
