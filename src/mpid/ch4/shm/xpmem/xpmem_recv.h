@@ -167,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
 
     mpi_errno =
         MPIDI_XPMEM_seg_regist(src_lrank, src_data_sz, (void *) src_offset, &seg_ptr, &src_buf,
-                               &MPIDI_XPMEM_global.segmaps[src_lrank].segcache);
+                               &MPIDI_XPMEM_global.segmaps[src_lrank].segcache_ubuf);
     MPIR_ERR_CHECK(mpi_errno);
 
     XPMEM_TRACE("handle_lmt_coop_recv: handle matched rreq %p [source %d, tag %d, context_id 0x%x],"
@@ -256,7 +256,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
 
     mpi_errno =
         MPIDI_XPMEM_seg_regist(src_lrank, src_data_sz, (void *) src_offset, &seg_ptr, &src_buf,
-                               &MPIDI_XPMEM_global.segmaps[src_lrank].segcache);
+                               &MPIDI_XPMEM_global.segmaps[src_lrank].segcache_ubuf);
     MPIR_ERR_CHECK(mpi_errno);
 
     XPMEM_TRACE("handle_lmt_single_recv: handle matched rreq %p [source %d, tag %d, "
