@@ -35,6 +35,24 @@
 
 #ifdef ROMIO_HAVE_WORKING_AIO
 
+#if !defined(MPI_IMPL_IS_MPICH) && !defined(HAVE_MPIX_GREQUEST_CLASS) && !defined(HAVE_MPI_GREQUEST_EXTENSIONS)
+void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
+                            MPI_Datatype datatype, int file_ptr_type,
+                            ADIO_Offset offset, ADIO_Request * request, int *error_code)
+{
+    static char myname[] = "ADIOI_GEN_IWRITECONTIG";
+    *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                       myname, __LINE__,
+                                       MPI_ERR_UNSUPPORTED_OPERATION, "**fileopunsupported", 0);
+}
+
+int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+                  ADIO_Offset offset, int wr, MPI_Request * request)
+{
+    return -1;
+}
+#else
+
 static MPIX_Grequest_class ADIOI_GEN_greq_class = 0;
 
 /* ADIOI_GEN_IwriteContig
@@ -189,6 +207,7 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
     memcpy(&(aio_req->req), request, sizeof(MPI_Request));
     return 0;
 }
+#endif
 #endif
 
 

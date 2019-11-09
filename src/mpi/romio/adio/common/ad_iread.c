@@ -24,6 +24,19 @@
 #include "mpiu_greq.h"
 
 #ifdef ROMIO_HAVE_WORKING_AIO
+
+#if !defined(MPI_IMPL_IS_MPICH) && !defined(HAVE_MPIX_GREQUEST_CLASS)
+void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
+                           MPI_Datatype datatype, int file_ptr_type,
+                           ADIO_Offset offset, MPI_Request * request, int *error_code)
+{
+    static char myname[] = "ADIOI_GEN_IREADCONTIG";
+    *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                       myname, __LINE__,
+                                       MPI_ERR_UNSUPPORTED_OPERATION, "**fileopunsupported", 0);
+}
+#else
+
 /* ADIOI_GEN_IreadContig
  *
  * This code handles two distinct cases.  If ROMIO_HAVE_WORKING_AIO is not
@@ -61,6 +74,7 @@ void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
 
     *error_code = MPI_SUCCESS;
 }
+#endif
 #endif
 
 /* Generic implementation of IreadStrided calls the blocking ReadStrided
