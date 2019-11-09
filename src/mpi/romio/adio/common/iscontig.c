@@ -5,7 +5,8 @@
 
 #include "adio.h"
 
-#if defined(MPICH)
+#if defined(ROMIO_INSIDE_MPICH) || defined(HAVE_MPIR_DATATYPE_ISCONTIG)
+
 /* MPICH also provides this routine */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag);
 
@@ -51,7 +52,7 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     *flag = MPI_SGI_type_is_contig(datatype) && (displacement == 0);
 }
 
-#elif defined(OMPI_BUILDING) && OMPI_BUILDING
+#elif defined(ROMIO_INSIDE_OMPI)
 
 /* void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag) is defined
  * and implemented in OpenMPI itself */
@@ -60,38 +61,44 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
-    int nints, nadds, ntypes, combiner;
-    int *ints, ni, na, nt, cb;
+    int i, nints, nadds, ntypes, combiner, *ints;
     MPI_Aint *adds;
     MPI_Datatype *types;
 
     MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
 
-    switch (combiner) {
-        case MPI_COMBINER_NAMED:
-            *flag = 1;
-            break;
-        case MPI_COMBINER_CONTIGUOUS:
-            ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
-            adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
-            types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
-            MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
-            ADIOI_Datatype_iscontig(types[0], flag);
-
-            MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
-            if (cb != MPI_COMBINER_NAMED)
-                MPI_Type_free(types);
-
-            ADIOI_Free(ints);
-            ADIOI_Free(adds);
-            ADIOI_Free(types);
-            break;
-        default:
-            *flag = 0;
-            break;
+    if (combiner == MPI_COMBINER_NAMED) {
+        *flag = 1;
+        return;
     }
 
-    /* This function needs more work. It should check for contiguity
-     * in other cases as well. */
+    if (combiner == MPI_COMBINER_RESIZED) {
+        /* because nints == 0, cannot check ints[0] */
+        *flag = 0;
+        return;
+    }
+
+    ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
+    adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
+    types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
+    MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+
+    if (ints[0] == 0)   /* zero-size datatype */
+        *flag = 1;
+    else if (combiner == MPI_COMBINER_CONTIGUOUS)
+        ADIOI_Datatype_iscontig(types[0], flag);
+    else
+        *flag = 0;
+
+    for (i = 0; i < ntypes; i++) {
+        int ni, na, nt, cb;
+        MPI_Type_get_envelope(types[i], &ni, &na, &nt, &cb);
+        if (cb != MPI_COMBINER_NAMED)
+            MPI_Type_free(types + i);
+    }
+
+    ADIOI_Free(ints);
+    ADIOI_Free(adds);
+    ADIOI_Free(types);
 }
 #endif
