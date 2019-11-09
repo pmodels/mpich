@@ -20,7 +20,8 @@ noinst_HEADERS +=                      \
     adio/include/mpiu_greq.h           \
     adio/include/nopackage.h           \
     adio/include/mpiu_external32.h     \
-    adio/include/hint_fns.h
+    adio/include/hint_fns.h            \
+    adio/include/ad_tuning.h
 
 include $(top_srcdir)/adio/ad_daos/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/Makefile.mk

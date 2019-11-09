@@ -3,6 +3,24 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+if ROMIO_INSIDE_OMPI
+AM_CPPFLAGS = \
+        -I@master_top_srcdir@ \
+        -I@master_top_srcdir@/opal/include \
+        -I@master_top_builddir@/opal/include \
+        -I@master_top_builddir@/ompi/include \
+        -I$(top_srcdir)/include \
+        -I$(top_srcdir)/adio/include
+else
+if ROMIO_INSIDE_MPICH
+# when building under MPICH we must be able to find mpi.h
+AM_CPPFLAGS = -I@MPI_INCLUDE_DIR@
+else
+AM_CPPFLAGS =
+endif
+endif
+
+
 ## TODO: need to write an automakefile that handles two primary cases:
 ## 1) that ROMIO is being embedded within the MPI library, as in MPICH or Open
 ##    MPI
@@ -17,7 +35,6 @@ include_HEADERS =
 nodist_include_HEADERS =
 noinst_HEADERS = 
 AM_CFLAGS = @VISIBILITY_CFLAGS@
-AM_CPPFLAGS =
 EXTRA_DIST =
 SUFFIXES = 
 doc1_src_txt =
@@ -45,18 +62,16 @@ romio_other_sources =
 glue_sources = 
 
 # ------------------------------------------------------------------------
-# when building under MPICH we must be able to find mpi.h
-AM_CPPFLAGS += $(MPI_H_INCLUDE)
-
-# ------------------------------------------------------------------------
 # handle the "include" directory here
 AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include $(external_includes)
+AM_CPPFLAGS += -I$(top_srcdir)/adio/include
 # nodist_ b/c these are created by config.status and should not be distributed
-nodist_include_HEADERS += include/mpio.h include/mpiof.h
+nodist_include_HEADERS += include/mpio.h
+noinst_HEADERS += include/ompi_grequestx.h include/io_romio_conv.h
 
 # ------------------------------------------------------------------------
 
-SUBDIRS = $(external_subdirs)
+SUBDIRS = $(external_subdirs) . test
 DIST_SUBDIRS = test test-internal $(external_dist_subdirs)
 
 # for the sake of parallel make and avoiding an excessive number of convenience
@@ -69,8 +84,13 @@ EXTRA_DIST += autogen.sh
 if BUILD_ROMIO_EMBEDDED
 # Build a libtool convenience library that the enclosing MPI implementation can
 # use by adding it to the right _LIBADD variable.
+if ROMIO_INSIDE_OMPI
+noinst_LTLIBRARIES = libromio_dist.la
+libromio_dist_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+else
 noinst_LTLIBRARIES = libromio.la
 libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+endif
 
 ## NOTE: ROMIO's old build system builds a bunch of _foo.o objects that contain
 ## PMPI_ implementations as well as calls to only other PMPI routines.  In
@@ -83,27 +103,41 @@ libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources
 ## Annoying, right?
 if BUILD_PROFILING_LIB
 # The current best strategy for now is to build the PMPI symbols as a separate
-# convenience lib to permit adding the special "-D..." argument for all objects.
-# MPICH will then link in both convenience library into libmpi, since it
-# won't work very well the other way around.
+# convenience lib, libpromio.la, to permit adding the special "-D..." argument
+# for all objects. MPICH will then link in both convenience libraries,
+# libromio.la and libpromio.la, into libmpi, since it won't work very well the
+# other way around.
+# $(romio_mpi_sources) are the ones needed to be built twice. Once in
+# libromio.la without -DMPIO_BUILD_PROFILING and the other in libpromio.la.
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
-libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING 
+libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
 libpromio_la_LDFLAGS = $(external_ldflags)
 libpromio_la_LIBADD = $(external_libs)
 else !BUILD_PROFILING_LIB
+if ROMIO_INSIDE_OMPI
+libromio_dist_la_LDFLAGS = $(external_ldflags)
+libromio_dist_la_LIBADD = $(external_libs)
+else !ROMIO_INSIDE_OMPI
 libromio_la_LDFLAGS = $(external_ldflags)
 libromio_la_LIBADD = $(external_libs)
+endif !ROMIO_INSIDE_OMPI
 endif !BUILD_PROFILING_LIB
 
 else !BUILD_ROMIO_EMBEDDED
 lib_LTLIBRARIES = libromio.la
-libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+libromio_la_SOURCES = $(romio_other_sources) $(glue_sources)
 if BUILD_PROFILING_LIB
+# $(romio_mpi_sources) are the ones needed to be built twice.
+noinst_LTLIBRARIES = libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
 libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
-endif BUILD_PROFILING_LIB
-
+libpromio_la_LDFLAGS = $(external_ldflags)
+libpromio_la_LIBADD = $(external_libs)
+libromio_la_LIBADD = libpromio.la
+else !BUILD_PROFILING_LIB
+libromio_la_SOURCES += $(romio_mpi_sources)
+endif !BUILD_PROFILING_LIB
 endif
 
 # --------------------------------------------------------------------------
