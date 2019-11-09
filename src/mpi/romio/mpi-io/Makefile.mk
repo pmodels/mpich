@@ -75,11 +75,11 @@ romio_mpi_sources +=          \
 
 
 # non-MPI/PMPI sources that will be included in libromio
-romio_other_sources +=       \
-    mpi-io/mpich_fileutil.c \
-    mpi-io/mpir-mpioinit.c   \
-    mpi-io/mpiu_greq.c \
-    mpi-io/mpiu_external32.c \
+romio_other_sources +=        \
+    mpi-io/mpich_fileutil.c   \
+    mpi-io/mpir-mpioinit.c    \
+    mpi-io/mpiu_greq.c        \
+    mpi-io/mpiu_external32.c  \
     mpi-io/mpir_cst_filesys.c \
     mpi-io/mpl_str.c
 

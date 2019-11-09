@@ -10,6 +10,20 @@
 
 #include "mpi.h"
 
+#ifdef ROMIO_INSIDE_OMPI
+/* Open MPI: We need to rename almost all of MPI-IO functions, as well
+ * the types to be names that conform to the prefix rule.
+ */
+#include "io_romio_conv.h"
+
+/* These datatypes and combiners have been defined in OpenMPI */
+#define MPIIMPL_HAVE_MPI_COMBINER_DARRAY 1
+#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
+#define MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY 1
+#define MPIIMPL_HAVE_MPI_TYPE_CREATE_DARRAY 1
+#define MPIIMPL_HAVE_MPI_COMBINER_DUP 1
+#endif
+
 #if defined(HAVE_VISIBILITY)
 #define ROMIO_API_PUBLIC __attribute__((visibility ("default")))
 #else
@@ -35,6 +49,12 @@ typedef struct ADIOI_FileD *MPI_File;
 typedef struct ADIOI_RequestD *MPIO_Request;  
 #else
 #define MPIO_Request MPI_Request
+#ifndef MPIO_Request_c2f
+#define MPIO_Request_c2f MPI_Request_c2f
+#endif
+#ifndef MPIO_Request_f2c
+#define MPIO_Request_f2c MPI_Request_f2c
+#endif
 #define MPIO_USES_MPI_REQUEST
 /* Also rename the MPIO routines to get the MPI versions */
 #define MPIO_Wait MPI_Wait
@@ -43,6 +63,8 @@ typedef struct ADIOI_RequestD *MPIO_Request;
 #define PMPIO_Test PMPI_Test
 #endif
 #define MPIO_REQUEST_DEFINED
+
+@DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS@
 
 #ifndef HAVE_MPI_OFFSET
 /* *INDENT-OFF* */
@@ -94,7 +116,7 @@ typedef int MPI_Fint;
 
 #define MPI_DISPLACEMENT_CURRENT   -54278278
 
-#ifndef MPICH
+#if !defined(MPI_FILE_NULL) && (!defined(HAVE_DECL_MPI_FILE_NULL) || HAVE_DECL_MPI_FILE_NULL == 0)
 /* FIXME: Make sure that we get a consistent definition of MPI_FILE_NULL
 	in MPICH */
 /* MPICH defines null object handles differently */
@@ -126,6 +148,9 @@ typedef int MPI_Fint;
 #  define MPI_DISTRIBUTE_DFLT_DARG -49767
 #endif
 
+#if !defined(ROMIO_INSIDE_MPICH) && !defined(MPICH_ATTR_POINTER_WITH_TYPE_TAG)
+#  define MPICH_ATTR_POINTER_WITH_TYPE_TAG(buffer_idx, type_idx)
+#endif
 
 /* MPI-IO function prototypes */
 
@@ -247,7 +272,7 @@ int MPI_File_set_atomicity(MPI_File fh, int flag) ROMIO_API_PUBLIC;
 int MPI_File_get_atomicity(MPI_File fh, int *flag) ROMIO_API_PUBLIC;
 int MPI_File_sync(MPI_File fh) ROMIO_API_PUBLIC;
 
-/* Section 4.13.3 */
+/* MPI 3.1 Section 8.3.3 */
 #ifndef MPICH
 /* MPICH provides these definitions */
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler) ROMIO_API_PUBLIC;
@@ -369,8 +394,11 @@ int MPI_Type_create_darray(int size, int rank, int ndims, const int array_of_gsi
 #endif
 #endif
 /* above needed for some versions of mpi.h in MPICH!! */
+
+#ifndef ROMIO_INSIDE_OMPI
 MPI_File MPI_File_f2c(MPI_Fint file) ROMIO_API_PUBLIC;
 MPI_Fint MPI_File_c2f(MPI_File file) ROMIO_API_PUBLIC;
+#endif
 
 
 #ifndef HAVE_MPI_GREQUEST
@@ -425,6 +453,8 @@ MPI_Info MPI_Info_f2c(MPI_Fint info) ROMIO_API_PUBLIC;
 
 #endif   /* HAVE_PRAGMA_HP_SEC_DEF */
 
+
+#ifndef ROMIO_INSIDE_OMPI
 
 /**************** BINDINGS FOR THE PROFILING INTERFACE ***************/
 
@@ -689,6 +719,8 @@ int PMPI_Info_free(MPI_Info *) ROMIO_API_PUBLIC;
 
 MPI_Fint PMPI_Info_c2f(MPI_Info) ROMIO_API_PUBLIC;
 MPI_Info PMPI_Info_f2c(MPI_Fint) ROMIO_API_PUBLIC;
+#endif
+
 #endif
 
 #if defined(__cplusplus)
