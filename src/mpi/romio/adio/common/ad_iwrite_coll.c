@@ -12,6 +12,23 @@
 #include "mpe.h"
 #endif
 
+#if !defined(MPI_IMPL_IS_MPICH) && !defined(HAVE_MPIX_GREQUEST_CLASS) && !defined(HAVE_MPI_GREQUEST_EXTENSIONS)
+void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, MPI_Aint count,
+                                 MPI_Datatype datatype, int file_ptr_type,
+                                 ADIO_Offset offset, MPI_Request * request, int *error_code)
+{
+    static char myname[] = "ADIOI_GEN_IwriteStridedColl";
+
+    *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                       myname, __LINE__,
+                                       MPI_ERR_UNSUPPORTED_OPERATION, "**fileopunsupported", 0);
+}
+#else
+
+#ifdef MPIO_BUILD_PROFILING
+#include "../../mpi-io/mpioprof.h"
+#endif
+
 /* ADIOI_GEN_IwriteStridedColl */
 struct ADIOI_GEN_IwriteStridedColl_vars {
     /* requests */
@@ -1494,3 +1511,4 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
   fn_exit:
     return errcode;
 }
+#endif

@@ -8,6 +8,19 @@
 #include "mpiu_greq.h"
 #include "mpioimpl.h"
 
+#if !defined(MPI_IMPL_IS_MPICH) && !defined(HAVE_MPIX_GREQUEST_CLASS) && !defined(HAVE_MPI_GREQUEST_EXTENSIONS)
+void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, MPI_Aint count,
+                                MPI_Datatype datatype, int file_ptr_type,
+                                ADIO_Offset offset, MPI_Request * request, int *error_code)
+{
+    static char myname[] = "ADIOI_GEN_IreadStridedColl";
+
+    *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                       myname, __LINE__,
+                                       MPI_ERR_UNSUPPORTED_OPERATION, "**fileopunsupported", 0);
+}
+#else
+
 #ifdef MPL_USE_DBG_LOGGING
 #define RDCOLL_DEBUG 1
 #endif
@@ -1290,3 +1303,4 @@ static int ADIOI_GEN_irc_wait_fn(int count, void **array_of_states,
   fn_exit:
     return errcode;
 }
+#endif

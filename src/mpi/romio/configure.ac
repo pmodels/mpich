@@ -1601,7 +1601,8 @@ AC_CHECK_DECLS([MPI_ERRORS_ABORT], [], [], [[#include <mpi.h>]])
 
 AC_CHECK_TYPES([MPI_Datarep_conversion_function,
                 MPI_Datarep_extent_function,
-                MPI_Datarep_conversion_function_c],
+                MPI_Datarep_conversion_function_c,
+                MPIX_Grequest_class],
                [], [], [#include <mpi.h>])
 
 # check subroutines when ROMIO is built outside MPICH
