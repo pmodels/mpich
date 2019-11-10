@@ -504,6 +504,7 @@ int MPIR_hwtopo_mem_bind(void *baseaddr, size_t len, MPIR_hwtopo_gid_t gid)
         flags |= HWLOC_MEMBIND_BYNODESET;
     } else {
         fprintf(stderr, "%s: object type not valid, skipping memory binding\n", __func__);
+        hwloc_bitmap_free(bitmap);
         return MPI_ERR_OTHER;
     }
 
