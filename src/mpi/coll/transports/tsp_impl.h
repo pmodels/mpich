@@ -35,7 +35,7 @@ typedef int (*MPIR_TSP_cb_t) (struct MPIR_Comm * comm, int tag, void *data);
 int MPIR_TSP_sched_create(MPIR_TSP_sched_t * sched, bool is_persistent);
 
 /* Transport function to free a schedule */
-void MPIR_TSP_sched_free(MPIR_TSP_sched_t sched);
+int MPIR_TSP_sched_free(MPIR_TSP_sched_t sched);
 
 int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn,
                             MPIR_TSP_sched_complete_fn complete_fn, MPIR_TSP_sched_free_fn free_fn);
@@ -122,6 +122,6 @@ int MPIR_TSP_sched_reset(MPIR_TSP_sched_t sched);
 int MPIR_TSP_sched_sink(MPIR_TSP_sched_t sched, int *vtx_id);
 
 /* Transport function to schedule a fence */
-void MPIR_TSP_sched_fence(MPIR_TSP_sched_t sched);
+int MPIR_TSP_sched_fence(MPIR_TSP_sched_t sched);
 
 #endif /* TSP_IMPL_H_INCLUDED */

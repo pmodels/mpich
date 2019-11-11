@@ -47,9 +47,10 @@ int MPIR_TSP_sched_create(MPIR_TSP_sched_t * s, bool is_persistent)
     return MPI_SUCCESS;
 }
 
-void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
+int MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
+    int mpi_errno = MPI_SUCCESS;
     int i;
     vtx_t *vtx;
     void **p;
@@ -59,7 +60,7 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     MPII_Genutil_vtx_type_t *vtype =
         ut_type_array(&sched->generic_types, MPII_Genutil_vtx_type_t *);
     for (i = 0; i < sched->total_vtcs; i++, vtx++) {
-        MPIR_Assert(vtx != NULL);
+        MPIR_ERR_CHKANDJUMP(vtx == NULL, mpi_errno, MPI_ERR_OTHER, "**nullvertex");
         if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
             MPL_free(vtx->u.imcast.req);
             utarray_free(vtx->u.imcast.dests);
@@ -73,9 +74,8 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
             MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
             MPIR_Assert(type != NULL);
             if (type->free_fn != NULL) {
-                int mpi_errno = type->free_fn(vtx->u.generic.data);
-                /* TODO: change this function to return mpi_errno */
-                MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                mpi_errno = type->free_fn(vtx->u.generic.data);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
     }
@@ -89,6 +89,11 @@ void MPIR_TSP_sched_free(MPIR_TSP_sched_t s)
     utarray_done(&sched->buffers);
     utarray_done(&sched->generic_types);
     MPL_free(sched);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_TSP_sched_new_type(MPIR_TSP_sched_t s, MPIR_TSP_sched_issue_fn issue_fn,
@@ -399,7 +404,7 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
                         mpi_errno, "in_vtcs buffer", MPL_MEM_COLL);
     /* record incoming vertices */
     sched_fence = ut_type_array(&sched->vtcs, vtx_t *) + *vtx_id - 1;
-    MPIR_Assert(sched_fence != NULL);
+    MPIR_ERR_CHKANDJUMP(sched_fence == NULL, mpi_errno, MPI_ERR_OTHER, "**nofence");
     for (i = *vtx_id - 1; i >= 0; i--) {
         if (sched_fence->vtx_kind == MPII_GENUTIL_VTX_KIND__FENCE)
             /* no need to record this and any vertex before fence.
@@ -425,22 +430,26 @@ int MPIR_TSP_sched_sink(MPIR_TSP_sched_t s, int *vtx_id)
     goto fn_exit;
 }
 
-void MPIR_TSP_sched_fence(MPIR_TSP_sched_t s)
+int MPIR_TSP_sched_fence(MPIR_TSP_sched_t s)
 {
     MPII_Genutil_sched_t *sched = s;
-    int fence_id;
     int mpi_errno = MPI_SUCCESS;
+    int fence_id;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
 
     /* fence operation is an extension to fence, so we can reuse the fence call */
     mpi_errno = MPIR_TSP_sched_sink(sched, &fence_id);
+    MPIR_ERR_CHECK(mpi_errno);
     /* change the vertex kind from SINK to FENCE */
     vtx_t *sched_fence = (vtx_t *) utarray_eltptr(&sched->vtcs, fence_id);
-    MPIR_Assert(sched_fence != NULL);
+    MPIR_ERR_CHKANDJUMP(sched_fence == NULL, mpi_errno, MPI_ERR_OTHER, "**nofence");
     sched_fence->vtx_kind = MPII_GENUTIL_VTX_KIND__FENCE;
     sched->last_fence = fence_id;
-    /* TODO - Replace this with real error handling */
-    MPIR_Assert(MPI_SUCCESS == mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_TSP_sched_selective_sink(MPIR_TSP_sched_t s, int n_in_vtcs, int *in_vtcs, int *vtx_id)
@@ -487,9 +496,11 @@ int MPIR_TSP_sched_start(MPIR_TSP_sched_t s, MPIR_Comm * comm, MPIR_Request ** r
     sched->req = reqp;
 
     if (unlikely(sched->total_vtcs == 0)) {
-        if (!sched->is_persistent)
-            MPIR_TSP_sched_free(sched);
-        MPIR_Request_complete(reqp);
+        if (!sched->is_persistent) {
+            mpi_errno = MPIR_TSP_sched_free(sched);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        MPID_Request_complete(reqp);
         goto fn_exit;
     }
     MPIR_Assert(sched->completed_vtcs == 0);
