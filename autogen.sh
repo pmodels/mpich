@@ -1031,7 +1031,7 @@ if [ "$do_build_configure" = "yes" ] ; then
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
                     || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
-                    [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ]; then
+                    || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
