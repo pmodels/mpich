@@ -54,7 +54,7 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
 
     char *sbuf = NULL, *rbuf = NULL;
     int soffset, roffset;
-    int torecv, tosend, min;
+    int torecv, tosend, max, chunk_count = 0;
     int sendnow, recvnow;
     int sidx, ridx;
 
@@ -72,24 +72,31 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     torecv = total_count - recvcounts[rank];
     tosend = total_count - recvcounts[right];
 
-    min = recvcounts[0];
+    max = recvcounts[0];
     for (i = 1; i < comm_size; i++)
-        if (min > recvcounts[i])
-            min = recvcounts[i];
-    if (min * recvtype_extent > MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE)
-        min = MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE / recvtype_extent;
-    /* Handle the case where the datatype extent is larger than
-     * the pipeline size. */
-    if (!min)
-        min = 1;
+        if (max < recvcounts[i])
+            max = recvcounts[i];
+    if (MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE > 0 &&
+        max * recvtype_extent > MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE) {
+        chunk_count = MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE / recvtype_extent;
+        /* Handle the case where the datatype extent is larger than
+         * the pipeline size. */
+        if (!chunk_count)
+            chunk_count = 1;
+    }
+    /* pipeline is disabled */
+    if (!chunk_count)
+        chunk_count = max;
 
     sidx = rank;
     ridx = left;
     soffset = 0;
     roffset = 0;
     while (tosend || torecv) {  /* While we have data to send or receive */
-        sendnow = ((recvcounts[sidx] - soffset) > min) ? min : (recvcounts[sidx] - soffset);
-        recvnow = ((recvcounts[ridx] - roffset) > min) ? min : (recvcounts[ridx] - roffset);
+        sendnow = ((recvcounts[sidx] - soffset) >
+                   chunk_count) ? chunk_count : (recvcounts[sidx] - soffset);
+        recvnow = ((recvcounts[ridx] - roffset) >
+                   chunk_count) ? chunk_count : (recvcounts[ridx] - roffset);
         sbuf = (char *) recvbuf + ((displs[sidx] + soffset) * recvtype_extent);
         rbuf = (char *) recvbuf + ((displs[ridx] + roffset) * recvtype_extent);
 
