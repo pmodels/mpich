@@ -656,8 +656,10 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                 break;
         }
 
-        if (sched->is_persistent == false)
-            MPIR_TSP_sched_free(sched);
+        if (sched->is_persistent == false) {
+            mpi_errno = MPIR_TSP_sched_free(sched);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:

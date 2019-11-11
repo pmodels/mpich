@@ -66,7 +66,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
             MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched, 0,
                                      NULL, &vtx_id);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIR_TSP_sched_fence(sched);
+        mpi_errno = MPIR_TSP_sched_fence(sched);
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
     }
 
     /* Phase 2: Ring based send recv reduce scatter */
@@ -106,7 +107,8 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, MPI
     }
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, 2 * sizeof(int), mpi_errno, "reduce_id", MPL_MEM_COLL);
 
-    MPIR_TSP_sched_fence(sched);
+    mpi_errno = MPIR_TSP_sched_fence(sched);
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, errflag);
 
     /* Phase 3: Allgatherv ring, so everyone has the reduced data */
     MPIR_TSP_Iallgatherv_sched_intra_ring(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, recvbuf, cnts,
