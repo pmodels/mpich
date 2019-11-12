@@ -297,8 +297,7 @@ int MPIR_pmi_barrier_local(void)
     int pmi_errno;
     int local_size = MPIR_Process.local_size;
     pmix_proc_t *procs = MPL_malloc(local_size * sizeof(pmix_proc_t), MPL_MEM_OTHER);
-    int i;
-    for (i = 0; i < local_size; i++) {
+    for (int i = 0; i < local_size; i++) {
         PMIX_PROC_CONSTRUCT(&procs[i]);
         strncpy(procs[i].nspace, pmix_proc.nspace, PMIX_MAX_NSLEN);
         procs[i].rank = MPIR_Process.node_local_map[i];
@@ -396,7 +395,9 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
     int mpi_errno = MPI_SUCCESS;
 #if defined(USE_PMI1_API) || defined(USE_PMI2_API)
     char *val = MPL_malloc(pmi_max_val_size, MPL_MEM_OTHER);
-    int segsize = (pmi_max_val_size - 1) / 2;
+    /* reserve some spaces for '\0' and maybe newlines
+     * (depends on pmi implementations, and may not be sufficient) */
+    int segsize = (pmi_max_val_size - 2) / 2;
     if (bufsize < segsize) {
         encode(bufsize, buf, val);
         mpi_errno = optimized_put(key, val, is_local);
@@ -409,12 +410,15 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         MPL_snprintf(val, pmi_max_val_size, "segments=%d", num_segs);
         mpi_errno = MPIR_pmi_kvs_put(key, val);
         MPIR_ERR_CHECK(mpi_errno);
-        int i;
-        for (i = 0; i < num_segs; i++) {
+        for (int i = 0; i < num_segs; i++) {
             char seg_key[50];
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
-            encode(bufsize, buf, val);
-            mpi_errno = optimized_put(key, val, is_local);
+            int n = segsize;
+            if (i == num_segs - 1) {
+                n = bufsize - segsize * (num_segs - 1);
+            }
+            encode(n, (char *) buf + i * segsize, val);
+            mpi_errno = optimized_put(seg_key, val, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -447,21 +451,20 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
     MPIR_ERR_CHECK(mpi_errno);
     if (strncmp(val, "segments=", 9) == 0) {
         int num_segs = atoi(val + 9);
-        int i;
         got_size = 0;
-        for (i = 0; i < num_segs; i++) {
+        for (int i = 0; i < num_segs; i++) {
             char seg_key[50];
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
-            mpi_errno = optimized_get(src, key, val, pmi_max_val_size, is_local);
+            mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
+            int n = strlen(val) / 2;    /* 2-to-1 decode */
             if (i < num_segs - 1) {
-                decode(segsize, val, (char *) buf + i * segsize);
-                got_size += segsize;
+                MPIR_Assert(n == segsize);
             } else {
-                int n = strlen(val) / 2;        /* 2-to-1 decode */
-                decode(n, val, (char *) buf + i * segsize);
-                got_size += n;
+                MPIR_Assert(n <= segsize);
             }
+            decode(n, val, (char *) buf + i * segsize);
+            got_size += n;
         }
     } else {
         int n = strlen(val) / 2;        /* 2-to-1 decode */
@@ -620,8 +623,7 @@ int MPIR_pmi_allgather(const void *sendbuf, int sendsize, void *recvbuf, int rec
         if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
             domain_size = MPIR_Process.num_nodes;
         }
-        int i;
-        for (i = 0; i < domain_size; i++) {
+        for (int i = 0; i < domain_size; i++) {
             int rank = i;
             if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
                 rank = MPIR_Process.node_root_map[i];
@@ -649,7 +651,6 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
                            MPIR_PMI_DOMAIN domain)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
 
     MPIR_Assert(domain != MPIR_PMI_DOMAIN_LOCAL);
 
@@ -689,7 +690,7 @@ int MPIR_pmi_allgather_shm(const void *sendbuf, int sendsize, void *shm_buf, int
     if (end > size) {
         end = size;
     }
-    for (i = start; i < end; i++) {
+    for (int i = start; i < end; i++) {
         int src = i;
         if (domain == MPIR_PMI_DOMAIN_NODE_ROOTS) {
             src = MPIR_Process.node_root_map[i];
@@ -804,14 +805,12 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     MPIR_ERR_CHKANDJUMP(!info_keyval_vectors, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     if (!info_ptrs) {
-        int i;
-        for (i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             info_keyval_vectors[i] = 0;
             info_keyval_sizes[i] = 0;
         }
     } else {
-        int i;
-        for (i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             mpi_errno = mpi_to_pmi_keyvals(info_ptrs[i], &info_keyval_vectors[i],
                                            &info_keyval_sizes[i]);
             MPIR_ERR_CHECK(mpi_errno);
@@ -928,8 +927,7 @@ static int get_option_num_cliques(void)
 /* one process per node */
 int build_nodemap_nolocal(int *nodemap, int sz, int *p_max_node_id)
 {
-    int i;
-    for (i = 0; i < sz; ++i) {
+    for (int i = 0; i < sz; ++i) {
         nodemap[i] = i;
     }
     *p_max_node_id = sz - 1;
@@ -939,8 +937,7 @@ int build_nodemap_nolocal(int *nodemap, int sz, int *p_max_node_id)
 /* assign processes to num_cliques nodes in a round-robin fashion */
 static int build_nodemap_roundrobin(int num_cliques, int *nodemap, int sz, int *p_max_node_id)
 {
-    int i;
-    for (i = 0; i < sz; ++i) {
+    for (int i = 0; i < sz; ++i) {
         nodemap[i] = i % num_cliques;
     }
     *p_max_node_id = num_cliques - 1;
@@ -1022,7 +1019,6 @@ int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id)
     char *nodelist = NULL, *node = NULL;
     pmix_proc_t *procs = NULL;
     size_t nprocs, node_id = 0;
-    int i;
 
     pmi_errno = PMIx_Resolve_nodes(pmix_proc.nspace, &nodelist);
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -1034,7 +1030,7 @@ int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id)
         pmi_errno = PMIx_Resolve_peers(node, pmix_proc.nspace, &procs, &nprocs);
         MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                              "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
-        for (i = 0; i < nprocs; i++) {
+        for (int i = 0; i < nprocs; i++) {
             nodemap[procs[i].rank] = node_id;
         }
         node_id++;
@@ -1056,7 +1052,6 @@ int build_nodemap_pmix(int *nodemap, int sz, int *p_max_node_id)
 /* allocate and populate MPIR_Process.node_local_map and MPIR_Process.node_root_map */
 static int build_locality(void)
 {
-    int i;
     int local_rank = -1;
     int local_size = 0;
     int *node_root_map, *node_local_map;
@@ -1068,11 +1063,11 @@ static int build_locality(void)
     int local_node_id = node_map[rank];
 
     node_root_map = MPL_malloc(num_nodes * sizeof(int), MPL_MEM_ADDRESS);
-    for (i = 0; i < num_nodes; i++) {
+    for (int i = 0; i < num_nodes; i++) {
         node_root_map[i] = -1;
     }
 
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         int node_id = node_map[i];
         if (node_root_map[node_id] < 0) {
             node_root_map[node_id] = i;
@@ -1084,7 +1079,7 @@ static int build_locality(void)
 
     node_local_map = MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
     int j = 0;
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         int node_id = node_map[i];
         if (node_id == local_node_id) {
             node_local_map[j] = i;
@@ -1120,8 +1115,7 @@ static int hex(unsigned char c)
 
 static void encode(int size, const char *src, char *dest)
 {
-    int i;
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         MPL_snprintf(dest, 3, "%02X", (unsigned char) *src);
         src++;
         dest += 2;
@@ -1130,8 +1124,7 @@ static void encode(int size, const char *src, char *dest)
 
 static void decode(int size, const char *src, char *dest)
 {
-    int i;
-    for (i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++) {
         *dest = (char) (hex(src[0]) << 4) + hex(src[1]);
         src += 2;
         dest++;
@@ -1144,7 +1137,7 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
 {
     char key[MPI_MAX_INFO_KEY];
     PMI_keyval_t *kv = 0;
-    int i, nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
+    int nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
@@ -1159,7 +1152,7 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
 
     kv = (PMI_keyval_t *) MPL_malloc(nkeys * sizeof(PMI_keyval_t), MPL_MEM_BUFFER);
 
-    for (i = 0; i < nkeys; i++) {
+    for (int i = 0; i < nkeys; i++) {
         mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
@@ -1180,13 +1173,11 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
 
 static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
 {
-    int i, j;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
 
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < counts[i]; j++) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < counts[i]; j++) {
             MPL_free((char *) kv[i][j].key);
             MPL_free(kv[i][j].val);
         }
