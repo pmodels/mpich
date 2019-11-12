@@ -28,6 +28,122 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef MPI_Comm_split_type
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
+struct shmem_processor_info_table {
+    const char *val;
+    MPIR_Node_obj_type obj_type;
+};
+
+/* hardware topology node object table */
+static struct shmem_processor_info_table shmem_processor_info[] = {
+    {"machine", MPIR_NODE_OBJ_TYPE__MACHINE},
+    {"socket", MPIR_NODE_OBJ_TYPE__PACKAGE},
+    {"package", MPIR_NODE_OBJ_TYPE__PACKAGE},
+    {"numa", MPIR_NODE_OBJ_TYPE__NUMANODE},
+    {"core", MPIR_NODE_OBJ_TYPE__CORE},
+    {"hwthread", MPIR_NODE_OBJ_TYPE__PU},
+    {"pu", MPIR_NODE_OBJ_TYPE__PU},
+    {"l1dcache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l1ucache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l1icache", MPIR_NODE_OBJ_TYPE__L1ICACHE},
+    {"l1cache", MPIR_NODE_OBJ_TYPE__L1CACHE},
+    {"l2dcache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l2ucache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l2icache", MPIR_NODE_OBJ_TYPE__L2ICACHE},
+    {"l2cache", MPIR_NODE_OBJ_TYPE__L2CACHE},
+    {"l3dcache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l3ucache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l3icache", MPIR_NODE_OBJ_TYPE__L3ICACHE},
+    {"l3cache", MPIR_NODE_OBJ_TYPE__L3CACHE},
+    {"l4dcache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l4ucache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l4cache", MPIR_NODE_OBJ_TYPE__L4CACHE},
+    {"l5dcache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {"l5ucache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {"l5cache", MPIR_NODE_OBJ_TYPE__L5CACHE},
+    {NULL, MPIR_NODE_OBJ_TYPE__MAX}
+};
+
+static const char *SHMEM_INFO_KEY = "shmem_topo";
+static const char *NETWORK_INFO_KEY = "network_topo";
+
+static int node_split_pci_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                                 MPIR_Comm ** newcomm_ptr);
+static int node_split_network_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                                     MPIR_Comm ** newcomm_ptr);
+static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                                 MPIR_Comm ** newcomm_ptr);
+static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                                MPIR_Comm ** newcomm_ptr);
+static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
+                                      int switch_level, MPIR_Comm ** newcomm_ptr);
+static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
+                                    MPIR_Comm ** newcomm_ptr);
+static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_size, int min_size);
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+                                        MPIR_Comm ** newcomm_ptr);
+static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
+                                            int dimension, MPIR_Comm ** newcomm_ptr);
+static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal);
+
+int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                         MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    MPIR_Comm *comm_ptr = NULL;
+    int mpi_errno = MPI_SUCCESS;
+
+    /* split out the undefined processes */
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (split_type == MPI_COMM_TYPE_SHARED) {
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
+        mpi_errno =
+            MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
+    }
+
+  fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
+                              MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
+     * NEIGHBORHOOD are supported */
+    MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
+                split_type == MPI_UNDEFINED || split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
+
+    if (MPIR_Comm_fns != NULL && MPIR_Comm_fns->split_type != NULL) {
+        mpi_errno = MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    } else {
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -91,40 +207,179 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * user_comm_ptr, int split_type, int 
     goto fn_exit;
 }
 
-struct shmem_processor_info_table {
-    const char *val;
-    MPIR_Node_obj_type obj_type;
-};
+int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                                   MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    MPIR_Comm *comm_ptr;
+    int mpi_errno = MPI_SUCCESS;
+    int flag = 0;
+    char hint_str[MPI_MAX_INFO_VAL + 1];
+    int info_args_are_equal;
+    *newcomm_ptr = NULL;
 
-/* hardware topology node object table */
-static struct shmem_processor_info_table shmem_processor_info[] = {
-    {"machine", MPIR_NODE_OBJ_TYPE__MACHINE},
-    {"socket", MPIR_NODE_OBJ_TYPE__PACKAGE},
-    {"package", MPIR_NODE_OBJ_TYPE__PACKAGE},
-    {"numa", MPIR_NODE_OBJ_TYPE__NUMANODE},
-    {"core", MPIR_NODE_OBJ_TYPE__CORE},
-    {"hwthread", MPIR_NODE_OBJ_TYPE__PU},
-    {"pu", MPIR_NODE_OBJ_TYPE__PU},
-    {"l1dcache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l1ucache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l1icache", MPIR_NODE_OBJ_TYPE__L1ICACHE},
-    {"l1cache", MPIR_NODE_OBJ_TYPE__L1CACHE},
-    {"l2dcache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l2ucache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l2icache", MPIR_NODE_OBJ_TYPE__L2ICACHE},
-    {"l2cache", MPIR_NODE_OBJ_TYPE__L2CACHE},
-    {"l3dcache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l3ucache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l3icache", MPIR_NODE_OBJ_TYPE__L3ICACHE},
-    {"l3cache", MPIR_NODE_OBJ_TYPE__L3CACHE},
-    {"l4dcache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l4ucache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l4cache", MPIR_NODE_OBJ_TYPE__L4CACHE},
-    {"l5dcache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {"l5ucache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {"l5cache", MPIR_NODE_OBJ_TYPE__L5CACHE},
-    {NULL, MPIR_NODE_OBJ_TYPE__MAX}
-};
+    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, split_type, key, &comm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm_ptr == NULL) {
+        MPIR_Assert(split_type == MPI_UNDEFINED);
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (info_ptr) {
+        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
+    }
+
+    if (!flag) {
+        hint_str[0] = '\0';
+    }
+
+    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* if all processes do not have the same hint_str, skip
+     * topology-aware comm split */
+    if (!info_args_are_equal)
+        goto use_node_comm;
+
+    /* if no info key is given, skip topology-aware comm split */
+    if (!info_ptr)
+        goto use_node_comm;
+
+    /* if hw topology is not initialized, skip topology-aware comm split */
+    if (!MPIR_hw_topo_is_initialized())
+        goto use_node_comm;
+
+    if (flag) {
+        if (!strncmp(hint_str, "pci:", strlen("pci:")))
+            mpi_errno = node_split_pci_device(comm_ptr, key, hint_str, newcomm_ptr);
+        else if (!strncmp(hint_str, "ib", strlen("ib")) ||
+                 !strncmp(hint_str, "en", strlen("en")) ||
+                 !strncmp(hint_str, "eth", strlen("eth")) ||
+                 !strncmp(hint_str, "hfi", strlen("hfi")))
+            mpi_errno = node_split_network_device(comm_ptr, key, hint_str, newcomm_ptr);
+        else if (!strncmp(hint_str, "gpu", strlen("gpu")))
+            mpi_errno = node_split_gpu_device(comm_ptr, key, hint_str, newcomm_ptr);
+        else
+            mpi_errno = node_split_processor(comm_ptr, key, hint_str, newcomm_ptr);
+
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIR_Comm_free_impl(comm_ptr);
+
+        goto fn_exit;
+    }
+
+  use_node_comm:
+    *newcomm_ptr = comm_ptr;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hint_str,
+                                      MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (!strncmp(hint_str, ("switch_level:"), strlen("switch_level:"))
+        && *(hint_str + strlen("switch_level:")) != '\0') {
+        int switch_level = atoi(hint_str + strlen("switch_level:"));
+        mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
+    } else if (!strncmp(hint_str, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
+               && *(hint_str + strlen("subcomm_min_size:")) != '\0') {
+        int subcomm_min_size = atoi(hint_str + strlen("subcomm_min_size:"));
+        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
+    } else if (!strncmp(hint_str, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hint_str + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hint_str + strlen("min_mem_size:"));
+        /* Split by minimum memory size per subcommunicator in bytes */
+        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
+    } else if (!strncmp(hint_str, ("torus_dimension:"), strlen("torus_dimension:"))
+               && *(hint_str + strlen("torus_dimension:")) != '\0') {
+        int dimension = atol(hint_str + strlen("torus_dimension:"));
+        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
+    }
+    return mpi_errno;
+}
+
+int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hint_str,
+                                         MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ROMIO
+    MPI_Comm dummycomm;
+    MPIR_Comm *dummycomm_ptr;
+
+    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hint_str, &dummycomm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
+    *newcomm_ptr = dummycomm_ptr;
+#endif
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
+                                      MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+
+    int flag = 0;
+    char hint_str[MPI_MAX_INFO_VAL + 1];
+    int mpi_errno = MPI_SUCCESS;
+    int info_args_are_equal;
+
+    *newcomm_ptr = NULL;
+
+    if (info_ptr) {
+        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hint_str, &flag);
+    }
+    if (!flag) {
+        hint_str[0] = '\0';
+    }
+
+    *newcomm_ptr = NULL;
+    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (info_args_are_equal && flag) {
+        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hint_str, newcomm_ptr);
+    } else {
+        /* Check if the info hint is a network topology hint */
+        if (info_ptr) {
+            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
+        }
+
+        if (!flag) {
+            hint_str[0] = '\0';
+        }
+
+        mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
+
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* if all processes have the same hint_str, perform
+         * topology-aware comm split */
+        if (info_args_are_equal) {
+            MPIR_Comm_split_type_network_topo(comm_ptr, key, hint_str, newcomm_ptr);
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                                 MPIR_Comm ** newcomm_ptr)
@@ -656,9 +911,6 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
     goto fn_exit;
 }
 
-static const char *SHMEM_INFO_KEY = "shmem_topo";
-static const char *NETWORK_INFO_KEY = "network_topo";
-
 static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
 {
     int hint_str_size = strlen(hint_str);
@@ -709,239 +961,6 @@ static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *in
     *info_args_are_equal = hint_str_equal_global;
     return mpi_errno;
 
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
-                                   MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Comm *comm_ptr;
-    int mpi_errno = MPI_SUCCESS;
-    int flag = 0;
-    char hint_str[MPI_MAX_INFO_VAL + 1];
-    int info_args_are_equal;
-    *newcomm_ptr = NULL;
-
-    mpi_errno = MPIR_Comm_split_type_by_node(user_comm_ptr, split_type, key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (comm_ptr == NULL) {
-        MPIR_Assert(split_type == MPI_UNDEFINED);
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
-
-    if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
-    }
-
-    if (!flag) {
-        hint_str[0] = '\0';
-    }
-
-    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* if all processes do not have the same hint_str, skip
-     * topology-aware comm split */
-    if (!info_args_are_equal)
-        goto use_node_comm;
-
-    /* if no info key is given, skip topology-aware comm split */
-    if (!info_ptr)
-        goto use_node_comm;
-
-    /* if hw topology is not initialized, skip topology-aware comm split */
-    if (!MPIR_hw_topo_is_initialized())
-        goto use_node_comm;
-
-    if (flag) {
-        if (!strncmp(hint_str, "pci:", strlen("pci:")))
-            mpi_errno = node_split_pci_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else if (!strncmp(hint_str, "ib", strlen("ib")) ||
-                 !strncmp(hint_str, "en", strlen("en")) ||
-                 !strncmp(hint_str, "eth", strlen("eth")) ||
-                 !strncmp(hint_str, "hfi", strlen("hfi")))
-            mpi_errno = node_split_network_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else if (!strncmp(hint_str, "gpu", strlen("gpu")))
-            mpi_errno = node_split_gpu_device(comm_ptr, key, hint_str, newcomm_ptr);
-        else
-            mpi_errno = node_split_processor(comm_ptr, key, hint_str, newcomm_ptr);
-
-        MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_Comm_free_impl(comm_ptr);
-
-        goto fn_exit;
-    }
-
-  use_node_comm:
-    *newcomm_ptr = comm_ptr;
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hint_str,
-                                      MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    if (!strncmp(hint_str, ("switch_level:"), strlen("switch_level:"))
-        && *(hint_str + strlen("switch_level:")) != '\0') {
-        int switch_level = atoi(hint_str + strlen("switch_level:"));
-        mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
-    } else if (!strncmp(hint_str, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
-               && *(hint_str + strlen("subcomm_min_size:")) != '\0') {
-        int subcomm_min_size = atoi(hint_str + strlen("subcomm_min_size:"));
-        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
-    } else if (!strncmp(hint_str, ("min_mem_size:"), strlen("min_mem_size:"))
-               && *(hint_str + strlen("min_mem_size:")) != '\0') {
-        long min_mem_size = atol(hint_str + strlen("min_mem_size:"));
-        /* Split by minimum memory size per subcommunicator in bytes */
-        mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
-    } else if (!strncmp(hint_str, ("torus_dimension:"), strlen("torus_dimension:"))
-               && *(hint_str + strlen("torus_dimension:")) != '\0') {
-        int dimension = atol(hint_str + strlen("torus_dimension:"));
-        mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
-    }
-    return mpi_errno;
-}
-
-int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
-                         MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
-{
-    MPIR_Comm *comm_ptr = NULL;
-    int mpi_errno = MPI_SUCCESS;
-
-    /* split out the undefined processes */
-    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
-                                     key, &comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (split_type == MPI_UNDEFINED) {
-        *newcomm_ptr = NULL;
-        goto fn_exit;
-    }
-
-    if (split_type == MPI_COMM_TYPE_SHARED) {
-        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
-        mpi_errno =
-            MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
-    }
-
-  fn_exit:
-    if (comm_ptr)
-        MPIR_Comm_free_impl(comm_ptr);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hint_str,
-                                         MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ROMIO
-    MPI_Comm dummycomm;
-    MPIR_Comm *dummycomm_ptr;
-
-    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hint_str, &dummycomm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
-    *newcomm_ptr = dummycomm_ptr;
-#endif
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
-                                      MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
-{
-
-    int flag = 0;
-    char hint_str[MPI_MAX_INFO_VAL + 1];
-    int mpi_errno = MPI_SUCCESS;
-    int info_args_are_equal;
-
-    *newcomm_ptr = NULL;
-
-    if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hint_str, &flag);
-    }
-    if (!flag) {
-        hint_str[0] = '\0';
-    }
-
-    *newcomm_ptr = NULL;
-    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (info_args_are_equal && flag) {
-        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hint_str, newcomm_ptr);
-    } else {
-        /* Check if the info hint is a network topology hint */
-        if (info_ptr) {
-            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
-        }
-
-        if (!flag) {
-            hint_str[0] = '\0';
-        }
-
-        mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
-
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* if all processes have the same hint_str, perform
-         * topology-aware comm split */
-        if (info_args_are_equal) {
-            MPIR_Comm_split_type_network_topo(comm_ptr, key, hint_str, newcomm_ptr);
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
-     * NEIGHBORHOOD are supported */
-    MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
-                split_type == MPI_UNDEFINED || split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
-
-    if (MPIR_Comm_fns != NULL && MPIR_Comm_fns->split_type != NULL) {
-        mpi_errno = MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-    } else {
-        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
