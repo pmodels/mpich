@@ -1,0 +1,15 @@
+--- libtool.m4~	2019-11-08 13:59:39.000000000 -0600
++++ libtool.m4	2019-11-11 15:34:57.000000000 -0600
+@@ -4736,6 +4736,12 @@
+ 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
+ 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+         ;;
++      # flang / f18
++      flang* | f18*)
++       _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
++       _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
++       _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
++        ;;
+       # icc used to be incompatible with GCC.
+       # ICC 10 doesn't accept -KPIC any more.
+       icc* | ifort*)
