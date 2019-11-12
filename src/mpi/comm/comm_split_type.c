@@ -126,7 +126,7 @@ static struct shmem_processor_info_table shmem_processor_info[] = {
     {NULL, MPIR_NODE_OBJ_TYPE__MAX}
 };
 
-static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintval,
+static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                                 MPIR_Comm ** newcomm_ptr)
 {
     int color;
@@ -140,7 +140,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
     /* try to find the info value in the processor object
      * table */
     for (i = 0; shmem_processor_info[i].val; i++) {
-        if (!strcmp(shmem_processor_info[i].val, hintval)) {
+        if (!strcmp(shmem_processor_info[i].val, hint_str)) {
             query_obj_type = shmem_processor_info[i].obj_type;
             break;
         }
@@ -167,13 +167,13 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
 }
 
 static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
-                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+                                 const char *hint_str, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Node_obj non_io_ancestor, io_device = NULL;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    io_device = MPIR_Node_get_osdev_obj_by_busidstring(hintval + strlen("pci:"));
+    io_device = MPIR_Node_get_osdev_obj_by_busidstring(hint_str + strlen("pci:"));
     if (io_device) {
         non_io_ancestor = MPIR_Node_get_non_io_ancestor_obj(io_device);
         if (non_io_ancestor)
@@ -195,7 +195,7 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
 }
 
 static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
-                                     const char *hintval, MPIR_Comm ** newcomm_ptr)
+                                     const char *hint_str, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Node_obj non_io_ancestor;
     int mpi_errno = MPI_SUCCESS;
@@ -204,7 +204,7 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     /* assign the node id as the color, initially */
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
 
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hint_str);
     if (non_io_ancestor) {
         uint32_t depth = (uint32_t) MPIR_Node_get_obj_depth(non_io_ancestor);
         int idx = MPIR_Node_get_obj_index(non_io_ancestor);
@@ -224,13 +224,13 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
 }
 
 static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
-                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+                                 const char *hint_str, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Node_obj non_io_ancestor;
     int mpi_errno = MPI_SUCCESS;
     int color;
 
-    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hintval);
+    non_io_ancestor = MPIR_Node_get_common_non_io_ancestor_obj(hint_str);
     if (non_io_ancestor) {
         MPIR_Node_obj_type type = MPIR_Node_get_obj_type(non_io_ancestor);
         int idx = MPIR_Node_get_obj_index(non_io_ancestor);
@@ -659,54 +659,54 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 static const char *NETWORK_INFO_KEY = "network_topo";
 
-static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *info_args_are_equal)
+static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
 {
-    int hintval_size = strlen(hintval);
-    int hintval_size_max;
-    int hintval_equal;
-    int hintval_equal_global = 0;
-    char *hintval_global = NULL;
+    int hint_str_size = strlen(hint_str);
+    int hint_str_size_max;
+    int hint_str_equal;
+    int hint_str_equal_global = 0;
+    char *hint_str_global = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    /* Find the maximum hintval size.  Each process locally compares
-     * its hintval size to the global max, and makes sure that this
+    /* Find the maximum hint_str size.  Each process locally compares
+     * its hint_str size to the global max, and makes sure that this
      * comparison is successful on all processes. */
     mpi_errno =
-        MPID_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
+        MPID_Allreduce(&hint_str_size, &hint_str_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    hintval_equal = (hintval_size == hintval_size_max);
+    hint_str_equal = (hint_str_size == hint_str_size_max);
 
     mpi_errno =
-        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!hintval_equal_global)
+    if (!hint_str_equal_global)
         goto fn_exit;
 
 
-    /* Now that the sizes of the hintvals match, check to make sure
-     * the actual hintvals themselves are the equal */
-    hintval_global = (char *) MPL_malloc(strlen(hintval), MPL_MEM_OTHER);
+    /* Now that the sizes of the hint_strs match, check to make sure
+     * the actual hint_strs themselves are the equal */
+    hint_str_global = (char *) MPL_malloc(strlen(hint_str), MPL_MEM_OTHER);
 
     mpi_errno =
-        MPID_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
+        MPID_Allreduce(hint_str, hint_str_global, strlen(hint_str), MPI_CHAR,
                        MPI_MAX, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
+    hint_str_equal = !memcmp(hint_str, hint_str_global, strlen(hint_str));
 
     mpi_errno =
-        MPID_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+        MPID_Allreduce(&hint_str_equal, &hint_str_equal_global, 1, MPI_INT, MPI_LAND,
                        comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPL_free(hintval_global);
+    MPL_free(hint_str_global);
 
-    *info_args_are_equal = hintval_equal_global;
+    *info_args_are_equal = hint_str_equal_global;
     return mpi_errno;
 
   fn_fail:
@@ -719,7 +719,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
     int flag = 0;
-    char hintval[MPI_MAX_INFO_VAL + 1];
+    char hint_str[MPI_MAX_INFO_VAL + 1];
     int info_args_are_equal;
     *newcomm_ptr = NULL;
 
@@ -733,18 +733,18 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     }
 
     if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
+        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
     }
 
     if (!flag) {
-        hintval[0] = '\0';
+        hint_str[0] = '\0';
     }
 
-    mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* if all processes do not have the same hintval, skip
+    /* if all processes do not have the same hint_str, skip
      * topology-aware comm split */
     if (!info_args_are_equal)
         goto use_node_comm;
@@ -758,16 +758,17 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto use_node_comm;
 
     if (flag) {
-        if (!strncmp(hintval, "pci:", strlen("pci:")))
-            mpi_errno = node_split_pci_device(comm_ptr, key, hintval, newcomm_ptr);
-        else if (!strncmp(hintval, "ib", strlen("ib")) ||
-                 !strncmp(hintval, "en", strlen("en")) ||
-                 !strncmp(hintval, "eth", strlen("eth")) || !strncmp(hintval, "hfi", strlen("hfi")))
-            mpi_errno = node_split_network_device(comm_ptr, key, hintval, newcomm_ptr);
-        else if (!strncmp(hintval, "gpu", strlen("gpu")))
-            mpi_errno = node_split_gpu_device(comm_ptr, key, hintval, newcomm_ptr);
+        if (!strncmp(hint_str, "pci:", strlen("pci:")))
+            mpi_errno = node_split_pci_device(comm_ptr, key, hint_str, newcomm_ptr);
+        else if (!strncmp(hint_str, "ib", strlen("ib")) ||
+                 !strncmp(hint_str, "en", strlen("en")) ||
+                 !strncmp(hint_str, "eth", strlen("eth")) ||
+                 !strncmp(hint_str, "hfi", strlen("hfi")))
+            mpi_errno = node_split_network_device(comm_ptr, key, hint_str, newcomm_ptr);
+        else if (!strncmp(hint_str, "gpu", strlen("gpu")))
+            mpi_errno = node_split_gpu_device(comm_ptr, key, hint_str, newcomm_ptr);
         else
-            mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
+            mpi_errno = node_split_processor(comm_ptr, key, hint_str, newcomm_ptr);
 
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -786,26 +787,26 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
+int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hint_str,
                                       MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (!strncmp(hintval, ("switch_level:"), strlen("switch_level:"))
-        && *(hintval + strlen("switch_level:")) != '\0') {
-        int switch_level = atoi(hintval + strlen("switch_level:"));
+    if (!strncmp(hint_str, ("switch_level:"), strlen("switch_level:"))
+        && *(hint_str + strlen("switch_level:")) != '\0') {
+        int switch_level = atoi(hint_str + strlen("switch_level:"));
         mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
-    } else if (!strncmp(hintval, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
-               && *(hintval + strlen("subcomm_min_size:")) != '\0') {
-        int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
+    } else if (!strncmp(hint_str, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
+               && *(hint_str + strlen("subcomm_min_size:")) != '\0') {
+        int subcomm_min_size = atoi(hint_str + strlen("subcomm_min_size:"));
         mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
-    } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
-               && *(hintval + strlen("min_mem_size:")) != '\0') {
-        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+    } else if (!strncmp(hint_str, ("min_mem_size:"), strlen("min_mem_size:"))
+               && *(hint_str + strlen("min_mem_size:")) != '\0') {
+        long min_mem_size = atol(hint_str + strlen("min_mem_size:"));
         /* Split by minimum memory size per subcommunicator in bytes */
         mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
-    } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
-               && *(hintval + strlen("torus_dimension:")) != '\0') {
-        int dimension = atol(hintval + strlen("torus_dimension:"));
+    } else if (!strncmp(hint_str, ("torus_dimension:"), strlen("torus_dimension:"))
+               && *(hint_str + strlen("torus_dimension:")) != '\0') {
+        int dimension = atol(hint_str + strlen("torus_dimension:"));
         mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
     return mpi_errno;
@@ -847,7 +848,7 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hint_str,
                                          MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -855,7 +856,7 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
     MPI_Comm dummycomm;
     MPIR_Comm *dummycomm_ptr;
 
-    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
+    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hint_str, &dummycomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
@@ -874,44 +875,44 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
 {
 
     int flag = 0;
-    char hintval[MPI_MAX_INFO_VAL + 1];
+    char hint_str[MPI_MAX_INFO_VAL + 1];
     int mpi_errno = MPI_SUCCESS;
     int info_args_are_equal;
 
     *newcomm_ptr = NULL;
 
     if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval, &flag);
+        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hint_str, &flag);
     }
     if (!flag) {
-        hintval[0] = '\0';
+        hint_str[0] = '\0';
     }
 
     *newcomm_ptr = NULL;
-    mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+    mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
 
     MPIR_ERR_CHECK(mpi_errno);
 
     if (info_args_are_equal && flag) {
-        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hintval, newcomm_ptr);
+        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hint_str, newcomm_ptr);
     } else {
         /* Check if the info hint is a network topology hint */
         if (info_ptr) {
-            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
+            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hint_str, &flag);
         }
 
         if (!flag) {
-            hintval[0] = '\0';
+            hint_str[0] = '\0';
         }
 
-        mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+        mpi_errno = compare_info_hint(hint_str, comm_ptr, &info_args_are_equal);
 
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* if all processes have the same hintval, perform
+        /* if all processes have the same hint_str, perform
          * topology-aware comm split */
         if (info_args_are_equal) {
-            MPIR_Comm_split_type_network_topo(comm_ptr, key, hintval, newcomm_ptr);
+            MPIR_Comm_split_type_network_topo(comm_ptr, key, hint_str, newcomm_ptr);
         }
     }
 
