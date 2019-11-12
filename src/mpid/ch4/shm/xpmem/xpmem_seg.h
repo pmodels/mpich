@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_create(MPIDI_XPMEM_seg_t ** seg_
     seg = *seg_ptr;
     seg->low = low;
     seg->high = high;
-    MPIR_cc_set(&seg->refcount, 0);
+    MPIR_Object_set_ref(seg, 0);
 
     xpmem_addr.apid = apid;
     xpmem_addr.offset = seg->low;
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_release(MPIDI_XPMEM_seg_t * seg)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_DO_RELEASE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_DO_RELEASE);
 
-    MPIR_Assert(MPIR_cc_get(seg->refcount) == 0);
+    MPIR_Assert(MPIR_Object_get_ref(seg) == 0);
     ret = xpmem_detach((void *) seg->vaddr);
     MPIR_ERR_CHKANDJUMP(ret == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_detach");
     MPIR_Handle_obj_free(&MPIDI_XPMEM_seg_mem, seg);
@@ -486,13 +486,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
 
 /* Registers a segment into cache for the specified remote buffer.
  * It internally rounds down the low address and rounds up the size to
- * ensure the cached segment is page aligned.
+ * ensure the cached segment is page aligned. Specific tree is given to
+ * differentiate different cache tree (e.g. user buffer tree used to cache
+ * user buffer, and XPMEM cooperative counter tree used to cache counter
+ * obj)
  *
  * Input parameters:
  * - node_rank:    rank of remote process on local node.
  * - size:         size in bytes of the remote buffer.
  * - remote_vaddr: start virtual address of the remote buffer
- *
+ * - segcache: specific tree we want to insert segment into
  * Output parameters:
  * - seg_ptr: registered segment. It can be a matched existing segment
  *            or a newly created one.
@@ -500,7 +503,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
  *            virtual address space. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
                                                     void *remote_vaddr,
-                                                    MPIDI_XPMEM_seg_t ** seg_ptr, void **vaddr)
+                                                    MPIDI_XPMEM_seg_t ** seg_ptr, void **vaddr,
+                                                    MPIDI_XPMEM_segtree_t * segcache)
 {
     int mpi_errno = MPI_SUCCESS, c = 0;
     MPIDI_XPMEM_segmap_t *segmap = &MPIDI_XPMEM_global.segmaps[node_rank];
@@ -526,16 +530,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
     seg_size = MPL_ROUND_UP_ALIGN(size + (size_t) offset_diff, MPIDI_XPMEM_global.sys_page_sz);
     seg_high = seg_low + seg_size;
     mpi_errno =
-        MPIDI_XPMEM_segtree_do_search_and_insert_safe(&segmap->segcache, seg_low, seg_high,
+        MPIDI_XPMEM_segtree_do_search_and_insert_safe(segcache, seg_low, seg_high,
                                                       segmap->apid, &seg, &voffset);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_cc_incr(&seg->refcount, &c);
+    MPIR_Object_add_ref(seg);
     /* return mapped vaddr without round down */
     *vaddr = (void *) ((off_t) seg->vaddr + offset_diff + voffset);
     *seg_ptr = seg;
     XPMEM_TRACE("seg: register segment %p(refcount %d) for node_rank %d, apid 0x%lx, "
                 "size 0x%lx->0x%lx, seg->low %p->0x%lx, attached_vaddr %p, vaddr %p\n", seg,
-                MPIR_cc_get(seg->refcount), node_rank, (uint64_t) segmap->apid, size, seg_size,
+                MPIR_Object_get_ref(seg), node_rank, (uint64_t) segmap->apid, size, seg_size,
                 remote_vaddr, seg->low, seg->vaddr, *vaddr);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_REGIST);
@@ -551,9 +555,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_deregist(MPIDI_XPMEM_seg_t * seg)
     int mpi_errno = MPI_SUCCESS, c = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
-    MPIR_cc_decr(&seg->refcount, &c);
+    MPIR_Object_release_ref(seg, &c);
     XPMEM_TRACE("seg: deregister segment %p(refcount %d) vaddr=%p\n", seg,
-                MPIR_cc_get(seg->refcount), seg->vaddr);
+                MPIR_Object_get_ref(seg), seg->vaddr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
     return mpi_errno;
