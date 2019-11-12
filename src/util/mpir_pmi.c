@@ -415,7 +415,11 @@ static int put_ex(const char *key, const void *buf, int bufsize, int is_local)
         for (i = 0; i < num_segs; i++) {
             char seg_key[50];
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
-            encode(segsize, (char *) buf + i * segsize, val);
+            int n = segsize;
+            if (i == num_segs - 1) {
+                n = bufsize - segsize * (num_segs - 1);
+            }
+            encode(n, (char *) buf + i * segsize, val);
             mpi_errno = optimized_put(seg_key, val, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
@@ -456,14 +460,14 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
             mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
+            int n = strlen(val) / 2;    /* 2-to-1 decode */
             if (i < num_segs - 1) {
-                decode(segsize, val, (char *) buf + i * segsize);
-                got_size += segsize;
+                MPIR_Assert(n == segsize);
             } else {
-                int n = strlen(val) / 2;        /* 2-to-1 decode */
-                decode(n, val, (char *) buf + i * segsize);
-                got_size += n;
+                MPIR_Assert(n <= segsize);
             }
+            decode(n, val, (char *) buf + i * segsize);
+            got_size += n;
         }
     } else {
         int n = strlen(val) / 2;        /* 2-to-1 decode */
