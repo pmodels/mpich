@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
             int val = -1;
 
             buf[0] = rank * i;
-            MPI_Raccumulate(&buf[0], 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_MAX, window, &acc_req);
+            MPI_Raccumulate(&buf[0], 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window, &acc_req);
             MPI_Wait(&acc_req, MPI_STATUS_IGNORE);
 
             /* reset local buffer to check local completion */
