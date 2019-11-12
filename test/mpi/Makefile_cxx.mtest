@@ -16,7 +16,7 @@ LDADD = $(top_builddir)/util/mtest_cxx.$(OBJEXT) $(top_builddir)/util/mtest_comm
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
-LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
+LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.la
 
 $(top_builddir)/util/mtest_cxx.$(OBJEXT): $(top_srcdir)/util/mtest_cxx.cxx
 	(cd $(top_builddir)/util && $(MAKE) mtest_cxx.$(OBJEXT))
@@ -24,7 +24,7 @@ $(top_builddir)/util/mtest_cxx.$(OBJEXT): $(top_srcdir)/util/mtest_cxx.cxx
 $(top_builddir)/util/mtest_common.$(OBJEXT): $(top_srcdir)/util/mtest_common.c
 	(cd $(top_builddir)/util && $(MAKE) mtest_common.$(OBJEXT))
 
-$(top_builddir)/dtpools/src/.libs/libdtpools.a: $(top_srcdir)/dtpools/src/*.c
+$(top_builddir)/dtpools/src/.libs/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
 testing:
