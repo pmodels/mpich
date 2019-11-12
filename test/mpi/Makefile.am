@@ -26,7 +26,7 @@ EXTRA_DIST = maint/common.defn maint/f77tof90 maint/testmerge.in maint/updatefil
 DISTCLEANFILES = config.system
 
 ## here are automakefile entries for the test/mpi/include dir
-noinst_HEADERS = include/mpitest.h include/mpitestcxx.h include/mpithreadtest.h include/dtypes.h rma/squelch.h errors/rma/win_sync.h
+noinst_HEADERS = include/mpitest.h include/mpicolltest.h include/mpitestcxx.h include/mpithreadtest.h include/dtypes.h rma/squelch.h errors/rma/win_sync.h
 nodist_noinst_HEADERS = include/mpitestconf.h
 
 # Need to patch some things up:
