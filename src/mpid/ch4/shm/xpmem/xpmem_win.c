@@ -122,7 +122,9 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
             mpi_errno = MPIDI_XPMEM_seg_regist(node_rank, shared_table[i].size,
                                                remote_vaddr,
                                                &xpmem_win->regist_segs[i],
-                                               &shared_table[i].shm_base_addr);
+                                               &shared_table[i].shm_base_addr,
+                                               &MPIDI_XPMEM_global.
+                                               segmaps[node_rank].segcache_ubuf);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (shared_table[i].size == 0)
             shared_table[i].shm_base_addr = NULL;

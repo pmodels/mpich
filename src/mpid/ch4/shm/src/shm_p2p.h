@@ -68,6 +68,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mmods_try_matched_recv(void *buf,
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     /* XPMEM special receive */
     if (MPIDI_SHM_REQUEST(message, status) & MPIDI_SHM_REQ_XPMEM_SEND_LMT) {
+        MPIR_Comm *root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(message, context_id));
+
         /* Matching XPMEM LMT receive is now posted */
         MPIR_Datatype_add_ref_if_not_builtin(datatype); /* will -1 once completed in handle_lmt_recv */
         MPIDIG_REQUEST(message, datatype) = datatype;
@@ -77,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mmods_try_matched_recv(void *buf,
         MPIDI_XPMEM_am_unexp_rreq_t *unexp_rreq = &MPIDI_XPMEM_REQUEST(message, unexp_rreq);
         mpi_errno = MPIDI_XPMEM_handle_lmt_recv(unexp_rreq->src_offset,
                                                 unexp_rreq->data_sz, unexp_rreq->sreq_ptr,
-                                                unexp_rreq->src_lrank, message);
+                                                unexp_rreq->src_lrank, root_comm, message);
         MPIR_ERR_CHECK(mpi_errno);
 
         *recvd_flag = true;
@@ -160,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 
     MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
     if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE > -1 &&
-        dt_contig && data_sz > MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE) {
+        dt_contig && data_sz > MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE && rank != comm->rank) {
         /* SHM only issues contig large message through XPMEM.
          * TODO: support noncontig send message */
         mpi_errno = MPIDI_XPMEM_lmt_isend(buf, count, datatype, rank, tag, comm,
