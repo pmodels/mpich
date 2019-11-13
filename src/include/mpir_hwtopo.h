@@ -28,7 +28,8 @@ typedef enum {
     MPIR_HWTOPO_TYPE__MAX
 } MPIR_hwtopo_type_e;
 
-#define MPIR_HWTOPO_GID_INVALID (-1)
+/* ROOT GID is same as MACHINE GID (refer to mpir_hwtopo.h) */
+#define MPIR_HWTOPO_GID_ROOT (0x00030000)
 
 typedef int MPIR_hwtopo_gid_t;
 
