@@ -41,12 +41,12 @@
  * for different classes of objects, we also encode the object class in the
  * gid. */
 typedef enum {
-    MPIR_HWTOPO_CLASS__INVALID = -1,
-    MPIR_HWTOPO_CLASS__MEMORY,
-    MPIR_HWTOPO_CLASS__IO,
-    MPIR_HWTOPO_CLASS__MISC,
-    MPIR_HWTOPO_CLASS__NORMAL
-} MPIR_hwtopo_class_e;
+    HWTOPO_CLASS__INVALID = -1,
+    HWTOPO_CLASS__MEMORY,
+    HWTOPO_CLASS__IO,
+    HWTOPO_CLASS__MISC,
+    HWTOPO_CLASS__NORMAL
+} hwtopo_class_e;
 
 /* When calculating the gid for non-Normal objects we remove the sign of
  * the depth field. This is done as valid gids are positive and the depth
@@ -54,9 +54,9 @@ typedef enum {
  * be queried using get_depth). In this case, when we calculate the depth
  * from the gid we do the opposite operation, restoring the sign. */
 #define HWTOPO_GET_GID(class, depth, idx) ({              \
-    MPIR_Assert(class != MPIR_HWTOPO_CLASS__INVALID);     \
+    MPIR_Assert(class != HWTOPO_CLASS__INVALID);          \
     MPIR_hwtopo_gid_t gid_;                               \
-    int depth_ = (class != MPIR_HWTOPO_CLASS__NORMAL) ?   \
+    int depth_ = (class != HWTOPO_CLASS__NORMAL) ?        \
                  -depth : depth;                          \
     do {                                                  \
         MPIR_Assert(depth <= HWTOPO_GID_DEPTH_MAX);       \
@@ -82,7 +82,7 @@ typedef enum {
     do {                                                  \
         depth_ = (gid & HWTOPO_GID_DEPTH_MASK);           \
         depth_ = (depth_ >> HWTOPO_GID_DEPTH_SHIFT);      \
-        if (HWTOPO_GET_CLASS(gid) != MPIR_HWTOPO_CLASS__NORMAL) \
+        if (HWTOPO_GET_CLASS(gid) != HWTOPO_CLASS__NORMAL) \
             depth_ = -depth_;                             \
     } while (0);                                          \
     depth_;                                               \
@@ -147,21 +147,21 @@ static hwloc_obj_type_t get_hwloc_obj_type(MPIR_hwtopo_type_e type)
 }
 
 /* Get object type class in hwloc: Memory, I/O, Misc or Normal */
-static MPIR_hwtopo_class_e get_type_class(hwloc_obj_type_t type)
+static hwtopo_class_e get_type_class(hwloc_obj_type_t type)
 {
-    MPIR_hwtopo_class_e class;
+    hwtopo_class_e class;
 
     switch (type) {
         case HWLOC_OBJ_NUMANODE:
-            class = MPIR_HWTOPO_CLASS__MEMORY;
+            class = HWTOPO_CLASS__MEMORY;
             break;
         case HWLOC_OBJ_BRIDGE:
         case HWLOC_OBJ_PCI_DEVICE:
         case HWLOC_OBJ_OS_DEVICE:
-            class = MPIR_HWTOPO_CLASS__IO;
+            class = HWTOPO_CLASS__IO;
             break;
         case HWLOC_OBJ_MISC:
-            class = MPIR_HWTOPO_CLASS__MISC;
+            class = HWTOPO_CLASS__MISC;
             break;
         case HWLOC_OBJ_MACHINE:
         case HWLOC_OBJ_PACKAGE:
@@ -176,10 +176,10 @@ static MPIR_hwtopo_class_e get_type_class(hwloc_obj_type_t type)
         case HWLOC_OBJ_L2ICACHE:
         case HWLOC_OBJ_L3ICACHE:
         case HWLOC_OBJ_GROUP:
-            class = MPIR_HWTOPO_CLASS__NORMAL;
+            class = HWTOPO_CLASS__NORMAL;
             break;
         default:
-            class = MPIR_HWTOPO_CLASS__INVALID;
+            class = HWTOPO_CLASS__INVALID;
     }
 
     return class;
@@ -243,7 +243,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void)
 
 #ifdef HAVE_HWLOC
     hwloc_obj_t leaf = hwloc_get_obj_covering_cpuset(hwloc_topology, bindset);
-    MPIR_hwtopo_class_e class = get_type_class(leaf->type);
+    hwtopo_class_e class = get_type_class(leaf->type);
     gid = HWTOPO_GET_GID(class, leaf->depth, leaf->logical_index);
 #endif
 
@@ -284,7 +284,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_ancestor(MPIR_hwtopo_gid_t gid, int depth)
     while (obj && obj->parent && obj->depth != depth)
         obj = obj->parent;
 
-    MPIR_hwtopo_class_e class = get_type_class(obj->type);
+    hwtopo_class_e class = get_type_class(obj->type);
     ancestor_gid = HWTOPO_GET_GID(class, obj->depth, obj->logical_index);
 #endif
 
@@ -356,7 +356,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_type(MPIR_hwtopo_type_e type)
     while ((tmp = hwloc_get_next_obj_by_type(hwloc_topology, hw_obj_type, tmp)) != NULL) {
         if (hwloc_bitmap_isincluded(bindset, tmp->cpuset) ||
             hwloc_bitmap_isequal(bindset, tmp->cpuset)) {
-            MPIR_hwtopo_class_e class = get_type_class(tmp->type);
+            hwtopo_class_e class = get_type_class(tmp->type);
             if (type == MPIR_HWTOPO_TYPE__DDR) {
                 if (!tmp->subtype)
                     gid = HWTOPO_GET_GID(class, tmp->depth, tmp->logical_index);
@@ -415,7 +415,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
         io_device = hwloc_get_pcidev_by_busidstring(hwloc_topology, name + strlen("pci:"));
         if (io_device) {
             non_io_ancestor = hwloc_get_non_io_ancestor_obj(hwloc_topology, io_device);
-            MPIR_hwtopo_class_e class = get_type_class(non_io_ancestor->type);
+            hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
     } else if (!strncmp(name, "hfi", strlen("hfi")) || !strncmp(name, "ib", strlen("ib")) ||
@@ -456,7 +456,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
         }
 
         if (non_io_ancestor) {
-            MPIR_hwtopo_class_e class = get_type_class(non_io_ancestor->type);
+            hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
     } else
