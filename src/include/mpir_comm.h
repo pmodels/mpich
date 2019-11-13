@@ -403,6 +403,65 @@ typedef struct MPIR_Commops {
 } MPIR_Commops;
 extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functions */
 
+static inline int MPIR_Comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx, int *avtid)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_COMM_RANK_TO_PID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_COMM_RANK_TO_PID);
+
+    *avtid = 0;
+
+    switch (comm->map.mode) {
+        case MPIR_RANK_MAP_DIRECT:
+            *avtid = comm->map.avtid;
+            *idx = rank;
+            break;
+        case MPIR_RANK_MAP_DIRECT_INTRA:
+            *idx = rank;
+            break;
+        case MPIR_RANK_MAP_OFFSET:
+            *avtid = comm->map.avtid;
+            *idx = rank + comm->map.reg.offset;
+            break;
+        case MPIR_RANK_MAP_OFFSET_INTRA:
+            *idx = rank + comm->map.reg.offset;
+            break;
+        case MPIR_RANK_MAP_STRIDE:
+            *avtid = comm->map.avtid;
+            *idx = MPIR_CALC_STRIDE_SIMPLE(rank, comm->map.reg.stride.stride,
+                                           comm->map.reg.stride.offset);
+            break;
+        case MPIR_RANK_MAP_STRIDE_INTRA:
+            *idx = MPIR_CALC_STRIDE_SIMPLE(rank, comm->map.reg.stride.stride,
+                                           comm->map.reg.stride.offset);
+            break;
+        case MPIR_RANK_MAP_STRIDE_BLOCK:
+            *avtid = comm->map.avtid;
+            *idx = MPIR_CALC_STRIDE(rank, comm->map.reg.stride.stride,
+                                    comm->map.reg.stride.blocksize, comm->map.reg.stride.offset);
+            break;
+        case MPIR_RANK_MAP_STRIDE_BLOCK_INTRA:
+            *idx = MPIR_CALC_STRIDE(rank, comm->map.reg.stride.stride,
+                                    comm->map.reg.stride.blocksize, comm->map.reg.stride.offset);
+            break;
+        case MPIR_RANK_MAP_LUT:
+            *avtid = comm->map.avtid;
+            *idx = comm->map.irreg.lut.lpid[rank];
+            break;
+        case MPIR_RANK_MAP_LUT_INTRA:
+            *idx = comm->map.irreg.lut.lpid[rank];
+            break;
+        case MPIR_RANK_MAP_MLUT:
+            *idx = comm->map.irreg.mlut.gpid[rank].lpid;
+            *avtid = comm->map.irreg.mlut.gpid[rank].avtid;
+            break;
+        case MPIR_RANK_MAP_NONE:
+            MPIR_Assert(0);
+            break;
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_COMM_RANK_TO_PID);
+    return *idx;
+}
+
 
 /* internal functions */
 
