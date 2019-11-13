@@ -365,7 +365,7 @@ int MPII_Genutil_progress_hook(int *made_progress)
         if (progress) {
             count++;
         }
-        if (count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
+        if (MPIR_CVAR_PROGRESS_MAX_COLLS > 0 && count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
             break;
     }
 
