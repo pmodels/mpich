@@ -236,7 +236,7 @@ bool MPIR_hwtopo_is_initialized(void)
 
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void)
 {
-    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_INVALID;
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
     if (!bindset_is_valid)
         return gid;
@@ -252,26 +252,36 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void)
 
 int MPIR_hwtopo_get_depth(MPIR_hwtopo_gid_t gid)
 {
-    if (gid < 0)
-        return gid;
+    int hwloc_obj_depth = 0;
 
-    return HWTOPO_GET_DEPTH(gid);
+#ifdef HAVE_HWLOC
+    /* gid sanity check */
+    int hwloc_obj_index = HWTOPO_GET_INDEX(gid);
+    hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
+
+    hwloc_obj_t hwloc_obj =
+        hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth, hwloc_obj_index);
+    if (!hwloc_obj) {
+        return 0;
+    }
+#endif
+
+    return hwloc_obj_depth;
 }
 
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_ancestor(MPIR_hwtopo_gid_t gid, int depth)
 {
-    MPIR_hwtopo_gid_t ancestor_gid = MPIR_HWTOPO_GID_INVALID;
-    int obj_depth = HWTOPO_GET_DEPTH(gid);
-
-    /* Sanity check on global id and depth */
-    if (gid < 0 || depth >= obj_depth || depth < 0)
-        return gid;
+    MPIR_hwtopo_gid_t ancestor_gid = MPIR_HWTOPO_GID_ROOT;
 
 #ifdef HAVE_HWLOC
-    int obj_index = HWTOPO_GET_INDEX(gid);
-    hwloc_obj_t obj = hwloc_get_obj_by_depth(hwloc_topology, obj_depth, obj_index);
+    int hwloc_obj_index = HWTOPO_GET_INDEX(gid);
+    int hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
 
-    while (obj && obj->depth != depth)
+    hwloc_obj_t obj = hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth, hwloc_obj_index);
+    if (obj == NULL)
+        return ancestor_gid;
+
+    while (obj && obj->parent && obj->depth != depth)
         obj = obj->parent;
 
     MPIR_hwtopo_class_e class = get_type_class(obj->type);
@@ -334,7 +344,7 @@ MPIR_hwtopo_type_e MPIR_hwtopo_get_type_id(const char *name)
 
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_type(MPIR_hwtopo_type_e type)
 {
-    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_INVALID;
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
     if (!bindset_is_valid || type <= MPIR_HWTOPO_TYPE__NONE || type >= MPIR_HWTOPO_TYPE__MAX)
         return gid;
@@ -392,7 +402,7 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 
 MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
 {
-    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_INVALID;
+    MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
     if (!name || !bindset_is_valid)
         return gid;
@@ -408,12 +418,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
             MPIR_hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
-        return gid;
-    }
-
-    if (!strncmp(name, "hfi", strlen("hfi")) || !strncmp(name, "ib", strlen("ib")) ||
-        !strncmp(name, "eth", strlen("eth")) || !strncmp(name, "en", strlen("en")) ||
-        !strncmp(name, "gpu", strlen("gpu"))) {
+    } else if (!strncmp(name, "hfi", strlen("hfi")) || !strncmp(name, "ib", strlen("ib")) ||
+               !strncmp(name, "eth", strlen("eth")) || !strncmp(name, "en", strlen("en")) ||
+               !strncmp(name, "gpu", strlen("gpu"))) {
 
         hwloc_obj_t obj_containing_cpuset = hwloc_get_obj_covering_cpuset(hwloc_topology, bindset);
 
@@ -452,16 +459,13 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
             MPIR_hwtopo_class_e class = get_type_class(non_io_ancestor->type);
             gid = HWTOPO_GET_GID(class, non_io_ancestor->depth, non_io_ancestor->logical_index);
         }
-
-        return gid;
-    }
+    } else
 #endif
-
-    MPIR_hwtopo_type_e type = MPIR_hwtopo_get_type_id(name);
-    if (type != MPIR_HWTOPO_TYPE__MAX)
-        gid = MPIR_hwtopo_get_obj_by_type(type);
-    else
-        MPID_Get_node_id(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, &gid);
+    {
+        MPIR_hwtopo_type_e type = MPIR_hwtopo_get_type_id(name);
+        if (type != MPIR_HWTOPO_TYPE__MAX)
+            gid = MPIR_hwtopo_get_obj_by_type(type);
+    }
 
     return gid;
 }
