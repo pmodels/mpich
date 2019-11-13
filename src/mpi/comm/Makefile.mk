@@ -27,6 +27,7 @@ mpi_sources +=                       \
     src/mpi/comm/intercomm_create.c  \
     src/mpi/comm/intercomm_merge.c   \
     src/mpi/comm/comm_split_type.c   \
+    src/mpi/comm/comm_split_type_nbhd.c        \
     src/mpi/comm/comm_failure_ack.c            \
     src/mpi/comm/comm_failure_get_acked.c      \
     src/mpi/comm/comm_revoke.c                 \
