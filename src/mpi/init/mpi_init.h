@@ -111,25 +111,6 @@ static inline void MPII_debugger_hold(void)
     }
 }
 
-static inline void MPII_wait_for_debugger(void)
-{
-    /* FIXME: Does this need to come before the call to MPID_InitComplete?
-     * For some debugger support, MPII_Wait_for_debugger may want to use
-     * MPI communication routines to collect information for the debugger */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPII_Wait_for_debugger();
-#endif
-}
-
-static inline void MPII_debugger_set_aborting(void)
-{
-    /* Signal the debugger that we are about to exit. */
-    /* FIXME: Should this also be a finalize callback? */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_Debugger_set_aborting((char *) 0);
-#endif
-}
-
 static inline void MPII_final_coverage_delay(int rank)
 {
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
