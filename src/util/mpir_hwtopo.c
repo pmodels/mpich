@@ -250,6 +250,11 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void)
     return gid;
 }
 
+int MPIR_hwtopo_get_lid(MPIR_hwtopo_gid_t gid)
+{
+    return HWTOPO_GET_INDEX(gid);
+}
+
 int MPIR_hwtopo_get_depth(MPIR_hwtopo_gid_t gid)
 {
     int hwloc_obj_depth = 0;
