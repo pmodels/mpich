@@ -208,6 +208,19 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+int MPID_Coll_comm_init_hook(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
