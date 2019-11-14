@@ -157,7 +157,6 @@ int MPI_Finalize(void)
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
-    MPII_hw_topo_finalize();    /* to be eventually replaced by MPII_hwtopo_finalize() */
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
 
