@@ -202,16 +202,4 @@ void ADIOI_DAOS_IreadStrided(ADIO_File fd, void *buf, int count,
 void ADIOI_DAOS_IwriteStrided(ADIO_File fd, const void *buf, int count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, MPI_Request * request, int *error_code);
-void ADIOI_DAOS_ReadStridedColl(ADIO_File fd, void *buf, int count,
-                                MPI_Datatype datatype, int file_ptr_type,
-                                ADIO_Offset offset, ADIO_Status * status, int *error_code);
-void ADIOI_DAOS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
-                                 MPI_Datatype datatype, int file_ptr_type,
-                                 ADIO_Offset offset, ADIO_Status * status, int *error_code);
-void ADIOI_DAOS_IreadStridedColl(ADIO_File fd, void *buf, int count,
-                                 MPI_Datatype datatype, int file_ptr_type,
-                                 ADIO_Offset offset, ADIO_Request * request, int *error_code);
-void ADIOI_DAOS_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
-                                  MPI_Datatype datatype, int file_ptr_type,
-                                  ADIO_Offset offset, MPI_Request * request, int *error_code);
 #endif /* AD_DAOS_H_INCLUDED */
