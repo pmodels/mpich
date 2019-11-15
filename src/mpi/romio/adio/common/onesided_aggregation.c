@@ -16,30 +16,6 @@
 
 //  #define onesidedtrace 1
 
-/* Data that needs to persist throughout multiple calls to ADIOI_OneSidedWriteAggregation
- * to support file systems that stripe data -- the algorithm can now be called once
- * for each segment of data, a segment being defined as a contiguous region of the file which
- * is the size of one striping unit times the number of aggregators.  Each call effectively packs one
- * striping unit of data into the collective buffer on each agg, with additional parameters which govern when to flush
- * the collective buffer to the file.  Therefore in practice the collective write call for a file system such as
- * lustre on a dataset composed of multiple segments would call the algorithm several times without a
- * flush parameter to fill the collective buffers with multiple stripes of data, before calling it again to flush
- * the collective buffer to the file system.  In this fashion the synchronization can be minimized as that
- * only needs to occur during the actual read from or write to the file system.
- */
-int iWasUsedStripingAgg;        /* whether this rank was ever a used agg for this striping segement */
-int numStripesUsed;             /* the number of stripes packed into an aggregator */
-/* These 2 variables are the offset and lengths in the file corresponding to the actual stripes */
-ADIO_Offset *stripeWriteOffsets, *stripeWriteLens;
-int amountOfStripedDataExpected;        /* used to determine holes in this segment thereby requiring a rmw */
-/* Since ADIOI_OneSidedWriteAggregation can be called multiple times now only flatten the buffer once */
-/* for optimal performance so persist these two variables through multiple calls */
-MPI_Aint bufTypeExtent_global;
-ADIOI_Flatlist_node *flatBuf_global;
-/* These three variables track the state of the source buffer advancement through multiple calls */
-int lastDataTypeExtent;
-int lastFlatBufIndice;
-ADIO_Offset lastIndiceOffset;
 /* This data structure holds the number of extents, the index into the flattened buffer and the remnant length
  * beyond the flattened buffer index corresponding to the base buffer offset for non-contiguous source data
  * for the range to be written coresponding to the round and target agg.
@@ -231,6 +207,36 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * fd_end,
                                     int *hole_found, ADIOI_OneSidedStripeParms stripe_parms)
 {
+    /* Data that needs to persist throughout multiple calls to
+     * ADIOI_OneSidedWriteAggregation to support file systems that stripe data
+     * -- the algorithm can now be called once for each segment of data, a
+     * segment being defined as a contiguous region of the file which is the
+     * size of one striping unit times the number of aggregators.  Each call
+     * effectively packs one striping unit of data into the collective buffer
+     * on each agg, with additional parameters which govern when to flush
+     * the collective buffer to the file.  Therefore in practice the collective
+     * write call for a file system such as lustre on a dataset composed of
+     * multiple segments would call the algorithm several times without a flush
+     * parameter to fill the collective buffers with multiple stripes of data,
+     * before calling it again to flush the collective buffer to the file
+     * system.  In this fashion the synchronization can be minimized as that
+     * only needs to occur during the actual read from or write to the file
+     * system.
+     */
+    static int iWasUsedStripingAgg;     /* whether this rank was ever a used agg for this striping segement */
+    static int numStripesUsed;  /* the number of stripes packed into an aggregator */
+    /* These 2 variables are the offset and lengths in the file corresponding to the actual stripes */
+    static ADIO_Offset *stripeWriteOffsets, *stripeWriteLens;
+    static int amountOfStripedDataExpected;     /* used to determine holes in this segment thereby requiring a rmw */
+    /* Since ADIOI_OneSidedWriteAggregation can be called multiple times now only flatten the buffer once */
+    /* for optimal performance so persist these two variables through multiple calls */
+    static MPI_Aint bufTypeExtent_global;
+    static ADIOI_Flatlist_node *flatBuf_global;
+    /* These three variables track the state of the source buffer advancement through multiple calls */
+    static int lastDataTypeExtent;
+    static int lastFlatBufIndice;
+    static ADIO_Offset lastIndiceOffset;
+
     int i, j;                   /* generic iterators */
 
     if ((stripe_parms.stripeSize > 0) && stripe_parms.firstStripedWriteCall)
@@ -901,7 +907,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     char *write_buf = write_buf0;
     MPI_Win write_buf_window = fd->io_buf_window;
 
-    if (!romio_onesided_no_rmw) {
+    if (!fd->romio_onesided_no_rmw) {
         *hole_found = 0;
     }
 
@@ -991,7 +997,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         }       // if ((stripe_parms.stripeSize>0) && (stripe_parms.segmentIter==0))
 
 
-        if (romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0))) { // read in the first buffer
+        if (fd->romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0))) {     // read in the first buffer
             ADIO_Offset tmpCurrentRoundFDEnd = 0;
             if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                 if (myAggRank == greatestFileDomainAggRank) {
@@ -1005,7 +1011,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 tmpCurrentRoundFDEnd = currentRoundFDStart + coll_bufsize - (ADIO_Offset) 1;
 #ifdef onesidedtrace
             printf
-                ("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld to %ld total is %d\n",
+                ("fd->romio_onesided_always_rmw - first buffer pre-read for file offsets %ld to %ld total is %d\n",
                  currentRoundFDStart, tmpCurrentRoundFDEnd,
                  (int) (tmpCurrentRoundFDEnd - currentRoundFDStart) + 1);
 #endif
@@ -1027,7 +1033,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             }
         }
     }   // if iAmUsedAgg
-    if (romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0)))       // wait until the first buffer is read
+    if (fd->romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0)))   // wait until the first buffer is read
         MPI_Barrier(fd->comm);
 
 #ifdef ROMIO_GPFS
@@ -1146,7 +1152,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                         printf("bufferAmountToSend is %d\n", bufferAmountToSend);
 #endif
                         if (bufferAmountToSend > 0) {   /* we have data to send this round */
-                            if (romio_write_aggmethod == 2) {
+                            if (fd->romio_write_aggmethod == 2) {
                                 /* Only allocate these arrays if we are using method 2 and only do it once for this round/target agg.
                                  */
                                 if (!allocatedDerivedTypeArrays) {
@@ -1202,7 +1208,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                              * chunk in the target, of source data is non-contiguous then pack the data first.
                              */
 
-                            if (romio_write_aggmethod == 1) {
+                            if (fd->romio_write_aggmethod == 1) {
                                 MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
                                              write_buf_window);
                                 char *putSourceData = NULL;
@@ -1237,7 +1243,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                              * to be used subsequently when building the derived type for 1 mpi_put for all the data for this
                              * round/agg.
                              */
-                            else if (romio_write_aggmethod == 2) {
+                            else if (fd->romio_write_aggmethod == 2) {
 
                                 if (bufTypeIsContig) {
                                     targetAggBlockLengths[targetAggContigAccessCount] =
@@ -1284,7 +1290,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
                     /* For romio_write_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
                      */
-                    if (romio_write_aggmethod == 2) {
+                    if (fd->romio_write_aggmethod == 2) {
 
                         MPI_Datatype sourceBufferDerivedDataType, targetBufferDerivedDataType;
                         MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths,
@@ -1332,7 +1338,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                             MPI_Type_free(&targetBufferDerivedDataType);
                         }
                     }
-                    if (!romio_onesided_no_rmw) {
+                    if (!fd->romio_onesided_no_rmw) {
                         MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0,
                                      fd->io_buf_put_amounts_window);
                         MPI_Accumulate(&numBytesPutThisAggRound, 1, MPI_INT,
@@ -1395,7 +1401,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             }
 #endif
             int doWriteContig = 1;
-            if (!romio_onesided_no_rmw) {
+            if (!fd->romio_onesided_no_rmw) {
                 if (stripe_parms.stripeSize == 0) {
                     if (fd->io_buf_put_amounts !=
                         ((int) (currentRoundFDEnd - currentRoundFDStart) + 1)) {
@@ -1506,7 +1512,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         if (iAmUsedAgg && stripe_parms.stripeSize == 0) {
             currentRoundFDStart += coll_bufsize;
 
-            if (romio_onesided_always_rmw && (roundIter < (numberOfRounds - 1))) {      // read in the buffer for the next round unless this is the last round
+            if (fd->romio_onesided_always_rmw && (roundIter < (numberOfRounds - 1))) {  // read in the buffer for the next round unless this is the last round
                 ADIO_Offset tmpCurrentRoundFDEnd = 0;
                 if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                     if (myAggRank == greatestFileDomainAggRank) {
@@ -1520,7 +1526,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     tmpCurrentRoundFDEnd = currentRoundFDStart + coll_bufsize - (ADIO_Offset) 1;
 #ifdef onesidedtrace
                 printf
-                    ("romio_onesided_always_rmw - round %d buffer pre-read for file offsets %ld to %ld total is %d\n",
+                    ("fd->romio_onesided_always_rmw - round %d buffer pre-read for file offsets %ld to %ld total is %d\n",
                      roundIter, currentRoundFDStart, tmpCurrentRoundFDEnd,
                      (int) (tmpCurrentRoundFDEnd - currentRoundFDStart) + 1);
 #endif
@@ -2471,7 +2477,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                         }
 
                         if (bufferAmountToRecv > 0) {   /* we have data to recv this round */
-                            if (romio_read_aggmethod == 2) {
+                            if (fd->romio_read_aggmethod == 2) {
                                 /* Only allocate these arrays if we are using method 2 and only do it once for this round/source agg.
                                  */
                                 if (!allocatedDerivedTypeArrays) {
@@ -2525,7 +2531,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                              * contiguous chunk from the target, if the source is non-contiguous then unpack the data after
                              * the MPI_Win_unlock is done to make sure the data has arrived first.
                              */
-                            if (romio_read_aggmethod == 1) {
+                            if (fd->romio_read_aggmethod == 1) {
                                 MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0,
                                              read_buf_window);
                                 char *getSourceData = NULL;
@@ -2562,7 +2568,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                              * to be used subsequently when building the derived type for 1 mpi_put for all the data for this
                              * round/agg.
                              */
-                            else if (romio_read_aggmethod == 2) {
+                            else if (fd->romio_read_aggmethod == 2) {
                                 if (bufTypeIsContig) {
                                     sourceAggBlockLengths[sourceAggContigAccessCount] =
                                         bufferAmountToRecv;
@@ -2592,7 +2598,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
                     /* For romio_read_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
                      */
-                    if (romio_read_aggmethod == 2) {
+                    if (fd->romio_read_aggmethod == 2) {
                         MPI_Datatype recvBufferDerivedDataType, sourceBufferDerivedDataType;
 
                         MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths,
