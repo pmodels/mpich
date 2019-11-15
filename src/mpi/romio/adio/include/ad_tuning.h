@@ -33,6 +33,6 @@ extern int romio_onesided_inform_rmw;
 extern int romio_tunegather;
 
 /* set internal variables for tuning environment variables */
-void ad_get_env_vars(void);
+void ad_get_env_vars(ADIO_File fd);
 
 #endif /* AD_TUNING_H_INCLUDED */

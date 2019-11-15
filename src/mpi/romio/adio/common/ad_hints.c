@@ -30,7 +30,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         *error_code = MPI_SUCCESS;
         return;
     }
-    ad_get_env_vars();
+    ad_get_env_vars(fd);
 
     if (fd->info == MPI_INFO_NULL) {
         if (users_info == MPI_INFO_NULL)
