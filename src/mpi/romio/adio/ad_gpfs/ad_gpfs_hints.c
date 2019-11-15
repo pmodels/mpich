@@ -83,7 +83,7 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      */
     if (!fd->hints->initialized) {
 
-        ad_get_env_vars();
+        ad_get_env_vars(fd);
         ad_gpfs_get_env_vars();
         did_anything = 1;
 

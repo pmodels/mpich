@@ -19,15 +19,6 @@
  * on MPI-IO scalability").
  */
 
-enum {
-    BLOCKSIZE = 0,
-    STRIPE_SIZE,
-    STRIPE_FACTOR,
-    START_IODEVICE,
-    STAT_ITEMS
-} file_stats;
-
-
 /* generate an MPI datatype describing the members of the ADIO_File struct that
  * we want to ensure all processes have.  In deferred open, aggregators will
  * open the file and possibly read layout and other information.
@@ -36,6 +27,14 @@ enum {
 
 static MPI_Datatype make_stats_type(ADIO_File fd)
 {
+    enum file_stats {
+        BLOCKSIZE = 0,
+        STRIPE_SIZE,
+        STRIPE_FACTOR,
+        START_IODEVICE,
+        STAT_ITEMS
+    };
+
     int lens[STAT_ITEMS];
     MPI_Aint offsets[STAT_ITEMS];
     MPI_Datatype types[STAT_ITEMS];

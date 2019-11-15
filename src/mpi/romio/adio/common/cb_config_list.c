@@ -31,7 +31,6 @@
 
 #undef CB_CONFIG_LIST_DEBUG
 
-/* a couple of globals keep things simple */
 int ADIOI_cb_config_list_keyval = MPI_KEYVAL_INVALID;
 
 /* internal stuff */
@@ -260,8 +259,7 @@ int ADIOI_cb_config_list_parse(char *config_list,
     int token, max_procs, cur_rank = 0, nr_procnames;
     char *cur_procname, *cur_procname_p, **procnames;
     char *used_procnames;
-    char *yylval;
-    char *token_ptr;
+    char *yylval, *token_ptr;
 
     nr_procnames = array->namect;
     procnames = array->names;
@@ -696,18 +694,18 @@ static int cb_config_list_lex(char *yylval, char **token_ptr)
     slen = (int) strcspn(token, DELIMS);
 
     if (*token == COLON) {
-        *token_ptr = token + 1;
+        (*token_ptr)++;
         return AGG_COLON;
     }
     if (*token == COMMA) {
-        *token_ptr = token + 1;
+        (*token_ptr)++;
         return AGG_COMMA;
     }
 
     if (*token == '*') {
         /* make sure that we don't have characters after the '*' */
         if (slen == 1) {
-            *token_ptr = token + 1;
+            (*token_ptr)++;
             return AGG_WILDCARD;
         } else
             return AGG_ERROR;
@@ -722,6 +720,6 @@ static int cb_config_list_lex(char *yylval, char **token_ptr)
      */
     ADIOI_Strncpy(yylval, token, slen);
     yylval[slen] = '\0';
-    *token_ptr = token + slen;
+    (*token_ptr) += slen;
     return AGG_STRING;
 }

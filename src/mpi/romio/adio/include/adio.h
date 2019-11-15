@@ -57,10 +57,7 @@
 
 /* Include romioconf.h if we haven't already (some include files may
    need to include romioconf before some system includes) */
-#ifndef ROMIOCONF_H_INCLUDED
 #include "romioconf.h"
-#define ROMIOCONF_H_INCLUDED
-#endif
 
 #ifdef BUILD_MPI_ABI
 #include "romio_abi_internal.h"
@@ -246,6 +243,14 @@ typedef struct ADIOI_FileD {
     struct quobyte_fh *file_handle;     /* file handle for quobytefs */
 #endif
     int dirty_write;            /* this client has written data */
+
+    /* see file adio/common/onesided_aggregation.c for descriptions of the next 6 members */
+    int romio_write_aggmethod;
+    int romio_read_aggmethod;
+    int romio_onesided_no_rmw;
+    int romio_onesided_always_rmw;
+    int romio_onesided_inform_rmw;
+    int romio_tunegather;
 } ADIOI_FileD;
 
 typedef struct ADIOI_FileD *ADIO_File;
