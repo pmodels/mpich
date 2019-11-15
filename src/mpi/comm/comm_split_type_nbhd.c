@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpir_hw_topo.h"
 
 static const char *NETWORK_INFO_KEY = "network_topo";
 
@@ -127,40 +126,40 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
 {
     int i, color;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Network_node network_node;
-    MPIR_Network_node *traversal_stack;
-    MPIR_Network_topology_type topo_type;
+    MPIR_nettopo_node_t network_node;
+    MPIR_nettopo_node_t *traversal_stack;
+    MPIR_nettopo_type_e topo_type;
     int num_nodes;
     int traversal_begin, traversal_end;
 
-    topo_type = MPIR_Net_get_topo_type();
-    num_nodes = MPIR_Net_get_num_nodes();
+    topo_type = MPIR_nettopo_get_type();
+    num_nodes = MPIR_nettopo_get_num_nodes();
 
-    if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
-        topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
-        MPIR_Network_node *switches_at_level;
+    if (topo_type == MPIR_NETTOPO_TYPE__FAT_TREE || topo_type == MPIR_NETTOPO_TYPE__CLOS_NETWORK) {
+        MPIR_nettopo_node_t *switches_at_level;
         int switch_count;
         traversal_stack =
-            (MPIR_Network_node *) MPL_malloc(sizeof(MPIR_Network_node) * num_nodes, MPL_MEM_OTHER);
+            (MPIR_nettopo_node_t *) MPL_malloc(sizeof(MPIR_nettopo_node_t) * num_nodes,
+                                               MPL_MEM_OTHER);
 
-        network_node = MPIR_Net_get_endpoint();
+        network_node = MPIR_nettopo_get_endpoint();
 
         traversal_begin = 0;
         traversal_end = 0;
-        MPIR_Net_tree_topo_get_switches_at_level(switch_level, &switches_at_level, &switch_count);
+        MPIR_nettopo_tree_get_switches_at_level(switch_level, &switches_at_level, &switch_count);
 
         /* Find the switch `switch_level` steps away */
         MPIR_Assert(traversal_end < num_nodes);
         traversal_stack[traversal_end++] = network_node;
         color = 0;
         while (traversal_end > traversal_begin) {
-            MPIR_Network_node current_node = traversal_stack[traversal_begin++];
+            MPIR_nettopo_node_t current_node = traversal_stack[traversal_begin++];
             int num_edges;
-            int node_uid = MPIR_Net_get_node_uid(current_node);
-            int *node_levels = MPIR_Net_tree_topo_get_node_levels();
-            MPIR_Network_node_type node_type = MPIR_Net_get_node_type(current_node);
-            MPIR_Network_edge *edges;
-            if (node_type == MPIR_NETWORK_NODE_TYPE__SWITCH && node_levels[node_uid]
+            int node_uid = MPIR_nettopo_get_node_uid(current_node);
+            int *node_levels = MPIR_nettopo_tree_get_node_levels();
+            MPIR_nettopo_node_type_e node_type = MPIR_nettopo_get_node_type(current_node);
+            MPIR_nettopo_edge_t *edges;
+            if (node_type == MPIR_NETTOPO_NODE_TYPE__SWITCH && node_levels[node_uid]
                 == switch_level) {
                 for (i = 0; i < switch_count; i++) {
                     if (switches_at_level[i] == current_node) {
@@ -172,10 +171,10 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
                 continue;
             }
             /*find all nodes not visited with an edge from the current node */
-            MPIR_Net_get_all_edges(network_node, &num_edges, &edges);
+            MPIR_nettopo_get_all_edges(network_node, &num_edges, &edges);
             for (i = 0; i < num_edges; i++) {
                 MPIR_Assert(traversal_end < num_nodes);
-                traversal_stack[traversal_end++] = MPIR_Net_get_edge_dest_node(edges[i]);
+                traversal_stack[traversal_end++] = MPIR_nettopo_get_edge_dest_node(edges[i]);
             }
         }
 
@@ -243,30 +242,30 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
     int comm_size = MPIR_Comm_size(comm_ptr);
     int node_index;
     int num_nodes;
-    MPIR_Network_topology_type topo_type;
+    MPIR_nettopo_type_e topo_type;
 
-    num_nodes = MPIR_Net_get_num_nodes();
-    topo_type = MPIR_Net_get_topo_type();
+    num_nodes = MPIR_nettopo_get_num_nodes();
+    topo_type = MPIR_nettopo_get_type();
 
     if (subcomm_min_size == 0 || comm_size < subcomm_min_size ||
-        topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
+        topo_type == MPIR_NETTOPO_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
         int *num_processes_at_node = NULL;
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-        if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
-            topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
-            mpi_errno = MPIR_Net_tree_topo_get_hostnode_index(&node_index, &num_nodes);
+        if (topo_type == MPIR_NETTOPO_TYPE__FAT_TREE ||
+            topo_type == MPIR_NETTOPO_TYPE__CLOS_NETWORK) {
+            mpi_errno = MPIR_nettopo_tree_get_hostnode_index(&node_index, &num_nodes);
 
             MPIR_ERR_CHECK(mpi_errno);
 
             num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
             num_processes_at_node[node_index] = 1;
 
-        } else if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__TORUS) {
+        } else if (topo_type == MPIR_NETTOPO_TYPE__TORUS) {
             num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
-            node_index = MPIR_Net_torus_topo_get_node_index();
+            node_index = MPIR_nettopo_torus_get_node_index();
             num_processes_at_node[node_index] = 1;
         }
         MPIR_Assert(num_processes_at_node != NULL);
@@ -275,14 +274,14 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
             MPID_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
                            MPI_SUM, comm_ptr, &errflag);
 
-        if (topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__FAT_TREE ||
-            topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__CLOS_NETWORK) {
+        if (topo_type == MPIR_NETTOPO_TYPE__FAT_TREE ||
+            topo_type == MPIR_NETTOPO_TYPE__CLOS_NETWORK) {
             color =
                 get_color_from_subset_bitmap(node_index, num_processes_at_node, num_nodes,
                                              subcomm_min_size);
         } else {
-            int torus_dim = MPIR_Net_torus_topo_get_dimension();
-            int *torus_geometry = MPIR_Net_torus_topo_get_geometry();
+            int torus_dim = MPIR_nettopo_torus_get_dimension();
+            int *torus_geometry = MPIR_nettopo_torus_get_geometry();
             int *offset_along_dimension = (int *) MPL_calloc(torus_dim, sizeof(int),
                                                              MPL_MEM_OTHER);
             int *partition = (int *) MPL_calloc(torus_dim, sizeof(int),
@@ -456,7 +455,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
 {
 
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Network_topology_type topo_type;
+    MPIR_nettopo_type_e topo_type;
 
     /* Get available memory in the node */
     long total_memory_size = 0;
@@ -464,9 +463,9 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
 
     total_memory_size = MPIR_hwtopo_get_node_mem();
 
-    topo_type = MPIR_Net_get_topo_type();
+    topo_type = MPIR_nettopo_get_type();
 
-    if (min_mem_size == 0 || topo_type == MPIR_NETWORK_TOPOLOGY_TYPE__INVALID) {
+    if (min_mem_size == 0 || topo_type == MPIR_NETTOPO_TYPE__INVALID) {
         *newcomm_ptr = NULL;
     } else {
         int num_ranks_node;
@@ -493,17 +492,17 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
     int mpi_errno = MPI_SUCCESS;
     int i, color;
     int torus_dim;
-    MPIR_Network_topology_type topo_type;
+    MPIR_nettopo_type_e topo_type;
 
-    topo_type = MPIR_Net_get_topo_type();
-    torus_dim = MPIR_Net_torus_topo_get_dimension();
+    topo_type = MPIR_nettopo_get_type();
+    torus_dim = MPIR_nettopo_torus_get_dimension();
 
     /* Dimension is assumed to be indexed from 0 */
-    if (topo_type != MPIR_NETWORK_TOPOLOGY_TYPE__TORUS || dimension >= torus_dim) {
+    if (topo_type != MPIR_NETTOPO_TYPE__TORUS || dimension >= torus_dim) {
         *newcomm_ptr = NULL;
     } else {
-        int node_coordinates = MPIR_Net_torus_topo_get_node_index();
-        int *node_dimensions = MPIR_Net_torus_topo_get_geometry();
+        int node_coordinates = MPIR_nettopo_torus_get_node_index();
+        int *node_dimensions = MPIR_nettopo_torus_get_geometry();
         color = 0;
         for (i = 0; i < torus_dim; i++) {
             int coordinate_along_dim;
