@@ -104,8 +104,6 @@ fi
 
 AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)
 
-PAC_CHECK_OPA_CH3
-
 AC_C_BIGENDIAN
 
 ])dnl end AM_COND_IF(BUILD_CH3,...)
