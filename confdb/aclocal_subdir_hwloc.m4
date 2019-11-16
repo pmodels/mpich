@@ -56,20 +56,13 @@ AC_DEFUN([PAC_SUBDIR_HWLOC],[
         AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
     fi
 
-    HWLOC_DO_AM_CONDITIONALS
-    dnl FIXME: update hydra Makefile.am?
-    m4_ifset([INSIDE_MPICH],[
-        AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
-        AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
-        ],[])
-    m4_ifset([INSIDE_HYDRA],[
-        AM_CONDITIONAL([hydra_have_hwloc], [test "${have_hwloc}" = "yes"])
-        AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
-        ],[])
+    AM_CONDITIONAL([HAVE_HWLOC], [test "${have_hwloc}" = "yes"])
 
-    if test "$have_hwloc" = "yes" ; then
-        PAC_EXTERNAL_NETLOC
-    fi
+    m4_ifset([INSIDE_MPICH],[
+        if test "$have_hwloc" = "yes" ; then
+            PAC_EXTERNAL_NETLOC
+        fi
+    ])
 ])
 
 AC_DEFUN([PAC_CONFIG_ARG_HWLOC], [
