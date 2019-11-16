@@ -7,12 +7,13 @@ AC_PREREQ(2.62)
 m4_include([version.m4])
 AC_INIT([Hydra], MPICH_VERSION_m4)
 
+dnl SUBDIR may build differently, define INSIDE_HYDRA
+m4_define([INSIDE_HYDRA],[1])
+PAC_SUBDIR_INIT
+
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 
-# needed by hwloc in embedded mode.  Must come very early to avoid
-# bizarre expansion ordering warnings
-AC_CANONICAL_TARGET
 AC_ARG_PROGRAM
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
@@ -20,19 +21,6 @@ dnl must also come before AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
-
-# also needed by hwloc in embedded mode, must also come early for expansion
-# ordering reasons
-AC_USE_SYSTEM_EXTENSIONS
-
-# Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
-# are building under MPICH with --enable-strict that defined _POSIX_C_SOURCE.
-# Some standard Darwin headers don't build correctly under a strict posix
-# environment.
-AS_CASE([$host],
-    [*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[CPPFLAGS])]
-)
-
 
 AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir-objects])
 
@@ -120,46 +108,7 @@ PAC_POP_ALL_FLAGS
 
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
-# MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR. Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with Hydra.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
-mpl_srcdir=""
-AC_SUBST([mpl_srcdir])
-# Controls whether we recurse into the MPL dir when running "dist" rules like
-# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-# superset of SUBDIRS, but we don't want to double-distclean and similar.
-AC_SUBST(mpl_dist_srcdir)
-mpl_includedir=""
-AC_SUBST([mpl_includedir])
-mpl_libdir=""
-AC_SUBST([mpl_libdir])
-mpl_lib=""
-AC_SUBST([mpl_lib])
-if test "$with_mpl_prefix" = "embedded" ; then
-    mpl_srcdir="mpl"
-    mpl_dist_srcdir="mpl"
-    mpl_lib="mpl/lib${MPLLIBNAME}.la"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    mpl_includedir="-I${with_mpl_prefix}/include"
-    mpl_libdir="-L${with_mpl_prefix}/lib"
-    mpl_lib="-l${MPLLIBNAME}"
-fi
+PAC_SUBDIR_MPL([mpl])
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
@@ -311,44 +260,7 @@ AC_SUBST(hydra_bstrap_includes)
 AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_BSTRAP,"${hydra_bstrap_default}",[Default bstrap])
 AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_BSTRAPS,"${hydra_bstrap_names_unquoted}",[Definition of enabled BSTRAPS])
 
-
-#########################################################################
-# System hwloc
-#########################################################################
-PAC_CHECK_PREFIX(hwloc)
-
-have_hwloc=no
-if test "$with_hwloc_prefix" = "embedded" ; then
-   HWLOC_SETUP_CORE([libhydra/topo/hwloc/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-   # Only build hwloc in embedded mode
-   if test "$have_hwloc" = "yes" ; then
-      hydra_use_embedded_hwloc=yes
-   fi
-else
-   AC_CHECK_HEADERS([hwloc.h])
-   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
-   # minimum required version
-   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
-   AC_MSG_CHECKING([if non-embedded hwloc works])
-   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
-      have_hwloc=yes
-   fi
-   AC_MSG_RESULT([$have_hwloc])
-fi
-
-# FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-# atleast as of 1.0.2, does not install correctly on Cygwin
-AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
-
-if test "$have_hwloc" = "yes" ; then
-   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
-fi
-
-HWLOC_DO_AM_CONDITIONALS
-AM_CONDITIONAL([HYDRA_HAVE_HWLOC], [test "${have_hwloc}" = "yes"])
-AM_CONDITIONAL([HYDRA_USE_EMBEDDED_HWLOC], [test "${hydra_use_embedded_hwloc}" = "yes"])
-
-
+PAC_SUBDIR_HWLOC([libhydra/topo/hwloc/hwloc])
 
 #########################################################################
 # Demux engine
@@ -495,6 +407,8 @@ if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
 fi
+
+PAC_CONFIG_ALL_SUBDIRS
 
 # Final output
 AC_OUTPUT(Makefile
