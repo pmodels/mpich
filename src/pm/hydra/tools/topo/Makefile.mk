@@ -10,6 +10,6 @@ noinst_HEADERS += tools/topo/topo.h
 
 libhydra_la_SOURCES += tools/topo/topo.c
 
-if HYDRA_HAVE_HWLOC
+if HAVE_HWLOC
 include tools/topo/hwloc/Makefile.mk
 endif
