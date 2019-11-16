@@ -18,18 +18,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     PAC_SUBDIR_OFI([src/mpid/ch4/netmod/ofi/libfabric])
-
-    # Check for required functions
-    # Does MPL provide MPL_aligned_malloc?
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mplconfig.h>]],
-                                       [[
-                                       #ifndef MPL_DEFINE_ALIGNED_ALLOC
-                                       # error
-                                       #endif
-                                       ]])],
-                                       [],
-                                       [AC_MSG_ERROR(MPL_aligned_alloc is required to build OFI netmod)])
-
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 

@@ -18,6 +18,10 @@
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
+#ifndef MPL_DEFINE_ALIGNED_ALLOC
+#error MPL_aligned_alloc is required to build OFI netmod
+#endif
+
 #define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
 #define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
 
