@@ -34,4 +34,7 @@ for dir in errors/f77/* ; do
         exit 1
     fi
 done
+
+autoreconf -ivf
+
 echo "done"
