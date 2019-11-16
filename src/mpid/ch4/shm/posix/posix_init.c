@@ -53,8 +53,7 @@ static int choose_posix_eager(void)
     }
 
     for (i = 0; i < MPIDI_num_posix_eager_fabrics; ++i) {
-        /* use MPL variant of strncasecmp if we get one */
-        if (!strncasecmp
+        if (!MPL_strncasecmp
             (MPIR_CVAR_CH4_SHM_POSIX_EAGER, MPIDI_POSIX_eager_strings[i],
              MPIDI_MAX_POSIX_EAGER_STRING_LEN)) {
             MPIDI_POSIX_eager_func = MPIDI_POSIX_eager_funcs[i];

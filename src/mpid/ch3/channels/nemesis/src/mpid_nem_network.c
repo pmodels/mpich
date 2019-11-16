@@ -55,7 +55,7 @@ int MPID_nem_choose_netmod(void)
 
     for (i = 0; i < MPID_nem_num_netmods; ++i)
     {
-        if (!MPIR_Strncasecmp(MPIR_CVAR_NEMESIS_NETMOD, MPID_nem_netmod_strings[i], MPID_NEM_MAX_NETMOD_STRING_LEN))
+        if (!MPL_strncasecmp(MPIR_CVAR_NEMESIS_NETMOD, MPID_nem_netmod_strings[i], MPID_NEM_MAX_NETMOD_STRING_LEN))
         {
             MPID_nem_netmod_func = MPID_nem_netmod_funcs[i];
             MPID_nem_netmod_id = i;

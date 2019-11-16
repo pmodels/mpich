@@ -971,6 +971,11 @@ if test "$ac_cv_func_strerror" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror)
 fi
 
+AC_CHECK_FUNCS(strncasecmp)
+if test "$ac_cv_func_strncasecmp" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <string.h>],strncasecmp)
+fi
+
 # Check for usleep
 AC_CHECK_FUNCS(usleep)
 if test "$ac_cv_func_usleep" = "yes" ; then

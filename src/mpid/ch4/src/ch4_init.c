@@ -112,8 +112,8 @@ static int choose_netmod(void)
     }
 
     for (i = 0; i < MPIDI_num_netmods; ++i) {
-        /* use MPL variant of strncasecmp if we get one */
-        if (!strncasecmp(MPIR_CVAR_CH4_NETMOD, MPIDI_NM_strings[i], MPIDI_MAX_NETMOD_STRING_LEN)) {
+        if (!MPL_strncasecmp
+            (MPIR_CVAR_CH4_NETMOD, MPIDI_NM_strings[i], MPIDI_MAX_NETMOD_STRING_LEN)) {
             MPIDI_NM_func = MPIDI_NM_funcs[i];
             MPIDI_NM_native_func = MPIDI_NM_native_funcs[i];
             goto fn_exit;

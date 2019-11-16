@@ -37,6 +37,15 @@ extern char *strerror(int errnum);
 char *MPL_strerror(int errnum);
 #endif /* MPL_HAVE_STRERROR */
 
+#if defined MPL_NEEDS_STRNCASECMP_DECL
+extern int strncasecmp(const char *s1, const char *s2, size_t n);
+#endif
+#if defined MPL_HAVE_STRNCASECMP
+#define MPL_strncasecmp strncasecmp
+#else
+#error strncasecmp is not available!
+#endif /* MPL_HAVE_STRNCASECMP */
+
 int MPL_strnapp(char *dest, const char *src, size_t n);
 void MPL_create_pathname(char *dest_filename, const char *dirname,
                          const char *prefix, const int is_dir);

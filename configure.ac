@@ -4281,7 +4281,7 @@ if test "$ac_cv_func_vsnprintf" = "yes" ; then
 fi
 # We would like to use strerror in the file namepublisher; it is also used
 # in MPIR_Strerror (whose implementation is broken if strerror is not found)
-AC_CHECK_FUNCS(strerror strncasecmp)
+AC_CHECK_FUNCS(strerror)
 AC_FUNC_STRERROR_R
 if test "$ac_cv_func_strerror_r" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror_r)

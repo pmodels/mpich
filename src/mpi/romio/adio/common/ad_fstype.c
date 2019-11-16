@@ -584,7 +584,7 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
 
     i = 0;
     while (fstypes[i].fileops) {
-        if (!strncasecmp(fstypes[i].prefix, filename, strlen(fstypes[i].prefix))) {
+        if (!MPL_strncasecmp(fstypes[i].prefix, filename, strlen(fstypes[i].prefix))) {
             *fstype = fstypes[i].fstype;
             *ops = fstypes[i].fileops;
             break;

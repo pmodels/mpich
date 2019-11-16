@@ -220,15 +220,6 @@ extern "C" {
         (ptr_) = realloc_tmp_;                                          \
     } while (0)
 
-#if defined(HAVE_STRNCASECMP)
-#define MPIR_Strncasecmp strncasecmp
-#elif defined(HAVE_STRNICMP)
-#define MPIR_Strncasecmp strnicmp
-#else
-/* FIXME: Provide a fallback function ? */
-#error "No function defined for case-insensitive strncmp"
-#endif
-
 /* Evaluates to a boolean expression, true if the given byte ranges overlap,
  * false otherwise.  That is, true iff [a_,a_+a_len_) overlaps with [b_,b_+b_len_) */
 #define MPIR_MEM_RANGES_OVERLAP(a_,a_len_,b_,b_len_)                    \
