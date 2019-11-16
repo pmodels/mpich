@@ -106,6 +106,11 @@ AC_INIT([MPICH],
         [mpich],
         [http://www.mpich.org/])
 
+dnl The behavior of macros in confdb may vary depend on where it is being
+dnl used, e.g. whether it is inside mpich or inside hydra.
+m4_define([INSIDE_MPICH],[1])
+PAC_SUBDIR_INIT
+
 if test "x$prefix" != "xNONE" && test -d "$prefix"; then
     if test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x`(cd \"$srcdir\"; echo \"$PWD\")`" ||\
        test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x$PWD"  ; then
@@ -823,8 +828,6 @@ export LDFLAGS
 export LIBS
 export MPILIBNAME
 export PMPILIBNAME
-export OPALIBNAME
-export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
 if test "$with_device" = "default" ; then
@@ -1824,7 +1827,7 @@ if test "$with_pmi" != "no" ; then
         fi
     else
         # only add to subsystems if a full configure is present
-        subsystems="$subsystems src/pmi/$pmi_name"
+        PAC_SUBDIR_ADD([src/pmi/$pmi_name])
     fi
 fi
 
@@ -1837,7 +1840,7 @@ for this_pm_name in $pm_names ; do
     # only add the PM to the subsystems if it has a full configure to be
     # executed
     if test -f $use_top_srcdir/src/pm/$this_pm_name/configure ; then
-        subsystems="$subsystems src/pm/$this_pm_name"
+        PAC_SUBDIR_ADD([src/pm/$this_pm_name])
     fi
     if test -f $use_top_srcdir/src/pm/$this_pm_name/setup_pm ; then
 	echo sourcing $use_top_srcdir/src/pm/$this_pm_name/setup_pm
@@ -2831,7 +2834,7 @@ if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
     if test -d "$use_top_srcdir/src/nameserv/$dir" ; then
         if test -x "$use_top_srcdir/src/nameserv/$dir/configure" ; then
 	    # Run the configure in this directory if necessary
-            subsystems="$subsystems src/nameserv/$dir"
+            PAC_SUBDIR_ADD([src/nameserv/$dir])
         fi
 	nameserv_name=$dir
     else
@@ -4974,19 +4977,11 @@ fi
 dnl "configure" the device here via subconfigure.m4 files
 m4_map([PAC_SUBCFG_CONFIGURE_SUBSYS], [PAC_SUBCFG_MODULE_LIST])
 
+PAC_SUBDIR_ADD([test/mpi])
+
 # now configure any actual recursively configures subsystems, such as ROMIO and
 # hydra, or older components that haven't been updated to a subconfigure.m4 yet
-for subsys in $devsubsystems $subsystems ; do
-    PAC_CONFIG_SUBDIR([$subsys],[],[AC_MSG_ERROR([$subsys configure failed])])
-done
-if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
-    set +x
-fi
-dnl PAC_SUBDIR_CACHE_CLEANUP
-
-# Make subsystems available to makefiles.
-# FIXME does the makefile actually need this?
-subsystems="$devsubsystems $subsystems $bindingsubsystems"
+PAC_CONFIG_ALL_SUBDIRS([$devsubsystems $subsystems])
 
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
@@ -5335,7 +5330,6 @@ PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpif90", MPIF90_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 
-AC_CONFIG_SUBDIRS([test/mpi])
 dnl
 dnl Generate the Makefiles from Makefile.in
 dnl Also generate mpi.h from mpi.h.in so that we can eliminate all ifdefs
