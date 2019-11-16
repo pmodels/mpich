@@ -9,6 +9,9 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+/* MAP_ANON require _GNU_SOURCE */
+#define _GNU_SOURCE
+
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
 
