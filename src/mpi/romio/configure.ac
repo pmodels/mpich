@@ -12,6 +12,7 @@ AC_INIT([ROMIO],
         [discuss@mpich.org],
         [romio],
         [http://www.mpich.org/])
+PAC_SUBDIR_INIT
 
 dnl The behavior of macros in confdb may vary depend on where it is being
 dnl used, e.g. whether it is inside mpich or inside hydra.
@@ -105,49 +106,11 @@ AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
 FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
 
-# MPL
-AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
-MPLLIBNAME=${MPLLIBNAME:-"mpl"}
-export MPLLIBNAME
-AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR. Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with Hydra.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
-mpl_srcdir=""
-AC_SUBST([mpl_srcdir])
-# Controls whether we recurse into the MPL dir when running "dist" rules like
-# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
-# superset of SUBDIRS, but we don't want to double-distclean and similar.
-mpl_dist_srcdir=""
-AC_SUBST(mpl_dist_srcdir)
-mpl_includedir=""
-AC_SUBST([mpl_includedir])
-mpl_libdir=""
-AC_SUBST([mpl_libdir])
-mpl_lib=""
-AC_SUBST([mpl_lib])
-if test "$FROM_MPICH" = "no" ; then
-if test "$with_mpl_prefix" = "embedded" ; then
-    mpl_srcdir="mpl"
-    mpl_dist_srcdir="mpl"
-    mpl_subdir_args="--disable-versioning --enable-embedded"
-    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
-    mpl_lib="mpl/lib${MPLLIBNAME}.la"
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    mpl_includedir="-I${with_mpl_prefix}/include"
-    mpl_libdir="-L${with_mpl_prefix}/lib"
-    mpl_lib="-l${MPLLIBNAME}"
+MPL_INCLUDE_PATH_ONLY=no 
+if test "$FROM_MPICH" = yes ; then
+    MPL_INCLUDE_PATH_ONLY=yes
 fi
-fi
+PAC_SUBDIR_MPL([mpl])
 
 CFLAGS=${CFLAGS:-""}
 LL="lld"
@@ -1774,6 +1737,8 @@ AC_CONFIG_FILES([
     test/fperf.f
 ])
 AC_OUTPUT
+
+PAC_CONFIG_ALL_SUBDIRS
 
 dnl PAC_SUBDIR_CACHE_CLEANUP
 exit 0

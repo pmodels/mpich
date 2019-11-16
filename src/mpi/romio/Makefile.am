@@ -23,12 +23,6 @@ EXTRA_DIST =
 SUFFIXES = 
 doc1_src_txt =
 
-external_subdirs = @mpl_srcdir@
-external_dist_subdirs = @mpl_dist_srcdir@
-external_includes = @mpl_includedir@
-external_ldflags = @mpl_libdir@
-external_libs = @mpl_lib@
-
 # ------------------------------------------------------------------------
 # variables to be populated by the included Makefile.mk fragments:
 
