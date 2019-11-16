@@ -1306,17 +1306,14 @@ else
     # Make device_name available to subdirs
 fi
 
-if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
+PAC_WITH_PMIX
+if test "${with_pmix}" = "yes" ; then
     # disable built-in PMI and process managers
     with_pmi="no"
     with_pm="no"
     if test "${device_name}" != "ch4" ; then
         AC_MSG_ERROR([$device_name does not support PMIx])
     fi
-    PAC_PUSH_FLAG([LIBS])
-    PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
-    PAC_APPEND_FLAG([-lpmix],[WRAPPER_LIBS])
-    PAC_POP_FLAG([LIBS])
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
 fi
 
@@ -4549,14 +4546,13 @@ fi
 # Checkpointing
 AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
-    [ if test "$enableval" != "no" ; then
-	PAC_PUSH_FLAG([LIBS])
-	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
-	PAC_POP_FLAG([LIBS])
-        AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
-      fi ],
+    [],
+    [enable_checkpointing=no]
 )
+if test "$enable_checkpointing" != "no" ; then
+    PAC_WITH_LIBCR
+    AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
+fi
 
 # Update the cache first with the results of the previous configure steps
 # We don't use the subdir cache because ensuring that the cache is consistant
