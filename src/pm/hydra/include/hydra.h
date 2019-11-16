@@ -7,11 +7,6 @@
 #ifndef HYDRA_H_INCLUDED
 #define HYDRA_H_INCLUDED
 
-/* hydra_config.h must come first, otherwise feature macros like _USE_GNU that
- * were defined by AC_USE_SYSTEM_EXTENSIONS will not be defined yet when mpl.h
- * indirectly includes features.h.  This leads to a mismatch between the
- * behavior determined by configure and the behavior actually caused by
- * "#include"ing unistd.h, for example. */
 #include "hydra_config.h"
 
 #include "mpl.h"

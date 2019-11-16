@@ -1,25 +1,3 @@
-dnl Need it right after AC_INIT
-AC_DEFUN([PAC_HWLOC_NEED_CANONICAL_TARGET],[
-    # needed by hwloc in embedded mode.  Must come very early to avoid
-    # bizarre expansion ordering warnings
-    AC_CANONICAL_TARGET
-])
-
-dnl Between AC_PROG_CC and AM_INIT_AUTOMAKE
-AC_DEFUN([PAC_HWLOC_NEED_USE_SYSTEM_EXTENSIONS],[
-    # also needed by hwloc in embedded mode, must also come early for expansion
-    # ordering reasons
-    AC_USE_SYSTEM_EXTENSIONS
-
-    # Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
-    # are building under MPICH with --enable-strict that defined _POSIX_C_SOURCE.
-    # Some standard Darwin headers don't build correctly under a strict posix
-    # environment.
-    AS_CASE([$host],
-        [*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[CPPFLAGS])]
-    )
-])
-
 dnl We used to call HWLOC_SETUP_CORE directly, which sets up 
 dnl HWLOC_EMBEDDED_CFLAGS, HWLOC_EMBEDDED_CPPFLAGS, and HWLOC_EMBEDDED_LIBS.
 dnl Now we uses PAC_CONFIG_SUBDIR_ARGS, we need hard code CPPFLAGS and 
