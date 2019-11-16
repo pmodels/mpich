@@ -26,35 +26,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         # $ac_configure_args - all arguments passed to configure
         #
         
-        found_dir="no"
-        for sys in $devsubsystems ; do
-            if test "$sys" = "src/mpid/common/sock" ; then
-               found_dir="yes"
-               break
-            fi
-        done
-        if test "$found_dir" = "no" ; then
-           devsubsystems="$devsubsystems src/mpid/common/sock"
-        fi
-        
-        # FIXME: The setup file has a weird requirement that it needs to be
-        # run *before* the MPICH device (not the setup directory itself) is
-        # configured, but the actual configuration of the associated directory
-        # needs to be done *after* the device is configured.
-        file=${master_top_srcdir}/src/mpid/common/sock/setup
-        if test -f $file ; then
-           echo sourcing $file
-           . $file
-        fi
-        
-        pathlist=""
-        pathlist="$pathlist src/mpid/${device_name}/channels/${channel_name}/include"
-        pathlist="$pathlist src/util/wrappers"
-        ## TODO delete this -I junk
-        ##for path in $pathlist ; do
-        ##    CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
-        ##done
-
 # Adding this prevents the pesky "(strerror() not found)" problem, which can be
 # very frustrating in the sock code, the most likely to receive an error code
 # from the system. [goodell@ 2008-01-10]
