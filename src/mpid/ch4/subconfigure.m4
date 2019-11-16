@@ -13,15 +13,7 @@ AM_COND_IF([BUILD_CH4],[
 AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
 # check availability of libfabric
-if test x"$with_libfabric" != x"embedded" ; then
-    PAC_SET_HEADER_LIB_PATH(libfabric)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
-    PAC_POP_FLAG(LIBS)
-else
-    have_libfabric=no
-fi
-
+PAC_PROBE_OFI
 # check availability of ucx
 PAC_PROBE_UCX
 
@@ -43,12 +35,13 @@ if test -z "${device_args}" ; then
     elif test $have_ucx = yes ; then
         ch4_netmods="ucx"
     elif test -n $with_libfabric ; then
+        # "embedded" or "yes"
         ch4_netmods="ofi"
     elif test -n $with_ucx ; then
+        # "embedded" or "yes"
         ch4_netmods="ucx"
     else
         ch4_netmods="ofi"
-        with_libfabric=embedded
     fi
 else
     changequote(<<,>>)
