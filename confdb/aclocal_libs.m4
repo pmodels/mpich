@@ -1,5 +1,5 @@
 
-dnl PAC_SET_HEADER_LIB_PATH(with_option,[default_path])
+dnl PAC_SET_HEADER_LIB_PATH(with_option)
 dnl This macro looks for the --with-xxx=, --with-xxx-include and --with-xxx-lib=
 dnl options and sets the library and include paths.
 dnl
@@ -10,7 +10,7 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     AC_ARG_WITH([$1],
                 [AC_HELP_STRING([--with-$1=[[PATH]]],
                                 [specify path where $1 include directory and lib directory can be found])],,
-                [with_$1=$2])
+                [with_$1=""])
     AC_ARG_WITH([$1-include],
                 [AC_HELP_STRING([--with-$1-include=PATH],
                                 [specify path where $1 include directory can be found])],
@@ -47,8 +47,14 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
 		        [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
                  ])
           ])
-])
 
+    if test -z "$with_$1" ; then
+        if test -n "$with_$1_include" || test -n "$with_$1_lib" ; then
+            # User specified a path, potentially raise error if check failed
+            with_$1=yes
+        fi
+    fi
+])
 
 dnl PAC_CHECK_HEADER_LIB(header.h, libname, function, action-if-yes, action-if-no)
 dnl This macro checks for a header and lib.  It is assumed that the
