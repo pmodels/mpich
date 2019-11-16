@@ -4,12 +4,6 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-external_subdirs = @mpl_srcdir@
-external_dist_subdirs = @mpl_dist_srcdir@
-external_includes = @mpl_includedir@
-external_ldflags = @mpl_libdir@
-external_libs = @mpl_lib@ @WRAPPER_LIBS@
-
 bin_PROGRAMS =
 noinst_HEADERS =
 DISTCLEANFILES =
@@ -17,8 +11,8 @@ EXTRA_DIST =
 SUFFIXES =
 doc1_src_txt =
 
-ACLOCAL_AMFLAGS = -I confdb -I tools/topo/hwloc/hwloc/config
-AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
+ACLOCAL_AMFLAGS = -I confdb
+AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS =
 
 noinst_HEADERS += include/hydra.h include/hydra_server.h
@@ -35,9 +29,9 @@ include pm/Makefile.mk
 include ui/Makefile.mk
 
 # External subdirs should be built first, as we might depend on them
-SUBDIRS = ${external_subdirs} .
+SUBDIRS = @external_subdirs@ .
 # see note in MPICH Makefile.am about our usage of DIST_SUBDIRS
-DIST_SUBDIRS = ${external_dist_subdirs}
+DIST_SUBDIRS = @external_dist_subdirs@
 
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
@@ -122,10 +116,4 @@ coverage:
 	    ( $(GCOV) -b -f -o $$file $$file && mv $${bname}.gcov $$dir ) ; \
 	    rm -f *.gcov ; \
 	done
-## we don't recurse into SUBDIRS in hydra, since they are only really
-## external packages like hwloc
-##	for subdir in $(SUBDIRS) ; do \
-##	    ( cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) coverage ) ; \
-##	done
-# --------------------------------------------------------------------------
 
