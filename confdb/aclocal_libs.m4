@@ -66,7 +66,21 @@ dnl macro (or equivalent logic) to be used before this macro is used.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
+    dnl prepends -l[name] to LIBS and define HAVE_LIBNAME
     AC_CHECK_LIB($2,$3,,failure=yes)
+    if test "$failure" = "no" ; then
+       $4
+    else
+       $5
+    fi
+])
+
+dnl PAC_CHECK_HEADER_LIB_ONLY(header.h, libname, function, action-if-yes, action-if-no)
+dnl Similar to PAC_CHECK_HEADER_LIB, but does not later LIBS
+AC_DEFUN([PAC_CHECK_HEADER_LIB_ONLY],[
+    failure=no
+    AC_CHECK_HEADER([$1],,failure=yes)
+    AC_CHECK_LIB($2,$3,:,failure=yes)
     if test "$failure" = "no" ; then
        $4
     else
