@@ -23,14 +23,7 @@ else
 fi
 
 # check availability of ucx
-if test x"$with_ucx" != x"embedded" ; then
-    PAC_SET_HEADER_LIB_PATH(ucx)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB([ucp/api/ucp.h], [ucp], [ucp_config_read], [have_ucx=yes], [have_ucx=no])
-    PAC_POP_FLAG(LIBS)
-else
-    have_ucx=no
-fi
+PAC_PROBE_UCX
 
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes

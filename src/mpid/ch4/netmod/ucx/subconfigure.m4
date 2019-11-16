@@ -47,38 +47,7 @@ dnl Parse the device arguments
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
-    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:ucx])
-
-    ucxdir=""
-    AC_SUBST([ucxdir])
-    ucxlib=""
-    AC_SUBST([ucxlib])
-
-    ucx_embedded=""
-    if test $have_ucx = no ; then
-        ucx_embedded="yes"
-    fi
-    
-    if test "${ucx_embedded}" = "yes" ; then
-        PAC_PUSH_FLAG(CPPFLAGS)
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
-        PAC_POP_FLAG(CPPFLAGS)
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
-
-        ucxdir="src/mpid/ch4/netmod/ucx/ucx"
-        ucxlib="src/mpid/ch4/netmod/ucx/ucx/src/ucp/libucp.la"
-
-        # embedded ucx is 1.4 or higher version, thus always set as defined.
-        have_ucp_put_nb=yes
-        have_ucp_get_nb=yes
-    else
-        PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
-
-        # ucp_put_nb and ucp_get_nb are added only from ucx 1.4.
-        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_put_nb], [have_ucp_put_nb=yes], [have_ucp_put_nb=no])
-        PAC_CHECK_HEADER_LIB([ucp/api/ucp.h],[ucp],[ucp_get_nb], [have_ucp_get_nb=yes], [have_ucp_get_nb=no])
-    fi
+    PAC_SUBDIR_UCX([src/mpid/ch4/netmod/ucx/ucx])
 
     if test "${have_ucp_put_nb}" = "yes" ; then
         AC_DEFINE(HAVE_UCP_PUT_NB,1,[Define if ucp_put_nb is defined in ucx])
