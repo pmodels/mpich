@@ -4,12 +4,12 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-ACLOCAL_AMFLAGS = -I confdb -I src/hwloc/config
+ACLOCAL_AMFLAGS = -I confdb
 
 # automake requires that we initialize variables to something, even just empty,
 # before appending to them with "+="
-AM_CFLAGS = @VISIBILITY_CFLAGS@ @HWLOC_EMBEDDED_CFLAGS@
-AM_CPPFLAGS = @HWLOC_EMBEDDED_CPPFLAGS@
+AM_CFLAGS = @VISIBILITY_CFLAGS@
+AM_CPPFLAGS = 
 AM_FFLAGS =
 AM_FCFLAGS =
 include_HEADERS =
@@ -49,11 +49,8 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mplsrcdir@ @opasrcdir@ @zmsrcdir@ @hwlocsrcdir@
-external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
-external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
-pmpi_convenience_libs = @opalib@ @mpllib@ @zmlib@ @hwloclib@
+pmpi_convenience_libs = @external_libs@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
@@ -63,8 +60,8 @@ pmpi_convenience_libs = @opalib@ @mpllib@ @zmlib@ @hwloclib@
 # almost always configure exactly the directories that will be included in
 # SUBDIRS.  So most additions to DIST_SUBDIRS should be conditional on the same
 # condition as the corresponding SUBDIRS addition.
-DIST_SUBDIRS = ${external_subdirs}
-SUBDIRS = ${external_subdirs}
+SUBDIRS = @external_subdirs@
+DIST_SUBDIRS = @external_dist_subdirs@
 
 ## Automake attempts to guess the correct linker among the various compilers
 ## for each language (see "How the Linker is Chosen" in the AM manual).
@@ -151,9 +148,9 @@ if BUILD_PROFILING_LIB
 # don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
-lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI
-lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
+lib_lib@PMPILIBNAME@_la_LIBADD = $(pmpi_convenience_libs)
 EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
 
 # lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
@@ -169,9 +166,9 @@ else !BUILD_PROFILING_LIB
 
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
 lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
-lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+lib_lib@MPILIBNAME@_la_LIBADD = $(pmpi_convenience_libs) $(mpi_convenience_libs)
 EXTRA_lib_lib@MPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs) $(mpi_convenience_libs)
 endif !BUILD_PROFILING_LIB
 
