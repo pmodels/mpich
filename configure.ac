@@ -447,10 +447,6 @@ AC_ARG_ENABLE(fc,
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
 
-AC_ARG_ENABLE(romio,
-	AC_HELP_STRING([--enable-romio], [Enable ROMIO MPI I/O implementation]),,
-	enable_romio=yes)
-
 AC_ARG_ENABLE(debuginfo,
 	AC_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
 	enable_debuginfo=no)
@@ -996,6 +992,8 @@ PAC_SUBDIR_OPA([src/openpa])
 PAC_SUBDIR_ENABLE_IZEM
 PAC_SUBDIR_IZEM([src/izem])
 
+PAC_SUBDIR_ENABLE_ROMIO
+PAC_SUBDIR_ROMIO([src/mpi/romio])
 
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
 # and -lp$MPILIBNAME.
@@ -1406,36 +1404,6 @@ if test "$with_cross" != "no" ; then
 	rm -f confcross
     fi
 fi
-
-# This goes here because we need the top_srcdir
-if test "$enable_romio" = "yes" ; then
-   if test -d $use_top_srcdir/src/mpi/romio ; then
-       subsystems="$subsystems src/mpi/romio"
-       AC_DEFINE(HAVE_ROMIO,1,[Define if ROMIO is enabled])
-
-       # make it possible to "#include" mpio.h at build time
-       #
-       # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accomodate current mpicc limitations.  See
-       # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
-
-       # Set environment variables that the romio configure expects
-       export use_top_srcdir
-       top_build_dir=`pwd`
-       export top_build_dir
-       # if there is no $top_build_dir/lib, romio puts lib in wrong place
-       # This test used -e under Linux, but not all test programs understand
-       # -e
-       if test ! -d lib ; then mkdir lib ; fi
-       # tell mpi.h to include mpio.h
-       PAC_HAVE_ROMIO
-   else
-       AC_MSG_WARN([ROMIO src directory is not available])
-   fi
-fi
-
-AM_CONDITIONAL([BUILD_ROMIO], [test x$enable_romio = xyes])
 
 #
 # FIXME: If an external device, don't necessarily complain (e.g.,

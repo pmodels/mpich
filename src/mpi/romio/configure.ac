@@ -13,6 +13,11 @@ AC_INIT([ROMIO],
         [romio],
         [http://www.mpich.org/])
 
+dnl The behavior of macros in confdb may vary depend on where it is being
+dnl used, e.g. whether it is inside mpich or inside hydra.
+m4_define([INSIDE_ROMIO],[1])
+PAC_SUBDIR_INIT
+
 dnl AC_CONFIG_AUX_DIR(../../../confdb)
 dnl Set the directory that contains the required install-sh, config.sub,
 dnl and config.guess .  Make sure that these are updated (in MPICH, use
