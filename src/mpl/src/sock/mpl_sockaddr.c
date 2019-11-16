@@ -46,6 +46,11 @@
  *    systems even earlier.
  */
 
+/* On solaris and --enable-strict, in6addr_loopback and in6addr_any are undefined without
+ * __EXTENSIONS__ macro
+ */
+#define __EXTENSIONS__
+
 #include "mplconfig.h"
 #include <assert.h>
 #include <sys/types.h>
