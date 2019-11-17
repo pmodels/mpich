@@ -7,10 +7,7 @@ dnl TODO as written, this macro cannot handle a "with_option" arg that has "-"
 dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
 dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
-    AC_ARG_WITH([$1],
-                [AC_HELP_STRING([--with-$1=[[PATH]]],
-                                [specify path where $1 include directory and lib directory can be found])],,
-                [with_$1=""])
+    PAC_SET_HEADER_LIB_PATH_ARG([$1])
     AC_ARG_WITH([$1-include],
                 [AC_HELP_STRING([--with-$1-include=PATH],
                                 [specify path where $1 include directory can be found])],
@@ -56,6 +53,28 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     fi
 ])
 
+dnl PAC_SET_HEADER_LIB_PATH_SIMPLE(with_option)
+dnl similar to PAC_SET_HEADER_LIB_PATH, but without --with-xxx-include and --with--xxx-lib
+AC_DEFUN([PAC_SET_HEADER_LIB_PATH_SIMPLE],[
+    PAC_SET_HEADER_LIB_PATH_ARG([$1])
+    if test -n "$with_$1" ; then
+        PAC_APPEND_FLAG([-I${with_$1}/include],[CPPFLAGS])
+        PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
+        if test -d "${with_$1}/lib64" ; then
+            PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])
+        fi
+    fi
+])
+
+dnl PAC_SET_HEADER_LIB_PATH_ARG(with_option)
+dnl this one only does AC_ARG_WITH. Define this macro here to ensure consistent behavior.
+AC_DEFUN([PAC_SET_HEADER_LIB_PATH_ARG],[
+    AC_ARG_WITH([$1],
+                [AC_HELP_STRING([--with-$1=[[PATH]]],
+                                [specify path where $1 include directory and lib directory can be found])],,
+                [with_$1=""])
+])
+
 dnl PAC_CHECK_HEADER_LIB(header.h, libname, function, action-if-yes, action-if-no)
 dnl This macro checks for a header and lib.  It is assumed that the
 dnl user can specify a path to the includes and libs using --with-xxx=.
@@ -75,16 +94,17 @@ AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     fi
 ])
 
-dnl PAC_CHECK_HEADER_LIB_ONLY(header.h, libname, function, action-if-yes, action-if-no)
+dnl PAC_CHECK_HEADER_LIB_ONLY(with_option, header.h, libname, function)
 dnl Similar to PAC_CHECK_HEADER_LIB, but does not later LIBS
 AC_DEFUN([PAC_CHECK_HEADER_LIB_ONLY],[
+    PAC_SET_HEADER_LIB_PATH($1)
     failure=no
-    AC_CHECK_HEADER([$1],,failure=yes)
-    AC_CHECK_LIB($2,$3,:,failure=yes)
+    AC_CHECK_HEADER([$2],,failure=yes)
+    AC_CHECK_LIB($3,$4,:,failure=yes)
     if test "$failure" = "no" ; then
-       $4
+       have_$1=yes
     else
-       $5
+       have_$1=no
     fi
 ])
 
@@ -92,9 +112,19 @@ dnl PAC_CHECK_HEADER_LIB_FATAL(with_option, header.h, libname, function)
 dnl Similar to PAC_CHECK_HEADER_LIB, but errors out on failure
 AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
 	PAC_SET_HEADER_LIB_PATH($1)
-	PAC_CHECK_HEADER_LIB($2,$3,$4,success=yes,success=no)
-	if test "$success" = "no" ; then
+	PAC_CHECK_HEADER_LIB($2,$3,$4,have_$1=yes,have_$1=no)
+	if test "$have_$1" = "no" ; then
 	   AC_MSG_ERROR(['$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?'])
+	fi
+])
+
+dnl PAC_CHECK_HEADER_LIB_ERROR(with_option, header.h, libname, function)
+dnl Similar to PAC_CHECK_HEADER_LIB, but errors out on failure and when --with options is given
+AC_DEFUN([PAC_CHECK_HEADER_LIB_ERROR],[
+	PAC_SET_HEADER_LIB_PATH($1)
+	PAC_CHECK_HEADER_LIB($2,$3,$4,have_$1=yes,have_$1=no)
+        if test -n "$with_$1" && test have_$1 = no ; then
+	   AC_MSG_ERROR([with-$1 specified but library was not found])
 	fi
 ])
 

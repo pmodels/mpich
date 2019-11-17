@@ -60,10 +60,11 @@ AC_DEFUN([PAC_CONFIG_ALL_SUBDIRS],[
                     PAC_CONFIG_ARG_UCX
                     ;;
                 src/mpi/romio)
-                    config_arg="FROM_MPICH=yes --with-mpl-prefix=../../mpl"
+                    need_reset_flags=no
+                    config_arg="FROM_MPICH=yes --with-mpl=../../mpl"
                     ;;
                 src/pm/hydra)
-                    config_arg="--with-mpl-prefix=../../mpl --with-hwloc-prefix=../../hwloc"
+                    config_arg="--with-mpl=../../mpl --with-hwloc=../../hwloc"
                     ;;
                 *)
                     config_arg=""
@@ -121,14 +122,14 @@ AC_DEFUN([PAC_SUBDIR_EMBED],[
 ])
 
 dnl Reuse the convenience library, skip subsystems
-dnl PAC_SUBDIR_EMBED([libname],[src_dir],[la_dir],[inc_dir])
+dnl PAC_SUBDIR_EMBED_REUSE([libname],[src_dir],[la_dir],[inc_dir])
 AC_DEFUN([PAC_SUBDIR_EMBED_REUSE],[
     if test -e "$2" ; then
         dnl prevent linking libmpl.la twice
         m4_ifndef([INSIDE_ROMIO], [
             external_libs="$external_libs $3/lib$1.la"
         ])
-        PAC_APPEND_FLAG([-I./$4],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I$4],[CPPFLAGS])
         if test $srcdir != . ; then
             PAC_APPEND_FLAG([-I${srcdir}/$4],[CPPFLAGS])
         fi
@@ -147,42 +148,50 @@ AC_DEFUN([PAC_SUBDIR_SYSTEM],[
         ],[])
 ])
 
-dnl **** prefix ************************************
-dnl FIXME: unify with PAC_SET_HEADER_LIB_PATH
-dnl PAC_ARG_WITH_PREFIX(libname)
-AC_DEFUN([PAC_ARG_WITH_PREFIX],[
-	AC_ARG_WITH([$1-prefix],
-            [AS_HELP_STRING([[--with-$1-prefix[=DIR]]], [use the $1
-                            library installed in DIR, rather than the
-                            one included in the distribution.  Pass
-                            "embedded" to force usage of the included
-                            $1 source.])],
-            [],dnl action-if-given
-            [with_$1_prefix="embedded"])
+dnl **** wrapper for configure options with --with-[libname] ****
+dnl allowed options are: embedded, embed_reuse (../path), and prefix
+dnl uses macros from aclocal_libs.m4
+
+dnl following macros are used together:
+dnl PAC_SUBDIR_CONFIG([name],[header.h],[lib],[func])
+AC_DEFUN([PAC_SUBDIR_CONFIG], [
+    have_$1=no
+    case $with_$1 in
+        ../*)
+            have_$1=embed_reuse
+            ;;
+        embedded)
+            ;;
+        *)
+            dnl FIXME: exclue empty case to make embedded default
+            PAC_CHECK_HEADER_LIB_ERROR([$1],[$2],[$3],[$4])
+            ;;
+    esac
 ])
 
-dnl PAC_SUBDIR_PREFIX([libname],[prefix_dir])
-AC_DEFUN([PAC_SUBDIR_PREFIX],[
-    PAC_APPEND_FLAG([-I$2/include],[CPPFLAGS])
-    if test -d "$2/lib64"; then
-        pac_libdir="$2/lib64"
-    else
-        pac_libdir="$2/lib"
+dnl ---- always required, use embedded unless supplied with --with-xxx=prefix
+dnl PAC_SUBDIR_CONFIG_EMBED([name],[la_name],[src_dir],[la_dir],[inc_dir])
+AC_DEFUN([PAC_SUBDIR_CONFIG_EMBED],[
+    # if have_$1 is yes, the library is already configured and added to LIBS
+    # otherwise, use embedded. 
+    if test $have_$1 = no ; then
+        with_$1=embedded
     fi
-    PAC_PREPEND_FLAG([-L${pac_libdir}],[LDFLAGS])
-    m4_ifset([INSIDE_MPICH],[
-        PAC_PREPEND_FLAG([-L${pac_libdir}],[WRAPPER_LDFLAGS])
-        ],[])
+    PAC_SUBDIR_CONFIG_EMBED_OPTIONAL([$1],[$2],[$3],[$4],[$5])
+])
 
-    if "$3"x == x ; then
-        PAC_SUBDIR_SYSTEM([$1])
+dnl ---- optional, used embedded only with --with-xxx=embedded
+dnl PAC_SUBDIR_CONFIG_EMBED_OPTIONAL([name],[la_name],[src_dir],[la_dir],[inc_dir])
+AC_DEFUN([PAC_SUBDIR_CONFIG_EMBED_OPTIONAL],[
+    if test $have_$1 = embed_reuse ; then
+        m4_ifval($4,[inc_dir=$with_$1/$4],[inc_dir=$with_$1])
+        m4_ifval($5,[la_dir=$with_$1/$5],[la_dir=$with_$1])
+        PAC_SUBDIR_EMBED_REUSE([$2],[$with_$1],[$inc_dir],[$la_dir])
+        have_$1=yes
+    elif test x$with_$1 = xembedded ; then
+        m4_ifval($4,[inc_dir=$3/$4],[inc_dir=$3])
+        m4_ifval($5,[la_dir=$3/$5],[la_dir=$3])
+        PAC_SUBDIR_EMBED([$2],[$3],[$inc_dir],[$la_dir])
+        have_$1=yes
     fi
 ])
-
-dnl .internal.
-dnl PAC_SUBDIR_PREFIX_CHECK([name],[dir],[file])
-AC_DEFUN([PAC_SUBDIR_PREFIX_CHECK],[
-    AS_IF([test -s "$2/$3"],
-        [:],[AC_MSG_ERROR([the $1 installation in "$2" appears broken])])
-])
-
