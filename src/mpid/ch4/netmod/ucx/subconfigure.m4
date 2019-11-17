@@ -24,25 +24,27 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
             [ucx_netmod_args=$withval],
             [ucx_netmod_args=])
 
-dnl Parse the device arguments
-    SAVE_IFS=$IFS
-    IFS=':'
-    args_array=$ucx_netmod_args
-    do_am_only=false
-    echo "Parsing Arguments for UCX Netmod"
-    for arg in $args_array; do
-    case ${arg} in
-      am-only)
-              do_am_only=true
-              echo " ---> CH4::UCX Disable native tagged and RMA communication : $arg"
-    esac
-    done
-    IFS=$SAVE_IFS
+    AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
+        dnl Parse the device arguments
+        SAVE_IFS=$IFS
+        IFS=':'
+        args_array=$ucx_netmod_args
+        do_am_only=false
+        echo "Parsing Arguments for UCX Netmod"
+        for arg in $args_array; do
+        case ${arg} in
+        am-only)
+                do_am_only=true
+                echo " ---> CH4::UCX Disable native tagged and RMA communication : $arg"
+        esac
+        done
+        IFS=$SAVE_IFS
 
-    if [test "$do_am_only" = "true"]; then
-       AC_MSG_NOTICE([Disabling native UCX tagged and RMA communication])
-       PAC_APPEND_FLAG([-DMPICH_UCX_AM_ONLY], [CPPFLAGS])
-    fi
+        if [test "$do_am_only" = "true"]; then
+        AC_MSG_NOTICE([Disabling native UCX tagged and RMA communication])
+        PAC_APPEND_FLAG([-DMPICH_UCX_AM_ONLY], [CPPFLAGS])
+        fi
+    ])
 ])dnl
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
