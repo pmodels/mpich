@@ -230,14 +230,9 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	pbs)
 		hydra_bss_external=true
 		# Check if TM library support is available
-		PAC_SET_HEADER_LIB_PATH(pbs)
-		PAC_PUSH_FLAG(LIBS)
-		PAC_CHECK_HEADER_LIB(tm.h, torque, tm_init, have_pbs_launcher=yes,
-					   have_pbs_launcher=no)
-		PAC_POP_FLAG(LIBS)
-                if test "$have_pbs_launcher" = "yes" ; then
+		PAC_CHECK_HEADER_LIB_ERROR(pbs, tm.h, torque, tm_init)
+                if test "$have_pbs" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
-		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
 		available_rmks="$available_rmks pbs"
 		;;
@@ -437,15 +432,10 @@ have_blcr=no
 for hydra_ckpointlib in ${hydra_ckpointlibs}; do
     case "$hydra_ckpointlib" in
     	blcr)
-	    PAC_SET_HEADER_LIB_PATH(blcr)
-	    PAC_PUSH_FLAG(LIBS)
-	    PAC_CHECK_HEADER_LIB(libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
-	    PAC_POP_FLAG(LIBS)
-	    # BLCR works
+	    PAC_CHECK_HEADER_LIB_ERROR(blcr, libcr.h, cr, cr_init)
 	    if test "$have_blcr" = "yes" ; then
 	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
 	       available_ckpointlibs="$available_ckpointlibs blcr"
-	       PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
 	    fi
 	    ;;		
 	*)
