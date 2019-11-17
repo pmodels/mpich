@@ -629,10 +629,12 @@ static HYD_status launch_procs(void)
             str = HYDU_int_to_str(HYD_pmcd_pmip.local.proxy_process_count);
             status = HYDU_append_env_to_list("MPI_LOCALNRANKS", str, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
+            MPL_free(str);
 
             str = HYDU_int_to_str(process_id);
             status = HYDU_append_env_to_list("MPI_LOCALRANKID", str, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
+            MPL_free(str);
 
             if (using_pmi_port) {
                 /* If we are using the PMI_PORT format */
