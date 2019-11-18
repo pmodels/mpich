@@ -687,11 +687,11 @@ AS_IF([test "x$enable_cxx" = "xno"],[CXX=no])
 
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
-AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
+AC_PROG_CXX
 
 # suppress default "-g -O2" from AC_PROG_FC
 : ${FCFLAGS=""}
-AC_PROG_FC([PAC_FC_SEARCH_LIST])
+AC_PROG_FC
 
 save_IFS="$IFS"
 IFS=","
@@ -740,7 +740,7 @@ AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"
 # time, as is allowed.
 # suppress default "-g -O2" from AC_PROG_F77
 : ${FFLAGS=""}
-AC_PROG_F77([PAC_F77_SEARCH_LIST])
+AC_PROG_F77
 
 # compute canonical system types
 AC_CANONICAL_BUILD
