@@ -1,22 +1,3 @@
-dnl PAC_CXX_SEARCH_LIST - expands to a whitespace separated list of C++
-dnl compilers for use with AC_PROG_CXX that is more suitable for HPC software
-dnl packages
-AC_DEFUN([PAC_CXX_SEARCH_LIST],[$CCC icpc pgCC xlC pathCC g++ clang++ c++ cc++ cxx CC cl])
-dnl PAC_PROG_CXX - reprioritize the C++ compiler search order
-dnl NOTE: this macro suffers from a basically intractable "expanded before it
-dnl was required" problem when libtool is also used
-AC_DEFUN([PAC_PROG_CXX],[
-	PAC_PUSH_FLAG([CXXFLAGS])
-        # This test uses the list from a recent PROG_CXX, but with the
-        # addition of the Portland group, IBM, and Intel C++ compilers
-        # (While the Intel icc compiler will compile C++ programs, it will
-        # not *link* C++ object files unless there is at least one C++ source
-        # file present on the command that performs the linking.  icpc is the
-        # Intel C++ compiler that both compiles and links C++ programs)
-	AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
-	PAC_POP_FLAG([CXXFLAGS])
-])
-
 dnl This is from crypt.to/autoconf-archive, slightly modified.
 dnl It defines bool as int if it is not availalbe
 dnl
