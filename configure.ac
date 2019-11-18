@@ -475,6 +475,32 @@ AC_ARG_WITH(device,
 	AC_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
 	with_device=default)
 
+if test $with_device = "default" -o $with_device = "ch4" ; then
+  dnl default linux builds must choose a netmod.
+  AC_MSG_ERROR([no ch4 netmod selected
+
+  The default ch4 device requires users to choose a netmod. Supported
+  options are ofi (libfabric) and ucx:
+
+    --with-device=ch4:ofi or --with-device=ch4:ucx
+
+  Configure will attempt to discover external libfabric or ucx
+  libraries to link with. Users may also specify an installation by
+  adding
+
+    --with-libfabric=<path/to/install> or --with-ucx=<path/to/install>
+
+  to the configuration. If no installation is specified or found, an
+  embedded library will be built and used.
+
+  The previous MPICH default device (ch3) is also available and
+  supported with option:
+
+    --with-device=ch3
+  ])
+fi
+
+
 AC_ARG_WITH(pmi,
 	AC_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
 	with_pmi=default)
@@ -827,10 +853,7 @@ export OPALIBNAME
 export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
-if test "$with_device" = "default" ; then
-    # Pick the device.  For now, always choose ch3
-    with_device=ch3
-fi
+#
 # Extract the device name from any options
 # Allow the device to specify a directory; if no directory, use the
 # included directories
