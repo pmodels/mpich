@@ -320,12 +320,12 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                                      HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
-
-            MPL_free(buf);
         } else {
             status = HYDT_dmx_deregister_fd(STDIN_FILENO);
             HYDU_ERR_POP(status, "unable to deregister STDIN\n");
         }
+
+        MPL_free(buf);
     } else if (hdr.cmd == PROCESS_TERMINATED) {
         if (HYD_server_info.user_global.auto_cleanup == 0) {
             /* Update the map of the alive processes */
