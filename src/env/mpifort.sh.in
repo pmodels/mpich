@@ -117,7 +117,6 @@ static_mpi=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
-    qarg=$arg
     case $arg in
 	# ----------------------------------------------------------------
 	# Compiler options that affect whether we are linking or no
@@ -205,26 +204,6 @@ for arg in "$@" ; do
     fi
     exit 0
     ;;
-        # -----------------------------------------------------------------
-	# Other arguments.  We are careful to handle arguments with
-	# quotes (we try to quote all arguments in case they include
-	# any spaces)
-    *\"*)
-    qarg="'"$arg"'"
-    case $arg in
-       -D*)
-       cppflags="$cppflags $qarg"
-       ;;
-    esac
-    ;;
-    *\'*)
-    qarg='\"'"$arg"'\"'
-    case $arg in
-       -D*)
-       cppflags="$cppflags $qarg"
-       ;;
-    esac
-    ;;
     # The following are special args used to handle .F files when the
     # Fortran compiler itself does not handle these options
     -I*)
@@ -271,13 +250,9 @@ for arg in "$@" ; do
     ;;
     # - end of special handling for .F files
 
-    *)
-    qarg="'$arg'"
-    ;;
-
     esac
     if [ $addarg = yes ] ; then
-        allargs="$allargs $qarg"
+        allargs="$allargs $arg"
     fi
 done
 

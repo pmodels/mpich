@@ -98,7 +98,6 @@ static_mpi=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
-    qarg=$arg
     case $arg in 
  	# ----------------------------------------------------------------
 	# Compiler options that affect whether we are linking or no
@@ -187,23 +186,10 @@ for arg in "$@" ; do
     fi
     exit 0
     ;;
-        # -----------------------------------------------------------------
-	# Other arguments.  We are careful to handle arguments with 
-	# quotes (we try to quote all arguments in case they include 
-	# any spaces)
-    *\"*) 
-    qarg="'"$arg"'"
-    ;;
-    *\'*) 
-    qarg='\"'"$arg"'\"'
-    ;;
-    *)
-    qarg="'$arg'"
-    ;;
 
     esac
     if [ $addarg = yes ] ; then
-        allargs="$allargs $qarg"
+        allargs="$allargs $arg"
     fi
 done
 
