@@ -836,7 +836,7 @@ AC_SUBST(MPI_VERSION)
 AC_SUBST(MPI_SUBVERSION)
 
 # Running Fortran 77 compiler tests
-PAC_PROG_F77
+AC_PROG_F77
 if test "$enable_f77" = yes ; then
     # If there is no working F77, then set enable_f77 to no
     if test -z "$F77" ; then
@@ -1141,7 +1141,7 @@ fi
 AC_SUBST(F77_MPI_ADDRESS)
 
 # Running Fortran 90+ compiler tests
-PAC_PROG_FC
+AC_PROG_FC
 if test "$enable_fc" = yes ; then
     # Work around feature in autoconf that adds -g -O2 to FCFLAGS
     saveFCFLAGS="$FCFLAGS"
@@ -1281,7 +1281,7 @@ if test "$enable_f08" = "yes" -a "$FROM_MPICH" = "yes" ; then
 fi
 
 # Running C++ compiler tests
-PAC_PROG_CXX
+AC_PROG_CXX
 if test "$enable_cxx" = yes ; then
     if test -z "$CXX" ; then
         enable_cxx=no
