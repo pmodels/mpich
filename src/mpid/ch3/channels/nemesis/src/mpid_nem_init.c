@@ -104,6 +104,7 @@ int
 MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 {
     int    mpi_errno       = MPI_SUCCESS;
+    int    tmp_mpi_errno;
     int    num_procs       = pg_p->size;
     int    ret;
     int    num_local       = -1;
@@ -413,7 +414,9 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
-    mpi_errno = MPIDU_Init_shm_finalize();
+    /* we do not want to lose a potential failed errno */
+    tmp_mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_ADD(mpi_errno, tmp_mpi_errno);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
