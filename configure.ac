@@ -2668,27 +2668,6 @@ AC_PATH_PROG(BASH_SHELL,bash)
 # compliation scripts) by taking advantage of the array features in
 # bash.
 bashWorks=no
-if test -x "$BASH_SHELL" ; then
-changequote(%%,::)dnl
-    cat >>conftest <<EOF
-#! $BASH_SHELL
-A[0]="b"
-A[1]="c"
-rc=1
-if test \${A[1]} != "c" ; then rc=2 ; else rc=0 ; fi
-exit \$rc
-EOF
-changequote([,])dnl
-    AC_MSG_CHECKING([whether $BASH_SHELL supports arrays])
-    chmod +x conftest
-    if ./conftest 2>&1 >/dev/null ; then
-        bashWorks=yes
-    else
-        bashWorks=no
-    fi
-    rm -f conftest*
-    AC_MSG_RESULT($bashWorks)
-fi
 dnl BUILD_BASH_SCRIPTS used to be an AC_SUBST
 AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
 
