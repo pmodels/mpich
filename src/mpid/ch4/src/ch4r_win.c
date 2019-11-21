@@ -385,20 +385,12 @@ static int win_finalize(MPIR_Win ** win_ptr)
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
         win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* if more than one process on a node, we use shared memory by default */
-        if (win->comm_ptr->node_comm != NULL && MPIDIG_WIN(win, mmap_addr)) {
-            if (MPIDIG_WIN(win, mmap_sz) > 0) {
-                /* destroy shared window memory */
-                mpi_errno = MPIDIU_destroy_shm_segment(MPIDIG_WIN(win, mmap_sz),
-                                                       &MPIDIG_WIN(win, shm_segment_handle),
-                                                       &MPIDIG_WIN(win, mmap_addr));
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+        if (MPIDIG_WIN(win, mmap_addr)) {
+            mpi_errno = MPIDU_shm_free(MPIDIG_WIN(win, mmap_addr));
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* if shared memory allocation fails or zero size window, free the table at allocation. */
             MPL_free(MPIDIG_WIN(win, shared_table));
-        } else if (MPIDIG_WIN(win, mmap_sz) > 0) {
-            /* if single process on the node, we use mmap with symm heap */
-            MPL_munmap(MPIDIG_WIN(win, mmap_addr), MPIDIG_WIN(win, mmap_sz), MPL_MEM_RMA);
         } else
             MPL_free(win->base);
     }
@@ -479,7 +471,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                total_shm_size += MPIDIU_get_mapsize(shared_table[i].size, &page_sz);
+                total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
             else
                 total_shm_size += shared_table[i].size;
         }
@@ -489,7 +481,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
             goto fn_no_shm;
 
         /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
-        if (size != MPIDIU_get_mapsize(size, &page_sz) &&
+        if (size != MPIDU_shm_get_mapsize(size, &page_sz) &&
             !MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
             symheap_flag = false;
     } else
@@ -513,13 +505,15 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     /* because MPI_shm follows a create & attach mode, we need to set the
      * size of entire shared memory segment on each node as the size of
      * each process. */
-    mapsize = MPIDIU_get_mapsize(total_shm_size, &page_sz);
+    mapsize = MPIDU_shm_get_mapsize(total_shm_size, &page_sz);
 
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
+        size_t my_offset = (shm_comm_ptr) ? shm_offsets[shm_comm_ptr->rank] : 0;
         MPIDIG_WIN(win, mmap_sz) = mapsize;
-        mpi_errno = MPIDIU_get_shm_symheap(mapsize, shm_offsets, comm_ptr,
-                                           win, &symheap_mapfail_flag);
+        mpi_errno =
+            MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset, &MPIDIG_WIN(win, mmap_addr),
+                                     &symheap_mapfail_flag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
@@ -533,9 +527,9 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     if (!global_symheap_flag || symheap_mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
             MPIDIG_WIN(win, mmap_sz) = mapsize;
-            mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, mapsize,
-                                                    &MPIDIG_WIN(win, shm_segment_handle),
-                                                    &MPIDIG_WIN(win, mmap_addr), &shm_mapfail_flag);
+            mpi_errno =
+                MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr),
+                                &shm_mapfail_flag);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
 
@@ -567,7 +561,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                 shared_table[i].shm_base_addr = NULL;
 
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                cur_base += MPIDIU_get_mapsize(shared_table[i].size, &page_sz);
+                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
             else
                 cur_base += shared_table[i].size;
         }

@@ -138,7 +138,6 @@ do { \
 
 typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
-    MPL_shm_hnd_t shm_mutex_segment_handle;
 } MPIDI_POSIX_win_t;
 
 /*
