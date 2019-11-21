@@ -28,7 +28,6 @@ typedef enum MPIDI_POSIX_release_gather_tree_type_t {
 
 typedef struct MPIDI_POSIX_release_gather_comm_t {
     MPIR_Treealgo_tree_t bcast_tree, reduce_tree;
-    MPL_shm_hnd_t shm_flags_handle, shm_bcast_buf_handle, shm_reduce_buf_handle;
     int flags_shm_size;
     uint64_t gather_state, release_state;
 

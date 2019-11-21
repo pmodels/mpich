@@ -13,20 +13,11 @@
 
 #include "ch4_types.h"
 #include "mpidig.h"
+#include "mpidu_shm.h"
 
 int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
-/* Collectively allocate shared memory region.
- * MPL_shm routines and MPI collectives are internally used. */
-int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
-                                MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
-                                bool * mapfail_flag_ptr);
-/* Destroy shared memory region on the local process.
- * MPL_shm routines are internally used. */
-int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_segment_hdl_ptr,
-                               void **base_ptr);
-
 
 /* Static inlines */
 
