@@ -1073,6 +1073,7 @@
 /io/testfile*
 /io/testlist
 /io/userioerr
+/io/zero_count
 /maint/conftimestamp
 /maint/testmerge
 /manual/dimsbalanced
