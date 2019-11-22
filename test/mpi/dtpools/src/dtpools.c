@@ -66,6 +66,10 @@ int DTP_pool_free(DTP_pool_s dtp)
     if (dtpi->base_type_is_struct) {
         rc = MPI_Type_free(&dtp.DTP_base_type);
         DTPI_ERR_CHK_MPI_RC(rc);
+
+        DTPI_FREE(dtpi->base_type_attrs.array_of_blklens);
+        DTPI_FREE(dtpi->base_type_attrs.array_of_displs);
+        DTPI_FREE(dtpi->base_type_attrs.array_of_types);
     }
     DTPI_FREE(dtpi);
 
