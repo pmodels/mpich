@@ -562,7 +562,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
          * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
         MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
 
-        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
+        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov), getinfo);
 
         /* We'll try to pick the best provider three times.
          * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
@@ -599,7 +599,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         }
 
         /* If we did not find a provider, return an error */
-        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
         fi_freeinfo(prov);
     } else {
@@ -613,8 +613,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
-    MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
-    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+    MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     /* When a specific provider is specified at configure time,
      * make sure it is the one selected by fi_getinfo */
     MPIR_ERR_CHKANDJUMP(!MPIDI_OFI_ENABLE_RUNTIME_CHECKS &&
