@@ -1629,6 +1629,16 @@ static int init_hints(struct fi_info *hints)
     return MPI_SUCCESS;
 }
 
+#define CHECK_CAP(SETTING, cond_bad) \
+    if (SETTING) { \
+        if (cond_bad) { \
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
+                            (MPL_DBG_FDEST, "provider failed" #SETTING)); \
+            prov = prov->next; \
+            continue; \
+        } \
+    }
+
 /* If name is not NULL, we'll use the specified capability set as the selection basis */
 static struct fi_info *pick_provider(struct fi_info *hints, const char *provname,
                                      struct fi_info *prov_list)
@@ -1658,69 +1668,49 @@ static struct fi_info *pick_provider(struct fi_info *hints, const char *provname
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                          prov->fabric_attr->prov_name));
 
+        /* ----------------------------- */
+        /* Check agains all requirements */
+        /* ----------------------------- */
+
         /* Check that this provider meets the minimum requirements for the user */
-        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS &&
-            (prov->domain_attr->max_ep_tx_ctx <= 1 ||
-             (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
-            prov = prov->next;
-            continue;
-        } else if (MPIDI_OFI_ENABLE_TAGGED &&
-                   (!(prov->caps & FI_TAGGED) ||
-                    !(prov->caps & FI_DIRECTED_RECV) || prov->domain_attr->cq_data_size < 4)) {
-            /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
-             * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
-             * and FI_RECV are mutually exclusive, so they should never be set both at the same
-             * time. */
-            /* This capability set also requires the ability to receive data in the completion
-             * queue object (at least 32 bits). Previously, this was a separate capability set,
-             * but as more and more providers supported this feature, the decision was made to
-             * require it. */
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
-            prov = prov->next;
-            continue;
-        } else if (MPIDI_OFI_ENABLE_AM &&
-                   ((prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support active messages"));
-            prov = prov->next;
-            continue;
-        } else if (MPIDI_OFI_ENABLE_RMA && !(prov->caps & FI_RMA)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support RMA"));
-            prov = prov->next;
-            continue;
-        } else if (MPIDI_OFI_ENABLE_ATOMICS) {
-            uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-            if (!(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "Provider doesn't support atomics"));
-                prov = prov->next;
-                continue;
-            }
-        } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
-                   !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
-            prov = prov->next;
-            continue;
-        } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                   !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
-            prov = prov->next;
-            continue;
+        CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
+                  prov->domain_attr->max_ep_tx_ctx <= 1 ||
+                  (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
 
-            /* Check that the provider has all of the requirements of MPICH */
-        } else if (prov->ep_attr->type != FI_EP_RDM) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Provider doesn't support RDM"));
-            prov = prov->next;
-            continue;
-        }
+        /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
+         * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
+         * and FI_RECV are mutually exclusive, so they should never be set both at the same
+         * time. */
+        /* This capability set also requires the ability to receive data in the completion
+         * queue object (at least 32 bits). Previously, this was a separate capability set,
+         * but as more and more providers supported this feature, the decision was made to
+         * require it. */
+        CHECK_CAP(MPIDI_OFI_ENABLE_TAGGED,
+                  !(prov->caps & FI_TAGGED) || !(prov->caps & FI_DIRECTED_RECV) ||
+                  prov->domain_attr->cq_data_size < 4);
 
+        CHECK_CAP(MPIDI_OFI_ENABLE_AM,
+                  (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
+
+        CHECK_CAP(MPIDI_OFI_ENABLE_RMA, prov->caps & FI_RMA);
+
+        uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
+                  !(prov->caps & FI_ATOMICS) ||
+                  (prov->tx_attr->msg_order & msg_order) != msg_order);
+
+        CHECK_CAP(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS,
+                  prov->domain_attr->control_progress & FI_PROGRESS_AUTO);
+
+        CHECK_CAP(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS,
+                  prov->domain_attr->data_progress & FI_PROGRESS_AUTO);
+
+        int MPICH_REQUIRE_RDM = 1;      /* hack to use CHECK_CAP */
+        CHECK_CAP(MPICH_REQUIRE_RDM, prov->ep_attr->type != FI_EP_RDM);
+
+        /* -------------------------- */
+        /* prov passed all our checks */
+        /* -------------------------- */
         prov_use = prov;
 
         /* Update hints that correspond to the current globals */
