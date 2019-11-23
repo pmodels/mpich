@@ -1682,41 +1682,38 @@ static struct fi_info *pick_provider(struct fi_info *hints, const char *provname
 
     prov = prov_list;
     while (NULL != prov) {
-        prov_use = prov;
-
         /* If we picked the provider already, make sure we grab the right provider */
         if ((NULL != provname) &&
             (0 != strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT)) &&
             (0 != strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL)) &&
-            (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
+            (0 != strcmp(provname, prov->fabric_attr->prov_name))) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Skipping provider because not selected one"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         }
 
         /* Set global settings according to evaluated provider if not already picked */
         if (!provname)
-            init_global_settings(prov_use->fabric_attr->prov_name);
+            init_global_settings(prov->fabric_attr->prov_name);
 
         /* Update hints according to global settings just picked */
         init_hints(hints);
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
-                                                         prov_use->fabric_attr->prov_name));
+                                                         prov->fabric_attr->prov_name));
 
         /* Check that this provider meets the minimum requirements for the user */
         if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS &&
-            (prov_use->domain_attr->max_ep_tx_ctx <= 1 ||
-             (prov_use->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX)) {
+            (prov->domain_attr->max_ep_tx_ctx <= 1 ||
+             (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         } else if (MPIDI_OFI_ENABLE_TAGGED &&
-                   (!(prov_use->caps & FI_TAGGED) ||
-                    !(prov_use->caps & FI_DIRECTED_RECV) ||
-                    prov_use->domain_attr->cq_data_size < 4)) {
+                   (!(prov->caps & FI_TAGGED) ||
+                    !(prov->caps & FI_DIRECTED_RECV) || prov->domain_attr->cq_data_size < 4)) {
             /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
              * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
              * and FI_RECV are mutually exclusive, so they should never be set both at the same
@@ -1727,48 +1724,49 @@ static struct fi_info *pick_provider(struct fi_info *hints, const char *provname
              * require it. */
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         } else if (MPIDI_OFI_ENABLE_AM &&
-                   ((prov_use->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
+                   ((prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support active messages"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
-        } else if (MPIDI_OFI_ENABLE_RMA && !(prov_use->caps & FI_RMA)) {
+        } else if (MPIDI_OFI_ENABLE_RMA && !(prov->caps & FI_RMA)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support RMA"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         } else if (MPIDI_OFI_ENABLE_ATOMICS) {
             uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-            if (!(prov_use->caps & FI_ATOMICS) ||
-                (prov_use->tx_attr->msg_order & msg_order) != msg_order) {
+            if (!(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support atomics"));
-                prov = prov_use->next;
+                prov = prov->next;
                 continue;
             }
         } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
-                   !(prov_use->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
+                   !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                   !(prov_use->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
+                   !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
 
             /* Check that the provider has all of the requirements of MPICH */
-        } else if (prov_use->ep_attr->type != FI_EP_RDM) {
+        } else if (prov->ep_attr->type != FI_EP_RDM) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Provider doesn't support RDM"));
-            prov = prov_use->next;
+            prov = prov->next;
             continue;
         }
+
+        prov_use = prov;
 
         /* Update hints that correspond to the current globals */
         hints->caps = prov_use->caps;
