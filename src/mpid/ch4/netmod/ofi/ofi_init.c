@@ -282,19 +282,24 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static void dump_providers(struct fi_info *prov);
+static int get_ofi_version(void);
+static int open_fabric(void);
 static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
                            struct fid_cq *p2p_cq, struct fid_cntr *rma_ctr, struct fid_av *av,
                            struct fid_ep **ep, int index);
-static int application_hints(int rank);
-static int init_global_settings(const char *prov_name);
-static int init_hints(struct fi_info *hints);
-static struct fi_info *pick_provider(struct fi_info *hints, const char *provname,
-                                     struct fi_info *prov_list);
+
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
 static int conn_manager_init(void);
 static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
+
+static int get_ofi_version(void)
+{
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+        return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+    else
+        return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+}
 
 static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
 {
@@ -485,10 +490,8 @@ static int dynproc_send_disconnect(int conn_id)
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
                             int *n_vcis_provided)
 {
-    int mpi_errno = MPI_SUCCESS, i, ofi_version;
+    int mpi_errno = MPI_SUCCESS, i;
     void *table = NULL;
-    const char *provname = NULL;
-    struct fi_info *hints, *prov = NULL, *prov_use;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
@@ -497,17 +500,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_INIT);
-
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
-    } else {
-        /* When runtime checks are enabled, and no provider name is set, then try to select the
-         * fastest provider which fits the default requirements.  To do this use "default" provider
-         * name to force initialization of global settings by default values. We are assuming that
-         * libfabric returns available provider list sorted by performance (faster - first) */
-        init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
-                             MPIDI_OFI_SET_NAME_DEFAULT);
-    }
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -531,177 +523,16 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_Add_mutex(&MPIDI_OFI_THREAD_FI_MUTEX);
     MPIR_Add_mutex(&MPIDI_OFI_THREAD_SPAWN_MUTEX);
 
-    /* ------------------------------------------------------------------------ */
-    /* fi_allocinfo: allocate and zero an fi_info structure and all related     */
-    /* substructures                                                            */
-    /* ------------------------------------------------------------------------ */
-    hints = fi_allocinfo();
-    MPIR_Assert(hints != NULL);
-
-    /* ------------------------------------------------------------------------ */
-    /* FI_VERSION provides binary backward and forward compatibility support    */
-    /* Specify the version of OFI is coded to, the provider will select struct  */
-    /* layouts that are compatible with this version.                           */
-    /* ------------------------------------------------------------------------ */
-    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
-        ofi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
-    else
-        ofi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
-
-    /* ------------------------------------------------------------------------ */
-    /* fi_getinfo:  returns information about fabric  services for reaching a   */
-    /* remote node or service.  this does not necessarily allocate resources.   */
-    /* Pass NULL for name/service because we want a list of providers supported */
-    /* ------------------------------------------------------------------------ */
-    provname = MPIR_CVAR_OFI_USE_PROVIDER ? MPL_strdup(MPIR_CVAR_OFI_USE_PROVIDER) : NULL;
-    hints->fabric_attr->prov_name = (char *) provname;
-
-    /* If the user picked a particular provider, ignore the checks */
-    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        /* Ensure that we aren't trying to shove too many bits into the match_bits.
-         * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
-        MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
-
-        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov), getinfo);
-
-        /* We'll try to pick the best provider three times.
-         * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
-         * 2 - Check to see if any provider meets the default capability set
-         * 3 - Check to see if any provider meets the minimal capability set
-         *
-         * If we get 1, we'll use that capability set as is. If we get 2, we'll use the default
-         * capability set with the first provider that satisfies it (first should be best) and
-         * supply the default capability set as the hints. If we get 3, we'll use the first provider
-         * that satisfies it and supply the minimal capability set as the hints.
-         */
-        prov_use = pick_provider(hints, (char *) provname, prov);
-
-        if (NULL == prov_use) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "1st trial of pick_provider() returned NULL\n"));
-            init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
-            prov_use = pick_provider(hints, MPIDI_OFI_SET_NAME_DEFAULT, prov);
-
-            if (NULL == prov_use) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "2nd trial of pick_provider() returned NULL\n"));
-                init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
-                prov_use = pick_provider(hints, MPIDI_OFI_SET_NAME_MINIMAL, prov);
-            } else {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                (MPL_DBG_FDEST, "2nd trial of pick_provider() returned %s\n",
-                                 prov_use->fabric_attr->prov_name));
-            }
-        } else {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "1st trial of pick_provider() returned %s\n",
-                             prov_use->fabric_attr->prov_name));
-        }
-
-        /* If we did not find a provider, return an error */
-        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
-
-        fi_freeinfo(prov);
-    } else {
-        /* If runtime checks are disabled, make sure that the hints are initialized to the
-         * compile-time capability set chosen by the user. */
-        init_hints(hints);
-
-        /* Make sure that the user-specified provider matches the configure-specified provider. */
-        MPIR_ERR_CHKANDJUMP(provname != NULL &&
-                            MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
-    }
-
-    MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov), getinfo);
-    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
-    /* When a specific provider is specified at configure time,
-     * make sure it is the one selected by fi_getinfo */
-    MPIR_ERR_CHKANDJUMP(!MPIDI_OFI_ENABLE_RUNTIME_CHECKS &&
-                        MPIDI_OFI_SET_NUMBER !=
-                        MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name), mpi_errno,
-                        MPI_ERR_OTHER, "**ofi_provider_mismatch");
-    prov_use = prov;
-    if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
-        dump_providers(prov);
-
-    *tag_bits = MPIDI_OFI_TAG_BITS;
-
-    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        /* ------------------------------------------------------------------------ */
-        /* Set global attributes attributes based on the provider choice            */
-        /* ------------------------------------------------------------------------ */
-        MPIDI_OFI_global.settings.enable_av_table = MPIDI_OFI_global.settings.enable_av_table &&
-            prov_use->domain_attr->av_type == FI_AV_TABLE;
-        MPIDI_OFI_global.settings.enable_scalable_endpoints =
-            MPIDI_OFI_global.settings.enable_scalable_endpoints &&
-            prov_use->domain_attr->max_ep_tx_ctx > 1 &&
-            (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX;
-        MPIDI_OFI_global.settings.enable_mr_scalable =
-            MPIDI_OFI_global.settings.enable_mr_scalable &&
-            prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
-        MPIDI_OFI_global.settings.enable_tagged = MPIDI_OFI_global.settings.enable_tagged &&
-            (prov_use->caps & FI_TAGGED) && (prov_use->caps & FI_DIRECTED_RECV) &&
-            (prov_use->domain_attr->cq_data_size >= 4);
-        MPIDI_OFI_global.settings.enable_am = MPIDI_OFI_global.settings.enable_am &&
-            (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
-            (FI_MSG | FI_MULTI_RECV | FI_READ);
-        MPIDI_OFI_global.settings.enable_rma = MPIDI_OFI_global.settings.enable_rma &&
-            prov_use->caps & FI_RMA;
-        MPIDI_OFI_global.settings.enable_atomics = MPIDI_OFI_global.settings.enable_atomics &&
-            prov_use->caps & FI_ATOMICS;
-        MPIDI_OFI_global.settings.enable_data_auto_progress =
-            MPIDI_OFI_global.settings.enable_data_auto_progress &&
-            hints->domain_attr->data_progress & FI_PROGRESS_AUTO;
-        MPIDI_OFI_global.settings.enable_control_auto_progress =
-            MPIDI_OFI_global.settings.enable_control_auto_progress &&
-            hints->domain_attr->control_progress & FI_PROGRESS_AUTO;
-
-        if (MPIDI_OFI_global.settings.enable_scalable_endpoints) {
-            MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
-            MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-        } else {
-            MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
-            MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
-        }
-    }
-
-    /* if using extended context id, check that selected provider can support it */
-    MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
-
-    /* Print some debugging output to give the user some hints */
-    mpi_errno = application_hints(rank);
+    mpi_errno = open_fabric();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_OFI_global.prov_use = fi_dupinfo(prov_use);
-    MPIR_Assert(MPIDI_OFI_global.prov_use);
-
-    MPIDI_OFI_global.max_buffered_send = prov_use->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov_use->tx_attr->inject_size;
-    MPIDI_OFI_global.max_msg_size = prov_use->ep_attr->max_msg_size;
-    MPIDI_OFI_global.max_order_raw = prov_use->ep_attr->max_order_raw_size;
-    MPIDI_OFI_global.max_order_war = prov_use->ep_attr->max_order_war_size;
-    MPIDI_OFI_global.max_order_waw = prov_use->ep_attr->max_order_waw_size;
-    MPIDI_OFI_global.tx_iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rx_iov_limit = MIN(prov_use->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
-
-    /* ------------------------------------------------------------------------ */
-    /* Open fabric                                                              */
-    /* The getinfo struct returns a fabric attribute struct that can be used to */
-    /* instantiate the virtual or physical network.  This opens a "fabric       */
-    /* provider".   We choose the first available fabric, but getinfo           */
-    /* returns a list.                                                          */
-    /* ------------------------------------------------------------------------ */
-    MPIDI_OFI_CALL(fi_fabric(prov_use->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
-
+    struct fi_info *prov = MPIDI_OFI_global.prov_use;
     /* ------------------------------------------------------------------------ */
     /* Create the access domain, which is the physical or virtual network or    */
     /* hardware port/collection of ports.  Returns a domain object that can be  */
     /* used to create endpoints.                                                */
     /* ------------------------------------------------------------------------ */
-    MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, prov_use, &MPIDI_OFI_global.domain, NULL),
+    MPIDI_OFI_CALL(fi_domain(MPIDI_OFI_global.fabric, prov, &MPIDI_OFI_global.domain, NULL),
                    opendomain);
 
     /* ------------------------------------------------------------------------ */
@@ -828,8 +659,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     MPIDI_OFI_global.max_ch4_vcis = 1;
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
-                                  prov_use->domain_attr->rx_ctx_cnt);
+        int max_by_prov = MPL_MIN(prov->domain_attr->tx_ctx_cnt,
+                                  prov->domain_attr->rx_ctx_cnt);
         if (MPIR_CVAR_CH4_OFI_MAX_VCIS > 0)
             MPIDI_OFI_global.max_ch4_vcis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VCIS, max_by_prov);
         if (MPIDI_OFI_global.max_ch4_vcis < 1) {
@@ -841,13 +672,13 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */
-        prov_use->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
-        prov_use->ep_attr->rx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
+        prov->ep_attr->tx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
+        prov->ep_attr->rx_ctx_cnt = MPIDI_OFI_global.max_ch4_vcis;
     }
 
     for (i = 0; i < MPIDI_OFI_global.max_ch4_vcis; i++) {
         mpi_errno =
-            create_endpoint(prov_use, MPIDI_OFI_global.domain, MPIDI_OFI_global.p2p_cq,
+            create_endpoint(prov, MPIDI_OFI_global.domain, MPIDI_OFI_global.p2p_cq,
                             MPIDI_OFI_global.rma_cmpl_cntr, MPIDI_OFI_global.av,
                             &MPIDI_OFI_global.ep, i);
         MPIR_ERR_CHECK(mpi_errno);
@@ -995,17 +826,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_OFI_index_datatypes();
 
   fn_exit:
-
-    /* -------------------------------- */
-    /* Free temporary resources         */
-    /* -------------------------------- */
-    MPL_free((char *) provname);
-    hints->fabric_attr->prov_name = NULL;
-
-    if (prov)
-        fi_freeinfo(prov);
-
-    fi_freeinfo(hints);
+    *tag_bits = MPIDI_OFI_TAG_BITS;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_INIT);
     return mpi_errno;
@@ -1352,151 +1173,369 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     goto fn_exit;
 }
 
-static void dump_providers(struct fi_info *prov)
-{
-    fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
-    while (prov) {
-        fprintf(stdout, "%s", fi_tostr(prov, FI_TYPE_INFO));
-        prov = prov->next;
-    }
-}
+/* ---------------------------------------------------------- */
+/* Provider Selections and open_fabric()                      */
+/* ---------------------------------------------------------- */
+static int find_provider(struct fi_info *hints);
+static void dump_providers(struct fi_info *prov);
+static void update_global_settings(struct fi_info *prov, struct fi_info *hints);
+static void dump_global_settings(void);
 
-static int application_hints(int rank)
+/* set MPIDI_OFI_global.settings based on provider-set */
+static void init_global_settings(const char *prov_name);
+/* set hints based on MPIDI_OFI_global.settings */
+static void init_hints(struct fi_info *hints);
+/* whether prov matches MPIDI_OFI_global.settings */
+bool match_global_settings(struct fi_info *prov);
+/* picks one matching provider from the list or return NULL */
+static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
+static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list);
+static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list);
+
+static int open_fabric(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    struct fi_info *prov = NULL;
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d",
-                     MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d",
-                     MPIDI_OFI_ENABLE_SHARED_CONTEXTS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d",
-                     MPIDI_OFI_ENABLE_MR_SCALABLE));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_TAGGED: %d", MPIDI_OFI_ENABLE_TAGGED));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d",
-                     MPIDI_OFI_FETCH_ATOMIC_IOVECS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_IOVEC_ALIGN: %d", MPIDI_OFI_IOVEC_ALIGN));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS: %d",
-                     MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d",
-                     MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d",
-                     MPIDI_OFI_ENABLE_PT2PT_NOPACK));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_NUM_AM_BUFFERS: %d", MPIDI_OFI_NUM_AM_BUFFERS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_CONTEXT_BITS: %d", MPIDI_OFI_CONTEXT_BITS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_SOURCE_BITS: %d", MPIDI_OFI_SOURCE_BITS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_TAG_BITS: %d", MPIDI_OFI_TAG_BITS));
+    /* First, find the provider and prepare the hints */
+    struct fi_info *hints = fi_allocinfo();
+    MPIR_Assert(hints != NULL);
 
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
-        fprintf(stdout, "==== Capability set configuration ====\n");
-        fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
-                MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_ATOMICS: %d\n", MPIDI_OFI_ENABLE_ATOMICS);
-        fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
-        fprintf(stdout, "MPIDI_OFI_IOVEC_ALIGN: %d\n", MPIDI_OFI_IOVEC_ALIGN);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS: %d\n",
-                MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
-                MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
-        fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
-        fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
-        fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
-        fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
-        fprintf(stdout, "======================================\n");
+    mpi_errno = find_provider(hints);
+    MPIR_ERR_CHECK(mpi_errno);
 
-        /* Discover the maximum number of ranks. If the source shift is not
-         * defined, there are 32 bits in use due to the uint32_t used in
-         * ofi_send.h */
-        fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << MPIDI_OFI_MAX_RANK_BITS);
-
-        /* Discover the tag_ub */
-        fprintf(stdout, "MAXIMUM TAG: %lu\n", 1UL << MPIDI_OFI_TAG_BITS);
-        fprintf(stdout, "======================================\n");
+    /* Second, get the actual fi_info * prov */
+    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
+        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
+    /* Third, debug and update settings */
+    if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
+        dump_providers(prov);
+
+    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        update_global_settings(prov, hints);
+    }
+
+    MPIDI_OFI_global.prov_use = fi_dupinfo(prov);
+    MPIR_Assert(MPIDI_OFI_global.prov_use);
+
+    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_msg_size = prov->ep_attr->max_msg_size;
+    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
+    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
+    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
+    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
+
+    /* if using extended context id, check that selected provider can support it */
+    MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
     /* Check that the desired number of ranks is possible and abort if not */
-    if (MPIDI_OFI_MAX_RANK_BITS < 32 &&
-        MPIR_Comm_size(MPIR_Process.comm_world) > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
+    if (MPIDI_OFI_MAX_RANK_BITS < 32 && MPIR_Process.size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
-  fn_fail:
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        dump_global_settings();
+    }
+
+    /* Finally open the fabric */
+    MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
+
+  fn_exit:
+    if (prov)
+        fi_freeinfo(prov);
+
+    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
+    MPL_free(hints->fabric_attr->prov_name);
+    hints->fabric_attr->prov_name = NULL;
+    fi_freeinfo(hints);
+
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-#define UPDATE_SETTING(cap, CVAR) \
+static int find_provider(struct fi_info *hints)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    const char *provname = MPIR_CVAR_OFI_USE_PROVIDER;
+    int ofi_version = get_ofi_version();
+
+    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
+    } else {
+        init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
+                             MPIDI_OFI_SET_NAME_DEFAULT);
+    }
+
+    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        /* Ensure that we aren't trying to shove too many bits into the match_bits.
+         * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
+        MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
+
+        struct fi_info *prov_list, *prov_use;
+        MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
+
+        prov_use = pick_provider_from_list(provname, prov_list);
+
+        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+
+        /* Initialize hints based on MPIDI_OFI_global.settings (updated by pick_provider_from_list()) */
+        init_hints(hints);
+        hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
+        hints->caps = prov_use->caps;
+
+        fi_freeinfo(prov_list);
+    } else {
+        /* Make sure that the user-specified provider matches the configure-specified provider. */
+        MPIR_ERR_CHKANDJUMP(provname != NULL &&
+                            MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+        /* Initialize hints based on MPIDI_OFI_global.settings (config macros) */
+        init_hints(hints);
+        hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
+    }
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#define DBG_TRY_PICK_PROVIDER(round) /* round is a str, eg "Round 1" */ \
+    if (NULL == prov_use) { \
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
+                        (MPL_DBG_FDEST, round ": find_provider returned NULL\n")); \
+    } else { \
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
+                        (MPL_DBG_FDEST, round ": find_provider returned %s\n", \
+                        prov_use->fabric_attr->prov_name)); \
+    }
+
+static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list)
+{
+    struct fi_info *prov_use = NULL;
+    /* We'll try to pick the best provider three times.
+     * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
+     * 2 - Check to see if any provider meets the default capability set
+     * 3 - Check to see if any provider meets the minimal capability set
+     */
+    bool provname_is_set = (provname &&
+                            strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT) != 0 &&
+                            strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) != 0);
+    if (NULL == prov_use && provname_is_set) {
+        prov_use = pick_provider_by_name((char *) provname, prov_list);
+        DBG_TRY_PICK_PROVIDER("[match name]");
+    }
+
+    bool provname_is_minimal = (provname && strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) == 0);
+    if (NULL == prov_use && !provname_is_minimal) {
+        init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
+        prov_use = pick_provider_by_global_settings(prov_list);
+        DBG_TRY_PICK_PROVIDER("[match default]");
+    }
+
+    if (NULL == prov_use) {
+        init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
+        prov_use = pick_provider_by_global_settings(prov_list);
+        DBG_TRY_PICK_PROVIDER("[match minimal]");
+    }
+
+    return prov_use;
+}
+
+static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list)
+{
+    struct fi_info *prov, *prov_use = NULL;
+
+    prov = prov_list;
+    while (NULL != prov) {
+        /* Match provider name exactly */
+        if (0 != strcmp(provname, prov->fabric_attr->prov_name)) {
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "Skipping provider: name mismatch"));
+            prov = prov->next;
+            continue;
+        }
+
+        init_global_settings(prov->fabric_attr->prov_name);
+
+        if (!match_global_settings(prov)) {
+            prov = prov->next;
+            continue;
+        }
+
+        prov_use = prov;
+
+        break;
+    }
+
+    return prov_use;
+}
+
+static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list)
+{
+    struct fi_info *prov, *prov_use = NULL;
+
+    prov = prov_list;
+    while (NULL != prov) {
+        if (!match_global_settings(prov)) {
+            prov = prov->next;
+            continue;
+        } else {
+            prov_use = prov;
+            break;
+        }
+    }
+
+    return prov_use;
+}
+
+#define CHECK_CAP(SETTING, cond_bad) \
+    if (SETTING) { \
+        if (cond_bad) { \
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
+                            (MPL_DBG_FDEST, "provider failed " #SETTING)); \
+            return false; \
+        } \
+    }
+
+bool match_global_settings(struct fi_info * prov)
+{
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
+                                                     prov->fabric_attr->prov_name));
+
+    CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
+              prov->domain_attr->max_ep_tx_ctx <= 1 ||
+              (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
+
+    /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
+     * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
+     * and FI_RECV are mutually exclusive, so they should never be set both at the same
+     * time. */
+    /* This capability set also requires the ability to receive data in the completion
+     * queue object (at least 32 bits). Previously, this was a separate capability set,
+     * but as more and more providers supported this feature, the decision was made to
+     * require it. */
+    CHECK_CAP(MPIDI_OFI_ENABLE_TAGGED,
+              !(prov->caps & FI_TAGGED) || !(prov->caps & FI_DIRECTED_RECV) ||
+              prov->domain_attr->cq_data_size < 4);
+
+    CHECK_CAP(MPIDI_OFI_ENABLE_AM,
+              (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
+
+    CHECK_CAP(MPIDI_OFI_ENABLE_RMA, !(prov->caps & FI_RMA));
+
+    uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+    CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
+              !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
+
+    CHECK_CAP(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS,
+              !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO));
+
+    CHECK_CAP(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS,
+              !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO));
+
+    int MPICH_REQUIRE_RDM = 1;  /* hack to use CHECK_CAP macro */
+    CHECK_CAP(MPICH_REQUIRE_RDM, prov->ep_attr->type != FI_EP_RDM);
+
+    return true;
+}
+
+#define UPDATE_SETTING_BY_CAP(cap, CVAR) \
     MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : \
                                     prov_name ? prov_caps->cap : \
                                     CVAR
 
-static int init_global_settings(const char *prov_name)
+static void init_global_settings(const char *prov_name)
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
 
     /* Seed the global settings values for cases where we are using runtime sets */
-    UPDATE_SETTING(enable_av_table, MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE);
-    UPDATE_SETTING(enable_scalable_endpoints, MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS);
+    UPDATE_SETTING_BY_CAP(enable_av_table, MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE);
+    UPDATE_SETTING_BY_CAP(enable_scalable_endpoints, MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS);
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
      * and fall back if necessary in the RMA init code */
-    UPDATE_SETTING(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
-    UPDATE_SETTING(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
-    UPDATE_SETTING(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
-    UPDATE_SETTING(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
-    UPDATE_SETTING(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
+    UPDATE_SETTING_BY_CAP(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
+    UPDATE_SETTING_BY_CAP(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
+    UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
+    UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
+    UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
     /* try to enable atomics only when RMA is enabled */
     if (MPIDI_OFI_ENABLE_RMA) {
-        UPDATE_SETTING(enable_atomics, MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS);
+        UPDATE_SETTING_BY_CAP(enable_atomics, MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS);
     } else {
         MPIDI_OFI_global.settings.enable_atomics = 0;
     }
-    UPDATE_SETTING(fetch_atomic_iovecs, MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS);
-    UPDATE_SETTING(enable_data_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS);
-    UPDATE_SETTING(enable_control_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
-    UPDATE_SETTING(enable_pt2pt_nopack, MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK);
-    UPDATE_SETTING(context_bits, MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS);
-    UPDATE_SETTING(source_bits, MPIR_CVAR_CH4_OFI_RANK_BITS);
-    UPDATE_SETTING(tag_bits, MPIR_CVAR_CH4_OFI_TAG_BITS);
-    UPDATE_SETTING(major_version, MPIR_CVAR_CH4_OFI_MAJOR_VERSION);
-    UPDATE_SETTING(minor_version, MPIR_CVAR_CH4_OFI_MINOR_VERSION);
-    UPDATE_SETTING(num_am_buffers, MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS);
+    UPDATE_SETTING_BY_CAP(fetch_atomic_iovecs, MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS);
+    UPDATE_SETTING_BY_CAP(enable_data_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS);
+    UPDATE_SETTING_BY_CAP(enable_control_auto_progress,
+                          MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
+    UPDATE_SETTING_BY_CAP(enable_pt2pt_nopack, MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK);
+    UPDATE_SETTING_BY_CAP(context_bits, MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS);
+    UPDATE_SETTING_BY_CAP(source_bits, MPIR_CVAR_CH4_OFI_RANK_BITS);
+    UPDATE_SETTING_BY_CAP(tag_bits, MPIR_CVAR_CH4_OFI_TAG_BITS);
+    UPDATE_SETTING_BY_CAP(major_version, MPIR_CVAR_CH4_OFI_MAJOR_VERSION);
+    UPDATE_SETTING_BY_CAP(minor_version, MPIR_CVAR_CH4_OFI_MINOR_VERSION);
+    UPDATE_SETTING_BY_CAP(num_am_buffers, MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS);
     if (MPIDI_OFI_global.settings.num_am_buffers < 0) {
         MPIDI_OFI_global.settings.num_am_buffers = 0;
     }
     if (MPIDI_OFI_global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
         MPIDI_OFI_global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
-    return MPI_SUCCESS;
 }
 
-static int init_hints(struct fi_info *hints)
+#define UPDATE_SETTING_BY_INFO(cap, info_cond) \
+    MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
+
+static void update_global_settings(struct fi_info *prov_use, struct fi_info *hints)
 {
-    int ofi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+    /* ------------------------------------------------------------------------ */
+    /* Set global attributes attributes based on the provider choice            */
+    /* ------------------------------------------------------------------------ */
+    UPDATE_SETTING_BY_INFO(enable_av_table, prov_use->domain_attr->av_type == FI_AV_TABLE);
+    UPDATE_SETTING_BY_INFO(enable_scalable_endpoints,
+                           prov_use->domain_attr->max_ep_tx_ctx > 1 &&
+                           (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
+    UPDATE_SETTING_BY_INFO(enable_mr_scalable, prov_use->domain_attr->mr_mode == FI_MR_SCALABLE);
+    UPDATE_SETTING_BY_INFO(enable_tagged,
+                           (prov_use->caps & FI_TAGGED) &&
+                           (prov_use->caps & FI_DIRECTED_RECV) &&
+                           (prov_use->domain_attr->cq_data_size >= 4));
+    UPDATE_SETTING_BY_INFO(enable_am,
+                           (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
+                           (FI_MSG | FI_MULTI_RECV | FI_READ));
+    UPDATE_SETTING_BY_INFO(enable_rma, prov_use->caps & FI_RMA);
+    UPDATE_SETTING_BY_INFO(enable_atomics, prov_use->caps & FI_ATOMICS);
+
+    UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
+                           hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
+    UPDATE_SETTING_BY_INFO(enable_control_auto_progress,
+                           hints->domain_attr->control_progress & FI_PROGRESS_AUTO);
+
+    if (MPIDI_OFI_global.settings.enable_scalable_endpoints) {
+        MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
+        MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+    } else {
+        MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
+        MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
+    }
+}
+
+/* Initializes hint structure based MPIDI_OFI_global.settings (or config macros) */
+static void init_hints(struct fi_info *hints)
+{
+    int ofi_version = get_ofi_version();
     MPIR_Assert(hints != NULL);
 
     /* ------------------------------------------------------------------------ */
@@ -1527,9 +1566,6 @@ static int init_hints(struct fi_info *hints)
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
-
-    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
-        ofi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
 
     if (ofi_version >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
@@ -1602,7 +1638,7 @@ static int init_hints(struct fi_info *hints)
         hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     else
         hints->domain_attr->mr_mode = FI_MR_BASIC;
-    if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1, 5)) {
+    if (ofi_version >= FI_VERSION(1, 5)) {
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
 #endif
@@ -1625,113 +1661,53 @@ static int init_hints(struct fi_info *hints)
         /*     PROTOCOL         |  CONTEXT  |        SOURCE         |       TAG          */
         MPIDI_OFI_PROTOCOL_MASK | 0 | MPIDI_OFI_SOURCE_MASK | 0 /* With source bits */ :
         MPIDI_OFI_PROTOCOL_MASK | 0 | 0 | MPIDI_OFI_TAG_MASK /* No source bits */ ;
-
-    return MPI_SUCCESS;
 }
 
-#define CHECK_CAP(SETTING, cond_bad) \
-    if (SETTING) { \
-        if (cond_bad) { \
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
-                            (MPL_DBG_FDEST, "provider failed" #SETTING)); \
-            prov = prov->next; \
-            continue; \
-        } \
-    }
+/* ---------------------------------------------------------- */
+/* Provider Debug Routines                                    */
+/* ---------------------------------------------------------- */
 
-/* If name is not NULL, we'll use the specified capability set as the selection basis */
-static struct fi_info *pick_provider(struct fi_info *hints, const char *provname,
-                                     struct fi_info *prov_list)
+static void dump_global_settings(void)
 {
-    struct fi_info *prov, *prov_use = NULL;
+    fprintf(stdout, "==== Capability set configuration ====\n");
+    fprintf(stdout, "libfabric provider: %s\n", MPIDI_OFI_global.prov_use->fabric_attr->prov_name);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
+            MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_ATOMICS: %d\n", MPIDI_OFI_ENABLE_ATOMICS);
+    fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
+    fprintf(stdout, "MPIDI_OFI_IOVEC_ALIGN: %d\n", MPIDI_OFI_IOVEC_ALIGN);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS: %d\n",
+            MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
+            MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+    fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
+    fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
+    fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
+    fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
+    fprintf(stdout, "======================================\n");
 
-    prov = prov_list;
-    while (NULL != prov) {
-        /* If we picked the provider already, make sure we grab the right provider */
-        if ((NULL != provname) &&
-            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT)) &&
-            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL)) &&
-            (0 != strcmp(provname, prov->fabric_attr->prov_name))) {
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "Skipping provider because not selected one"));
-            prov = prov->next;
-            continue;
-        }
+    /* Discover the maximum number of ranks. If the source shift is not
+     * defined, there are 32 bits in use due to the uint32_t used in
+     * ofi_send.h */
+    fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << MPIDI_OFI_MAX_RANK_BITS);
 
-        /* Set global settings according to evaluated provider if not already picked */
-        if (!provname)
-            init_global_settings(prov->fabric_attr->prov_name);
+    /* Discover the tag_ub */
+    fprintf(stdout, "MAXIMUM TAG: %lu\n", 1UL << MPIDI_OFI_TAG_BITS);
+    fprintf(stdout, "======================================\n");
+}
 
-        /* Update hints according to global settings just picked */
-        init_hints(hints);
-
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
-                                                         prov->fabric_attr->prov_name));
-
-        /* ----------------------------- */
-        /* Check agains all requirements */
-        /* ----------------------------- */
-
-        /* Check that this provider meets the minimum requirements for the user */
-        CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
-                  prov->domain_attr->max_ep_tx_ctx <= 1 ||
-                  (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
-
-        /* From the fi_getinfo manpage: "FI_TAGGED implies the ability to send and receive
-         * tagged messages." Therefore no need to specify FI_SEND|FI_RECV.  Moreover FI_SEND
-         * and FI_RECV are mutually exclusive, so they should never be set both at the same
-         * time. */
-        /* This capability set also requires the ability to receive data in the completion
-         * queue object (at least 32 bits). Previously, this was a separate capability set,
-         * but as more and more providers supported this feature, the decision was made to
-         * require it. */
-        CHECK_CAP(MPIDI_OFI_ENABLE_TAGGED,
-                  !(prov->caps & FI_TAGGED) || !(prov->caps & FI_DIRECTED_RECV) ||
-                  prov->domain_attr->cq_data_size < 4);
-
-        CHECK_CAP(MPIDI_OFI_ENABLE_AM,
-                  (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
-
-        CHECK_CAP(MPIDI_OFI_ENABLE_RMA, prov->caps & FI_RMA);
-
-        uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
-        CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
-                  !(prov->caps & FI_ATOMICS) ||
-                  (prov->tx_attr->msg_order & msg_order) != msg_order);
-
-        CHECK_CAP(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS,
-                  prov->domain_attr->control_progress & FI_PROGRESS_AUTO);
-
-        CHECK_CAP(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS,
-                  prov->domain_attr->data_progress & FI_PROGRESS_AUTO);
-
-        int MPICH_REQUIRE_RDM = 1;      /* hack to use CHECK_CAP */
-        CHECK_CAP(MPICH_REQUIRE_RDM, prov->ep_attr->type != FI_EP_RDM);
-
-        /* -------------------------- */
-        /* prov passed all our checks */
-        /* -------------------------- */
-        prov_use = prov;
-
-        /* Update hints that correspond to the current globals */
-        hints->caps = prov_use->caps;
-
-        /* If the user picked a provider, we want to reset all of the hints to be whatever that
-         * provider actually provides (we might get multiple version of that provider back from
-         * fi_init and we want the best version). */
-        if ((NULL != provname) &&
-            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT)) &&
-            (0 != strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL)) &&
-            (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
-
-            /* set provider name to hints to make more accurate selection */
-            init_hints(hints);
-
-            hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
-        }
-
-        break;
+static void dump_providers(struct fi_info *prov)
+{
+    fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
+    while (prov) {
+        fprintf(stdout, "%s", fi_tostr(prov, FI_TYPE_INFO));
+        prov = prov->next;
     }
-
-    return prov_use;
 }
