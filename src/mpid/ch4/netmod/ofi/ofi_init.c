@@ -1449,87 +1449,42 @@ static int application_hints(int rank)
     return mpi_errno;
 }
 
+#define UPDATE_SETTING(cap, CVAR) \
+    MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : \
+                                    prov_name ? prov_caps->cap : \
+                                    CVAR
+
 static int init_global_settings(const char *prov_name)
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
 
     /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_OFI_global.settings.enable_av_table =
-        MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE : prov_name ?
-        prov_caps->enable_av_table : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
-    MPIDI_OFI_global.settings.enable_scalable_endpoints =
-        MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS : prov_name ?
-        prov_caps->enable_scalable_endpoints : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
+    UPDATE_SETTING(enable_av_table, MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE);
+    UPDATE_SETTING(enable_scalable_endpoints, MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS);
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
      * and fall back if necessary in the RMA init code */
-    MPIDI_OFI_global.settings.enable_shared_contexts =
-        MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS : prov_name ?
-        prov_caps->enable_shared_contexts : MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS;
-    MPIDI_OFI_global.settings.enable_mr_scalable =
-        MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE : prov_name ?
-        prov_caps->enable_mr_scalable : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
-    MPIDI_OFI_global.settings.enable_tagged =
-        MPIR_CVAR_CH4_OFI_ENABLE_TAGGED !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_TAGGED : prov_name ?
-        prov_caps->enable_tagged : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
-    MPIDI_OFI_global.settings.enable_am =
-        MPIR_CVAR_CH4_OFI_ENABLE_AM !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM : prov_name ?
-        prov_caps->enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
-    MPIDI_OFI_global.settings.enable_rma =
-        MPIR_CVAR_CH4_OFI_ENABLE_RMA !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA : prov_name ?
-        prov_caps->enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
+    UPDATE_SETTING(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
+    UPDATE_SETTING(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
+    UPDATE_SETTING(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
+    UPDATE_SETTING(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
+    UPDATE_SETTING(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
     /* try to enable atomics only when RMA is enabled */
-    MPIDI_OFI_global.settings.enable_atomics =
-        MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS !=
-                                -1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS : prov_name ?
-                                prov_caps->enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
-    MPIDI_OFI_global.settings.fetch_atomic_iovecs =
-        MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS !=
-        -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS : prov_name ?
-        prov_caps->fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
-    MPIDI_OFI_global.settings.enable_data_auto_progress =
-        MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS : prov_name ?
-        prov_caps->enable_data_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS;
-    MPIDI_OFI_global.settings.enable_control_auto_progress =
-        MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS : prov_name ?
-        prov_caps->enable_control_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS;
-    MPIDI_OFI_global.settings.enable_pt2pt_nopack =
-        MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK : prov_name ?
-        prov_caps->enable_pt2pt_nopack : MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK;
-    MPIDI_OFI_global.settings.context_bits =
-        MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS !=
-        -1 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS : prov_name ?
-        prov_caps->context_bits : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
-    MPIDI_OFI_global.settings.source_bits =
-        MPIR_CVAR_CH4_OFI_RANK_BITS !=
-        -1 ? MPIR_CVAR_CH4_OFI_RANK_BITS : prov_name ?
-        prov_caps->source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
-    MPIDI_OFI_global.settings.tag_bits =
-        MPIR_CVAR_CH4_OFI_TAG_BITS !=
-        -1 ? MPIR_CVAR_CH4_OFI_TAG_BITS : prov_name ?
-        prov_caps->tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
-    MPIDI_OFI_global.settings.major_version =
-        MPIR_CVAR_CH4_OFI_MAJOR_VERSION !=
-        -1 ? MPIR_CVAR_CH4_OFI_MAJOR_VERSION : prov_name ?
-        prov_caps->major_version : MPIR_CVAR_CH4_OFI_MAJOR_VERSION;
-    MPIDI_OFI_global.settings.minor_version =
-        MPIR_CVAR_CH4_OFI_MINOR_VERSION !=
-        -1 ? MPIR_CVAR_CH4_OFI_MINOR_VERSION : prov_name ?
-        prov_caps->minor_version : MPIR_CVAR_CH4_OFI_MINOR_VERSION;
-    MPIDI_OFI_global.settings.num_am_buffers =
-        MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS !=
-        -1 ? MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS : prov_name ?
-        prov_caps->num_am_buffers : MPIDI_OFI_NUM_AM_BUFFERS_MINIMAL;
+    if (MPIDI_OFI_ENABLE_RMA) {
+        UPDATE_SETTING(enable_atomics, MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS);
+    } else {
+        MPIDI_OFI_global.settings.enable_atomics = 0;
+    }
+    UPDATE_SETTING(fetch_atomic_iovecs, MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS);
+    UPDATE_SETTING(enable_data_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS);
+    UPDATE_SETTING(enable_control_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
+    UPDATE_SETTING(enable_pt2pt_nopack, MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK);
+    UPDATE_SETTING(context_bits, MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS);
+    UPDATE_SETTING(source_bits, MPIR_CVAR_CH4_OFI_RANK_BITS);
+    UPDATE_SETTING(tag_bits, MPIR_CVAR_CH4_OFI_TAG_BITS);
+    UPDATE_SETTING(major_version, MPIR_CVAR_CH4_OFI_MAJOR_VERSION);
+    UPDATE_SETTING(minor_version, MPIR_CVAR_CH4_OFI_MINOR_VERSION);
+    UPDATE_SETTING(num_am_buffers, MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS);
     if (MPIDI_OFI_global.settings.num_am_buffers < 0) {
         MPIDI_OFI_global.settings.num_am_buffers = 0;
     }
