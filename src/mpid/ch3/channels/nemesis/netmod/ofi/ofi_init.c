@@ -9,7 +9,6 @@
  */
 #include "ofi_impl.h"
 
-static inline int dump_and_choose_providers(info_t * prov, info_t ** prov_use);
 static inline int compile_time_checking();
 
 /*
@@ -27,16 +26,6 @@ cvars:
         If non-null, choose an OFI provider by name. If using with the CH4
         device and using an older libfabric installation than the recommended
         version to accompany this MPICH version, unexpected results may occur.
-
-    - name        : MPIR_CVAR_OFI_DUMP_PROVIDERS
-      category    : DEVELOPER
-      type        : boolean
-      default     : false
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If true, dump provider information at init
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -116,6 +105,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIR_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**ofi_getinfo", "**ofi_getinfo %s %d %s %s",
                          __SHORT_FILE__, __LINE__, __func__, "No tag matching provider found");
+    /* Choose the first provider (assuming it's the fastest one libfabric returned) */
+    prov_use = prov_tagged;
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
     /* The getinfo struct returns a fabric attribute struct that can be used to */
@@ -123,7 +114,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* provider".   We choose the first available fabric, but getinfo           */
     /* returns a list.  see man fi_fabric for details                           */
     /* ------------------------------------------------------------------------ */
-    dump_and_choose_providers(prov_tagged, &prov_use);
     FI_RC(fi_fabric(prov_use->fabric_attr,      /* In:   Fabric attributes */
                     &gl_data.fabric,    /* Out:  Fabric descriptor */
                     NULL), openfabric); /* Context: fabric events  */
@@ -375,20 +365,4 @@ static inline int compile_time_checking()
     MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cancel", "**ofi_cancel %s %d %s %s", a, b, a, a);
 #endif
     return 0;
-}
-
-
-static inline int dump_and_choose_providers(info_t * prov, info_t ** prov_use)
-{
-    info_t *p = prov;
-    int i = 0;
-    *prov_use = prov;
-    if (MPIR_CVAR_OFI_DUMP_PROVIDERS) {
-        fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
-        while (p) {
-            fprintf(stdout, "%s", fi_tostr(p, FI_TYPE_INFO));
-            p = p->next;
-        }
-    }
-    return i;
 }

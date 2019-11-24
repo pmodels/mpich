@@ -1177,7 +1177,6 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
 /* Provider Selections and open_fabric()                      */
 /* ---------------------------------------------------------- */
 static int find_provider(struct fi_info *hints);
-static void dump_providers(struct fi_info *prov);
 static void update_global_settings(struct fi_info *prov, struct fi_info *hints);
 static void dump_global_settings(void);
 
@@ -1213,10 +1212,7 @@ static int open_fabric(void)
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
-    /* Third, debug and update settings */
-    if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
-        dump_providers(prov);
-
+    /* Third, update global settings */
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         update_global_settings(prov, hints);
     }
@@ -1664,7 +1660,7 @@ static void init_hints(struct fi_info *hints)
 }
 
 /* ---------------------------------------------------------- */
-/* Provider Debug Routines                                    */
+/* Debug Routines                                    */
 /* ---------------------------------------------------------- */
 
 static void dump_global_settings(void)
@@ -1701,13 +1697,4 @@ static void dump_global_settings(void)
     /* Discover the tag_ub */
     fprintf(stdout, "MAXIMUM TAG: %lu\n", 1UL << MPIDI_OFI_TAG_BITS);
     fprintf(stdout, "======================================\n");
-}
-
-static void dump_providers(struct fi_info *prov)
-{
-    fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
-    while (prov) {
-        fprintf(stdout, "%s", fi_tostr(prov, FI_TYPE_INFO));
-        prov = prov->next;
-    }
 }
