@@ -85,6 +85,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPID_Wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
 
+    /* create fine-grained mutexes */
+    MPIR_Thread_CS_Init();
+
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -147,9 +150,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* dup comm_self and creates progress thread (if needed) */
     mpi_errno = MPII_init_async(thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* create fine-grained mutexes */
-    MPIR_Thread_CS_Init();
 
     /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
