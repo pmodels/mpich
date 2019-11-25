@@ -16,8 +16,12 @@ static int mutex_count = 0;
 
 void MPIR_Add_mutex(MPID_Thread_mutex_t * p_mutex)
 {
+    int err;
     MPIR_Assert(mutex_count < MAX_MUTEX_COUNT);
-    mutex_list[mutex_count++] = p_mutex;
+    mutex_list[mutex_count] = p_mutex;
+    MPID_Thread_mutex_create(mutex_list[mutex_count], &err);
+    MPIR_Assert(err == 0);
+    mutex_count++;
 }
 
 /* All the other mutexes that depend on the configured thread granularity */
@@ -55,12 +59,6 @@ void MPIR_Thread_CS_Init(void)
 #else
 #error Unrecognized thread granularity
 #endif
-
-    int err;
-    for (int i = 0; i < mutex_count; i++) {
-        MPID_Thread_mutex_create(mutex_list[i], &err);
-        MPIR_Assert(err == 0);
-    }
 
     MPID_THREADPRIV_KEY_CREATE;
 
