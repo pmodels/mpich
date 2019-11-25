@@ -209,6 +209,8 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
  *    Thread Local Storage
  * ======================================================================*/
 
+#define MPL_NO_COMPILER_TLS     /* Cannot use compiler tls with argobots */
+
 #define MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)         \
     do {                                                                  \
         int err__;                                                        \

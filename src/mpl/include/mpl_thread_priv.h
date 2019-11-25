@@ -10,7 +10,7 @@
 extern int MPL_is_threaded;
 void MPL_set_threaded(int isThreaded);
 
-#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE && !defined(MPL_TLS)
+#if !defined(MPL_TLS)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPLI_cleanup_tls(void *a);
@@ -89,10 +89,8 @@ void MPLI_cleanup_tls(void *a);
         }                                                      \
     } while (0)
 
-#else /* MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE || defined(MPL_TLS) */
+#else /* defined(MPL_TLS) */
 
-/* We have proper thread-local storage (TLS) support from the compiler, which
- * should yield the best performance and simplest code, so we'll use that. */
 #define MPL_THREADPRIV_KEY_CREATE(...)
 #define MPL_THREADPRIV_KEY_GET_ADDR(key, var, addr, err_ptr_)           \
     do {                                                                \

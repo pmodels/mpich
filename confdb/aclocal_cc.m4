@@ -1644,7 +1644,7 @@ AC_DEFUN([PAC_CC_CHECK_TLS], [
     if test -z $pac_cv_tls ; then
         AC_MSG_WARN([Compiler does not support thread local storage])
     else
-        AC_DEFINE_UNQUOTED([TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
+        AC_DEFINE_UNQUOTED([COMPILER_TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
     fi
 ])
 
