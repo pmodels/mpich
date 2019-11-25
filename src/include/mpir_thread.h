@@ -131,8 +131,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_alloc(MPIR_Thread_sync_t ** sync,
 {
     int rc;
     MPIR_Per_thread_t *per_thread = NULL;
-    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                 MPIR_Per_thread, per_thread, &rc);
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_Per_thread_key, MPIR_Per_thread, per_thread, &rc);
     *sync = &per_thread->sync;
     (*sync)->is_server = FALSE;
     OPA_store_int(&((*sync)->count), count);
