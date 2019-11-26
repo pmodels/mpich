@@ -279,6 +279,8 @@ int main(int argc, char *argv[])
     err = MPI_File_close(&fh);
     CHECK_ERROR(err, nerrs);
 
+    free(filename);
+
     if (nerrs == 0)
         printf(" No Errors\n");
     MPI_Finalize();

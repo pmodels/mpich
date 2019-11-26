@@ -37,6 +37,7 @@ int main(int argc, char **argv)
     MPI_Comm_free(&newcomm);
     MPI_Group_free(&basegroup);
     MPI_Group_free(&g1);
+    free(ranks);
     MTest_Finalize(errs);
     return 0;
 }
