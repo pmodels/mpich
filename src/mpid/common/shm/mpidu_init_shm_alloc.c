@@ -173,6 +173,8 @@ int MPIDU_Init_shm_free(void *ptr)
         }
     }
 
+    MPIR_Assert(memory != NULL);
+
     if (MPIR_Process.local_size == 1)
         MPL_free(memory->base_addr);
     else {
