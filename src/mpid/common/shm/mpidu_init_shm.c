@@ -7,7 +7,6 @@
 #include "mpidu_init_shm.h"
 #include "mpl_shm.h"
 #include "mpidimpl.h"
-#include "mpidu_shm.h"
 #include "mpir_pmi.h"
 #include "mpidu_shm_seg.h"
 
