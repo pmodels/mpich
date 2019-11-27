@@ -193,6 +193,15 @@ int main(int argc, char **argv)
     errs += comm_hint_test(hints_1, hints_1_vals, 2, false);
     MPI_Barrier(MPI_COMM_WORLD);
 
+    /* Test : vci hint.
+     * Here we expect the program to run successfully when valid
+     * vci values are provided.
+     */
+    hints_1[0] = "vci";
+    hints_1_vals[0] = "2";
+    errs += comm_hint_test(hints_1, hints_1_vals, 1, false);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MTest_Finalize(errs);
     return errs;
 }
