@@ -1,1 +1,3 @@
 sendrecv_vci_assignment 2
+# Set same value for MPIR_CVAR_CH4_THREAD_ID_KEY and THREAD_ID_KEY
+sendrecv_vci_assignment 2 env=MPIR_CVAR_CH4_THREAD_ID_KEY=comm_id env=THREAD_ID_KEY=comm_id

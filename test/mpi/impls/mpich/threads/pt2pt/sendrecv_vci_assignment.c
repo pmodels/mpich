@@ -145,6 +145,7 @@ int main(int argc, char **argv)
     int i, pmode, nprocs, errs = 0, err, count = 0, iter = 0;
     const char *hints_1[2];
     const char *hints_1_vals[2];
+    char *env_thread_id_key = NULL;
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {
@@ -234,6 +235,22 @@ int main(int argc, char **argv)
     hints_1_vals[0] = "99999";
     hints_1_vals[1] = "99999";
     errs += comm_hint_test(hints_1, hints_1_vals, 2, false, true);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Test : hint for thread_id_key. The default key is "thread_id" but
+     * user can change if with the CVAR MPIR_CVAR_CH4_THREAD_ID_KEY.
+     * We expect user to set same value for THREAD_ID_KEY and
+     * MPIR_CVAR_CH4_THREAD_ID_KEY when the renaming is done.
+     * Here we expect the program to run successfully when the valid
+     * thread_id values is provided.
+     */
+    env_thread_id_key = getenv("THREAD_ID_KEY");
+    if (env_thread_id_key)
+        hints_1[0] = env_thread_id_key;
+    else
+        hints_1[0] = "thread_id";
+    hints_1_vals[0] = "2";
+    errs += comm_hint_test(hints_1, hints_1_vals, 1, false, true);
     MPI_Barrier(MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
