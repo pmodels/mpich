@@ -119,7 +119,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
      * which checks errhandler in comm_world structure, which should
      * NULL by default before or during init, and treated as fatal.
      */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     MPII_pre_init_memory_tracing();
 
@@ -169,10 +169,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPID_InitCompleted();
 
     MPII_init_thread_and_exit_cs();
-    /* Make fields of MPIR_Process global visible and set mpich_state
-     * atomically so that MPI_Initialized() etc. are thread safe */
-    OPA_write_barrier();
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
@@ -181,7 +179,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
     MPII_init_thread_failed_exit_cs();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
@@ -236,7 +234,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+            if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
                 mpi_errno =
                     MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread",
                                          __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
