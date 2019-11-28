@@ -80,7 +80,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPII_init_thread_and_enter_cs(required);
+    MPII_init_thread_and_enter_cs();
 
     MPID_Wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
@@ -88,6 +88,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Certain features may potentially change required thread-level */
     mpi_errno = MPII_init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
@@ -98,6 +99,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPIR_ThreadInfo.thread_provided = MPICH_THREAD_LEVEL;
     }
 
+    MPL_set_threaded(MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+
+    /* Init various components */
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -110,12 +114,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPII_debugger_hold();
     }
 
-    /* Setting MPICH_MPI_STATE__IN_INIT allows MPI_Initialized and
+    /* Setting mpich_state from `PRE_INIT` allows MPI_Initialized and
      * MPI_Finalized to call MPIR_Err_return_comm(0, ...) on error,
      * which checks errhandler in comm_world structure, which should
      * NULL by default before or during init, and treated as fatal.
      */
-    /* FIXME: remove MPICH_MPI_STATE__IN_INIT */
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     MPII_pre_init_memory_tracing();

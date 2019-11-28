@@ -130,20 +130,6 @@ static int choose_netmod(void)
     goto fn_exit;
 }
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
-#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE)
-#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
-#else
-#error "Thread Granularity:  Invalid"
-#endif
-
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
@@ -350,6 +336,20 @@ static int init_av_table(void)
     return avtid;
 }
 
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
+#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE)
+#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
+#else
+#error "Thread Granularity:  Invalid"
+#endif
+
 int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
 {
     switch (requested) {
@@ -358,7 +358,6 @@ int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
         case MPI_THREAD_FUNNELED:
             *provided = requested;
             break;
-
         case MPI_THREAD_MULTIPLE:
             *provided = MAX_THREAD_MODE;
             break;

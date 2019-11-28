@@ -42,7 +42,7 @@ void MPII_init_dbg_logging(void)
 #ifdef MPICH_IS_THREADED
     MPL_dbg_init(NULL, NULL, TRUE, TRUE,
                  MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
-                 MPIR_ThreadInfo.isThreaded);
+                 MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #else
     MPL_dbg_init(NULL, NULL, TRUE, TRUE,
                  MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank, 0);

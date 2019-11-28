@@ -56,8 +56,8 @@ void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
          * MPIR_Process.mpich_state to decide how to signal the error */
         (void) MPL_internal_error_printf("overflow in finalize stack! "
                                          "Is MAX_FINALIZE_FUNC too small?\n");
-        if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
-            OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
+        if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT &&
+            OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__POST_FINALIZED) {
             MPID_Abort(NULL, MPI_SUCCESS, 13, NULL);
         } else {
             exit(1);
