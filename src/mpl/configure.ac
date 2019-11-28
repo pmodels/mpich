@@ -816,6 +816,8 @@ AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
         MPL_atomic_write_barrier();
         MPL_atomic_read_barrier();
         MPL_atomic_read_write_barrier();
+
+        return c;
     ]])]
 )
 
