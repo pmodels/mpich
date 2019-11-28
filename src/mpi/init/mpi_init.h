@@ -43,7 +43,7 @@ cvars:
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
 
-void MPII_init_thread_and_enter_cs(int thread_required);
+void MPII_init_thread_and_enter_cs(void);
 void MPII_init_thread_and_exit_cs(void);
 void MPII_init_thread_failed_exit_cs(void);
 void MPII_finalize_thread_and_enter_cs(void);
@@ -75,7 +75,8 @@ static inline void MPII_post_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
 #ifdef MPICH_IS_THREADED
-    MPL_trconfig(MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded);
+    MPL_trconfig(MPIR_Process.comm_world->rank,
+                 MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #else
     MPL_trconfig(MPIR_Process.comm_world->rank, 0);
 #endif

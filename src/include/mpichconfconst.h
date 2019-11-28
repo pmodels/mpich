@@ -55,8 +55,9 @@
 
 /* Possible values for process state */
 #define MPICH_MPI_STATE__PRE_INIT 0
-#define MPICH_MPI_STATE__IN_INIT 1
-#define MPICH_MPI_STATE__POST_INIT 2
-#define MPICH_MPI_STATE__POST_FINALIZED 3
+#define MPICH_MPI_STATE__POST_INIT 1
+#define MPICH_MPI_STATE__POST_FINALIZED 2
+/* Internal init states. */
+#define MPICH_MPI_STATE__IN_INIT 3      /* can call MPIR_Err_return_comm(...) on error */
 
 #endif /* MPICHCONFCONST_H_INCLUDED */

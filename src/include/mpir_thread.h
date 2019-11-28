@@ -79,8 +79,12 @@ extern MPIR_Per_thread_t MPIR_Per_thread;
 
 extern MPID_Thread_tls_t MPIR_Per_thread_key;
 
+/* During Init time, `isThreaded` is not set until the very end of init -- preventing
+ * usage of mutexes during init-time; `thread_provided` is set by MPID_Init_thread_level
+ * early in the stage so it can be used instead.
+ */
 #if defined(MPICH_IS_THREADED)
-#define MPIR_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
+#define MPIR_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
 #define MPIR_THREAD_CHECK_END   }
 #else
 #define MPIR_THREAD_CHECK_BEGIN
