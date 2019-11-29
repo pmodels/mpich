@@ -132,13 +132,14 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
                 *curr_index);
     DBG_FPRINTF(stderr, "ADIOI_Flatten:: nints %#X, nadds %#X, ntypes %#X\n", nints, nadds, ntypes);
     for (i = 0; i < nints; ++i) {
-        DBG_FPRINTF(stderr, "ADIOI_Flatten:: ints[%lld]=%#X\n", i, ints[i]);
+        DBG_FPRINTF(stderr, "ADIOI_Flatten:: ints[%lld]=%#X\n", (long long) i, ints[i]);
     }
     for (i = 0; i < nadds; ++i) {
-        DBG_FPRINTF(stderr, "ADIOI_Flatten:: adds[%lld]=" MPI_AINT_FMT_HEX_SPEC "\n", i, adds[i]);
+        DBG_FPRINTF(stderr, "ADIOI_Flatten:: adds[%lld]=" MPI_AINT_FMT_HEX_SPEC "\n",
+                    (long long) i, adds[i]);
     }
     for (i = 0; i < ntypes; ++i) {
-        DBG_FPRINTF(stderr, "ADIOI_Flatten:: types[%lld]=%#llX\n", i,
+        DBG_FPRINTF(stderr, "ADIOI_Flatten:: types[%lld]=%#llX\n", (long long) i,
                     (unsigned long long) (unsigned long) types[i]);
     }
 #endif
