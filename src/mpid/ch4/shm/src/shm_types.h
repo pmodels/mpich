@@ -67,8 +67,8 @@ typedef union {
     MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t xpmem_slmt_send_fin;
     MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t xpmem_slmt_recv_fin;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t xpmem_slmt_cnt_free;
-    char dummy;                 /* some compilers (suncc) does not like empty struct */
 #endif
+    char dummy;                 /* some compilers (suncc) does not like empty struct */
 } MPIDI_SHM_ctrl_hdr_t;
 
 #endif /* SHM_TYPES_H_INCLUDED */
