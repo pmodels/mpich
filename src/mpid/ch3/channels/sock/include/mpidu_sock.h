@@ -65,7 +65,7 @@ D*/
 MPIDI_CH3I_Sock_op_t - enumeration of posted operations that can be completed by the Sock module
 
 Notes:
-MPIDI_CH3I_SOCK_OP_ACCEPT is different that the other operations.  When returned by MPIDI_CH3I_Sock_wait(), operations other than
+MPIDI_CH3I_SOCK_OP_ACCEPT is different than the other operations.  When returned by MPIDI_CH3I_Sock_wait(), operations other than
 MPIDI_CH3I_SOCK_OP_ACCEPT mark the completion of a previously posted operation.  MPIDI_CH3I_SOCK_OP_ACCEPT indicates that a new connection is
 being formed and that MPIDI_CH3I_Sock_accept() should be called.
 

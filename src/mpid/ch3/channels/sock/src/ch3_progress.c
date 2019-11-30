@@ -74,8 +74,8 @@ static int MPIDI_CH3i_Progress_test(void)
             /*
              * Another thread is already blocking in the progress engine.
              * We are not going to block waiting for progress, so we
-             * simply return.  It might make sense to yield before * returning,
-             * giving the PE thread a change to make progress.
+             * simply return.  It might make sense to yield before returning,
+             * giving the PE thread a chance to make progress.
              *
              * MT: Another thread is already blocking in poll.  Right now,
              * calls to the progress routines are effectively
