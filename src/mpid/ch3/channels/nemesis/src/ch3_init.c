@@ -184,6 +184,14 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 
     vc->ch.recv_active = NULL;
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&vc->pobj_mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+#endif
+
     mpi_errno = MPID_nem_vc_init (vc);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
@@ -207,6 +215,13 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
         goto fn_exit;
     }
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    {
+        int thr_err;
+        MPID_Thread_mutex_destroy(&vc->pobj_mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+#endif
     mpi_errno = MPID_nem_vc_destroy(vc);
 
 fn_exit:

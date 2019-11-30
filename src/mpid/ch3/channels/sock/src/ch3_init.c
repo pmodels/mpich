@@ -71,6 +71,13 @@ int MPIDI_CH3_VC_Init(MPIDI_VC_t * vc)
     vcch->sendq_head = NULL;
     vcch->sendq_tail = NULL;
     vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&vc->pobj_mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+#endif
     MPIDI_VC_InitSock(vc);
     MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT, TYPICAL,
                   "vc=%p: Setting state (ch) to VC_STATE_UNCONNECTED (Initialization)", vc);
@@ -109,6 +116,13 @@ int MPIDI_CH3_PG_Destroy(struct MPIDI_PG *pg ATTRIBUTE((unused)))
    freeing a virtual connection */
 int MPIDI_CH3_VC_Destroy(struct MPIDI_VC *vc ATTRIBUTE((unused)))
 {
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    {
+        int thr_err;
+        MPID_Thread_mutex_destroy(&vc->pobj_mutex, &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
+#endif
     return MPI_SUCCESS;
 }
 

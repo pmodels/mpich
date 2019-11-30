@@ -731,6 +731,10 @@ typedef struct MPIDI_VC
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
 			      void *header, intptr_t hdr_sz, MPL_IOV *hdr_iov, int n_hdr_iov);
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    MPID_Thread_mutex_t pobj_mutex;
+#endif
+
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_ops_t *comm_ops;
 #endif
