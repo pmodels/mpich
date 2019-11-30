@@ -389,6 +389,10 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
 /* NOTE: it appears that this function is sometimes (inadvertently?) recursive.
  * Some packet handlers, such as MPIDI_CH3_PktHandler_Close, call iStartMsg,
  * which calls MPID_Progress_test. */
+/* NOTE: MPID_Progress_test do not yield locks, so recursive locking may be okay */ 
+/*       To prevent recursive locking, we may need to unlock before handle events,
+ *       then event handlers need check its own thread safety
+ */
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -397,7 +401,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PROGRESS_MUTEX);
 
     /* sanity: if this doesn't hold, we can't track our local view of completion safely */
     if (is_blocking) {
@@ -615,7 +619,9 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                  * sections besides the MPIDCOMM CS at this point.
                  * Violating this will probably lead to lock-ordering
                  * deadlocks. */
-                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                /* hzhou: above comment means we need ensure all POBJ locks are unlocked before
+                 * entering progress. Hopefully, they are all not in critical paths */
+                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_PROGRESS_MUTEX);
                 MPIDI_CH3I_progress_blocked = FALSE;
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
@@ -640,7 +646,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #endif
 
  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PROGRESS_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS);
     return mpi_errno;
  fn_fail:
