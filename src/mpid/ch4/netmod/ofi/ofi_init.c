@@ -1660,7 +1660,7 @@ static void init_hints(struct fi_info *hints)
 }
 
 /* ---------------------------------------------------------- */
-/* Debug Routines                                    */
+/* Debug Routines                                             */
 /* ---------------------------------------------------------- */
 
 static void dump_global_settings(void)
