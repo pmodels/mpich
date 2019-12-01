@@ -3070,14 +3070,6 @@ int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, size_t
 
 /*********** sock_wait.i *****************/
 
-/* Make sure that we can properly ensure atomic access to the poll routine */
-#ifdef MPICH_IS_THREADED
-#if !(MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
-#error selected multi-threaded implementation is not supported
-#endif
-#endif
-
-
 static int MPIDI_CH3I_Socki_handle_pollhup(struct pollfd *const pollfd,
                                            struct pollinfo *const pollinfo);
 static int MPIDI_CH3I_Socki_handle_pollerr(struct pollfd *const pollfd,
