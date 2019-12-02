@@ -159,7 +159,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #ifdef RDCOLL_DEBUG
         for (i = 0; i < contig_access_count; i++) {
             DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n",
-                        myrank, offset_list[i], len_list[i]);
+                        myrank, (long long) offset_list[i], (long long) len_list[i]);
         }
 #endif
 
@@ -691,7 +691,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
             ADIO_ReadContig(fd, read_buf + for_curr_iter, (int) size, MPI_BYTE,
                             ADIO_EXPLICIT_OFFSET, off, &status, error_code);
 #ifdef RDCOLL_DEBUG
-            DBG_FPRINTF(stderr, "\tread_coll: 700, data read [%lld] = ", size);
+            DBG_FPRINTF(stderr, "\tread_coll: 700, data read [%lld] = ", (long long) size);
             for (iii = 0; iii < size && iii < 80; iii++) {
                 DBGV_FPRINTF(stderr, "%3d,", *((unsigned char *) read_buf + for_curr_iter + iii));
             }

@@ -273,7 +273,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
             FPRINTF(stdout, "data needed from %d (count = %d):\n", i, my_req[i].count);
             for (l = 0; l < my_req[i].count; l++) {
                 FPRINTF(stdout, "   off[%d] = %lld, len[%d] = %d\n",
-                        l, my_req[i].offsets[l], l, my_req[i].lens[l]);
+                        l, (long long) my_req[i].offsets[l], l, (long long) my_req[i].lens[l]);
             }
         }
     }
