@@ -38,8 +38,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
             return &MPIDI_OFI_Bcast_intra_scatter_ring_allgather_cnt;
         }
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -63,8 +61,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -89,8 +85,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Reduce_intra_binomial_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -186,8 +180,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoall_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoall_intra_pairwise_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -209,8 +201,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallv_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoallv_intra_scattered_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -232,8 +222,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallw_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoallw_intra_scattered_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -261,8 +249,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgather_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Allgather_intra_ring_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -300,8 +286,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgatherv_select(const void *sendbuf
     } else {
         return &MPIDI_OFI_Allgatherv_intra_ring_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const

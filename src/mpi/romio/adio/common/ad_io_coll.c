@@ -395,7 +395,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
 #endif
                 }
 #ifdef DEBUG2
-                fprintf(stderr, "buffered_io_size = %lld\n", buffered_io_size);
+                fprintf(stderr, "buffered_io_size = %lld\n", (long long) buffered_io_size);
                 if (fd->is_agg && buffered_io_size) {
                     fprintf(stderr, "buf = [");
                     for (i = 0; i < bufextent; i++)
@@ -435,7 +435,7 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                 fflush(NULL);
 #endif
 #ifdef DEBUG
-                fprintf(stderr, "buffered_io_size = %lld\n", buffered_io_size);
+                fprintf(stderr, "buffered_io_size = %lld\n", (long long) buffered_io_size);
 #endif
 
                 if (clients_agg_count) {
@@ -821,7 +821,8 @@ void ADIOI_Calc_bounds(ADIO_File fd, int count, MPI_Datatype buftype,
     *st_offset = st_byte_off;
     *end_offset = end_byte_off;
 #ifdef DEBUG
-    printf("st_offset = %lld\nend_offset = %lld\n", st_byte_off, end_byte_off);
+    printf("st_offset = %lld\nend_offset = %lld\n", (long long) st_byte_off,
+           (long long) end_byte_off);
 #endif
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5001, 0, NULL);
