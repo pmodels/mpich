@@ -11,7 +11,7 @@
 #ifndef POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
 #define POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
 
-#include "fbox_init.h"
+#include "fbox_noinline.h"
 #include "fbox_send.h"
 #include "fbox_recv.h"
 

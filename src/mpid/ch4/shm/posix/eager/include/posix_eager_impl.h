@@ -13,16 +13,6 @@
 #ifndef POSIX_EAGER_INLINE
 #ifndef POSIX_EAGER_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
-{
-    return MPIDI_POSIX_eager_func->init(rank, size);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
-{
-    return MPIDI_POSIX_eager_func->finalize();
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
                                                     struct iovec **iov, size_t * iov_num)
