@@ -178,6 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     }
 
     /* pgi compiler can't handle preprocessing within macro argument */
+#undef _SEQ_NUM
 #ifdef POSIX_AM_DEBUG
 #define _SEQ_NUM msg_hdr_p->seq_num,
 #else
