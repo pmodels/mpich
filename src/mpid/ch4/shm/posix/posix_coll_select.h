@@ -409,6 +409,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_scatter_select(const void 
             return &MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_cnt;
         }
     }
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -467,6 +468,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_scatter_block_select(const
             return &MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt;
         }
     }
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
