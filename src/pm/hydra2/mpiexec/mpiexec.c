@@ -38,7 +38,13 @@ struct mpiexec_params_s mpiexec_params = {
 
     .ppn = -1,
     .print_all_exitcodes = -1,
-    .timeout = -1,
+
+    .timeout = {
+        .sec = -1,
+        .signal = -1,
+        .timed_out = 0,
+        .start_time = 0,
+    },
 
     .envprop = MPIEXEC_ENVPROP__UNSET,
     .envlist_count = 0,
@@ -87,19 +93,23 @@ static void signal_cb(int signum)
     /* SIGINT is a partially special signal. The first time we see it,
      * we will send it to the processes. The next time, we will treat
      * it as a SIGKILL (user convenience to force kill processes). */
-    if (signum == SIGINT && ++sigint_count > 1)
+    if (signum == SIGINT && ++sigint_count > 1) {
         exit(1);
-    else if (signum == SIGINT) {
+    } else if (signum == SIGINT) {
         /* First Ctrl-C */
         HYD_PRINT(stdout, "Sending Ctrl-C to processes as requested\n");
         HYD_PRINT(stdout, "Press Ctrl-C again to force abort\n");
+    } else if (signum == SIGALRM) {
+        HYD_handle_sigalrm(&mpiexec_params.timeout);
+        if (mpiexec_params.timeout.timed_out) {
+            cmd.signum = HYD_get_timeout_signal(&mpiexec_params.timeout);
+        }
     }
 
     HYD_sock_write(mpiexec_params.signal_pipe[0], &cmd, sizeof(cmd), &sent, &closed,
                    HYD_SOCK_COMM_TYPE__BLOCKING);
 
     HYD_FUNC_EXIT();
-    return;
 }
 
 static HYD_status cmd_bcast_root(struct MPX_cmd cmd, struct mpiexec_pg *pg, void *buf)
@@ -744,7 +754,9 @@ int main(int argc, char **argv)
     status = mpiexec_get_parameters(argv);
     HYD_ERR_POP(status, "error parsing parameters\n");
 
-    MPL_env2int("MPIEXEC_TIMEOUT", &mpiexec_params.timeout);
+    if (mpiexec_params.timeout.sec > 0) {
+        HYD_set_alarm(&mpiexec_params.timeout);
+    }
 
     if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &mpiexec_params.port_range) ||
         MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &mpiexec_params.port_range))
@@ -835,6 +847,8 @@ int main(int argc, char **argv)
     args[i++] = HYD_str_from_int(mpiexec_params.usize);
     args[i++] = NULL;
 
+    int time_left = HYD_get_time_left(&mpiexec_params.timeout);
+
     status =
         HYD_bstrap_setup(mpiexec_params.base_path, mpiexec_params.launcher,
                          mpiexec_params.launcher_exec, pg->node_count, pg->node_list, -1,
@@ -842,7 +856,15 @@ int main(int argc, char **argv)
                          &pg->downstream.fd_stdin, &pg->downstream.fd_stdout_hash,
                          &pg->downstream.fd_stderr_hash, &pg->downstream.fd_control_hash,
                          &pg->downstream.proxy_id, &pg->downstream.pid, mpiexec_params.debug,
-                         mpiexec_params.tree_width);
+                         mpiexec_params.tree_width, time_left);
+
+    if (status == HYD_ERR_TIMED_OUT) {
+        mpiexec_params.timeout.timed_out = 1;
+        HYD_print_timeout_message(&mpiexec_params.timeout);
+        exit_status |= 1;
+        goto fn_fail;
+    }
+
     HYD_ERR_POP(status, "error setting up the boostrap proxies\n");
 
     HYD_str_free_list(args);
@@ -928,13 +950,20 @@ int main(int argc, char **argv)
         }
     }
 
+    HYD_check_timed_out(&mpiexec_params.timeout, &exit_status);
+
     /* Print exitcodes if necessary */
     if (mpiexec_params.print_all_exitcodes) {
         HYD_PRINT(stdout, "Exit codes: ");
     }
-    exit_status = 0;
+
     for (i = 0; i < pg->num_downstream; i++) {
         char *curr_nodename = NULL;
+
+        /* Time out could occur at startup. So, exitcodes might not be collected */
+        if (mpiexec_params.timeout.timed_out && !exitcodes) {
+            break;
+        }
 
         /* We didn't receive the exit status for this proxy */
         HYD_ASSERT(exitcodes != NULL, status);

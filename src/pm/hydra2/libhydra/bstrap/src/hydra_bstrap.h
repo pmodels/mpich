@@ -21,7 +21,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
                             struct HYD_int_hash **downstream_stderr_hash,
                             struct HYD_int_hash **downstream_control_hash,
                             int **downstream_proxy_id, int **downstream_pid, int debug,
-                            int tree_width);
+                            int tree_width, int time_left);
 
 HYD_status HYD_bstrap_finalize(const char *launcher);
 
