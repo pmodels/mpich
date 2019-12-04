@@ -427,3 +427,77 @@ int MTest_thread_barrier(int nt)
     return err;
 }
 #endif /* Default barrier routine */
+
+
+/* MTest_init_thread_pkg()
+ * Initialize the threading package if needed. Argobots requires this
+ * but Pthreads doesn't, for example. */
+
+#if defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_ARGOBOTS)
+static ABT_xstream xstreams[MTEST_NUM_XSTREAMS];
+static ABT_sched scheds[MTEST_NUM_XSTREAMS];
+ABT_pool pools[MTEST_NUM_XSTREAMS];
+
+void MTest_init_thread_pkg(int argc, char **argv)
+{
+    int i, k, ret;
+    int num_xstreams;
+
+    ABT_init(argc, argv);
+
+    /* Create pools */
+    for (i = 0; i < MTEST_NUM_XSTREAMS; i++) {
+        ret = ABT_pool_create_basic(ABT_POOL_FIFO, ABT_POOL_ACCESS_MPMC, ABT_TRUE, &pools[i]);
+        MTEST_ABT_ERROR(ret, "ABT_pool_create_basic");
+    }
+
+    /* Create schedulers */
+    ABT_pool my_pools[MTEST_NUM_XSTREAMS];
+    num_xstreams = MTEST_NUM_XSTREAMS;
+    for (i = 0; i < num_xstreams; i++) {
+        for (k = 0; k < num_xstreams; k++) {
+            my_pools[k] = pools[(i + k) % num_xstreams];
+        }
+
+        ret = ABT_sched_create_basic(ABT_SCHED_RANDWS, num_xstreams, my_pools,
+                                     ABT_SCHED_CONFIG_NULL, &scheds[i]);
+        MTEST_ABT_ERROR(ret, "ABT_sched_create_basic");
+    }
+
+    /* Create Execution Streams */
+    ret = ABT_xstream_self(&xstreams[0]);
+    MTEST_ABT_ERROR(ret, "ABT_xstream_self");
+    ret = ABT_xstream_set_main_sched(xstreams[0], scheds[0]);
+    MTEST_ABT_ERROR(ret, "ABT_xstream_set_main_sched");
+    for (i = 1; i < num_xstreams; i++) {
+        ret = ABT_xstream_create(scheds[i], &xstreams[i]);
+        MTEST_ABT_ERROR(ret, "ABT_xstream_create");
+    }
+}
+
+void MTest_finalize_thread_pkg()
+{
+    int i, ret;
+    int num_xstreams = MTEST_NUM_XSTREAMS;
+
+    for (i = 1; i < num_xstreams; i++) {
+        ret = ABT_xstream_join(xstreams[i]);
+        MTEST_ABT_ERROR(ret, "ABT_xstream_join");
+        ret = ABT_xstream_free(&xstreams[i]);
+        MTEST_ABT_ERROR(ret, "ABT_xstream_free");
+    }
+
+    ret = ABT_finalize();
+    MTEST_ABT_ERROR(ret, "ABT_finalize");
+}
+
+#else
+void MTest_init_thread_pkg(int argc, char **argv)
+{
+}
+
+void MTest_finalize_thread_pkg()
+{
+}
+
+#endif
