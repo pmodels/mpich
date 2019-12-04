@@ -1637,7 +1637,6 @@ AC_OUTPUT(maint/testmerge \
           f77/ext/add1size.h \
           f77/datatype/Makefile \
           f77/datatype/typeaints.h \
-          f77/util/Makefile \
           f77/coll/Makefile \
           f77/comm/Makefile \
           f77/topo/Makefile \
@@ -1661,7 +1660,6 @@ AC_OUTPUT(maint/testmerge \
           f90/attr/Makefile \
           f90/datatype/Makefile \
           f90/f90types/Makefile \
-          f90/util/Makefile \
           f90/coll/Makefile \
           f90/comm/Makefile \
           f90/topo/Makefile \
@@ -1681,7 +1679,6 @@ AC_OUTPUT(maint/testmerge \
 	  f08/Makefile \
 	      f08/attr/Makefile \
 	      f08/datatype/Makefile \
-	      f08/util/Makefile \
 	      f08/coll/Makefile \
 	      f08/comm/Makefile \
 	      f08/pt2pt/Makefile \
@@ -1716,7 +1713,6 @@ AC_OUTPUT(maint/testmerge \
 	  cxx/topo/Makefile \
           threads/Makefile \
           threads/pt2pt/Makefile \
-          threads/util/Makefile \
           threads/comm/Makefile \
           threads/comm/testlist \
           threads/init/Makefile \
