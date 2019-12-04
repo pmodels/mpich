@@ -840,13 +840,57 @@ static HYD_status tree_width_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static HYD_status read_default_env()
+{
+    char *tstr;
+    HYD_status status = HYD_SUCCESS;
+
+    /* check if there is an environment set for the hostfile */
+    if (mpiexec_params.global_node_count == 0) {
+        tstr = NULL;
+        MPL_env2str("HYDRA_HOST_FILE", (const char **) &tstr);
+        if (tstr) {
+            status =
+                HYD_hostfile_parse(tstr, &mpiexec_params.global_node_count,
+                                   &mpiexec_params.global_node_list, HYD_hostfile_process_tokens);
+            HYD_ERR_POP(status, "error parsing hostfile\n");
+        }
+    }
+
+    /* check if there is an environment set for the RMK */
+    if (mpiexec_params.rmk == NULL) {
+        if (MPL_env2str("HYDRA_RMK", (const char **) &mpiexec_params.rmk))
+            mpiexec_params.rmk = MPL_strdup(mpiexec_params.rmk);
+    }
+
+    /* check if there's an environment set for PPN */
+    if (mpiexec_params.ppn == -1) {
+        tstr = NULL;
+        if (MPL_env2str("HYDRA_PPN", (const char **) &tstr))
+            mpiexec_params.ppn = atoi(tstr);
+    }
+
+    if (mpiexec_params.timeout.sec == -1) {
+        MPL_env2int("MPIEXEC_TIMEOUT", &mpiexec_params.timeout.sec);
+    }
+
+    if (mpiexec_params.timeout.signal == -1) {
+        MPL_env2int("MPIEXEC_TIMEOUT_SIGNAL", &mpiexec_params.timeout.signal);
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 HYD_status mpiexec_get_parameters(char **t_argv)
 {
     char **argv = t_argv;
     char *progname = *argv;
     char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS];
     struct HYD_exec *exec;
-    char *tstr;
     int i;
     HYD_status status = HYD_SUCCESS;
 
@@ -887,35 +931,10 @@ HYD_status mpiexec_get_parameters(char **t_argv)
         } while (++argv && *argv);
     } while (1);
 
-
-
     /***** ENVIRONMENT-SET PARAMETERS ****/
 
-    /* check if there is an environment set for the hostfile */
-    if (mpiexec_params.global_node_count == 0) {
-        tstr = NULL;
-        MPL_env2str("HYDRA_HOST_FILE", (const char **) &tstr);
-        if (tstr) {
-            status =
-                HYD_hostfile_parse(tstr, &mpiexec_params.global_node_count,
-                                   &mpiexec_params.global_node_list, HYD_hostfile_process_tokens);
-            HYD_ERR_POP(status, "error parsing hostfile\n");
-        }
-    }
-
-    /* check if there is an environment set for the RMK */
-    if (mpiexec_params.rmk == NULL) {
-        if (MPL_env2str("HYDRA_RMK", (const char **) &mpiexec_params.rmk))
-            mpiexec_params.rmk = MPL_strdup(mpiexec_params.rmk);
-    }
-
-    /* check if there's an environment set for PPN */
-    if (mpiexec_params.ppn == -1) {
-        tstr = NULL;
-        if (MPL_env2str("HYDRA_PPN", (const char **) &tstr))
-            mpiexec_params.ppn = atoi(tstr);
-    }
-
+    status = read_default_env();
+    HYD_ERR_POP(status, "read default env error\n");
 
     /***** AUTO-DETECT/COMPUTE PARAMETERS ****/
 
