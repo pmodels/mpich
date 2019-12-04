@@ -77,15 +77,15 @@ static FILE *dbg_static_fp = 0;
  * More formally: This function sets basename to the character just
  * after the last '/' in path.
 */
-static void find_basename(char *path, char **basename) ATTRIBUTE((unused));
-static void find_basename(char *path, char **basename)
+static void find_basename(char *path, char **base_name) ATTRIBUTE((unused));
+static void find_basename(char *path, char **base_name)
 {
     char *c;
 
-    c = *basename = path;
+    c = *base_name = path;
     while (*c) {
         if (*c == '/')
-            *basename = c + 1;
+            *base_name = c + 1;
         ++c;
     }
 }
@@ -618,20 +618,20 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
     int mpl_errno = MPL_DBG_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
-    char *basename;
+    char *base_name;
     int ret;
 
     ret = MPL_strncpy(temp_filename, file_pattern, MAXPATHLEN);
     if (ret)
         goto fn_fail;
 
-    find_basename(temp_filename, &basename);
+    find_basename(temp_filename, &base_name);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
-    if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern))
+    if (base_name - temp_filename > MAXPATHLEN - sizeof(temp_pattern))
         goto fn_fail;
 
-    MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
+    MPL_strncpy(base_name, temp_pattern, sizeof(temp_pattern));
 
     fd = mkstemp(temp_filename);
     if (fd == -1)
@@ -659,7 +659,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
     int mpl_errno = MPL_DBG_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
-    char *basename;
+    char *base_name;
     int ret;
     errno_t ret_errno;
 
@@ -667,13 +667,13 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
     if (ret)
         goto fn_fail;
 
-    find_basename(temp_filename, &basename);
+    find_basename(temp_filename, &base_name);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
-    if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern))
+    if (base_name - temp_filename > MAXPATHLEN - sizeof(temp_pattern))
         goto fn_fail;
 
-    MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
+    MPL_strncpy(base_name, temp_pattern, sizeof(temp_pattern));
 
     ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
     if (ret_errno != 0)
