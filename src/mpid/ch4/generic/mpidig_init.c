@@ -44,8 +44,8 @@ int MPIDIG_init(void)
 #endif
 
     MPIDI_global.cmpl_list = NULL;
-    OPA_store_int(&MPIDI_global.exp_seq_no, 0);
-    OPA_store_int(&MPIDI_global.nxt_seq_no, 0);
+    MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
+    MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
 
     MPIDI_global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM, MPIDIU_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_global.buf_pool);
