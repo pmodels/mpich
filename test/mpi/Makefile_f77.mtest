@@ -19,15 +19,15 @@ AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 # configure test, but this version is no worse than the simplemake version was.
 AM_FFLAGS = -I.
 
-LDADD = $(top_builddir)/f77/util/mtestf.o
+LDADD = $(top_builddir)/util/mtest_f77.o
 
 ## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
 ## prog_DEPENDENCIES variable, but it would be better to figure out the right
 ## way to do this
 ##DEPADD = @MPILIBLOC@ ../util/mtest.o
 
-$(top_builddir)/f77/util/mtestf.o: $(top_srcdir)/f77/util/mtestf.f
-	(cd $(top_builddir)/f77/util && $(MAKE) mtestf.o)
+$(top_builddir)/util/mtest_f77.o: $(top_srcdir)/util/mtest_f77.f
+	(cd $(top_builddir)/util && $(MAKE) mtest_f77.o)
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
