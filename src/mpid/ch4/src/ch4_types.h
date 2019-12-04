@@ -314,8 +314,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_rreq_t *unexp_list;
 #endif
     MPIDIG_req_ext_t *cmpl_list;
-    OPA_int_t exp_seq_no;
-    OPA_int_t nxt_seq_no;
+    MPL_atomic_uint64_t exp_seq_no;
+    MPL_atomic_uint64_t nxt_seq_no;
     MPIDIU_buf_pool_t *buf_pool;
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
