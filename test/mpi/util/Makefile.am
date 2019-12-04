@@ -20,3 +20,10 @@ all-local: mtest_cxx.$(OBJEXT)
 EXTRA_LIBRARIES = libmtest_dummy.a
 libmtest_dummy_a_SOURCES = mtest_cxx.cxx
 
+#---- thread ---------------------------------------------------------------------
+all-local: mtest_thread.$(OBJEXT)
+
+## another dummy library
+EXTRA_LIBRARIES = libmtest_thread.a
+libmtest_thread_a_SOURCES = mtest_thread.c
+
