@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/threads/Makefile_threads.mtest
+include $(top_srcdir)/Makefile_threads.mtest
 
 EXTRA_DIST = testlist.in
 

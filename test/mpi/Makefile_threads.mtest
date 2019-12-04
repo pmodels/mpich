@@ -12,8 +12,8 @@
 ## start with the basic rules for mtest-based C programs
 include $(top_srcdir)/Makefile.mtest
 
-## then add rules/vars for mtestthread.o
-LDADD += $(top_builddir)/threads/util/mtestthread.$(OBJEXT) @threadlib@
+## then add rules/vars for mtest_thread.o
+LDADD += $(top_builddir)/util/mtest_thread.$(OBJEXT) @threadlib@
 
-$(top_builddir)/threads/util/mtestthread.$(OBJEXT): $(top_srcdir)/threads/util/mtestthread.c
-	(cd $(top_builddir)/threads/util && $(MAKE) mtestthread.$(OBJEXT))
+$(top_builddir)/util/mtest_thread.$(OBJEXT): $(top_srcdir)/util/mtest_thread.c
+	(cd $(top_builddir)/util && $(MAKE) mtest_thread.$(OBJEXT))
