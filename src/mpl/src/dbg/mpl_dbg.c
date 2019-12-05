@@ -448,7 +448,7 @@ static int dbg_process_env(void)
 MPL_dbg_class MPL_DBG_ROUTINE_ENTER;
 MPL_dbg_class MPL_DBG_ROUTINE_EXIT;
 MPL_dbg_class MPL_DBG_ROUTINE;
-MPL_dbg_class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
+MPL_dbg_class MPL_DBG_ALL = ~(0U);      /* pre-initialize the ALL class */
 
 /*
  * Attempt to initialize the logging system.  This works only if the
