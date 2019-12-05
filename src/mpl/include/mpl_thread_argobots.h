@@ -162,10 +162,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)                   \
     do {                                                                        \
         int err__;                                                              \
-        MPL_DBG_MSG_FMT(THREAD,TYPICAL,                                         \
-                        (MPL_DBG_FDEST,                                         \
-                         "Enter cond_wait on cond=%p mutex=%p",                 \
-                         (cond_ptr_),(mutex_ptr_)));                            \
         do {                                                                    \
             err__ = ABT_cond_wait((*cond_ptr_), *mutex_ptr_);                   \
         } while (err__ == EINTR);                                               \
@@ -174,17 +170,11 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
             MPL_internal_sys_error_printf("ABT_cond_free", err__,                 \
                    "    %s:%d error in cond_wait on cond=%p mutex=%p err__=%d", \
                    __FILE__, __LINE__);       \
-        MPL_DBG_MSG_FMT(THREAD,TYPICAL,(MPL_DBG_FDEST,                          \
-                                        "Exit cond_wait on cond=%p mutex=%p",   \
-                                        (cond_ptr_),(mutex_ptr_)));             \
     } while (0)
 
 #define MPL_thread_cond_broadcast(cond_ptr_, err_ptr_)                        \
     do {                                                                      \
         int err__;                                                            \
-        MPL_DBG_MSG_P(THREAD,TYPICAL,                                         \
-                      "About to cond_broadcast on MPL_thread_cond %p",        \
-                      (cond_ptr_));                                           \
         err__ = ABT_cond_broadcast((*cond_ptr_));                             \
         if (unlikely(err__))                                                  \
             MPL_internal_sys_error_printf("ABT_cond_broadcast", err__,        \
@@ -195,9 +185,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 #define MPL_thread_cond_signal(cond_ptr_, err_ptr_)                           \
     do {                                                                      \
         int err__;                                                            \
-        MPL_DBG_MSG_P(THREAD,TYPICAL,                                         \
-                      "About to cond_signal on MPL_thread_cond %p",           \
-                      (cond_ptr_));                                           \
         err__ = ABT_cond_signal((*cond_ptr_));                                \
         if (unlikely(err__))                                                  \
             MPL_internal_sys_error_printf("ABT_cond_signal", err__,           \
