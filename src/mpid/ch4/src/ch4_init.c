@@ -102,6 +102,18 @@ cvars:
       description : >-
         Defines the threshold of high-density datatype. The
         density is calculated by (datatype_size / datatype_num_contig_blocks).
+
+    - name        : MPIR_CVAR_CH4_THREAD_ID_KEY
+      category    : CH4
+      type        : string
+      default     : "thread_id"
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This CVAR specifies the key for a comm info hint that can define thread ID for a communicator
+        or to control the mapping a communicator with a tx and rcv vci.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

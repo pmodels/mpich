@@ -539,11 +539,13 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
 /* Register CH4-specific hints */
 static void register_comm_hints(MPIR_Comm * comm)
 {
+    const char *thread_id_key = MPIR_CVAR_CH4_THREAD_ID_KEY;
+
     /* Non-standard hints for VCI selection */
     MPIR_Comm_register_hint(MPIR_COMM_HINT_VCI_IDX_SENDER, "vci_idx_sender",
                             MPIDI_set_comm_hint_sender_vci, MPIR_COMM_HINT_TYPE_INT, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_VCI_IDX_RECEIVER, "vci_idx_receiver",
                             MPIDI_set_comm_hint_receiver_vci, MPIR_COMM_HINT_TYPE_INT, 0);
-    MPIR_Comm_register_hint(MPIR_COMM_HINT_THREAD_ID, "thread_id",
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_THREAD_ID, thread_id_key,
                             MPIDI_set_comm_hint_thread_id, MPIR_COMM_HINT_TYPE_INT, 0);
 }
