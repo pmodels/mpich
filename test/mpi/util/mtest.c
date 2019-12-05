@@ -4,8 +4,6 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "mpi.h"
-#include "mpitestconf.h"
 #include "mpitest.h"
 #if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
@@ -29,7 +27,6 @@
 #include <sys/resource.h>
 #endif
 #include <errno.h>
-
 
 /*
  * Utility routines for writing MPI tests.
@@ -62,14 +59,6 @@ static int usageOutput = 0;     /* */
 #endif
 #if MPI_VERSION < 2
 #define MPI_THREAD_SINGLE 0
-#endif
-
-#ifdef MTEST_USE_THREAD
-/* Initialize/finalize the threading package if needed. Argobots requires this
- * but Pthreads doesn't, for example.
- */
-void MTest_init_thread_pkg(int argc, char **argv);
-void MTest_finalize_thread_pkg();
 #endif
 
 /*
