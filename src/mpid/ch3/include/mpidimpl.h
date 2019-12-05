@@ -484,6 +484,12 @@ void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
 /*--------------------
   BEGIN PACKET SECTION
   --------------------*/
+/* FIXME: the memset below gives warning (-Warray-bounds) since pkt_ is smaller than
+ * MPIDI_CH3_Pkt_t, which is a union of all possible packet type. Compiler does not know
+ * that pkt_ is always inside the union.
+ * To fix, we need add the union variable to the macro argument and memset the union
+ * instead.
+ */
 #if !defined(MPICH_DEBUG_MEMINIT)
 #   define MPIDI_Pkt_init(pkt_, type_)		\
     {						\
