@@ -105,16 +105,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     struct iovec iov_left[2];
     struct iovec *iov_left_ptr;
     size_t iov_num_left;
-#ifdef POSIX_AM_DEBUG
-    static int seq_num = 0;
-#endif /* POSIX_AM_DEBUG */
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ISEND);
-
-#ifdef POSIX_AM_DEBUG
-    msg_hdr.seq_num = seq_num++;
-#endif /* POSIX_AM_DEBUG */
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -177,18 +170,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         goto fn_exit;
     }
 
-    /* pgi compiler can't handle preprocessing within macro argument */
-#undef _SEQ_NUM
-#ifdef POSIX_AM_DEBUG
-#define _SEQ_NUM msg_hdr_p->seq_num,
-#else
-#define _SEQ_NUM -1
-#endif
-
     POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
+                ", data_sz %" PRIu64 "], " "tag = %d, src_rank = %d ] to %d\n",
                 (uint64_t) msg_hdr_p->handler_id,
-                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM,
+                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz,
                 ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
 
     result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
@@ -380,10 +365,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     } else {
 
         POSIX_TRACE("Direct OUT HDR [ POSIX AM HDR [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                    ", data_sz %" PRIu64 ", seq_num = %d]] to %d\n",
+                    ", data_sz %" PRIu64 "]] to %d\n",
                     (uint64_t) msg_hdr_p->handler_id,
-                    (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz,
-                    _SEQ_NUM, grank);
+                    (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, grank);
 
         result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
         if (unlikely((MPIDI_POSIX_NOK == result) || iov_num_left)) {

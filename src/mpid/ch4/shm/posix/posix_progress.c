@@ -280,19 +280,12 @@ static int progress_send(int blocking)
         /* Drain postponed queue */
         curr_sreq_hdr = MPIDI_POSIX_global.postponed_queue;
 
-        /* pgi compiler can't handle preprocessing within macro argument */
-#undef _SEQ_NUM
-#ifdef POSIX_AM_DEBUG
-#define _SEQ_NUM (curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->seq_num : -1)
-#else
-#define _SEQ_NUM -1
-#endif
         POSIX_TRACE("Queue OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                    ", data_sz %" PRIu64 ", seq_num = %d], request=%p] to %d\n",
+                    ", data_sz %" PRIu64 "], request=%p] to %d\n",
                     curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->handler_id : (uint64_t) - 1,
                     curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->am_hdr_sz : (uint64_t) - 1,
                     curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->data_sz : (uint64_t) - 1,
-                    _SEQ_NUM, curr_sreq_hdr->request, curr_sreq_hdr->dst_grank);
+                    curr_sreq_hdr->request, curr_sreq_hdr->dst_grank);
 
         result = MPIDI_POSIX_eager_send(curr_sreq_hdr->dst_grank,
                                         &curr_sreq_hdr->msg_hdr,
