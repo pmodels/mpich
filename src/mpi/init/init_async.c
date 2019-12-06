@@ -184,7 +184,7 @@ int MPIR_Finalize_async_thread(void)
 }
 
 /* called inside MPIR_Init_thread */
-int MPII_init_async(int thread_provided)
+int MPII_init_async(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,7 +193,7 @@ int MPII_init_async(int thread_provided)
         printf("WARNING: Asynchronous progress is not supported with Argobots\n");
         goto fn_fail;
 #else
-        if (thread_provided == MPI_THREAD_MULTIPLE) {
+        if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
                 goto fn_fail;
@@ -235,7 +235,7 @@ int MPIR_Init_async_thread(void)
     return MPI_SUCCESS;
 }
 
-int MPII_init_async(int thread_provided ATTRIBUTE((unused)))
+int MPII_init_async(void)
 {
     return MPI_SUCCESS;
 }
