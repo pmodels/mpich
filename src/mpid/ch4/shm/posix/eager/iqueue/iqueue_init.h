@@ -60,15 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     size_of_shared_memory = size_of_terminals + size_of_cells;
 
     /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
-    mpi_errno = MPIDU_shm_seg_alloc(size_of_shared_memory,
-                                    &transport->pointer_to_shared_memory, MPL_MEM_SHM);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-
-    mpi_errno = MPIDU_shm_seg_commit(&transport->memory, &MPIDI_POSIX_global.barrier,
-                                     MPIDI_POSIX_global.num_local, MPIDI_POSIX_global.my_local_rank,
-                                     MPIDI_POSIX_global.local_rank_0, rank, MPL_MEM_SHM);
+    mpi_errno = MPIDU_Init_shm_alloc(size_of_shared_memory, &transport->pointer_to_shared_memory);
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -96,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     }
 
     /* Run local procs barrier */
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_Init_shm_barrier();
     if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -118,13 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
-    /* Make sure all local processes are ready to destroy the segment together */
-    mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_global.barrier, MPIDI_POSIX_global.num_local);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-
-    mpi_errno = MPIDU_shm_seg_destroy(&transport->memory, MPIDI_POSIX_global.num_local);
+    mpi_errno = MPIDU_Init_shm_free(transport->pointer_to_shared_memory);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_EAGER_FINALIZE);
