@@ -350,7 +350,23 @@ static int init_av_table(void)
     return avtid;
 }
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided)
+int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
+{
+    switch (requested) {
+        case MPI_THREAD_SINGLE:
+        case MPI_THREAD_SERIALIZED:
+        case MPI_THREAD_FUNNELED:
+            *provided = requested;
+            break;
+
+        case MPI_THREAD_MULTIPLE:
+            *provided = MAX_THREAD_MODE;
+            break;
+    }
+    return MPI_SUCCESS;
+}
+
+int MPID_Init(void)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
@@ -452,21 +468,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     destroy_init_comm(&init_comm);
     mpi_errno = init_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* -------------------------------- */
-    /* Return MPICH Parameters          */
-    /* -------------------------------- */
-    switch (requested) {
-        case MPI_THREAD_SINGLE:
-        case MPI_THREAD_SERIALIZED:
-        case MPI_THREAD_FUNNELED:
-            *provided = requested;
-            break;
-
-        case MPI_THREAD_MULTIPLE:
-            *provided = MAX_THREAD_MODE;
-            break;
-    }
 
     MPIDI_global.is_initialized = 0;
 
