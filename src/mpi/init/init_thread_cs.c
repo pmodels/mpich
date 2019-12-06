@@ -38,7 +38,7 @@ void MPII_init_thread_and_enter_cs(int thread_required)
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
-void MPII_init_thread_and_exit_cs(int thread_provided)
+void MPII_init_thread_and_exit_cs(void)
 {
     /* need to ensure consistency here */
     int save_is_threaded = MPIR_ThreadInfo.isThreaded;
@@ -89,7 +89,7 @@ void MPII_init_thread_and_enter_cs(int thread_required)
 {
 }
 
-void MPII_init_thread_and_exit_cs(int thread_provided)
+void MPII_init_thread_and_exit_cs(void)
 {
 }
 

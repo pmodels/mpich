@@ -91,6 +91,13 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
+    /* Device layer parse command line, decide thread level, and preset configurations. */
+    mpi_errno = MPID_Pre_init(argc, argv, required, &MPIR_ThreadInfo.thread_provided);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (MPIR_ThreadInfo.thread_provided > MPICH_THREAD_LEVEL) {
+        MPIR_ThreadInfo.thread_provided = MPICH_THREAD_LEVEL;
+    }
+
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -122,8 +129,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_Datatype_init_predefined();
     MPIR_ERR_CHECK(mpi_errno);
 
-    int thread_provided = 0;
-    mpi_errno = MPID_Init(argc, argv, required, &thread_provided);
+    mpi_errno = MPID_Init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Commit pairtypes after device hooks are activated */
@@ -134,7 +140,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPII_Coll_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPII_post_init_global(thread_provided);
+    mpi_errno = MPII_post_init_global();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPII_post_init_memory_tracing();
@@ -145,7 +151,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPII_Wait_for_debugger();
 
     /* dup comm_self and creates progress thread (if needed) */
-    mpi_errno = MPII_init_async(thread_provided);
+    mpi_errno = MPII_init_async();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create fine-grained mutexes */
@@ -159,14 +165,14 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
-    MPII_init_thread_and_exit_cs(thread_provided);
+    MPII_init_thread_and_exit_cs();
     /* Make fields of MPIR_Process global visible and set mpich_state
      * atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
 
     if (provided)
-        *provided = thread_provided;
+        *provided = MPIR_ThreadInfo.thread_provided;
     return mpi_errno;
 
   fn_fail:
