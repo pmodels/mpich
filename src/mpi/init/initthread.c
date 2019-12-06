@@ -206,6 +206,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 
+#if defined(ROMIO_VERSION)
+    mpi_errno = MPIR_Ext_init();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
     mpi_errno = MPII_init_async();
     MPIR_ERR_CHECK(mpi_errno);
 

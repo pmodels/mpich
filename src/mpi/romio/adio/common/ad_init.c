@@ -56,10 +56,6 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     MPL_UNREFERENCED_ARG(argc);
     MPL_UNREFERENCED_ARG(argv);
 
-#ifdef ROMIO_INSIDE_MPICH
-    MPIR_Ext_init();
-#endif
-
 #if defined(ROMIO_XFS) || defined(ROMIO_LUSTRE)
     c = getenv("MPIO_DIRECT_READ");
     if (c && (!strcmp(c, "true") || !strcmp(c, "TRUE")))

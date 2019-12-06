@@ -19,6 +19,8 @@ int MPIR_Ext_dbg_romio_terse_enabled = 0;
 int MPIR_Ext_dbg_romio_typical_enabled = 0;
 int MPIR_Ext_dbg_romio_verbose_enabled = 0;
 
+static MPL_thread_mutex_t romio_mutex;
+
 /* to be called early by ROMIO's initialization process in order to setup init-time
  * glue code that cannot be initialized statically */
 int MPIR_Ext_init(void)
@@ -26,6 +28,12 @@ int MPIR_Ext_init(void)
     MPIR_Ext_dbg_romio_terse_enabled = 0;
     MPIR_Ext_dbg_romio_typical_enabled = 0;
     MPIR_Ext_dbg_romio_verbose_enabled = 0;
+
+#if defined(MPICH_IS_THREADED)
+    int err;
+    MPL_thread_mutex_create(&romio_mutex, &err);
+    MPIR_Assert(err == 0);
+#endif
 
 #if defined (MPL_USE_DBG_LOGGING)
     DBG_ROMIO = MPL_dbg_class_alloc("ROMIO", "romio");
@@ -41,26 +49,42 @@ int MPIR_Ext_init(void)
     return MPI_SUCCESS;
 }
 
+int MPIR_Ext_finalize(void)
+{
+#if defined(MPICH_IS_THREADED)
+    int err;
+    MPL_thread_mutex_destroy(&romio_mutex, &err);
+    MPIR_Assert(err == 0);
+#endif
+    return MPI_SUCCESS;
+}
+
 
 int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num)
 {
     return MPIR_Assert_fail(cond, file_name, line_num);
 }
 
-/* These two routines export the GLOBAL CS_ENTER/EXIT macros as functions so
- * that ROMIO can use them.  These routines only support the GLOBAL granularity
- * of MPICH threading; other accommodations must be made for finer-grained
- * threading strategies. */
 void MPIR_Ext_cs_enter(void)
 {
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+#if defined(MPICH_IS_THREADED)
+    if (MPIR_ThreadInfo.isThreaded) {
+        int err;
+        MPL_thread_mutex_lock(&romio_mutex, &err, MPL_THREAD_PRIO_HIGH);
+        MPIR_Assert(err == 0);
+    }
+#endif
 }
 
 void MPIR_Ext_cs_exit(void)
 {
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+#if defined(MPICH_IS_THREADED)
+    if (MPIR_ThreadInfo.isThreaded) {
+        int err;
+        MPL_thread_mutex_unlock(&romio_mutex, &err);
+        MPIR_Assert(err == 0);
+    }
+#endif
 }
 
 /* This routine is for a thread to yield control when the thread is waiting for
@@ -68,9 +92,18 @@ void MPIR_Ext_cs_exit(void)
  * engine is blocked by another thread. */
 void MPIR_Ext_cs_yield(void)
 {
-    /* TODO: check whether the progress engine is blocked */
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+#if defined(MPICH_IS_THREADED)
+    if (MPIR_ThreadInfo.isThreaded) {
+        int err;
+        MPL_thread_mutex_unlock(&romio_mutex, &err);
+        MPIR_Assert(err == 0);
+
+        MPL_thread_yield();
+
+        MPL_thread_mutex_lock(&romio_mutex, &err, MPL_THREAD_PRIO_HIGH);
+        MPIR_Assert(err == 0);
+    }
+#endif
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */

@@ -182,6 +182,11 @@ int MPI_Finalize(void)
     MPII_thread_mutex_destroy();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
+#if defined(ROMIO_VERSION)
+    mpi_errno = MPIR_Ext_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
     /* ... end of body of routine ... */
   fn_exit:
     MPIR_FUNC_TERSE_FINALIZE_EXIT(MPID_STATE_MPI_FINALIZE);
