@@ -30,38 +30,17 @@ static MPIDI_PG_t *pg_world = NULL;
 
 #define MPIDI_MAX_KVS_KEY_LEN      256
 
-int MPIDI_PG_Init(int *argc_p, char ***argv_p, 
-		  MPIDI_PG_Compare_ids_fn_t compare_ids_fn, 
+void MPIDI_PG_set_verbose(int level) {
+    verbose = level;
+}
+
+int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t compare_ids_fn, 
 		  MPIDI_PG_Destroy_fn_t destroy_fn)
 {
     int mpi_errno = MPI_SUCCESS;
-    char *p;
     
     MPIDI_PG_Compare_ids_fn = compare_ids_fn;
     MPIDI_PG_Destroy_fn     = destroy_fn;
-
-    /* Check for debugging options.  We use MPICHD_DBG and -mpichd-dbg 
-       to avoid confusion with the code in src/util/dbg/dbg_printf.c */
-    p = getenv( "MPICHD_DBG_PG" );
-    if (p && ( strcmp( p, "YES" ) == 0 || strcmp( p, "yes" ) == 0) )
-	verbose = 1;
-    if (argc_p && argv_p) {
-	int argc = *argc_p, i;
-	char **argv = *argv_p;
-        /* applied patch from Juha Jeronen, req #3920 */
-	for (i=1; i<argc && argv[i]; i++) {
-	    if (strcmp( "-mpichd-dbg-pg", argv[i] ) == 0) {
-		int j;
-		verbose = 1;
-		for (j=i; j<argc-1; j++) {
-		    argv[j] = argv[j+1];
-		}
-		argv[argc-1] = NULL;
-		*argc_p = argc - 1;
-		break;
-	    }
-	}
-    }
 
     return mpi_errno;
 }

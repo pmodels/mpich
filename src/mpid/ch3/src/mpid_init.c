@@ -30,7 +30,7 @@ char *MPIDI_DBG_parent_str = "?";
 
 #include "datatype.h"
 
-static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
+static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
 static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state);
@@ -85,8 +85,39 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
     goto fn_exit;
 }
 
+int MPID_Pre_init(int *argc_p, char ***argv_p, int requested, int *provided)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (provided != NULL) {
+        *provided = requested;
+    }
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided)
+    /* Check for debugging options.  We use MPICHD_DBG and -mpichd-dbg 
+       to avoid confusion with the code in src/util/dbg/dbg_printf.c */
+    char *p = getenv( "MPICHD_DBG_PG" );
+    if (p && (strcmp(p, "YES") == 0 || strcmp(p, "yes") == 0)) {
+        MPIDI_PG_set_verbose(1);
+    }
+    if (argc_p && argv_p) {
+        /* applied patch from Juha Jeronen, req #3920 */
+        int argc = *argc_p;
+        char **argv = *argv_p;
+	for (int i=1; i<argc && argv[i]; i++) {
+	    if (strcmp( "-mpichd-dbg-pg", argv[i] ) == 0) {
+                MPIDI_PG_set_verbose(1);
+		for (int j=i; j<argc-1; j++) {
+		    argv[j] = argv[j+1];
+		}
+		argv[argc-1] = NULL;
+		*argc_p = argc - 1;
+		break;
+	    }
+	}
+    }
+    return mpi_errno;
+}
+
+int MPID_Init(void)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -133,7 +164,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = init_pg(argc, argv, &has_parent, &pg_rank, &pg);
+    mpi_errno = init_pg(&has_parent, &pg_rank, &pg);
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -256,17 +287,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
     MPIR_Process.has_parent = has_parent;
 
-    /*
-     * Set provided thread level
-     */
-    if (provided != NULL)
-    {
-	/* This must be min(requested,MPICH_THREAD_LEVEL) if runtime
-	   control of thread level is available */
-	*provided = (MPICH_THREAD_LEVEL < requested) ? 
-	    MPICH_THREAD_LEVEL : requested;
-    }
-
     mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
                                         set_eager_threshold,
                                         NULL);
@@ -300,7 +320,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
+static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int pg_rank, pg_size, appnum;
@@ -361,8 +381,7 @@ static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPI
     /*
      * Initialize the process group tracking subsystem
      */
-    mpi_errno = MPIDI_PG_Init(argc, argv, 
-			     pg_compare_ids, pg_destroy);
+    mpi_errno = MPIDI_PG_Init(pg_compare_ids, pg_destroy);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**dev|pg_init");
     }
