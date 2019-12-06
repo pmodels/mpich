@@ -54,13 +54,13 @@ int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num)
 void MPIR_Ext_cs_enter(void)
 {
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 }
 
 void MPIR_Ext_cs_exit(void)
 {
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 }
 
 /* This routine is for a thread to yield control when the thread is waiting for
@@ -70,7 +70,7 @@ void MPIR_Ext_cs_yield(void)
 {
     /* TODO: check whether the progress engine is blocked */
     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */
