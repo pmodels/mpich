@@ -978,13 +978,13 @@ int MPIDU_Sched_progress(int *made_progress)
 {
     int mpi_errno;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
     if (!mpi_errno && all_schedules.head == NULL)
         MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     return mpi_errno;
 }
