@@ -12,7 +12,7 @@
 #define POSIX_EAGER_IQUEUE_TYPES_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 #define MPIDI_POSIX_EAGER_IQUEUE_DEFAULT_CELL_SIZE (64 * 1024)
 
@@ -46,9 +46,6 @@ typedef union {
 } MPIDI_POSIX_eager_iqueue_terminal_t;
 
 typedef struct MPIDI_POSIX_eager_iqueue_transport {
-    MPIDU_shm_seg_t memory;     /* Pointer to the shared memory region used by the segment allocator
-                                 * to be used at initialization and freeing time */
-    MPIDU_shm_seg_info_t *seg;  /* Field used for shared memory segment tracking */
     int num_cells;              /* The number of cells allocated to each terminal in this transport */
     int size_of_cell;           /* The size of each of the cells in this transport */
     void *pointer_to_shared_memory;     /* The entire shared memory region used by both the terminal
