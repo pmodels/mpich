@@ -288,7 +288,6 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
                            struct fid_cq *p2p_cq, struct fid_cntr *rma_ctr, struct fid_av *av,
                            struct fid_ep **ep, int index);
 
-static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state);
 static int conn_manager_init(void);
 static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
@@ -299,16 +298,6 @@ static int get_ofi_version(void)
         return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
     else
         return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
-}
-
-static int set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
-{
-    if (!strncmp(info->value, "true", strlen("true")))
-        MPIDI_OFI_COMM(comm_ptr).eagain = TRUE;
-    if (!strncmp(info->value, "false", strlen("false")))
-        MPIDI_OFI_COMM(comm_ptr).eagain = FALSE;
-
-    return MPI_SUCCESS;
 }
 
 static int conn_manager_init()
