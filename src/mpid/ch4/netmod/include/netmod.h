@@ -70,7 +70,8 @@ typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_mpi_send_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                    MPIDI_av_entry_t * addr, MPIR_Request ** request);
+                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                    int src_vci, int dst_vci);
 typedef int (*MPIDI_NM_send_coll_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -80,7 +81,8 @@ typedef int (*MPIDI_NM_mpi_ssend_t) (const void *buf, MPI_Aint count, MPI_Dataty
                                      MPIDI_av_entry_t * addr, MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                     MPIDI_av_entry_t * addr, MPIR_Request ** request);
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                     int src_vci, int dst_vci);
 typedef int (*MPIDI_NM_isend_coll_t) (const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -92,10 +94,11 @@ typedef int (*MPIDI_NM_mpi_cancel_send_t) (MPIR_Request * sreq);
 typedef int (*MPIDI_NM_mpi_recv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                     int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPI_Status * status,
-                                    MPIR_Request ** request);
+                                    MPIR_Request ** request, int src_vci, int dst_vci);
 typedef int (*MPIDI_NM_mpi_irecv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                      int tag, MPIR_Comm * comm, int context_offset,
-                                     MPIDI_av_entry_t * addr, MPIR_Request ** request);
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                     int src_vci, int dst_vci);
 typedef int (*MPIDI_NM_mpi_imrecv_t) (void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       MPIR_Request * message);
 typedef int (*MPIDI_NM_mpi_cancel_recv_t) (MPIR_Request * rreq);
@@ -706,7 +709,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
                                                MPIDI_av_entry_t * addr,
-                                               MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+                                               MPIR_Request ** request,
+                                               int src_vci, int dst_vci) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
@@ -721,7 +725,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
-                                                MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+                                                MPIR_Request ** request,
+                                                int src_vci, int dst_vci) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
@@ -737,11 +742,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf, MPI_Aint count, MPI_Da
                                                int rank, int tag, MPIR_Comm * comm,
                                                int context_offset, MPIDI_av_entry_t * addr,
                                                MPI_Status * status,
-                                               MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+                                               MPIR_Request ** request,
+                                               int src_vci, int dst_vci) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
                                                 int context_offset, MPIDI_av_entry_t * addr,
-                                                MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
+                                                MPIR_Request ** request,
+                                                int src_vci, int dst_vci) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                  MPIR_Request * message) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq) MPL_STATIC_INLINE_SUFFIX;
