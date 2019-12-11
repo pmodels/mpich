@@ -49,8 +49,6 @@ void MPII_init_thread_failed_exit_cs(void);
 void MPII_finalize_thread_and_enter_cs(void);
 void MPII_finalize_thread_and_exit_cs(void);
 void MPII_finalize_thread_failed_exit_cs(void);
-void MPIR_Thread_CS_Init(void);
-void MPIR_Thread_CS_Finalize(void);
 
 int MPII_init_global(int *p_thread_required);
 int MPII_post_init_global(int thread_provided);
@@ -62,8 +60,6 @@ void MPII_init_binding_cxx(void);
 void MPII_init_binding_f08(void);
 void MPII_pre_init_dbg_logging(int *argc, char ***argv);
 void MPII_init_dbg_logging(void);
-void MPII_init_topo(void);
-void MPII_finalize_topo(void);
 
 int MPII_init_async(int thread_provided);
 int MPII_finalize_async(void);
@@ -113,25 +109,6 @@ static inline void MPII_debugger_hold(void)
         usleep(100);
 #endif
     }
-}
-
-static inline void MPII_wait_for_debugger(void)
-{
-    /* FIXME: Does this need to come before the call to MPID_InitComplete?
-     * For some debugger support, MPII_Wait_for_debugger may want to use
-     * MPI communication routines to collect information for the debugger */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPII_Wait_for_debugger();
-#endif
-}
-
-static inline void MPII_debugger_set_aborting(void)
-{
-    /* Signal the debugger that we are about to exit. */
-    /* FIXME: Should this also be a finalize callback? */
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_Debugger_set_aborting((char *) 0);
-#endif
 }
 
 static inline void MPII_final_coverage_delay(int rank)

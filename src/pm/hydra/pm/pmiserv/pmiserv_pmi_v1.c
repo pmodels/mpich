@@ -472,7 +472,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             execname = MPL_strdup(val);
         else {
             HYD_STRING_STASH_INIT(stash);
-            HYD_STRING_STASH(stash, MPL_strdup(path), status);
+            HYD_STRING_STASH(stash, path, status);
             HYD_STRING_STASH(stash, MPL_strdup("/"), status);
             HYD_STRING_STASH(stash, MPL_strdup(val), status);
 

@@ -1,8 +1,8 @@
 **ofid_pmi:PMI_Init() failure
 **ofid_pmi %s %d %s %s:pmi failed (%s:%d:%s:%s)
-**ofid_addrinfo:OFI addrinfo() failure
-**ofid_addrinfo %s %d %s %s:OFI addrinfo() failed (%s:%d:%s:%s)
-**ofid_addrinfo %s:Addrinfo failure ('%s')
+**ofid_getinfo:OFI fi_getinfo() failure
+**ofid_getinfo %s %d %s %s:OFI fi_getinfo() failed (%s:%d:%s:%s)
+**ofid_getinfo %s:fi_getinfo failure ('%s')
 **ofid_opendomain:OFI fi_open domain failure
 **ofid_opendomain %s %d %s %s:OFI fi_open domain failed (%s:%d:%s:%s)
 **ofid_fabric:OFI fi_fabric failure

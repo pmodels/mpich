@@ -36,6 +36,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -76,7 +77,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
      * a pointer to a copy */
     /* Note that if we are called from Fortran, we must return the values,
      * not the addresses, of these attributes */
-    if (HANDLE_GET_KIND(win_keyval) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(win_keyval)) {
         void **attr_val_p = (void **) attribute_val;
 #ifdef HAVE_FORTRAN_BINDING
         /* Note that this routine only has a Fortran 90 binding,
@@ -182,6 +183,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

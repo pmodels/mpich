@@ -6,7 +6,6 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidu_shm.h"
 #include "mpidu_bc.h"
 #include "mpidu_init_shm.h"
 
@@ -23,7 +22,7 @@ int MPIDU_bc_table_destroy(void)
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIDU_shm_seg_free((void *) segment);
+    mpi_errno = MPIDU_Init_shm_free((void *) segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (rank_map) {
@@ -37,7 +36,7 @@ int MPIDU_bc_table_destroy(void)
 }
 
 /* allgather (local_size - 1) bc over node roots */
-int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
+int MPIDU_bc_allgather(MPIR_Comm * allgather_comm, void *bc, int bc_len, int same_len,
                        void **bc_table, int **bc_ranks, int *ret_bc_len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -113,7 +112,6 @@ int MPIDU_bc_allgather(void *bc, int bc_len, int same_len,
     void *recv_buf = segment + local_size * recv_bc_len;
     if (rank == node_root) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        MPIR_Comm *allgather_comm = MPIR_Process.comm_world->node_roots_comm;
         MPIR_Allgatherv_fallback(segment, local_size * recv_bc_len, MPI_BYTE, recv_buf,
                                  recv_cnts, recv_offs, MPI_BYTE, allgather_comm, &errflag);
 
@@ -152,7 +150,7 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
         *ret_bc_len = recv_bc_len;
     }
 
-    mpi_errno = MPIDU_shm_seg_alloc(recv_bc_len * size, (void **) &segment);
+    mpi_errno = MPIDU_Init_shm_alloc(recv_bc_len * size, (void **) &segment);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (size == 1) {

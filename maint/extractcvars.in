@@ -473,7 +473,7 @@ foreach my $g (sort keys %enum_groups){
         $t_if = "else if";
     }
     print OUTPUT_C "    else return -1;\n";
-    print OUTPUT_C "};\n";
+    print OUTPUT_C "}\n";
 }
 
 close(OUTPUT_C);

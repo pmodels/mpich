@@ -131,7 +131,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #ifdef RDCOLL_DEBUG
         for (i = 0; i < contig_access_count; i++) {
             DBG_FPRINTF(stderr, "rank %d  off %lld  len %lld\n",
-                        myrank, offset_list[i], len_list[i]);
+                        myrank, (long long) offset_list[i], (long long) len_list[i]);
         }
 #endif
 

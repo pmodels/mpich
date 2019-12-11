@@ -129,14 +129,9 @@
   MPI handle represents.  It is an enum because only this applies only the
   the MPI and internal MPICH objects.
 
-  The 'MPIR_PROCGROUP' kind is used to manage process groups (different
-  from MPI Groups) that are used to keep track of collections of
-  processes (each 'MPIR_PROCGROUP' corresponds to a group of processes
-  that define an 'MPI_COMM_WORLD'.  This becomes important only
-  when MPI-2 dynamic process features are supported.  'MPIR_VCONN' is
-  a virtual connection; while this is not part of the overall ADI3
-  design, an object that manages connections to other processes is
-  a common need, and 'MPIR_VCONN' may be used for that.
+  'MPIR_VCONN' is a virtual connection; while this is not part of the
+  overall ADI3 design, an object that manages connections to other processes
+  is a common need, and 'MPIR_VCONN' may be used for that.
 
   Module:
   Attribute-DS
@@ -153,12 +148,10 @@ typedef enum MPII_Object_kind {
     MPIR_KEYVAL = 0x9,
     MPIR_ATTR = 0xa,
     MPIR_REQUEST = 0xb,
-    MPIR_PROCGROUP = 0xc,       /* These are internal device objects */
-    MPIR_VCONN = 0xd,
-    MPIR_WORKQ_ELEM = 0xe,      /* Work queue element, currently only meaningful in CH4 */
-    MPIR_GREQ_CLASS = 0xf,
-    MPIR_XPMEM_SEG = 0x10,      /* XPMEM segment, only meaningful in CH4
-                                 * when XPMEM shmmod is enabled */
+    MPIR_VCONN = 0xc,
+    MPIR_GREQ_CLASS = 0xd,
+    MPIR_INTERNAL = 0xe,        /* used for various MPICH internal objects that
+                                 * do not require a handle */
 } MPII_Object_kind;
 
 
@@ -179,6 +172,7 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_KIND_SHIFT 30
 #define HANDLE_GET_KIND(a) (((unsigned)(a)&HANDLE_KIND_MASK)>>HANDLE_KIND_SHIFT)
 #define HANDLE_SET_KIND(a,kind) ((a)|((kind)<<HANDLE_KIND_SHIFT))
+#define HANDLE_IS_BUILTIN(a) (HANDLE_GET_KIND((a)) == HANDLE_KIND_BUILTIN)
 
 /* For indirect, the remainder of the handle has a block and index within that
  * block */
@@ -422,7 +416,7 @@ typedef struct MPIR_Handle_common {
 typedef struct MPIR_Object_alloc_t {
     MPIR_Handle_common *avail;  /* Next available object */
     int initialized;            /* */
-    void *(*indirect)[];        /* Pointer to indirect object blocks */
+    void **indirect;            /* Pointer to indirect object blocks */
     int indirect_size;          /* Number of allocated indirect blocks */
     MPII_Object_kind kind;      /* Kind of object this is for */
     int size;                   /* Size of an individual object */

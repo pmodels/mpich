@@ -169,7 +169,7 @@ fi
 
 if [ $daos_pool = 1 ] ; then
 echo '**** Creating DAOS Pool ****'
-pool=`dmg create --size=1GB`
+pool=`dmg_old create --size=1GB`
 value=$pool
 echo $value
 OLDIFS=$IFS
@@ -465,7 +465,7 @@ fi
 
 if [ $daos_pool = 1 ] ; then
 echo '**** Destroying DAOS Pool ****'
-pool=`mpirun -np 1 dmg destroy --force --pool=${array[0]}`
+pool=`mpirun -np 1 dmg_old destroy --force --pool=${array[0]}`
 fi
 
 #

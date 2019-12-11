@@ -14,6 +14,7 @@
 #include "hydra_err.h"
 #include "hydra_mem.h"
 #include "hydra_hash.h"
+#include "hydra_timeout.h"
 #include "utlist.h"
 
 /* *INDENT-OFF* */
@@ -113,7 +114,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
                             struct HYD_int_hash **downstream_stdout_hash,
                             struct HYD_int_hash **downstream_stderr_hash,
                             struct HYD_int_hash **downstream_fd_hash, int **downstream_proxy_id,
-                            int **downstream_pid, int debug, int tree_width)
+                            int **downstream_pid, int debug, int tree_width, int time_left)
 {
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS] = { NULL };
@@ -131,9 +132,12 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     struct HYD_int_hash *hash, *thash;
     struct HYD_int_hash *fd_stdout_hash = NULL;
     struct HYD_int_hash *fd_stderr_hash = NULL;
+    struct timeout_s timeout;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
+
+    HYD_init_timeout(time_left, &timeout);
 
     /* create the bstrap proxy string */
     i = 0;
@@ -257,6 +261,8 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
             targs[i++] = HYD_str_from_int(subtree_size);
             targs[i++] = MPL_strdup("--tree-width");
             targs[i++] = HYD_str_from_int(tree_width);
+            targs[i++] = MPL_strdup("--time-left");
+            targs[i++] = HYD_str_from_int(HYD_get_time_left(&timeout));
             if (debug)
                 targs[i++] = MPL_strdup("--debug");
             if (pmi_args)
@@ -311,6 +317,8 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
             targs[i++] = HYD_str_from_int(subtree_size);
             targs[i++] = MPL_strdup("--tree-width");
             targs[i++] = HYD_str_from_int(tree_width);
+            targs[i++] = MPL_strdup("--time-left");
+            targs[i++] = HYD_str_from_int(HYD_get_time_left(&timeout));
             if (debug)
                 targs[i++] = MPL_strdup("--debug");
             if (pmi_args)
@@ -352,7 +360,14 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     /* our immediate children have been launched.  wait for them to
      * connect back. */
     while (bstrap_control->current_downstreams < bstrap_control->total_downstreams) {
-        status = HYD_dmx_wait_for_event(-1);
+        status = HYD_dmx_wait_for_event(HYD_get_time_left(&timeout));
+
+        if (status == HYD_ERR_TIMED_OUT) {
+            HYD_dmx_deregister_fd(listen_fd);
+            close(listen_fd);
+            goto fn_fail;
+        }
+
         HYD_ERR_POP(status, "error waiting for event\n");
     }
 

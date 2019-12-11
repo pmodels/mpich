@@ -78,7 +78,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
                                                       context_offset );
 	/* If we're not complete and this is a derived datatype
          * communication, then add a reference to the datatype */
-	if (sreq && (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)) {
+	if (sreq && (!HANDLE_IS_BUILTIN(datatype))) {
 	    sreq->dev.datatype_ptr = dt_ptr;
         MPIR_Datatype_ptr_add_ref(dt_ptr);
 	}

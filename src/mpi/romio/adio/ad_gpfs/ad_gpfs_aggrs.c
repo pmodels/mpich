@@ -141,7 +141,7 @@ int ADIOI_GPFS_Calc_aggregator(ADIO_File fd,
     if (rank_index >= fd->hints->cb_nodes || rank_index < 0) {
         FPRINTF(stderr,
                 "Error in ADIOI_Calc_aggregator(): rank_index(%d) >= fd->hints->cb_nodes (%d) fd_size=%lld off=%lld\n",
-                rank_index, fd->hints->cb_nodes, fd_size, off);
+                rank_index, fd->hints->cb_nodes, (long long) fd_size, (long long) off);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     /* DBG_FPRINTF ("ADIOI_GPFS_Calc_aggregator: rank_index = %d\n",
@@ -595,7 +595,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
             DBG_FPRINTF(stderr, "data needed from %d (count = %d):\n", i, my_req[i].count);
             for (l = 0; l < my_req[i].count; l++) {
                 DBG_FPRINTF(stderr, "   off[%d] = %lld, len[%d] = %lld\n", l,
-                            my_req[i].offsets[l], l, my_req[i].lens[l]);
+                            (long long) my_req[i].offsets[l], l, (long long) my_req[i].lens[l]);
             }
         }
         DBG_FPRINTF(stderr, "buf_idx[%d] = 0x%x\n", i, buf_idx[i]);

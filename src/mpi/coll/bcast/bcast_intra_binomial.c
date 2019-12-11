@@ -42,7 +42,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     if (comm_size == 1)
         goto fn_exit;
 
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
+    if (HANDLE_IS_BUILTIN(datatype))
         is_contig = 1;
     else {
         MPIR_Datatype_is_contig(datatype, &is_contig);

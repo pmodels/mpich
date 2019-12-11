@@ -71,6 +71,7 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_GET_NKEYS);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -113,6 +114,7 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_GET_NKEYS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

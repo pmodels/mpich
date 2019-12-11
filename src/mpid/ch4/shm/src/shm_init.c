@@ -23,8 +23,10 @@ int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_
     MPIR_ERR_CHECK(ret);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    ret = MPIDI_XPMEM_mpi_init_hook(rank, size, n_vcis_provided, tag_bits);
-    MPIR_ERR_CHECK(ret);
+    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
+        ret = MPIDI_XPMEM_mpi_init_hook(rank, size, n_vcis_provided, tag_bits);
+        MPIR_ERR_CHECK(ret);
+    }
 #endif
 
   fn_exit:
@@ -42,8 +44,10 @@ int MPIDI_SHMI_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_MPI_FINALIZE_HOOK);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    ret = MPIDI_XPMEM_mpi_finalize_hook();
-    MPIR_ERR_CHECK(ret);
+    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
+        ret = MPIDI_XPMEM_mpi_finalize_hook();
+        MPIR_ERR_CHECK(ret);
+    }
 #endif
 
     ret = MPIDI_POSIX_mpi_finalize_hook();

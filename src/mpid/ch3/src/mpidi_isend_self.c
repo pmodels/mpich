@@ -105,7 +105,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
           "added receive request to unexpected queue; attaching send request");
-	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+	    if (!HANDLE_IS_BUILTIN(datatype))
 	    {
 		MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
         MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);

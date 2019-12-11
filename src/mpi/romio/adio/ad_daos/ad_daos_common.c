@@ -60,37 +60,35 @@ void ADIOI_DAOS_Init(int *error_code)
     }
 
     /** attach to comm_self destroy to finalize DAOS */
-    MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_DAOS_End,
-                      &ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_DAOS_End, &ADIOI_DAOS_Initialized, (void *) 0);
     MPI_Attr_put(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
 }
 
 int ADIOI_DAOS_error_convert(int error)
 {
-    switch (error)
-    {
-	case -DER_NO_PERM:
-	    return MPI_ERR_ACCESS;
-	case -DER_ENOENT:
+    switch (error) {
+        case -DER_NO_PERM:
+            return MPI_ERR_ACCESS;
+        case -DER_ENOENT:
         case -DER_NONEXIST:
-	    return MPI_ERR_NO_SUCH_FILE;
-	case -DER_IO:
-	    return MPI_ERR_IO;
-	case -DER_EXIST:
-	    return MPI_ERR_FILE_EXISTS;
-	case -DER_NOTDIR:
-	    return MPI_ERR_BAD_FILE;
-	case -DER_INVAL:
-	case -DER_STALE:
-	    return MPI_ERR_FILE;
-	case -DER_NOSPACE:
-	    return MPI_ERR_NO_SPACE;
-	case -DER_NOSYS:
-	    return MPI_ERR_UNSUPPORTED_OPERATION;
-	case -DER_NOMEM:
-	    return MPI_ERR_INTERN;
-	default:
-	    return MPI_UNDEFINED;
+            return MPI_ERR_NO_SUCH_FILE;
+        case -DER_IO:
+            return MPI_ERR_IO;
+        case -DER_EXIST:
+            return MPI_ERR_FILE_EXISTS;
+        case -DER_NOTDIR:
+            return MPI_ERR_BAD_FILE;
+        case -DER_INVAL:
+        case -DER_STALE:
+            return MPI_ERR_FILE;
+        case -DER_NOSPACE:
+            return MPI_ERR_NO_SPACE;
+        case -DER_NOSYS:
+            return MPI_ERR_UNSUPPORTED_OPERATION;
+        case -DER_NOMEM:
+            return MPI_ERR_INTERN;
+        default:
+            return MPI_UNDEFINED;
     }
 }
 
@@ -102,76 +100,71 @@ int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)
         return MPI_SUCCESS;
 
     switch (rc) {
-    case -DER_NO_PERM:
-    case EPERM:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE, myname,
-                                          line, MPI_ERR_ACCESS,
-                                          "**fileaccess", "**fileaccess %s",
-                                          filename);
-        break;
-    case -DER_ENOENT:
-    case -DER_NONEXIST:
-    case -DER_NO_HDL:
-    case ENOENT:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE, myname,
-                                          line, MPI_ERR_NO_SUCH_FILE,
-                                          "**filenoexist", "**filenoexist %s",
-                                          filename);
-        break;
-    case -DER_IO:
-    case EIO:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, line, MPI_ERR_IO, "**io",
-                                          "**io %s", filename);
-        break;
-    case -DER_EXIST:
-    case EEXIST:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE, myname,
-                                          line, MPI_ERR_FILE_EXISTS,
-                                          "**fileexist", 0);
-        break;
-    case -DER_NOTDIR:
-    case ENOTDIR:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE,
-                                          myname, line,
-                                          MPI_ERR_BAD_FILE,
-                                          "**filenamedir", "**filenamedir %s",
-                                          filename);
-        break;
-    case -DER_NOSPACE:
-    case ENOSPC:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE, myname, line,
-                                          MPI_ERR_NO_SPACE, "**filenospace", 0);
-        break;
-    case -DER_INVAL:
-    case EINVAL:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                          MPIR_ERR_RECOVERABLE, myname, line,
-                                          MPI_ERR_ARG, "**arg", 0);
-        break;
-    case -DER_NOSYS:
-    case ENOSYS:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, line,
-                                          MPI_ERR_UNSUPPORTED_OPERATION,
-                                          "**fileopunsupported", 0);
-        break;
-    case -DER_NOMEM:
-    case ENOMEM:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, line, MPI_ERR_NO_MEM,
-                                          "**allocmem", 0);
-        break;
-    default:
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          myname, line, MPI_ERR_IO, "**io",
-                                          "**io %s", filename);
-        break;
+        case -DER_NO_PERM:
+        case EPERM:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE, myname,
+                                              line, MPI_ERR_ACCESS,
+                                              "**fileaccess", "**fileaccess %s", filename);
+            break;
+        case -DER_ENOENT:
+        case -DER_NONEXIST:
+        case -DER_NO_HDL:
+        case ENOENT:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE, myname,
+                                              line, MPI_ERR_NO_SUCH_FILE,
+                                              "**filenoexist", "**filenoexist %s", filename);
+            break;
+        case -DER_IO:
+        case EIO:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                              myname, line, MPI_ERR_IO, "**io",
+                                              "**io %s", filename);
+            break;
+        case -DER_EXIST:
+        case EEXIST:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE, myname,
+                                              line, MPI_ERR_FILE_EXISTS, "**fileexist", 0);
+            break;
+        case -DER_NOTDIR:
+        case ENOTDIR:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE,
+                                              myname, line,
+                                              MPI_ERR_BAD_FILE,
+                                              "**filenamedir", "**filenamedir %s", filename);
+            break;
+        case -DER_NOSPACE:
+        case ENOSPC:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE, myname, line,
+                                              MPI_ERR_NO_SPACE, "**filenospace", 0);
+            break;
+        case -DER_INVAL:
+        case EINVAL:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE, myname, line,
+                                              MPI_ERR_ARG, "**arg", 0);
+            break;
+        case -DER_NOSYS:
+        case ENOSYS:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                              myname, line,
+                                              MPI_ERR_UNSUPPORTED_OPERATION,
+                                              "**fileopunsupported", 0);
+            break;
+        case -DER_NOMEM:
+        case ENOMEM:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                              myname, line, MPI_ERR_NO_MEM, "**allocmem", 0);
+            break;
+        default:
+            error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                              myname, line, MPI_ERR_IO, "**io",
+                                              "**io %s", filename);
+            break;
     }
 
     return error_code;

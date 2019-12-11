@@ -106,7 +106,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 		/* The data is still being transfered across the net.  
 		   We'll leave it to the progress engine to handle once the
 		   entire message has arrived. */
-		if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+		if (!HANDLE_IS_BUILTIN(datatype))
 		{
 		    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
             MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
@@ -119,7 +119,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
         MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rreq->dev.match.parts.rank);
 	    mpi_errno = vc->rndvRecv_fn( vc, rreq );
 	    MPIR_ERR_CHECK(mpi_errno);
-	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+	    if (!HANDLE_IS_BUILTIN(datatype))
 	    {
 		MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
         MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
@@ -159,7 +159,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	   of the actions that are taken when a request is freed. 
 	   (specifically, the datatype and comm both have their refs
 	   decremented, and are freed if the refs are zero) */
-	if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
+	if (!HANDLE_IS_BUILTIN(datatype))
 	{
 	    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
         MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);

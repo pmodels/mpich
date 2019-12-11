@@ -179,7 +179,7 @@ int llapi_ladvise_lock(ADIO_File fd, unsigned long long flags, int num_advise,
     for (i = 0; i < num_extents; ++i) {
         if (ladvise_hdr->lah_advise[i].lla_lockahead_result) {
             fprintf(stderr, "%s(%d) "
-                    "lock ahead extent[%4.4d] {%ld,%ld} stripe {%lld,%lld} error %d\n",
+                    "lock ahead extent[%4.4d] {%ld,%ld} stripe {%ld,%ld} error %d\n",
                     __func__, __LINE__,
                     i,
                     (long int) ladvise_hdr->lah_advise[i].lla_start,

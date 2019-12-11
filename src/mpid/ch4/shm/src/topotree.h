@@ -16,9 +16,6 @@
 int MPIDI_SHM_create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
                                    bool right_skewed, int max_ranks, MPIR_Errflag_t * eflag);
 
-void MPIDI_SHM_hwloc_init_bindmap(int num_ranks, int topo_depth, int *shared_region,
-                                  int **bind_map);
-
 void MPIDI_SHM_copy_tree(int *shared_region, int num_ranks, int rank,
                          MPIR_Treealgo_tree_t * my_tree, int *topotree_fail);
 

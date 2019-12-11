@@ -243,7 +243,7 @@ int MPIR_Datatype_commit_pairtypes(void)
 /* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
+    if (HANDLE_IS_BUILTIN(datatype))
         *flag = 1;
     else {
         MPIR_Datatype_is_contig(datatype, flag);

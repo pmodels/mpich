@@ -1,9 +1,67 @@
 ===============================================================================
+                               Changes in 3.4
+===============================================================================
+
+# ch4 replaces ch3 as the default device configuration. Users must
+  select a netmod in order to build ch4, else configure will prompt
+  the user to choose.
+
+# Further improvements to ch4 business card exchange: extra
+  long address support and fixes for PMIx integration.
+
+# Un-inline non-critical ch4 code for improved build times.
+
+# Add support for Arm compiler toolchain
+
+# Add support for flang/f18 Fortran compiler
+
+# Remove mxm, llc, and portals4 netmods from ch3.
+
+# Remove support for logical reduction operations on floating point
+  types.
+
+# Remove MPIX_Mutex interfaces.
+
+# Fix several test program bugs.
+
+# Fix several static analysis and compiler warnings.
+
+===============================================================================
+                               Changes in 3.3.2
+===============================================================================
+
+# Add support for struct sockaddr in MPICH, Hydra, and PMI socket
+  code. Works with both IPv4 and IPv6 addresses.
+
+# Fix localhost detection on FreeBSD and macOS, avoiding long delay
+  during startup.
+
+# Fix thread-local storage detection.
+
+# Fix several test program bugs.
+
+# Fix several static analysis and compiler warnings.
+
+===============================================================================
                                Changes in 3.3.1
 ===============================================================================
 
- # Removed support for logical reduction operations on floating point
-   types.
+ # Fix bug in MPI_Testany/MPI_Waitany that could cause deadlock
+
+ # Add missing functionality in Argobots library support
+
+ # Fix configure-time detection for thread local storage support
+
+ # Better support for reproducible builds. Thanks to Bernhard
+   Wiedemann for the report and fixes
+
+ # Fix support for XL compiler toolchain
+
+ # Add support for -static-intel linking option
+
+ # Fix building on systems without weak symbols
+
+ # Fix several static analysis and compiler warnings
 
 ===============================================================================
                                Changes in 3.3

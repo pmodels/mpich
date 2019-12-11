@@ -54,6 +54,7 @@ int MPI_Win_free(MPI_Win * win)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -101,8 +102,7 @@ int MPI_Win_free(MPI_Win * win)
         goto fn_fail;
 
     /* We need to release the error handler */
-    if (win_ptr->errhandler &&
-        !(HANDLE_GET_KIND(win_ptr->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+    if (win_ptr->errhandler && !(HANDLE_IS_BUILTIN(win_ptr->errhandler->handle))) {
         int in_use;
         MPIR_Errhandler_release_ref(win_ptr->errhandler, &in_use);
         if (!in_use) {
@@ -120,6 +120,7 @@ int MPI_Win_free(MPI_Win * win)
   fn_exit:
     MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_WIN_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

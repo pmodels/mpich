@@ -544,7 +544,7 @@ int MPID_Init_spawn(void);
 int MPID_InitCompleted( void );
 
 int MPID_Finalize(void);
-#define MPID_CS_finalize() do {} while (0)
+
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
 int MPID_Open_port(MPIR_Info *, char *);

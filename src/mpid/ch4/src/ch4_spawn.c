@@ -31,165 +31,73 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#if defined(USE_PMIX_API) || defined(USE_PMI2_API)
 int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
                              MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
                              MPIR_Comm ** intercomm, int errcodes[])
 {
-    MPIR_Assert(0);
-}
-#else
-static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr);
-static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts);
-
-static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
-{
-    char key[MPI_MAX_INFO_KEY];
-    PMI_keyval_t *kv = 0;
-    int i, nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
-
-    if (!info_ptr || info_ptr->handle == MPI_INFO_NULL)
-        goto fn_exit;
-
-    MPIR_Info_get_nkeys_impl(info_ptr, &nkeys);
-
-    if (nkeys == 0)
-        goto fn_exit;
-
-    kv = (PMI_keyval_t *) MPL_malloc(nkeys * sizeof(PMI_keyval_t), MPL_MEM_BUFFER);
-
-    for (i = 0; i < nkeys; i++) {
-        mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, i, key);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Info_get_valuelen_impl(info_ptr, key, &vallen, &flag);
-        kv[i].key = (const char *) MPL_strdup(key);
-        kv[i].val = (char *) MPL_malloc(vallen + 1, MPL_MEM_BUFFER);
-        MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
-    }
-
-  fn_exit:
-    *kv_ptr = kv;
-    *nkeys_ptr = nkeys;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MPI_TO_PMI_KEYVALS);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
-{
-    int i, j;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
-
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < counts[i]; j++) {
-            MPL_free((char *) kv[i][j].key);
-            MPL_free(kv[i][j].val);
-        }
-        MPL_free(kv[i]);
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_PMI_KEYVALS);
-}
-
-int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const int maxprocs[],
-                             MPIR_Info * info_ptrs[], int root, MPIR_Comm * comm_ptr,
-                             MPIR_Comm ** intercomm, int errcodes[])
-{
-    char port_name[MPI_MAX_PORT_NAME];
-    int *info_keyval_sizes = 0, i, mpi_errno = MPI_SUCCESS;
-    PMI_keyval_t **info_keyval_vectors = 0, preput_keyval_vector;
-    int *pmi_errcodes = 0, pmi_errno = 0;
-    int total_num_processes, should_accept = 1;
+    int mpi_errno = MPI_SUCCESS;
+    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
 
+    char port_name[MPI_MAX_PORT_NAME];
     memset(port_name, 0, sizeof(port_name));
 
+    int total_num_processes = 0;
+    for (i = 0; i < count; i++)
+        total_num_processes += maxprocs[i];
+
+    int *pmi_errcodes;
+    pmi_errcodes = (int *) MPL_calloc(total_num_processes, sizeof(int), MPL_MEM_OTHER);
+    MPIR_Assert(pmi_errcodes);
+
+    int spawn_error = 0;
     if (comm_ptr->rank == root) {
-        total_num_processes = 0;
-
-        for (i = 0; i < count; i++)
-            total_num_processes += maxprocs[i];
-
-        pmi_errcodes = (int *) MPL_malloc(sizeof(int) * total_num_processes, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!pmi_errcodes, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        for (i = 0; i < total_num_processes; i++)
-            pmi_errcodes[i] = 0;
+        /* NOTE: we can't do ERR JUMP here, or the later BCAST won't work */
 
         mpi_errno = MPID_Open_port(NULL, port_name);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (mpi_errno == MPI_SUCCESS) {
+            struct MPIR_PMI_KEYVAL preput_keyval_vector;
+            preput_keyval_vector.key = MPIDI_PARENT_PORT_KVSKEY;
+            preput_keyval_vector.val = port_name;
 
-        info_keyval_sizes = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!info_keyval_sizes, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        info_keyval_vectors =
-            (PMI_keyval_t **) MPL_malloc(count * sizeof(PMI_keyval_t *), MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP(!info_keyval_vectors, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-        if (!info_ptrs)
-            for (i = 0; i < count; i++) {
-                info_keyval_vectors[i] = 0;
-                info_keyval_sizes[i] = 0;
-        } else
-            for (i = 0; i < count; i++) {
-                mpi_errno = mpi_to_pmi_keyvals(info_ptrs[i], &info_keyval_vectors[i],
-                                               &info_keyval_sizes[i]);
-                MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPIR_pmi_spawn_multiple(count, commands, argvs, maxprocs, info_ptrs,
+                                                1, &preput_keyval_vector, pmi_errcodes);
+            if (mpi_errno != MPI_SUCCESS) {
+                spawn_error = 1;
             }
-
-        preput_keyval_vector.key = MPIDI_PARENT_PORT_KVSKEY;
-        preput_keyval_vector.val = port_name;
-        pmi_errno = PMI_Spawn_multiple(count, (const char **)
-                                       commands,
-                                       (const char ***) argvs,
-                                       maxprocs, info_keyval_sizes, (const PMI_keyval_t **)
-                                       info_keyval_vectors, 1, &preput_keyval_vector, pmi_errcodes);
-
-        if (pmi_errno != PMI_SUCCESS)
-            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                                 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
-
-        if (errcodes != MPI_ERRCODES_IGNORE) {
-            for (i = 0; i < total_num_processes; i++) {
-                errcodes[i] = pmi_errcodes[0];
-                should_accept = should_accept && errcodes[i];
-            }
-
-            should_accept = !should_accept;
+        } else {
+            spawn_error = 1;
         }
     }
 
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+    mpi_errno = MPIR_Bcast(&spawn_error, 1, MPI_INT, root, comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(spawn_error, mpi_errno, MPI_ERR_OTHER, "**spawn");
+
+    int should_accept = 1;
     if (errcodes != MPI_ERRCODES_IGNORE) {
-        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno =
+            MPIR_Bcast(pmi_errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Bcast(&pmi_errno, 1, MPI_INT, root, comm_ptr, &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIR_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIR_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
+        /* FIXME: Are we only checking pmi_errcodes[0] and ignoring the rest? */
+        for (i = 0; i < total_num_processes; i++) {
+            errcodes[i] = pmi_errcodes[0];
+            should_accept = should_accept && errcodes[i];
+        }
+        should_accept = !should_accept;
     }
-
     if (should_accept) {
         mpi_errno = MPID_Comm_accept(port_name, NULL, root, comm_ptr, intercomm);
         MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        if ((pmi_errno == PMI_SUCCESS) && (errcodes[0] != 0)) {
-            mpi_errno = MPIR_Comm_create(intercomm);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
+    } else if (errcodes[0] != 0) {
+        /* FIXME: An empty comm? How does it supposed to work? */
+        mpi_errno = MPIR_Comm_create(intercomm);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (comm_ptr->rank == root) {
@@ -198,13 +106,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
     }
 
   fn_exit:
-
-    if (info_keyval_vectors) {
-        free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-        MPL_free(info_keyval_vectors);
-    }
-
-    MPL_free(info_keyval_sizes);
     MPL_free(pmi_errcodes);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
@@ -212,7 +113,6 @@ int MPID_Comm_spawn_multiple(int count, char *commands[], char **argvs[], const 
   fn_fail:
     goto fn_exit;
 }
-#endif
 
 int MPID_Comm_connect(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                       MPIR_Comm ** newcomm_ptr)

@@ -37,6 +37,8 @@ int MPII_Dataloop_convert_darray(int size,
 /* calculate position in Cartesian grid as MPI would (row-major
    ordering) */
     coords = (int *) MPL_malloc(ndims * sizeof(int), MPL_MEM_DATATYPE);
+    MPIR_ERR_CHKANDJUMP(!coords, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
     procs = size;
     tmp_rank = rank;
     for (i = 0; i < ndims; i++) {
@@ -46,6 +48,7 @@ int MPII_Dataloop_convert_darray(int size,
     }
 
     st_offsets = (MPI_Aint *) MPL_malloc(ndims * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
+    MPIR_ERR_CHKANDJUMP(!st_offsets, mpi_errno, MPI_ERR_OTHER, "**nomem");
     type_old = oldtype;
 
     if (order == MPI_ORDER_FORTRAN) {
