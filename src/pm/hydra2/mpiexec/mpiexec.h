@@ -114,7 +114,6 @@ struct mpiexec_pg {
 
 extern struct mpiexec_pg *mpiexec_pg_hash;
 extern struct mpiexec_params_s mpiexec_params;
-extern int *contig_pids;
 
 HYD_status mpiexec_get_parameters(char **t_argv);
 HYD_status mpiexec_pmi_barrier(struct mpiexec_pg *pg);

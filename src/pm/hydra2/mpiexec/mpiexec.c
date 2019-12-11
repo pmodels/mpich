@@ -73,10 +73,10 @@ struct mpiexec_params_s mpiexec_params = {
 
 struct mpiexec_pg *mpiexec_pg_hash = NULL;
 
-int *contig_pids;
-int **exitcodes;
-int **exitcode_node_ids;
-int *n_proxy_exitcodes;
+static int *contig_pids;
+static int **exitcodes;
+static int **exitcode_node_ids;
+static int *n_proxy_exitcodes;
 
 static void signal_cb(int signum)
 {
