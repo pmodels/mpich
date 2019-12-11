@@ -16,8 +16,6 @@
 Makefile.in
 Makefile
 
-/build
-
 # a lot of generic patterns for generated files
 *-cache
 *.MOD
