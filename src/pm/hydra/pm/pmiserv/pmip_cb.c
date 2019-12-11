@@ -93,6 +93,76 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
+static HYD_status handle_pmi_cmd(int fd, char *buf, struct HYD_pmcd_hdr hdr)
+{
+    struct HYD_pmcd_pmip_pmi_handle *h;
+    char *pmi_cmd = NULL, **args = NULL;
+    int sent, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if (hdr.pmi_version == 1)
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
+    else
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
+
+    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
+    for (int i = 0; i < MAX_PMI_ARGS; i++)
+        args[i] = NULL;
+
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    HYDU_ERR_POP(status, "unable to parse PMI command\n");
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
+        HYDU_print_strlist(args);
+    }
+
+    h = HYD_pmcd_pmip_pmi_handle;
+    while (h->handler) {
+        if (!strcmp(pmi_cmd, h->cmd)) {
+            status = h->handler(fd, args);
+            HYDU_ERR_POP(status, "PMI handler returned error\n");
+            goto fn_exit;
+        }
+        h++;
+    }
+
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n", pmi_cmd);
+    }
+
+    /* We don't understand the command; forward it upstream */
+    hdr.cmd = PMI_CMD;
+    hdr.pid = fd;
+    hdr.buflen = strlen(buf);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+    HYDU_ASSERT(!closed, status);
+
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+    HYDU_ASSERT(!closed, status);
+
+  fn_exit:
+    MPL_free(pmi_cmd);
+    if (args) {
+        HYDU_free_strlist(args);
+        MPL_free(args);
+    }
+
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 {
     int full_command, buflen, cmdlen;
@@ -195,10 +265,9 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
-    char *buf = NULL, *pmi_cmd = NULL, **args = NULL;
+    char *buf = NULL;
     int closed, repeat, sent, i = -1, linelen, pid = -1;
     struct HYD_pmcd_hdr hdr;
-    struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -288,64 +357,15 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
-    if (hdr.pmi_version == 1)
-        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
-    else
-        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
-
-    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
-    for (i = 0; i < MAX_PMI_ARGS; i++)
-        args[i] = NULL;
-
-    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
-    HYDU_ERR_POP(status, "unable to parse PMI command\n");
-
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
-        HYDU_print_strlist(args);
-    }
-
-    h = HYD_pmcd_pmip_pmi_handle;
-    while (h->handler) {
-        if (!strcmp(pmi_cmd, h->cmd)) {
-            status = h->handler(fd, args);
-            HYDU_ERR_POP(status, "PMI handler returned error\n");
-            goto fn_exit;
-        }
-        h++;
-    }
-
-    if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n", pmi_cmd);
-    }
-
-    /* We don't understand the command; forward it upstream */
-    hdr.cmd = PMI_CMD;
-    hdr.pid = fd;
-    hdr.buflen = strlen(buf);
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
-    HYDU_ASSERT(!closed, status);
-
-    status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
-    HYDU_ASSERT(!closed, status);
+    status = handle_pmi_cmd(fd, buf, hdr);
+    MPL_free(buf);
+    HYDU_ERR_POP(status, "unable to handle PMI command\n");
 
     if (repeat)
         /* there are more commands to process. */
         goto check_cmd;
 
   fn_exit:
-    MPL_free(pmi_cmd);
-    if (args) {
-        HYDU_free_strlist(args);
-        MPL_free(args);
-    }
-    MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -629,10 +649,12 @@ static HYD_status launch_procs(void)
             str = HYDU_int_to_str(HYD_pmcd_pmip.local.proxy_process_count);
             status = HYDU_append_env_to_list("MPI_LOCALNRANKS", str, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
+            MPL_free(str);
 
             str = HYDU_int_to_str(process_id);
             status = HYDU_append_env_to_list("MPI_LOCALRANKID", str, &force_env);
             HYDU_ERR_POP(status, "unable to add env to list\n");
+            MPL_free(str);
 
             if (using_pmi_port) {
                 /* If we are using the PMI_PORT format */

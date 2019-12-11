@@ -123,6 +123,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         if (unlikely(ret))
             MPIR_ERR_POP(ret);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         goto fn_exit;
     }
 
@@ -134,6 +135,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         if (state->progress_count != OPA_load_int(&MPIDI_global.progress_count))
             break;
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     } while (1);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);

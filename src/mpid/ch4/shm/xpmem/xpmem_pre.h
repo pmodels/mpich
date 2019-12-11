@@ -11,8 +11,23 @@
 
 #define MPIDI_XPMEM_PERMIT_VALUE ((void *)0600)
 #define MPIDI_XPMEM_SEG_PREALLOC 8      /* Number of segments to preallocate in the "direct" block */
+#define MPIDI_XPMEM_CNT_PREALLOC 64     /* Number of shm counter to preallocate in the "direct" block */
+
+/* Variables used to indicate coop copy completion cases.
+ *  See more explanation in xpmem_recv.h and xpmem_control.c */
+typedef enum {
+    MPIDI_XPMEM_COPY_ALL,       /* local process copied all chunks */
+    MPIDI_XPMEM_COPY_ZERO,      /* local process copied zero chunk */
+    MPIDI_XPMEM_COPY_MIX        /* both sides copied a part of chunks */
+} MPIDI_XPMEM_copy_type_t;
+
+typedef enum {
+    MPIDI_XPMEM_LOCAL_FIN,      /* local copy is done but the other side may be still copying */
+    MPIDI_XPMEM_BOTH_FIN        /* both sides finished copy */
+} MPIDI_XPMEM_fin_type_t;
 
 typedef struct MPIDI_XPMEM_seg {
+    MPIR_OBJECT_HEADER;
     /* AVL-tree internal components start */
     struct MPIDI_XPMEM_seg *parent;
     struct MPIDI_XPMEM_seg *left;
@@ -23,8 +38,15 @@ typedef struct MPIDI_XPMEM_seg {
     uint64_t low;               /* page aligned low address of remote seg */
     uint64_t high;              /* page aligned high address of remote seg */
     void *vaddr;                /* virtual address attached in current process */
-    MPIR_cc_t refcount;         /* reference count of this seg */
 } MPIDI_XPMEM_seg_t;
+
+typedef union MPIDI_XPMEM_cnt {
+    MPIR_Handle_common common;  /* ensure sufficient bytes required for MPIR_Handle_common */
+    struct {
+        MPIR_OBJECT_HEADER;
+        OPA_int_t counter;
+    } obj;
+} MPIDI_XPMEM_cnt_t;
 
 typedef struct MPIDI_XPMEM_segtree {
     MPIDI_XPMEM_seg_t *root;
@@ -35,7 +57,8 @@ typedef struct MPIDI_XPMEM_segtree {
 typedef struct {
     xpmem_segid_t remote_segid;
     xpmem_apid_t apid;
-    MPIDI_XPMEM_segtree_t segcache;     /* AVL tree based segment cache */
+    MPIDI_XPMEM_segtree_t segcache_ubuf;        /* AVL tree based segment cache for user buffer */
+    MPIDI_XPMEM_segtree_t segcache_cnt; /* AVL tree based segment cache for XPMEM counter buffer */
 } MPIDI_XPMEM_segmap_t;
 
 typedef struct {
@@ -45,6 +68,10 @@ typedef struct {
     xpmem_segid_t segid;        /* my local segid associated with entire address space */
     MPIDI_XPMEM_segmap_t *segmaps;      /* remote seg info for every local processes. */
     size_t sys_page_sz;
+    MPIDI_XPMEM_seg_t **coop_counter_seg_direct;        /* original direct cooperative counter array segments,
+                                                         * used for detach in finalize */
+    MPIDI_XPMEM_cnt_t **coop_counter_direct;    /* direct cooperative counter array attached in init */
+    MPIR_cc_t num_pending_cnt;
 } MPIDI_XPMEM_global_t;
 
 typedef struct {
@@ -61,10 +88,14 @@ typedef struct {
 
 typedef struct {
     MPIDI_XPMEM_am_unexp_rreq_t unexp_rreq;
+    MPIDI_XPMEM_cnt_t *counter_ptr;
 } MPIDI_XPMEM_am_request_t;
 
 extern MPIDI_XPMEM_global_t MPIDI_XPMEM_global;
 extern MPIR_Object_alloc_t MPIDI_XPMEM_seg_mem;
+
+extern MPIR_Object_alloc_t MPIDI_XPMEM_cnt_mem;
+extern MPIDI_XPMEM_cnt_t MPIDI_XPMEM_cnt_mem_direct[MPIDI_XPMEM_CNT_PREALLOC];
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_SHM_XPMEM_GENERAL;

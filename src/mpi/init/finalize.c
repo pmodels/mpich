@@ -138,7 +138,8 @@ int MPI_Finalize(void)
     /* Call the high-priority callbacks */
     MPIR_Call_finalize_callbacks(MPIR_FINALIZE_CALLBACK_PRIO + 1, MPIR_FINALIZE_CALLBACK_MAX_PRIO);
 
-    MPII_debugger_set_aborting();
+    /* Signal the debugger that we are about to exit. */
+    MPIR_Debugger_set_aborting(NULL);
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -156,7 +157,8 @@ int MPI_Finalize(void)
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks(0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
-    MPII_finalize_topo();
+    MPII_hwtopo_finalize();
+    MPII_nettopo_finalize();
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */

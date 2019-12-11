@@ -46,7 +46,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     /* these are checked at the MPI layer, so I feel that asserts
      * are appropriate.
      */
-    MPIR_Assert(HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN);
+    MPIR_Assert(!HANDLE_IS_BUILTIN(datatype));
     MPIR_Assert(datatype != MPI_FLOAT_INT &&
                 datatype != MPI_DOUBLE_INT &&
                 datatype != MPI_LONG_INT &&
@@ -79,7 +79,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     }
 
     for (i = 0; i < cp->nr_types; i++) {
-        if (HANDLE_GET_KIND(array_of_datatypes[i]) != HANDLE_KIND_BUILTIN) {
+        if (!HANDLE_IS_BUILTIN(array_of_datatypes[i])) {
             MPIR_Datatype_get_ptr(array_of_datatypes[i], dtp);
             MPIR_Datatype_ptr_add_ref(dtp);
         }
@@ -124,6 +124,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_CONTENTS);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -145,7 +146,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Check for built-in type */
-            if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+            if (HANDLE_IS_BUILTIN(datatype)) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
                                                  __func__, __LINE__,
@@ -195,6 +196,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_CONTENTS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

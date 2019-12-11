@@ -598,6 +598,7 @@ static HYD_status fn_finalize(int fd, char *args[])
 
     if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
         /* All processes have finalized */
+        HASH_CLEAR(hh, hash_get);
         for (i = 0; i < num_elems; i++) {
             MPL_free((cache_get + i)->key);
             MPL_free((cache_get + i)->val);

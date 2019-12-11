@@ -144,8 +144,9 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
-    if (in_cs)
+    if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    }
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
     return mpi_errno;

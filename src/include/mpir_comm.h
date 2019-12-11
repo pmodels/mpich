@@ -241,6 +241,7 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
+int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_node_aware(MPIR_Comm *);
@@ -292,8 +293,8 @@ int MPIR_Comm_remote_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_gr
 int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
+                                 MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int split_type, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,

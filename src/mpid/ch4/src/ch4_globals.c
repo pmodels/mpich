@@ -26,7 +26,7 @@ MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 
 MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
-    0, 0, 0, 0, MPIR_WORKQ_ELEM, sizeof(struct MPIDI_workq_elemt), MPIDI_workq_elemt_direct,
+    0, 0, 0, 0, MPIR_INTERNAL, sizeof(struct MPIDI_workq_elemt), MPIDI_workq_elemt_direct,
     MPIDI_WORKQ_ELEMT_PREALLOC
 };
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
@@ -119,13 +119,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     if (comm != MPIR_Process.comm_world) {
         MPIDIG_comm_abort(comm, exit_code);
     } else {
-#ifdef USE_PMIX_API
-        PMIx_Abort(exit_code, error_msg, NULL, 0);
-#elif defined(USE_PMI2_API)
-        PMI2_Abort(TRUE, error_msg);
-#else
-        PMI_Abort(exit_code, error_msg);
-#endif
+        MPIR_pmi_abort(exit_code, error_msg);
     }
     return 0;
 }
@@ -133,10 +127,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
 int MPIDI_check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
-    int len;
-    const char *kvsname = MPIR_pmi_job_id();
-    char *failed_procs_string = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
 
@@ -144,41 +134,20 @@ int MPIDI_check_for_failed_procs(void)
      * comm_world.  We need to fix hydra to include the pgid along
      * with the rank, then we need to create the failed group from
      * something bigger than comm_world. */
-#ifdef USE_PMIX_API
-    MPIR_Assert(0);
-#elif defined(USE_PMI2_API)
-    {
-        int vallen = 0;
-        len = PMI2_MAX_VALLEN;
-        failed_procs_string = MPL_malloc(len, MPL_MEM_OTHER);
-        MPIR_Assert(failed_procs_string);
-        pmi_errno =
-            PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", failed_procs_string,
-                         len, &vallen);
-        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+
+    char *failed_procs_string = MPIR_pmi_get_failed_procs();
+
+    if (failed_procs_string) {
         MPL_free(failed_procs_string);
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST,
+                         "Received proc fail notification: %s", failed_procs_string));
+
+        /* FIXME: handle ULFM failed groups here */
     }
-#else
-    pmi_errno = PMI_KVS_Get_value_length_max(&len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    failed_procs_string = MPL_malloc(len, MPL_MEM_OTHER);
-    MPIR_Assert(failed_procs_string);
-    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", failed_procs_string, len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-    MPL_free(failed_procs_string);
-#endif
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "Received proc fail notification: %s", failed_procs_string));
-
-    /* FIXME: handle ULFM failed groups here */
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
-  fn_fail:
-    MPL_free(failed_procs_string);
-    goto fn_exit;
 }
 
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;

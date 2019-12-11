@@ -68,6 +68,7 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ERRHANDLER_GET);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -114,6 +115,7 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler * errhandler)
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ERRHANDLER_GET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 #ifdef HAVE_ERROR_CHECKING

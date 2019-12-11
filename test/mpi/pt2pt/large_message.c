@@ -68,6 +68,8 @@ int main(int argc, char *argv[])
             }
         }
     }
+    free(cols);
+
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

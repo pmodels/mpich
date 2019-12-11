@@ -110,6 +110,7 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
         mpi_errno = MPIDIG_reply_ssend(rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
+    MPIR_Datatype_release_if_not_builtin(datatype);
     MPID_Request_complete(rreq);
 
   fn_exit:

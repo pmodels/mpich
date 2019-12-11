@@ -22,7 +22,7 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-#define MAX_NCOMM 100000
+#define MAX_NCOMM 200000
 
 static const int verbose = 0;
 

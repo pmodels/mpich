@@ -75,34 +75,51 @@ static HYD_status list_to_nodes(char *str)
 
     string = MPL_strdup(str);
 
-    /* compile regex patterns for nodelist matching */
+    /* compile regex patterns for nodelist matching:
+     *
+     * From RFC952:
+     * 1. A "name" (Net, Host, Gateway, or Domain name) is a text string up
+     * to 24 characters drawn from the alphabet (A-Z), digits (0-9), minus
+     * sign (-), and period (.).  Note that periods are only allowed when
+     * they serve to delimit components of "domain style names". (See
+     * RFC-921, "Domain Name System Implementation Schedule", for
+     * background).  No blank or space characters are permitted as part of a
+     * name. No distinction is made between upper and lower case.  The first
+     * character must be an alpha character.  The last character must not be
+     * a minus sign or period. [...] Single character names or nicknames are
+     * not allowed.
+     *
+     * see https://tools.ietf.org/html/rfc952 and section 2.1 of
+     * https://tools.ietf.org/html/rfc1123 for more details on hostnames
+     * format */
 
     /* compile group-0 regex for old format: "[h00-h12,h14] | h00-h12 | h14" */
     regcomp(&gmatch_old[0],
-            "(,|^)(\\[[-,a-zA-Z0-9]+\\]|[a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)(,|$)",
-            REG_EXTENDED);
+            "(,|^)(\\[[-,a-z0-9]+\\]|[a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)(,|$)",
+            REG_EXTENDED | REG_ICASE);
 
     /* compile group-1 regex for old format: "h00-h12 | h14" */
     regcomp(&gmatch_old[1],
-            "([[,]|^)([a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)([],]|$)", REG_EXTENDED);
+            "([[,]|^)([a-z]+[0-9]+-[a-z]+[0-9]+|[a-z]+[0-9]+)([],]|$)", REG_EXTENDED | REG_ICASE);
 
     /* compile range regex for old format: "h00-h12" */
-    regcomp(&rmatch_old, "([a-zA-Z]+)([0-9]+)-([a-zA-Z]+)([0-9]+)", REG_EXTENDED);
+    regcomp(&rmatch_old, "([a-z]+)([0-9]+)-([a-z]+)([0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile element regex for old format: "h14" */
-    regcomp(&ematch_old, "([a-zA-Z]+[0-9]+)", REG_EXTENDED);
+    regcomp(&ematch_old, "([a-z]+[0-9]+)", REG_EXTENDED | REG_ICASE);
 
     /* compile group-0 regex for new format: "h00-[00-12,14] | h00[00-12,14] | h00-14 | h0014" */
-    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z0-9]+-?)(\\[[-,0-9]+\\]|[0-9]*)(,|$)", REG_EXTENDED);
+    regcomp(&gmatch_new[0], "(,|^)([a-z0-9][\\.a-z0-9-]+)(\\[[-,0-9]+\\])?(,|$)",
+            REG_EXTENDED | REG_ICASE);
 
-    /* compile group-1 regex for new format: "00-12 | 14 | " */
-    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]*)([],]|$)", REG_EXTENDED);
+    /* compile group-1 regex for new format: "00-12 | 14" */
+    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED | REG_ICASE);
 
     /* compile range regex for new format: "00-12" */
-    regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED);
+    regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED | REG_ICASE);
 
-    /* compile element regex for new format: "14 | " */
-    regcomp(&ematch_new, "([0-9]*)", REG_EXTENDED);
+    /* compile element regex for new format: "14" */
+    regcomp(&ematch_new, "([0-9]+)", REG_EXTENDED | REG_ICASE);
 
     gpattern[0] = string;
 
@@ -162,7 +179,7 @@ static HYD_status list_to_nodes(char *str)
         gpattern[0] += gmatch[0][0].rm_eo;
     }
 
-    /* match new group-0 pattern: (,|^)(h|h-)([00-12,14] | 00-12 | 14)(,|$) */
+    /* match new group-0 pattern: (,|^)(h-)([00-12,14] | [00-12] | 14)(,|$) */
     while (*gpattern[0] && regexec(&gmatch_new[0], gpattern[0], MAX_GMATCH, gmatch[0], 0) == 0) {
         /* bound group-0 for group-1 matching: h-[00-h12,14],... -> h-[00-12,14]\0... */
         tmp[0] = *(gpattern[0] + gmatch[0][0].rm_eo);
@@ -171,6 +188,28 @@ static HYD_status list_to_nodes(char *str)
         /* extranct basename from atom 2 in group-0 */
         snprintf(basename, MAX_HOSTNAME_LEN, "%.*s",
                  (int) (gmatch[0][2].rm_eo - gmatch[0][2].rm_so), gpattern[0] + gmatch[0][2].rm_so);
+
+        /*
+         * name is matched entirely by second atom of group-0 pattern;
+         * this happens when there is no numeric range ([00-12]), e.g.,
+         * h00, h-00, etc ...
+         */
+        if (gmatch[0][3].rm_so == gmatch[0][3].rm_eo) {
+            char trail = *(gpattern[0] + gmatch[0][2].rm_eo - 1);
+            /* hostname must end with a letter or a digit */
+            if ((trail >= 'a' && trail <= 'z') ||
+                (trail >= 'A' && trail <= 'Z') || (trail >= '0' && trail <= '9')) {
+                status = HYDU_add_to_node_list(basename, tasks_per_node[k++], &global_node_list);
+                *(gpattern[0] + gmatch[0][0].rm_eo) = tmp[0];
+                gpattern[0] += gmatch[0][0].rm_eo;
+                continue;
+            } else {
+                fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist.\n"
+                        "Use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
+                        "format and report bugs\n", basename);
+                break;
+            }
+        }
 
         /* select third atom in group-0 */
         gpattern[1] = gpattern[0] + gmatch[0][3].rm_so;
@@ -224,7 +263,9 @@ static HYD_status list_to_nodes(char *str)
     /* if nodelist format not recognized throw an error message and abort */
     if (global_node_list == NULL) {
         fprintf(stdout,
-                "Error: node list format not recognized. Try using '-hosts=<hostnames>'.\n");
+                "Error: node list format not recognized. Try using '-hosts {node list}' or\n"
+                "use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
+                "format and report bugs\n");
         fflush(stdout);
         abort();
     }

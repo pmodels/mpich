@@ -146,7 +146,10 @@ int MPII_post_init_global(int thread_provided)
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_ThreadInfo.thread_provided = thread_provided;
+
+#if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = (thread_provided == MPI_THREAD_MULTIPLE);
+#endif
 
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
@@ -191,7 +194,7 @@ int MPII_finalize_global(void)
      * comm self and comm world
      */
     if (MPIR_Process.comm_world->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+        !(HANDLE_IS_BUILTIN(MPIR_Process.comm_world->errhandler->handle))) {
         int in_use;
         MPIR_Errhandler_release_ref(MPIR_Process.comm_world->errhandler, &in_use);
         if (!in_use) {
@@ -201,7 +204,7 @@ int MPII_finalize_global(void)
         MPIR_Process.comm_world->errhandler = NULL;
     }
     if (MPIR_Process.comm_self->errhandler &&
-        !(HANDLE_GET_KIND(MPIR_Process.comm_self->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
+        !(HANDLE_IS_BUILTIN(MPIR_Process.comm_self->errhandler->handle))) {
         int in_use;
         MPIR_Errhandler_release_ref(MPIR_Process.comm_self->errhandler, &in_use);
         if (!in_use) {

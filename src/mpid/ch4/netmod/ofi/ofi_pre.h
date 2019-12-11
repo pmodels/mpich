@@ -30,7 +30,6 @@
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
 #define MPIDI_OFI_AM_DATA_SZ_BITS     48
-#define MPIDI_OFI_AM_CONTEXT_ID_BITS  16
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
@@ -77,7 +76,6 @@ typedef struct MPIDI_OFI_am_header_t {
     uint16_t seqno;             /* Sequence number of this message.
                                  * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
     fi_addr_t fi_src_addr;      /* OFI address of the sender */
-    uint64_t payload[0];
 } MPIDI_OFI_am_header_t;
 
 /* Represents early-arrived active messages.
@@ -132,14 +130,13 @@ typedef struct {
     void *buf;
     size_t count;
     MPI_Datatype datatype;
-    char pack_buffer[0];
+    char pack_buffer[];
 } MPIDI_OFI_pack_t;
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
-    struct MPIR_Comm *util_comm;
     MPI_Datatype datatype;
     union {
         MPIDI_OFI_pack_t *pack;

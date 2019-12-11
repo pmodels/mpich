@@ -194,7 +194,7 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr);
      * a builtin type, it must be a pair type composed of different \
      * builtin types, so we return MPI_DATATYPE_NULL here.          \
      */                                                             \
-    if (HANDLE_GET_KIND(basic_type_) != HANDLE_KIND_BUILTIN)        \
+    if (!HANDLE_IS_BUILTIN((basic_type_)))                          \
         basic_type_ = MPI_DATATYPE_NULL;                            \
  } while (0)
 
@@ -253,7 +253,7 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr);
  * (*is_config_) if the type is contiguous */
 #define MPIR_Datatype_is_contig(dtype_, is_contig_)                            \
     do {                                                                       \
-        if (HANDLE_GET_KIND(dtype_) == HANDLE_KIND_BUILTIN) {                  \
+        if (HANDLE_IS_BUILTIN((dtype_))) {                                     \
             *(is_contig_) = TRUE;                                              \
         }                                                                      \
         else {                                                                 \
@@ -296,7 +296,7 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr);
  * (*true_lb_) */
 #define MPIR_Datatype_get_true_lb(dtype_, true_lb_)                            \
     do {                                                                       \
-        if (HANDLE_GET_KIND(dtype_) == HANDLE_KIND_BUILTIN) {                  \
+        if (HANDLE_IS_BUILTIN((dtype_))) {                                     \
             *(true_lb_) = 0;                                                   \
         }                                                                      \
         else {                                                                 \
@@ -313,7 +313,7 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr);
 #define MPIR_Datatype_add_ref_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+        !HANDLE_IS_BUILTIN((datatype_)))                            \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
@@ -325,7 +325,7 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr);
 #define MPIR_Datatype_release_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+        !HANDLE_IS_BUILTIN((datatype_)))                            \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
@@ -349,7 +349,7 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
     array_of_types = (MPI_Datatype *) ((char *) dtp->contents + struct_sz);
 
     for (i = 0; i < dtp->contents->nr_types; i++) {
-        if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
+        if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
             MPIR_Datatype_ptr_release(old_dtp);
         }
@@ -446,7 +446,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
 
     /* increment reference counts on all the derived types used here */
     for (i = 0; i < nr_types; i++) {
-        if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
+        if (!HANDLE_IS_BUILTIN(array_of_types[i])) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
             MPIR_Datatype_ptr_add_ref(old_dtp);
         }
@@ -467,7 +467,7 @@ void MPII_Datatype_attr_finalize(void);
 int MPII_Type_zerolen(MPI_Datatype * newtype);
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
-    ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
+    ((HANDLE_IS_BUILTIN((type))) || \
      (type == MPI_FLOAT_INT) || (type == MPI_DOUBLE_INT) || \
      (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
      (type == MPI_LONG_DOUBLE_INT))

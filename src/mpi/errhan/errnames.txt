@@ -215,6 +215,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 
 **noizem: release_gather based intra-node collectives cannot be used without izem submodule. \
 Reconfigure mpich with --enable-izem=atomic --with-zm-prefix=yes
+**sockaddrfailed: MPL_get_sockaddr failed
 
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.

@@ -1429,7 +1429,6 @@ static int attr_tree_free(DTPI_Attr_s * attr)
         rc = attr_tree_free(attr->child);
         DTPI_ERR_CHK_RC(rc);
     }
-    DTPI_FREE(attr->child);
 
     switch (attr->kind) {
         case DTPI_DATATYPE_KIND__BLKINDX:
@@ -1464,6 +1463,8 @@ static int attr_tree_free(DTPI_Attr_s * attr)
         default:
             break;
     }
+
+    DTPI_FREE(attr);
 
   fn_exit:
     return rc;

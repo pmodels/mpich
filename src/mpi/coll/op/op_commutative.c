@@ -36,7 +36,7 @@ int MPIR_Op_is_commutative(MPI_Op op)
 {
     MPIR_Op *op_ptr;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         return TRUE;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
@@ -95,6 +95,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_COMMUTATIVE);
 
     MPIR_Op_get_ptr(op, op_ptr);
@@ -121,6 +122,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_COMMUTATIVE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 #ifdef HAVE_ERROR_CHECKING
