@@ -15,7 +15,7 @@ AC_CHECK_HEADER([slurm/pmi.h], [], [AC_MSG_ERROR([could not find slurm/pmi.h.  C
 AC_CHECK_LIB([pmi], [PMI_Init],
              [PAC_PREPEND_FLAG([-lpmi],[LIBS])
               PAC_PREPEND_FLAG([-lpmi], [WRAPPER_LIBS])],
-             [AC_MSG_ERROR([could not find the slurm libpmi.  Configure aborted])])
+             [AC_MSG_ERROR([could not find the Slurm libpmi.  Configure aborted])])
 
 ])dnl end COND_IF
 

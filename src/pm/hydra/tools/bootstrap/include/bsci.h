@@ -112,7 +112,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * Background of use_rmk: RMK is used to allocate nodes on a system
  * before launching a job.  If it is not specified in the user
  * arguments for the UI process (e.g., mpiexec), it is set to the same
- * as a job launcher (e.g., SLURM or PBS).  This works fine for
+ * as a job launcher (e.g., Slurm or PBS).  This works fine for
  * launching processes on nodes for the first time, but it has
  * a problem when a process dynamically creates other processes at run
  * time, e.g., by calling MPI_Comm_spawn(), because the job launcher

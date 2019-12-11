@@ -51,7 +51,7 @@ HYD_status HYDI_bstrap_slurm_launch(const char *hostname, const char *launch_exe
 
     /* Fill in the remaining arguments */
     /* We do not need to create a quoted version of the string for
-     * SLURM. It seems to be internally quoting it anyway. */
+     * Slurm. It seems to be internally quoting it anyway. */
     for (i = 0; args[i]; i++)
         targs[idx++] = MPL_strdup(args[i]);
 
