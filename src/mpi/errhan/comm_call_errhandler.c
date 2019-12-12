@@ -151,8 +151,9 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
-    if (in_cs)
+    if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    }
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
     return mpi_errno;

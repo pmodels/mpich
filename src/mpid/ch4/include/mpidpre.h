@@ -77,6 +77,7 @@ typedef enum {
 
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
+    char dummy;                 /* some compilers (suncc) does not like empty struct */
 } MPIDIG_sreq_t;
 
 typedef struct MPIDIG_lreq_t {
@@ -468,12 +469,12 @@ typedef struct {
 
 typedef struct {
     MPIR_OBJECT_HEADER;
-    MPIDI_lpid_t lpid[0];
+    MPIDI_lpid_t lpid[];
 } MPIDI_rank_map_lut_t;
 
 typedef struct {
     MPIR_OBJECT_HEADER;
-    MPIDI_gpid_t gpid[0];
+    MPIDI_gpid_t gpid[];
 } MPIDI_rank_map_mlut_t;
 
 typedef struct {
@@ -544,7 +545,7 @@ typedef struct MPIDI_av_entry {
 typedef struct {
     MPIR_OBJECT_HEADER;
     int size;
-    MPIDI_av_entry_t table[0];
+    MPIDI_av_entry_t table[];
 } MPIDI_av_table_t;
 
 extern MPIDI_av_table_t **MPIDI_av_table;

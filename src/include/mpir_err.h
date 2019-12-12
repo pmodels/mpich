@@ -458,7 +458,7 @@ cvars:
 #define MPIR_ERRTEST_USERBUFFER(buf,count,dtype,err)                    \
     if (count > 0 && buf == 0) {                                        \
         int ferr = 0;                                                   \
-        if (HANDLE_GET_KIND(dtype) == HANDLE_KIND_BUILTIN) { ferr=1; }  \
+        if (HANDLE_IS_BUILTIN((dtype))) { ferr=1; }  \
         else {                                                          \
             MPI_Aint errsize;                                           \
             MPIR_Datatype *errdtypeptr;                                 \
@@ -520,7 +520,7 @@ cvars:
         else {                                                          \
             MPIR_ERRTEST_VALID_HANDLE(op,MPIR_OP,err,MPI_ERR_OP,"**op"); \
         }                                                               \
-        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {               \
+        if (!HANDLE_IS_BUILTIN((op))) {               \
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
         }                                                               \
     } while (0)
@@ -533,7 +533,7 @@ cvars:
         else {                                                          \
             MPIR_ERRTEST_VALID_HANDLE(op,MPIR_OP,err,MPI_ERR_OP,"**op"); \
         }                                                               \
-        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {               \
+        if (!HANDLE_IS_BUILTIN((op))) {               \
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
         }                                                               \
     } while (0)
@@ -656,7 +656,7 @@ cvars:
 #define MPIR_ERRTEST_KEYVAL_PERM(keyval_, err_)                         \
     {                                                                   \
         if (HANDLE_GET_MPI_KIND(keyval_) == MPIR_KEYVAL &&              \
-            HANDLE_GET_KIND(keyval_) == HANDLE_KIND_BUILTIN)            \
+            HANDLE_IS_BUILTIN((keyval_)))            \
         {                                                               \
             MPIR_ERR_SETANDSTMT(err_, MPI_ERR_KEYVAL,goto fn_fail, "**permattr"); \
         }                                                               \

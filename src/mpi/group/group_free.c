@@ -71,6 +71,7 @@ int MPI_Group_free(MPI_Group * group)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -98,7 +99,7 @@ int MPI_Group_free(MPI_Group * group)
 
             /* Cannot free the predefined groups, but allow GROUP_EMPTY
              * because otherwise many tests fail */
-            if ((HANDLE_GET_KIND(*group) == HANDLE_KIND_BUILTIN) && *group != MPI_GROUP_EMPTY) {
+            if ((HANDLE_IS_BUILTIN(*group)) && *group != MPI_GROUP_EMPTY) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                  MPI_ERR_GROUP, "**groupperm", 0);
@@ -122,6 +123,7 @@ int MPI_Group_free(MPI_Group * group)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

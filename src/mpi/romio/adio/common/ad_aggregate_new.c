@@ -132,14 +132,15 @@ void ADIOI_Calc_file_realms_user_size(ADIO_File fd, int fr_size,
         file_realm_st_offs[0] = aligned_fr_off;
     file_realm_types[0] = simpletype;
 #ifdef DEBUG
-    printf("file_realm[0] = (%lld, %d)\n", file_realm_st_offs[0], fr_size);
+    printf("file_realm[0] = (%lld, %d)\n", (long long) file_realm_st_offs[0], fr_size);
 #endif
 
     for (i = 1; i < nprocs_for_coll; i++) {
         file_realm_st_offs[i] = file_realm_st_offs[i - 1] + fr_size;
         file_realm_types[i] = simpletype;
 #ifdef DEBUG
-        printf("file_realm[%d] = (%lld, %d)\n", i, file_realm_st_offs[i], aligned_fr_size);
+        printf("file_realm[%d] = (%lld, %d)\n", i, (long long) file_realm_st_offs[i],
+               aligned_fr_size);
 #endif
     }
 }
@@ -168,13 +169,13 @@ void ADIOI_Calc_file_realms_aar(ADIO_File fd, int nprocs_for_coll, int cb_pfr,
     file_realm_types[0] = simpletype;
 
 #ifdef DEBUG
-    printf("file_realm[0] = (%lld, %d)\n", file_realm_st_offs[0], fr_size);
+    printf("file_realm[0] = (%lld, %d)\n", (long long) file_realm_st_offs[0], fr_size);
 #endif
     for (i = 1; i < nprocs_for_coll; i++) {
         file_realm_st_offs[i] = file_realm_st_offs[i - 1] + fr_size;
         file_realm_types[i] = simpletype;
 #ifdef DEBUG
-        printf("file_realm[%d] = (%lld, %d)\n", i, file_realm_st_offs[i], fr_size);
+        printf("file_realm[%d] = (%lld, %d)\n", i, (long long) file_realm_st_offs[i], fr_size);
 #endif
     }
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {

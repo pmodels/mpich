@@ -19,6 +19,24 @@
 #define DYNPROC_RECEIVER 0
 #define DYNPROC_SENDER 1
 
+/* The normal progress is protected with vci_lock, the progress here is not and it needs to.
+ * We customized the OFI PROGRESS macros here to add the vci_locks as a work-around.
+ * FIXME: what is wrong is the yielding of MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX. Lower-layer
+ *        does not know and should not know what outer-layer lock has been taken.
+ *        If structured properly, there shouldn't be yield.
+ */
+#define _fixme_MPIDI_OFI_PROGRESS()                                      \
+    do {                                                          \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);         \
+        mpi_errno = MPIDI_OFI_progress(0, 0);                     \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPIR_ERR_CHECK(mpi_errno);                                \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+    } while (0)
+
+#define _fixme_MPIDI_OFI_PROGRESS_WHILE(cond)                 \
+    while (cond) _fixme_MPIDI_OFI_PROGRESS()
+
 static void free_port_name_tag(int tag);
 static int get_port_name_tag(int *port_name_tag);
 static int get_tag_from_port(const char *port_name, int *port_name_tag);
@@ -320,7 +338,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                           match_bits,
                                           (void *) &req.context), tsenddata, FALSE /* eagain */);
 
-        MPIDI_OFI_PROGRESS_WHILE(!req.done);
+        _fixme_MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_HANDSHAKE);
@@ -377,7 +395,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
             MPIDI_OFI_CALL(fi_trecvmsg
                            (MPIDI_OFI_global.ctx[0].rx, &msg,
                             FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), trecv);
-            MPIDI_OFI_PROGRESS_WHILE(req[0].done == MPIDI_OFI_PEEK_START);
+            _fixme_MPIDI_OFI_PROGRESS_WHILE(req[0].done == MPIDI_OFI_PEEK_START);
         }
 
         *remote_size = req[0].msglen / sizeof(size_t);
@@ -401,7 +419,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits, mask_bits, &req[0].context), trecv, FALSE);
-        MPIDI_OFI_PROGRESS_WHILE(!req[0].done);
+        _fixme_MPIDI_OFI_PROGRESS_WHILE(!req[0].done);
 
         for (i = 0; i < (*remote_size); i++)
             remote_upid_recvsize += (*remote_upid_size)[i];
@@ -422,7 +440,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                       FI_ADDR_UNSPEC,
                                       match_bits, mask_bits, &req[2].context), trecv, FALSE);
 
-        MPIDI_OFI_PROGRESS_WHILE(!req[1].done || !req[2].done);
+        _fixme_MPIDI_OFI_PROGRESS_WHILE(!req[1].done || !req[2].done);
         size_t disp = 0;
         for (i = 0; i < req[0].source; i++)
             disp += (*remote_upid_size)[i];
@@ -479,7 +497,7 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
                                           (void *) &req[2].context),
                              tsenddata, FALSE /* eagain */);
 
-        MPIDI_OFI_PROGRESS_WHILE(!req[0].done || !req[1].done || !req[2].done);
+        _fixme_MPIDI_OFI_PROGRESS_WHILE(!req[0].done || !req[1].done || !req[2].done);
 
     }
 
@@ -726,7 +744,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;
-    fi_addr_t conn = -1;
+    fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
     int get_tag = -1;
 
@@ -746,6 +764,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 
         mpi_errno = get_tag_from_port(port_name, &port_id);
         MPIR_ERR_CHECK(mpi_errno);
+        /* note: conn is a dummy for DYNPROC_RECEIVER (phase 0). */
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_RECEIVER, port_id, &conn, conname, comm_ptr,
                                  &child_root, &remote_size, &remote_upid_size, &remote_upids,

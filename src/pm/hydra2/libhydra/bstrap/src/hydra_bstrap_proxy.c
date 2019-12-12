@@ -13,6 +13,7 @@
 #include "hydra_mem.h"
 #include "hydra_node.h"
 #include "hydra_hash.h"
+#include "hydra_timeout.h"
 
 static const char *upstream_host = NULL;
 static int upstream_port = -1;
@@ -40,6 +41,7 @@ static int *downstream_pid = NULL;
 static int debug = 0;
 
 static const char *localhost = NULL;
+static struct timeout_s timeout;
 
 static HYD_status get_params(int argc, char **argv)
 {
@@ -94,6 +96,10 @@ static HYD_status get_params(int argc, char **argv)
             ++argv;
             --argc;
             tree_width = atoi(*argv);
+        } else if (!strcmp(*argv, "--time-left")) {
+            ++argv;
+            --argc;
+            HYD_init_timeout(atoi(*argv), &timeout);
         } else if (!strcmp(*argv, "--debug")) {
             debug = 1;
         } else {
@@ -204,6 +210,7 @@ static HYD_status upstream_cb(int fd, HYD_dmx_event_t events, void *userp)
         /* launch the remaining bstrap proxies in this subtree */
         if (subtree_size > 1) {
             struct HYD_int_hash *hash, *thash;
+            int time_left = HYD_get_time_left(&timeout);
 
             status =
                 HYD_bstrap_setup(base_path, launcher, launcher_exec, subtree_size - 1,
@@ -211,7 +218,12 @@ static HYD_status upstream_cb(int fd, HYD_dmx_event_t events, void *userp)
                                  &num_downstream_proxies, &downstream_stdin,
                                  &downstream_stdout_hash, &downstream_stderr_hash,
                                  &downstream_control_hash, &downstream_proxy_id, &downstream_pid,
-                                 debug, tree_width);
+                                 debug, tree_width, time_left);
+
+            if (status == HYD_ERR_TIMED_OUT) {
+                goto fn_fail;
+            }
+
             HYD_ERR_POP(status, "error setting up the bstrap proxies\n");
 
             HYD_MALLOC(downstream_control, int *, num_downstream_proxies * sizeof(int), status);

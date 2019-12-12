@@ -22,8 +22,8 @@ static void request_init_callback(void *request)
 
 }
 
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * comm_world,
-                            MPIR_Comm * comm_self, int *n_vcis_provided)
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
+                            int *n_vcis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -36,6 +36,9 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
+
+    /* unable to support extended context id in current match bit configuration */
+    MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
 
     *n_vcis_provided = 1;
 
@@ -81,6 +84,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
         int *node_roots = MPIR_Process.node_root_map;
         int num_nodes = MPIR_Process.num_nodes;
+        int *rank_map;
 
         for (i = 0; i < num_nodes; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
@@ -90,6 +94,22 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                               &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
+        MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.if_address,
+                           (int) MPIDI_UCX_global.addrname_len, FALSE, (void **) &table, &rank_map,
+                           &recv_bc_len);
+
+        /* insert new addresses, skipping over node roots */
+        for (i = 0; i < MPIR_Process.size; i++) {
+            if (rank_map[i] >= 0) {
+
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+                ucx_status = ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
+                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
+        }
+        MPIDU_bc_table_destroy();
     } else {
         for (i = 0; i < size; i++) {
             ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;

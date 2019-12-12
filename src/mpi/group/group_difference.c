@@ -138,6 +138,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgrou
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -186,6 +187,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgrou
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_DIFFERENCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -9,6 +9,12 @@
 
 #include <stdint.h>
 
+#ifdef __SUNPRO_C
+/* Solaris Studio 12.6 shows warnings if an argument of __atomic builtins is
+ * qualified with const or volatile.  The following pragma suppresses it. */
+#pragma error_messages (off, E_ARG_INCOMPATIBLE_WITH_ARG_L)
+#endif
+
 #define MPL_ATOMIC_INITIALIZER(val_) { (val_) }
 
 #define MPL_ATOMIC_INT_T_INITIALIZER(val_)    MPL_ATOMIC_INITIALIZER(val_)
@@ -107,5 +113,9 @@ static inline void MPL_atomic_compiler_barrier(void)
     /* atomic_signal_fence performs a compiler barrier without any overhead */
     __atomic_signal_fence(__ATOMIC_ACQ_REL);
 }
+
+#ifdef __SUNPRO_C
+#pragma error_messages (default, E_ARG_INCOMPATIBLE_WITH_ARG_L)
+#endif
 
 #endif /* MPL_ATOMIC_GCC_ATOMIC_H_INCLUDED */

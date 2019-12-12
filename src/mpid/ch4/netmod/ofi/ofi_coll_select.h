@@ -38,8 +38,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
             return &MPIDI_OFI_Bcast_intra_scatter_ring_allgather_cnt;
         }
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -58,13 +56,11 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm->coll.pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+        (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
         return &MPIDI_OFI_Allreduce_intra_recursive_doubling_cnt;
     } else {
         return &MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -84,13 +80,11 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm->coll.pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
-        (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
+        (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
         return &MPIDI_OFI_Reduce_intra_reduce_scatter_gather_cnt;
     } else {
         return &MPIDI_OFI_Reduce_intra_binomial_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -186,8 +180,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoall_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoall_intra_pairwise_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -209,8 +201,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallv_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoallv_intra_scattered_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -232,8 +222,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallw_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Alltoallw_intra_scattered_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -261,8 +249,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgather_select(const void *sendbuf,
     } else {
         return &MPIDI_OFI_Allgather_intra_ring_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -300,8 +286,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgatherv_select(const void *sendbuf
     } else {
         return &MPIDI_OFI_Allgatherv_intra_ring_cnt;
     }
-
-    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX const
@@ -326,7 +310,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_select(const void *sen
 
     comm_size = comm->local_size;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
@@ -398,7 +382,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_block_select(const voi
 
     comm_size = comm->local_size;
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(op)) {
         is_commutative = 1;
     } else {
         MPIR_Op_get_ptr(op, op_ptr);

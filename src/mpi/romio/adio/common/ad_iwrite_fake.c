@@ -17,22 +17,20 @@ void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
                              ADIO_Offset offset, ADIO_Request * request, int *error_code)
 {
     ADIO_Status status;
-    MPI_Offset len;
     MPI_Count typesize;
     int write_count;
-    MPI_Offset nbytes = 0;
-
-    MPI_Type_size_x(datatype, &typesize);
-    len = (MPI_Offset) count *(MPI_Offset) typesize;
+    MPI_Offset nbytes;
 
     /* Call the blocking function.  It will create an error code
      * if necessary.
      */
-    ADIOI_Assert(len == (int) len);     /* the count is an int parm */
-    ADIO_WriteContig(fd, buf, (int) len, MPI_BYTE, file_ptr_type, offset, &status, error_code);
+    ADIO_WriteContig(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
-        MPI_Get_count(&status, MPI_BYTE, &write_count);
-        nbytes = (MPI_Offset) write_count *(MPI_Offset) typesize;
+        MPI_Type_size_x(datatype, &typesize);
+        MPI_Get_count(&status, datatype, &write_count);
+        nbytes = write_count * typesize;
+    } else {
+        nbytes = 0;
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 
@@ -48,7 +46,8 @@ void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, int count,
 {
     ADIO_Status status;
     MPI_Count typesize;
-    MPI_Offset nbytes = 0;
+    int write_count;
+    MPI_Offset nbytes;
 
     /* Call the blocking function.  It will create an error code
      * if necessary.
@@ -56,7 +55,10 @@ void ADIOI_FAKE_IwriteStrided(ADIO_File fd, const void *buf, int count,
     ADIO_WriteStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
     if (*error_code == MPI_SUCCESS) {
         MPI_Type_size_x(datatype, &typesize);
-        nbytes = (MPI_Offset) count *(MPI_Offset) typesize;
+        MPI_Get_count(&status, datatype, &write_count);
+        nbytes = write_count * typesize;
+    } else {
+        nbytes = 0;
     }
     MPIO_Completed_request_create(&fd, nbytes, error_code, request);
 }

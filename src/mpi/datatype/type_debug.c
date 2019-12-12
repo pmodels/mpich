@@ -40,7 +40,7 @@ void MPII_Datatype_printf(MPI_Datatype type,
     MPI_Aint size;
     MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
 
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(type)) {
         string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
         if (type == MPI_LB)
@@ -308,7 +308,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 #endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
 
-    is_builtin = (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN);
+    is_builtin = (HANDLE_IS_BUILTIN(type));
 
     /* can get a NULL type a number of different ways, including not having
      * fortran support included.
@@ -406,7 +406,7 @@ static void contents_printf(MPI_Datatype type, int depth, int acount)
     int *ints = NULL;
 
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(type)) {
         const char *string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
         MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST, "# %stype: %s\n",

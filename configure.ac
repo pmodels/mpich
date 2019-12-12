@@ -347,6 +347,12 @@ AC_ARG_ENABLE(tag-error-bits,
         no        - No bits are taken from the user tag (this could cause deadlock if an error is detected during a collective).
 ],,enable_tag_error_bits=yes)
 
+AC_ARG_ENABLE(extended-context-bits,
+[  --enable-extended-context-bits=yes|no - Enable wider context id space. (experimental)
+        yes       - 20 bits
+        no        - 16 bits (default)
+],,enable_extended_context_bits=no)
+
 AC_ARG_ENABLE(timing,
 [  --enable-timing=level - Control the amount of timing information
                            collected by the MPICH implementation.
@@ -613,6 +619,7 @@ AC_CANONICAL_TARGET
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
 AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O dnl needed for automake "silent-rules"
 PAC_PUSH_FLAG([CFLAGS])
 AC_PROG_CPP
@@ -680,11 +687,11 @@ AS_IF([test "x$enable_cxx" = "xno"],[CXX=no])
 
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
-AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
+AC_PROG_CXX
 
 # suppress default "-g -O2" from AC_PROG_FC
 : ${FCFLAGS=""}
-AC_PROG_FC([PAC_FC_SEARCH_LIST])
+AC_PROG_FC
 
 save_IFS="$IFS"
 IFS=","
@@ -733,7 +740,7 @@ AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"
 # time, as is allowed.
 # suppress default "-g -O2" from AC_PROG_F77
 : ${FFLAGS=""}
-AC_PROG_F77([PAC_F77_SEARCH_LIST])
+AC_PROG_F77
 
 # compute canonical system types
 AC_CANONICAL_BUILD
@@ -972,6 +979,11 @@ AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable e
 #error-tags
 if test "$enable_tag_error_bits" = "yes" ; then
     AC_DEFINE([HAVE_TAG_ERROR_BITS],[1],[Define to enable tag error bits])
+fi
+
+# context bits
+if test "$enable_extended_context_bits" = "yes" ; then
+    AC_DEFINE([HAVE_EXTENDED_CONTEXT_BITS],[1],[Define to enable extended context id bit space])
 fi
 
 # MPL
@@ -1456,6 +1468,9 @@ fi
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPICH_THREAD_GRANULARITY__SINGLE
 thread_refcount=MPICH_REFCOUNT__NONE
+if test "$device_name" = "ch4" ; then
+    enable_thread_cs="per-vci"
+fi
 if test "$enable_threads" = "multiple" ; then
     case $enable_thread_cs in
     global)
@@ -4515,7 +4530,7 @@ AC_SUBST([MPI_F77_CXX_LONG_DOUBLE_COMPLEX])
 # does not help, since only the latest type_tag definition is used. Type tags are defined in mpi.h,
 # therefore, they must be also be activated/deavtivated there
 PAC_PUSH_FLAG([CFLAGS])
-PAC_APPEND_FLAG([-Werror],[CFLAGS])
+PAC_C_CHECK_COMPILER_OPTION([-Werror],[CFLAGS="$CFLAGS -Werror"])
 AC_TRY_COMPILE([
 typedef int TEST_Datatype;
 #define TEST_INT ((TEST_Datatype)0x44)

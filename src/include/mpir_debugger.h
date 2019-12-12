@@ -12,11 +12,11 @@
    selected.  As there is extra overhead for this, we only do this
    when specifically requested
 */
-#ifdef HAVE_DEBUGGER_SUPPORT
-void MPIR_Debugger_set_aborting(const char *);
 
-/* internal functions */
+#ifdef HAVE_DEBUGGER_SUPPORT
 void MPII_Wait_for_debugger(void);
+void MPIR_Debugger_set_aborting(const char *);
+/* internal functions */
 void MPII_Sendq_remember(MPIR_Request *, int, int, int);
 void MPII_Sendq_forget(MPIR_Request *);
 void MPII_CommL_remember(MPIR_Comm *);
@@ -28,6 +28,14 @@ void MPII_CommL_forget(MPIR_Comm *);
 #define MPII_COMML_FORGET(_a) MPII_CommL_forget(_a)
 #define MPII_REQUEST_CLEAR_DBG(_r) ((_r)->u.send.dbg_next = NULL)
 #else
+static inline void MPII_Wait_for_debugger(void)
+{
+}
+
+static inline void MPIR_Debugger_set_aborting(const char *dummy)
+{
+}
+
 #define MPII_SENDQ_REMEMBER(a,b,c,d)
 #define MPII_SENDQ_FORGET(a)
 #define MPII_COMML_REMEMBER(_a)

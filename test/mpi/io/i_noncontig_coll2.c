@@ -325,6 +325,10 @@ int main(int argc, char **argv)
     if (mynod)
         free(filename);
     free(cb_config_string);
+    for (i = 0; i < array->namect; i++)
+        free(array->names[i]);
+    free(array->names);
+    free(array);
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

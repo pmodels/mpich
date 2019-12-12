@@ -256,6 +256,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_ALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -306,8 +307,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
                     if (sendcounts[i] > 0) {
                         MPIR_ERRTEST_DATATYPE(sendtypes[i], "sendtype[i]", mpi_errno);
                     }
-                    if ((sendcounts[i] > 0) &&
-                        (HANDLE_GET_KIND(sendtypes[i]) != HANDLE_KIND_BUILTIN)) {
+                    if ((sendcounts[i] > 0) && (!HANDLE_IS_BUILTIN(sendtypes[i]))) {
                         MPIR_Datatype_get_ptr(sendtypes[i], sendtype_ptr);
                         MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
                         if (mpi_errno != MPI_SUCCESS)
@@ -322,7 +322,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
                 if (recvcounts[i] > 0) {
                     MPIR_ERRTEST_DATATYPE(recvtypes[i], "recvtype[i]", mpi_errno);
                 }
-                if ((recvcounts[i] > 0) && (HANDLE_GET_KIND(recvtypes[i]) != HANDLE_KIND_BUILTIN)) {
+                if ((recvcounts[i] > 0) && (!HANDLE_IS_BUILTIN(recvtypes[i]))) {
                     MPIR_Datatype_get_ptr(recvtypes[i], recvtype_ptr);
                     MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
                     if (mpi_errno != MPI_SUCCESS)
@@ -368,6 +368,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
   fn_exit:
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_ALLTOALLW);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

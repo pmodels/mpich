@@ -105,6 +105,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_GET_ACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -150,7 +151,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
-            if (op != MPI_NO_OP && HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN) {
+            if (op != MPI_NO_OP && !HANDLE_IS_BUILTIN(origin_datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(origin_datatype, datatype_ptr);
@@ -162,7 +163,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                     goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(result_datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(result_datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(result_datatype, datatype_ptr);
@@ -174,7 +175,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                     goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(target_datatype)) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
                 MPIR_Datatype_get_ptr(target_datatype, datatype_ptr);
@@ -215,6 +216,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
   fn_exit:
     MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_GET_ACCUMULATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

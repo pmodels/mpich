@@ -201,7 +201,7 @@ static void dot_printf(MPII_Dataloop * loop_p, int depth, int header)
 
 void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header)
 {
-    if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(type)) {
         MPL_DBG_OUT(MPIR_DBG_DATATYPE, "type_dot_printf: type is a basic");
         return;
     } else {

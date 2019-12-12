@@ -9,7 +9,10 @@
 
 #include "shm_types.h"
 
-int MPIDI_XPMEM_ctrl_send_lmt_ack_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
-int MPIDI_XPMEM_ctrl_send_lmt_req_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
 
 #endif /* XPMEM_CONTROL_H_INCLUDED */

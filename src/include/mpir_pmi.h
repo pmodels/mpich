@@ -40,6 +40,7 @@ void MPIR_pmi_finalize(void);
 void MPIR_pmi_abort(int exit_code, const char *error_msg);
 
 /* PMI getters for private fields */
+int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);
 const char *MPIR_pmi_job_id(void);
 

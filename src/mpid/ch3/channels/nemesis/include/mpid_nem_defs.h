@@ -10,7 +10,7 @@
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
 #include "mpiimpl.h"
-#include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 /* FIXME: This definition should be gotten from mpidi_ch3_impl.h */
 #ifndef MAX_HOSTNAME_LEN

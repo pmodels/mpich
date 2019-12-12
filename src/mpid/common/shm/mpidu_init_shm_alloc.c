@@ -23,9 +23,6 @@
 extern int mkstemp(char *t);
 #endif
 
-#include "mpidimpl.h"
-#include "mpidu_shm.h"
-
 typedef struct memory_list {
     void *ptr;
     MPIDU_shm_seg_t *memory;
@@ -44,11 +41,11 @@ typedef struct asym_check_region {
 
 static asym_check_region *asym_check_region_p = NULL;
 
-/* MPIDU_shm_seg_alloc(len, ptr_p)
+/* MPIDU_Init_shm_alloc(len, ptr_p)
 
    This function allocates a shared memory segment
  */
-int MPIDU_shm_seg_alloc(size_t len, void **ptr)
+int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     void *current_addr;
@@ -60,9 +57,9 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr)
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *memory_node = NULL;
     MPIR_CHKPMEM_DECL(3);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_ALLOC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_ALLOC);
 
     MPIR_Assert(segment_len > 0);
 
@@ -104,10 +101,9 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr)
 
             mpl_err = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
-            serialized_hnd_size = strlen(serialized_hnd);
-            MPIR_Assert(serialized_hnd_size < MPIDU_SHM_MAX_FNAME_LEN);
+            serialized_hnd_size = strlen(serialized_hnd) + 1;   /* add 1 for null char */
 
-            MPIDU_Init_shm_put(serialized_hnd, MPIDU_SHM_MAX_FNAME_LEN);
+            MPIDU_Init_shm_put(serialized_hnd, serialized_hnd_size);
             MPIDU_Init_shm_barrier();
         } else {
             MPIDU_Init_shm_barrier();
@@ -146,7 +142,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr)
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_ALLOC);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -158,14 +154,14 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr)
 }
 
 /* MPIDU_SHM_Seg_free() free the shared memory segment */
-int MPIDU_shm_seg_free(void *ptr)
+int MPIDU_Init_shm_free(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *el = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_FREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FREE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FREE);
 
     /* retrieve memory handle for baseaddr */
     LL_FOREACH(memory_head, el) {
@@ -176,6 +172,8 @@ int MPIDU_shm_seg_free(void *ptr)
             break;
         }
     }
+
+    MPIR_Assert(memory != NULL);
 
     if (MPIR_Process.local_size == 1)
         MPL_free(memory->base_addr);
@@ -188,13 +186,13 @@ int MPIDU_shm_seg_free(void *ptr)
   fn_exit:
     MPL_shm_hnd_finalize(&(memory->hnd));
     MPL_free(memory);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_SEG_FREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_FREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-int MPIDU_shm_seg_is_symm(void *ptr)
+int MPIDU_Init_shm_is_symm(void *ptr)
 {
     int ret = -1;
     memory_list_t *el;

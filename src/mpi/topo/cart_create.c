@@ -227,6 +227,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -290,6 +291,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

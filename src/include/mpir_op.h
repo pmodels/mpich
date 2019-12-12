@@ -160,7 +160,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
 
 #define MPIR_Op_add_ref_if_not_builtin(op)               \
     do {                                                 \
-        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+        if (!HANDLE_IS_BUILTIN((op))) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
             MPIR_Assert(op_ptr != NULL);                 \
@@ -171,7 +171,7 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
 
 #define MPIR_Op_release_if_not_builtin(op)               \
     do {                                                 \
-        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+        if (!HANDLE_IS_BUILTIN((op))) {\
             MPIR_Op *op_ptr = NULL;                      \
             MPIR_Op_get_ptr(op, op_ptr);                 \
             MPIR_Assert(op_ptr != NULL);                 \

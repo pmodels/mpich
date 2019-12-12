@@ -78,13 +78,13 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
  * for BUILTIN down in the MPIR_Object_* routines. */
 #define MPIR_Errhandler_add_ref(_errhand)                               \
     do {                                                                  \
-        if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
+        if (!HANDLE_IS_BUILTIN((_errhand)->handle)) { \
             MPIR_Object_add_ref(_errhand);                              \
         }                                                                 \
     } while (0)
 #define MPIR_Errhandler_release_ref(_errhand, _inuse)                   \
     do {                                                                  \
-        if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
+        if (!HANDLE_IS_BUILTIN((_errhand)->handle)) { \
             MPIR_Object_release_ref((_errhand), (_inuse));              \
         }                                                                 \
         else {                                                            \

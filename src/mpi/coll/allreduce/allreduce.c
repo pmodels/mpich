@@ -180,7 +180,7 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
 
     pof2 = comm_ptr->coll.pof2;
     if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
+        (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
         mpi_errno =
             MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                     comm_ptr, errflag);
@@ -340,6 +340,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_ALLREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -371,7 +372,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_OP(op, mpi_errno);
 
-            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(datatype)) {
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS)
@@ -394,11 +395,10 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, count, mpi_errno);
             MPIR_ERRTEST_USERBUFFER(recvbuf, count, datatype, mpi_errno);
 
-            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(op)) {
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
-            }
-            if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+            } else {
                 mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
             }
             if (mpi_errno != MPI_SUCCESS)
@@ -418,6 +418,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
   fn_exit:
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_ALLREDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

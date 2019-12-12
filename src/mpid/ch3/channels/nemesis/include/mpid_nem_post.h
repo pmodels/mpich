@@ -7,7 +7,7 @@
 #ifndef MPID_NEM_POST_H_INCLUDED
 #define MPID_NEM_POST_H_INCLUDED
 
-#include "mpidu_shm.h"
+#include "mpidu_init_shm.h"
 
 struct MPIDI_PG;
 union MPIDI_CH3_Pkt;

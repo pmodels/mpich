@@ -106,10 +106,11 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
 
-    p_data = in_data = (char *) msg_hdr->payload + msg_hdr->am_hdr_sz;
+    /* note: msg_hdr + 1 points to the payload */
+    p_data = in_data = (char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz;
     in_data_sz = data_sz = msg_hdr->data_sz;
 
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
+    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, (msg_hdr + 1),
                                                        &p_data, &data_sz, 0 /* is_local */ ,
                                                        &is_contig, &target_cmpl_cb, &rreq);
 
@@ -374,8 +375,9 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
 
-    lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ((char *) msg_hdr->payload + msg_hdr->am_hdr_sz);
-    mpi_errno = MPIDI_OFI_do_handle_long_am(msg_hdr, lmt_msg, msg_hdr->payload);
+    /* note: msg_hdr + 1 points to the payload */
+    lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ((char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz);
+    mpi_errno = MPIDI_OFI_do_handle_long_am(msg_hdr, lmt_msg, msg_hdr + 1);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -396,7 +398,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
 
-    ack_msg = (MPIDI_OFI_ack_msg_payload_t *) msg_hdr->payload;
+    ack_msg = (MPIDI_OFI_ack_msg_payload_t *) (msg_hdr + 1);
     sreq = ack_msg->sreq_ptr;
 
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {

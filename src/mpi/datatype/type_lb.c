@@ -28,7 +28,7 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement)
 
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement)
 {
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+    if (HANDLE_IS_BUILTIN(datatype)) {
         *displacement = 0;
     } else {
         MPIR_Datatype *datatype_ptr = NULL;

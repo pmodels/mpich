@@ -28,7 +28,8 @@ noinst_PROGRAMS = \
     hindexed_io   \
     simple_collective \
     external32_derived_dtype \
-    tst_fileview
+    tst_fileview \
+    zero_count
 
 
 if BUILD_MPIX_TESTS

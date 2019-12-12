@@ -101,8 +101,10 @@ int MPIDI_SHMI_mpi_win_create_hook(MPIR_Win * win)
     MPIR_ERR_CHECK(ret);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    ret = MPIDI_XPMEM_mpi_win_create_hook(win);
-    MPIR_ERR_CHECK(ret);
+    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
+        ret = MPIDI_XPMEM_mpi_win_create_hook(win);
+        MPIR_ERR_CHECK(ret);
+    }
 #endif
 
   fn_exit:
@@ -185,8 +187,10 @@ int MPIDI_SHMI_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_MPI_WIN_FREE_HOOK);
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    ret = MPIDI_XPMEM_mpi_win_free_hook(win);
-    MPIR_ERR_CHECK(ret);
+    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
+        ret = MPIDI_XPMEM_mpi_win_free_hook(win);
+        MPIR_ERR_CHECK(ret);
+    }
 #endif
     ret = MPIDI_POSIX_mpi_win_free_hook(win);
     MPIR_ERR_CHECK(ret);

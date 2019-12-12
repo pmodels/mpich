@@ -58,7 +58,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
+    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
 
     if (is_builtin) {
         el_sz = MPIR_Datatype_get_basic_size(oldtype);
@@ -226,6 +226,7 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CONTIGUOUS);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -237,7 +238,7 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
             MPIR_ERRTEST_COUNT(count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+            if (!HANDLE_IS_BUILTIN(oldtype)) {
                 MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS)
@@ -259,6 +260,7 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CONTIGUOUS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

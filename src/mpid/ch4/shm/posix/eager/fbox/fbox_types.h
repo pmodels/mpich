@@ -12,7 +12,6 @@
 #define POSIX_EAGER_FBOX_TYPES_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidu_shm.h"
 #include "mpidu_init_shm.h"
 
 #define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))

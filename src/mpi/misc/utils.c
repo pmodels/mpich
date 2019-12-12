@@ -46,8 +46,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         copy_sz = sdata_sz;
 
     /* Builtin types is the common case; optimize for it */
-    if ((HANDLE_GET_KIND(sendtype) == HANDLE_KIND_BUILTIN) &&
-        HANDLE_GET_KIND(recvtype) == HANDLE_KIND_BUILTIN) {
+    if ((HANDLE_IS_BUILTIN(sendtype)) && HANDLE_IS_BUILTIN(recvtype)) {
         MPIR_Memcpy(recvbuf, sendbuf, copy_sz);
         goto fn_exit;
     }

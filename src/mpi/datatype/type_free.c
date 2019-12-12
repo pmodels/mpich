@@ -71,6 +71,7 @@ int MPI_Type_free(MPI_Datatype * datatype)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -93,7 +94,7 @@ int MPI_Type_free(MPI_Datatype * datatype)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Check for built-in type */
-            if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) {
+            if (HANDLE_IS_BUILTIN(*datatype)) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
                                                  __func__, __LINE__, MPI_ERR_TYPE, "**dtypeperm",
@@ -137,6 +138,7 @@ int MPI_Type_free(MPI_Datatype * datatype)
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
