@@ -42,6 +42,7 @@
 
 // no debian/ support yet
 // no pmix for leap15 yet
-packageBuildingPipeline(['distros' : ['centos7'],
+packageBuildingPipeline(['distros' : ['centos7', 'leap15'],
                          'publish_branch': 'daos_adio-rpm',
-                         'make args' : '-f Makefile-rpm.mk'])
+                         'make args' : '-f Makefile-rpm.mk',
+                         'rpmlint_check': false])

@@ -1,0 +1,20 @@
+#
+# mpich
+#
+
+%hpc_mpich_init(V:) \
+ %{-V: %define _mf_ver %{-V*}} \
+ %{expand: %%global hpc_mpich_dep_version %%{?_mf_ver}} \
+ %{expand: %%global hpc_mpich_dir mpich%{hpc_mpich_dep_version}} \
+ %global hpc_mpich_pack_version %{hpc_mpich_dep_version} \
+ %{expand: %%global _hpc_mpich_modules mpich}
+
+# We may have to add a version here.
+%hpc_setup_mpich \
+ module load mpich
+
+%hpc_mpich_requires \
+Requires:  mpich%{hpc_mpich_dep_version}-%{hpc_compiler_family}%{hpc_cf_pack_version}-hpc
+
+%hpc_mpich_requires_devel \
+Requires:  mpich%{hpc_mpich_dep_version}-%{hpc_compiler_family}%{hpc_cf_pack_version}-hpc-devel

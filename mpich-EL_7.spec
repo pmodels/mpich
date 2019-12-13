@@ -1,7 +1,7 @@
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        3.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -334,11 +334,14 @@ make check VERBOSE=1
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Tue Dec 10 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-4
+- Another Update packaging standards
+
 * Fri Nov 22 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-3
 - Rebuild with newer CaRT SO version
 
 * Sat Nov 02 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-2
-- Another Update packaging standards
+- Another update packaging standards
 
 * Fri Aug 30 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-1
 - Update packaging standards
