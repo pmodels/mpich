@@ -44,19 +44,8 @@ MPID_MAX_ERROR_STRING=512
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
-    # need pick a netmod
-    if test $have_libfabric = yes ; then
-        ch4_netmods="ofi"
-    elif test $have_ucx = yes ; then
-        ch4_netmods="ucx"
-    elif test -n $with_libfabric ; then
-        ch4_netmods="ofi"
-    elif test -n $with_ucx ; then
-        ch4_netmods="ucx"
-    else
-        ch4_netmods="ofi"
-        with_libfabric=embedded
-    fi
+    AC_MSG_ERROR([Netmod configuration not specified. To build ch4, you must select a netmod:
+    --with-device=ch4:ofi or --with-device=ch4:ucx])
 else
     changequote(<<,>>)
     netmod_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://' -e 's/,/ /g'`
