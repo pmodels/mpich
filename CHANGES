@@ -11,6 +11,8 @@
 
 # Un-inline non-critical ch4 code for improved build times.
 
+# Add DAOS ADIO driver to ROMIO (contributed by Intel).
+
 # Add support for Arm compiler toolchain
 
 # Add support for flang/f18 Fortran compiler
