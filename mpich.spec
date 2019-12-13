@@ -93,6 +93,7 @@ Requires:       gcc-gfortran
 %if (0%{?fedora} >= 30)
 Requires:       rpm-mpi-hooks
 %endif
+Requires:       daos-devel
 Provides:       mpich2-devel = 3.0.1
 Obsoletes:      mpich2-devel < 3.0
 # the standard EL7 compatibility package
