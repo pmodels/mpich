@@ -39,9 +39,9 @@ static inline TYPE MPL_atomic_relaxed_load_ ## NAME                            \
 static inline TYPE MPL_atomic_acquire_load_ ## NAME                            \
                                 (const struct MPL_atomic_ ## NAME ## _t * ptr) \
 {                                                                              \
-    volatile int i = 0;                                                        \
     TYPE val = ptr->v;                                                         \
-    __sync_lock_test_and_set(&i, 1); /* guarantees acquire semantics */        \
+    /* Need a full barrier (see https://github.com/pmodels/mpich/pull/4222) */ \
+    __sync_synchronize();                                                      \
     return val;                                                                \
 }                                                                              \
 static inline void MPL_atomic_relaxed_store_ ## NAME                           \
@@ -52,8 +52,8 @@ static inline void MPL_atomic_relaxed_store_ ## NAME                           \
 static inline void MPL_atomic_release_store_ ## NAME                           \
                             (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
-    volatile int i = 1;                                                        \
-    __sync_lock_release(&i); /* guarantees release semantics */                \
+    /* Need a full barrier (see https://github.com/pmodels/mpich/pull/4222) */ \
+    __sync_synchronize();                                                      \
     ptr->v = val;                                                              \
 }                                                                              \
 static inline TYPE MPL_atomic_cas_ ## NAME                                     \
