@@ -5,8 +5,8 @@
  */
 
 /* FIXME needs to be converted to new style functions with OPA_int_t/OPA_ptr_t-types */
-#ifndef OPA_GCC_INTRINSICS_H_INCLUDED
-#define OPA_GCC_INTRINSICS_H_INCLUDED
+#ifndef OPA_GCC_SYNC_H_INCLUDED
+#define OPA_GCC_SYNC_H_INCLUDED
 
 /* FIXME do we need to align these? */
 typedef struct {
@@ -232,4 +232,4 @@ static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 
 #include"opa_emulated.h"
 
-#endif /* OPA_GCC_INTRINSICS_H_INCLUDED */
+#endif /* OPA_GCC_SYNC_H_INCLUDED */
