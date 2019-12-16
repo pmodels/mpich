@@ -150,16 +150,32 @@ static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
     finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAR) ==
         MPIDIG_ACCU_ORDER_RAR)
+#ifdef FI_ORDER_ATOMIC_RAR
+        finfo->tx_attr->msg_order |= FI_ORDER_ATOMIC_RAR;
+#else
         finfo->tx_attr->msg_order |= FI_ORDER_RAR;
+#endif
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) ==
         MPIDIG_ACCU_ORDER_RAW)
+#ifdef FI_ORDER_ATOMIC_RAW
+        finfo->tx_attr->msg_order |= FI_ORDER_ATOMIC_RAW;
+#else
         finfo->tx_attr->msg_order |= FI_ORDER_RAW;
+#endif
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR) ==
         MPIDIG_ACCU_ORDER_WAR)
+#ifdef FI_ORDER_ATOMIC_WAR
+        finfo->tx_attr->msg_order |= FI_ORDER_ATOMIC_WAR;
+#else
         finfo->tx_attr->msg_order |= FI_ORDER_WAR;
+#endif
     if ((MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW) ==
         MPIDIG_ACCU_ORDER_WAW)
+#ifdef FI_ORDER_ATOMIC_WAW
+        finfo->tx_attr->msg_order |= FI_ORDER_ATOMIC_WAW;
+#else
         finfo->tx_attr->msg_order |= FI_ORDER_WAW;
+#endif
 }
 
 static int win_allgather(MPIR_Win * win, void *base, int disp_unit)

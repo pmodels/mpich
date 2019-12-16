@@ -14,6 +14,15 @@
 #define MPIDI_OFI_OFF     0
 #define MPIDI_OFI_ON      1
 
+/* Check to see if the OFI library supports FI_ORDER_ATOMIC_* flags. */
+#if defined(FI_ORDER_ATOMIC_RAR) && defined(FI_ORDER_ATOMIC_RAW) && defined(FI_ORDER_ATOMIC_WAR) && defined(FI_ORDER_ATOMIC_WAW)
+/* Support for atomic flags was added in OFI 1.8. */
+#define MPIDI_OFI_ATOMIC_ORDER_FLAGS (FI_ORDER_ATOMIC_RAR | FI_ORDER_ATOMIC_RAW | FI_ORDER_ATOMIC_WAR | FI_ORDER_ATOMIC_WAW)
+#else
+/* Earlier versions of OFI will use the more generic flags that will do more locking. */
+#define MPIDI_OFI_ATOMIC_ORDER_FLAGS (FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW)
+#endif
+
 enum {
     MPIDI_OFI_SET_NUMBER_DEFAULT = 0,
     MPIDI_OFI_SET_NUMBER_MINIMAL,
