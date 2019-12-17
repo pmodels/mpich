@@ -1,7 +1,10 @@
+%global cart_major 4
+%global daos_major 0
+
 Summary:        A high-performance implementation of MPI
 Name:           mpich
 Version:        3.3
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -49,6 +52,7 @@ Obsoletes:      mpich-3.0 < 3.1
 Obsoletes:      mpich-3.2 < 3.3
 Requires:       environment(modules)
 Provides:       bundled(hwloc) = 2.0.1rc2
+Provides:       %{name}-cart-%{cart_major}-daos-%{daos_major}
 
 %description
 MPICH is a high-performance and widely portable implementation of the Message
@@ -80,6 +84,7 @@ Obsoletes:      mpich2-autoload < 3.0
 Obsoletes:      mpich-3.0-autoload < 3.1
 # and it's standard package
 Obsoletes:      mpich-3.2-autoload < 3.3
+Provides:       %{name}-autoload-cart-%{cart_major}-daos-%{daos_major}
 
 %description autoload
 This package contains profile files that make mpich automatically loaded.
@@ -120,12 +125,14 @@ Contains documentations, examples and man-pages for mpich
 
 %package -n python2-mpich
 Summary:        mpich support for Python 2
+Provides:       %{name}-python2-mpich-cart-%{cart_major}-daos-%{daos_major}
 
 %description -n python2-mpich
 mpich support for Python 2.
 
 %package -n python3-mpich
 Summary:        mpich support for Python 3
+Provides:       %{name}-python3-mpich-cart-%{cart_major}-daos-%{daos_major}
 
 %description -n python3-mpich
 mpich support for Python 3.
@@ -334,6 +341,10 @@ make check VERBOSE=1
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
+- Rebuild with CaRT SO version 4
+- Add Provides: to allow consumers to target cart and daos ABI versions
+
 * Tue Dec 10 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-4
 - Another Update packaging standards
 
