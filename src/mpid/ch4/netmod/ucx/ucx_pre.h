@@ -17,6 +17,7 @@ typedef union {
     MPIR_Request *req;
     MPI_Status *status;
     void *buf;
+    void *context;
 } MPIDI_UCX_ucp_request_t;
 
 typedef struct {
@@ -29,7 +30,7 @@ typedef union {
 } MPIDI_UCX_request_t;
 
 typedef struct {
-    int handler_id;
+    int completion_id;
     char *pack_buffer;
     ucp_dt_iov_t iov[2];
 } MPIDI_UCX_am_request_t;
