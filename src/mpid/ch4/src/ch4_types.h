@@ -322,6 +322,9 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_workq_t workqueue;
 #endif
     MPIDI_CH4_configurations_t settings;
+
+    /* cache source av */
+    MPIDI_av_entry_t *my_av;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_global;
 #ifdef MPL_USE_DBG_LOGGING

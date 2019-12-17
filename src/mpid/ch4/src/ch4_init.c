@@ -299,6 +299,9 @@ static int init_builtin_comms(void)
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_global.my_av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world,
+                                                MPIR_Process.comm_world->rank);
+
   fn_exit:
     return mpi_errno;
   fn_fail:

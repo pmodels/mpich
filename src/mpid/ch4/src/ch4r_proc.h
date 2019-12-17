@@ -31,6 +31,11 @@ int MPIDIU_get_max_node_id(MPIR_Comm * comm, int *max_id_p);
 int MPIDIU_build_nodemap(int myrank, MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out);
 int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 
+MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_get_my_av()
+{
+    return MPIDI_global.my_av;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx,
                                                      int *avtid)
 {
