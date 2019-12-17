@@ -14,6 +14,9 @@
 
 #include "ch4_impl.h"
 
+#define MPIDI_NONBLOCKING 0
+#define MPIDI_BLOCKING    1
+
 static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
                                     MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -67,7 +70,8 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     } else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq);
+        mpi_errno = MPIDI_NM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq,
+                                      addr);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

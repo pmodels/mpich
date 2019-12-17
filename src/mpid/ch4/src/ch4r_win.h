@@ -123,6 +123,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_Group *group;
     int *ranks_in_win_grp = NULL;
     int all_local_completed = 0;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
@@ -163,15 +164,17 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
 
+        av = MPIDIU_comm_rank_to_av(win->comm_ptr, peer);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(peer, win->comm_ptr))
+        if (av->is_local)
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
                                               MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
+            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr, MPIDIG_WIN_COMPLETE, &msg,
+                                             sizeof(msg), av);
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -200,6 +203,7 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     MPIDIG_win_cntrl_msg_t msg;
     int win_grp_idx, peer;
     int *ranks_in_win_grp = NULL;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_POST);
@@ -228,15 +232,17 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
 
+        av = MPIDIU_comm_rank_to_av(win->comm_ptr, peer);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(peer, win->comm_ptr))
+        if (av->is_local)
             mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
                                               MPIDIG_WIN_POST, &msg, sizeof(msg));
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_POST, &msg, sizeof(msg));
+            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr, MPIDIG_WIN_POST, &msg,
+                                             sizeof(msg), av);
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -314,6 +320,7 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned locked;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK);
@@ -336,13 +343,16 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     msg.lock_type = lock_type;
 
     locked = slock->locked + 1;
+    av = MPIDIU_comm_rank_to_av(win->comm_ptr, rank);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_rank_is_local(rank, win->comm_ptr))
+    if (av->is_local)
         mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg),
+                                         av);
     }
 
     if (mpi_errno != MPI_SUCCESS)
@@ -367,6 +377,7 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     unsigned unlocked;
     MPIDIG_win_cntrl_msg_t msg;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
@@ -410,14 +421,17 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
     msg.origin_rank = win->comm_ptr->rank;
     unlocked = slock->locked - 1;
 
+    av = MPIDIU_comm_rank_to_av(win->comm_ptr, rank);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_rank_is_local(rank, win->comm_ptr))
+    if (av->is_local)
         mpi_errno =
             MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
     else
 #endif
     {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg),
+                                         av);
     }
 
     if (mpi_errno != MPI_SUCCESS)
@@ -626,11 +640,12 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int i;
+    int all_remote_completed = 0;
+    MPIDI_av_entry_t *av;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
-    int i;
-
-    int all_remote_completed = 0;
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
     /* NOTE: lockall blocking waits till all locks granted */
@@ -665,15 +680,17 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
         msg.win_id = MPIDIG_WIN(win, win_id);
         msg.origin_rank = win->comm_ptr->rank;
 
+        av = MPIDIU_comm_rank_to_av(win->comm_ptr, i);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(i, win->comm_ptr))
+        if (av->is_local)
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
                                               MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
+            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr, MPIDIG_WIN_UNLOCKALL, &msg,
+                                             sizeof(msg), av);
         }
 
         if (mpi_errno != MPI_SUCCESS)
@@ -791,6 +808,7 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_LOCK_ALL);
@@ -814,15 +832,17 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
         msg.origin_rank = win->comm_ptr->rank;
         msg.lock_type = MPI_LOCK_SHARED;
 
+        av = MPIDIU_comm_rank_to_av(win->comm_ptr, i);
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(i, win->comm_ptr))
+        if (av->is_local)
             mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
                                               MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
+            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr, MPIDIG_WIN_LOCKALL, &msg,
+                                             sizeof(msg), av);
         }
 
         if (mpi_errno != MPI_SUCCESS)

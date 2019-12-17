@@ -17,11 +17,18 @@
 static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
+    MPIR_Context_id_t context_id = 0;
     MPIDIG_ssend_ack_msg_t ack_msg;
+    MPIR_Comm *comm;
+    MPIDI_av_entry_t *av;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REPLY_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REPLY_SSEND);
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    context_id = MPIDIG_REQUEST(rreq, context_id);
+    comm = MPIDIG_context_id_to_comm(context_id);
+    av = MPIDIU_comm_rank_to_av(comm, MPIDIG_REQUEST(rreq, rank));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -33,9 +40,8 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
-                                    MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                    sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
+            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(rreq, rank), comm, MPIDIG_SSEND_ACK, &ack_msg,
+                                    sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq, av);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

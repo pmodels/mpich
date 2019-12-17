@@ -12,6 +12,7 @@
 #include "mpidimpl.h"
 #include "mpidch4r.h"
 #include "ch4r_callbacks.h"
+#include "ch4_impl.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
 static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq);
@@ -22,12 +23,15 @@ int MPIDIG_do_long_ack(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     MPIDIG_send_long_ack_msg_t am_hdr;
+    MPIDI_av_entry_t *av;
+
     am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
     am_hdr.rreq_ptr = rreq;
     MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
 
     int rank = MPIDIG_REQUEST(rreq, rank);
     MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
 #else
@@ -35,7 +39,8 @@ int MPIDIG_do_long_ack(MPIR_Request * rreq)
         mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK,
                                           &am_hdr, sizeof(am_hdr));
     } else {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr),
+                                         av);
     }
 #endif
 
@@ -763,9 +768,13 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
                                        MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Context_id_t context_id = 0;
     MPIR_Request *sreq;
     MPIDIG_send_long_ack_msg_t *msg_hdr = (MPIDIG_send_long_ack_msg_t *) am_hdr;
     MPIDIG_send_long_lmt_msg_t send_hdr;
+    MPIR_Comm *comm;
+    MPIDI_av_entry_t *av;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_ACK_TARGET_MSG_CB);
 
@@ -774,10 +783,15 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
 
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
+    context_id = MPIDIG_REQUEST(sreq, req->lreq).context_id;
+
+    comm = MPIDIG_context_id_to_comm(context_id);
+    av = MPIDIU_comm_rank_to_av(comm, MPIDIG_REQUEST(sreq, rank));
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(sreq, is_local))
         mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+            MPIDI_SHM_am_isend_reply(context_id,
                                      MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
                                      &send_hdr, sizeof(send_hdr),
                                      MPIDIG_REQUEST(sreq, req->lreq).src_buf,
@@ -787,12 +801,11 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
 #endif
     {
         mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
-                                    MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
+            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, rank), comm, MPIDIG_SEND_LONG_LMT,
                                     &send_hdr, sizeof(send_hdr),
                                     MPIDIG_REQUEST(sreq, req->lreq).src_buf,
                                     MPIDIG_REQUEST(sreq, req->lreq).count,
-                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq, av);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
