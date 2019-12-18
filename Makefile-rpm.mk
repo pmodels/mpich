@@ -111,4 +111,34 @@ mpich.spec: FORCE
 	rm -f mpich.spec
 	ln mpich-$(DISTRO_BASE).spec $@
 
-FORCE:
+CHROOT      ?= false
+CHROOT_NAME ?= epel-7-x86_64
+
+romio-$(VERSION).tar.gz: FORCE
+	set -e;                                                              \
+	if $(CHROOT); then                                                   \
+	    romio_prefix=/var/lib/mock/$(CHROOT_NAME)/root/builddir/build;   \
+	    chroot_romio_prefix=/builddir/build;                             \
+	else                                                                 \
+	    romio_prefix=_topdir;                                            \
+	fi;                                                                  \
+	romio_dir=BUILD/mpich-$(VERSION)/src/mpi/romio;                      \
+	if grep "MPI_LIB = /" $$romio_prefix/$$romio_dir/test/Makefile; then \
+	    trap 'mv $$romio_prefix/$$romio_dir/test/Makefile{.old,}' EXIT;  \
+	    mv $$romio_prefix/$$romio_dir/test/Makefile{,.old};              \
+	    sed -e 's/\(MPI_LIB = \)\/\(.*\)/\1-L\/\2/'                      \
+	        < $$romio_prefix/$$romio_dir/test/Makefile.old               \
+	        > $$romio_prefix/$$romio_dir/test/Makefile;                  \
+	fi;                                                                  \
+	if $(CHROOT); then                                                   \
+	    mock -r $(CHROOT_NAME) --chroot                                  \
+	        "make -C $$chroot_romio_prefix/$$romio_dir clean";           \
+	else                                                                 \
+	    make -C $$romio_prefix/$$romio_dir clean;                        \
+	fi;                                                                  \
+	tar -C $$romio_prefix/$$romio_dir/.. --exclude Makefile.old          \
+	    -czf romio-$(VERSION).tar.gz romio
+
+romio-tarball: romio-$(VERSION).tar.gz
+
+.PHONY: romio-tarball

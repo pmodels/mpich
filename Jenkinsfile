@@ -44,5 +44,8 @@
 // no pmix for leap15 yet
 packageBuildingPipeline(['distros' : ['centos7', 'leap15'],
                          'publish_branch': 'daos_adio-rpm',
-                         'make args' : '-f Makefile-rpm.mk',
+                         'make args' : 'CHROOT=true -f Makefile-rpm.mk',
+                         'add_make_targets': 'romio-tarball',
+                         'add_archiving_cmds': 'mv romio-*.tar.gz artifacts/',
+                         'add_artifacts': 'artifacts/romio-*.tar.gz',
                          'rpmlint_check': false])

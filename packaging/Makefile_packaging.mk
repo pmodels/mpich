@@ -21,6 +21,7 @@ RPM_BUILD_OPTIONS += $(EXTERNAL_RPM_BUILD_OPTIONS)
 BUILD_OS ?= leap.15
 CHROOT_NAME ?= opensuse-leap-15-x86_64
 PACKAGING_CHECK_DIR ?= ../packaging
+LOCAL_REPOS ?= true
 
 COMMON_RPM_ARGS  := --define "%_topdir $$PWD/_topdir" $(BUILD_DEFINES)
 SPEC             := $(shell if [ -f $(NAME)-$(DISTRO_BASE).spec ]; then echo $(NAME)-$(DISTRO_BASE).spec; else echo $(NAME).spec; fi)
@@ -35,7 +36,7 @@ DEB_TOP          := _topdir/BUILD
 DEB_BUILD        := $(DEB_TOP)/$(NAME)-$(DEB_VERS)
 DEB_TARBASE      := $(DEB_TOP)/$(DEB_NAME)_$(DEB_VERS)
 SOURCE            = $(eval SOURCE := $(shell spectool -S -l $(SPEC) | sed -e 2,\$$d -e 's/.*:  *//'))$(SOURCE)
-PATCHES           = $(eval PATCHES := $(shell spectool -l $(SPEC) | sed -e 1d -e 's/.*:  *//'))$(PATCHES)
+PATCHES           = $(eval PATCHES := $(shell spectool -l $(SPEC) | sed -e 1d -e 's/.*:  *//' -e 's/.*\///'))$(PATCHES)
 SOURCES          := $(addprefix _topdir/SOURCES/,$(notdir $(SOURCE)) $(PATCHES))
 ifeq ($(ID_LIKE),debian)
 DEBS             := $(addsuffix _$(DEB_VERS)-1_amd64.deb,$(shell sed -n '/-udeb/b; s,^Package:[[:blank:]],$(DEB_TOP)/,p' debian/control))
@@ -331,7 +332,12 @@ baseurl=$${JENKINS_URL:-https://build.hpdd.intel.com/}job/daos-stack/job/$$repo/
 enabled=1\n\
 gpgcheck=False\n" >> /etc/mock/$(CHROOT_NAME).cfg;                                          \
 	    done;                                                                           \
-	    for repo in $($(DISTRO_BASE)_LOCAL_REPOS) $($(DISTRO_BASE)_REPOS); do           \
+	    if ! $(LOCAL_REPOS); then                                                       \
+	        LOCAL_REPOS="";                                                             \
+	    else                                                                            \
+	        LOCAL_REPOS="$($(DISTRO_BASE)_LOCAL_REPOS)";                                \
+	    fi;                                                                             \
+	    for repo in $$LOCAL_REPOS $($(DISTRO_BASE)_REPOS); do                           \
 	        repo_name=$${repo##*://};                                                   \
 	        repo_name=$${repo_name//\//_};                                              \
 	        echo -e "[$$repo_name]\n\
@@ -417,4 +423,4 @@ show_git_metadata:
 
 .PHONY: srpm rpms debs deb_detar ls chrootbuild rpmlint FORCE        \
         show_version show_release show_rpms show_source show_sources \
-        show_targets check-env show_git_metadata
+        show_targets check-env show_git_metadata 
