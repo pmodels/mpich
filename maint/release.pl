@@ -256,7 +256,7 @@ print("done\n");
 print("===> Creating secondary codebase for the docs... ");
 run_cmd("mkdir ${expdir}-build");
 chdir("${expdir}-build");
-run_cmd("${expdir}/configure --disable-fortran --disable-cxx");
+run_cmd("${expdir}/configure --with-device=ch4:stubnm --disable-fortran --disable-cxx");
 run_cmd("(make mandoc && make htmldoc && make latexdoc)");
 print("done\n");
 
