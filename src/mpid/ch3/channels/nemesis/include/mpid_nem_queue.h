@@ -5,7 +5,7 @@
  */
 
 /* TODO figure out how to rewrite some/all of this queue code to use
- * explicit OPA_load_ptr/OPA_store_ptr operations */
+ * explicit relaxed atomic operations */
 
 #ifndef MPID_NEM_QUEUE_H_INCLUDED
 #define MPID_NEM_QUEUE_H_INCLUDED
@@ -65,7 +65,7 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    OPA_store_ptr(&ret.p, OPA_swap_ptr(&(ptr->p), OPA_load_ptr(&val.p)));
+    MPL_atomic_relaxed_store_ptr(&ret.p, MPL_atomic_swap_ptr(&(ptr->p), MPL_atomic_relaxed_load_ptr(&val.p)));
     return ret;
 }
 
@@ -73,7 +73,7 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    OPA_store_ptr(&ret.p, OPA_cas_ptr(&(ptr->p), OPA_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
+    MPL_atomic_relaxed_store_ptr(&ret.p, MPL_atomic_cas_ptr(&(ptr->p), MPL_atomic_relaxed_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
     return ret;
 }
 
@@ -94,7 +94,7 @@ MPID_nem_queue_enqueue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t element)
      * the consumer does not directly inspect the tail.  But the subsequent
      * update to the head or e->next field does need to be ordered w.r.t. the
      * payload or the consumer may read incorrect data. */
-    OPA_write_barrier();
+    MPL_atomic_write_barrier();
 
     /* enqueue at tail */
     r_prev = MPID_NEM_SWAP_REL (&(qhead->tail), r_element);
@@ -214,7 +214,7 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
      * unconvinced of this.  Further work, ideally using more formal methods,
      * should justify removing this.  (note that this barrier won't cost us
      * anything on many platforms, esp. x86) */
-    OPA_read_barrier();
+    MPL_atomic_read_barrier();
 
     *e = _e;
 }
