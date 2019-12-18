@@ -74,8 +74,35 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
+        This variable is only provided for backward compatibility. When using OFI versions 1.5+, use
+        the other memory region variables.
+
         If true, MR_SCALABLE for OFI memory regions.
         If false, MR_BASIC for OFI memory regions.
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable virtual addressing for OFI memory regions. This variable is only meaningful
+        for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of
+        OFI older than 1.5.
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable provider supplied key for OFI memory regions. This variable is only
+        meaningful for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of OFI
+        older than 1.5.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED
       category    : CH4_OFI
@@ -1462,7 +1489,21 @@ static void init_global_settings(const char *prov_name)
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
      * and fall back if necessary in the RMA init code */
     UPDATE_SETTING_BY_CAP(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
-    UPDATE_SETTING_BY_CAP(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
+
+    /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
+     * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
+     * being used. */
+    if (get_ofi_version() < FI_VERSION(1, 5)) {
+        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
+         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
+        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
+        MPIDI_OFI_global.settings.enable_mr_virt_address =
+            MPIDI_OFI_global.settings.enable_mr_prov_key =
+            !MPIDI_OFI_global.settings.enable_mr_virt_address;
+    } else {
+        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
+        UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
+    }
     UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
     UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
     UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
@@ -1503,7 +1544,17 @@ static void update_global_settings(struct fi_info *prov_use, struct fi_info *hin
     UPDATE_SETTING_BY_INFO(enable_scalable_endpoints,
                            prov_use->domain_attr->max_ep_tx_ctx > 1 &&
                            (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
-    UPDATE_SETTING_BY_INFO(enable_mr_scalable, prov_use->domain_attr->mr_mode == FI_MR_SCALABLE);
+    /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
+     * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
+     * being used. */
+    if (get_ofi_version() < FI_VERSION(1, 5)) {
+        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
+         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
+        UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
+                               prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
+        UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
+                               prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
+    }
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov_use->caps & FI_TAGGED) &&
                            (prov_use->caps & FI_DIRECTED_RECV) &&
@@ -1630,14 +1681,31 @@ static void init_hints(struct fi_info *hints)
     }
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
-        hints->domain_attr->mr_mode = FI_MR_SCALABLE;
-    else
-        hints->domain_attr->mr_mode = FI_MR_BASIC;
+
     if (ofi_version >= FI_VERSION(1, 5)) {
+        hints->domain_attr->mr_mode = 0;
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
 #endif
+        /* avoid using FI_MR_SCALABLE and FI_MR_BASIC because they are only
+         * for backward compatibility (pre OFI version 1.5), and they don't allow any other
+         * mode bits to be added */
+#ifdef FI_MR_VIRT_ADDR
+        if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+            hints->domain_attr->mr_mode |= FI_MR_VIRT_ADDR | FI_MR_ALLOCATED;
+        }
+#endif
+
+#ifdef FI_MR_PROV_KEY
+        if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+            hints->domain_attr->mr_mode |= FI_MR_PROV_KEY;
+        }
+#endif
+    } else {
+        if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+            hints->domain_attr->mr_mode = FI_MR_SCALABLE;
+        else
+            hints->domain_attr->mr_mode = FI_MR_BASIC;
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
@@ -1672,6 +1740,8 @@ static void dump_global_settings(void)
             MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS: %d\n", MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_PROV_KEY: %d\n", MPIDI_OFI_ENABLE_MR_PROV_KEY);
     fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
     fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
