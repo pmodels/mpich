@@ -16,11 +16,10 @@
 #include "ch4r_proc.h"
 #include "ch4r_recv.h"
 
-static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
-                                          void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                          MPIR_Request * rreq)
+static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
+                                           void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                           MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 
@@ -32,7 +31,6 @@ static inline int MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t c
     MPIDIG_REQUEST(rreq, count) = count;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
-    return mpi_errno;
 }
 
 static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
@@ -201,9 +199,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     *request = rreq;
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    mpi_errno = MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
-    MPIR_ERR_CHECK(mpi_errno);
-
+    MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
 
     if (!unexp_req) {
         /* MPIDI_CS_ENTER(); */
