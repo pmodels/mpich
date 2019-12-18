@@ -5019,6 +5019,14 @@ AC_CHECK_SIZEOF(OPA_ptr_t,0,[
 pthread_mutex_t *OPA_emulation_lock;
 ])
 
+# Find the size of MPL_atomic_ptr_t. This step needs to come after the MPL
+# configuration in order to get the size MPL_atomic_ptr_t evaluated for this
+# platform.
+AC_CHECK_SIZEOF(MPL_atomic_ptr_t,0,[
+#include "${master_top_srcdir}/src/mpl/include/mpl_atomic.h"
+pthread_mutex_t *MPL_atomic_emulation_lock;
+])
+
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
     # Removed the invalid 2COMPLEX and 2DOUBLE_COMPLEX
