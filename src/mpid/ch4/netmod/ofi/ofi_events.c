@@ -93,7 +93,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 
-    if (MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+    if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
         int continue_matching = 1;
 
         MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_NETMOD,
@@ -102,10 +102,8 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         /* It is always possible to cancel a request on shm side w/o an aux thread */
 
         /* Decouple requests */
-        if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-        }
+        MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
+        MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
         MPIR_Request_free(rreq);
     }
 #endif
