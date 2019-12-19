@@ -46,6 +46,9 @@ opa_gcc_intel_32_64.h - GCC (and some GCC-like compilers) on x86 and
 opa_gcc_sync.h        - GCC on many other platforms.  These use GCC's __sync
                         intrinsics which are not always implemented on
                         every platform
+opa_gcc_atomic.h      - GCC on many other platforms.  These use GCC's __atomic
+                        intrinsics which are not always implemented on
+                        every platform
 opa_gcc_ppc.h         - GCC and IBM's XLC on PowerPC 4xx and 970 systems.
                         Specifically, this supports the modified-PPC440
                         processor in IBM's Blue Gene/P supercomputers and most
