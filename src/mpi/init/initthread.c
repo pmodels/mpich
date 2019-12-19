@@ -17,6 +17,7 @@
 #include "mpir_info.h"
 #include "datatype.h"
 #include "mpi_init.h"
+#include "autogen.h"
 #ifdef HAVE_CRTDBG_H
 #include <crtdbg.h>
 #endif
@@ -146,6 +147,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* dup comm_self and creates progress thread (if needed) */
     mpi_errno = MPII_init_async(thread_provided);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* run components init, which are aggregated in autogen.h by script */
+    mpi_errno = MPIR_init_components();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create fine-grained mutexes */

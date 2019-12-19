@@ -13,6 +13,7 @@
 #include "mpidch4r.h"
 #include "datatype.h"
 #include "mpidu_init_shm.h"
+#include "autogen.h"
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
@@ -471,6 +472,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIDI_global.is_initialized = 0;
 
     mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* run components init, which are aggregated in autogen.h by script */
+    mpi_errno = MPID_ch4_init_components();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

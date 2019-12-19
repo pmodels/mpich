@@ -931,6 +931,11 @@ echo "## Generating configure files"
 echo "###########################################################"
 echo
 
+# autogen init/finalize placeholders
+echo_n "Extracting component init/finalize (autogen.h) ... "
+perl ./maint/gen_init.pl
+echo "done"
+
 ########################################################################
 ## Running autotools on non-simplemake directories
 ########################################################################

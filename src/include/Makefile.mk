@@ -13,6 +13,7 @@ nodist_include_HEADERS += src/include/mpi.h
 ## important because they contain lots of info that is computed by configure.
 nodist_noinst_HEADERS +=     \
     src/include/mpichinfo.h \
+    src/include/autogen.h   \
     src/include/mpichconf.h
 
 ## listed here in BUILT_SOURCES to ensure that if mpir_ext.h is out of date

@@ -1,0 +1,49 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2019 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* This file will be processed by `maint/gen_init.pl` into autogen.h.
+ * The script will scan through all source file and extracting snippets
+ * into variouls placeholders.
+ *
+ * The main purpose is to gather component init/finalize code so that
+ * a component development do not need to touch code outside its component
+ * tree.
+ *
+ * Potentially, features can be extended.
+ */
+
+/* DISCLAIMER */
+
+#ifndef AUTOGEN_H_INCLUDED
+#define AUTOGEN_H_INCLUDED
+
+/* PLACEHOLDER-DECLARE */
+
+static inline int MPIR_init_components(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* PLACEHOLDER-MPIR_INIT */
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline int MPID_ch4_init_components(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* PLACEHOLDER-MPID_CH4_INIT */
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif
