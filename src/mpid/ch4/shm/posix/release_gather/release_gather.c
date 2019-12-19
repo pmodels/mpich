@@ -380,11 +380,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         release_gather_info_ptr->reduce_buf_addr = NULL;
         release_gather_info_ptr->child_reduce_buf_addr = NULL;
 
-        mpi_errno = MPIDIU_allocate_shm_segment(comm_ptr, flags_shm_size,
-                                                &(release_gather_info_ptr->shm_flags_handle),
-                                                (void **)
-                                                &(release_gather_info_ptr->flags_addr),
-                                                &mapfail_flag);
+        mpi_errno =
+            MPIDU_shm_alloc(comm_ptr, flags_shm_size,
+                            (void **) &(release_gather_info_ptr->flags_addr), &mapfail_flag);
         if (mpi_errno || mapfail_flag) {
             /* for communication errors, just record the error but continue */
             errflag =
@@ -420,10 +418,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     if (initialize_bcast_buf) {
         /* Allocate the shared memory for bcast buffer */
         mpi_errno =
-            MPIDIU_allocate_shm_segment(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
-                                        &(COMM_FIELD(comm_ptr, shm_bcast_buf_handle)),
-                                        (void **) &(COMM_FIELD(comm_ptr, bcast_buf_addr)),
-                                        &mapfail_flag);
+            MPIDU_shm_alloc(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
+                            (void **) &(COMM_FIELD(comm_ptr, bcast_buf_addr)), &mapfail_flag);
         if (mpi_errno || mapfail_flag) {
             /* for communication errors, just record the error but continue */
             errflag =
@@ -441,12 +437,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
 
         mpi_errno =
-            MPIDIU_allocate_shm_segment(comm_ptr,
-                                        num_ranks *
-                                        MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
-                                        &(COMM_FIELD(comm_ptr, shm_reduce_buf_handle)),
-                                        (void **) &(COMM_FIELD(comm_ptr, reduce_buf_addr)),
-                                        &mapfail_flag);
+            MPIDU_shm_alloc(comm_ptr, num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
+                            (void **) &(COMM_FIELD(comm_ptr, reduce_buf_addr)), &mapfail_flag);
         if (mpi_errno || mapfail_flag) {
             /* for communication errors, just record the error but continue */
             errflag =
@@ -490,19 +482,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     /* destroy and detach shared memory used for flags */
-    mpi_errno = MPL_shm_seg_detach(COMM_FIELD(comm_ptr, shm_flags_handle),
-                                   (void **) &COMM_FIELD(comm_ptr, flags_addr),
-                                   COMM_FIELD(comm_ptr, flags_shm_size));
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
-
-    mpi_errno = MPL_shm_hnd_finalize(&COMM_FIELD(comm_ptr, shm_flags_handle));
+    mpi_errno = MPIDU_shm_free(COMM_FIELD(comm_ptr, flags_addr));
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         errflag =
@@ -514,19 +494,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     if (COMM_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
         /* destroy and detach shared memory used for bcast buffer */
-        mpi_errno = MPL_shm_seg_detach(COMM_FIELD(comm_ptr, shm_bcast_buf_handle),
-                                       (void **) &COMM_FIELD(comm_ptr, bcast_buf_addr),
-                                       MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-
-        mpi_errno = MPL_shm_hnd_finalize(&COMM_FIELD(comm_ptr, shm_bcast_buf_handle));
+        mpi_errno = MPIDU_shm_free(COMM_FIELD(comm_ptr, bcast_buf_addr));
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             errflag =
@@ -539,20 +507,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     if (COMM_FIELD(comm_ptr, reduce_buf_addr) != NULL) {
         /* destroy and detach shared memory used for reduce buffers */
-        mpi_errno = MPL_shm_seg_detach(COMM_FIELD(comm_ptr, shm_reduce_buf_handle),
-                                       (void **) &COMM_FIELD(comm_ptr, reduce_buf_addr),
-                                       MPIR_Comm_size(comm_ptr)
-                                       * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-
-        mpi_errno = MPL_shm_hnd_finalize(&COMM_FIELD(comm_ptr, shm_reduce_buf_handle));
+        mpi_errno = MPIDU_shm_free(COMM_FIELD(comm_ptr, reduce_buf_addr));
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             errflag =
