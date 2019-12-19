@@ -27,8 +27,10 @@ void MPIR_Add_mutex(MPID_Thread_mutex_t * p_mutex)
  * all mutexes
  */
 
-/* These routine handle any thread initialization that may be required */
-void MPIR_Thread_CS_Init(void)
+/* AUTOGEN-MPIR_INIT */
+void MPIR_thread_add_mutexes(void);
+
+void MPIR_thread_add_mutexes(void)
 {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
     /* Use the single MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX for all MPI calls */
@@ -55,7 +57,11 @@ void MPIR_Thread_CS_Init(void)
 #else
 #error Unrecognized thread granularity
 #endif
+}
 
+/* These routine handle any thread initialization that may be required */
+void MPIR_Thread_CS_Init(void)
+{
     int err;
     for (int i = 0; i < mutex_count; i++) {
         MPID_Thread_mutex_create(mutex_list[i], &err);
