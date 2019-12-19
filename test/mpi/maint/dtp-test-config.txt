@@ -11,7 +11,7 @@
 #
 # The autogen.sh script generates a single binary for every line. Each binary will appear in
 # the testlist file multiple times, corresponding to different combinations of basic datatypes
-# (a list of which is defined in basictypelist.txt) and counts.
+# and counts.
 #
 # NOTE: the second (ssv args), fourth (timeLimit) and seventh (maxtestsize) fields are optional.
 

@@ -4,4 +4,3 @@
 #     See COPYRIGHT in top-level directory.
 #
 SUBDIRS = src include
-EXTRA_DIST = basictypelist.txt
