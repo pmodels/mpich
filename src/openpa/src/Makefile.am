@@ -14,6 +14,7 @@ nodist_include_HEADERS = opa_config.h
 # "nobase_" causes the primitives directory to be preserved when installed
 nobase_include_HEADERS = primitives/opa_by_lock.h                   \
                          primitives/opa_emulated.h                  \
+                         primitives/opa_gcc_atomic.h                \
                          primitives/opa_gcc_ia64.h                  \
                          primitives/opa_gcc_intel_32_64.h           \
                          primitives/opa_gcc_intel_32_64_barrier.h   \
