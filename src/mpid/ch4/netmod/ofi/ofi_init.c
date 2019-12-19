@@ -636,7 +636,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* A shared transmit context’s attributes must be a union of all associated
          * endpoints' transmit capabilities. */
         tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        tx_attr.msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
         MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_OFI_global.domain,
                                              &tx_attr,
@@ -1430,7 +1430,7 @@ bool match_global_settings(struct fi_info * prov)
 
     CHECK_CAP(MPIDI_OFI_ENABLE_RMA, !(prov->caps & FI_RMA));
 
-    uint64_t msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+    uint64_t msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
 
@@ -1647,7 +1647,7 @@ static void init_hints(struct fi_info *hints)
         hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
         /* Apply most restricted msg order in hints for RMA ATOMICS. */
         if (MPIDI_OFI_ENABLE_ATOMICS)
-            hints->tx_attr->msg_order |= FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+            hints->tx_attr->msg_order |= MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     }
     hints->tx_attr->comp_order = FI_ORDER_NONE;
     hints->rx_attr->op_flags = FI_COMPLETION;
