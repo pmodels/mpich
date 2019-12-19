@@ -1421,7 +1421,6 @@
 /pt2pt/testlist
 /cxx/attr/testlist
 /cxx/datatype/testlist
-/dtpools/basictypelist.txt
 /dtpools/aclocal.m4
 /dtpools/ar-lib
 /dtpools/compile
