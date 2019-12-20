@@ -116,12 +116,12 @@
    
 */
 
-#if (SIZEOF_VOID_P > 8)
-#  if (SIZEOF_VOID_P > 16)
-#    error unexpected size for OPA_ptr_t
+#if (SIZEOF_MPL_ATOMIC_PTR_T > 8)
+#  if (SIZEOF_MPL_ATOMIC_PTR_T > 16)
+#    error unexpected size for MPL_atomic_ptr_t
 #  endif
 #  define MPID_NEM_CELL_HEAD_LEN  16 /* We use this to keep elements 64-bit aligned */
-#else /* (SIZEOF_VOID_P <= 8) */
+#else /* (SIZEOF_MPL_ATOMIC_PTR_T <= 8) */
 #  define MPID_NEM_CELL_HEAD_LEN  8 /* We use this to keep elements 64-bit aligned */
 #endif
 
@@ -175,7 +175,7 @@ typedef struct MPID_nem_pkt
 /* This should always be exactly the size of a pointer */
 typedef struct MPID_nem_cell_rel_ptr
 {
-    OPA_ptr_t p;
+    MPL_atomic_ptr_t p;
 }
 MPID_nem_cell_rel_ptr_t;
 
@@ -188,7 +188,7 @@ MPID_nem_cell_rel_ptr_t;
 typedef struct MPID_nem_cell
 {
     MPID_nem_cell_rel_ptr_t next;
-#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_VOID_P)
+#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_MPL_ATOMIC_PTR_T)
     char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
     volatile MPID_nem_pkt_t pkt;
@@ -225,11 +225,11 @@ typedef struct MPID_nem_queue
 {
     MPID_nem_cell_rel_ptr_t head;
     MPID_nem_cell_rel_ptr_t tail;
-#if (MPID_NEM_CACHE_LINE_LEN > (2 * SIZEOF_VOID_P))
+#if (MPID_NEM_CACHE_LINE_LEN > (2 * SIZEOF_MPL_ATOMIC_PTR_T))
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2 * sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
     MPID_nem_cell_rel_ptr_t my_head;
-#if (MPID_NEM_CACHE_LINE_LEN > SIZEOF_VOID_P)
+#if (MPID_NEM_CACHE_LINE_LEN > SIZEOF_MPL_ATOMIC_PTR_T)
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
 #endif
 #if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
@@ -243,7 +243,7 @@ typedef struct MPID_nem_queue
 /* Fast Boxes*/ 
 typedef union
 {
-    OPA_int_t value;
+    MPL_atomic_int_t value;
 #if MPID_NEM_CACHE_LINE_LEN != 0
     char padding[MPID_NEM_CACHE_LINE_LEN];
 #endif

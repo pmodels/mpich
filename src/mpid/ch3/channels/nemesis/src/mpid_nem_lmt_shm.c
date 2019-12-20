@@ -75,7 +75,7 @@ typedef union
 {
     struct
     {
-        OPA_int_t rank; /* OPA_int_t is already volatile */
+        MPL_atomic_int_t rank;
         volatile int remote_req_id;
         DBG_LMT(volatile int ctr;)
     } val;
@@ -177,7 +177,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_coo
         for (i = 0; i < NUM_BUFS; ++i)
             vc_ch->lmt_copy_buf->len[i].val = 0;
 
-        OPA_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
+        MPL_atomic_relaxed_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, NO_OWNER);
         vc_ch->lmt_copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
         DBG_LMT(vc_ch->lmt_copy_buf->owner_info.val.ctr = 0);
     }
@@ -325,7 +325,7 @@ static int get_next_req(MPIDI_VC_t *vc)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_NEXT_REQ);
 
-    prev_owner_rank = OPA_cas_int(&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
+    prev_owner_rank = MPL_atomic_cas_int(&copy_buf->owner_info.val.rank, NO_OWNER, MPIDI_Process.my_pg_rank);
 
     if (prev_owner_rank == IN_USE || prev_owner_rank == MPIDI_Process.my_pg_rank)
     {
@@ -339,13 +339,13 @@ static int get_next_req(MPIDI_VC_t *vc)
     {
         int i;
         /* successfully grabbed idle copy buf */
-        OPA_write_barrier();
+        MPL_atomic_write_barrier();
         for (i = 0; i < NUM_BUFS; ++i)
             copy_buf->len[i].val = 0;
 
         DBG_LMT(++copy_buf->owner_info.val.ctr);
 
-        OPA_write_barrier();
+        MPL_atomic_write_barrier();
 
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &vc_ch->lmt_active_lmt);
         copy_buf->owner_info.val.remote_req_id = vc_ch->lmt_active_lmt->req->ch.lmt_req_id;
@@ -357,7 +357,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* copy buf is owned by the remote side */
         /* remote side chooses next transfer */
 
-        OPA_read_barrier();
+        MPL_atomic_read_barrier();
         
         MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
                                                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "waiting for owner rank=%d", vc->pg_rank));
@@ -371,7 +371,7 @@ static int get_next_req(MPIDI_VC_t *vc)
             MPIU_Busy_wait();
         }
 
-        OPA_read_barrier();
+        MPL_atomic_read_barrier();
         LMT_SHM_Q_SEARCH_REMOVE(&vc_ch->lmt_queue, copy_buf->owner_info.val.remote_req_id, &vc_ch->lmt_active_lmt);
 
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "remote side owns buf.  local_req=%d", copy_buf->owner_info.val.remote_req_id);
@@ -387,7 +387,7 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* found request, clear remote_req_id field to prevent this buffer from matching future reqs */
         copy_buf->owner_info.val.remote_req_id = MPI_REQUEST_NULL;
 
-        OPA_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
+        MPL_atomic_relaxed_store_int(&vc_ch->lmt_copy_buf->owner_info.val.rank, IN_USE);
     }
 
     vc_ch->lmt_buf_num = 0;
@@ -450,7 +450,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             MPIU_Busy_wait();
         }
 
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
 
 
         /* we have a free buffer, fill it */
@@ -466,7 +466,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         MPIR_Typerep_pack(req->dev.user_buf, req->dev.user_count, req->dev.datatype, first,
                        (void *)copy_buf->buf[buf_num], max_pack_bytes, &actual_pack_bytes);
 
-        OPA_write_barrier();
+        MPL_atomic_write_barrier();
         MPIR_Assign_trunc(copy_buf->len[buf_num].val, actual_pack_bytes, int);
 
         first += actual_pack_bytes;
@@ -545,7 +545,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             MPIU_Busy_wait();
         }
 
-        OPA_read_barrier();
+        MPL_atomic_read_barrier();
 
         /* unpack data including any leftover from the previous buffer */
         src_buf = ((char *)copy_buf->buf[buf_num]) - surfeit; /* cast away volatile */
@@ -564,7 +564,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             /* we had leftover data from the previous buffer, we can
                now mark that buffer as empty */
 
-            OPA_read_write_barrier();
+            MPL_atomic_read_write_barrier();
             copy_buf->len[(buf_num-1)].val = 0;
             /* Make sure we copied at least the leftover data from last time */
             MPIR_Assert(last - first > surfeit);
@@ -585,7 +585,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
                 /* if we're wrapping back to buf 0, then we can copy it directly */
                 MPIR_Memcpy(((char *)copy_buf->buf[0]) - surfeit, surfeit_ptr, surfeit);
 
-                OPA_read_write_barrier();
+                MPL_atomic_read_write_barrier();
                 copy_buf->len[buf_num].val = 0;
             }
             else
@@ -602,7 +602,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
             /* all data was unpacked, we can mark this buffer as empty */
             surfeit = 0;
 
-            OPA_read_write_barrier();
+            MPL_atomic_read_write_barrier();
             copy_buf->len[buf_num].val = 0;
         }
 
@@ -615,8 +615,8 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPIR_Request *req, int *done)
         copy_buf->len[i].val = 0;
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
-    OPA_write_barrier();
-    OPA_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
+    MPL_atomic_write_barrier();
+    MPL_atomic_relaxed_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
     mpi_errno = MPID_Request_complete(req);
