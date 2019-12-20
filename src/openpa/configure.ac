@@ -344,7 +344,8 @@ dnl without AC_TRY_RUN().
         OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sicortex.h], [GCC_AND_SICORTEX_ASM], [gcc SiCortex atomics])
     fi
 
-    OPA_TRY_PRIMITIVE_HEADER([opa_gcc_intrinsics.h], [GCC_INTRINSIC_ATOMICS], [gcc atomic intrinsics])
+    OPA_TRY_PRIMITIVE_HEADER([opa_gcc_atomic.h], [GCC_ATOMIC_INTRINSICS], [gcc __atomic intrinsics])
+    OPA_TRY_PRIMITIVE_HEADER([opa_gcc_sync.h], [GCC_SYNC_INTRINSICS], [gcc __sync intrinsics])
     OPA_TRY_PRIMITIVE_HEADER([opa_nt_intrinsics.h], [NT_INTRINSICS], [Windows NT atomic intrinsics])
     OPA_TRY_PRIMITIVE_HEADER([opa_sun_atomic_ops.h], [SUN_ATOMIC_OPS], [Sun atomic operations library])
 

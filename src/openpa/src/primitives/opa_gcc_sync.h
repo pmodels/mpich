@@ -5,8 +5,8 @@
  */
 
 /* FIXME needs to be converted to new style functions with OPA_int_t/OPA_ptr_t-types */
-#ifndef OPA_GCC_INTRINSICS_H_INCLUDED
-#define OPA_GCC_INTRINSICS_H_INCLUDED
+#ifndef OPA_GCC_SYNC_H_INCLUDED
+#define OPA_GCC_SYNC_H_INCLUDED
 
 /* FIXME do we need to align these? */
 typedef struct {
@@ -54,33 +54,37 @@ static inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 
 static inline int OPA_load_acquire_int(const OPA_int_t * ptr)
 {
-    volatile int i = 0;
-    int tmp;
-    tmp = ptr->v;
-    __sync_lock_test_and_set(&i, 1);    /* guarantees acquire semantics */
+    int tmp = ptr->v;
+    /* __sync does not have a true load-acquire barrier builtin,
+     * so the best that can be done is use a normal barrier to
+     * ensure the read of ptr->v happens before the ensuing block
+     * of memory references we are ordering.
+     */
+    __sync_synchronize();
     return tmp;
 }
 
 static inline void OPA_store_release_int(OPA_int_t * ptr, int val)
 {
-    volatile int i = 1;
-    __sync_lock_release(&i);    /* guarantees release semantics */
+    /* __sync does not a true store-release barrier builtin,
+     * so the best that can be done is to use a normal barrier
+     * to ensure previous memory operations are ordered-before
+     * the following store.
+     */
+    __sync_synchronize();
     ptr->v = val;
 }
 
 static inline void *OPA_load_acquire_ptr(const OPA_ptr_t * ptr)
 {
-    volatile int i = 0;
-    void *tmp;
-    tmp = ptr->v;
-    __sync_lock_test_and_set(&i, 1);    /* guarantees acquire semantics */
+    void *tmp = ptr->v;
+    __sync_synchronize();
     return tmp;
 }
 
 static inline void OPA_store_release_ptr(OPA_ptr_t * ptr, void *val)
 {
-    volatile int i = 1;
-    __sync_lock_release(&i);    /* guarantees release semantics */
+    __sync_synchronize();
     ptr->v = val;
 }
 
@@ -126,15 +130,15 @@ static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 {
     return __sync_lock_test_and_set(&ptr->v, val, /* protected variables: */ &ptr->v);
 }
-
 #else
 #define OPA_swap_ptr_by_cas OPA_swap_ptr
 #define OPA_swap_int_by_cas OPA_swap_int
-#endif
+#endif /* SYNC_LOCK_TEST_AND_SET_IS_SWAP */
 
 #define OPA_write_barrier()      __sync_synchronize()
 #define OPA_read_barrier()       __sync_synchronize()
 #define OPA_read_write_barrier() __sync_synchronize()
+
 #define OPA_compiler_barrier()   __asm__ __volatile__  (""  ::: "memory")
 
 #ifdef __SUNPRO_C
@@ -146,4 +150,4 @@ static inline int OPA_swap_int(OPA_int_t * ptr, int val)
 
 #include"opa_emulated.h"
 
-#endif /* OPA_GCC_INTRINSICS_H_INCLUDED */
+#endif /* OPA_GCC_SYNC_H_INCLUDED */
