@@ -91,6 +91,12 @@ static void MTest_abt_error(int err, const char *msg, const char *file, int line
 
 #define MTEST_THREAD_RETVAL_IGN
 
+#elif defined(THREAD_PACKAGE_NAME) && (THREAD_PACKAGE_NAME == THREAD_PACKAGE_NONE)
+/* define some dummy values when no thread package is configured */
+#define MTEST_THREAD_RETURN_TYPE int
+#define MTEST_THREAD_HANDLE int
+#define MTEST_THREAD_LOCK_TYPE int
+
 #else
 #error "thread package (THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
