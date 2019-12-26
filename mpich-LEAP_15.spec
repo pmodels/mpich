@@ -15,6 +15,8 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
+%global cart_major 4
+%global daos_major 0
 
 %global flavor @BUILD_FLAVOR@%nil
 
@@ -145,7 +147,7 @@ ExclusiveArch:  do_not_build
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        4
+Release:        5
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -184,6 +186,7 @@ BuildRequires:  sysfsutils
 BuildRequires:  libfabric-devel
 %endif
 BuildRequires:  daos-devel
+Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
 
 Provides:       mpi
 %if %{without hpc}
@@ -513,3 +516,6 @@ fi
 %endif # !testsuite
 
 %changelog
+* Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
+- Rebuild with CaRT SO version 4
+- Add Provides: to allow consumers to target cart and daos ABI versions
