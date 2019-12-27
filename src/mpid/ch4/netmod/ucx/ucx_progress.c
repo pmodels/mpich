@@ -9,7 +9,6 @@
 
 #include "mpidimpl.h"
 #include "ucx_impl.h"
-//#include "events.h"
 
 static void *am_buf;
 static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
