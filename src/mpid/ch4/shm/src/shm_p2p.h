@@ -296,7 +296,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        mpi_errno = MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
+        MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIR_Comm_add_ref(root_comm);   /* +1 for queuing into posted_list */
