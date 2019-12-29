@@ -522,6 +522,11 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
+    if (am_hdr->handler_id == MPIDIG_NEW_AM) {
+        ofi_new_am_recv(wc->buf, wc->len);
+        goto fn_exit;
+    }
+
     expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
@@ -642,6 +647,11 @@ static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (req->handle == 0) {
+        progress_new_am_send_complete(req);
+        goto fn_exit;
+    }
 
     if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND)) {
         /* Passing the event_id as a parameter; do not need to load it from the
