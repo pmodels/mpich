@@ -68,6 +68,11 @@ static int progress_recv(int blocking)
     payload_left = transaction.payload_sz;
 
     if (msg_hdr) {
+        if (msg_hdr->handler_id == MPIDIG_NEW_AM) {
+            /* new am message is garunteed to be within eager limit */
+            progress_new_am_recv(transaction.payload, transaction.payload_sz);
+            goto fn_exit;
+        }
         am_hdr = payload;
         p_data = payload + msg_hdr->am_hdr_sz;
 
@@ -275,6 +280,8 @@ static int progress_send(int blocking)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS_SEND);
+
+    progress_new_am_send();
 
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */

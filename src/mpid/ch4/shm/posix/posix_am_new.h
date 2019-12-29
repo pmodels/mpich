@@ -18,6 +18,13 @@ static MPIDI_POSIX_am_header_t posix_new_am_msg_hdr = {
     .handler_id = MPIDIG_NEW_AM
 };
 
+/* Until old am usages are fully replaced, we need have both path working.
+ * Use a static msg_hdr to hack. The new am path does not use msg_hdr.
+ */
+static MPIDI_POSIX_am_header_t new_am_msg_hdr = {
+    .handler_id = MPIDIG_NEW_AM
+};
+
 MPL_STATIC_INLINE_PREFIX int NEW_POSIX_am_enqueue(int grank, struct iovec *iov, int iov_count,
                                                   int completion_id, void *context);
 
@@ -113,17 +120,13 @@ MPL_STATIC_INLINE_PREFIX int NEW_POSIX_am_enqueue(int grank,
     return MPI_SUCCESS;
 }
 
-/* TODO: move to posix_am_new.c */
-static void progress_am_send(void)
+/* NOTE: called from posix/progress.c:progress_send */
+MPL_STATIC_INLINE_PREFIX void progress_new_am_send(void)
 {
     if (MPIDI_POSIX_global.am_send_queue) {
         struct am_queue_elem *elem = MPIDI_POSIX_global.am_send_queue;
-<<<<<<< HEAD
-        int result = MPIDI_POSIX_eager_send(elem->grank, NULL, &elem->iov, &elem->iov_count);
-=======
         int result = MPIDI_POSIX_eager_send(elem->grank, &posix_new_am_msg_hdr,
                                             &elem->iov, &elem->iov_count);
->>>>>>> 73a4c7e46... squash: posix_am_new
         if ((MPIDI_POSIX_NOK == result) || elem->iov_num) {
             return;
         }
@@ -135,8 +138,8 @@ static void progress_am_send(void)
     }
 }
 
-/* TODO: move to posix_progress.c and refactor progress_recv to use RNDV protocol */
-static void progress_am_recv(void *data, int size)
+/* NOTE: called from posix/progress.c:progress_recv */
+MPL_STATIC_INLINE_PREFIX void progress_new_am_recv(void *data, int size)
 {
     struct posix_new_am_header *p_hdr = data;
     void *header = data;
