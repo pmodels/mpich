@@ -325,7 +325,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
             ctrl.rma_key = MPIDI_OFI_mr_key_alloc();
             rma_key = ctrl.rma_key;
@@ -345,7 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDIU_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr,
                        MPL_MEM_BUFFER);
 
-        if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* MR_BASIC */
             ctrl.rma_key = fi_mr_key(huge_send_mr);
         }

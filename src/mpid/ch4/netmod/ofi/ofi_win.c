@@ -189,7 +189,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
 
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_WIN(win).win_id;
     } else {
         MPIDI_OFI_WIN(win).mr_key = 0;
@@ -198,7 +198,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     /* Don't register MR for NULL buffer, because FI_MR_BASIC mode requires
      * that all registered memory regions must be backed by physical memory
      * pages at the time the registration call is made. */
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE || base) {
+    if ((!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) || base) {
         MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,       /* In:  Domain Object       */
                                  base,  /* In:  Lower memory address */
                                  win->size,     /* In:  Length              */
@@ -214,7 +214,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
 
-    if (!MPIDI_OFI_ENABLE_MR_SCALABLE && MPIDI_OFI_WIN(win).mr) {
+    if ((MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) && MPIDI_OFI_WIN(win).mr) {
         /* MR_BASIC */
         MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
         winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
@@ -226,7 +226,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         first = winfo[0].disp_unit;
         same_disp = 1;
         for (i = 1; i < comm_ptr->local_size; i++) {

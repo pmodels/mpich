@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS)
         return 0;
     else
         return MPIDI_OFI_WIN(w).winfo[rank].base;
@@ -223,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY)
         return MPIDI_OFI_WIN(w).mr_key;
     else
         return MPIDI_OFI_WIN(w).winfo[rank].mr_key;
