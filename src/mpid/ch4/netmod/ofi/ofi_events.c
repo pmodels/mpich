@@ -300,7 +300,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         MPIDIU_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             uint64_t key = fi_mr_key(huge_send_mr);
             MPIDI_OFI_mr_key_free(key);
         }
@@ -337,7 +337,7 @@ static int ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 
 static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv_elem)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         return 0;
     } else {
         return recv_elem->remote_info.send_buf;

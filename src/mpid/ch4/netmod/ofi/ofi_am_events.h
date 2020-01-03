@@ -401,7 +401,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     ack_msg = (MPIDI_OFI_ack_msg_payload_t *) (msg_hdr + 1);
     sreq = ack_msg->sreq_ptr;
 
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
         MPIDI_OFI_mr_key_free(mr_key);
     }
