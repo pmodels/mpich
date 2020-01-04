@@ -13,6 +13,57 @@
 
 #include "ch4_impl.h"
 
+/* internal function */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+MPL_STATIC_INLINE_PREFIX int anysrc_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                         int rank, int tag, MPIR_Comm * comm,
+                                         int context_offset, MPIDI_av_entry_t * av,
+                                         MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Note: SHM path is ANYSOURCE_PARTNER aware and will only match after the partner
+     *       request is canceled.
+     *       All other paths (NM path) are ANYSOURCE_PARTNER unaware.
+     *       Currently, SHM path is the same as Active Message path.
+     *
+     * pre-create request with kind MPIR_REQUEST_KIND__ANYSRC_RECV.
+     * It will prevent SHM progress (other than immediate complete) the request until
+     * we set the anysrc partner.
+     * Otherwise, there will always be a chance it gets completed during NM_mpi_irecv.
+     */
+    *request = MPIDIG_request_create(MPIR_REQUEST_KIND__ANYSRC_RECV, 2);
+    MPIR_ERR_CHKANDSTMT(*request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    MPIR_REQUEST_ANYSRC_PARTNER(*request) = NULL;
+
+    mpi_errno = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIDI_REQUEST(*request, is_local) = 1;
+
+    if (MPIR_Request_is_complete(*request)) {
+        /* immediately completed, set kind to normal recv */
+        (*request)->kind = MPIR_REQUEST_KIND__RECV;
+    } else {
+        MPIR_Request *netmod_request;
+        mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm,
+                                       context_offset, av, &netmod_request);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_REQUEST(netmod_request, is_local) = 0;
+
+        /* link cc_ptr so when netmod_request completes, this request also complete.
+         * If shm matches first, it will cancel the netmod_request first and reset cc_ptr.
+         */
+        (*request)->cc_ptr = netmod_request->cc_ptr;
+        MPIR_REQUEST_ANYSRC_PARTNER(*request) = netmod_request;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype,
@@ -32,33 +83,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
                           request);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
-        mpi_errno =
-            MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-
+        mpi_errno = anysrc_recv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPIDI_REQUEST(*request, is_local) = 1;
-
-        if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
-            mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
-                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)));
-
-            MPIR_ERR_CHECK(mpi_errno);
-
-            MPIDI_REQUEST(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
-
-            /* cancel the shm request if netmod/am handles the request from unexpected queue. */
-            if (MPIR_Request_is_complete(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request))) {
-                mpi_errno = MPIDI_SHM_mpi_cancel_recv(*request);
-                if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
-                    (*request)->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)->status;
-                }
-                MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
-                goto fn_exit;
-            }
-
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)) = *request;
-        }
     } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
@@ -102,33 +128,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
         MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
-        mpi_errno =
-            MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-
+        mpi_errno = anysrc_recv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
         MPIR_ERR_CHECK(mpi_errno);
-
-        MPIR_Assert(*request);
-        if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
-            mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
-                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)));
-
-            MPIR_ERR_CHECK(mpi_errno);
-
-            MPIDI_REQUEST(*request, is_local) = 1;
-            MPIDI_REQUEST(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
-
-            /* cancel the shm request if netmod/am handles the request from unexpected queue. */
-            if (MPIR_Request_is_complete(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request))) {
-                mpi_errno = MPIDI_SHM_mpi_cancel_recv(*request);
-                if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
-                    (*request)->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)->status;
-                }
-                MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
-                goto fn_exit;
-            }
-
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)) = *request;
-        }
     } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
@@ -185,9 +186,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #else
     if (MPIDI_REQUEST(rreq, is_local)) {
-        MPIR_Request *partner_rreq = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
+        MPIR_Request *partner_rreq = MPIR_REQUEST_ANYSRC_PARTNER(rreq);
         if (unlikely(partner_rreq)) {
             /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
+            /* FIXME: what if cancel failed */
             mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
             MPIR_ERR_CHECK(mpi_errno);
             MPIR_Request_free(partner_rreq);
