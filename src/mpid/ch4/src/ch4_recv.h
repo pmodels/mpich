@@ -97,7 +97,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
                                   request);
         if (mpi_errno == MPI_SUCCESS && *request) {
             MPIDI_REQUEST(*request, is_local) = r;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
     }
 #endif
@@ -142,7 +141,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
         if (mpi_errno == MPI_SUCCESS) {
             MPIR_Assert(*request);
             MPIDI_REQUEST(*request, is_local) = r;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
     }
 #endif

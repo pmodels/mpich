@@ -74,36 +74,9 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
      * we increase its refcount at enqueue time. */
     root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
     if (root_comm) {
-        int continue_matching = 1;
-        while (continue_matching) {
-            anysource_partner = NULL;
-
-            rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
-                                         slmt_rts_hdr->context_id,
-                                         &MPIDIG_COMM(root_comm, posted_list));
-
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-                /* Try to cancel NM parter request */
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-                mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                    MPIDI_SHM, &continue_matching);
-                MPIR_ERR_CHECK(mpi_errno);
-
-                if (continue_matching) {
-                    /* NM partner request has already been matched, we need to continue until
-                     * no matching rreq. This SHM rreq will be cancelled by NM. */
-                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
-                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-                    continue;
-                }
-
-                /* Release cancelled NM partner request (only SHM request is returned to user) */
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-                MPIR_Request_free(anysource_partner);
-            }
-            break;
-        }
+        rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
+                                     slmt_rts_hdr->context_id,
+                                     &MPIDIG_COMM(root_comm, posted_list));
     }
 
     if (rreq) {

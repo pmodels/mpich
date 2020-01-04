@@ -203,10 +203,6 @@ typedef struct MPIDI_prequest {
 typedef struct {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
-    /* Anysource handling. Netmod and shm specific requests are cross
-     * referenced. This must be present all of the time to avoid lots of extra
-     * ifdefs in the code. */
-    struct MPIR_Request *anysource_partner_request;
 #endif
 
     union {
@@ -242,12 +238,6 @@ typedef struct {
 #else
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
 #endif /* #ifdef MPIDI_CH4_USE_WORK_QUEUES */
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-#define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
-#else
-#define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  NULL
-#endif
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
