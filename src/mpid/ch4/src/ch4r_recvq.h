@@ -28,9 +28,39 @@ int MPIDIG_recvq_init(void);
 MPL_STATIC_INLINE_PREFIX int MPIDIG_match_posted(int rank, int tag,
                                                  MPIR_Context_id_t context_id, MPIR_Request * req)
 {
-    return (rank == MPIDIG_REQUEST(req, rank) || MPIDIG_REQUEST(req, rank) == MPI_ANY_SOURCE) &&
+    /* FIXME: anysource_partner_request need use atomics */
+    int match;
+    match = (rank == MPIDIG_REQUEST(req, rank) || MPIDIG_REQUEST(req, rank) == MPI_ANY_SOURCE) &&
         (tag == MPIR_TAG_MASK_ERROR_BITS(MPIDIG_REQUEST(req, tag)) ||
          MPIDIG_REQUEST(req, tag) == MPI_ANY_TAG) && context_id == MPIDIG_REQUEST(req, context_id);
+    if (!match) {
+        return 0;
+    } else if (req->kind == MPIR_REQUEST_KIND__ANYSRC_RECV) {
+        MPIR_Request *req2;
+        req2 = MPIR_REQUEST_ANYSRC_PARTNER(req);
+        if (req2 == NULL) {
+            /* still in the process of creating netmod recv request */
+            return 0;
+        } else {
+            /* try cancel netmod request */
+            int mpi_errno = MPID_Cancel_recv(req2);
+            MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            if (MPIR_STATUS_GET_CANCEL_BIT(req2->status)) {
+                /* successfully cancelled */
+                req->cc_ptr = req2->cc_ptr;
+                return 1;
+            } else {
+                /* cancel this one instead */
+                MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+                MPIR_STATUS_SET_COUNT(req->status, 0);
+                /* MPIDIG_dequeue_posted will understand and dequeue it */
+                return 2;
+            }
+        }
+    } else {
+        /* matched and normal recv */
+        return 1;
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_match_unexp(int rank, int tag,
@@ -159,10 +189,14 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         req = curr->request;
-        if (MPIDIG_match_posted(rank, tag, context_id, req)) {
+        int match = MPIDIG_match_posted(rank, tag, context_id, req);
+        if (match) {
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
-            break;
+            if (match == 1) {
+                break;
+            }
+            /* curr is cancelled while partner request is active, continue matching */
         }
         req = NULL;
     }
@@ -316,10 +350,14 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
     DL_FOREACH_SAFE(MPIDI_global.posted_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if (MPIDIG_match_posted(rank, tag, context_id, req)) {
+        int match = MPIDIG_match_posted(rank, tag, context_id, req);
+        if (match) {
             DL_DELETE(MPIDI_global.posted_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
-            break;
+            if (match == 1) {
+                break;
+            }
+            /* curr is cancelled while partner request is active, continue matching */
         }
         req = NULL;
     }
