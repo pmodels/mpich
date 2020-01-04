@@ -67,6 +67,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
     MPIR_REQUEST_KIND__RMA,
+    MPIR_REQUEST_KIND__ANYSRC_RECV,
     MPIR_REQUEST_KIND__LAST
 #ifdef MPID_REQUEST_KIND_DECL
         , MPID_REQUEST_KIND_DECL
@@ -196,6 +197,10 @@ struct MPIR_Request {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
         } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+
+        struct {
+            MPIR_Request *partner_request;
+        } anysrc;               /* kind: MPIR_REQUEST_KIND__ANYSRC_RECV */
     } u;
 
     /* Other, device-specific information */
@@ -203,6 +208,8 @@ struct MPIR_Request {
      MPID_DEV_REQUEST_DECL
 #endif
 };
+
+#define MPIR_REQUEST_ANYSRC_PARTNER(req) ((req)->u.anysrc.partner_request)
 
 #define MPIR_REQUEST_PREALLOC 8
 
@@ -234,6 +241,7 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
 #define MPIR_REQUESTS_PROPERTY__OPT_ALL (MPIR_REQUESTS_PROPERTY__NO_NULL          \
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
+
 
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {

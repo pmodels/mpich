@@ -35,6 +35,24 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 MPII_SENDQ_FORGET(request_ptr);
                 break;
             }
+        case MPIR_REQUEST_KIND__ANYSRC_RECV:
+            {
+                MPIR_Request *partner = MPIR_REQUEST_ANYSRC_PARTNER(request_ptr);
+                if (request_ptr->cc_ptr == &(request_ptr->cc)) {
+                    MPIR_Request_extract_status(request_ptr, status);
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+
+                    MPID_Cancel_recv(partner);
+                } else {
+                    MPIR_Request_extract_status(partner, status);
+                    mpi_errno = partner->status.MPI_ERROR;
+
+                    request_ptr->cc_ptr = &(request_ptr->cc);
+                    MPID_Cancel_recv(request_ptr);
+                }
+                MPIR_Request_free(partner);
+                break;
+            }
         case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
         case MPIR_REQUEST_KIND__RMA:
