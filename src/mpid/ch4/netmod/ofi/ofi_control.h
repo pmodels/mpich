@@ -16,7 +16,8 @@
 static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                             char *send_buf,
                                             size_t msgsize,
-                                            int rank, MPIR_Comm * comm_ptr, MPIR_Request * ackreq)
+                                            int rank, MPIR_Comm * comm_ptr, MPIR_Request * ackreq,
+                                            MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
@@ -26,12 +27,11 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
     control->send_buf = (uintptr_t) send_buf;
     control->msgsize = msgsize;
     control->comm_id = comm_ptr->context_id;
-    control->endpoint_id = MPIDI_OFI_comm_to_ep(comm_ptr, comm_ptr->rank);
+    control->endpoint_id = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
     control->ackreq = ackreq;
 
-    mpi_errno = MPIDI_OFI_do_inject(rank, comm_ptr,
-                                    MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                    (void *) control, sizeof(*control));
+    mpi_errno = MPIDI_OFI_do_inject(rank, comm_ptr, MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
+                                    (void *) control, sizeof(*control), av);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
     return mpi_errno;

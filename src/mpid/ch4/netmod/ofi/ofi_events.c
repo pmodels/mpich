@@ -408,6 +408,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv_elem = (MPIDI_OFI_huge_recv_t *) req;
     uint64_t remote_key;
+    MPIDI_av_entry_t *av;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GETHUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GETHUGE_EVENT);
 
@@ -430,9 +431,10 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
             recv_elem->wc.len = recv_elem->cur_offset;
             recv_elem->done_fn(&recv_elem->wc, recv_elem->localreq, recv_elem->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
+            av = MPIDIU_comm_rank_to_av(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank);
             mpi_errno =
                 MPIDI_OFI_do_control_send(&ctrl, NULL, 0, recv_elem->remote_info.origin_rank,
-                                          recv_elem->comm_ptr, recv_elem->remote_info.ackreq);
+                                          recv_elem->comm_ptr, recv_elem->remote_info.ackreq, av);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters, key_to_erase);

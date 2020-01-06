@@ -372,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl.tag = tag;
 
         /* Send information about the memory region here to get the lmt going. */
-        mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
+        mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq, addr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
