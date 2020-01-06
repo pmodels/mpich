@@ -29,6 +29,7 @@
 #include "uthash.h"
 #include "ch4_coll_params.h"
 #include "ch4i_workq_types.h"
+#include "mpir_hwtopo.h"
 
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
@@ -306,6 +307,7 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+    MPIR_hwtopo_type_e bind_memory;
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
@@ -393,8 +395,9 @@ typedef struct MPIDIG_win_target {
 
 typedef struct MPIDIG_win_t {
     uint64_t win_id;
-    void *mmap_addr;
-    int64_t mmap_sz;
+    void **mmap_addr;
+    int64_t *mmap_sz;
+    int num_seg;
 
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */

@@ -13,10 +13,40 @@
 #include "mpidch4r.h"
 #include "ch4r_win.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE
+      category    : CH4
+      type        : enum
+      default     : default
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Select target memory type for binding
+        default   - Default memory (DDR in most systems)
+        ddr       - Double data rate memory
+        hbm       - High-bandwidth memory
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 enum {
     SHM_WIN_OPTIONAL,
     SHM_WIN_REQUIRED,
 };
+
+/* heterogeneous memory utility functions */
+static int get_proc_gids(MPIR_Comm * shm_comm_ptr, MPIR_hwtopo_gid_t * proc_gids,
+                         bool * bind_is_valid);
+static int get_unique_gids(int num_local, MPIR_hwtopo_gid_t * gids, int *num_unique_gids,
+                           MPIR_hwtopo_gid_t ** unique_gid);
+static void get_seg_len(MPIR_Win * win_ptr, MPIR_hwtopo_gid_t seg_gid,
+                        MPIR_hwtopo_gid_t * proc_gids, int64_t * len);
+static void map_procs_to_seg(MPIR_Win * win_ptr, MPIR_hwtopo_gid_t seg_gid,
+                             MPIR_hwtopo_gid_t * proc_gids, char *seg_ptr, char **ptr_table);
+static void can_use_symheap(int num_seg, bool * symheap_flag);
 
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr);
 static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen);
@@ -26,6 +56,146 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 static int win_finalize(MPIR_Win ** win_ptr);
 static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option);
+
+static int get_proc_gids(MPIR_Comm * shm_comm_ptr, MPIR_hwtopo_gid_t * proc_gids,
+                         bool * bind_is_valid)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag;
+    int num_local = MPIR_Comm_size(shm_comm_ptr);
+
+    *bind_is_valid = true;
+
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
+                               0,
+                               MPI_DATATYPE_NULL,
+                               proc_gids, sizeof(*proc_gids), MPI_BYTE, shm_comm_ptr, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    for (int i = 0; i < num_local; i++) {
+        /* if processes are not bound to any NUMA disable CH4 memory
+         * binding and leave it to OS default policy. */
+        if (proc_gids[i] == MPIR_HWTOPO_GID_ROOT) {
+            *bind_is_valid = false;
+            break;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int compare_gid(const void *a, const void *b)
+{
+    return *(int *) a - *(int *) b;
+}
+
+static int get_unique_gids(int num_local, MPIR_hwtopo_gid_t * gids,
+                           int *num_unique_gids, MPIR_hwtopo_gid_t ** unique_gids)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int count = 0;
+    int i, j;
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(1);
+
+    /* Sort memory global ids */
+    MPIR_hwtopo_gid_t *sorted_gids;
+    MPIR_CHKLMEM_MALLOC(sorted_gids, MPIR_hwtopo_gid_t *,
+                        sizeof(MPIR_hwtopo_gid_t) * num_local, mpi_errno,
+                        "sorted_gids", MPL_MEM_OTHER);
+    memcpy(sorted_gids, gids, sizeof(MPIR_hwtopo_gid_t) * num_local);
+
+    qsort(sorted_gids, num_local, sizeof(MPIR_hwtopo_gid_t), compare_gid);
+
+    /* Count global ids */
+    MPIR_hwtopo_gid_t curr_gid = -1;
+    for (i = 0; i < num_local; i++) {
+        if (curr_gid != sorted_gids[i]) {
+            count++;
+            curr_gid = sorted_gids[i];
+        }
+    }
+
+    /* Remove duplicates from sorted_mem_gid */
+    MPIR_CHKPMEM_MALLOC(*unique_gids, MPIR_hwtopo_gid_t *,
+                        sizeof(MPIR_hwtopo_gid_t) * count, mpi_errno, "seg_gids", MPL_MEM_OTHER);
+    curr_gid = -1;
+    for (i = 0, j = 0; i < num_local; i++) {
+        if (curr_gid != sorted_gids[i]) {
+            curr_gid = sorted_gids[i];
+            (*unique_gids)[j++] = curr_gid;
+        }
+    }
+
+    MPIR_CHKPMEM_COMMIT();
+
+  fn_exit:
+    *num_unique_gids = count;
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    *unique_gids = NULL;
+    goto fn_exit;
+}
+
+static void get_seg_len(MPIR_Win * win_ptr, MPIR_hwtopo_gid_t seg_gid,
+                        MPIR_hwtopo_gid_t * proc_gids, int64_t * len)
+{
+    MPIR_Comm *shm_comm_ptr = win_ptr->comm_ptr->node_comm;
+    MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win_ptr, shared_table);
+    int num_local = MPIR_Comm_size(shm_comm_ptr);
+    size_t pg_sz;
+
+    *len = 0;
+    for (int i = 0; i < num_local; i++) {
+        /* seg_gid and proc_gids can also be MPIR_HWTOPO_GID_ROOT if
+         * processes are not bound to hardware. Even for these cases
+         * we need to calculate the length of the segment. */
+        if (seg_gid == proc_gids[i]) {
+            if (MPIDIG_WIN(win_ptr, info_args).alloc_shared_noncontig)
+                *len += (int64_t) MPIDU_shm_get_mapsize(shared_table[i].size, &pg_sz);
+            else
+                *len += (int64_t) shared_table[i].size;
+        }
+    }
+}
+
+static void map_procs_to_seg(MPIR_Win * win_ptr, MPIR_hwtopo_gid_t seg_gid,
+                             MPIR_hwtopo_gid_t * proc_gids, char *seg_ptr, char **ptr_table)
+{
+    MPIR_Comm *shm_comm_ptr = win_ptr->comm_ptr->node_comm;
+    MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win_ptr, shared_table);
+    int num_local = MPIR_Comm_size(shm_comm_ptr);
+    size_t pg_sz;
+    size_t offset = 0;
+
+    for (int i = 0; i < num_local; i++) {
+        /* proc_gids and seg_gid can also be MPIR_HWTOPO_GID_ROOT if
+         * processes are not bound to NUMAs. Even for these cases
+         * we need to map processes to segment regions. */
+        if (seg_gid == proc_gids[i]) {
+            ptr_table[i] = seg_ptr + offset;
+            if (MPIDIG_WIN(win_ptr, info_args).alloc_shared_noncontig)
+                offset += MPIDU_shm_get_mapsize(shared_table[i].size, &pg_sz);
+            else
+                offset += shared_table[i].size;
+        }
+    }
+}
+
+static void can_use_symheap(int num_seg, bool * symheap_flag)
+{
+    /* for symheap the only time memory binding is allowed
+     * is when all processes are bound to the same NUMA, i.e.,
+     * num_seg = 1. */
+    if (num_seg > 1) {
+        *symheap_flag = false;
+    }
+}
 
 static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
 {
@@ -240,6 +410,26 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
             else
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "bind_memory")) {
+            if (MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE == MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE_default) {
+                /* memory bind type can be set either through hints or cvars, the latter having
+                 * precedence over hints; thus, hints are only considered if cvars are not set */
+                if (!strcmp(curr_ptr->value, "ddr")) {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__DDR;
+                } else if (!strcmp(curr_ptr->value, "hbm")) {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__HBM;
+                } else {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__DDR;
+                }
+            } else {
+                if (MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE == MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE_ddr) {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__DDR;
+                } else if (MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE == MPIR_CVAR_CH4_WIN_MEM_BIND_TYPE_hbm) {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__HBM;
+                } else {
+                    MPIDIG_WIN(win, info_args).bind_memory = MPIR_HWTOPO_TYPE__DDR;
+                }
+            }
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -386,8 +576,13 @@ static int win_finalize(MPIR_Win ** win_ptr)
         win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* if more than one process on a node, we use shared memory by default */
         if (MPIDIG_WIN(win, mmap_addr)) {
-            mpi_errno = MPIDU_shm_free(MPIDIG_WIN(win, mmap_addr));
-            MPIR_ERR_CHECK(mpi_errno);
+            for (int i = 0; i < MPIDIG_WIN(win, num_seg); i++) {
+                mpi_errno = MPIDU_shm_free(MPIDIG_WIN(win, mmap_addr)[i]);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
+
+            MPL_free(MPIDIG_WIN(win, mmap_sz));
+            MPL_free(MPIDIG_WIN(win, mmap_addr));
 
             /* if shared memory allocation fails or zero size window, free the table at allocation. */
             MPL_free(MPIDIG_WIN(win, shared_table));
@@ -421,17 +616,49 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = NULL;
     size_t total_shm_size = 0LL;
+    int64_t *mmap_sz = NULL;
     MPIDIG_win_shared_info_t *shared_table = NULL;
     MPI_Aint *shm_offsets = NULL;
     MPIR_Comm *shm_comm_ptr = comm_ptr->node_comm;
     size_t page_sz = 0, mapsize;
     bool symheap_mapfail_flag = false, shm_mapfail_flag = false;
     bool symheap_flag = true, global_symheap_flag = false;
+    void **mmap_addr = NULL;
+    MPIR_hwtopo_gid_t *seg_gids = NULL;
 
-    MPIR_CHKPMEM_DECL(2);
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(4);
+    MPIR_CHKLMEM_DECL(3);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
+
+    /* allocate space for memory gids on the node */
+    int num_local = (shm_comm_ptr) ? MPIR_Comm_size(shm_comm_ptr) : 1;
+    MPIR_hwtopo_gid_t *proc_gids;
+    MPIR_CHKLMEM_MALLOC(proc_gids, MPIR_hwtopo_gid_t *,
+                        sizeof(MPIR_hwtopo_gid_t) * num_local, mpi_errno,
+                        "mem_gids", MPL_MEM_OTHER);
+
+    int my_local_rank = (shm_comm_ptr) ? MPIR_Comm_rank(shm_comm_ptr) : 0;
+    MPIR_hwtopo_type_e mem_type = MPIDIG_WIN(*win_ptr, info_args).bind_memory;
+    proc_gids[my_local_rank] = MPIR_hwtopo_get_obj_by_type(mem_type);
+
+    /* each process communicates its memory gid to others */
+    bool bind_is_valid;
+    get_proc_gids(shm_comm_ptr, proc_gids, &bind_is_valid);
+
+    /* get list of unique memory gids */
+    int num_seg;
+    get_unique_gids(num_local, proc_gids, &num_seg, &seg_gids);
+
+    /* We disable symmetric memory if num_seg > 1. In this way we prioritize
+     * memory locality over symmetric memory optimizations. The reason for
+     * this is that NUMA awareness requires the allocation of multiple segments
+     * rather than only one. This would force the implementation to do a
+     * symmetric allocation for each of them, involving multiple rounds of
+     * global synchronization. Moreover, as nodes may not have the same number
+     * of processes the number of segments per node may also vary, increasing
+     * the complexity of the allocation logic. */
+    can_use_symheap(num_seg, &symheap_flag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -507,35 +734,66 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
      * each process. */
     mapsize = MPIDU_shm_get_mapsize(total_shm_size, &page_sz);
 
+    MPIR_CHKPMEM_MALLOC(mmap_sz, int64_t *, sizeof(int64_t) * num_seg, mpi_errno, "mmap_sz",
+                        MPL_MEM_RMA);
+    MPIR_CHKPMEM_MALLOC(mmap_addr, void **, sizeof(void **) * num_seg, mpi_errno, "mmap_addr",
+                        MPL_MEM_RMA);
+
+    MPIDIG_WIN(win, mmap_sz) = mmap_sz;
+    MPIDIG_WIN(win, mmap_addr) = mmap_addr;
+    MPIDIG_WIN(win, num_seg) = num_seg;
+
+    /* pointer table of processes region into segment(s) */
+    char **ptr_table = NULL;
+    MPIR_CHKLMEM_MALLOC(ptr_table, char **, sizeof(*ptr_table) * num_local, mpi_errno,
+                        "ptr_table", MPL_MEM_RMA);
+
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
         size_t my_offset = (shm_comm_ptr) ? shm_offsets[shm_comm_ptr->rank] : 0;
-        MPIDIG_WIN(win, mmap_sz) = mapsize;
+        mmap_sz[0] = mapsize;
         mpi_errno =
-            MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset, &MPIDIG_WIN(win, mmap_addr),
+            MPIDU_shm_alloc_symm_all(comm_ptr, mmap_sz[0], my_offset, &mmap_addr[0],
                                      &symheap_mapfail_flag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
-        if (symheap_mapfail_flag) {
-            MPIDIG_WIN(win, mmap_sz) = 0;
-            MPIDIG_WIN(win, mmap_addr) = NULL;
+        if (!symheap_mapfail_flag) {
+            map_procs_to_seg(win, seg_gids[0], proc_gids, mmap_addr[0], ptr_table);
+            if (my_local_rank == 0 && bind_is_valid)
+                MPIR_hwtopo_mem_bind(mmap_addr[0], mmap_sz[0], seg_gids[0]);
+        } else {
+            mmap_sz[0] = 0;
+            mmap_addr[0] = NULL;
         }
     }
 
     /* if symmetric heap is disabled or fails, try normal shm segment allocation */
     if (!global_symheap_flag || symheap_mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
-            MPIDIG_WIN(win, mmap_sz) = mapsize;
-            mpi_errno =
-                MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr),
-                                &shm_mapfail_flag);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
+            for (i = 0; i < num_seg; i++) {
+                get_seg_len(win, seg_gids[i], proc_gids, &mmap_sz[i]);
+                mpi_errno =
+                    MPIDU_shm_alloc(shm_comm_ptr, mmap_sz[i], &mmap_addr[i], &shm_mapfail_flag);
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
 
-            if (shm_mapfail_flag) {
-                MPIDIG_WIN(win, mmap_sz) = 0;
-                MPIDIG_WIN(win, mmap_addr) = NULL;
+                if (!shm_mapfail_flag) {
+                    map_procs_to_seg(win, seg_gids[i], proc_gids, mmap_addr[i], ptr_table);
+                    if (my_local_rank == 0 && bind_is_valid)
+                        MPIR_hwtopo_mem_bind(mmap_addr[i], mmap_sz[i], seg_gids[i]);
+                } else {
+                    /* if map fails clean up allocated memory and break */
+                    for (i = i - 1; i >= 0; i--)
+                        MPIDU_shm_free(mmap_addr[i]);
+
+                    MPL_free(mmap_sz);
+                    MPL_free(mmap_addr);
+
+                    mmap_sz = NULL;
+                    mmap_addr = NULL;
+                    break;
+                }
             }
 
             /* throw error here if shm allocation is required but fails */
@@ -552,24 +810,18 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     }
 
     /* compute the base addresses of each process within the shared memory segment */
-    if (shm_comm_ptr != NULL && MPIDIG_WIN(win, mmap_addr)) {
-        char *cur_base = (char *) MPIDIG_WIN(win, mmap_addr);
+    if (shm_comm_ptr != NULL && mmap_sz) {
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             if (shared_table[i].size)
-                shared_table[i].shm_base_addr = cur_base;
+                shared_table[i].shm_base_addr = ptr_table[i];
             else
                 shared_table[i].shm_base_addr = NULL;
-
-            if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
-            else
-                cur_base += shared_table[i].size;
         }
 
         *base_ptr = shared_table[shm_comm_ptr->rank].shm_base_addr;
-    } else if (MPIDIG_WIN(win, mmap_sz) > 0) {
+    } else if (mmap_sz && mmap_sz[0] > 0) {
         /* if symm heap is allocated without shared memory, use the mapping address */
-        *base_ptr = MPIDIG_WIN(win, mmap_addr);
+        *base_ptr = mmap_addr[0];
     }
     /* otherwise, it has already be assigned with a local memory region or NULL (zero size). */
 
@@ -581,6 +833,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     }
 
   fn_exit:
+    MPL_free(seg_gids);
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
     return mpi_errno;
