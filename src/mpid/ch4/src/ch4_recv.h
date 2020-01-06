@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
         MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, av, status,
-                          request);
+                          request, 0, 0);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
         mpi_errno =
@@ -41,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
 
         if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
             mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
-                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)));
+                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)), 0, 0);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
         else
             mpi_errno =
                 MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, av, status,
-                                  request);
+                                  request, 0, 0);
         if (mpi_errno == MPI_SUCCESS && *request) {
             MPIDI_REQUEST(*request, is_local) = r;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
@@ -99,7 +99,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request, 0,
+                           0);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
         mpi_errno =
@@ -110,7 +111,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
         MPIR_Assert(*request);
         if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
             mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
-                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)));
+                                           av, &(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)), 0, 0);
 
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -137,7 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
         else
             mpi_errno =
                 MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
-                                   request);
+                                   request, 0, 0);
         if (mpi_errno == MPI_SUCCESS) {
             MPIR_Assert(*request);
             MPIDI_REQUEST(*request, is_local) = r;
