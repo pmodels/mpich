@@ -12,7 +12,7 @@
 #include "mpidimpl.h"
 #include "ch4_impl.h"
 
-int MPIDIG_get_context_index(uint64_t context_id)
+int MPIDIG_get_context_index(MPIR_Context_id_t context_id)
 {
     int raw_prefix, idx, bitpos, gen_id;
 

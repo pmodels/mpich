@@ -16,7 +16,7 @@
 #include "mpidu_shm.h"
 
 int MPIDI_Progress_test(int flags);
-int MPIDIG_get_context_index(uint64_t context_id);
+int MPIDIG_get_context_index(MPIR_Context_id_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
 /* Static inlines */
@@ -40,7 +40,7 @@ static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
     return context_offset;
 }
 
-static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
+static inline MPIR_Comm *MPIDIG_context_id_to_comm(MPIR_Context_id_t context_id)
 {
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
@@ -58,7 +58,7 @@ static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
     return ret;
 }
 
-static inline MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
+static inline MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(MPIR_Context_id_t context_id)
 {
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
