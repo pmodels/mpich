@@ -229,11 +229,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
                               status, *req, NULL /*flag */ , NULL /*message */ ,
                               NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_recv_unsafe(buf, count, datatype, rank, tag, comm,
                                   context_offset, av, status, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -266,10 +266,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
                               NULL /*status */ , *req, NULL /*flag */ , NULL /*message */ ,
                               NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_irecv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -298,9 +298,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                               NULL /*status */ , request, NULL /*flag */ ,
                               &message, NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -317,11 +317,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno = MPIDI_cancel_recv_unsafe(rreq);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 

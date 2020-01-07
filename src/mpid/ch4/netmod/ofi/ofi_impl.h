@@ -99,9 +99,9 @@ int MPIDI_OFI_progress(int vci, int blocking);
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);        \
         MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \

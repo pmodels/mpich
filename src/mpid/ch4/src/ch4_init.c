@@ -419,7 +419,6 @@ int MPID_Init(void)
     MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
     MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-    MPIR_Add_mutex(&MPIDI_global.vci_lock);
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);

@@ -27,9 +27,9 @@
  */
 #define _fixme_MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);         \
         mpi_errno = MPIDI_OFI_progress(0, 0);                     \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);         \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
