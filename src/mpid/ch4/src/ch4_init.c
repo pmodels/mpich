@@ -79,9 +79,18 @@ cvars:
         handoff
         trylock
 
+    - name        : MPIR_CVAR_CH4_MAX_RUNTIME_VCIS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_CONFIG_VCIS).
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
-
 static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
@@ -370,6 +379,7 @@ int MPID_Init(void)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
+    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -432,6 +442,16 @@ int MPID_Init(void)
 
     mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Set the number of VCIs to setup */
+    MPIDI_global.n_vcis = 1;
+    if (MPIR_CVAR_CH4_MAX_RUNTIME_VCIS > 1)
+        MPIDI_global.n_vcis = MPIR_CVAR_CH4_MAX_RUNTIME_VCIS;
+
+    /* Initialize the VCIs */
+    for (i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPIR_Add_mutex(&MPIDI_VCI(i).lock);
+    }
 
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;

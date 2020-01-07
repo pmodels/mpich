@@ -284,6 +284,18 @@ typedef struct {
 #define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[3]
 #define MAX_CH4_MUTEXES 4
 
+/* VCI */
+typedef struct MPIDI_vci {
+    int attr;                   /* attributes of this VCI */
+    MPID_Thread_mutex_t lock;   /* lock to protect this VCI */
+    MPIR_Request *lw_req;       /* pre-allocated completed request for this VCI */
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIDI_workq_t workqueue;    /* WorkQ for this VCI */
+#endif
+} MPIDI_vci_t;
+
+#define MPIDI_VCI(i) MPIDI_global.vci[i]
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -317,6 +329,8 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
+    int n_vcis;
+    MPIDI_vci_t vci[MPIDI_CH4_MAX_CONFIG_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_t workqueue;
 #endif

@@ -467,6 +467,16 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
+AC_ARG_WITH(ch4-max-config-vcis,
+    [--with-ch4-max-config-vcis=<N>
+       Select number of VCIs to configure (default is 1; minimum is 1)],
+    [ ch4_max_config_vcis=$withval ],
+    [ ch4_max_config_vcis=1 ])
+if test $ch4_max_config_vcis -le 0 ; then
+   AC_MSG_ERROR(Number of configured VCIs must be greater than 0)
+fi
+AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_CONFIG_VCIS], [$ch4_max_config_vcis], [Number of VCIs configured in CH4])
+
 AC_ARG_ENABLE(ch4-mt,
     [--enable-ch4-mt=model
        Select model for multi-threading
