@@ -538,6 +538,10 @@ typedef struct MPIDI_av_entry {
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     MPIDI_locality_t is_local;
 #endif
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    union {
+    MPIDI_SHM_ADDR_DECL} shm;
+#endif
 } MPIDI_av_entry_t;
 
 typedef struct {

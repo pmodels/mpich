@@ -34,6 +34,8 @@
 #define MPIDI_SHM_WIN_DECL           MPIDI_POSIX_win_t posix;   \
                                      MPIDI_SHM_XPMEM_WIN_DECL
 
+#define MPIDI_SHM_ADDR_DECL          MPIDI_POSIX_addr_t posix;
+
 #define MPIDI_SHM_REQUEST(req, field)  ((req)->dev.ch4.am.shm_am.field)
 
 #endif /* SHMPRE_H_INCLUDED */

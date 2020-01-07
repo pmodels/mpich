@@ -118,6 +118,10 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
         MPIDI_POSIX_global.active_rreq[i] = NULL;
     }
 
+    for (i = 0; i < MPIR_Process.size; ++i) {
+        MPIDI_POSIX_AV(&MPIDIU_get_av(0, i)) = i;
+    }
+
     choose_posix_eager();
 
     mpi_errno = MPIDI_POSIX_eager_init(rank, size);

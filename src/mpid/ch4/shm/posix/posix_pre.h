@@ -138,6 +138,8 @@ typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
 } MPIDI_POSIX_win_t;
 
+typedef int MPIDI_POSIX_addr_t;
+
 /*
  * Wrapper routines of process mutex for shared memory RMA.
  * Called by both POSIX RMA and fallback AM handlers through CS hooks.
