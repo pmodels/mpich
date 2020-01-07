@@ -33,9 +33,8 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
         mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
-                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &ack_msg,
-                                     sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
+            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(rreq, rank), comm, MPIDIG_SSEND_ACK, &ack_msg,
+                                     sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq, av);
     else
 #endif
     {

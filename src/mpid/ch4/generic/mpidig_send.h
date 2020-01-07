@@ -66,7 +66,8 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_av_is_local(addr)) {
-        mpi_errno = MPIDI_SHM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq);
+        mpi_errno = MPIDI_SHM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq,
+                                       addr);
     } else
 #endif
     {

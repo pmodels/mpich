@@ -90,9 +90,9 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
-                                           &am_hdr, sizeof(am_hdr), origin_addr,
-                                           origin_count, origin_datatype, sreq);
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_REQ, &am_hdr,
+                                           sizeof(am_hdr), origin_addr, origin_count,
+                                           origin_datatype, sreq, av);
         else
 #endif
         {
@@ -137,9 +137,8 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= am_hdr_max_size) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
-                                            am_iov, 2, origin_addr, origin_count,
-                                            origin_datatype, sreq);
+            mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ, am_iov, 2,
+                                            origin_addr, origin_count, origin_datatype, sreq, av);
         else
 #endif
         {
@@ -154,9 +153,9 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_IOV_REQ,
-                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_IOV_REQ, &am_hdr,
+                                           sizeof(am_hdr), am_iov[1].iov_base, am_iov[1].iov_len,
+                                           MPI_BYTE, sreq, av);
         else
 #endif
         {
@@ -252,9 +251,8 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr,
-                                           MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                           NULL, 0, MPI_DATATYPE_NULL, sreq);
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr,
+                                           sizeof(am_hdr), NULL, 0, MPI_DATATYPE_NULL, sreq, av);
         else
 #endif
         {
@@ -286,9 +284,9 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (av->is_local)
-        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
-                                       &am_hdr, sizeof(am_hdr), dt_iov,
-                                       sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
+        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ, &am_hdr,
+                                       sizeof(am_hdr), dt_iov, sizeof(struct iovec) * am_hdr.n_iov,
+                                       MPI_BYTE, sreq, av);
     else
 #endif
     {
@@ -391,10 +389,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                           &am_hdr, sizeof(am_hdr), origin_addr,
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ, &am_hdr,
+                                           sizeof(am_hdr), origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, av);
         else
 #endif
         {
@@ -443,10 +441,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= am_hdr_max_sz) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                            am_iov, 2, origin_addr,
+            mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ, am_iov, 2,
+                                            origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                            sreq);
+                                            sreq, av);
         else
 #endif
         {
@@ -463,9 +461,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
-                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ, &am_hdr,
+                                           sizeof(am_hdr), am_iov[1].iov_base, am_iov[1].iov_len,
+                                           MPI_BYTE, sreq, av);
         else
 #endif
         {
@@ -583,10 +581,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (av->is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
-                                           &am_hdr, sizeof(am_hdr), origin_addr,
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ, &am_hdr,
+                                           sizeof(am_hdr), origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, av);
         else
 #endif
         {
@@ -638,7 +636,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
                                             am_iov, 2, origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                            sreq);
+                                            sreq, av);
         else
 #endif
         {
@@ -657,7 +655,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
         if (av->is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_IOV_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+                                           am_iov[1].iov_len, MPI_BYTE, sreq, av);
         else
 #endif
         {
@@ -928,8 +926,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (av->is_local)
-        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
-                                       &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq);
+        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ, &am_hdr,
+                                       sizeof(am_hdr), (char *) p_data, 2, datatype, sreq, av);
     else
 #endif
     {
