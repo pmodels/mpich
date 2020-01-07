@@ -43,14 +43,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
-                                               MPIR_Comm * comm,
-                                               int handler_id,
-                                               const void *am_hdr,
-                                               size_t am_hdr_sz,
-                                               const void *data,
-                                               MPI_Count count, MPI_Datatype datatype,
-                                               MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
+                                               const void *am_hdr, size_t am_hdr_sz,
+                                               const void *data, MPI_Count count,
+                                               MPI_Datatype datatype, MPIR_Request * sreq,
+                                               MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -83,12 +80,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
         MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
         MPIDIG_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr));
+                                         &lreq_hdr, sizeof(lreq_hdr), av);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_AV_TO_EP(av);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
@@ -142,14 +139,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
-                                                MPIR_Comm * comm,
-                                                int handler_id,
-                                                struct iovec *am_hdr,
-                                                size_t iov_len,
-                                                const void *data,
-                                                MPI_Count count, MPI_Datatype datatype,
-                                                MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
+                                                struct iovec *am_hdr, size_t iov_len,
+                                                const void *data, MPI_Count count,
+                                                MPI_Datatype datatype, MPIR_Request * sreq,
+                                                MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t am_hdr_sz = 0, i;
@@ -167,7 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_AV_TO_EP(av);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
@@ -225,13 +219,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
 }
 
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
-                                                     int src_rank,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(int src_rank,
+                                                     MPIR_Comm * comm,
                                                      int handler_id,
                                                      const void *am_hdr,
                                                      size_t am_hdr_sz,
                                                      const void *data, MPI_Count count,
-                                                     MPI_Datatype datatype, MPIR_Request * sreq)
+                                                     MPI_Datatype datatype, MPIR_Request * sreq,
+                                                     MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -246,14 +241,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
-    MPIR_Comm *use_comm;
     ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
 
-    use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
+    ep = MPIDI_UCX_AV_TO_EP(av);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
@@ -331,10 +324,9 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
-                                                  MPIR_Comm * comm,
-                                                  int handler_id, const void *am_hdr,
-                                                  size_t am_hdr_sz)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
+                                                  const void *am_hdr, size_t am_hdr_sz,
+                                                  MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -346,7 +338,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_AV_TO_EP(av);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
@@ -378,10 +370,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
-                                                        int src_rank,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(int src_rank, MPIR_Comm * comm,
                                                         int handler_id, const void *am_hdr,
-                                                        size_t am_hdr_sz)
+                                                        size_t am_hdr_sz, MPIDI_av_entry_t * av)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -389,13 +380,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     uint64_t ucx_tag;
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
-    MPIR_Comm *use_comm;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_SEND_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR_REPLY);
 
-    use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
+    ep = MPIDI_UCX_AV_TO_EP(av);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
