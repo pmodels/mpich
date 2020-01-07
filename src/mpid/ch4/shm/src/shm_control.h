@@ -14,12 +14,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_do_ctrl_send(int rank, MPIR_Comm * comm,
                                                     int ctrl_id, void *ctrl_hdr)
 {
     int ret;
+    MPIDI_av_entry_t *av;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_DO_CTRL_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_DO_CTRL_SEND);
 
-    ret = MPIDI_POSIX_am_send_hdr(rank, comm, MPIDI_POSIX_AM_HDR_SHM,
-                                  ctrl_id, ctrl_hdr, sizeof(MPIDI_SHM_ctrl_hdr_t));
+    av = MPIDIU_comm_rank_to_av(comm, rank);
+
+    ret = MPIDI_POSIX_am_send_hdr(rank, comm, MPIDI_POSIX_AM_HDR_SHM, ctrl_id, ctrl_hdr,
+                                  sizeof(MPIDI_SHM_ctrl_hdr_t), av);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_DO_CTRL_SEND);
     return ret;
