@@ -53,7 +53,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     MPIR_Win *win_ptr = NULL;
     MPIR_Attribute *p, **old_p;
     MPII_Keyval *keyval_ptr = 0;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_DELETE_ATTR);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
@@ -61,7 +61,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_DELETE_ATTR);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -140,7 +140,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_DELETE_ATTR);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

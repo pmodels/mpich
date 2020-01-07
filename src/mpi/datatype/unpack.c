@@ -63,11 +63,11 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint position_x;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_UNPACK);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -134,7 +134,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_UNPACK);
+
     return mpi_errno;
 
 

@@ -17,8 +17,8 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
     MPIDIG_rreq_t **uelist;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT_COMM);
+
+
 
     MPIR_Assert(MPIDI_global.is_ch4u_initialized);
 
@@ -56,15 +56,15 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
 
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT_COMM);
+
     return mpi_errno;
 }
 
 int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DESTROY_COMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DESTROY_COMM);
+
+
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
@@ -90,26 +90,26 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DESTROY_COMM);
+
     return mpi_errno;
 }
 
 void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
+
+
     void *p;
     p = MPL_malloc(size, MPL_MEM_USER);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ALLOC_MEM);
+
     return p;
 }
 
 int MPIDIG_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_FREE_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_FREE_MEM);
+
+
     MPL_free(ptr);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_FREE_MEM);
+
     return mpi_errno;
 }

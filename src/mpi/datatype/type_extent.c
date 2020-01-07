@@ -51,11 +51,11 @@ The replacement for this routine is 'MPI_Type_get_extent'.
 int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_EXTENT);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_EXTENT);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -97,7 +97,7 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint * extent)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_EXTENT);
+
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

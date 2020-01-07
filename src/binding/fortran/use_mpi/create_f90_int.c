@@ -67,13 +67,13 @@ int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
     MPI_Datatype basetype = MPI_DATATYPE_NULL;
     static intModel f90_integer_map[] = { MPIR_F90_INTEGER_MODEL_MAP {0, 0, 0}
     };
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
+
 
     /* ... body of routine ...  */
     for (i = 0; f90_integer_map[i].range > 0; i++) {
@@ -114,7 +114,7 @@ int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
 
     /* ... end of body of routine ... */
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

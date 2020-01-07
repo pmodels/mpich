@@ -31,8 +31,8 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
     int i, j, bblock, comm_block, dst;
     int tag = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
+
+
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     MPIR_Assert(!is_inplace);
@@ -84,7 +84,7 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_BLOCKED);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -101,8 +101,8 @@ int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_BLOCKED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_BLOCKED);
+
+
 
 
     /* generate the schedule */
@@ -120,7 +120,7 @@ int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_BLOCKED);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

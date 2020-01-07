@@ -76,8 +76,8 @@ void MPIDI_sigusr1_handler(int sig)
 
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ABORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ABORT);
+
+
 
     char world_str[MPI_MAX_ERROR_STRING] = "";
     if (MPIR_Process.comm_world) {
@@ -110,7 +110,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_Debugger_set_aborting(error_msg);
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
+
     fflush(stderr);
     fflush(stdout);
     if (NULL == comm || (MPIR_Comm_size(comm) == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM))
@@ -127,8 +127,8 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
 int MPIDI_check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
+
+
 
     /* FIXME: Currently this only handles failed processes in
      * comm_world.  We need to fix hydra to include the pgid along
@@ -146,7 +146,7 @@ int MPIDI_check_for_failed_procs(void)
         /* FIXME: handle ULFM failed groups here */
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
+
     return mpi_errno;
 }
 

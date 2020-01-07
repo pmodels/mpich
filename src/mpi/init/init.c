@@ -94,8 +94,8 @@ The Fortran binding for 'MPI_Init' has only the error return
 int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
-    MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
+
+
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -137,7 +137,7 @@ int MPI_Init(int *argc, char ***argv)
         goto fn_fail;
 
     /* ... end of body of routine ... */
-    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);
+
     return mpi_errno;
 
   fn_fail:

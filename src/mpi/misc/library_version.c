@@ -45,11 +45,11 @@ Output Parameters:
 int MPI_Get_library_version(char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+
 
     /* Note that this routine may be called before MPI_Init */
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -86,7 +86,7 @@ int MPI_Get_library_version(char *version, int *resultlen)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

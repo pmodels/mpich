@@ -32,9 +32,9 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
+
+
     /* Return a group consisting of the members of group1 that are
      * in group2 */
     size1 = group_ptr1->size;
@@ -91,7 +91,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     }
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -134,13 +134,13 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgr
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
     MPIR_Group *new_group_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_INTERSECTION);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_INTERSECTION);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -186,7 +186,7 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgr
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_INTERSECTION);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

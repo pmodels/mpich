@@ -53,11 +53,11 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_REMOTE_SIZE);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_REMOTE_SIZE);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -103,7 +103,7 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_REMOTE_SIZE);
+
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

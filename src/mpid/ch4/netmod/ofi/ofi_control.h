@@ -19,8 +19,8 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                             int rank, MPIR_Comm * comm_ptr, MPIR_Request * ackreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
+
+
 
     control->origin_rank = comm_ptr->rank;
     control->send_buf = (uintptr_t) send_buf;
@@ -33,7 +33,7 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                     (void *) control, sizeof(*control));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
+
     return mpi_errno;
 }
 

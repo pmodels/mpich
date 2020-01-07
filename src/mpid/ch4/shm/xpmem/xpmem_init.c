@@ -15,8 +15,8 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     int i;
     bool anyfail = false;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
+
+
     MPIR_CHKPMEM_DECL(3);
 
 #ifdef MPL_USE_DBG_LOGGING
@@ -99,7 +99,7 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIDU_Init_shm_barrier();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
+
     return mpi_errno;
   fn_fail:
     if (MPIDI_XPMEM_global.segid != -1) {
@@ -120,8 +120,8 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
+
+
 
     /* Ensure all counter objs are freed at MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb */
     while (MPIR_cc_get(MPIDI_XPMEM_global.num_pending_cnt))
@@ -164,7 +164,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -50,13 +50,13 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     int new_code;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_CODE);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ADD_ERROR_CODE);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -80,7 +80,7 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ADD_ERROR_CODE);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

@@ -17,15 +17,15 @@
 int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
+
+
 
 #if defined HAVE_LIBHCOLL
     hcoll_comm_create(comm, NULL);
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_CREATE_HOOK);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -34,13 +34,13 @@ int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
+
+
 
 #ifdef HAVE_LIBHCOLL
     hcoll_comm_destroy(comm, NULL);
 #endif
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_FREE_HOOK);
+
     return mpi_errno;
 }

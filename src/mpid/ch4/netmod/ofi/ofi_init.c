@@ -342,8 +342,8 @@ static int conn_manager_init()
 {
     int mpi_errno = MPI_SUCCESS, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
+
+
 
     MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
@@ -368,7 +368,7 @@ static int conn_manager_init()
     MPIDI_OFI_global.conn_mgr.free_conn_id[MPIDI_OFI_global.conn_mgr.max_n_conn - 1] = -1;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -386,8 +386,8 @@ static int conn_manager_destroy()
     MPIR_Context_id_t context_id = 0xF000;
     MPIR_CHKLMEM_DECL(3);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
+
+
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
@@ -444,7 +444,7 @@ static int conn_manager_destroy()
     MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -461,8 +461,8 @@ static int dynproc_send_disconnect(int conn_id)
     struct fi_msg_tagged msg;
     struct iovec msg_iov;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+
+
 
     if (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -508,7 +508,7 @@ static int dynproc_send_disconnect(int conn_id)
                      conn_id, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -525,8 +525,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     struct fi_av_attr av_attr;
     size_t optlen;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_INIT);
+
+
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -855,7 +855,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_INIT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -868,8 +868,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int barrier[2] = { 0 };
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FINALIZE);
+
+
 
     /* clean dynamic process connections */
     conn_manager_destroy();
@@ -941,7 +941,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FINALIZE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1108,8 +1108,8 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     struct fi_tx_attr tx_attr;
     struct fi_rx_attr rx_attr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
+
+
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         struct fi_cq_attr cq_attr;
@@ -1194,7 +1194,7 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CREATE_ENDPOINT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

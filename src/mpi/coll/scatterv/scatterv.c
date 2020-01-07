@@ -233,13 +233,13 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_SCATTERV);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_SCATTERV);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -384,7 +384,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_SCATTERV);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

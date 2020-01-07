@@ -63,8 +63,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
     int i, nvtcs;
     void **step1_recvbuf;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_STEP1);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_STEP1);
+
+
     /* Step 1 */
     if (!in_step2) {
         /* non-participating rank sends the data to a participating rank */
@@ -120,6 +120,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
             }
         }
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_STEP1);
+
     return mpi_errno;
 }

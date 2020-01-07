@@ -51,13 +51,13 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_SET);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_SET);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -108,7 +108,7 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_SET);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
@@ -134,9 +134,9 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *curr_ptr, *prev_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_INFO_SET_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_INFO_SET_IMPL);
+
+
 
     prev_ptr = info_ptr;
     curr_ptr = info_ptr->next;
@@ -164,7 +164,7 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
     }
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INFO_SET_IMPL);
+
     return mpi_errno;
 
   fn_fail:

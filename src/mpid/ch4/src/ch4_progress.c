@@ -16,8 +16,8 @@ int MPIDI_Progress_test(int flags)
     int mpi_errno, made_progress, i;
     mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
+
+
 
 #ifdef HAVE_SIGNAL
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
@@ -69,7 +69,7 @@ int MPIDI_Progress_test(int flags)
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -84,30 +84,30 @@ int MPID_Progress_poke(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_POKE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_POKE);
+
+
 
     ret = MPID_Progress_test();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_POKE);
+
     return ret;
 }
 
 void MPID_Progress_start(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
+
+
+
     return;
 }
 
 void MPID_Progress_end(MPID_Progress_state * state)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
+
+
+
     return;
 }
 
@@ -115,8 +115,8 @@ int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
+
+
 
     if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_DIRECT) {
         ret = MPID_Progress_test();
@@ -138,7 +138,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     } while (1);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
+
 
   fn_exit:
     return ret;
@@ -152,8 +152,8 @@ int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_REGISTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_REGISTER);
+
+
 
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (MPIDI_global.progress_hooks[i].func_ptr == NULL) {
@@ -171,7 +171,7 @@ int MPID_Progress_register(int (*progress_fn) (int *), int *id)
     (*id) = i;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_REGISTER);
+
     return mpi_errno;
   fn_fail:
     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -183,8 +183,8 @@ int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 int MPID_Progress_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEREGISTER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_DEREGISTER);
+
+
 
     MPIR_Assert(id >= 0);
     MPIR_Assert(id < MAX_PROGRESS_HOOKS);
@@ -194,15 +194,15 @@ int MPID_Progress_deregister(int id)
 
     MPIDI_global.registered_progress_hooks--;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_DEREGISTER);
+
     return mpi_errno;
 }
 
 int MPID_Progress_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_ACTIVATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_ACTIVATE);
+
+
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_Assert(id >= 0);
@@ -218,15 +218,15 @@ int MPID_Progress_activate(int id)
     }
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_ACTIVATE);
+
     return mpi_errno;
 }
 
 int MPID_Progress_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
+
+
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_Assert(id >= 0);
@@ -240,6 +240,6 @@ int MPID_Progress_deactivate(int id)
     }
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
+
     return mpi_errno;
 }

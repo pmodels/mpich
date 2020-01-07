@@ -32,9 +32,9 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
+
+
 
     size = group_ptr->size;
 
@@ -67,7 +67,7 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -113,13 +113,13 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL, *new_group_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_EXCL);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_EXCL);
+
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -167,7 +167,7 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_EXCL);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

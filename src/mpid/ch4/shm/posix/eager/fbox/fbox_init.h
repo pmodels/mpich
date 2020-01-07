@@ -41,8 +41,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     int i;
     MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
+
+
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
+
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -115,8 +115,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
+
+
 
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
@@ -125,7 +125,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

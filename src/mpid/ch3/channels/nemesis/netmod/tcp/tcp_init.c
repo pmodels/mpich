@@ -119,9 +119,9 @@ int MPID_nem_tcp_listen(int sockfd);
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SET_UP_LISTENER);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SET_UP_LISTENER);
+
+
 
     MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd =
         socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -139,7 +139,7 @@ static int set_up_listener(void)
     MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_SET_UP_LISTENER);
+
     return mpi_errno;
   fn_fail:
 
@@ -149,9 +149,9 @@ static int set_up_listener(void)
 int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_INIT);
+
+
 
     MPID_nem_net_module_vc_dbg_print_sendq = MPID_nem_tcp_vc_dbg_print_sendq;
 
@@ -199,7 +199,7 @@ int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_INIT);
+
 /*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     return mpi_errno;
   fn_fail:
@@ -216,9 +216,9 @@ static int ckpt_restart(void)
     char *bc_val = NULL;
     int val_max_sz;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CKPT_RESTART);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CKPT_RESTART);
+
+
 
     /* First, clean up.  We didn't shut anything down before the
      * checkpoint, so we need to go close and free any resources */
@@ -259,7 +259,7 @@ static int ckpt_restart(void)
 
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CKPT_RESTART);
+
     return mpi_errno;
   fn_fail:
 
@@ -383,9 +383,9 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     int ret;
     MPL_sockaddr_t sock_id;
     socklen_t len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
+
+
 
     mpi_errno = GetSockInterfaceAddr(my_rank, ifname, sizeof(ifname), &addr);
     if (mpi_errno)
@@ -428,7 +428,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
 
   fn_exit:
 /*     fprintf(stdout, "MPID_nem_tcp_get_business_card Exit, mpi_errno=%d\n", mpi_errno); fflush(stdout); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -439,9 +439,9 @@ int MPID_nem_tcp_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     int mpi_errno = MPI_SUCCESS;
     struct in_addr addr;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(new_vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
+
+
 
     /* vc is already allocated before reaching this point */
 
@@ -455,7 +455,7 @@ int MPID_nem_tcp_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
+
     return mpi_errno;
 
   fn_fail:
@@ -467,9 +467,9 @@ int MPID_nem_tcp_vc_init(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_VC_INIT);
+
+
 
     vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
 
@@ -504,7 +504,7 @@ int MPID_nem_tcp_vc_init(MPIDI_VC_t * vc)
 
     vc_tcp->connect_retry_count = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_VC_INIT);
+
     return mpi_errno;
 }
 
@@ -531,9 +531,9 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     int port_int;
     /*char desc_str[256]; */
     char ifname[256];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
+
+
 
     /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
@@ -559,7 +559,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 
   fn_exit:
 /*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
+
     return mpi_errno;
   fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -576,9 +576,9 @@ int MPID_nem_tcp_listen(int sockfd)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     unsigned short port;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_BIND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_BIND);
+
+
 
     MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 ||
                         MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno,
@@ -608,7 +608,7 @@ int MPID_nem_tcp_listen(int sockfd)
 /*     if (ret == 0) */
 /*         fprintf(stdout, "sockfd=%d  port=%d bound\n", sockfd, port); */
 /*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_BIND);
+
     return mpi_errno;
   fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -621,9 +621,9 @@ int MPID_nem_tcp_vc_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     int req_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+
+
 
     if (vc->state != MPIDI_VC_STATE_CLOSED) {
         /* VC is terminated as a result of a fault.  Complete
@@ -651,7 +651,7 @@ int MPID_nem_tcp_vc_terminate(MPIDI_VC_t * vc)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_VC_TERMINATE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -663,9 +663,9 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t * vc)
     /* This is called when the VC is to be terminated once all queued
      * sends have been sent. */
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_NEM_TCP_VC_TERMINATED);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_NEM_TCP_VC_TERMINATED);
+
+
 
     mpi_errno = MPID_nem_tcp_cleanup(vc);
     MPIR_ERR_CHECK(mpi_errno);
@@ -674,7 +674,7 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t * vc)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_NEM_TCP_VC_TERMINATED);
+
     return mpi_errno;
   fn_fail:
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,

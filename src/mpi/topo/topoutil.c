@@ -286,9 +286,9 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TOPO_CANON_NHB);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TOPO_CANON_NHB);
+
+
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
     MPIR_ERR_CHKANDJUMP(!topo_ptr, mpi_errno, MPI_ERR_TOPOLOGY, "**notopology");
@@ -341,7 +341,7 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
 #endif
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TOPO_CANON_NHB);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

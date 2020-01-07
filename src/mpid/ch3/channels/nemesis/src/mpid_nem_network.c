@@ -37,9 +37,9 @@ int MPID_nem_choose_netmod(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
+
+
 
     MPIR_Assert(MPIR_CVAR_NEMESIS_NETMOD != NULL);
     if (strcmp(MPIR_CVAR_NEMESIS_NETMOD, "") == 0)
@@ -69,7 +69,7 @@ int MPID_nem_choose_netmod(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s", MPIR_CVAR_NEMESIS_NETMOD);
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);
+
     return mpi_errno;
  fn_fail:
 

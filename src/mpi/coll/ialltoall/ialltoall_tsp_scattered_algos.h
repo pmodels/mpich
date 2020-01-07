@@ -63,8 +63,8 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
     int batch_size, bblock;
     int tag = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_SCATTERED);
+
+
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -154,7 +154,7 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
     MPL_free(send_id);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_SCATTERED);
+
     return mpi_errno;
 
   fn_fail:
@@ -171,8 +171,8 @@ int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
+
+
 
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -189,7 +189,7 @@ int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_SCATTERED);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

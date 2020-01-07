@@ -15,9 +15,9 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     const int context = comm->recvcontext_id + context_offset;
     int found = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
+
+
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
@@ -96,7 +96,7 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     *flag = found;
 
  fn_exit:    
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IPROBE);
+
     return mpi_errno;
  fn_fail:
     goto fn_exit;

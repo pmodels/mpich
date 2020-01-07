@@ -19,9 +19,9 @@
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IMMED_COPY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IMMED_COPY);
+
+
 
     if (src == NULL || dest == NULL || len == 0)
         goto fn_exit;
@@ -49,7 +49,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IMMED_COPY);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -68,8 +68,8 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
     void *flattened_type, *total_hdr;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_ACCUM_EXT_PKT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_ACCUM_EXT_PKT);
+
+
 
     /*
      * The extended header consists of two parts:
@@ -115,7 +115,7 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
     (*ext_hdr_sz) = _total_sz;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_ACCUM_EXT_PKT);
+
     return mpi_errno;
   fn_fail:
     MPL_free((*ext_hdr_ptr));
@@ -145,9 +145,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     int pkt_flags;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+
+
 
     /* Judge if origin buffer is empty (this can only happens for
      * GACC and FOP when op is MPI_NO_OP). */
@@ -283,7 +283,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         MPIR_Datatype_ptr_release(target_dtp);
     (*req_ptr) = req;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+
     return mpi_errno;
   fn_fail:
     if (req) {
@@ -309,9 +309,9 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPI_Datatype target_datatype;
     MPIR_Datatype*target_dtp_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_PUT_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_PUT_OP);
+
+
 
     put_pkt->pkt_flags |= pkt_flags;
 
@@ -359,7 +359,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_PUT_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -388,9 +388,9 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_ACC_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_ACC_OP);
+
+
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -517,7 +517,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_ACC_OP);
+
     return mpi_errno;
   fn_fail:
     if (rma_op->reqs_size == 1) {
@@ -548,9 +548,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_ACC_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_GET_ACC_OP);
+
+
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -732,7 +732,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -776,9 +776,9 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Request *req = NULL;
     MPIR_Request *curr_req = NULL;
     MPL_IOV iov[MPL_IOV_LIMIT];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_GET_OP);
+
+
 
     rma_op->reqs_size = 1;
 
@@ -871,7 +871,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     rma_op->single_req = curr_req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_GET_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -892,9 +892,9 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *rmw_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_CAS_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_CAS_OP);
+
+
 
     rma_op->reqs_size = 1;
 
@@ -930,7 +930,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = curr_req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_CAS_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -951,9 +951,9 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *resp_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_FOP_OP);
+
+
 
     rma_op->reqs_size = 1;
 
@@ -998,7 +998,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = resp_req;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_FOP_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1015,9 +1015,9 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_RMA_OP);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_RMA_OP);
+
+
 
     switch (op_ptr->pkt.type) {
     case (MPIDI_CH3_PKT_PUT):
@@ -1049,7 +1049,7 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_RMA_OP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

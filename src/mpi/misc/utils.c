@@ -22,9 +22,9 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
     MPI_Aint sendsize, recvsize, sdata_sz, rdata_sz, copy_sz;
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
     MPIR_CHKLMEM_DECL(1);
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_LOCALCOPY);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_LOCALCOPY);
+
+
 
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
@@ -121,7 +121,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_LOCALCOPY);
+
     return mpi_errno;
 
   fn_fail:

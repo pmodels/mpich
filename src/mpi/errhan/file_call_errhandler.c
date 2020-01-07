@@ -51,11 +51,11 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     MPIR_Errhandler *e;
     MPI_Errhandler eh;
 #endif
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
+
 
 #ifdef MPI_MODE_RDONLY
     /* Validate parameters, especially handles needing to be converted */
@@ -134,7 +134,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 #else
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
+
     return mpi_errno;
 }
 

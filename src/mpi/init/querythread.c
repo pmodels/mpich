@@ -60,11 +60,11 @@ Output Parameters:
 int MPI_Query_thread(int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_QUERY_THREAD);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_QUERY_THREAD);
+
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -83,7 +83,7 @@ int MPI_Query_thread(int *provided)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_QUERY_THREAD);
+
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

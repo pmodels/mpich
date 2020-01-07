@@ -184,8 +184,8 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(int pkt_flags,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_EXTPKTHANDLER_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_EXTPKTHANDLER_ACCUMULATE);
+
+
 
     if (pkt_flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         (*ext_hdr_sz) = sizeof(MPIDI_CH3_Ext_pkt_stream_t);
@@ -201,7 +201,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(int pkt_flags,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_EXTPKTHANDLER_ACCUMULATE);
+
     return mpi_errno;
   fn_fail:
     MPL_free((*ext_hdr_ptr));
@@ -235,9 +235,9 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     MPIR_Win *win_ptr;
     int acquire_lock_fail = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received put pkt");
 
@@ -374,7 +374,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_put);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -393,9 +393,9 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
     int acquire_lock_fail = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received get pkt");
 
@@ -568,7 +568,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     }
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -588,9 +588,9 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
     MPI_Aint stream_elem_count, total_len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received accumulate pkt");
 
@@ -778,7 +778,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -798,9 +798,9 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     int acquire_lock_fail = 0;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint stream_elem_count, total_len;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received accumulate pkt");
 
@@ -1066,7 +1066,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_accum);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1086,9 +1086,9 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     MPIR_Request *rreq = NULL;
     MPI_Aint len;
     int acquire_lock_fail = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received CAS pkt");
 
@@ -1174,7 +1174,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1192,9 +1192,9 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPI_Aint len;
     MPIR_Win *win_ptr;
     int target_rank = cas_resp_pkt->target_rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received CAS response pkt");
 
@@ -1228,7 +1228,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas_resp);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1247,9 +1247,9 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
     int acquire_lock_fail = 0;
     MPIR_Win *win_ptr = NULL;
     MPI_Aint type_size;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received FOP pkt");
 
@@ -1408,7 +1408,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1429,9 +1429,9 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     intptr_t data_len;
     int complete = 0;
     int target_rank = fop_resp_pkt->target_rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOPRESP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOPRESP);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received FOP response pkt");
 
@@ -1487,7 +1487,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop_resp);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOPRESP);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1507,9 +1507,9 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     MPI_Aint type_size;
     MPIR_Win *win_ptr;
     int target_rank = get_accum_resp_pkt->target_rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received Get-Accumulate response pkt");
 
@@ -1614,7 +1614,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_accum_resp);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1628,9 +1628,9 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data
     MPIR_Win *win_ptr = NULL;
     int lock_type;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received lock pkt");
 
@@ -1665,7 +1665,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data
     *rreqp = NULL;
   fn_fail:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
+
     return mpi_errno;
 }
 
@@ -1682,9 +1682,9 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPI_Aint type_size;
     MPIR_Win *win_ptr;
     int target_rank = get_resp_pkt->target_rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received get response pkt");
 
@@ -1740,7 +1740,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_resp);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1754,9 +1754,9 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIR_Win *win_ptr = NULL;
     int target_rank = lock_ack_pkt->target_rank;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received lock ack pkt");
 
@@ -1783,7 +1783,7 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_CH3_Progress_signal_completion();
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock_ack);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
+
   fn_exit:
     return MPI_SUCCESS;
   fn_fail:
@@ -1799,9 +1799,9 @@ int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     int target_rank = lock_op_ack_pkt->target_rank;
     int pkt_flags = lock_op_ack_pkt->pkt_flags;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKOPACK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKOPACK);
+
+
 
     *buflen = 0;
 
@@ -1832,7 +1832,7 @@ int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKOPACK);
+
   fn_exit:
     return MPI_SUCCESS;
   fn_fail:
@@ -1847,9 +1847,9 @@ int MPIDI_CH3_PktHandler_Ack(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIR_Win *win_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     int target_rank = ack_pkt->target_rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACK);
+
+
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received shared lock ops done pkt");
 
@@ -1867,7 +1867,7 @@ int MPIDI_CH3_PktHandler_Ack(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_CH3_Progress_signal_completion();
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_ack);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACK);
+
   fn_exit:
     return MPI_SUCCESS;
   fn_fail:
@@ -1882,9 +1882,9 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_CH3_Pkt_decr_at_counter_t *decr_at_cnt_pkt = &pkt->decr_at_cnt;
     MPIR_Win *win_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
+
+
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_decr_at_cnt);
 
@@ -1905,7 +1905,7 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_decr_at_cnt);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1919,9 +1919,9 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_unlock_t *unlock_pkt = &pkt->unlock;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_UNLOCK);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_UNLOCK);
+
+
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received unlock pkt");
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_unlock);
@@ -1942,7 +1942,7 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_unlock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_UNLOCK);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1958,9 +1958,9 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_flush_t *flush_pkt = &pkt->flush;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSH);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSH);
+
+
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "received flush pkt");
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_flush);
@@ -1975,7 +1975,7 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_flush);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSH);
+
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

@@ -42,9 +42,9 @@ Output Parameters:
 int MPI_Finalized(int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FINALIZED);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FINALIZED);
+
+
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -69,7 +69,7 @@ int MPI_Finalized(int *flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FINALIZED);
+
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -78,8 +78,8 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
 static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 {
     MPIDI_OFI_am_request_header_t *req_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
+
+
 
     req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
 
@@ -92,7 +92,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 
     MPIDIU_release_buf(req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
+
     return;
 }
 
@@ -101,8 +101,8 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_request_header_t *req_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
+
+
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
@@ -129,7 +129,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
         MPIR_Memcpy(req_hdr->am_hdr, am_hdr, am_hdr_sz);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
+
     return mpi_errno;
 }
 
@@ -138,13 +138,13 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
+
+
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                        &MPIDI_OFI_global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), repost);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -157,8 +157,8 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
 
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
+
+
 
     ret = fi_cq_read(MPIDI_OFI_global.ctx[vci_idx].cq, &cq_entry, 1);
 
@@ -189,7 +189,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -205,8 +205,8 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     int mpi_errno = MPI_SUCCESS, c;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
+
+
 
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
@@ -243,7 +243,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -261,8 +261,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
+
+
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -325,7 +325,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -342,8 +342,8 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec *iov;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
+
+
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -377,7 +377,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -397,8 +397,8 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+
+
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
@@ -451,7 +451,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -498,8 +498,8 @@ static inline int MPIDI_OFI_do_inject(int rank,
     size_t buff_len;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_INJECT);
+
+
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -530,7 +530,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_INJECT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

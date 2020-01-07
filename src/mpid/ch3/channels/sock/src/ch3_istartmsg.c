@@ -9,9 +9,9 @@
 static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 {
     MPIR_Request *sreq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_REQUEST);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
+
+
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
@@ -27,7 +27,7 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
     sreq->dev.iov_count = 1;
     sreq->dev.OnDataAvail = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_REQUEST);
+
     return sreq;
 }
 
@@ -44,9 +44,9 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     MPIR_Request *sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
+
+
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -186,6 +186,6 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 
   fn_fail:
     *sreq_ptr = sreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
+
     return mpi_errno;
 }

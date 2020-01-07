@@ -33,8 +33,8 @@ static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool_internal(int num, int si
     MPIDIU_buf_pool_t *buf_pool;
     MPIDIU_buf_t *curr, *next;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_CREATE_BUF_POOL_INTERNAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_CREATE_BUF_POOL_INTERNAL);
+
+
 
     buf_pool = (MPIDIU_buf_pool_t *) MPL_malloc(sizeof(*buf_pool), MPL_MEM_BUFFER);
     MPIR_Assert(buf_pool);
@@ -56,7 +56,7 @@ static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool_internal(int num, int si
     }
     curr->next = NULL;
     curr->pool = parent_pool ? parent_pool : buf_pool;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_CREATE_BUF_POOL_INTERNAL);
+
     return buf_pool;
 }
 
@@ -64,14 +64,14 @@ static inline void *MPIDIU_get_head_buf(MPIDIU_buf_pool_t * pool)
 {
     void *buf;
     MPIDIU_buf_t *curr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_HEAD_BUF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_HEAD_BUF);
+
+
 
     curr = pool->head;
     pool->head = curr->next;
     buf = curr->data;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_HEAD_BUF);
+
     return buf;
 }
 
@@ -80,8 +80,8 @@ static inline void *MPIDIU_get_buf_safe(MPIDIU_buf_pool_t * pool)
     void *buf;
     MPIDIU_buf_pool_t *curr_pool;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_BUF_SAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_BUF_SAFE);
+
+
 
     if (pool->head) {
         buf = MPIDIU_get_head_buf(pool);
@@ -98,7 +98,7 @@ static inline void *MPIDIU_get_buf_safe(MPIDIU_buf_pool_t * pool)
     buf = MPIDIU_get_head_buf(pool);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_BUF_SAFE);
+
     return buf;
 }
 
@@ -106,35 +106,35 @@ static inline void *MPIDIU_get_buf(MPIDIU_buf_pool_t * pool)
 {
     void *buf;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_BUF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_BUF);
+
+
 
     MPID_THREAD_CS_ENTER(VCI, pool->lock);
     buf = MPIDIU_get_buf_safe(pool);
     MPID_THREAD_CS_EXIT(VCI, pool->lock);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_BUF);
+
     return buf;
 }
 
 static inline void MPIDIU_release_buf_safe(void *buf)
 {
     MPIDIU_buf_t *curr_buf;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_BUF_SAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_BUF_SAFE);
+
+
 
     curr_buf = MPL_container_of(buf, MPIDIU_buf_t, data);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_BUF_SAFE);
+
 }
 
 static inline void MPIDIU_release_buf(void *buf)
 {
     MPIDIU_buf_t *curr_buf;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_BUF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_BUF);
+
+
 
     curr_buf = MPL_container_of(buf, MPIDIU_buf_t, data);
     MPID_THREAD_CS_ENTER(VCI, curr_buf->pool->lock);
@@ -142,7 +142,7 @@ static inline void MPIDIU_release_buf(void *buf)
     curr_buf->pool->head = curr_buf;
     MPID_THREAD_CS_EXIT(VCI, curr_buf->pool->lock);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_BUF);
+
 }
 
 #endif /* CH4R_BUF_H_INCLUDED */

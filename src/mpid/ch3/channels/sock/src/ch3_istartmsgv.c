@@ -10,9 +10,9 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
 {
     MPIR_Request *sreq;
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_REQUEST);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
+
+
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     /* --BEGIN ERROR HANDLING-- */
@@ -35,7 +35,7 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
     sreq->dev.iov_count = iov_count;
     sreq->dev.OnDataAvail = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_REQUEST);
+
     return sreq;
 }
 
@@ -67,9 +67,9 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
     MPIR_Request *sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+
+
 
     MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
 
@@ -211,6 +211,6 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
 
   fn_fail:
     *sreq_ptr = sreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+
     return mpi_errno;
 }

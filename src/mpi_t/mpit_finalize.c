@@ -199,8 +199,8 @@ int MPI_T_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_FINALIZE);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_FINALIZE);
+
+
 
     /* ... body of routine ...  */
 
@@ -218,7 +218,7 @@ int MPI_T_finalize(void)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_FINALIZE);
+
     return mpi_errno;
 
   fn_fail:

@@ -54,11 +54,11 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL, *rreq = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_MRECV);
+
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_MRECV);
+
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -127,7 +127,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_MRECV);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

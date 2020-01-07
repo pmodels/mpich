@@ -16,9 +16,9 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     int in_cs = FALSE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
+
+
 
     if (vc->state == MPIDI_VC_STATE_MORIBUND) {
         sreq->status.MPI_ERROR = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISEND);
+
     return mpi_errno;
  fn_fail:
     goto fn_exit;

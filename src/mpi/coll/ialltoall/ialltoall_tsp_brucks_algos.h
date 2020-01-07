@@ -62,8 +62,8 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     int counter;
     int sink_id;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_BRUCKS_SCHED_PUP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_BRUCKS_SCHED_PUP);
+
+
 
     MPIR_Datatype_get_extent_macro(rtype, type_extent);
     MPIR_Type_get_true_extent_impl(rtype, &type_lb, &type_true_extent);
@@ -114,7 +114,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
     MPL_free(dtcopy_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_BRUCKS_SCHED_PUP);
+
 
     return sink_id;
 }
@@ -146,8 +146,8 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
 
     MPIR_CHKLMEM_DECL(6);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+
+
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -376,7 +376,7 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     }
     MPIR_CHKLMEM_FREEALL();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_BRUCKS);
+
 
     return mpi_errno;
   fn_fail:
@@ -393,8 +393,8 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
+
+
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -412,7 +412,7 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_INTRA_BRUCKS);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

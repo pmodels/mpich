@@ -136,12 +136,12 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
     MPIR_Request *request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAIT);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAIT);
+
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -191,7 +191,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAIT);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

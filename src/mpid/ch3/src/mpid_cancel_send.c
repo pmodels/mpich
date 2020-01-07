@@ -16,9 +16,9 @@ int MPID_Cancel_send(MPIR_Request * sreq)
     int proto;
     int flag;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_SEND);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_SEND);
+
+
     
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__SEND);
 
@@ -212,7 +212,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
        should be adequate. */
  fn_fail:
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CANCEL_SEND);
+
     return mpi_errno;
 }
 

@@ -141,13 +141,13 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     MPI_Datatype new_handle = MPI_DATATYPE_NULL;
     MPIR_Datatype *new_dtp;
     MPI_Aint aints[2];
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
+
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
+
 
     /* Get handles to MPI objects. */
 #ifdef HAVE_ERROR_CHECKING
@@ -192,7 +192,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

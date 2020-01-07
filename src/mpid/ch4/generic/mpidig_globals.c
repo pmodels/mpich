@@ -25,8 +25,8 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     MPIR_Request *sreq = NULL;
     MPIDIG_hdr_t am_hdr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT);
+
+
 
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = exit_code;
@@ -55,7 +55,7 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT);
+
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPL_exit(exit_code);
 

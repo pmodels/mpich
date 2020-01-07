@@ -32,8 +32,8 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendc
     int max_size;
     void *tmp_buf = NULL, *adj_tmp_buf = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_INPLACE);
+
+
 
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
 
@@ -84,7 +84,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_INPLACE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -102,8 +102,8 @@ int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const int sendcounts[
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLW_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLW_INTRA_INPLACE);
+
+
 
 
     /* generate the schedule */
@@ -121,7 +121,7 @@ int MPIR_TSP_Ialltoallw_intra_inplace(const void *sendbuf, const int sendcounts[
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLW_INTRA_INPLACE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

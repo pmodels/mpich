@@ -34,8 +34,8 @@ int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx,
                                                      int *avtid)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
+
+
 
     *avtid = 0;
 
@@ -91,15 +91,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     }
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_pid: rank=%d, avtid=%d idx=%d", rank, *avtid, *idx));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
+
     return *idx;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
+
+
 
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_DIRECT:
@@ -162,15 +162,15 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_av_addr: rank=%d, av addr=%p", rank, (void *) ret));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
+
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *idx,
                                                            int *avtid)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
+
+
 
     *avtid = MPIDI_COMM(comm, local_map).avtid;
     switch (MPIDI_COMM(comm, local_map).mode) {
@@ -208,15 +208,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " comm_to_pid_local: rank=%d, avtid=%d idx=%d",
                      rank, *avtid, *idx));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
+
     return *idx;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
+
+
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
@@ -224,15 +224,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
+
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AV_IS_LOCAL);
+
+
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = av->is_local;
@@ -240,15 +240,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
                     (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void *) av));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AV_IS_LOCAL);
+
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RANK_TO_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RANK_TO_LPID);
+
+
 
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
@@ -258,7 +258,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
         ret = -1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RANK_TO_LPID);
+
     return ret;
 }
 

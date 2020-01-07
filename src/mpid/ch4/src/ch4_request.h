@@ -16,34 +16,34 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_IS_ANYSOURCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_IS_ANYSOURCE);
+
+
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_IS_ANYSOURCE);
+
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_pending_failure(MPIR_Request * req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_IS_PENDING_FAILURE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_IS_PENDING_FAILURE);
+
+
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_IS_PENDING_FAILURE);
+
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_SET_COMPLETED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_SET_COMPLETED);
+
+
 
     MPIR_cc_set(&req->cc, 0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_SET_COMPLETED);
+
     return;
 }
 
@@ -82,8 +82,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
     int incomplete, notify_counter;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_COMPLETE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_COMPLETE);
+
+
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
 
@@ -105,14 +105,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         MPIR_Request_free(req);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_COMPLETE);
+
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
+
+
 
     /* If a user passed a derived datatype for this persistent communication,
      * free it.
@@ -122,7 +122,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
      * from persistent communications. */
     MPIR_Datatype_release_if_not_builtin(MPIDI_PREQUEST(req, datatype));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PREQUEST_FREE_HOOK);
+
 }
 
 #endif /* CH4_REQUEST_H_INCLUDED */

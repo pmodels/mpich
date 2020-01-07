@@ -41,8 +41,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     fi_addr_t *fi_addrs = NULL;
     MPIDI_VC_t *vc;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_INIT);
+
+
     MPIR_CHKLMEM_DECL(2);
 
     compile_time_checking();
@@ -279,7 +279,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
   fn_exit:
     MPL_free(fi_addrs);
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_INIT);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -289,8 +289,8 @@ int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t ret = MPIR_ERR_NONE;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_FINALIZE);
+
+
 
     while (gl_data.rts_cts_in_flight) {
         MPID_nem_ofi_poll(0);
@@ -308,7 +308,7 @@ int MPID_nem_ofi_finalize(void)
     FI_RC(fi_close((fid_t) gl_data.domain), domainclose);
     FI_RC(fi_close((fid_t) gl_data.fabric), fabricclose);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_FINALIZE);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;

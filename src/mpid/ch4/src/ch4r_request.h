@@ -19,8 +19,8 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIR_Request *req;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
+
+
 
     req = MPIR_Request_create(kind);
     if (req == NULL)
@@ -49,7 +49,7 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIDIG_REQUEST(req, req->status) = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
+
     return req;
   fn_fail:
     goto fn_exit;
@@ -58,8 +58,8 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                                            MPIR_Request_kind_t kind)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_INIT);
+
+
 
     MPIR_Assert(req != NULL);
     /* Increment the refcount by one to account for the MPIDIG layer */
@@ -75,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
+
     return req;
 }
 
@@ -87,8 +87,8 @@ static inline int MPIDI_anysource_matched(MPIR_Request * rreq, int caller, int *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
+
+
 
     MPIR_Assert(MPIDI_NETMOD == caller || MPIDI_SHM == caller);
 
@@ -124,7 +124,7 @@ static inline int MPIDI_anysource_matched(MPIR_Request * rreq, int caller, int *
         *continue_matching = !MPIR_STATUS_GET_CANCEL_BIT(rreq->status);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
+
     return mpi_errno;
 }
 
