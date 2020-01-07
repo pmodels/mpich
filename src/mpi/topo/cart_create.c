@@ -88,11 +88,9 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             goto fn_exit;
         }
     } else {
-
         /* Create a new communicator as a duplicate of the input communicator
          * (but do not duplicate the attributes) */
         if (reorder) {
-
             /* Allow the cart map routine to remap the assignment of ranks to
              * processes */
             mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims, (const int *) dims,
@@ -144,7 +142,6 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         }
     }
 
-
     /* Place this topology onto the communicator */
     mpi_errno = MPIR_Topology_put(newcomm_ptr, cart_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -153,7 +150,6 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
@@ -223,12 +219,10 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -289,11 +283,9 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

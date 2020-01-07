@@ -17,9 +17,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
 
-
-
-
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
         /* continue if the source/dest is MPI_PROC_NULL */
@@ -27,7 +24,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
             continue;
 
         switch (MPIDI_PREQUEST(preq, p_type)) {
-
             case MPIDI_PTYPE_RECV:
                 mpi_errno = MPID_Irecv(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
                                        MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
@@ -86,7 +82,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
             MPID_Request_set_completed(preq);
         }
     }
-
 
     return mpi_errno;
 }

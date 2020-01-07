@@ -100,7 +100,6 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
     return mpi_errno;
 }
 
-
 #endif
 
 /*@
@@ -134,7 +133,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* The routines that setup the group data structures must be executed
@@ -142,7 +140,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
      * critical, we simple run these routines within the SINGLE_CS */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -200,11 +197,9 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {

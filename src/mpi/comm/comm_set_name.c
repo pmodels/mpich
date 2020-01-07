@@ -28,7 +28,6 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 
 #endif
 
-
 /*@
    MPI_Comm_set_name - Sets the print name for a communicator
 
@@ -49,10 +48,7 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -97,7 +93,6 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

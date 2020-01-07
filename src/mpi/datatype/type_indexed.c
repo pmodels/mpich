@@ -46,7 +46,6 @@ int MPIR_Type_indexed(int count,
 
     if (count == 0)
         return MPII_Type_zerolen(newtype);
-
     /* sanity check that blocklens are all non-negative */
     for (i = 0; i < count; ++i) {
         MPIR_Assert(blocklength_array[i] >= 0);
@@ -253,7 +252,6 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     goto fn_exit;
 }
 
-
 #endif
 
 /*@
@@ -308,12 +306,10 @@ int MPI_Type_indexed(int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -356,11 +352,9 @@ int MPI_Type_indexed(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

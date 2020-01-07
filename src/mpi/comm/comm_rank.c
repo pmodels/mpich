@@ -26,7 +26,6 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__ ((weak, alias("PMPI_Co
 
 #endif
 
-
 /*@
 
 MPI_Comm_rank - Determines the rank of the calling process in the communicator
@@ -50,12 +49,10 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = 0;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -100,7 +97,6 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank)
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

@@ -62,9 +62,6 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     int counter;
     int sink_id;
 
-
-
-
     MPIR_Datatype_get_extent_macro(rtype, type_extent);
     MPIR_Type_get_true_extent_impl(rtype, &type_lb, &type_true_extent);
     type_extent = MPL_MAX(type_extent, type_true_extent);
@@ -114,8 +111,6 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
     MPL_free(dtcopy_id);
 
-
-
     return sink_id;
 }
 
@@ -145,9 +140,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     int tag;
 
     MPIR_CHKLMEM_DECL(6);
-
-
-
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -376,8 +368,6 @@ MPIR_TSP_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Da
     }
     MPIR_CHKLMEM_FREEALL();
 
-
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -392,9 +382,6 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -412,7 +399,6 @@ int MPIR_TSP_Ialltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Data
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

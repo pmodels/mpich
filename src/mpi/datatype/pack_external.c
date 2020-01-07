@@ -63,11 +63,7 @@ int MPI_Pack_external(const char datarep[],
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -113,9 +109,7 @@ int MPI_Pack_external(const char datarep[],
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

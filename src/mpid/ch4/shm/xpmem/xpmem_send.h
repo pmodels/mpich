@@ -25,9 +25,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_lmt_isend(const void *buf, MPI_Aint cou
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.xpmem_slmt_rts;
 
-
-
-
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -64,7 +61,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_lmt_isend(const void *buf, MPI_Aint cou
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

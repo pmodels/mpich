@@ -117,7 +117,6 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
                                                             op, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {    /* (!is_commutative) */
-
         if (MPL_is_pof2(comm_size, NULL)) {
             /* noncommutative, pof2 size */
             mpi_errno =
@@ -139,7 +138,6 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
                                                 MPI_Datatype datatype, MPI_Op op,
@@ -338,10 +336,8 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -416,11 +412,9 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

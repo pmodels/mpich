@@ -15,9 +15,6 @@ int MPID_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /*
      * Wait for all posted receives to complete.  For now we are not doing 
      * this since it will cause invalid programs to hang.
@@ -150,7 +147,6 @@ int MPID_Finalize(void)
     MPL_free(MPIDI_failed_procs_string);
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

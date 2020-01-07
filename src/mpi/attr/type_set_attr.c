@@ -35,14 +35,12 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     MPII_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* The thread lock prevents a valid attr delete on the same datatype
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -138,11 +136,9 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
@@ -187,19 +183,14 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     mpi_errno = MPII_Type_set_attr(datatype, type_keyval, attribute_val, MPIR_ATTR_PTR);
     if (mpi_errno)
         goto fn_fail;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

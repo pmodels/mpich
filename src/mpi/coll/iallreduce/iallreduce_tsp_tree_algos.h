@@ -43,9 +43,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int tag;
     int root = 0;
 
-
-
-
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Scheduling pipelined allreduce on %d ranks, root=%d ",
                      MPIR_Comm_size(comm), root));
@@ -58,7 +55,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     MPIR_Type_get_true_extent_impl(datatype, &type_lb, &true_extent);
     extent = MPL_MAX(extent, true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
-
 
     /* calculate chunking information for pipelining */
     MPIR_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
@@ -160,7 +156,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
                 reduce_id[i] = MPIR_TSP_sched_reduce_local(recv_address, reduce_address, msgsize,
                                                            datatype, op, sched, nvtcs, vtcs);
             } else {    /* wait for the previous allreduce to complete */
-
                 /* NOTE: Make sure that knomial tree is being constructed differently for allreduce for optimal performace.
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of allreduce */
 
@@ -226,7 +221,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     goto fn_exit;
 }
 
-
 /* Non-blocking tree based allreduce */
 int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
@@ -234,9 +228,6 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -256,7 +247,6 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

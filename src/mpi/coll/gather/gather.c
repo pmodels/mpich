@@ -106,7 +106,6 @@ int MPIR_Gather_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype send
     goto fn_exit;
 }
 
-
 int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                            int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                            MPIR_Errflag_t * errflag)
@@ -137,7 +136,6 @@ int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype send
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -259,12 +257,10 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -390,11 +386,9 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

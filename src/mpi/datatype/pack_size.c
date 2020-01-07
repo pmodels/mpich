@@ -33,7 +33,6 @@ void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size)
     *size = incount * typesize;
 }
 
-
 #endif
 
 /*@
@@ -72,10 +71,7 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint size_x = MPI_UNDEFINED;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -130,7 +126,6 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

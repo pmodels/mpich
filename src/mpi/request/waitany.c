@@ -98,7 +98,6 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
   fn_exit:
     MPID_Progress_end(&progress_state);
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -146,12 +145,10 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -260,11 +257,9 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         MPIR_CHKLMEM_FREEALL();
     }
 
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

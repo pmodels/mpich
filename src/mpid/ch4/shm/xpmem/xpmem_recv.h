@@ -55,9 +55,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
     int cur_chunk = 0, total_chunk = 0, num_local_copy = 0;
     uint64_t cur_offset;
 
-
-
-
     total_chunk =
         data_sz / MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE +
         (data_sz % MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE == 0 ? 0 : 1);
@@ -91,7 +88,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
         *copy_type = MPIDI_XPMEM_COPY_MIX;      /* both processes copy a part of chunks */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -111,9 +107,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     int fin_type, copy_type;
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_cts;
-
-
-
 
     MPIDI_Datatype_check_size_lb(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count),
                                  data_sz, dt_true_lb);
@@ -221,7 +214,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -237,9 +229,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
     void *src_buf = NULL;
     size_t data_sz, recv_data_sz;
     MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-
-
-
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
 
@@ -285,7 +274,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -295,11 +283,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_recv(uint64_t src_offset, si
                                                          uint64_t sreq_ptr, int src_lrank,
                                                          MPIR_Comm * comm, MPIR_Request * rreq)
 {
-
     int mpi_errno = MPI_SUCCESS;
     int recvtype_iscontig;
-
-
 
     /* TODO: need to support cooperative copy on non-contig datatype on receiver side. */
     MPIR_Datatype_is_contig(MPIDIG_REQUEST(rreq, datatype), &recvtype_iscontig);
@@ -312,7 +297,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_recv(uint64_t src_offset, si
             MPIDI_XPMEM_handle_lmt_single_recv(src_offset, data_sz, sreq_ptr, src_lrank, rreq);
     }
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

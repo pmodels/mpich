@@ -92,12 +92,10 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     MPIR_CHKLMEM_DECL(9);
     MPIR_CHKPMEM_DECL(1);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -152,7 +150,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
-
 
     /* ... body of routine ...  */
     /* Implementation based on Torsten Hoefler's reference implementation
@@ -432,11 +429,9 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     MPIR_CHKLMEM_FREEALL();
 
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     if (dist_graph_ptr) {

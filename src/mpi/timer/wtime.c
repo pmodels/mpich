@@ -24,7 +24,6 @@ double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
 #define MPI_Wtime PMPI_Wtime
 #endif
 
-
 /*@
   MPI_Wtime - Returns an elapsed time on the calling processor
 
@@ -47,13 +46,10 @@ double MPI_Wtime(void)
     double d;
     MPID_Time_t t;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
 
     MPID_Wtime(&t);
     MPID_Wtime_todouble(&t, &d);
-
 
     return d;
 }

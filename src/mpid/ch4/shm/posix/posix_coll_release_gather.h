@@ -24,9 +24,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                                                                   int root, MPIR_Comm * comm_ptr,
                                                                   MPIR_Errflag_t * errflag)
 {
-
-
-
     int i, my_rank, num_chunks, chunk_count_floor, chunk_count_ceil;
     int offset = 0, is_contig, ori_count = count;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
@@ -162,7 +159,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     }
 
   fn_exit:
-
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -185,9 +181,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     int offset = 0, is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
-
-
-
 
     /* If there is no data, return */
     if (count == 0) {
@@ -280,7 +273,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     }
 
   fn_exit:
-
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -302,9 +294,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     int offset = 0, is_contig;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
-
-
-
 
     if ((MPIR_Comm_size(comm_ptr) == 1) && (sendbuf != MPI_IN_PLACE)) {
         /* Simply copy the data from sendbuf to recvbuf if there is only 1 rank and MPI_IN_PLACE
@@ -392,7 +381,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     }
 
   fn_exit:
-
     return mpi_errno_ret;
 }
 

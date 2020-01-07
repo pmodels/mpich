@@ -8,9 +8,6 @@
 
 static void update_request(MPIR_Request * sreq, void *hdr, intptr_t hdr_sz, size_t nb)
 {
-
-
-
     MPIR_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
     sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) &sreq->dev.pending_pkt + nb);
@@ -24,9 +21,6 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_CH3I_VC *vcch = &vc->ch;
-
-
-
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 

@@ -42,7 +42,6 @@ int MPIR_Type_vector(int count,
 
     if (count == 0)
         return MPII_Type_zerolen(newtype);
-
     /* allocate new datatype object and handle */
     new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
     if (!new_dtp) {
@@ -89,7 +88,6 @@ int MPIR_Type_vector(int count,
 
         eff_stride = (strideinbytes) ? stride : (stride * el_sz);
     } else {    /* user-defined base type (oldtype) */
-
         MPIR_Datatype *old_dtp;
 
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
@@ -205,12 +203,10 @@ int MPI_Type_vector(int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -244,11 +240,9 @@ int MPI_Type_vector(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

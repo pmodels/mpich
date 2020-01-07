@@ -35,13 +35,8 @@ int MPID_nem_network_poll(int in_blocking_progress);
 
 static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 {
-
-
-
-
     MPID_NEM_SET_REL_NULL(cell->next);
     memset((void *)&cell->pkt, 0, sizeof(MPID_nem_pkt_header_t));
-
 
 }
 
@@ -49,14 +44,9 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-
-
-
-
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
-
 
 }
 
@@ -164,7 +154,6 @@ MPID_nem_queue_empty (MPID_nem_queue_ptr_t qhead)
     return 0;
 }
 
-
 /* Gets the head */
 static inline void
 MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
@@ -233,15 +222,10 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 /* must be called by exactly one process per queue */
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-
-
-
-
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
     MPID_nem_queue_mutex_create(&qhead->lock, NULL);
-
 
 }
 
@@ -303,7 +287,6 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 
     _r_e = qhead->my_head;
     _e = MPID_NEM_REL_TO_ABS (_r_e);
-
 
     if (MPID_NEM_IS_REL_NULL(_e->next)) {
         /* a REL_NULL _e->next or writing qhead->tail both require locking */

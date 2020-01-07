@@ -13,21 +13,10 @@
 
 int MPID_Type_commit_hook(MPIR_Datatype * type)
 {
-
-
-
     return 0;
-
-
 }
 
 int MPID_Type_free_hook(MPIR_Datatype * type)
 {
-
-
-
-
     return 0;
-
-
 }

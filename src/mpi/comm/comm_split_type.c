@@ -64,7 +64,6 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -118,7 +117,6 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -150,7 +148,6 @@ int MPIR_Comm_split_type_by_node(MPIR_Comm * user_comm_ptr, int split_type, int 
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -214,7 +211,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -258,7 +254,6 @@ static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *in
     if (!hint_str_equal_global)
         goto fn_exit;
 
-
     /* Now that the sizes of the hint_strs match, check to make sure
      * the actual hint_strs themselves are the equal */
     hint_str_global = (char *) MPL_malloc(strlen(hint_str), MPL_MEM_OTHER);
@@ -280,7 +275,6 @@ static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *in
 
     *info_args_are_equal = hint_str_equal_global;
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -320,12 +314,10 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -371,11 +363,9 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

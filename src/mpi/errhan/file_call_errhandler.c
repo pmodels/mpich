@@ -52,10 +52,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     MPI_Errhandler eh;
 #endif
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef MPI_MODE_RDONLY
     /* Validate parameters, especially handles needing to be converted */

@@ -33,7 +33,6 @@ static inline void MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datat
                                             intptr_t *msg_offset, intptr_t msgsize,
                                                     MPIDI_VC_t *vc, int *again);
 
-
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -100,9 +99,6 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     MPID_nem_cell_ptr_t el;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-
-
-
 
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
@@ -201,12 +197,10 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     *again = 1;
     goto fn_exit;
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 /*
   int MPID_nem_mpich_sendv (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc);
@@ -226,9 +220,6 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     intptr_t payload_len;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-
-
-
 
     MPIR_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN > 0);
     MPIR_Assert(vc_ch->is_local);
@@ -307,7 +298,6 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     *again = 1;
     goto fn_exit;
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -327,7 +317,6 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     MPI_Aint buf_offset = 0;
 
     
-
 
     MPIR_Assert(vc_ch->is_local);
 
@@ -441,7 +430,6 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     *again = 1;
     goto fn_exit;
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -465,9 +453,6 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
                                 intptr_t *msg_offset, intptr_t msgsize,
                                 void *header, intptr_t header_sz, MPIDI_VC_t *vc, int *again)
 {
-
-
-
     MPID_nem_cell_ptr_t el;
     intptr_t datalen;
     int my_rank;
@@ -598,7 +583,6 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
     *again = 1;
     goto fn_exit;
  fn_exit:
-
     return;
 }
 
@@ -608,9 +592,6 @@ static inline void
 MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
                          intptr_t *msg_offset, intptr_t msgsize, MPIDI_VC_t *vc, int *again)
 {
-
-
-
     MPID_nem_cell_ptr_t el;
     intptr_t datalen;
     int my_rank;
@@ -683,7 +664,6 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
     *again = 1;
     goto fn_exit;
  fn_exit:
-
     return;
 }
 
@@ -697,8 +677,6 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
 static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
-
-
 
     MPIR_Assert(local_rank < MPID_nem_mem_region.num_local);
 
@@ -741,8 +719,6 @@ static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
 
-
-
     MPIR_Assert(local_rank < MPID_nem_mem_region.num_local);
 
     el = &MPID_nem_fboxq_elem_list[local_rank];
@@ -782,8 +758,6 @@ MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 {
     int source;
 
-
-
     MPID_nem_cell_ptr_t cell = MPID_nem_queue_head(qhead);
     source = cell->pkt.header.source;
     
@@ -802,7 +776,6 @@ static inline int
 MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
@@ -856,7 +829,6 @@ MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blockin
  fn_fail:
 
     return mpi_errno;
-
  fbox_l:
    *in_fbox = 1;
     goto fn_exit;
@@ -875,7 +847,6 @@ static inline int
 MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
 #ifdef USE_FASTBOX
     if (poll_active_fboxes(cell)) goto fbox_l;
@@ -913,7 +884,6 @@ MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int time
  fn_fail:
 
     return mpi_errno;
-
  fbox_l:
     *in_fbox = 1;
     goto exit_l;
@@ -931,7 +901,6 @@ static inline int
 MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
@@ -1000,7 +969,6 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
  fn_fail:
 
     return mpi_errno;
-
  fbox_l:
     *in_fbox = 1;
     goto exit_l;
@@ -1016,13 +984,10 @@ MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     DO_PAPI (PAPI_reset (PAPI_EventSet));
     MPID_nem_queue_enqueue (vc_ch->free_queue, cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet,PAPI_vvalues9));
-
 
     return mpi_errno;
 }

@@ -53,9 +53,6 @@ int MPID_Startall(int count, MPIR_Request * requests[])
     int rc;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     for (i = 0; i < count; i++)
     {
 	MPIR_Request * const preq = requests[i];
@@ -146,7 +143,6 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	/* --END ERROR HANDLING-- */
     }
 
-
     return mpi_errno;
 }
 
@@ -163,9 +159,6 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
     if (!HANDLE_IS_BUILTIN(datatype))
@@ -176,7 +169,6 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
     *request = sreq;
 
   fn_exit:    
-
     return mpi_errno;
 }
 
@@ -189,9 +181,6 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SSEND);
     if (!HANDLE_IS_BUILTIN(datatype))
@@ -202,7 +191,6 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-
     return mpi_errno;
 }
 
@@ -215,9 +203,6 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
     if (!HANDLE_IS_BUILTIN(datatype))
@@ -228,7 +213,6 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-
     return mpi_errno;
 }
 
@@ -241,9 +225,6 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_BSEND);
     if (!HANDLE_IS_BUILTIN(datatype))
@@ -254,7 +235,6 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-
     return mpi_errno;
 }
 
@@ -274,8 +254,6 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
 {
     MPIR_Request * rreq;
     int mpi_errno = MPI_SUCCESS;
-
-
 
     
     rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
@@ -307,6 +285,5 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     *request = rreq;
 
   fn_exit:
-
     return mpi_errno;
 }

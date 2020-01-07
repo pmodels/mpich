@@ -45,7 +45,6 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -119,11 +118,9 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
     MPIR_Request *request_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -172,10 +169,8 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

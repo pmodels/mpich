@@ -30,9 +30,6 @@ MPID_nem_mpich_init(void)
     int i;
     MPIR_CHKPMEM_DECL (2);
 
-
-
-
     MPID_nem_prefetched_cell = NULL;
 
     MPIR_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno", MPL_MEM_SHM);
@@ -62,7 +59,6 @@ MPID_nem_mpich_init(void)
 
     MPIR_CHKPMEM_COMMIT();
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -80,10 +76,6 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     MPIR_Request *sreq = *sreq_ptr;
     MPL_IOV *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
-
-
-
-
 
     if (*sreq_ptr == NULL)
     {
@@ -110,7 +102,6 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     data_sz = 0;
     for (i = 0; i < data_n_iov; ++i)
         data_sz += data_iov[i].MPL_IOV_LEN;
-
 
     if (!MPIDI_Request_get_srbuf_flag(sreq))
     {
@@ -141,14 +132,8 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     *sreq_ptr = sreq;
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
-
-
-
-
 

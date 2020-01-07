@@ -28,20 +28,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_finalize(MPIR_Request * req
 {
     MPIDI_POSIX_am_request_header_t *req_hdr;
 
-
-
     MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(req);
 
     req_hdr = MPIDI_POSIX_AMREQUEST(req, req_hdr);
 
     if (!req_hdr)
         return;
-
     POSIX_TRACE("Completed request %d (%d)\n", req->kind, req_hdr->dst_grank);
 
     MPIDI_POSIX_am_release_req_hdr(&req_hdr);
     MPIDI_POSIX_AMREQUEST(req, req_hdr) = NULL;
-
 
     return;
 }

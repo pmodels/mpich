@@ -342,9 +342,6 @@ static int conn_manager_init()
 {
     int mpi_errno = MPI_SUCCESS, i;
 
-
-
-
     MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
     MPIDI_OFI_global.conn_mgr.next_conn_id = 0;
@@ -368,7 +365,6 @@ static int conn_manager_init()
     MPIDI_OFI_global.conn_mgr.free_conn_id[MPIDI_OFI_global.conn_mgr.max_n_conn - 1] = -1;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -385,9 +381,6 @@ static int conn_manager_destroy()
     uint64_t mask_bits = 0;
     MPIR_Context_id_t context_id = 0xF000;
     MPIR_CHKLMEM_DECL(3);
-
-
-
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
@@ -444,7 +437,6 @@ static int conn_manager_destroy()
     MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -460,9 +452,6 @@ static int dynproc_send_disconnect(int conn_id)
     unsigned int close_msg = 0xcccccccc;
     struct fi_msg_tagged msg;
     struct iovec msg_iov;
-
-
-
 
     if (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -508,7 +497,6 @@ static int dynproc_send_disconnect(int conn_id)
                      conn_id, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -524,9 +512,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     fi_addr_t *mapped_table;
     struct fi_av_attr av_attr;
     size_t optlen;
-
-
-
 
     MPL_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -597,7 +582,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ------------------------------------------------------------------------ */
 
     memset(&av_attr, 0, sizeof(av_attr));
-
 
     if (MPIDI_OFI_ENABLE_AV_TABLE) {
         av_attr.type = FI_AV_TABLE;
@@ -855,7 +839,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
 
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -867,9 +850,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     int i = 0;
     int barrier[2] = { 0 };
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-
-
 
     /* clean dynamic process connections */
     conn_manager_destroy();
@@ -941,7 +921,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -955,7 +934,6 @@ int MPIDI_OFI_get_vci_attr(int vci)
 
 void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-
     void *ap;
     ap = MPL_malloc(size, MPL_MEM_USER);
     return ap;
@@ -1099,7 +1077,6 @@ int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
     return 0;
 }
 
-
 static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
                            struct fid_cq *p2p_cq, struct fid_cntr *rma_ctr, struct fid_av *av,
                            struct fid_ep **ep, int idx)
@@ -1107,9 +1084,6 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     int mpi_errno = MPI_SUCCESS;
     struct fi_tx_attr tx_attr;
     struct fi_rx_attr rx_attr;
-
-
-
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         struct fi_cq_attr cq_attr;
@@ -1194,7 +1168,6 @@ static int create_endpoint(struct fi_info *prov_use, struct fid_domain *domain,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

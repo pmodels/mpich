@@ -19,7 +19,6 @@ int MPIDIG_put_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(req);
 
     return mpi_errno;
@@ -29,7 +28,6 @@ int MPIDIG_acc_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(req);
 
     return mpi_errno;
@@ -38,8 +36,6 @@ int MPIDIG_acc_ack_origin_cb(MPIR_Request * req)
 int MPIDIG_get_acc_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPL_free(MPIDIG_REQUEST(req, req->areq.data));
 
@@ -52,12 +48,8 @@ int MPIDIG_cswap_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPL_free(MPIDIG_REQUEST(req, req->creq.data));
     MPID_Request_complete(req);
-
 
     return mpi_errno;
 }
@@ -65,9 +57,6 @@ int MPIDIG_cswap_ack_origin_cb(MPIR_Request * req)
 int MPIDIG_get_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPL_free(MPIDIG_REQUEST(req, req->greq.dt_iov));
 
@@ -80,7 +69,6 @@ int MPIDIG_put_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -89,7 +77,6 @@ int MPIDIG_put_origin_cb(MPIR_Request * sreq)
 int MPIDIG_cswap_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPID_Request_complete(sreq);
 
@@ -100,7 +87,6 @@ int MPIDIG_acc_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -109,7 +95,6 @@ int MPIDIG_acc_origin_cb(MPIR_Request * sreq)
 int MPIDIG_get_acc_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPID_Request_complete(sreq);
 
@@ -120,7 +105,6 @@ int MPIDIG_put_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -129,7 +113,6 @@ int MPIDIG_put_data_origin_cb(MPIR_Request * sreq)
 int MPIDIG_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPID_Request_complete(sreq);
 
@@ -140,7 +123,6 @@ int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -149,7 +131,6 @@ int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
 int MPIDIG_put_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPID_Request_complete(sreq);
 
@@ -160,7 +141,6 @@ int MPIDIG_acc_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -170,7 +150,6 @@ int MPIDIG_get_acc_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_Request_complete(sreq);
 
     return mpi_errno;
@@ -179,7 +158,6 @@ int MPIDIG_get_acc_iov_origin_cb(MPIR_Request * sreq)
 int MPIDIG_get_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPID_Request_complete(sreq);
 

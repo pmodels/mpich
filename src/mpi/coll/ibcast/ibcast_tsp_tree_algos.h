@@ -35,9 +35,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     MPIR_Treealgo_tree_t my_tree;
     int tag;
 
-
-
-
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Scheduling pipelined tree broadcast on %d ranks, root=%d",
                      MPIR_Comm_size(comm), root));
@@ -94,12 +91,10 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking tree based broadcast */
 int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
@@ -108,9 +103,6 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -129,7 +121,6 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

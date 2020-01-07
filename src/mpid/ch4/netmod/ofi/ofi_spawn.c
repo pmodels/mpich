@@ -56,14 +56,10 @@ static void free_port_name_tag(int tag)
 {
     int idx, rem_tag;
 
-
-
-
     idx = tag / (sizeof(int) * 8);
     rem_tag = tag - (idx * sizeof(int) * 8);
 
     MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
-
 
 }
 
@@ -71,9 +67,6 @@ static int get_port_name_tag(int *port_name_tag)
 {
     unsigned i, j;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++)
         if (MPIDI_OFI_global.port_name_tag_mask[i] != ~0)
@@ -91,9 +84,7 @@ static int get_port_name_tag(int *port_name_tag)
         goto fn_fail;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     *port_name_tag = -1;
     mpi_errno = MPI_ERR_OTHER;
@@ -105,16 +96,12 @@ static int get_tag_from_port(const char *port_name, int *port_name_tag)
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
 
-
-
-
     if (strlen(port_name) == 0)
         goto fn_exit;
 
     str_errno = MPL_str_get_int_arg(port_name, PORT_NAME_TAG_KEY, port_name_tag);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_no_port_name_tag");
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -125,12 +112,8 @@ static int get_conn_name_from_port(const char *port_name, char *connname)
     int mpi_errno = MPI_SUCCESS;
     int maxlen = MPIDI_KVSAPPSTRLEN;
 
-
-
-
     MPL_str_get_binary_arg(port_name, CONNENTR_TAG_KEY, connname, MPIDI_OFI_global.addrnamelen,
                            &maxlen);
-
 
     return mpi_errno;
 }
@@ -143,9 +126,6 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     MPIR_Comm *tmp_comm_ptr = NULL;
     int i = 0;
     MPIDI_rank_map_mlut_t *mlut = NULL;
-
-
-
 
     if (get_tag) {
         mpi_errno = get_tag_from_port(port_name, &context_id_offset);
@@ -229,7 +209,6 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
     MPIR_Comm_release(tmp_comm_ptr);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -246,9 +225,6 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     int buf = 0;
     MPID_Time_t time_sta, time_now;
     double time_gap;
-
-
-
 
     /* connector */
     if (phase == 0) {
@@ -341,8 +317,6 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
         _fixme_MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
-
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -363,9 +337,6 @@ static int dynproc_exchange_map(int root, int phase, int port_id, fi_addr_t * co
     size_t *local_upid_size = NULL;
     char *local_upids = NULL;
     int *local_node_ids = NULL;
-
-
-
 
     MPIR_CHKPMEM_DECL(3);
 
@@ -516,8 +487,6 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
 {
     int conn_id = -1;
 
-
-
     /* We've run out of space in the connection table. Allocate more. */
     if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
         int old_max, new_max, i;
@@ -549,7 +518,6 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
-
     return conn_id;
 }
 
@@ -570,9 +538,6 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     int conn_id;
     int get_tag = 1;
     fi_addr_t conn;
-
-
-
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -669,14 +634,10 @@ int MPIDI_OFI_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -688,8 +649,6 @@ int MPIDI_OFI_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
     int str_errno = MPL_STR_SUCCESS;
     int port_name_tag = 0;
     int len = MPI_MAX_PORT_NAME;
-
-
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
@@ -704,7 +663,6 @@ int MPIDI_OFI_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
                                               MPIDI_OFI_global.addrname,
                                               MPIDI_OFI_global.addrnamelen), port_str);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -715,9 +673,6 @@ int MPIDI_OFI_mpi_close_port(const char *port_name)
     int mpi_errno = MPI_SUCCESS;
     int port_name_tag;
 
-
-
-
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
         goto fn_exit;
@@ -727,7 +682,6 @@ int MPIDI_OFI_mpi_close_port(const char *port_name)
     free_port_name_tag(port_name_tag);
 
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -747,9 +701,6 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     fi_addr_t conn = 0;
     int rank = comm_ptr->rank;
     int get_tag = -1;
-
-
-
 
     MPIR_CHKLMEM_DECL(1);
 
@@ -822,7 +773,6 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     }
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

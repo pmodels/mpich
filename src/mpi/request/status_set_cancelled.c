@@ -48,10 +48,7 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -74,7 +71,6 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

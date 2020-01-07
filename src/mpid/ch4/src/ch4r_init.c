@@ -17,9 +17,6 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
     MPIDIG_rreq_t **uelist;
 
-
-
-
     MPIR_Assert(MPIDI_global.is_ch4u_initialized);
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
@@ -56,15 +53,12 @@ int MPIDIG_init_comm(MPIR_Comm * comm)
 
     MPIDIG_COMM(comm, window_instance) = 0;
   fn_exit:
-
     return mpi_errno;
 }
 
 int MPIDIG_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
-
-
 
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
@@ -90,14 +84,11 @@ int MPIDIG_destroy_comm(MPIR_Comm * comm)
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
 
   fn_exit:
-
     return mpi_errno;
 }
 
 void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-
-
     void *p;
     p = MPL_malloc(size, MPL_MEM_USER);
 
@@ -107,7 +98,6 @@ void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 int MPIDIG_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     MPL_free(ptr);
 

@@ -46,9 +46,6 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
     int inuse;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     switch (event)
     {
 	case MPIDI_VC_EVENT_TERMINATED:
@@ -185,7 +182,6 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
     }
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -208,9 +204,6 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     MPIDI_CH3_Pkt_close_t * close_pkt = &upkt.close;
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 
@@ -253,7 +246,6 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 
  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
-
 
     return mpi_errno;
  fn_fail:
@@ -354,9 +346,6 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     MPID_Progress_state progress_state;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPID_Progress_start(&progress_state);
     while(MPIDI_Outstanding_close_ops > 0) {
 	MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
@@ -372,7 +361,6 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     }
     MPID_Progress_end(&progress_state);
 
-
     return mpi_errno;
 }
 
@@ -380,9 +368,6 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-
-
-
 
     for (i = 0; i < new_failed_group->size; ++i) {
         MPIDI_VC_t *vc;
@@ -394,12 +379,10 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
     }
     
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 #define parse_rank(r_p) do {                                                                    \
         while (isspace(*c)) /* skip spaces */                                                   \
@@ -423,9 +406,6 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
     int i, mpi_errno = MPI_SUCCESS, rank;
     UT_array *failed_procs = NULL;
     MPIR_Group *world_group;
-
-
-
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Getting failed group with %d as last acknowledged\n", last_rank);
 
@@ -471,7 +451,6 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
     MPIR_ERR_CHECK(mpi_errno);
 
 fn_exit:
-
     if (failed_procs)
         utarray_free(failed_procs);
     return mpi_errno;
@@ -488,9 +467,6 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     int len;
     char *kvsname;
     MPIR_Group *prev_failed_group, *new_failed_group;
-
-
-
 
     /* FIXME: Currently this only handles failed processes in
        comm_world.  We need to fix hydra to include the pgid along
@@ -547,9 +523,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     }
 
  fn_exit:
-
     return mpi_errno;
-
  fn_oom: /* out-of-memory handler for utarray operations */
     MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
  fn_fail:

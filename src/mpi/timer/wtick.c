@@ -27,7 +27,6 @@ double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 
 #endif
 
-
 /*@
   MPI_Wtick - Returns the resolution of MPI_Wtime
 
@@ -43,12 +42,9 @@ double MPI_Wtick(void)
 {
     double tick;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-
     MPID_Wtick(&tick);
-
 
     return tick;
 }

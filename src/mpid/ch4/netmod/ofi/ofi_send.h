@@ -24,7 +24,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     uint64_t match_bits;
 
-
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
                                         buf,
@@ -33,7 +32,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                         MPIDI_OFI_av_to_phys(addr),
                                         match_bits), tinjectdata, MPIDI_OFI_COMM(comm).eagain);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -51,7 +49,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     int mpi_errno = MPI_SUCCESS;
     uint64_t match_bits;
 
-
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
     MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
@@ -64,7 +61,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
      * to tell the main thread we completed the injection. */
     MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -101,9 +97,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     size_t l = 0;
     size_t countp_huge = 0;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
-
-
-
 
     /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
      *  fallback to the pack path */
@@ -208,9 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv, FALSE);
 
   fn_exit:
-
     return mpi_errno;
-
   pack:
     mpi_errno = MPIDI_OFI_SEND_NEEDS_PACK;
     goto fn_exit;
@@ -231,9 +222,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_Request *sreq = *request;
     char *send_buf;
     uint64_t match_bits;
-
-
-
 
     MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
@@ -374,7 +362,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -389,9 +376,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     size_t data_sz;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
-
-
-
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -408,7 +392,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank, tag, comm,
                                           context_offset, addr, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
-
 
     return mpi_errno;
 }
@@ -443,9 +426,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
     MPIR_Datatype *dt_ptr;
     uint64_t src_rank;
 
-
-
-
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     src_rank = comm->rank;
     MPIDI_OFI_idata_set_error_bits(&src_rank, *errflag);
@@ -464,7 +444,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
                                           tag, comm, context_offset, addr, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
 
-
     return mpi_errno;
 }
 
@@ -474,8 +453,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-
-
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -487,7 +464,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, (*request == NULL), 0ULL);
     }
-
 
     return mpi_errno;
 }
@@ -515,8 +491,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
 {
     int mpi_errno;
 
-
-
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
@@ -529,7 +503,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
                                         addr, request, (*request == NULL), 0ULL, errflag);
     }
 
-
     return mpi_errno;
 }
 
@@ -539,8 +512,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-
-
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -553,10 +524,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
                                    context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
     }
 
-
     return mpi_errno;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
@@ -564,8 +533,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-
-
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -577,7 +544,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, 0, 0ULL);
     }
-
 
     return mpi_errno;
 }
@@ -605,8 +571,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
 {
     int mpi_errno;
 
-
-
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
@@ -619,7 +583,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
                                         context_offset, addr, request, 0, 0ULL, errflag);
     }
 
-
     return mpi_errno;
 }
 
@@ -629,8 +592,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno;
-
-
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -643,7 +604,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
                                    context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND);
     }
 
-
     return mpi_errno;
 }
 
@@ -651,9 +611,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     /* Sends cannot be cancelled */
-
 
     return mpi_errno;
 }

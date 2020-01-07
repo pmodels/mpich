@@ -28,9 +28,6 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
     int iov_n, iovcnt = 0;
     MPL_IOV iov[MPL_IOV_LIMIT];
 
-
-
-
     iov[iovcnt].MPL_IOV_BUF = header;
     iov[iovcnt].MPL_IOV_LEN = hdr_sz;
     iovcnt++;
@@ -77,9 +74,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
 	/* --END ERROR HANDLING-- */
     }
 
-
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -661,7 +656,6 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
     return mpi_errno;
 }
 
-
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				    intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -775,7 +769,6 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *
  fn_fail:
     return mpi_errno;
 }
-
 
 /*
  * Define the routines that can print out the cancel packets if 

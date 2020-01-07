@@ -75,9 +75,6 @@ int MPIDI_PG_Finalize(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_PG_t *pg, *pgNext;
 
-
-
-
     /* Print the state of the process groups */
     if (verbose) {
 	MPIU_PG_Printall( stdout );
@@ -136,7 +133,6 @@ int MPIDI_PG_Finalize(void)
     }
 #endif
 
-
     return mpi_errno;
 }
 
@@ -157,8 +153,6 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     int p;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(2);
-
-
 
     
     MPIR_CHKPMEM_MALLOC(pg,MPIDI_PG_t*,sizeof(MPIDI_PG_t),mpi_errno,"pg", MPL_MEM_GROUP);
@@ -228,7 +222,6 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     *pg_ptr = pg;
     
   fn_exit:
-
     return mpi_errno;
     
   fn_fail:
@@ -242,9 +235,6 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
     MPIDI_PG_t * pg_cur;
     int i;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIR_Assert(MPIR_Object_get_ref(pg) == 0);
 
@@ -320,7 +310,6 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		  "**dev|pg_not_found", "**dev|pg_not_found %p", pg);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -330,8 +319,6 @@ int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
 {
     MPIDI_PG_t * pg;
     int mpi_errno = MPI_SUCCESS;
-
-
 
     
     pg = MPIDI_PG_list;
@@ -349,10 +336,8 @@ int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
     *pg_ptr = NULL;
 
   fn_exit:
-
     return mpi_errno;
 }
-
 
 int MPIDI_PG_Id_compare(void * id1, void *id2)
 {
@@ -394,9 +379,6 @@ int MPIDI_PG_To_string(MPIDI_PG_t *pg_ptr, char **str_ptr, int *lenStr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Replace this with the new string */
     if (pg_ptr->connInfoToString) {
 	(*pg_ptr->connInfoToString)( str_ptr, lenStr, pg_ptr );
@@ -407,7 +389,6 @@ int MPIDI_PG_To_string(MPIDI_PG_t *pg_ptr, char **str_ptr, int *lenStr)
 
     /*printf( "PgToString: Pg string is %s\n", *str_ptr ); fflush(stdout);*/
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -428,9 +409,6 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     const char *p;
     int vct_sz;
     MPIDI_PG_t *existing_pg, *pg_ptr=0;
-
-
-
 
     /*printf( "PgCreateFromString: Creating pg from %s\n", str ); 
       fflush(stdout); */
@@ -466,7 +444,6 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     (*pg_ptr->connInfoFromString)( str, pg_ptr );
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -532,9 +509,6 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     int len;
     char key[PMI2_MAX_KEYLEN];
 
-
-
-
     len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
     MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
@@ -545,7 +519,6 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     MPIR_ERR_CHECK(mpi_errno);
     
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -554,9 +527,6 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     int pmi_errno;
     int len;
     char key[128];
-
-
-
 
     MPIR_Assert(pg_world->connData);
     
@@ -582,7 +552,6 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 			     "**pmi_barrier %d", pmi_errno);
     }
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -606,7 +575,6 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
    Fixme: Add a routine to publish the connection info to this file so that
    the key for the businesscard is defined in just this one file.
 */
-
 
 /* The "KVS" versions are for the process group to which the calling 
    process belongs.  These use the PMI_KVS routines to access the
@@ -752,7 +720,6 @@ static int connFreeKVS( MPIDI_PG_t *pg )
     MPL_free( pg->connData );
     return MPI_SUCCESS;
 }
-
 
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 {
@@ -1032,7 +999,6 @@ int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
     return mpi_errno;
 }
 
-
 /*@
   MPIDI_PG_Dup_vcr - Duplicate a virtual connection from a process group
 
@@ -1051,9 +1017,6 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
 {
     MPIDI_VC_t *vc;
 
-
-
-
     vc = &pg->vct[rank];
     /* Increase the reference count of the vc.  If the reference count 
        increases from 0 to 1, increase the reference count of the 
@@ -1066,7 +1029,6 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
     }
     MPIDI_VC_add_ref(vc);
     *vc_p = vc;
-
 
     return MPI_SUCCESS;
 }
@@ -1084,9 +1046,6 @@ int MPIDI_PG_Close_VCs( void )
 {
     MPIDI_PG_t * pg = MPIDI_PG_list;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     while (pg) {
 	int i, inuse, n, i_start;
@@ -1146,7 +1105,6 @@ int MPIDI_PG_Close_VCs( void )
        handles any close requests that this code generates) */
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1182,7 +1140,6 @@ int MPIU_PG_Printall( FILE *fp )
 
 int MPIDI_PG_CheckForSingleton( void )
 {
-
 #ifdef USE_PMI2_API
     /* PMI2 FIXME for now we just always assume we aren't doing singleton init */
 #else

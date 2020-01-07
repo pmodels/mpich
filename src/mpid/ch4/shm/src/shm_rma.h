@@ -17,11 +17,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int 
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
-
 
     return ret;
 }
@@ -33,12 +29,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int orig
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                               target_disp, target_count, target_datatype, win);
-
 
     return ret;
 }
@@ -47,11 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_start(MPIR_Group * group, int ass
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_start(group, assert, win);
-
 
     return ret;
 }
@@ -60,11 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_complete(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_complete(win);
-
 
     return ret;
 }
@@ -73,11 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_post(MPIR_Group * group, int asse
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_post(group, assert, win);
-
 
     return ret;
 }
@@ -86,11 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_wait(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_wait(win);
-
 
     return ret;
 }
@@ -99,11 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_test(win, flag);
-
 
     return ret;
 }
@@ -113,11 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock(int lock_type, int rank, int
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_lock(lock_type, rank, assert, win);
-
 
     return ret;
 }
@@ -126,11 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_unlock(rank, win);
-
 
     return ret;
 }
@@ -142,12 +106,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                               target_disp, target_count, target_datatype, win);
-
 
     return ret;
 }
@@ -156,11 +116,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert, MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_fence(assert, win);
-
 
     return ret;
 }
@@ -173,13 +129,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, i
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count,
                                      target_datatype, op, win);
-
 
     return ret;
 }
@@ -192,12 +144,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rput(const void *origin_addr, int ori
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, request);
-
 
     return ret;
 }
@@ -206,11 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local(int rank, MPIR_Win * 
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_flush_local(rank, win);
-
 
     return ret;
 }
@@ -224,12 +168,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_a
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                            datatype, target_rank, target_disp, win);
-
 
     return ret;
 }
@@ -243,13 +183,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_raccumulate(const void *origin_addr, 
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
                                       target_datatype, op, win, request);
-
 
     return ret;
 }
@@ -266,14 +202,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget_accumulate(const void *origin_ad
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win, request);
-
 
     return ret;
 }
@@ -285,12 +217,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_fetch_and_op(const void *origin_addr,
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
                                        target_disp, op, win);
-
 
     return ret;
 }
@@ -299,11 +227,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_flush(rank, win);
-
 
     return ret;
 }
@@ -312,11 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_flush_local_all(win);
-
 
     return ret;
 }
@@ -325,11 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_unlock_all(win);
-
 
     return ret;
 }
@@ -342,12 +258,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_co
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                target_disp, target_count, target_datatype, win, request);
-
 
     return ret;
 }
@@ -356,11 +268,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_sync(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_sync(win);
-
 
     return ret;
 }
@@ -369,11 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_flush_all(win);
-
 
     return ret;
 }
@@ -390,14 +294,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
                                          target_datatype, op, win);
-
 
     return ret;
 }
@@ -406,11 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert, MPIR_Win * w
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_win_lock_all(assert, win);
-
 
     return ret;
 }

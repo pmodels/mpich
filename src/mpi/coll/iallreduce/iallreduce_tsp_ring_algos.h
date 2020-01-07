@@ -35,8 +35,6 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     void *tmpbuf;
     int tag;
 
-
-
     MPIR_CHKLMEM_DECL(4);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
@@ -120,9 +118,7 @@ int MPIR_TSP_Iallreduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int
     MPIR_CHKLMEM_FREEALL();
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -135,9 +131,6 @@ int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -153,7 +146,6 @@ int MPIR_TSP_Iallreduce_intra_ring(const void *sendbuf, void *recvbuf, int count
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

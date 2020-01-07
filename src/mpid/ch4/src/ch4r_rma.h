@@ -43,9 +43,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     int is_local;
 #endif
 
-
-
-
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
 #endif
@@ -178,9 +175,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     else if (sreq != NULL)
         MPIR_Request_free(sreq);
 
-
     return mpi_errno;
-
   immed_cmpl:
     if (sreq_ptr)
         MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
@@ -205,9 +200,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
-
-
-
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
@@ -315,9 +307,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     else if (sreq != NULL)
         MPIR_Request_free(sreq);
 
-
     return mpi_errno;
-
   immed_cmpl:
     if (sreq_ptr)
         MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
@@ -326,7 +316,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
   fn_fail:
     goto fn_exit;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
                                                   MPI_Datatype origin_datatype, int target_rank,
@@ -347,9 +336,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
-
-
-
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
@@ -496,9 +482,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     else if (sreq != NULL)
         MPIR_Request_free(sreq);
 
-
     return mpi_errno;
-
   immed_cmpl:
     if (sreq_ptr)
         MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
@@ -533,9 +517,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
-
-
-
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
@@ -692,9 +673,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     else if (sreq != NULL)
         MPIR_Request_free(sreq);
 
-
     return mpi_errno;
-
   immed_cmpl:
     if (sreq_ptr)
         MPIDI_RMA_REQUEST_CREATE_COMPLETE(sreq);
@@ -711,14 +690,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_put(const void *origin_addr, int origin_
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_do_put(origin_addr, origin_count, origin_datatype,
                               target_rank, target_disp, target_count, target_datatype, win, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -733,8 +709,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
 
-
-
     mpi_errno = MPIDIG_do_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                               target_count, target_datatype, win, &sreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -747,7 +721,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rput(const void *origin_addr, int origin
     goto fn_exit;
 }
 
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
                                             MPI_Datatype origin_datatype, int target_rank,
                                             MPI_Aint target_disp, int target_count,
@@ -755,13 +728,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get(void *origin_addr, int origin_count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     mpi_errno = MPIDIG_do_get(origin_addr, origin_count, origin_datatype,
                               target_rank, target_disp, target_count, target_datatype, win, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -776,8 +747,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
 
-
-
     mpi_errno = MPIDIG_do_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                               target_count, target_datatype, win, &sreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -790,7 +759,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget(void *origin_addr, int origin_count
     goto fn_exit;
 }
 
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int origin_count,
                                                     MPI_Datatype origin_datatype, int target_rank,
                                                     MPI_Aint target_disp, int target_count,
@@ -799,8 +767,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_raccumulate(const void *origin_addr, int
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-
-
 
     mpi_errno = MPIDIG_do_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                      target_disp, target_count, target_datatype, op, win, &sreq);
@@ -822,20 +788,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_accumulate(const void *origin_addr, int 
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_do_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, op,
                                      win, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget_accumulate(const void *origin_addr,
                                                         int origin_count,
@@ -849,8 +811,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rget_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
-
-
 
     mpi_errno = MPIDIG_do_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                          result_count, result_datatype, target_rank, target_disp,
@@ -877,8 +837,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count, target_datatype,
@@ -886,7 +844,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_get_accumulate(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -903,9 +860,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIDIG_cswap_req_msg_t am_hdr;
     size_t data_sz;
     void *p_data;
-
-
-
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -953,7 +907,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     }
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -966,13 +919,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_fetch_and_op(const void *origin_addr, vo
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, 1, datatype, result_addr, 1, datatype,
                                           target_rank, target_disp, 1, datatype, op, win);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

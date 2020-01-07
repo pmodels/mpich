@@ -33,9 +33,6 @@ static inline MPIDIU_buf_pool_t *MPIDIU_create_buf_pool_internal(int num, int si
     MPIDIU_buf_pool_t *buf_pool;
     MPIDIU_buf_t *curr, *next;
 
-
-
-
     buf_pool = (MPIDIU_buf_pool_t *) MPL_malloc(sizeof(*buf_pool), MPL_MEM_BUFFER);
     MPIR_Assert(buf_pool);
     MPID_Thread_mutex_create(&buf_pool->lock, &ret);
@@ -65,12 +62,9 @@ static inline void *MPIDIU_get_head_buf(MPIDIU_buf_pool_t * pool)
     void *buf;
     MPIDIU_buf_t *curr;
 
-
-
     curr = pool->head;
     pool->head = curr->next;
     buf = curr->data;
-
 
     return buf;
 }
@@ -79,9 +73,6 @@ static inline void *MPIDIU_get_buf_safe(MPIDIU_buf_pool_t * pool)
 {
     void *buf;
     MPIDIU_buf_pool_t *curr_pool;
-
-
-
 
     if (pool->head) {
         buf = MPIDIU_get_head_buf(pool);
@@ -98,7 +89,6 @@ static inline void *MPIDIU_get_buf_safe(MPIDIU_buf_pool_t * pool)
     buf = MPIDIU_get_head_buf(pool);
 
   fn_exit:
-
     return buf;
 }
 
@@ -106,13 +96,9 @@ static inline void *MPIDIU_get_buf(MPIDIU_buf_pool_t * pool)
 {
     void *buf;
 
-
-
-
     MPID_THREAD_CS_ENTER(VCI, pool->lock);
     buf = MPIDIU_get_buf_safe(pool);
     MPID_THREAD_CS_EXIT(VCI, pool->lock);
-
 
     return buf;
 }
@@ -121,12 +107,9 @@ static inline void MPIDIU_release_buf_safe(void *buf)
 {
     MPIDIU_buf_t *curr_buf;
 
-
-
     curr_buf = MPL_container_of(buf, MPIDIU_buf_t, data);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
-
 
 }
 
@@ -134,14 +117,11 @@ static inline void MPIDIU_release_buf(void *buf)
 {
     MPIDIU_buf_t *curr_buf;
 
-
-
     curr_buf = MPL_container_of(buf, MPIDIU_buf_t, data);
     MPID_THREAD_CS_ENTER(VCI, curr_buf->pool->lock);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
     MPID_THREAD_CS_EXIT(VCI, curr_buf->pool->lock);
-
 
 }
 

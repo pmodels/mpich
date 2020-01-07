@@ -23,9 +23,6 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
     MPIR_CHKLMEM_DECL(1);
 
-
-
-
     MPIR_Datatype_get_size_macro(sendtype, sendsize);
     MPIR_Datatype_get_size_macro(recvtype, recvsize);
 
@@ -123,7 +120,6 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
     MPIR_CHKLMEM_FREEALL();
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

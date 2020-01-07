@@ -10,7 +10,6 @@
 #include "mpid_nem_inline.h"
 #endif
 
-
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as msg_offset and msgsize. */
@@ -20,9 +19,6 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     intptr_t orig_msg_offset = sreq->dev.msg_offset;
-
-
-
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 

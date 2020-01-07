@@ -16,7 +16,6 @@ static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)
 {
-
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     ucp_request->req = NULL;
 
@@ -33,9 +32,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_params_t ucp_params;
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
-
-
-
 
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
@@ -125,7 +121,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (MPIDI_UCX_global.worker != NULL)

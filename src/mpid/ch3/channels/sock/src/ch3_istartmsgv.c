@@ -11,9 +11,6 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
     MPIR_Request *sreq;
     int i;
 
-
-
-
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
@@ -34,7 +31,6 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
     sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
     sreq->dev.iov_count = iov_count;
     sreq->dev.OnDataAvail = 0;
-
 
     return sreq;
 }
@@ -67,9 +63,6 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
     MPIR_Request *sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
 

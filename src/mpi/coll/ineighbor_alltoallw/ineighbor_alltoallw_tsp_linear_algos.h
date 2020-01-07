@@ -33,9 +33,6 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const
     int *srcs, *dsts;
     int tag;
 
-
-
-
     MPIR_CHKLMEM_DECL(2);
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
@@ -76,7 +73,6 @@ int MPIR_TSP_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const
     goto fn_exit;
 }
 
-
 /* Non-blocking linear algo based neighbor_alltoallw */
 int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                                 const MPI_Aint sdispls[],
@@ -88,9 +84,6 @@ int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int s
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -109,7 +102,6 @@ int MPIR_TSP_Ineighbor_alltoallw_allcomm_linear(const void *sendbuf, const int s
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

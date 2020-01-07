@@ -46,7 +46,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
     goto fn_exit;
 }
 
-
 /* FIXME: For the brief-global and finer-grain control, we must ensure that
    the global lock is *not* held when this routine is called. (unless we change
    progress_start/end to grab the lock, in which case we must *still* make
@@ -54,9 +53,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 
@@ -82,7 +78,6 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 /* Fault-tolerance versions.  When a process fails, collectives will
    still complete, however the result may be invalid.  Processes
@@ -110,9 +105,6 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     int mpi_errno = MPI_SUCCESS;
     int context_offset;
     MPIR_Request *request_ptr = NULL;
-
-
-
 
     /* Return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
@@ -164,9 +156,6 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     int context_offset;
     MPI_Status mystatus;
     MPIR_Request *request_ptr = NULL;
-
-
-
 
     /* Return immediately for dummy process */
     if (unlikely(source == MPI_PROC_NULL)) {
@@ -225,9 +214,6 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     int mpi_errno = MPI_SUCCESS;
     int context_offset;
     MPIR_Request *request_ptr = NULL;
-
-
-
 
     /* Return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
@@ -291,9 +277,6 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPI_Status mystatus;
     MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
 
-
-
-
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 
     MPIR_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
@@ -352,7 +335,6 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
   fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
 
-
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -381,9 +363,6 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint actual_pack_bytes = 0;
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
@@ -483,9 +462,6 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     int mpi_errno = MPI_SUCCESS;
     int context_id;
 
-
-
-
     /* Create a completed request and return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
         *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
@@ -507,7 +483,6 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -520,9 +495,6 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-
-
-
 
     /* Create a completed request and return immediately for dummy process */
     if (unlikely(dest == MPI_PROC_NULL)) {
@@ -554,7 +526,6 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
@@ -567,9 +538,6 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-
-
-
 
     /* Create a completed request and return immediately for dummy process */
     if (unlikely(source == MPI_PROC_NULL)) {
@@ -590,14 +558,12 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (mpi_errno == MPIX_ERR_NOREQ)
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
 }
-
 
 int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
                  MPIR_Errflag_t * errflag)
@@ -610,8 +576,6 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
     MPI_Status *status_array = statuses;
 
     MPIR_CHKLMEM_DECL(2);
-
-
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag ? "TRUE" : "FALSE");
 

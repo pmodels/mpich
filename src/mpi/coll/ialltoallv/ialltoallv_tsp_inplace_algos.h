@@ -32,9 +32,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendc
     void *tmp_buf = NULL;
     int tag = 0;
 
-
-
-
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
@@ -79,12 +76,10 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking inplace based ALLTOALLV */
 int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[],
@@ -95,10 +90,6 @@ int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -115,7 +106,6 @@ int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

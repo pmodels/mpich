@@ -77,12 +77,10 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPII_Dist_graph_topology *dist_graph_ptr = NULL;
     MPIR_CHKPMEM_DECL(5);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -184,11 +182,9 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_CHKPMEM_COMMIT();
     /* ... end of body of routine ... */
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     MPIR_CHKPMEM_REAP();

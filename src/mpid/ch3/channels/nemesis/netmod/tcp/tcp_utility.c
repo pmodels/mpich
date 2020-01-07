@@ -31,9 +31,6 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
     int mpi_errno = MPI_SUCCESS;
     MPIDI_PG_t *pg;
 
-
-
-
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                     (MPL_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
 
@@ -47,7 +44,6 @@ int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC 
     MPIDI_PG_Get_vc_set_active(pg, pg_rank, vc);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -93,7 +89,6 @@ int MPID_nem_tcp_set_sockopts(int fd)
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
     goto fn_exit;
 }
-
 
 /*
   MPID_NEM_TCP_SOCK_ERROR_EOF : connection failed
@@ -176,7 +171,6 @@ int MPID_nem_tcp_is_sock_connected(int fd)
   fn_exit:
     return rc;
 }
-
 
 /* --BEGIN ERROR HANDLING-- */
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE * stream, MPIDI_VC_t * vc)

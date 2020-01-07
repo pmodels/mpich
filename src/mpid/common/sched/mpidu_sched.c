@@ -157,8 +157,6 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     struct MPIDU_Sched *elt = NULL;
 #endif
 
-
-
     *tag = comm_ptr->next_sched_tag;
     ++comm_ptr->next_sched_tag;
 
@@ -202,9 +200,6 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     int mpi_errno = MPI_SUCCESS, ret_errno = MPI_SUCCESS;
     MPIR_Request *r = s->req;
     MPIR_Comm *comm;
-
-
-
 
     MPIR_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
@@ -340,7 +335,6 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
@@ -356,9 +350,6 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t i;
-
-
-
 
     for (i = s->idx; i < s->num_entries; ++i) {
         struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -384,7 +375,6 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
         }
     }
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -396,9 +386,6 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
     MPIR_CHKPMEM_DECL(2);
-
-
-
 
     *sp = NULL;
 
@@ -425,7 +412,6 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     MPIR_CHKPMEM_COMMIT();
     *sp = s;
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -449,9 +435,6 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
     struct MPIDU_Sched *s = *sp;
-
-
-
 
     *req = NULL;
     *sp = MPIR_SCHED_NULL;
@@ -498,7 +481,6 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
         sched_dump(s, stderr);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (*req)
@@ -510,7 +492,6 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
     goto fn_exit;
 }
-
 
 /* idx and e are permitted to be NULL */
 static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_Sched_entry **e)
@@ -579,7 +560,6 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     goto fn_exit;
 }
 
-
 int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                       MPIR_Comm * comm, MPIR_Sched_t s)
 {
@@ -613,7 +593,6 @@ int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, in
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
                            MPIR_Comm * comm, MPIR_Sched_t s)
@@ -858,7 +837,6 @@ int MPIDU_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MP
   fn_fail:
     goto fn_exit;
 }
-
 
 /* returns TRUE in (*made_progress) if any of the outstanding schedules in state completed */
 static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made_progress)

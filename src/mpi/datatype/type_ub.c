@@ -28,7 +28,6 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement)
 
 #endif
 
-
 /*@
     MPI_Type_ub - Returns the upper bound of a datatype
 
@@ -56,10 +55,7 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -104,7 +100,6 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint * displacement)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

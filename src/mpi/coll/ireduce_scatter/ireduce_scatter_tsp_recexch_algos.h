@@ -63,9 +63,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
     int send_cnt, recv_cnt, send_offset, recv_offset, nvtcs, vtcs[2];
     int send_id, recv_id, reduce_id = -1;
 
-
-
-
     for (x = 0, phase = step2_nphases - 1; phase >= 0; phase--, x++) {
         for (i = 0; i < k - 1; i++) {
             if (is_dist_halving)
@@ -126,11 +123,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch_step2(void *tmp_results, void *
     if (is_out_vtcs)
         *reduce_id_ = reduce_id;
 
-
-
     return mpi_errno;
 }
-
 
 /* Routine to schedule a recursive exchange based reduce_scatter with distance halving in each phase */
 int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recvbuf,
@@ -153,9 +147,6 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int *displs;
     int tag;
-
-
-
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -283,11 +274,8 @@ int MPIR_TSP_Ireduce_scatter_sched_intra_recexch(const void *sendbuf, void *recv
     MPL_free(step1_recvfrom);
     MPL_free(displs);
 
-
-
     return mpi_errno;
 }
-
 
 /* Non-blocking recursive exchange based Reduce_scatter */
 int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
@@ -297,9 +285,6 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -318,7 +303,6 @@ int MPIR_TSP_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -32,7 +32,6 @@ static int progress_send(int blocking);
 
 static int progress_recv(int blocking)
 {
-
     MPIDI_POSIX_eager_recv_transaction_t transaction;
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -50,9 +49,6 @@ static int progress_recv(int blocking)
     MPIDI_POSIX_am_header_t *msg_hdr;
     uint8_t *payload;
     size_t payload_left;
-
-
-
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
     result = MPIDI_POSIX_eager_recv_begin(&transaction);
@@ -102,7 +98,6 @@ static int progress_recv(int blocking)
         if (rreq) {
             /* zero message size optimization */
             if ((p_data_sz == 0) && (in_total_data_sz == 0)) {
-
                 MPIR_STATUS_SET_COUNT(rreq->status, 0);
                 rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
                 rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
@@ -119,7 +114,6 @@ static int progress_recv(int blocking)
 
             /* Received immediately */
             if (is_contig && (in_total_data_sz == payload_left)) {
-
                 if (in_total_data_sz > p_data_sz) {
                     rreq->status.MPI_ERROR =
                         MPIR_Err_create_code(rreq->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __func__,
@@ -261,20 +255,15 @@ static int progress_recv(int blocking)
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:
-
     return mpi_errno;
 }
 
 static int progress_send(int blocking)
 {
-
     int mpi_errno = MPI_SUCCESS;
     int result = MPIDI_POSIX_OK;
     MPIR_Request *sreq = NULL;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
-
-
-
 
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */
@@ -320,15 +309,11 @@ static int progress_send(int blocking)
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 
 int MPIDI_POSIX_progress(int blocking)
 {
-
-
-
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = progress_recv(blocking);
@@ -338,7 +323,6 @@ int MPIDI_POSIX_progress(int blocking)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

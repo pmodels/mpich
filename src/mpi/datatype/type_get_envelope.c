@@ -78,10 +78,7 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -125,7 +122,6 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

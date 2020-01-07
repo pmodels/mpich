@@ -56,10 +56,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -109,9 +106,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

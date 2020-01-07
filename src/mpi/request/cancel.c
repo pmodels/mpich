@@ -25,7 +25,6 @@ int MPI_Cancel(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Cancel")
 #undef MPI_Cancel
 #define MPI_Cancel PMPI_Cancel
 
-
 int MPIR_Cancel(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -118,7 +117,6 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
 }
 #endif
 
-
 /*@
     MPI_Cancel - Cancels a communication request
 
@@ -155,11 +153,9 @@ int MPI_Cancel(MPI_Request * request)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Convert MPI object handles to object pointers */
     MPIR_Request_get_ptr(*request, request_ptr);
@@ -187,10 +183,8 @@ int MPI_Cancel(MPI_Request * request)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

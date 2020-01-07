@@ -46,10 +46,7 @@ int MPI_Get_library_version(char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     /* Note that this routine may be called before MPI_Init */
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -88,7 +85,6 @@ int MPI_Get_library_version(char *version, int *resultlen)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

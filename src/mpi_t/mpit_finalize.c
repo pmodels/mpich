@@ -88,7 +88,6 @@ static void MPIR_T_cat_env_finalize(void)
     }
 }
 
-
 static void MPIR_T_cvar_env_finalize(void)
 {
     unsigned int i;
@@ -199,9 +198,6 @@ int MPI_T_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* ... body of routine ...  */
 
     --MPIR_T_init_balance;
@@ -218,9 +214,7 @@ int MPI_T_finalize(void)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

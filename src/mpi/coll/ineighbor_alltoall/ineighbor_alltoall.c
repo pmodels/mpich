@@ -23,7 +23,6 @@ cvars:
         linear          - Force linear algorithm
         gentran_linear  - Force generic transport based linear algorithm
 
-
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
@@ -89,7 +88,6 @@ int MPIR_Ineighbor_alltoall_sched_intra_auto(const void *sendbuf, int sendcount,
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -108,7 +106,6 @@ int MPIR_Ineighbor_alltoall_sched_inter_auto(const void *sendbuf, int sendcount,
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -235,7 +232,6 @@ int MPIR_Ineighbor_alltoall_impl(const void *sendbuf, int sendcount,
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -291,10 +287,8 @@ int MPI_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype send
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -367,11 +361,9 @@ int MPI_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype send
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

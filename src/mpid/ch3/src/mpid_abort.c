@@ -22,9 +22,6 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
     char msg[MPI_MAX_ERROR_STRING] = "";
     char error_str[MPI_MAX_ERROR_STRING + 100];
 
-
-
-
     if (error_msg == NULL) {
 	/* Create a default error message */
 	error_msg = error_str;

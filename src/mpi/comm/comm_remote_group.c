@@ -32,8 +32,6 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     int mpi_errno = MPI_SUCCESS;
     int i, lpid, n;
 
-
-
     /* Create a group and populate it with the local process ids */
     if (!comm_ptr->remote_group) {
         n = comm_ptr->remote_size;
@@ -56,7 +54,6 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     MPIR_Group_add_ref(comm_ptr->remote_group);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
 
@@ -95,12 +92,10 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Group *group_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -146,11 +141,9 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

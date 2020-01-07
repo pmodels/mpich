@@ -45,9 +45,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     void **nbr_buffer;
     int tag;
 
-
-
-
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
@@ -309,11 +306,8 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
     if (in_step2)
         MPL_free(step1_recvbuf);
 
-
-
     return mpi_errno;
 }
-
 
 /* Non-blocking recexch based ALLREDUCE */
 int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int count,
@@ -322,9 +316,6 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -343,7 +334,6 @@ int MPIR_TSP_Iallreduce_intra_recexch(const void *sendbuf, void *recvbuf, int co
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -14,9 +14,6 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     win_fns->create = MPIDI_CH3U_Win_create;
     win_fns->allocate = MPIDI_CH3U_Win_allocate;
     win_fns->allocate_shared = MPIDI_CH3U_Win_allocate;
@@ -24,11 +21,8 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
     win_fns->gather_info = MPIDI_CH3U_Win_gather_info;
     win_fns->shared_query = MPIDI_CH3U_Win_shared_query;
 
-
-
     return mpi_errno;
 }
-
 
 int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
@@ -38,9 +32,6 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     comm_size = (*win_ptr)->comm_ptr->local_size;
     rank = (*win_ptr)->comm_ptr->rank;
@@ -90,14 +81,10 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     /* --END ERROR HANDLING-- */
 }
 
-
 int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
                           MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     mpi_errno = MPIDI_CH3U_Win_fns.gather_info(base, size, disp_unit, info, comm_ptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -111,7 +98,6 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * 
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -119,19 +105,14 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * 
     /* --END ERROR HANDLING-- */
 }
 
-
 int MPIDI_CH3U_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     mpi_errno = MPIDI_CH3U_Win_fns.gather_info(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -143,32 +124,23 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* no op, all of memory is exposed */
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 int MPID_Win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* no op, all of memory is exposed */
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -176,14 +148,10 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
     /* --END ERROR HANDLING-- */
 }
 
-
 int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if ((*win_ptr)->info_args.alloc_shm == TRUE) {
         if (MPIDI_CH3U_Win_fns.allocate_shm != NULL) {
@@ -198,12 +166,10 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * info,
                                    MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
@@ -211,9 +177,6 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * inf
     void **base_pp = (void **) baseptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
-
-
-
 
     if (size > 0) {
         MPIR_CHKPMEM_MALLOC(*base_pp, void *, size, mpi_errno, "(*win_ptr)->base", MPL_MEM_RMA);
@@ -232,7 +195,6 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -241,21 +203,16 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * inf
     /* --END ERROR HANDLING-- */
 }
 
-
 int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
                                 int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     *(void **) baseptr = win_ptr->base;
     *size = win_ptr->size;
     *disp_unit = win_ptr->disp_unit;
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -263,13 +220,9 @@ int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * 
     /* --END ERROR HANDLING-- */
 }
 
-
 int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (info != NULL) {
         int info_flag = 0;
@@ -384,21 +337,15 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
         }
     }
 
-
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-
 int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* Allocate an empty info object */
     mpi_errno = MPIR_Info_alloc(info_used);
@@ -470,7 +417,6 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

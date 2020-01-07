@@ -57,11 +57,9 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate handle parameters needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -143,10 +141,8 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

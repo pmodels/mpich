@@ -15,15 +15,11 @@ int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_recv_fin.req_ptr;
 
-
-
-
     XPMEM_TRACE("send_lmt_recv_fin_cb: complete sreq %p\n", sreq);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -34,9 +30,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_send_fin.req_ptr;
 
-
-
-
     XPMEM_TRACE("send_lmt_send_fin_cb: complete rreq %p\n", rreq);
 
     /* send_fin_cb can only be triggered in cooperative copy, so
@@ -46,7 +39,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPID_Request_complete(rreq);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -59,9 +51,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIR_Request *anysource_partner;
-
-
-
 
     XPMEM_TRACE("send_lmt_rts_cb: received src_offset 0x%lx, data_sz 0x%lx, sreq_ptr 0x%lx, "
                 "src_lrank %d, match info[src_rank %d, tag %d, context_id 0x%x]\n",
@@ -151,7 +140,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -170,9 +158,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPI_Aint dt_true_lb;
     MPIDI_XPMEM_cnt_t *counter_ptr = NULL;
     int fin_type, copy_type;
-
-
-
 
     /* Sender gets the CTS packet from receiver and need to perform copy */
     sreq = (MPIR_Request *) slmt_cts_hdr->sreq_ptr;
@@ -258,7 +243,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -270,9 +254,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_XPMEM_cnt_t *counter_ptr;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t *xpmem_slmt_cnt_free = &ctrl_hdr->xpmem_slmt_cnt_free;
 
-
-
-
     if (xpmem_slmt_cnt_free->coop_counter_direct_flag)
         counter_ptr = (MPIDI_XPMEM_cnt_t *) ((char *) MPIDI_XPMEM_cnt_mem_direct +
                                              xpmem_slmt_cnt_free->coop_counter_offset);
@@ -282,7 +263,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIR_cc_decr(&MPIDI_XPMEM_global.num_pending_cnt, &c);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

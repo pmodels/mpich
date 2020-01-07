@@ -21,9 +21,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
     int in_cs = FALSE;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
-
-
-
     if (vc->state == MPIDI_VC_STATE_MORIBUND) {
         sreq->status.MPI_ERROR = MPI_SUCCESS;
         MPIR_ERR_SET1(sreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
@@ -180,7 +177,6 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-
 
     return mpi_errno;
  fn_fail:

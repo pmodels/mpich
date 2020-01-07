@@ -11,7 +11,6 @@
 #include "mpid_nem_inline.h"
 #endif
 
-
 /*
  * MPIDI_CH3_iStartMsg() attempts to send the message immediately.  If
  * the entire message is successfully sent, then NULL is returned.
@@ -25,9 +24,6 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     int in_cs = 0;
-
-
-
 
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
@@ -115,5 +111,4 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 	goto fn_exit;
     }
 }
-
 

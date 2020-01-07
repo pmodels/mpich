@@ -33,9 +33,6 @@ cvars:
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
-
-
-
     int j, local_rank, grank;
     MPIDI_POSIX_fastbox_t *fbox_in;
     int mpi_errno = MPIDI_POSIX_NOK;
@@ -44,7 +41,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
      * this function again if needed. */
     for (j = 0; j < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE +
          MPIR_CVAR_CH4_POSIX_EAGER_FBOX_BATCH_SIZE; j++) {
-
         /* Before polling *all* of the fastboxes, poll the ones that are most likely to have messages
          * (where receives have been preposted). */
         if (j < MPIR_CVAR_CH4_POSIX_EAGER_FBOX_POLL_CACHE_SIZE) {
@@ -119,7 +115,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -133,23 +128,16 @@ MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
-
-
-
     MPIDI_POSIX_fastbox_t *fbox_in = NULL;
 
     fbox_in = (MPIDI_POSIX_fastbox_t *) transaction->transport.fbox.fbox_ptr;
 
     fbox_in->data_ready = 0;
 
-
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
 {
-
-
-
     int local_rank, i;
 
     if (grank >= 0) {
@@ -171,15 +159,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
         }
     }
 
-
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 {
     int i, local_rank;
-
-
-
 
     if (grank >= 0) {
         local_rank = MPIDI_POSIX_global.local_ranks[grank];
@@ -195,7 +179,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
             }
         }
     }
-
 
 }
 

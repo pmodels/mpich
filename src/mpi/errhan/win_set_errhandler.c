@@ -50,10 +50,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
     int in_use;
     MPIR_Errhandler *errhan_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -121,7 +118,6 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

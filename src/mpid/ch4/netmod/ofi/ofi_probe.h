@@ -29,9 +29,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     struct fi_msg_tagged msg;
     int ofi_err;
 
-
-
-
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
@@ -97,7 +94,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -110,9 +106,6 @@ static inline int MPIDI_NM_mpi_improbe(int source,
                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -133,7 +126,6 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -145,8 +137,6 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
 {
     int mpi_errno;
 
-
-
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
@@ -156,7 +146,6 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
         mpi_errno =
             MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
     }
-
 
     return mpi_errno;
 }

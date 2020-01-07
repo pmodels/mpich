@@ -69,9 +69,6 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
     int mpi_errno = MPI_SUCCESS;
     char *endptr;
 
-
-
-
     comm_ptr->dev.eager_max_msg_sz = strtol(info->value, &endptr, 0);
 
     MPIR_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
@@ -79,12 +76,10 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
                          info->key);
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 {
@@ -97,9 +92,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_Comm * comm;
     int p;
     int val;
-
-
-
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
@@ -276,9 +268,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
@@ -439,7 +429,6 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -460,7 +449,6 @@ static int pg_compare_ids(void * id1, void * id2)
 {
     return (strcmp((char *) id1, (char *) id2) == 0) ? TRUE : FALSE;
 }
-
 
 static int pg_destroy(MPIDI_PG_t * pg)
 {

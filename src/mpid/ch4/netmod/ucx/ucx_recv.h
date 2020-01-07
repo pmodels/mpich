@@ -17,9 +17,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = NULL;
 
-
-
-
     if (ucp_request->req)
         rreq = ucp_request->req;
     else
@@ -54,8 +51,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
         ucp_request->req = rreq;
     }
 
-
-
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
@@ -63,9 +58,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPI_Status *mrecv_status;
-
-
-
 
     /* complete the request if we have it, or allocate a status object */
     if (ucp_request->req) {
@@ -89,7 +81,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     mrecv_status->MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
     mrecv_status->MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
 
-
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
@@ -108,9 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     uint64_t ucp_tag, tag_mask;
     MPIR_Request *req = *request;
     MPIDI_UCX_ucp_request_t *ucp_request;
-
-
-
 
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
@@ -157,7 +145,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
     *request = req;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -193,7 +180,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                             &MPIDI_UCX_mrecv_cmpl_cb);
     }
     MPIDI_UCX_CHK_REQUEST(ucp_request);
-
 
     if (ucp_request->status) {
         message->status = *(ucp_request->status);

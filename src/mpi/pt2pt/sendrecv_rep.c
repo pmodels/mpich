@@ -70,12 +70,10 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Convert handles to MPI objects. */
     MPIR_Comm_get_ptr(comm, comm_ptr);
@@ -166,7 +164,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                 goto fn_fail;
         }
 
-
         /* If dest is MPI_PROC_NULL, create a completed request and return. */
         if (unlikely(dest == MPI_PROC_NULL)) {
             sreq = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
@@ -220,7 +217,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

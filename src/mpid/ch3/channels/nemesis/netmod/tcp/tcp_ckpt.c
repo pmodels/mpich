@@ -16,13 +16,9 @@ int MPID_nem_tcp_ckpt_pause_send_vc(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-
-
-
     vc_tcp->send_paused = TRUE;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
 
@@ -36,9 +32,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-
-
-
     vc_tcp->send_paused = FALSE;
 
     /* There may be a unpause message in the send queue.  If so, just enqueue everything on the send queue. */
@@ -47,7 +40,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     /* if anything is left on the paused queue, put it on the send queue and wait for the reconnect */
     if (!MPIDI_CH3I_Sendq_empty(vc_tcp->paused_send_queue)) {
-
         MPIDI_CH3I_Sendq_enqueue_multiple_no_refcount(&vc_tcp->send_queue,
                                                       vc_tcp->paused_send_queue.head,
                                                       vc_tcp->paused_send_queue.tail);
@@ -56,7 +48,6 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
   fn_exit:
     *buflen = 0;
-
 
     return mpi_errno;
   fn_fail:
@@ -69,9 +60,6 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(upkt, MPIDI_nem_tcp_pkt_unpause_t, unpause_pkt);
     MPIR_Request *unpause_req;
-
-
-
 
     unpause_pkt->type = MPIDI_NEM_PKT_NETMOD;
     unpause_pkt->subtype = MPIDI_NEM_TCP_PKT_UNPAUSE;
@@ -89,14 +77,11 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t * vc)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
 
     goto fn_exit;
 }
-
-
 
 int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t * vc)
 {
@@ -104,9 +89,6 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t * vc)
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_nem_tcp_pkt_unpause_t *const pkt = (MPIDI_nem_tcp_pkt_unpause_t *) & upkt;
     MPIR_Request *sreq;
-
-
-
 
     pkt->type = MPIDI_NEM_PKT_NETMOD;
     pkt->subtype = MPIDI_NEM_TCP_PKT_UNPAUSE;
@@ -124,7 +106,6 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t * vc)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
 

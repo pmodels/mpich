@@ -42,7 +42,6 @@ Input Parameters:
 + service_name - a service name (string)
 - info - implementation-specific information (handle)
 
-
 Output Parameters:
 .  port_name - a port name (string)
 
@@ -66,10 +65,7 @@ int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -132,9 +128,7 @@ int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

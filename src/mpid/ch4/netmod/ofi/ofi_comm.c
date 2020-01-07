@@ -18,8 +18,6 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_send_counters, MPL_MEM_COMM);
     MPIDIU_map_create(&MPIDI_OFI_COMM(comm).huge_recv_counters, MPL_MEM_COMM);
 
@@ -30,7 +28,6 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_COMM(comm).eagain = FALSE;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -40,11 +37,8 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDIU_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
-
 
     return mpi_errno;
 }

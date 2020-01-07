@@ -18,14 +18,11 @@ int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #if defined HAVE_LIBHCOLL
     hcoll_comm_create(comm, NULL);
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -35,12 +32,9 @@ int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifdef HAVE_LIBHCOLL
     hcoll_comm_destroy(comm, NULL);
 #endif
   fn_exit:
-
     return mpi_errno;
 }

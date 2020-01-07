@@ -10,16 +10,11 @@
 /* --BEGIN ERROR HANDLING-- */
 void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 {
-
-
-
-
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  src = %6d", cell->pkt.header.source);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  dst = %6d", cell->pkt.header.dest);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  len = %6d", (int)cell->pkt.header.datalen);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  sqn = %6d", cell->pkt.header.seqno);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  typ = %6d", cell->pkt.header.type);
-
 
 }
 

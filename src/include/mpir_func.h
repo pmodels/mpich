@@ -36,38 +36,6 @@
 /* state declaration macros */
 #if defined(MPL_USE_DBG_LOGGING) || defined(MPICH_DEBUG_MEMARENA)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #define MPII_Timer_init(rank, size)
 #define MPII_Timer_finalize()
 
@@ -93,38 +61,6 @@
 
 #define MPII_Timer_init(rank, size)
 #define MPII_Timer_finalize()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /* HAVE_TIMING */
 

@@ -36,9 +36,6 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm_ptr->revoked) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
@@ -60,6 +57,5 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
     
 fn_fail:
 fn_exit:
-
     return mpi_errno;
 }

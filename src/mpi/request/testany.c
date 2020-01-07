@@ -116,11 +116,9 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -243,10 +241,8 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         MPIR_CHKLMEM_FREEALL();
     }
 
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

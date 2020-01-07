@@ -22,11 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 {
     int mpi_errno;
 
-
-
-
     mpi_errno = MPIDIG_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-
 
     return mpi_errno;
 }
@@ -39,10 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
 {
     int mpi_errno;
 
-
-
     mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-
 
     return mpi_errno;
 }

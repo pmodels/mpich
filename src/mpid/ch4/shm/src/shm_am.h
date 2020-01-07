@@ -26,12 +26,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_send_hdr(rank, comm, MPIDI_POSIX_AM_HDR_CH4,
                                   handler_id, am_hdr, am_hdr_sz);
-
 
     return ret;
 }
@@ -43,12 +39,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_isend(rank, comm, MPIDI_POSIX_AM_HDR_CH4, handler_id, am_hdr,
                                am_hdr_sz, data, count, datatype, sreq);
-
 
     return ret;
 }
@@ -60,12 +52,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_isendv(rank, comm, MPIDI_POSIX_AM_HDR_CH4, handler_id, am_hdrs,
                                 iov_len, data, count, datatype, sreq);
-
 
     return ret;
 }
@@ -76,12 +64,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t conte
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_send_hdr_reply(context_id, src_rank, MPIDI_POSIX_AM_HDR_CH4,
                                         handler_id, am_hdr, am_hdr_sz);
-
 
     return ret;
 }
@@ -94,12 +78,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_isend_reply(context_id, src_rank, MPIDI_POSIX_AM_HDR_CH4,
                                      handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
-
 
     return ret;
 }
@@ -108,11 +88,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_hdr_max_sz();
-
 
     return ret;
 }
@@ -121,33 +97,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_recv(req);
-
 
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)
 {
-
-
-
     MPIDI_SHM_REQUEST(req, status) = 0;
     MPIDI_POSIX_am_request_init(req);
-
 
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
 {
-
-
-
     MPIDI_POSIX_am_request_finalize(req);
-
 
 }
 

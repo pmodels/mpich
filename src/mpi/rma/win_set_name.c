@@ -50,10 +50,7 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -97,7 +94,6 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

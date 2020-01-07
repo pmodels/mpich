@@ -57,11 +57,7 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
     int mpi_errno = MPI_SUCCESS;
     MPI_Count count_x, byte_count;
 
-
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -113,9 +109,7 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {

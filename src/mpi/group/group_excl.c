@@ -33,9 +33,6 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
 
-
-
-
     size = group_ptr->size;
 
     /* Allocate a new group and lrank_to_lpid array */
@@ -67,15 +64,12 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-
 #endif
-
 
 /*@
 
@@ -113,7 +107,6 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL, *new_group_ptr;
-
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
@@ -167,11 +160,9 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

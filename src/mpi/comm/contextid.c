@@ -360,9 +360,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     struct gcn_state st;
     struct gcn_state *tmp;
 
-
-
-
     st.first_iter = 1;
     st.comm_ptr = comm_ptr;
     st.tag = tag;
@@ -607,7 +604,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "Context mask = %s", context_mask_to_str());
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     /* Release the masks */
@@ -626,12 +622,9 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
-
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-
 
 static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state);
 static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state);
@@ -646,7 +639,6 @@ static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
 
   fn_fail:
     return mpi_errno;
-
 }
 
 static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
@@ -854,7 +846,6 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
     return mpi_errno;
 }
 
-
 /** Allocating a new context ID collectively over the given communicator in a
  * nonblocking way.
  *
@@ -948,10 +939,6 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     int tag;
     MPIR_Sched_t s;
 
-
-
-
-
     /* now create a schedule */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
@@ -969,7 +956,6 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -983,9 +969,6 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPIR_Sched_t s;
-
-
-
 
     /* do as much local setup as possible */
     if (!comm_ptr->local_comm) {
@@ -1015,7 +998,6 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
 
     return mpi_errno;
 }
-
 
 /* Get a context for a new intercomm.  There are two approaches
    here (for MPI-1 codes only)
@@ -1048,9 +1030,6 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
                                  * provided in the intercomm routine? (not on a dup,
                                  * but in that case it can use the collective context) */
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-
-
 
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
@@ -1092,9 +1071,6 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
 void MPIR_Free_contextid(MPIR_Context_id_t context_id)
 {
     int idx, bitpos, raw_prefix;
-
-
-
 
     /* Convert the context id to the bit position */
     raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, context_id);
@@ -1158,5 +1134,4 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
                      "Freed context %d, mask[%d] bit %d (prefix=%#x)",
                      context_id, idx, bitpos, raw_prefix));
   fn_exit:
-
 }

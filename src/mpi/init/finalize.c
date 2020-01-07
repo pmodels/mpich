@@ -117,13 +117,11 @@ int MPI_Finalize(void)
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
     MPII_finalize_thread_and_enter_cs();
-
 
     /* ... body of routine ... */
 
@@ -183,9 +181,7 @@ int MPI_Finalize(void)
 
     /* ... end of body of routine ... */
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

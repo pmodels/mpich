@@ -34,9 +34,6 @@ int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int sz, int avtid);
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *idx,
                                                      int *avtid)
 {
-
-
-
     *avtid = 0;
 
     switch (MPIDI_COMM(comm, map).mode) {
@@ -98,8 +95,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
-
-
 
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_DIRECT:
@@ -169,9 +164,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *idx,
                                                            int *avtid)
 {
-
-
-
     *avtid = MPIDI_COMM(comm, local_map).avtid;
     switch (MPIDI_COMM(comm, local_map).mode) {
         case MPIDI_RANK_MAP_DIRECT:
@@ -216,14 +208,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret = 0;
 
-
-
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
-
 
     return ret;
 }
@@ -232,14 +221,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
 
-
-
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     ret = av->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void *) av));
 #endif
-
 
     return ret;
 }
@@ -248,8 +234,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
 
-
-
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
     if (avtid == 0) {
@@ -257,7 +241,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
     } else {
         ret = -1;
     }
-
 
     return ret;
 }

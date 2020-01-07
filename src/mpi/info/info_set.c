@@ -52,12 +52,10 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -112,7 +110,6 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -127,16 +124,12 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #endif
 }
 
-
 #ifndef MPICH_MPI_FROM_PMPI
 
 int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *curr_ptr, *prev_ptr;
-
-
-
 
     prev_ptr = info_ptr;
     curr_ptr = info_ptr->next;
@@ -164,9 +157,7 @@ int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

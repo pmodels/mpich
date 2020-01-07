@@ -32,9 +32,6 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     void *tmp_buf = NULL;
     int tag = 0;
 
-
-
-
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
@@ -121,12 +118,10 @@ int MPIR_TSP_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *rec
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking recursive_doubling based SCAN */
 int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
@@ -136,9 +131,6 @@ int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, 
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -155,7 +147,6 @@ int MPIR_TSP_Iscan_intra_recursive_doubling(const void *sendbuf, void *recvbuf, 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

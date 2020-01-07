@@ -16,33 +16,21 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * req)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_pending_failure(MPIR_Request * req)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
 {
-
-
-
     MPIR_cc_set(&req->cc, 0);
-
 
     return;
 }
@@ -82,9 +70,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
     int incomplete, notify_counter;
 
-
-
-
     MPIR_cc_decr(req->cc_ptr, &incomplete);
 
     /* if we hit a zero completion count, free up AM-related
@@ -105,15 +90,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         MPIR_Request_free(req);
     }
 
-
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
 {
-
-
-
     /* If a user passed a derived datatype for this persistent communication,
      * free it.
      * We could have done this cleanup in more general request cleanup functions,
@@ -121,7 +102,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Prequest_free_hook(MPIR_Request * req)
      * instructions for any kind of request object, even if it's no a request
      * from persistent communications. */
     MPIR_Datatype_release_if_not_builtin(MPIDI_PREQUEST(req, datatype));
-
 
 }
 

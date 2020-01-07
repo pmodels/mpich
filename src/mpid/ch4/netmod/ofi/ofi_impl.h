@@ -402,9 +402,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     ssize_t rem_size = total_bytes;
     MPI_Aint num_iov, total_iov = 0;
 
-
-
-
     if (dt_datatype == MPI_DATATYPE_NULL)
         goto fn_exit;
 
@@ -418,7 +415,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     } while (rem_size);
 
   fn_exit:
-
     return total_iov;
 }
 

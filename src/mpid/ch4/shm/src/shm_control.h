@@ -15,12 +15,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_do_ctrl_send(int rank, MPIR_Comm * comm,
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_am_send_hdr(rank, comm, MPIDI_POSIX_AM_HDR_SHM,
                                   ctrl_id, ctrl_hdr, sizeof(MPIDI_SHM_ctrl_hdr_t));
-
 
     return ret;
 }

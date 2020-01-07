@@ -48,9 +48,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int buffer_per_child = MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
 
-
-
-
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Scheduling pipelined reduce on %d ranks, root=%d",
                      MPIR_Comm_size(comm), root));
@@ -192,7 +189,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
                 reduce_id[i] = MPIR_TSP_sched_reduce_local(recv_address, reduce_address, msgsize,
                                                            datatype, op, sched, nvtcs, vtcs);
             } else {    /* wait for the previous reduce to complete */
-
                 /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performace.
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of reduce */
 
@@ -250,7 +246,6 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     goto fn_exit;
 }
 
-
 /* Non-blocking tree based reduce */
 int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
@@ -258,9 +253,6 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -280,7 +272,6 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -41,9 +41,6 @@ void MPIDI_CH3U_Buffer_copy(
     MPIR_Datatype* sdt_ptr;
     MPIR_Datatype* rdt_ptr;
 
-
-
-
     *smpi_errno = MPI_SUCCESS;
     *rmpi_errno = MPI_SUCCESS;
 
@@ -69,7 +66,6 @@ void MPIDI_CH3U_Buffer_copy(
     
     if (sdt_contig && rdt_contig)
     {
-
 	MPIR_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
 
 	*rsz = sdata_sz;
@@ -160,10 +156,8 @@ void MPIDI_CH3U_Buffer_copy(
     }
 
   fn_exit:
-
     return;
 }
-
 
 /*
  * This routine is called by mpid_recv and mpid_irecv when a request

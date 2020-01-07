@@ -66,10 +66,8 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * true_lb, MPI_C
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -120,7 +118,6 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * true_lb, MPI_C
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

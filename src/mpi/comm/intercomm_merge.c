@@ -21,7 +21,6 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
 #endif
 /* -- End Profiling Symbol Block */
 
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
@@ -66,8 +65,6 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     int local_high, remote_high, new_size;
     MPIR_Context_id_t new_context_id;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-
 
     /* Make sure that we have a local intercommunicator */
     if (!comm_ptr->local_comm) {
@@ -178,15 +175,12 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-
 #endif
-
 
 /*@
 MPI_Intercomm_merge - Creates an intracommuncator from an intercommunicator
@@ -232,12 +226,10 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *new_intracomm_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -316,11 +308,9 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

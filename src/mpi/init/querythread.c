@@ -61,10 +61,7 @@ int MPI_Query_thread(int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -85,7 +82,6 @@ int MPI_Query_thread(int *provided)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

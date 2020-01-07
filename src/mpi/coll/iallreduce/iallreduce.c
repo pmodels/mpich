@@ -193,7 +193,6 @@ int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int cou
     return mpi_errno;
 }
 
-
 int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -395,10 +394,8 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -479,11 +476,9 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

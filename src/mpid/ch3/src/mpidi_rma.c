@@ -78,7 +78,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-
 MPIDI_RMA_Op_t *global_rma_op_pool_head = NULL, *global_rma_op_pool_start = NULL;
 MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_start = NULL;
 
@@ -87,10 +86,6 @@ int MPIDI_RMA_init(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIR_CHKPMEM_DECL(3);
-
-
-
-
 
     MPIR_CHKPMEM_MALLOC(global_rma_op_pool_start, MPIDI_RMA_Op_t *,
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE,
@@ -109,27 +104,18 @@ int MPIDI_RMA_init(void)
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_fail;
 }
 
-
 void MPIDI_RMA_finalize(void)
 {
-
-
-
-
     MPL_free(global_rma_op_pool_start);
     MPL_free(global_rma_target_pool_start);
 
-
 }
-
 
 int MPID_Win_free(MPIR_Win ** win_ptr)
 {
@@ -137,9 +123,6 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     int in_use;
     MPIR_Comm *comm_ptr;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
-
-
 
     MPIR_ERR_CHKANDJUMP(((*win_ptr)->states.access_state != MPIDI_RMA_NONE &&
                          (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
@@ -210,9 +193,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     MPIR_Handle_obj_free(&MPIR_Win_mem, *win_ptr);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

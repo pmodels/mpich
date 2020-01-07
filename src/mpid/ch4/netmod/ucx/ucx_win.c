@@ -20,7 +20,6 @@ static int win_init(MPIR_Win * win);
 
 static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void **base_ptr)
 {
-
     MPIR_Errflag_t err = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
     int rank = 0;
@@ -79,7 +78,6 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     MPIR_ERR_CHECK(mpi_errno);
 
     recv_disps = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
-
 
     for (i = 0; i < comm_ptr->local_size; i++) {
         recv_disps[i] = cntr;
@@ -152,12 +150,9 @@ static int win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     memset(&MPIDI_UCX_WIN(win), 0, sizeof(MPIDI_UCX_win_t));
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -215,9 +210,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
 #ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
     if (mpi_errno != MPI_SUCCESS)
@@ -229,7 +221,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -239,9 +230,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
 #ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
     if (mpi_errno != MPI_SUCCESS)
@@ -253,7 +241,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -283,8 +270,6 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win)) {
         int i;
@@ -300,7 +285,6 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
         MPL_free(MPIDI_UCX_WIN(win).target_sync);
     }
 #endif
-
 
     return mpi_errno;
 }

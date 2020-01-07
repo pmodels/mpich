@@ -24,9 +24,6 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     int eager_threshold = -1;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                  "rank=%d, tag=%d, context=%d", 
                  rank, tag, comm->context_id + context_offset));

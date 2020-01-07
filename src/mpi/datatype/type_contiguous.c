@@ -37,7 +37,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 
     if (count == 0)
         return MPII_Type_zerolen(newtype);
-
     /* allocate new datatype object and handle */
     new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
@@ -197,7 +196,6 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
 }
 #endif
 
-
 /*@
     MPI_Type_contiguous - Creates a contiguous datatype
 
@@ -222,12 +220,10 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -258,11 +254,9 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

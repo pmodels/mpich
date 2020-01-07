@@ -16,9 +16,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_rma_cmpl_cb(void *request, ucs_status_t 
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *req = ucp_request->req;
 
-
-
-
     MPIR_Assert(status == UCS_OK);
     if (req) {
         MPID_Request_complete(req);
@@ -35,7 +32,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
                                                   MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                   MPIR_Request ** reqptr)
 {
-
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t offset;
     uint64_t base;
@@ -139,7 +135,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
                                                   MPIR_Win * win, MPIDI_av_entry_t * addr,
                                                   MPIR_Request ** reqptr)
 {
-
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
@@ -202,9 +197,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
 
-
-
-
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
                                                       origin_count, target_count,
@@ -239,7 +231,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -259,9 +250,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     size_t origin_bytes, target_bytes ATTRIBUTE((unused));
     size_t offset;
     MPI_Aint origin_true_lb, target_true_lb;
-
-
-
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
@@ -292,7 +280,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -308,8 +295,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifdef MPICH_UCX_AM_ONLY
     mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                                target_count, target_datatype, win);
@@ -324,7 +309,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 #endif
 
-
     return mpi_errno;
 }
 
@@ -337,8 +321,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
 #ifdef MPICH_UCX_AM_ONLY
     mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
@@ -353,7 +335,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                      win, addr, NULL);
     }
 #endif
-
 
     return mpi_errno;
 }
@@ -374,8 +355,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                            target_disp, target_count, target_datatype, win, request);
 #else
     int mpi_errno = MPI_SUCCESS;
-
-
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
@@ -398,13 +377,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 #endif
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                            const void *compare_addr,
@@ -462,7 +439,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                    win);
 }
 
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                                int origin_count,
                                                MPI_Datatype origin_datatype,
@@ -479,8 +455,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                            target_disp, target_count, target_datatype, win, request);
 #else
     int mpi_errno = MPI_SUCCESS;
-
-
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
@@ -503,13 +477,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 #endif
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                                          int origin_count,

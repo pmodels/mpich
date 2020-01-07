@@ -25,9 +25,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
     int mpi_errno = MPI_SUCCESS;
     int partner, offset, count, send_offset, recv_offset;
 
-
-
-
     /* get the partner with whom I should exchange data */
     partner = MPII_Recexchalgo_reverse_digits_step2(rank, nranks, k);
     if (rank != partner) {
@@ -52,11 +49,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
                              partner, tag, comm, sched, 0, NULL);
     }
 
-
-
     return mpi_errno;
 }
-
 
 int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int is_inplace, int rank,
@@ -67,9 +61,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_r
 {
     int mpi_errno = MPI_SUCCESS;
     int send_offset, recv_offset, i;
-
-
-
 
     if (step1_sendto != -1) {   /* non-participating rank sends the data to a partcipating rank */
         void *buf_to_send;
@@ -89,11 +80,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step1(int step1_sendto, int *step1_r
         }
     }
 
-
-
     return mpi_errno;
 }
-
 
 int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_nphases,
                                                   int **step2_nbrs, int rank, int nranks, int k,
@@ -107,9 +95,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
     int phase, i, j, count, nbr, send_offset, recv_offset, offset, rank_for_offset;
     int *recv_id = *recv_id_;
     int nrecvs = 0;
-
-
-
 
     if (is_dist_halving == 1) {
         phase = step2_nphases - 1;
@@ -161,11 +146,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
 
     *nrecvs_ = nrecvs;
 
-
-
     return mpi_errno;
 }
-
 
 int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_recvfrom,
                                                   int step1_nrecvs, int step2_nphases,
@@ -177,9 +159,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_r
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-
-
-
     if (step1_sendto != -1) {
         MPIR_TSP_sched_irecv(recvbuf, recvcount * nranks, recvtype, step1_sendto, tag, comm, sched,
                              0, NULL);
@@ -190,11 +169,8 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step3(int step1_sendto, int *step1_r
                              tag, comm, sched, nrecvs, recv_id);
     }
 
-
-
     return mpi_errno;
 }
-
 
 /* Routine to schedule a recursive exchange based allgather. The algorithm is based
  * on the recursive doubling algorithm described by Thakur et al, "Optimization of
@@ -222,9 +198,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
     int nrecvs;
     int *recv_id;
     int tag;
-
-
-
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -297,13 +270,10 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPL_free(recv_id);
 
   fn_exit:
-
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking recexch based Allgather */
 int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -313,9 +283,6 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -334,7 +301,6 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -11,7 +11,6 @@ int MPID_Init_spawn(void)
     int mpi_errno = MPI_SUCCESS;
     char * parent_port;
 
-
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 
     /* FIXME: To allow just the "root" process to

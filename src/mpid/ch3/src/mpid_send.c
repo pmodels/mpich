@@ -25,9 +25,6 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     int eager_threshold = -1;
     int mpi_errno = MPI_SUCCESS;    
 
-
-
-
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                 "rank=%d, tag=%d, context=%d", 
 		rank, tag, comm->context_id + context_offset));
@@ -73,7 +70,6 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, 
 			    dt_true_lb);
-
 
     if (data_sz == 0)
     {
@@ -189,9 +185,6 @@ int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int r
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     switch (*errflag) {
     case MPIR_ERR_NONE:
         break;
@@ -203,8 +196,6 @@ int MPID_Send_coll(const void *buf, MPI_Aint count, MPI_Datatype datatype, int r
     }
 
     mpi_errno = MPID_Send(buf, count, datatype, rank, tag, comm, context_offset, request);
-
-
 
     return mpi_errno;
 }

@@ -5,7 +5,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-
 /* This implementation of MPI_Reduce_scatter_block was obtained by taking
    the implementation of MPI_Reduce_scatter from reduce_scatter.c and replacing
    recvcnts[i] with recvcount everywhere. */
@@ -82,7 +81,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #undef MPI_Reduce_scatter_block
 #define MPI_Reduce_scatter_block PMPI_Reduce_scatter_block
 
-
 /* This is the machine-independent implementation of reduce_scatter. The algorithm is:
 
    Algorithm: MPI_Reduce_scatter
@@ -153,7 +151,6 @@ int MPIR_Reduce_scatter_block_intra_auto(const void *sendbuf,
     }
 
   fn_exit:
-
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -308,12 +305,10 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -388,11 +383,9 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

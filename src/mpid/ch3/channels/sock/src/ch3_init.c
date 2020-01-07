@@ -24,9 +24,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
     char *bc_val = NULL;
     int val_max_remaining;
 
-
-
-
     mpi_errno = MPIDI_CH3I_Progress_init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -49,7 +46,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     MPL_free(publish_bc_orig);

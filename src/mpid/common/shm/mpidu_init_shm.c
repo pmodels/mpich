@@ -26,10 +26,6 @@ static int barrier_init = 0;
 
 static int Init_shm_barrier_init(int init_values)
 {
-
-
-
-
     barrier = (Init_shm_barrier_t *) memory.base_addr;
     if (init_values) {
         OPA_store_int(&barrier->val, 0);
@@ -39,8 +35,6 @@ static int Init_shm_barrier_init(int init_values)
     sense = 0;
     barrier_init = 1;
 
-
-
     return MPI_SUCCESS;
 }
 
@@ -48,9 +42,6 @@ static int Init_shm_barrier_init(int init_values)
 static int Init_shm_barrier()
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (local_size == 1)
         goto fn_exit;
@@ -70,7 +61,6 @@ static int Init_shm_barrier()
 
   fn_fail:
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -86,9 +76,6 @@ int MPIDU_Init_shm_init(void)
 #endif
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     rank = MPIR_Process.rank;
     local_size = MPIR_Process.local_size;
@@ -230,9 +217,6 @@ int MPIDU_Init_shm_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err;
 
-
-
-
     mpi_errno = Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -255,12 +239,7 @@ int MPIDU_Init_shm_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = Init_shm_barrier();
-
-
 
     return mpi_errno;
 }
@@ -269,13 +248,8 @@ int MPIDU_Init_shm_put(void *orig, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIR_Assert(len <= sizeof(MPIDU_Init_shm_block_t));
     MPIR_Memcpy((char *) baseaddr + my_local_rank * sizeof(MPIDU_Init_shm_block_t), orig, len);
-
-
 
     return mpi_errno;
 }
@@ -284,13 +258,8 @@ int MPIDU_Init_shm_get(int local_rank, size_t len, void *target)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIR_Assert(local_rank < local_size && len <= sizeof(MPIDU_Init_shm_block_t));
     MPIR_Memcpy(target, (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t), len);
-
-
 
     return mpi_errno;
 }
@@ -299,13 +268,8 @@ int MPIDU_Init_shm_query(int local_rank, void **target_addr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIR_Assert(local_rank < local_size);
     *target_addr = (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
-
-
 
     return mpi_errno;
 }

@@ -326,7 +326,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	MPID_nem_mem_region.RecvQ[grank] = NULL;
     }
 
-
     /* set route for local procs through shmem */
     for (idx = 0; idx < num_local; idx++)
     {
@@ -394,7 +393,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
     MPL_free(publish_bc_orig);
 
-
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPID_nem_mpich_init();
@@ -433,8 +431,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIR_CHKPMEM_DECL(1);
-
-
 
     
     vc_ch->pkt_handler = NULL;
@@ -601,7 +597,6 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -614,16 +609,12 @@ MPID_nem_vc_destroy(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
-
-
-
     MPL_free(vc_ch->pending_pkt);
 
     mpi_errno = MPID_nem_netmod_func->vc_destroy(vc);
     MPIR_ERR_CHECK(mpi_errno);
 
     fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

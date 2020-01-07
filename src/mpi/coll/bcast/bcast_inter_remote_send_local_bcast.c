@@ -24,10 +24,6 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
 
-
-
-
-
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
         mpi_errno = MPI_SUCCESS;
@@ -87,7 +83,6 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
-
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)

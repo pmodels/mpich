@@ -26,9 +26,6 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* FIXME: This should probably be *rreqp = NULL? */
     rreqp = NULL;
     
@@ -153,7 +150,6 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 #endif /* defined(MPIDI_CH3_MSGS_UNORDERED) */

@@ -48,8 +48,6 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
 #endif
 /* -- End Profiling Symbol Block */
 
-
-
 /* Because we store factors with their multiplicities, a small array can
    store all of the factors for a large number (grows *faster* than n
    factorial). */
@@ -92,7 +90,6 @@ volatile int MPIR_DIMS_initPCVars = 1;
 /* This routine is called once to define any PVARS and CVARS */
 PMPI_LOCAL int MPIR_Dims_create_init(void)
 {
-
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(DIMS,
                                       MPI_DOUBLE,
                                       dims_getdivs,
@@ -362,7 +359,6 @@ static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
     return mpi_errno;
 }
 
-
 /*
  * This is a modified round robin assignment.  The goal is to
  * get a good first guess at a good distribution.
@@ -406,7 +402,6 @@ static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[])
     }
 }
 
-
 /* need to set a minidx where it stops because the remaining
    values are known.  Then pass in the entire array.  This is needed
    to get the correct values for "ties" between the first and last values.
@@ -436,7 +431,6 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
         MPIR_CHKLMEM_MALLOC(newdivs, int *, ndivs * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
         if (mpi_errno)
             return mpi_errno;
-
         /* At least 3 divisors to set (0...idx).  We try all choices
          * recursively, but stop looking when we can easily tell that
          * no additional cases can improve the current solution. */
@@ -574,12 +568,10 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
     return mpi_errno;
 }
 
-
 /* FIXME: The error checking should really be part of MPI_Dims_create,
    not part of MPIR_Dims_create_impl.  That slightly changes the
    semantics of Dims_create provided by the device, but only by
    removing the need to check for errors */
-
 
 PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 {
@@ -831,7 +823,6 @@ extern volatile int MPIR_DIMS_initPCVars;
 
 #endif /* PMPI Local */
 
-
 /*@
     MPI_Dims_create - Creates a division of processors in a cartesian grid
 
@@ -855,9 +846,7 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
 
     if (ndims == 0)
         goto fn_exit;
@@ -891,9 +880,7 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
 #ifdef HAVE_ERROR_CHECKING

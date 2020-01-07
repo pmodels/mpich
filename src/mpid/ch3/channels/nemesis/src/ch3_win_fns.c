@@ -31,17 +31,12 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (MPIDI_CH3I_Shm_supported()) {
         win_fns->allocate_shm = MPIDI_CH3I_Win_allocate_shm;
         win_fns->detect_shm = MPIDI_CH3I_Win_detect_shm;
         win_fns->gather_info = MPIDI_CH3I_Win_gather_info;
         win_fns->shared_query = MPIDI_CH3_SHM_Win_shared_query;
     }
-
-
 
     return mpi_errno;
 }
@@ -50,27 +45,18 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t * win_hooks)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (MPIDI_CH3I_Shm_supported()) {
         win_hooks->win_init = MPIDI_CH3I_Win_init;
         win_hooks->win_free = MPIDI_CH3_SHM_Win_free;
     }
 
-
-
     return mpi_errno;
 }
-
 
 int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings)
 {
     int mpi_errno = MPI_SUCCESS;
     int netmod_ordering = 0;
-
-
-
 
     win_pkt_orderings->am_flush_ordered = 0;
 
@@ -88,7 +74,6 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -98,9 +83,6 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
                                MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     (*win_ptr)->shm_base_addr = NULL;
     (*win_ptr)->shm_segment_len = 0;
@@ -113,13 +95,11 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
     (*win_ptr)->info_shm_segment_handle = 0;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 
 }
-
 
 static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_win,
                                      MPI_Aint ** base_shm_offs_ptr)
@@ -139,8 +119,6 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
     MPIDI_SHM_Win_t *elem = shm_wins_list;
 
     MPIR_CHKLMEM_DECL(2);
-
-
 
     *matched_win = NULL;
     base_shm_offs = *base_shm_offs_ptr;
@@ -264,8 +242,6 @@ static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
-
-
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         goto fn_exit;
     }
@@ -321,9 +297,6 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_gather_info(base, size, disp_unit, info, comm_ptr, win_ptr);
@@ -449,9 +422,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     int noncontig = FALSE;
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         mpi_errno =

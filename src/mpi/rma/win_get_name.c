@@ -28,7 +28,6 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
 
 #endif
 
-
 /*@
    MPI_Win_get_name - Get the print name associated with the MPI RMA window
 
@@ -55,10 +54,7 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -104,7 +100,6 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

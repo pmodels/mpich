@@ -56,10 +56,7 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -105,9 +102,7 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

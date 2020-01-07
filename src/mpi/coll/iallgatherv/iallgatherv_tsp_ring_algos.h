@@ -33,9 +33,6 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     int max_count;
     int tag;
 
-
-
-
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
@@ -145,12 +142,10 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
     MPIR_TSP_sched_fence(sched);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking ring based Allgatherv */
 int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -159,9 +154,6 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -180,7 +172,6 @@ int MPIR_TSP_Iallgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Data
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

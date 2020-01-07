@@ -36,13 +36,11 @@ static inline int MPIDI_NM_am_isend(int rank,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(rank, comm, handler_id,
                                           am_hdr, am_hdr_sz, data, count, datatype, sreq);
     else
         mpi_errno = MPIDI_OFI_do_am_isend_header(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq);
-
 
     return mpi_errno;
 }
@@ -58,9 +56,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
     int mpi_errno = MPI_SUCCESS, is_allocated;
     size_t am_hdr_sz = 0, i;
     char *am_hdr_buf;
-
-
-
 
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
@@ -90,7 +85,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
     else
         MPIDIU_release_buf(am_hdr_buf);
 
-
     return mpi_errno;
 }
 
@@ -104,7 +98,6 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
 
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id),
@@ -134,13 +127,11 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     mpi_errno = MPIDI_OFI_do_inject(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -152,16 +143,12 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
                                     am_hdr, am_hdr_sz);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -171,9 +158,6 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_send_long_ack_msg_t msg;
-
-
-
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = req;
@@ -185,7 +169,6 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

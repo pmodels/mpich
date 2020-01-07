@@ -109,9 +109,6 @@ static int check_terminating_vcs(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     while (!TERMQ_EMPTY() && MPIR_Request_is_complete(TERMQ_HEAD()->req)) {
         vc_term_element_t *ep;
         TERMQ_DEQUEUE(&ep);
@@ -122,12 +119,10 @@ static int check_terminating_vcs(void)
     }
     
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 /* MPIDI_CH3I_Shm_send_progress() this function makes progress sending
    queued messages on the shared memory queues.  This function is
@@ -139,10 +134,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
     int n_iov;
     MPIR_Request *sreq;
     int again = 0;
-
-
-
-
 
     sreq = MPIDI_CH3I_shm_active_send;
     MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: cont sreq");});
@@ -277,7 +268,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
     }
         
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -287,8 +277,6 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -312,7 +300,6 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -320,8 +307,6 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 int MPIDI_CH3I_Progress_deregister_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -334,17 +319,13 @@ int MPIDI_CH3I_Progress_deregister_hook(int id)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
-
 int MPIDI_CH3I_Progress_activate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -356,17 +337,13 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
-
 int MPIDI_CH3I_Progress_deactivate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -378,7 +355,6 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -390,9 +366,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     int made_progress = FALSE;
-
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
@@ -540,7 +513,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     break; /* break out of recv progress block */
                 }
 
-
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from queue");
 
                 MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_CELL_SOURCE(cell), &vc);
@@ -554,7 +526,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             }
         }
         while(0);  /* do the loop exactly once.  Used so we can jump out of recv progress using break. */
-
 
 	/* make progress sending */
         if (MPIDI_CH3I_shm_active_send || MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq)) {
@@ -647,8 +618,6 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS, err;
 
-
-
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
@@ -656,17 +625,13 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     }
 #   endif
 
-
     return mpi_errno;
 }
 /* end MPIDI_CH3I_Progress_delay() */
 
-
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 {
     int mpi_errno = MPI_SUCCESS,err;
-
-
 
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
@@ -676,18 +641,12 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
     }
 #   endif
 
-
     return mpi_errno;
 }
 /* end MPIDI_CH3I_Progress_continue() */
 
-
 void MPIDI_CH3I_Progress_wakeup(void)
 {
-
-
-
-
     /* no processes sleep in nemesis progress */
 
     return;
@@ -700,9 +659,6 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
     MPIR_Request *rreq = NULL;
     int complete;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-
-
-
 
     do
     {
@@ -900,12 +856,10 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
     while (buflen);
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 #define set_request_info(rreq_, pkt_, msg_type_)                \
 {                                                               \
@@ -922,9 +876,6 @@ int MPIDI_CH3I_Progress_init(void)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
@@ -976,7 +927,6 @@ int MPIDI_CH3I_Progress_init(void)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -987,9 +937,6 @@ int MPIDI_CH3I_Progress_finalize(void)
     int mpi_errno = MPI_SUCCESS;
     qn_ent_t *ent;
 
-
-
-
     while(qn_head) {
         ent = qn_head->next;
         MPL_free(qn_head);
@@ -997,7 +944,6 @@ int MPIDI_CH3I_Progress_finalize(void)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -1007,9 +953,6 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 {
     /* This function is called after all sends have completed */
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (vc->ch.lmt_vc_terminated) {
         mpi_errno = vc->ch.lmt_vc_terminated(vc);
@@ -1026,20 +969,15 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
-
 int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
-
-
-
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminating VC %d", vc->pg_rank);
 
@@ -1111,9 +1049,6 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *prev;
 
-
-
-
     req = MPIDI_CH3I_shm_sendq.head;
     prev = NULL;
     while (req) {
@@ -1140,13 +1075,10 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
-
 
 static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp)
 {
@@ -1154,18 +1086,13 @@ static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
-
-
-
     MPIR_Assert_fmt_msg(vc_ch->pkt_handler && netmod_pkt->subtype < vc_ch->num_pkt_handlers, ("no handler defined for netmod-local packet"));
 
     mpi_errno = vc_ch->pkt_handler[netmod_pkt->subtype](vc, pkt, data, buflen, rreqp);
 
 fn_exit:
-
     return mpi_errno;
 }
-
 
 int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *rreq), int (*dequeue_fn)(MPIR_Request *rreq))
 {
@@ -1231,10 +1158,6 @@ static int anysource_matched(MPIR_Request *rreq)
 
 void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 {
-
-
-
-
     /* MT FIXME acquiring MPIDCOMM here violates lock ordering rules,
      * easily causes deadlock */
 
@@ -1287,7 +1210,6 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
     }
 
  fn_exit:
-
     return;
 }
 
@@ -1297,9 +1219,6 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
     int local_rank = -1;
     MPIDI_VC_t *vc;
     int matched = FALSE;
-
-
-
 
     if (rreq->dev.match.parts.rank == MPI_ANY_SOURCE)
     {
@@ -1330,7 +1249,6 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
 #endif
 
  fn_exit:
-
     return matched;
 }
 

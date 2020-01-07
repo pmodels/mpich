@@ -416,9 +416,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int package_level = 0, i, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 
-
-
-
     num_ranks = MPIR_Comm_size(comm_ptr);
     rank = MPIR_Comm_rank(comm_ptr);
 

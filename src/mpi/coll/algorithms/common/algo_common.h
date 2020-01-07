@@ -33,9 +33,6 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(int maxbytes,
     int maxelems;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (count == 0 || type_size == 0) {
         *num_segments = *segsize_floor = *segsize_ceil = 0;
         goto fn_exit;
@@ -56,8 +53,6 @@ static inline int MPIR_Algo_calculate_pipeline_chunk_info(int maxbytes,
     *num_segments = (count + *segsize_ceil - 1) / (*segsize_ceil);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "num_segments %d", *num_segments));
-
-
 
   fn_exit:
     return mpi_errno;

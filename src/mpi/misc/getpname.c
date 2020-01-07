@@ -70,10 +70,7 @@ int MPI_Get_processor_name(char *name, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -97,9 +94,7 @@ int MPI_Get_processor_name(char *name, int *resultlen)
         goto fn_fail;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

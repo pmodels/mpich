@@ -44,7 +44,6 @@ int MPI_Is_thread_main(int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -55,8 +54,6 @@ int MPI_Is_thread_main(int *flag)
         MPID_END_ERROR_CHECKS;
     }
 #endif /* HAVE_ERROR_CHECKING */
-
-
 
     /* ... body of routine ...  */
 #if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
@@ -78,7 +75,6 @@ int MPI_Is_thread_main(int *flag)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

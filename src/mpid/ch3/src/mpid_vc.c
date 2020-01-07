@@ -61,9 +61,6 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
 
-
-
-
     MPIR_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem", MPL_MEM_ADDRESS);
     vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
     MPIR_Object_set_ref(vcrt, 1);
@@ -92,9 +89,6 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
   @*/
 int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt)
 {
-
-
-
     MPIR_Object_add_ref(vcrt);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Incr VCRT %p ref count",vcrt));
 
@@ -113,9 +107,6 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIR_Object_release_ref(vcrt, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Decr VCRT %p ref count",vcrt));
@@ -201,7 +192,6 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
     }
 
  fn_exit:    
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -223,10 +213,6 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
   @*/
 int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 {
-
-
-
-
     /* We are allowed to create a vc that belongs to no process group 
      as part of the initial connect/accept action, so in that case,
      ignore the pg ref count update */
@@ -251,17 +237,12 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
   @*/
 int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, bool is_remote)
 {
-
-
-
-
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
     else if (is_remote)
         *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
     else
         *lpid_ptr = comm_ptr->dev.local_vcrt->vcr_table[idx]->lpid;
-
 
     return MPI_SUCCESS;
 }
@@ -280,9 +261,6 @@ int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
     int *gpid = (int*)&local_gpids[0];
     int lastPGID = -1, pgid;
     MPIDI_VCR vc;
-
-
-
 
     MPIR_Assert(comm_ptr->local_size == local_size);
     
@@ -481,7 +459,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     cts_tag = 0 | MPIR_TAG_COLL_BIT;
 
     if (local_comm_ptr->rank == local_leader) {
-
         /* First, exchange the group information.  If we were certain
            that the groups were disjoint, we could exchange possible
            context ids at the same time, saving one communication.
@@ -519,7 +496,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                       remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
         MPIR_ERR_CHECK(mpi_errno);
-
 
         /* Convert the remote gpids to the lpids */
         mpi_errno = MPIDI_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
@@ -601,7 +577,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     */
     MPIDI_PG_ForwardPGInfo( peer_comm_ptr, local_comm_ptr,
                             *remote_size, (const MPIDI_Gpid*)remote_gpids, local_leader );
-
 
     /* Finally, if we are not the local leader, we need to
        convert the remote gpids to local pids.  This must be done
@@ -751,7 +726,6 @@ int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     
     if (allfound) return MPI_SUCCESS;
-
     /* FIXME: We need a cleaner way to handle this case than using an ifdef.
        We could have an empty version of MPID_PG_BCast in ch3u_port.c, but
        that's a rather crude way of addressing this problem.  Better is to

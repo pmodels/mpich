@@ -54,7 +54,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int asser
     return MPIDIG_mpi_win_post(group, assert, win);
 }
 
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
     return MPIDIG_mpi_win_wait(win);
@@ -131,8 +130,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
@@ -144,7 +141,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -153,8 +149,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush_local(win)) {
@@ -171,7 +165,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -181,13 +174,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_target(rank, win) &&
         /* including cases where FLUSH_LOCAL or FLUSH is set */
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync >= MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL) {
-
         ucs_status_t ucp_status;
         ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
         /* only flush the endpoint */
@@ -198,7 +188,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -207,8 +196,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_target(rank, win) &&
@@ -227,7 +214,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

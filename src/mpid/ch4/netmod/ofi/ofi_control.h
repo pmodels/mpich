@@ -20,8 +20,6 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     control->origin_rank = comm_ptr->rank;
     control->send_buf = (uintptr_t) send_buf;
     control->msgsize = msgsize;
@@ -33,9 +31,7 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
                                     (void *) control, sizeof(*control));
 
-
     return mpi_errno;
 }
-
 
 #endif /* OFI_CONTROL_H_INCLUDED */

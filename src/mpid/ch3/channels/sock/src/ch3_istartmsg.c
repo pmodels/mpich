@@ -10,9 +10,6 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 {
     MPIR_Request *sreq;
 
-
-
-
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
@@ -26,7 +23,6 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
     sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz - nb;
     sreq->dev.iov_count = 1;
     sreq->dev.OnDataAvail = 0;
-
 
     return sreq;
 }
@@ -44,9 +40,6 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     MPIR_Request *sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 

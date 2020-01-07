@@ -11,7 +11,6 @@ int MPID_Cancel_recv(MPIR_Request * rreq)
     int netmod_cancelled = TRUE;
     int mpi_errno = MPI_SUCCESS;
 
-
     
 
     
@@ -46,7 +45,6 @@ int MPID_Cancel_recv(MPIR_Request * rreq)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

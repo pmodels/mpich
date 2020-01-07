@@ -39,9 +39,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     int is_low_group = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-
-
-
     /* Shift tag into the tagged coll space */
     tag |= MPIR_TAG_COLL_BIT;
 
@@ -135,7 +132,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-
   fn_exit:
     MPL_free(remote_lpids);
     remote_lpids = NULL;
@@ -145,9 +141,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     goto fn_exit;
 }
 
-
 #endif /* MPICH_MPI_FROM_PMPI */
-
 
 /*@
 
@@ -205,12 +199,10 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     MPIR_Comm *peer_comm_ptr = NULL;
     MPIR_Comm *new_intercomm_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -256,7 +248,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 #endif /* HAVE_ERROR_CHECKING */
 
     if (local_comm_ptr->rank == local_leader) {
-
         MPIR_Comm_get_ptr(peer_comm, peer_comm_ptr);
 #ifdef HAVE_ERROR_CHECKING
         {
@@ -308,11 +299,9 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

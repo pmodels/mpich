@@ -74,12 +74,10 @@ int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype
         {MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_COMPLEX}
     };
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* ... body of routine ...  */
     /* MPI 2.1, Section 16.2, page 473 lines 12-27 make it clear that
@@ -121,7 +119,6 @@ int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

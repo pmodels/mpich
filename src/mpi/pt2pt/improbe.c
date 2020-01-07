@@ -55,9 +55,7 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
     MPIR_Request *msgp = NULL;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -113,10 +111,8 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * mes
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

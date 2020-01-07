@@ -28,7 +28,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
 #endif
 
-
 /*@
    MPI_Win_call_errhandler - Call the error handler installed on a
    window object
@@ -55,10 +54,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
     MPIR_Win *win_ptr = NULL;
     int in_cs = FALSE;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -148,9 +144,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
     }
 
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

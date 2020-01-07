@@ -30,7 +30,6 @@ static inline MPIR_Request *context_to_req(void *ofi_context)
 #define API_SET API_SET_2
 #include "ofi_probe_template.c"
 
-
 int MPID_nem_ofi_poll(int in_blocking_poll)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
@@ -40,7 +39,6 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
     MPIDI_VC_t *vc;
     MPIR_Request *req;
     req_fn reqFn;
-
 
     do {
         /* ----------------------------------------------------- */
@@ -113,7 +111,6 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
         }
     } while (in_blocking_poll && (ret > 0));
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -31,9 +31,6 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int s
     int tag;
     MPI_Aint recvtype_extent;
 
-
-
-
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
@@ -69,7 +66,6 @@ int MPIR_TSP_Ineighbor_allgather_sched_allcomm_linear(const void *sendbuf, int s
     goto fn_exit;
 }
 
-
 /* Non-blocking linear algo based neighbor_allgather */
 int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, int sendcount,
                                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
@@ -79,9 +75,6 @@ int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, int sendcou
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -99,7 +92,6 @@ int MPIR_TSP_Ineighbor_allgather_allcomm_linear(const void *sendbuf, int sendcou
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

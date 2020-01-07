@@ -79,13 +79,10 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 {
     MPIDI_OFI_am_request_header_t *req_hdr;
 
-
-
     req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
 
     if (!req_hdr)
         return;
-
     if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0]) {
         MPL_free(req_hdr->am_hdr);
     }
@@ -101,8 +98,6 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_request_header_t *req_hdr;
-
-
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
@@ -129,7 +124,6 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
         MPIR_Memcpy(req_hdr->am_hdr, am_hdr, am_hdr_sz);
     }
 
-
     return mpi_errno;
 }
 
@@ -138,13 +132,10 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
 
-
-
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                        &MPIDI_OFI_global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), repost);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -156,9 +147,6 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     struct fi_cq_tagged_entry cq_entry;
 
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
-
-
-
 
     ret = fi_cq_read(MPIDI_OFI_global.ctx[vci_idx].cq, &cq_entry, 1);
 
@@ -189,7 +177,6 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -204,9 +191,6 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
     int mpi_errno = MPI_SUCCESS, c;
-
-
-
 
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
@@ -243,7 +227,6 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -260,9 +243,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
-
-
-
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -325,7 +305,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -341,9 +320,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec *iov;
-
-
-
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -377,7 +353,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -396,9 +371,6 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     size_t data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
-
-
-
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
@@ -451,7 +423,6 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -497,9 +468,6 @@ static inline int MPIDI_OFI_do_inject(int rank,
     char *buff;
     size_t buff_len;
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));

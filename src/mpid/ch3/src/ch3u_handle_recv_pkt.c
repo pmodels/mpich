@@ -33,7 +33,6 @@
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
-
 /*
  * MPIDI_CH3U_Handle_recv_pkt()
  *
@@ -55,9 +54,6 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     static MPIDI_CH3_PktHandler_Fcn *pktArray[MPIDI_CH3_PKT_END_CH3+1];
     static int needsInit = 1;
 
-
-
-
     MPL_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,MPIDI_DBG_Print_packet(pkt));
 
     /* FIXME: We can turn this into something like
@@ -75,7 +71,6 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     /* Packet type is an enum and hence >= 0 */
     MPIR_Assert(pkt->type <= MPIDI_CH3_PKT_END_CH3);
     mpi_errno = pktArray[pkt->type](vc, pkt, data, buflen, rreqp);
-
 
     return mpi_errno;
 }
@@ -102,9 +97,6 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
     MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
 	
@@ -212,7 +204,6 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
     }
 
  fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -221,9 +212,6 @@ fn_fail:
 int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t *buflen, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* FIXME: to improve performance, allocate temporary buffer from a 
        specialized buffer pool. */
@@ -281,9 +269,6 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
     MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;
 
-
-
-
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
 	
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, 
@@ -335,7 +320,6 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -344,9 +328,6 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* FIXME: to improve performance, allocate temporary buffer from a 
        specialized buffer pool. */
@@ -372,7 +353,6 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-
 /* Check if requested lock can be granted. If it can, set 
    win_ptr->current_lock_type to the new lock type and return 1. Else return 0.
 
@@ -385,7 +365,6 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
     int existing_lock;
 
     
-
 
     existing_lock = win_ptr->current_lock_type;
 
@@ -405,14 +384,12 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
          || 
          ( (requested_lock == MPI_LOCK_EXCLUSIVE) &&
            (existing_lock == MPID_LOCK_NONE) ) ) {
-
         /* grant lock.  set new lock type on window */
         win_ptr->current_lock_type = requested_lock;
 
         /* if shared lock, incr. ref. count */
         if (requested_lock == MPI_LOCK_SHARED)
             win_ptr->shared_lock_ref_cnt++;
-
 
         return 1;
     }
@@ -422,8 +399,6 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
         return 0;
     }
 }
-
-
 
 /* ------------------------------------------------------------------------ */
 /* Here are the functions that implement the packet actions.  They'll be moved
@@ -443,7 +418,6 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
  *                                                                          */
 /* ------------------------------------------------------------------------ */
 
-
 /* FIXME: we still need to implement flow control.  As a reminder, 
    we don't mark these parameters as unused, because a full implementation
    of this routine will need to make use of all 4 parameters */
@@ -461,15 +435,10 @@ int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 				 intptr_t *buflen ATTRIBUTE((unused)),
 				 MPIR_Request **rreqp ATTRIBUTE((unused)) )
 {
-
     
-
-
-
 
     return MPI_SUCCESS;
 }
-
 
 /* ------------------------------------------------------------------------- */
 /* This routine may be called within a channel to initialize an 
@@ -486,7 +455,6 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
     int mpi_errno = MPI_SUCCESS;
 
     
-
 
     /* Check that the array is large enough */
     if (arraySize < MPIDI_CH3_PKT_END_CH3) {
@@ -529,7 +497,6 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 #endif
     /* Provision for flow control */
     pktArray[MPIDI_CH3_PKT_FLOW_CNTL_UPDATE] = 0;
-
 
     /* Default RMA operations */
     /* FIXME: This should be initialized by a separate, RMA routine.

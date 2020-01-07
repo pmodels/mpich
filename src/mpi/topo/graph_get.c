@@ -59,10 +59,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
     MPIR_Topology *topo_ptr;
     int i, n, *vals;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -125,9 +122,7 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

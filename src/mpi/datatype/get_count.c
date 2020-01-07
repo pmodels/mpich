@@ -57,7 +57,6 @@ void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_A
     }
 }
 
-
 #endif
 
 /*@
@@ -86,10 +85,7 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint count_x;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -128,7 +124,6 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

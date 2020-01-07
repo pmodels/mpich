@@ -114,7 +114,6 @@ static int ckpt_cb(void *arg)
     if (rc < 0) {
         ckpt_result = CKPT_ERROR;
     } else if (rc) {
-
         ckpt_result = CKPT_RESTART;
         ri = cr_get_restart_info();
         CHECK_ERR(!ri, "cr_get_restart_info");
@@ -131,7 +130,6 @@ static int ckpt_cb(void *arg)
             CHECK_ERR_MPI(mpi_errno, mpi_errno, "ckpt_restart failed");
         }
     } else {
-
         ckpt_result = CKPT_CONTINUE;
 
         if (MPID_nem_netmod_func->ckpt_continue) {
@@ -156,9 +154,6 @@ int MPIDI_nem_ckpt_init(void)
     cr_client_id_t client_id;
     int ret;
 
-
-
-
     if (!MPIR_CVAR_NEMESIS_ENABLE_CKPOINT)
         goto fn_exit;
     
@@ -177,7 +172,6 @@ int MPIDI_nem_ckpt_init(void)
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIR_Strerror(errno));
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -188,16 +182,12 @@ int MPIDI_nem_ckpt_finalize(void)
     int mpi_errno = MPI_SUCCESS;
     int ret;
 
-
-
-
     ret = sem_destroy(&ckpt_sem);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIR_Strerror(errno));
     ret = sem_destroy(&cont_sem);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIR_Strerror(errno));
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -210,9 +200,6 @@ static int reinit_pmi(void)
     int pg_rank, pg_size;
     int kvs_name_sz, pg_id_sz;
     
-
-
-
 
     /* Init pmi and do some sanity checks */
     ret = PMI_Init(&has_parent);
@@ -255,7 +242,6 @@ static int reinit_pmi(void)
 
     return 0;
 }
-
 
 static int restore_env(pid_t parent_pid, int rank)
 {
@@ -308,9 +294,6 @@ static int open_io_socket(socktype_t socktype, int rank, int dupfd)
     int len;
     char *id_p;
 
-
-
-
     memset(&sock_addr, 0, sizeof(sock_addr));
     memset(&addr, 0, sizeof(addr));
 
@@ -360,9 +343,6 @@ static int restore_stdinouterr(int rank)
 {
     int ret;
 
-
-
-
     if (rank == 0) {
         ret = open_io_socket(IN_SOCK,  rank, 0);
         CHECK_ERR(ret, "open stdin socket");
@@ -372,18 +352,13 @@ static int restore_stdinouterr(int rank)
     ret = open_io_socket(ERR_SOCK, rank, 2);
     CHECK_ERR(ret, "open stdin socket");
 
-
     return 0;
 }
-
 
 int MPIDI_nem_ckpt_start(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-
-
-
 
     if (checkpointing)
         goto fn_exit;
@@ -428,7 +403,6 @@ int MPIDI_nem_ckpt_start(void)
     
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
 
@@ -440,9 +414,6 @@ int MPIDI_nem_ckpt_finish(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
-
-
-
 
     /* Since we're checkpointing the shared memory region (i.e., the
        channels between local procs), we don't have to flush those
@@ -484,22 +455,17 @@ int MPIDI_nem_ckpt_finish(void)
     checkpointing = FALSE;
     
 fn_exit:
-
     return mpi_errno;
 fn_fail:
 
     goto fn_exit;
 }
 
-
 static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
                                    intptr_t *buflen, MPIR_Request **req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_ckpt_marker_t * const ckpt_pkt = (MPID_nem_pkt_ckpt_marker_t *)pkt;
-
-
-
 
     if (!checkpointing) {
         mpi_errno = MPIDI_nem_ckpt_start();
@@ -524,20 +490,15 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
     *req = NULL;
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
 
     goto fn_exit;
 }
 
-
 int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* Check that the array is large enough */
     if (arraySize <= MPIDI_CH3_PKT_END_ALL) {
@@ -547,7 +508,6 @@ int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arr
     pktArray[MPIDI_NEM_PKT_CKPT_MARKER] = pkt_ckpt_marker_handler;
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

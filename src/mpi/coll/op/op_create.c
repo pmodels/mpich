@@ -65,7 +65,6 @@ void MPII_Op_set_fc(MPI_Op op)
 }
 #endif
 
-
 int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     MPIR_Op *op_ptr;
@@ -135,12 +134,10 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* ... body of routine ...  */
 
@@ -151,11 +148,9 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

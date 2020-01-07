@@ -16,9 +16,6 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     int found = 0;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
@@ -96,7 +93,6 @@ int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     *flag = found;
 
  fn_exit:    
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

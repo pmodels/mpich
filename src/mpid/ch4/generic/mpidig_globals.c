@@ -25,9 +25,6 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     MPIR_Request *sreq = NULL;
     MPIDIG_hdr_t am_hdr;
 
-
-
-
     am_hdr.src_rank = comm->rank;
     am_hdr.tag = exit_code;
     am_hdr.context_id = comm->context_id + MPIR_CONTEXT_INTRA_PT2PT;
@@ -55,7 +52,6 @@ int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code)
     }
 
   fn_exit:
-
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPL_exit(exit_code);
 

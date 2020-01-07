@@ -16,77 +16,49 @@
 
 int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 int MPID_Comm_remote_group_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 int MPID_Comm_group_failed(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return 0;
 }
 
 int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return 0;
 }
 
 int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return 0;
 }
 
 int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group, int tag)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return 0;
 }
@@ -96,9 +68,6 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
 {
     MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
                                      key, &comm_ptr);
@@ -124,7 +93,6 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
         MPIR_Comm_free_impl(comm_ptr);
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
@@ -136,8 +104,6 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-
-
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
@@ -202,7 +168,6 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
 #endif
 #endif
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -213,7 +178,6 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-
 
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
@@ -280,7 +244,6 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -309,8 +272,6 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
      * CH4 only cares about LUPID. GUPID extraction and exchange should be done
      * by netmod
      */
-
-
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(5);

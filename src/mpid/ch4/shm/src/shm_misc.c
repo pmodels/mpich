@@ -13,11 +13,7 @@ int MPIDI_SHMI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_get_local_upids(comm, local_upid_size, local_upids);
-
 
     return ret;
 }
@@ -27,11 +23,7 @@ int MPIDI_SHMI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
-
 
     return ret;
 }
@@ -40,11 +32,7 @@ int MPIDI_SHMI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, co
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_create_intercomm_from_lpids(newcomm_ptr, size, lpids);
-
 
     return ret;
 }

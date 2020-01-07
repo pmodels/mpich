@@ -98,7 +98,6 @@ struct MPIR_Datatype {
     struct MPIR_Attribute *attributes;
     char name[MPI_MAX_OBJECT_NAME];
 
-
     /* private fields */
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;

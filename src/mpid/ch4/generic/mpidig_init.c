@@ -18,11 +18,8 @@ int MPIDIG_am_reg_cb(int handler_id,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIDIG_global.target_msg_cbs[handler_id] = target_msg_cb;
     MPIDIG_global.origin_cbs[handler_id] = origin_cb;
-
 
     return mpi_errno;
 }
@@ -30,8 +27,6 @@ int MPIDIG_am_reg_cb(int handler_id,
 int MPIDIG_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPIDI_global.is_ch4u_initialized = 0;
 
@@ -188,7 +183,6 @@ int MPIDIG_init(void)
 
     MPIDI_global.is_ch4u_initialized = 1;
 
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -197,13 +191,9 @@ int MPIDIG_init(void)
 
 void MPIDIG_finalize(void)
 {
-
-
-
     MPIDI_global.is_ch4u_initialized = 0;
     MPIDIU_map_destroy(MPIDI_global.win_map);
     MPIDIU_destroy_buf_pool(MPIDI_global.buf_pool);
     MPL_free(MPIDI_global.comm_req_lists);
-
 
 }

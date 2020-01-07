@@ -110,9 +110,6 @@ int MPI_T_init_thread(int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* ... body of routine ...  */
 
 #if defined MPICH_IS_THREADED
@@ -132,7 +129,6 @@ int MPI_T_init_thread(int required, int *provided)
     }
 
     /* ... end of body of routine ... */
-
 
     return mpi_errno;
 }

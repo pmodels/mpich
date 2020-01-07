@@ -1139,9 +1139,6 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
     PMI_keyval_t *kv = 0;
     int nkeys = 0, vallen, flag, mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (!info_ptr || info_ptr->handle == MPI_INFO_NULL)
         goto fn_exit;
 
@@ -1166,16 +1163,12 @@ static int mpi_to_pmi_keyvals(MPIR_Info * info_ptr, PMI_keyval_t ** kv_ptr, int 
     *nkeys_ptr = nkeys;
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
 static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
 {
-
-
-
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < counts[i]; j++) {
             MPL_free((char *) kv[i][j].key);
@@ -1183,7 +1176,6 @@ static void free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
         }
         MPL_free(kv[i]);
     }
-
 
 }
 #endif /* USE_PMI1_API or USE_PMI2_API */

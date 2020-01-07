@@ -18,8 +18,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -42,8 +40,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
 MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -68,8 +64,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -93,8 +87,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -114,12 +106,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
     goto fn_exit;
 }
 
-
 MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -144,8 +133,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -168,8 +155,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
 MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -194,8 +179,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -218,8 +201,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -246,7 +227,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 {
     int mpi_errno;
 
-
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -256,7 +236,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -265,8 +244,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -291,8 +268,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -315,8 +290,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
@@ -341,8 +314,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -366,8 +337,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
 {
     int mpi_errno;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();
 
@@ -390,8 +359,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     MPIDI_workq_vci_progress_unsafe();

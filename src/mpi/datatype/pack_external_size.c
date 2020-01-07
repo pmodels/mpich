@@ -29,7 +29,6 @@ int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datat
 
 #endif
 
-
 /*@
   MPI_Pack_external_size - Returns the upper bound on the amount of
   space needed to pack a message using MPI_Pack_external.
@@ -56,10 +55,7 @@ int MPI_Pack_external_size(const char datarep[],
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -104,7 +100,6 @@ int MPI_Pack_external_size(const char datarep[],
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

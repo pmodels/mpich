@@ -62,10 +62,7 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
     MPIR_Topology *cart_ptr;
     int i, n, *vals;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -144,7 +141,6 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

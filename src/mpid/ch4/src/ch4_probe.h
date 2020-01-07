@@ -21,8 +21,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
 {
     int mpi_errno;
 
-
-
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
 #else
@@ -40,7 +38,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -57,8 +54,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
     return MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
 #else
     int mpi_errno = MPI_SUCCESS;
-
-
 
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
@@ -87,9 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 #endif
@@ -102,8 +95,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
@@ -114,9 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -130,8 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
     MPIDI_workq_vci_progress_unsafe();
@@ -142,9 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -155,8 +140,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 {
     int mpi_errno, flag = 0;
     MPIDI_av_entry_t *av = NULL;
-
-
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
@@ -169,13 +152,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
-
 
 MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                          int tag,
@@ -185,8 +165,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
     MPIDI_av_entry_t *av = NULL;
-
-
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
@@ -200,7 +178,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -215,8 +192,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
 
-
-
     *flag = 0;
     av = MPIDIU_comm_rank_to_av(comm, source);
 
@@ -229,7 +204,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -240,11 +214,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
                                          MPIR_Comm * comm,
                                          int context_offset, int *flag, MPI_Status * status)
 {
-
     int mpi_errno;
     MPIDI_av_entry_t *av = NULL;
-
-
 
     *flag = 0;
     av = MPIDIU_comm_rank_to_av(comm, source);
@@ -258,7 +229,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

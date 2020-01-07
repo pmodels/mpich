@@ -66,7 +66,6 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
      * created */
     MPL_UNREFERENCED_ARG(complete);
 
-
     /* Try to cancel the underlying request */
     mpi_errno = MPIR_Cancel(req);
     MPIR_ERR_CHECK(mpi_errno);
@@ -116,7 +115,6 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     goto fn_exit;
 }
 
-
 #endif
 
 /*@
@@ -153,12 +151,10 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate handle parameters needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -231,11 +227,9 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* FIXME: should we be setting the request at all in the case of an error? */

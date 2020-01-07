@@ -12,9 +12,6 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *comple
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
 
-
-
-
     /* Use the associated function rather than switching on the old ca field */
     /* Routines can call the attached function directly */
     reqFn = sreq->dev.OnDataAvail;
@@ -29,7 +26,6 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *comple
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -100,9 +96,6 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIR_Win *win_ptr;
     int pkt_flags = rreq->dev.pkt_flags;
 
-
-
-
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
      * within the same req handler on the same request.
@@ -147,13 +140,10 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     *complete = TRUE;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
@@ -161,9 +151,6 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Win *win_ptr;
     int pkt_flags = rreq->dev.pkt_flags;
 
-
-
-
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
      * within the same req handler on the same request.
@@ -208,9 +195,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     *complete = TRUE;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -221,9 +206,6 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Win *win_ptr;
     int pkt_flags = rreq->dev.pkt_flags;
 
-
-
-
     /* NOTE: It is possible that this request is already completed before
      * entering this handler. This happens when this req handler is called
      * within the same req handler on the same request.
@@ -268,13 +250,10 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     *complete = TRUE;
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIDI_CH3_ReqHandler_SendReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)), MPIR_Request * sreq,
                                        int *complete)

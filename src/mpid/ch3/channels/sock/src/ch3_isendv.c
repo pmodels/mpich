@@ -11,9 +11,6 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
 {
     int i;
 
-
-
-
     for (i = 0; i < iov_count; i++) {
         sreq->dev.iov[i] = iov[i];
     }
@@ -27,7 +24,6 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
     sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
     sreq->dev.iov_count = iov_count;
 
-
 }
 
 int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_iov)
@@ -35,9 +31,6 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
-
-
-
 
     MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
     MPIR_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));

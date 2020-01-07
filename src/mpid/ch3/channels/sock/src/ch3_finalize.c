@@ -11,9 +11,6 @@ int MPIDI_CH3_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPIDI_CH3I_Progress_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 

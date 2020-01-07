@@ -38,7 +38,6 @@ MPIR_Topology *MPIR_Topology_get(MPIR_Comm * comm_ptr)
                                    &topo_ptr, &flag, MPIR_ATTR_PTR);
     if (mpi_errno)
         return NULL;
-
     if (flag)
         return topo_ptr;
     return NULL;
@@ -83,7 +82,6 @@ static int MPIR_Topology_finalize(void *p ATTRIBUTE((unused)))
     }
     return 0;
 }
-
 
 static int *MPIR_Copy_array(int n, const int a[], int *err)
 {
@@ -224,7 +222,6 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
     return MPI_SUCCESS;
 }
 
-
 /* the next two routines implement the following behavior (quoted from Section
  * 7.6 of the MPI-3.0 standard):
  *
@@ -287,9 +284,6 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
 
-
-
-
     topo_ptr = MPIR_Topology_get(comm_ptr);
     MPIR_ERR_CHKANDJUMP(!topo_ptr, mpi_errno, MPI_ERR_TOPOLOGY, "**notopology");
 
@@ -341,7 +335,6 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
 #endif
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

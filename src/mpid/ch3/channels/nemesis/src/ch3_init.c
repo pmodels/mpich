@@ -54,7 +54,6 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
@@ -86,9 +85,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-
-
-
     /* Override split_type */
     MPIR_Comm_fns = &comm_fns;
 
@@ -113,7 +109,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -123,12 +118,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
    MPI Port functions */
 int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
 {
-
-
-
-
     MPL_UNREFERENCED_ARG(portFns);
-
 
     return 0;
 }
@@ -137,14 +127,10 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPID_nem_get_business_card(myRank, value, length);
     MPIR_ERR_CHECK(mpi_errno);
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -154,9 +140,6 @@ fn_fail:
 int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* FIXME: Circular dependency.  Before calling MPIDI_CH3_Init,
        MPID_Init calls InitPG which calls MPIDI_PG_Create which calls
@@ -197,9 +180,6 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* no need to destroy vc to self, this corresponds to the optimization above
      * in MPIDI_CH3_VC_Init */
     if (vc->pg == MPIDI_CH3I_my_pg && vc->pg_rank == MPIDI_CH3I_my_rank) {
@@ -210,7 +190,6 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
     mpi_errno = MPID_nem_vc_destroy(vc);
 
 fn_exit:
-
     return mpi_errno;
 }
 
@@ -220,9 +199,6 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;
     MPIR_CHKPMEM_DECL(1);
-
-
-
 
     *new_vc = NULL; /* so that the err handling knows to cleanup */
 
@@ -246,7 +222,6 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     /* freeing without giving the lower layer a chance to cleanup can lead to
@@ -270,26 +245,17 @@ const char * MPIDI_CH3_VC_GetStateString( struct MPIDI_VC *vc )
 /* We don't initialize before calling MPIDI_CH3_VC_Init */
 int MPIDI_CH3_PG_Init(MPIDI_PG_t *pg_p)
 {
-
-
-
     MPL_UNREFERENCED_ARG(pg_p);
-
 
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PG_Destroy(MPIDI_PG_t *pg_p)
 {
-
-
-
     MPL_UNREFERENCED_ARG(pg_p);
-
 
     return MPI_SUCCESS;
 }
-
 
 typedef struct initcomp_cb
 {
@@ -309,8 +275,6 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
     initcomp_cb_t *ep;
     MPIR_CHKPMEM_DECL(1);
 
-
-
     MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element", MPL_MEM_OTHER);
 
     ep->callback = callback;
@@ -318,7 +282,6 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
 
     MPIR_CHKPMEM_COMMIT();
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -331,8 +294,6 @@ int MPIDI_CH3_InitCompleted(void)
     initcomp_cb_t *ep;
     initcomp_cb_t *ep_tmp;
 
-
-
     ep = INITCOMP_S_TOP();
     while (ep)
     {
@@ -344,7 +305,6 @@ int MPIDI_CH3_InitCompleted(void)
     }
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

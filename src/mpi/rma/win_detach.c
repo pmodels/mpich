@@ -30,7 +30,6 @@ int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("P
 /*@
 MPI_Win_detach - Detach memory from a dynamic window
 
-
 Detaches a previously attached memory region beginning at base. The arguments
 base and win must match the arguments passed to a previous call to
 'MPI_Win_attach'.
@@ -61,12 +60,10 @@ int MPI_Win_detach(MPI_Win win, const void *base)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -108,11 +105,9 @@ int MPI_Win_detach(MPI_Win win, const void *base)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

@@ -33,7 +33,6 @@ int MPI_Rget(void *origin_addr, int origin_count,
 /*@
 MPI_Rget - Get data from a memory window on a remote process
 
-
 'MPI_Rget' is similar to 'MPI_Get', except that it allocates a communication
 request object and associates it with the request handle (the argument request)
 that can be used to wait or test for completion. The completion of an 'MPI_Rget'
@@ -77,12 +76,10 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
     MPIR_Win *win_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -171,11 +168,9 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

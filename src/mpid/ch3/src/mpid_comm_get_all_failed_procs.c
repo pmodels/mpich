@@ -90,9 +90,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     int *bitarray, *remote_bitarray;
     MPIR_Group *local_fail;
 
-
-
-
     /* Kick the progress engine in case it's been a while so we get all the
      * latest updates about failures */
     MPID_Progress_poke();
@@ -152,7 +149,6 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     MPL_free(remote_bitarray);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -59,10 +59,7 @@ int MPI_Comm_get_parent(MPI_Comm * parent)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -86,7 +83,6 @@ int MPI_Comm_get_parent(MPI_Comm * parent)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

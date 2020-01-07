@@ -43,9 +43,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     mpi_errno = MPIR_Sched_next_tag(comm, &tag);
     MPIR_ERR_CHECK(mpi_errno);
 
-
-
-
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
                      "Scheduling scatter followed by recursive exchange allgather based broadcast on %d ranks, root=%d\n",
@@ -80,7 +77,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     for (i = 1; i < size; i++) {
         displs[i] = displs[i - 1] + cnts[i - 1];
     }
-
 
     if (is_contig) {
         /* contiguous. no need to pack. */
@@ -168,7 +164,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
                              child, tag, comm, sched, num_send_dependencies, &recv_id);
     }
 
-
     MPIR_Treealgo_tree_free(&my_tree);
     MPIR_TSP_sched_fence(sched);        /* wait for scatter to complete */
 
@@ -177,7 +172,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
         MPIR_TSP_Iallgatherv_sched_intra_recexch(MPI_IN_PLACE, cnts[rank], MPI_BYTE, tmp_buf, cnts,
                                                  displs, MPI_BYTE, comm, 0, allgatherv_k, sched);
     MPIR_ERR_CHECK(mpi_errno);
-
 
     if (!is_contig) {
         if (rank != root) {
@@ -198,7 +192,6 @@ int MPIR_TSP_Ibcast_sched_intra_scatterv_allgatherv(void *buffer, int count,
     goto fn_exit;
 }
 
-
 /* Non-blocking scatter followed by recursive exchange allgather  based broadcast */
 int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datatype datatype,
                                               int root, MPIR_Comm * comm, int scatterv_k,
@@ -206,9 +199,6 @@ int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datat
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -228,7 +218,6 @@ int MPIR_TSP_Ibcast_intra_scatterv_allgatherv(void *buffer, int count, MPI_Datat
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

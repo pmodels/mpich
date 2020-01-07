@@ -42,10 +42,7 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
     static PreDefined_attrs attr_copy;  /* Used to provide a copy of the
                                          * predefined attributes */
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -248,9 +245,7 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
@@ -283,9 +278,7 @@ int MPII_Comm_get_attr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
     return mpi_errno;
 }
 
-
 #endif /* MPICH_MPI_FROM_PMPI */
-
 
 /* FIXME: Attributes must be visable from all languages */
 /*@
@@ -323,12 +316,10 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Instead, ask for a desired type. */
     mpi_errno = MPII_Comm_get_attr(comm, comm_keyval, attribute_val, flag, MPIR_ATTR_PTR);
@@ -337,11 +328,9 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

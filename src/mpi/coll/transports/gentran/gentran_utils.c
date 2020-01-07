@@ -35,9 +35,6 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 {
     int i;
 
-
-
-
     /* Check if the vertex has not already been issued and its
      * incoming dependencies have completed */
     if (vtxp->vtx_state == MPII_GENUTIL_VTX_STATE__INIT && vtxp->pending_dependencies == 0) {
@@ -110,7 +107,6 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_issue(vtxp, sched);
                 }
                 break;
-
 
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:{
                     vtx_record_issue(vtxp, sched);
@@ -193,9 +189,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #endif
     }
 
-
 }
-
 
 static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
@@ -232,7 +226,6 @@ static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_
 
     LL_DELETE(sched->issued_head, sched->issued_tail, vtxp);
 }
-
 
 int MPII_Genutil_progress_hook(int *made_progress)
 {
@@ -272,7 +265,6 @@ int MPII_Genutil_progress_hook(int *made_progress)
     return mpi_errno;
 }
 
-
 void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
 {
     vtx_t *dst = (vtx_t *) _dst;
@@ -292,7 +284,6 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
     dst->next = src->next;
 }
 
-
 void MPII_Genutil_vtx_dtor(void *_elt)
 {
     vtx_t *elt = (vtx_t *) _elt;
@@ -300,7 +291,6 @@ void MPII_Genutil_vtx_dtor(void *_elt)
     utarray_free(elt->in_vtcs);
     utarray_free(elt->out_vtcs);
 }
-
 
 void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
                                        int n_in_vtcs, int *in_vtcs)
@@ -358,7 +348,6 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     }
 }
 
-
 int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** vtx)
 {
     MPII_Genutil_vtx_t *vtxp;
@@ -379,15 +368,11 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
     return vtxp->vtx_id;        /* return vertex vtx_id */
 }
 
-
 int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
     vtx_t *vtxp, *vtxp_tmp;
-
-
-
 
     if (sched->total_vtcs == 0) /* NULL schedule, nothing to issue */
         goto done;
@@ -543,7 +528,6 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

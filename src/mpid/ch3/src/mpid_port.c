@@ -41,9 +41,6 @@ int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
 
-
-
-
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
@@ -86,9 +83,6 @@ int MPID_Close_port(const char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
 
-
-
-
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
     if (setupPortFunctions) {
@@ -116,9 +110,6 @@ int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
 		     MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -148,9 +139,6 @@ int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
 		      MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
-
-
-
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -232,7 +220,6 @@ static int get_port_name_tag(int * port_name_tag)
 
 fn_exit:
     return mpi_errno;
-
 fn_fail:
     /* Everything is used up */
     *port_name_tag = -1;
@@ -262,9 +249,6 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
                               which is then returned as the port name */
     int myRank = MPIR_Process.comm_world->rank;
 
-
-
-
     mpi_errno = get_port_name_tag(&port_name_tag);
     MPIR_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
 
@@ -287,7 +271,6 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
     mpi_errno = MPIDI_CH3I_Port_init(port_name_tag);
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -301,9 +284,6 @@ static int MPIDI_Close_port(const char *port_name)
     int mpi_errno = MPI_SUCCESS;
     int port_name_tag;
 
-
-
-
     mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
 
@@ -312,7 +292,6 @@ static int MPIDI_Close_port(const char *port_name)
     mpi_errno = MPIDI_CH3I_Port_destroy(port_name_tag);
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;

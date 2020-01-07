@@ -43,9 +43,6 @@ int MPI_Initialized(int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -71,7 +68,6 @@ int MPI_Initialized(int *flag)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

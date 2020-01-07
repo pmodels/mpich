@@ -36,7 +36,6 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 MPI_Rget_accumulate - Perform an atomic, one-sided read-and-accumulate
 operation and return a request handle for the operation.
 
-
 'MPI_Rget_accumulate' is similar to 'MPI_Get_accumulate', except that it allocates
 a communication request object and associates it with the request handle (the
 argument request) that can be used to wait or test for completion. The
@@ -94,12 +93,10 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPIR_Win *win_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -209,11 +206,9 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

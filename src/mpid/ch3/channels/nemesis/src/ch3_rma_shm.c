@@ -7,15 +7,11 @@
 #include "mpidi_ch3_impl.h"
 #include "mpidrma.h"
 
-
 int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
                                    int *disp_unit, void *baseptr)
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (win_ptr->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
@@ -57,20 +53,14 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
-
 int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         goto fn_exit;
@@ -143,9 +133,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

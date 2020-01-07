@@ -32,7 +32,6 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
 memory window.
 
-
 This function queries the process-local address for remote memory segments
 created with 'MPI_Win_allocate_shared'. This function can return different
 process-local addresses for the same physical memory on different processes.
@@ -74,12 +73,10 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -128,11 +125,9 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

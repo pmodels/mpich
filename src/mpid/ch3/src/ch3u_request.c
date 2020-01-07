@@ -26,9 +26,6 @@
    use macros in mpidimpl.h *instead* of this routine */
 void MPID_Request_create_hook(MPIR_Request *req)
 {
-
-
-
     
     req->dev.datatype_ptr	   = NULL;
     req->dev.msg_offset         = 0;
@@ -62,12 +59,9 @@ void MPID_Request_create_hook(MPIR_Request *req)
 #endif
 }
 
-
 /* ------------------------------------------------------------------------- */
 /* Here are the routines to manipulate the iovs in the requests              */
 /* ------------------------------------------------------------------------- */
-
-
 
 /*
  * MPIDI_CH3U_Request_load_send_iov()
@@ -84,9 +78,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 {
     MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     last = sreq->dev.msgsize;
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
@@ -181,13 +172,10 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
-
 
 /*
  * MPIDI_CH3U_Request_load_recv_iov()
@@ -201,9 +189,6 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
     MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (rreq->dev.orig_msg_offset == MPIDI_LOAD_RECV_IOV_ORIG_MSG_OFFSET_UNSET) {
         rreq->dev.orig_msg_offset = rreq->dev.msg_offset;
@@ -397,7 +382,6 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
     }
     
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -413,7 +397,6 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     
-
 
     tmpbuf_last = (int)(rreq->dev.msg_offset + rreq->dev.tmpbuf_sz);
     if (rreq->dev.msgsize < tmpbuf_last)
@@ -474,7 +457,6 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 	rreq->dev.msg_offset = last;
     }
 
-
     return mpi_errno;
 }
 
@@ -491,10 +473,6 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
     MPIR_Datatype * dt_ptr;
     intptr_t unpack_sz;
     int mpi_errno = MPI_SUCCESS;
-
-
-
-
 
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, 
 			    dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
@@ -552,7 +530,6 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	    }
 	}
     }
-
 
     return mpi_errno;
 }

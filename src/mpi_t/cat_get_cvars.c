@@ -67,10 +67,8 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-
 
     /* Validate parameters */
 #ifdef HAVE_ERROR_CHECKING
@@ -96,10 +94,8 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[])
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

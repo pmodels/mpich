@@ -27,9 +27,6 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     MPIDIG_hdr_t am_hdr;
     MPIDIG_ssend_req_msg_t ssend_req;
 
-
-
-
     if (sreq == NULL) {
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -96,9 +93,7 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -113,17 +108,12 @@ static inline int MPIDIG_isend_coll_impl(const void *buf, MPI_Aint count, MPI_Da
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                   request, is_blocking, type, *errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -135,17 +125,12 @@ static inline int MPIDIG_am_isend(const void *buf, MPI_Aint count, MPI_Datatype 
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                   request, is_blocking, type, MPIR_ERR_NONE);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -159,11 +144,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_BLOCKING, MPIDIG_SEND);
-
 
     return mpi_errno;
 }
@@ -176,12 +158,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_send_coll(const void *buf, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno =
         MPIDIG_isend_coll_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                                MPIDI_BLOCKING, MPIDIG_SEND, errflag);
-
 
     return mpi_errno;
 }
@@ -195,15 +174,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_NONBLOCKING, MPIDIG_SEND);
 
-
     return mpi_errno;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank,
@@ -213,16 +188,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno =
         MPIDIG_isend_coll_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                                MPIDI_NONBLOCKING, MPIDIG_SEND, errflag);
 
-
     return mpi_errno;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
                                               MPI_Aint count,
@@ -233,15 +204,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_BLOCKING, MPIDIG_SEND);
 
-
     return mpi_errno;
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
                                                MPI_Aint count,
@@ -252,11 +219,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_NONBLOCKING, MPIDIG_SEND);
-
 
     return mpi_errno;
 }
@@ -270,11 +234,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_BLOCKING, MPIDIG_SSEND_REQ);
-
 
     return mpi_errno;
 }
@@ -288,11 +249,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno = MPIDIG_am_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                 request, MPIDI_NONBLOCKING, MPIDIG_SSEND_REQ);
-
 
     return mpi_errno;
 }
@@ -301,11 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_send(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* cannot cancel send */
-
 
     return mpi_errno;
 }

@@ -13,20 +13,10 @@
 
 int MPID_Op_commit_hook(MPIR_Op * op)
 {
-
-
-
     return 0;
-
-
 }
 
 int MPID_Op_free_hook(MPIR_Op * op)
 {
-
-
-
     return 0;
-
-
 }

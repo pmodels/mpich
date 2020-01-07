@@ -18,9 +18,6 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *shm_group_ptr;
 
-
-
-
     for (i = 0; i < shm_comm_ptr->local_size; i++)
         shm_ranks[i] = i;
 
@@ -43,7 +40,6 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -59,8 +55,6 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
     size_t total_shm_size = 0;
     MPIDIG_win_shared_info_t *shared_table = NULL;
     int *ranks_in_shm_grp = NULL;
-
-
 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
@@ -151,8 +145,6 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     MPIDI_XPMEM_win_t *xpmem_win = &win->dev.shm.xpmem;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
 
-
-
     if (!shm_comm_ptr || win->create_flavor != MPI_WIN_FLAVOR_CREATE ||
         !MPIDIG_WIN(win, shared_table))
         goto fn_exit;
@@ -169,7 +161,6 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     MPL_free(xpmem_win->regist_segs);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -41,9 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     int i;
     MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
-
-
-
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
 #endif /* MPL_USE_DBG_LOGGING */
@@ -102,7 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -115,9 +111,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks);
@@ -125,7 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -13,11 +13,7 @@ void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_alloc_mem(size, info_ptr);
-
 
     return ret;
 }
@@ -26,11 +22,7 @@ int MPIDI_SHMI_mpi_free_mem(void *ptr)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_free_mem(ptr);
-
 
     return ret;
 }

@@ -30,7 +30,6 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #undef MPI_Testall
 #define MPI_Testall PMPI_Testall
 
-
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[], int requests_property)
 {
@@ -81,7 +80,6 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                  MPI_Status array_of_statuses[])
@@ -299,11 +297,9 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -338,11 +334,8 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     /* ... end of body of routine ... */
 
   fn_exit:
-
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

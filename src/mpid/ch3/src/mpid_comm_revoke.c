@@ -25,9 +25,6 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_revoke_t *revoke_pkt = &upkt.revoke;
 
-
-
-
     if (0 == comm_ptr->revoked) {
         /* Mark the communicator as revoked locally */
         comm_ptr->revoked = 1;
@@ -93,7 +90,6 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
             MPIR_Comm_release(comm_ptr);
         }
     }
-
 
     return MPI_SUCCESS;
 }

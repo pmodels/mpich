@@ -21,17 +21,10 @@ static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
                                          MPIR_Comm * comm, int context_offset,
                                          MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
-
-
-
 
 static inline int MPIDI_STUBSHM_irsend(const void *buf,
                                        MPI_Aint count,
@@ -41,11 +34,7 @@ static inline int MPIDI_STUBSHM_irsend(const void *buf,
                                        MPIR_Comm * comm, int context_offset,
                                        MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -58,11 +47,7 @@ static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -75,11 +60,7 @@ static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -92,22 +73,14 @@ static inline int MPIDI_STUBSHM_mpi_issend(const void *buf,
                                            MPIR_Comm * comm, int context_offset,
                                            MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_STUBSHM_mpi_cancel_send(MPIR_Request * sreq)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }

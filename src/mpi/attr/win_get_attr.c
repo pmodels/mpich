@@ -32,12 +32,10 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -185,7 +183,6 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
@@ -237,10 +234,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
     MPIR_Win *win_ptr = NULL;
 #endif
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* ... body of routine ...  */
     mpi_errno = MPII_Win_get_attr(win, win_keyval, attribute_val, flag, MPIR_ATTR_PTR);
@@ -249,9 +243,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
 #ifdef HAVE_ERROR_CHECKING

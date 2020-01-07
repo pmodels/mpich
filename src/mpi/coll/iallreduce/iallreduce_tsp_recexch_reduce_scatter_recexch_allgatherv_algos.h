@@ -86,7 +86,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     vtcs = MPL_malloc(sizeof(int) * (step2_nphases) * k, MPL_MEM_COLL);
     tmp_recvbuf = MPIR_TSP_sched_malloc(count * extent, sched);
 
-
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
     if (in_step2 && !is_inplace && count > 0) { /* copy the data to tmp_recvbuf but only if you are a rank participating in Step 2 */
         dtcopy_id = MPIR_TSP_sched_localcopy(sendbuf, count, datatype,
@@ -176,7 +175,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking recexch_reduce_scatter_recexch_allgatherv based ALLREDUCE */
 int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const void *sendbuf,

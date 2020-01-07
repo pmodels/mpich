@@ -17,11 +17,7 @@ static inline int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
 
-
-
-
     ret = MPIDIU_rank_is_local(rank, comm);
-
 
     return ret;
 }
@@ -30,11 +26,7 @@ static inline int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
 
-
-
-
     ret = MPIDIU_av_is_local(av);
-
 
     return ret;
 }

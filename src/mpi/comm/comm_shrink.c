@@ -50,9 +50,6 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     int attempts = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-
-
-
     /* TODO - Implement this function for intercommunicators */
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
 
@@ -137,12 +134,10 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #ifdef HAVE_ERROR_CHECKING
@@ -181,11 +176,9 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm * newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

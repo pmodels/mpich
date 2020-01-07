@@ -21,11 +21,7 @@ static inline int MPIDI_STUBSHM_mpi_put(const void *origin_addr,
                                         int target_count, MPI_Datatype target_datatype,
                                         MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -38,11 +34,7 @@ static inline int MPIDI_STUBSHM_mpi_get(void *origin_addr,
                                         int target_count, MPI_Datatype target_datatype,
                                         MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -56,15 +48,10 @@ static inline int MPIDI_STUBSHM_mpi_rput(const void *origin_addr,
                                          MPI_Datatype target_datatype,
                                          MPIR_Win * win, MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
-
 
 static inline int MPIDI_STUBSHM_mpi_compare_and_swap(const void *origin_addr,
                                                      const void *compare_addr,
@@ -73,11 +60,7 @@ static inline int MPIDI_STUBSHM_mpi_compare_and_swap(const void *origin_addr,
                                                      int target_rank, MPI_Aint target_disp,
                                                      MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -91,11 +74,7 @@ static inline int MPIDI_STUBSHM_mpi_raccumulate(const void *origin_addr,
                                                 MPI_Datatype target_datatype,
                                                 MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -113,11 +92,7 @@ static inline int MPIDI_STUBSHM_mpi_rget_accumulate(const void *origin_addr,
                                                     MPI_Op op, MPIR_Win * win,
                                                     MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -128,15 +103,10 @@ static inline int MPIDI_STUBSHM_mpi_fetch_and_op(const void *origin_addr,
                                                  int target_rank,
                                                  MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
-
 
 static inline int MPIDI_STUBSHM_mpi_rget(void *origin_addr,
                                          int origin_count,
@@ -147,15 +117,10 @@ static inline int MPIDI_STUBSHM_mpi_rget(void *origin_addr,
                                          MPI_Datatype target_datatype,
                                          MPIR_Win * win, MPIR_Request ** request)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
-
 
 static inline int MPIDI_STUBSHM_mpi_get_accumulate(const void *origin_addr,
                                                    int origin_count,
@@ -169,11 +134,7 @@ static inline int MPIDI_STUBSHM_mpi_get_accumulate(const void *origin_addr,
                                                    MPI_Datatype target_datatype, MPI_Op op,
                                                    MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
@@ -187,11 +148,7 @@ static inline int MPIDI_STUBSHM_mpi_accumulate(const void *origin_addr,
                                                MPI_Datatype target_datatype, MPI_Op op,
                                                MPIR_Win * win)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }

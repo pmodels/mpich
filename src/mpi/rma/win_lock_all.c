@@ -30,7 +30,6 @@ int MPI_Win_lock_all(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_
 /*@
 MPI_Win_lock_all - Begin an RMA access epoch at all processes on the given window.
 
-
 Starts an RMA access epoch to all processes in win, with a lock type of
 'MPI_Lock_shared'. During the epoch, the calling process can access the window
 memory on all processes in win by using RMA operations. A window locked with
@@ -79,12 +78,10 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -134,11 +131,9 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

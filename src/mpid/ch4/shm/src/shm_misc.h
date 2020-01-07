@@ -16,11 +16,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int i
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_comm_get_lpid(comm_ptr, idx, lpid_ptr, is_remote);
-
 
     return ret;
 }

@@ -25,7 +25,6 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #undef MPI_Op_free
 #define MPI_Op_free PMPI_Op_free
 
-
 void MPIR_Op_free_impl(MPI_Op * op)
 {
     MPIR_Op *op_ptr = NULL;
@@ -70,12 +69,10 @@ int MPI_Op_free(MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -111,7 +108,6 @@ int MPI_Op_free(MPI_Op * op)
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

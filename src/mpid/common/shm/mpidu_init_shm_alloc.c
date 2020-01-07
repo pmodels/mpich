@@ -58,9 +58,6 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     memory_list_t *memory_node = NULL;
     MPIR_CHKPMEM_DECL(3);
 
-
-
-
     MPIR_Assert(segment_len > 0);
 
     /* allocate an area to check if the segment was allocated symmetrically */
@@ -142,7 +139,6 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -159,9 +155,6 @@ int MPIDU_Init_shm_free(void *ptr)
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     MPIDU_shm_seg_t *memory = NULL;
     memory_list_t *el = NULL;
-
-
-
 
     /* retrieve memory handle for baseaddr */
     LL_FOREACH(memory_head, el) {
@@ -215,9 +208,6 @@ static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (MPIR_Process.local_rank == 0) {
         asym_check_region_p->base_ptr = memory->base_addr;
         OPA_store_int(&asym_check_region_p->is_asym, 0);
@@ -239,7 +229,6 @@ static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

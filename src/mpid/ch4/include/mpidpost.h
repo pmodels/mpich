@@ -16,38 +16,26 @@
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
 {
-
-
-
     MPIDIG_REQUEST(req, req) = NULL;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
 #endif
 
-
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
 {
-
-
-
     OPA_incr_int(&MPIDI_global.progress_count);
 
     if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
         NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))
         MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));
 
-
     return;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
 {
-
-
-
-
     return;
 }
 
@@ -101,7 +89,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
 
     if (likely(single_threaded))
         return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
-
     MPIR_Thread_sync_alloc(&sync, count);
 
     /* Fix up number of pending requests and attach the sync. */
@@ -136,7 +123,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
 
     if (likely(single_threaded))
         return MPIR_Wait_impl(request_ptr, status);
-
     if (request_ptr == NULL || MPIR_Request_is_complete(request_ptr))
         goto fn_exit;
 

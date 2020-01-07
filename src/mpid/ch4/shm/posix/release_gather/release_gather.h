@@ -72,9 +72,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                                     MPIDI_POSIX_release_gather_opcode_t
                                                                     operation)
 {
-
-
-
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
@@ -261,7 +258,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     }
 
   fn_exit:
-
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -280,9 +276,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                                    MPIDI_POSIX_release_gather_opcode_t
                                                                    operation)
 {
-
-
-
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
     void *child_data_addr;
@@ -417,7 +410,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     }
 
   fn_exit:
-
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;

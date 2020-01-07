@@ -36,10 +36,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     int next_child, num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
     int offset, recv_size, num_dependencies;
 
-
-
-
-
     size = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
     lrank = (rank - root + size) % size;        /* logical rank when root is non-zero */
@@ -124,7 +120,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
         offset += (child_subtree_size[i] * ((lrank == 0) ? recvcount : sendcount));
     }
 
-
     if (root != 0 && lrank == 0) {
         tmp_buf = MPIR_TSP_sched_malloc(recv_size * recvtype_extent, sched);
     } else if (root == 0 && lrank == 0) {
@@ -194,7 +189,6 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-
 /* Non-blocking tree based gather */
 int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
@@ -203,9 +197,6 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -225,7 +216,6 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

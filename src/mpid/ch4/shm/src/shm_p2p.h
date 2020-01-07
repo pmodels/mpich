@@ -63,8 +63,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mmods_try_matched_recv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     /* XPMEM special receive */
     if (MPIDI_SHM_REQUEST(message, status) & MPIDI_SHM_REQ_XPMEM_SEND_LMT) {
@@ -101,11 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
 {
     int ret;
 
-
-
-
     ret = MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-
 
     return ret;
 }
@@ -118,12 +112,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_send_coll(const void *buf, MPI_Aint count
 {
     int ret;
 
-
-
     ret =
         MPIDI_POSIX_send_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                               request, errflag);
-
 
     return ret;
 }
@@ -135,12 +126,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_POSIX_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-
 
     return ret;
 }
@@ -151,9 +138,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
@@ -182,7 +166,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -196,13 +179,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_isend_coll(const void *buf, MPI_Aint coun
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_POSIX_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                request, errflag);
-
 
     return ret;
 }
@@ -214,13 +193,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint coun
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_POSIX_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                request);
-
 
     return ret;
 }
@@ -229,11 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_cancel_send(sreq);
-
 
     return ret;
 }
@@ -245,11 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv(void *buf, MPI_Aint count, MPI_D
 {
     int ret = MPI_SUCCESS;
 
-
-
-
     ret = MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-
 
     return ret;
 }
@@ -259,8 +226,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
                                                  int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
     MPIR_Comm *root_comm = NULL;
@@ -312,7 +277,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -322,9 +286,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
                                                   MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
     bool recvd_flag = false;
@@ -344,7 +305,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -354,11 +314,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_cancel_recv(rreq);
-
 
     return ret;
 }
@@ -369,11 +325,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Com
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-
 
     return ret;
 }
@@ -384,11 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iprobe(int source, int tag, MPIR_Comm
 {
     int ret;
 
-
-
-
     ret = MPIDI_POSIX_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-
 
     return ret;
 }

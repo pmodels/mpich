@@ -27,7 +27,6 @@ int MPI_Group_rank(MPI_Group group, int *rank) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-
 /*@
 
 MPI_Group_rank - Returns the rank of this process in the given group
@@ -53,10 +52,7 @@ int MPI_Group_rank(MPI_Group group, int *rank)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -99,7 +95,6 @@ int MPI_Group_rank(MPI_Group group, int *rank)
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

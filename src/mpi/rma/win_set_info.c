@@ -31,7 +31,6 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info) __attribute__ ((weak, alias("PM
 MPI_Win_set_info - Set new values for the hints of the window associated with
 win.
 
-
 The call is collective on the group of win. The info object may be different on
 each process, but any info entries that an implementation requires to be the
 same on all processes must appear with the same value in each process'' info
@@ -66,12 +65,10 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
     MPIR_Win *win_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -116,11 +113,9 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

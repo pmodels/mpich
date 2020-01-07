@@ -28,7 +28,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 
 #endif
 
-
 /*@
 
 MPI_Comm_test_inter - Tests to see if a comm is an inter-communicator
@@ -53,10 +52,7 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -99,7 +95,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

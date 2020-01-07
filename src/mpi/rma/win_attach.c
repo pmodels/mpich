@@ -31,7 +31,6 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 /*@
 MPI_Win_attach - Attach memory to a dynamic window.
 
-
 Attaches a local memory region beginning at base for remote access within the
 given window. The memory region specified must not contain any part that is
 already attached to the window win, that is, attaching overlapping memory
@@ -63,12 +62,10 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -126,11 +123,9 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

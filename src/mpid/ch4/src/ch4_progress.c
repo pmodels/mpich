@@ -16,9 +16,6 @@ int MPIDI_Progress_test(int flags)
     int mpi_errno, made_progress, i;
     mpi_errno = MPI_SUCCESS;
 
-
-
-
 #ifdef HAVE_SIGNAL
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
         MPIDI_global.my_sigusr1_count = MPIDI_global.sigusr1_count;
@@ -69,7 +66,6 @@ int MPIDI_Progress_test(int flags)
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -84,39 +80,24 @@ int MPID_Progress_poke(void)
 {
     int ret;
 
-
-
-
     ret = MPID_Progress_test();
-
 
     return ret;
 }
 
 void MPID_Progress_start(MPID_Progress_state * state)
 {
-
-
-
-
     return;
 }
 
 void MPID_Progress_end(MPID_Progress_state * state)
 {
-
-
-
-
     return;
 }
 
 int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int ret;
-
-
-
 
     if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_DIRECT) {
         ret = MPID_Progress_test();
@@ -138,22 +119,16 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     } while (1);
 
-
-
   fn_exit:
     return ret;
-
   fn_fail:
     goto fn_exit;
 }
-
 
 int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-
-
 
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (MPIDI_global.progress_hooks[i].func_ptr == NULL) {
@@ -171,7 +146,6 @@ int MPID_Progress_register(int (*progress_fn) (int *), int *id)
     (*id) = i;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -184,8 +158,6 @@ int MPID_Progress_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     MPIR_Assert(id >= 0);
     MPIR_Assert(id < MAX_PROGRESS_HOOKS);
     MPIR_Assert(MPIDI_global.progress_hooks[id].func_ptr != NULL);
@@ -194,15 +166,12 @@ int MPID_Progress_deregister(int id)
 
     MPIDI_global.registered_progress_hooks--;
 
-
     return mpi_errno;
 }
 
 int MPID_Progress_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_Assert(id >= 0);
@@ -225,8 +194,6 @@ int MPID_Progress_activate(int id)
 int MPID_Progress_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_Assert(id >= 0);

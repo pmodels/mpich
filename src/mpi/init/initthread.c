@@ -168,7 +168,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     if (provided)
         *provided = thread_provided;
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
@@ -210,7 +209,6 @@ Notes for Fortran:
    Note that the Fortran binding for this routine does not have the 'argc' and
    'argv' arguments. ('MPI_INIT_THREAD(required, provided, ierror)')
 
-
 .N Errors
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
@@ -220,8 +218,6 @@ Notes for Fortran:
 int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -247,9 +243,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* ... end of body of routine ... */
 
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_REPORTING
@@ -261,8 +255,6 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 

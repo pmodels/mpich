@@ -42,7 +42,6 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-
     /* Generate a new context value and a new communicator structure */
     /* We must use the local size, because this is compared to the
      * rank of the process in the communicator.  For intercomms,
@@ -57,7 +56,6 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
   fn_fail:
     goto fn_exit;
 }
-
 
 #endif
 
@@ -111,12 +109,10 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -157,11 +153,9 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

@@ -20,16 +20,12 @@ static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t 
                                            void *buf, MPI_Aint count, MPI_Datatype datatype,
                                            MPIR_Request * rreq)
 {
-
-
-
     MPIDIG_REQUEST(rreq, rank) = rank;
     MPIDIG_REQUEST(rreq, tag) = tag;
     MPIDIG_REQUEST(rreq, context_id) = context_id;
     MPIDIG_REQUEST(rreq, datatype) = datatype;
     MPIDIG_REQUEST(rreq, buffer) = (char *) buf;
     MPIDIG_REQUEST(rreq, count) = count;
-
 
 }
 
@@ -42,9 +38,6 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t in_data_sz, dt_sz, nbytes;
-
-
-
 
     /* Calculate the size of the data from the active message information and update the request
      * object. */
@@ -109,7 +102,6 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
      * process). */
     MPID_Request_complete(rreq);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -123,8 +115,6 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     MPIR_Comm *root_comm;
-
-
 
     root_comm = MPIDIG_context_id_to_comm(context_id);
     unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
@@ -213,7 +203,6 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
     }
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -230,14 +219,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
 {
     int mpi_errno;
 
-
-
     mpi_errno =
         MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -248,8 +234,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Datatype datatype, MPIR_Request * message)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
 
     MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
@@ -279,7 +263,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -295,13 +278,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     mpi_errno =
         MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -311,9 +291,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, found;
     MPIR_Comm *root_comm;
-
-
-
 
     if (!MPIR_Request_is_complete(rreq) &&
         !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDIG_REQUEST_IN_PROGRESS(rreq)) {
@@ -334,7 +311,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         MPID_Request_complete(rreq);
     }
-
 
     return mpi_errno;
 }

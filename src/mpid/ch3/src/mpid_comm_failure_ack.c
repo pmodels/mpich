@@ -10,9 +10,6 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Update the list of failed processes that we know about locally.
      * This part could technically be turned off and be a correct
      * implementation, but it would be slower about propagating failure
@@ -28,7 +25,6 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
     comm_ptr->dev.anysource_enabled = 1;
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -38,9 +34,6 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *failed_group, *comm_group;
-
-
-
 
     /* Get the group of all failed processes */
     MPIDI_CH3U_Check_for_failed_procs();
@@ -59,7 +52,6 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
     MPIR_Group_release(failed_group);
 
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;

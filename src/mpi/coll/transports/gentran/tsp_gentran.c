@@ -159,7 +159,6 @@ int MPII_Genutil_sched_isend(const void *buf,
     return vtx_id;
 }
 
-
 int MPII_Genutil_sched_irecv(void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -190,7 +189,6 @@ int MPII_Genutil_sched_irecv(void *buf,
 
     return vtx_id;
 }
-
 
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
@@ -284,7 +282,6 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
     return vtx_id;
 }
 
-
 int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
@@ -311,7 +308,6 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 
     return vtx_id;
 }
-
 
 /* Transport function that adds a no op vertex in the graph that has
  * all the vertices posted before it as incoming vertices */
@@ -388,7 +384,6 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task", vtx_id));
 
     return vtx_id;
-
 }
 
 void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
@@ -404,9 +399,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     int is_complete;
     int made_progress;
     MPIR_Request *reqp;
-
-
-
 
     /* Create a request */
     reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
@@ -432,8 +424,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     if (coll_queue.head == NULL)
         MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
     DL_APPEND(coll_queue.head, &(reqp->u.nbc.coll));
-
-
 
   fn_exit:
     return mpi_errno;

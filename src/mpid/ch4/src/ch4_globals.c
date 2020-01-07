@@ -76,9 +76,6 @@ void MPIDI_sigusr1_handler(int sig)
 
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
-
-
-
     char world_str[MPI_MAX_ERROR_STRING] = "";
     if (MPIR_Process.comm_world) {
         int rank = MPIR_Process.comm_world->rank;
@@ -128,8 +125,6 @@ int MPIDI_check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
     /* FIXME: Currently this only handles failed processes in
      * comm_world.  We need to fix hydra to include the pgid along
      * with the rank, then we need to create the failed group from
@@ -145,7 +140,6 @@ int MPIDI_check_for_failed_procs(void)
 
         /* FIXME: handle ULFM failed groups here */
     }
-
 
     return mpi_errno;
 }

@@ -17,8 +17,6 @@ int MPID_Cancel_send(MPIR_Request * sreq)
     int flag;
     int mpi_errno = MPI_SUCCESS;
 
-
-
     
     MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__SEND);
 
@@ -212,7 +210,6 @@ int MPID_Cancel_send(MPIR_Request * sreq)
        should be adequate. */
  fn_fail:
  fn_exit:
-
     return mpi_errno;
 }
 

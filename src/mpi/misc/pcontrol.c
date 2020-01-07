@@ -27,7 +27,6 @@ int MPI_Pcontrol(const int level, ...) __attribute__ ((weak, alias("PMPI_Pcontro
 
 #endif
 
-
 /*@
   MPI_Pcontrol - Controls profiling
 
@@ -52,10 +51,7 @@ int MPI_Pcontrol(const int level, ...)
     int mpi_errno = MPI_SUCCESS;
     va_list list;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* ... body of routine ...  */
 

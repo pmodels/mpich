@@ -28,7 +28,6 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
 #endif
 
-
 /*@
 
 MPI_Comm_compare - Compares two communicators
@@ -71,12 +70,10 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     MPIR_Comm *comm_ptr1 = NULL;
     MPIR_Comm *comm_ptr2 = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -176,11 +173,9 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
 #ifdef HAVE_ERROR_CHECKING

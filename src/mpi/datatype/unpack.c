@@ -43,7 +43,6 @@ Output Parameters:
 Inout/Output Parameters:
 . position - current position in bytes (integer)
 
-
 .N ThreadSafe
 
 .N Fortran
@@ -64,10 +63,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
     MPI_Aint position_x;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -134,10 +130,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

@@ -40,21 +40,13 @@ int MPIDI_UCX_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
   fn_fail:
     goto fn_exit;
 
-
-
 }
 
 int MPIDI_UCX_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
-
-
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -65,13 +57,7 @@ int MPIDI_UCX_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
-
-
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

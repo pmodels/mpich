@@ -46,11 +46,8 @@ int MPI_Get_version(int *version, int *subversion)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     /* Note that this routine may be called before MPI_Init */
     /* MPIR_ERRTEST_INITIALIZED_ORDIE(); */
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -76,7 +73,6 @@ int MPI_Get_version(int *version, int *subversion)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

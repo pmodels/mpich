@@ -63,8 +63,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_step1(const void *sendbuf,
     int i, nvtcs;
     void **step1_recvbuf;
 
-
-
     /* Step 1 */
     if (!in_step2) {
         /* non-participating rank sends the data to a participating rank */

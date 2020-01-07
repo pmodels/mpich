@@ -91,7 +91,6 @@ MPIR_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
       (((match1).parts.tag & (mask).parts.tag) == ((match2).parts.tag & (mask).parts.tag)) && \
       ((match1).parts.context_id == (match2).parts.context_id)))
 
-
 static unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
 static unsigned PVAR_LEVEL_unexpected_recvq_length ATTRIBUTE((unused));
 static unsigned long long PVAR_COUNTER_posted_recvq_match_attempts ATTRIBUTE((unused));
@@ -209,9 +208,6 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
     int found = 0;
     MPIDI_Message_match match, mask;
 
-
-
-
     rreq = recvq_unexpected_head;
 
     match.parts.context_id = context_id;
@@ -262,7 +258,6 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 	found = 1;
     }
 
-
     return found;
 }
 
@@ -287,9 +282,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     MPIR_Request * matching_prev_rreq;
     MPIR_Request * matching_cur_rreq;
     MPIDI_Message_match mask;
-
-
-
 
     matching_prev_rreq = NULL;
     matching_cur_rreq = NULL;
@@ -349,7 +341,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 	rreq = NULL;
     }
 
-
     return rreq;
 }
 
@@ -363,9 +354,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
     MPIR_Request *rreq, *prev_rreq;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
-
-
-
 
     /* Store how much time is spent traversing the queue */
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
@@ -452,7 +440,6 @@ lock_exit:
 
     *foundp = found;
 
-
     return rreq;
 }
 
@@ -479,9 +466,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     MPIR_Request *rreq, *prev_rreq;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
-
-
-
 
     /* Store how much time is spent traversing the queue */
     MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
@@ -636,7 +620,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     return rreq;
 }
 
-
 /*
  * MPIDI_CH3U_Recvq_DP()
  *
@@ -651,9 +634,6 @@ int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq)
     MPIR_Request * cur_rreq;
     MPIR_Request * prev_rreq;
     int dequeue_failed;
-
-
-
 
     found = FALSE;
     prev_rreq = NULL;
@@ -691,7 +671,6 @@ int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq)
 
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
-
     return found;
 }
 
@@ -722,9 +701,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     MPIR_Request * prev_rreq;
     int channel_matched;
     int error_bit_masked = 0, proc_failure_bit_masked = 0;
-
-
-
 
     /* Unset the error bit if it is set on the incoming packet so we don't
      * have to mask it every time. It will get reset at the end of the loop or
@@ -828,7 +804,6 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 
     *foundp = found;
 
-
     return rreq;
 }
 
@@ -887,9 +862,6 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
     MPIR_Request *rreq, *prev_rreq = NULL;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
-
-
-
 
     MPIR_ERR_SETSIMPLE(error, MPIX_ERR_REVOKED, "**revoked");
 
@@ -1082,8 +1054,6 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
         rreq = rreq->dev.next;
     }
 
-
-
     return mpi_errno;
 }
 
@@ -1092,9 +1062,6 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *prev_req;
     int error = MPI_SUCCESS;
-
-
-
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
@@ -1116,12 +1083,10 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
-
 
 /* --BEGIN ERROR HANDLING-- */
 /* pretty prints tag, returns out for calling convenience */

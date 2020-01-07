@@ -112,7 +112,6 @@ int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
     goto fn_exit;
 }
 
-
 #else
 extern MPIR_Grequest_class MPIR_Grequest_class_direct[];
 extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
@@ -174,12 +173,10 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters if error checking is enabled */
 #ifdef HAVE_ERROR_CHECKING
@@ -203,11 +200,9 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
@@ -335,7 +330,6 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_sta
 #define MPIX_Grequest_class_allocate PMPIX_Grequest_class_allocate
 #endif
 
-
 int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
                                  void *extra_state, MPI_Request * request)
 {
@@ -381,7 +375,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
 #define MPIX_Grequest_start PMPIX_Grequest_start
 #endif
 
-
 int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
                         MPI_Grequest_free_function * free_fn,
                         MPI_Grequest_cancel_function * cancel_fn,
@@ -403,7 +396,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
 
     return mpi_errno;
 }
-
 
 #ifndef MPICH_MPI_FROM_PMPI
 

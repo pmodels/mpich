@@ -13,9 +13,6 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
     const int context = comm->recvcontext_id + context_offset;
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
@@ -87,7 +84,6 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
     MPIDI_CH3_Progress_end(&progress_state);
 
  fn_exit:
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;

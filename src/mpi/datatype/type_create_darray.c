@@ -359,12 +359,10 @@ int MPI_Type_create_darray(int size,
     MPIR_Datatype *datatype_ptr = NULL;
     MPIR_CHKLMEM_DECL(3);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -560,7 +558,6 @@ int MPI_Type_create_darray(int size,
     }
 
     else {      /* order == MPI_ORDER_C */
-
         /* dimension ndims-1 changes fastest */
         for (i = ndims - 1; i >= 0; i--) {
             switch (array_of_distribs[i]) {
@@ -691,7 +688,6 @@ int MPI_Type_create_darray(int size,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

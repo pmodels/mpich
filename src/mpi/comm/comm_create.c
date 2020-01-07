@@ -49,9 +49,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
     int *mapping = 0;
     MPIR_CHKPMEM_DECL(1);
 
-
-
-
     *mapping_out = NULL;
     *mapping_comm = comm_ptr;
 
@@ -133,7 +130,6 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -163,7 +159,6 @@ int MPII_Comm_create_map(int local_n,
     return mpi_errno;
 }
 
-
 /* comm create impl for intracommunicators, assumes that the standard error
  * checking has already taken place in the calling function */
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr)
@@ -172,9 +167,6 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     MPIR_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
-
-
-
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -234,7 +226,6 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
   fn_exit:
     MPL_free(mapping);
 
-
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -263,9 +254,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
     int rinfo[2];
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(1);
-
-
-
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
@@ -407,7 +395,6 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
     MPIR_CHKLMEM_FREEALL();
     MPL_free(mapping);
 
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -443,12 +430,10 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm * newcomm)
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Group *group_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #ifdef HAVE_ERROR_CHECKING
@@ -492,7 +477,6 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm * newcomm)
     }
 #endif
 
-
     /* ... body of routine ...  */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         mpi_errno = MPIR_Comm_create_intra(comm_ptr, group_ptr, &newcomm_ptr);
@@ -509,11 +493,9 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm * newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

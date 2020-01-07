@@ -71,7 +71,6 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-
     /* If this process is not in the resulting communicator, return a
      * null communicator and exit */
     if (!newcomm_ptr) {
@@ -107,7 +106,6 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
 
   fn_exit:
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
@@ -163,12 +161,10 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -300,11 +296,9 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

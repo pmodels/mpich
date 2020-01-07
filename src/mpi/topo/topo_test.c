@@ -56,10 +56,7 @@ int MPI_Topo_test(MPI_Comm comm, int *status)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -107,7 +104,6 @@ int MPI_Topo_test(MPI_Comm comm, int *status)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

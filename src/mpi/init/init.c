@@ -95,7 +95,6 @@ int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -139,7 +138,6 @@ int MPI_Init(int *argc, char ***argv)
     /* ... end of body of routine ... */
 
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_REPORTING

@@ -62,9 +62,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-
-
-
     /* find out the buffer which has the send data and point data_buf to it */
     if (is_inplace) {
         sendcount = recvcount;
@@ -179,7 +176,6 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -193,9 +189,6 @@ int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Dataty
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -212,7 +205,6 @@ int MPIR_TSP_Ialltoall_intra_ring(const void *sendbuf, int sendcount, MPI_Dataty
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

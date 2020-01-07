@@ -52,7 +52,6 @@ Input/Output Parameters:
   the communicator that will be subsequently used for sending the packed
   message.
 
-
 .N Fortran
 
 .N Errors
@@ -68,11 +67,7 @@ int MPI_Pack(const void *inbuf,
     MPI_Aint position_x;
     MPIR_Comm *comm_ptr = NULL;
 
-
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -167,9 +162,7 @@ int MPI_Pack(const void *inbuf,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

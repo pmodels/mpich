@@ -25,7 +25,6 @@ int MPI_Comm_size(MPI_Comm comm, int *size) __attribute__ ((weak, alias("PMPI_Co
 #define MPI_Comm_size PMPI_Comm_size
 #endif
 
-
 /*@
 
 MPI_Comm_size - Determines the size of the group associated with a communicator
@@ -54,10 +53,7 @@ int MPI_Comm_size(MPI_Comm comm, int *size)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = 0;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -101,7 +97,6 @@ int MPI_Comm_size(MPI_Comm comm, int *size)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

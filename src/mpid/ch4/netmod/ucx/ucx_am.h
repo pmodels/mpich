@@ -17,14 +17,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_sta
     MPIR_Request *req = ucp_request->req;
     int handler_id = req->dev.ch4.am.netmod_am.ucx.handler_id;
 
-
-
-
     MPL_free(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
     MPIDIG_global.origin_cbs[handler_id] (req);
     ucp_request->req = NULL;
-
 
 }
 
@@ -32,16 +28,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
-
-
-
     MPL_free(ucp_request->buf);
     ucp_request->buf = NULL;
     ucp_request_release(ucp_request);
 
-
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,
@@ -62,9 +53,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
-
-
-
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (handler_id == MPIDIG_SEND &&
@@ -134,9 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     ucp_request->req = sreq;
     ucp_request_release(ucp_request);
 
-
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -162,10 +148,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
-
-
-
-
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
@@ -216,14 +198,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     ucp_request_release(ucp_request);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 
 }
-
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                                      int src_rank,
@@ -248,9 +227,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIDI_UCX_am_header_t ucx_hdr;
     MPIR_Comm *use_comm;
     ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
-
-
-
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
     ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
@@ -312,7 +288,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     ucp_request_release(ucp_request);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -322,11 +297,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
 
-
-
-
     ret = (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
-
 
     return ret;
 }
@@ -342,9 +313,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     uint64_t ucx_tag;
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
-
-
-
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
@@ -372,7 +340,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -390,9 +357,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     char *send_buf;
     MPIDI_UCX_am_header_t ucx_hdr;
     MPIR_Comm *use_comm;
-
-
-
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
     ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
@@ -419,7 +383,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -430,9 +393,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_send_long_ack_msg_t msg;
 
-
-
-
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
@@ -442,11 +402,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 #endif /* UCX_AM_H_INCLUDED */

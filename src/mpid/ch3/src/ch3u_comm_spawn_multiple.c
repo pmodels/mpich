@@ -101,10 +101,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     int *pmi_errcodes = 0, pmi_errno;
     int total_num_processes, should_accept = 1;
 
-
-
-
-
     if (comm_ptr->rank == root) {
 	/* create an array for the pmi error codes */
 	total_num_processes = 0;
@@ -211,7 +207,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         preput_keyval_vector.key = PARENT_PORT_KVSKEY;
         preput_keyval_vector.val = port_name;
 
-
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands, 
@@ -297,7 +292,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
    It might make more sense to have this function provided as a function 
    pointer as part of the channel init setup, particularly since this
    function appears to access channel-specific storage (MPIDI_CH3_Process) */
-
 
 /* This function is used only with mpid_init to set up the parent communicator
    if there is one.  The routine should be in this file because the parent 

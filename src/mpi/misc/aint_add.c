@@ -27,7 +27,6 @@ MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) __attribute__ ((weak, alias(
 
 #endif
 
-
 /*@
 MPI_Aint_add - Returns the sum of base and disp
 
@@ -57,12 +56,9 @@ MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-
     result = MPID_Aint_add(base, disp);
-
 
     return result;
 }

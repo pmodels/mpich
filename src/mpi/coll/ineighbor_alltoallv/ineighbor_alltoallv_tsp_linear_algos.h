@@ -32,9 +32,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
     int tag;
     MPI_Aint sendtype_extent, recvtype_extent;
 
-
-
-
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
@@ -72,7 +69,6 @@ int MPIR_TSP_Ineighbor_alltoallv_sched_allcomm_linear(const void *sendbuf, const
     goto fn_exit;
 }
 
-
 /* Non-blocking linear algo based neighbor_alltoallv */
 int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int sendcounts[],
                                                 const int sdispls[], MPI_Datatype sendtype,
@@ -83,9 +79,6 @@ int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int s
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -104,7 +97,6 @@ int MPIR_TSP_Ineighbor_alltoallv_allcomm_linear(const void *sendbuf, const int s
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -80,12 +80,10 @@ int MPI_Type_create_subarray(int ndims,
 
     MPIR_CHKLMEM_DECL(1);
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -209,7 +207,6 @@ int MPI_Type_create_subarray(int ndims,
         }
         /* rest done below for both Fortran and C order */
     } else {    /* MPI_ORDER_C */
-
         /* dimension ndims-1 changes fastest */
         if (ndims == 1) {
             mpi_errno = MPIR_Type_contiguous(array_of_subsizes[0], oldtype, &tmp1);
@@ -297,7 +294,6 @@ int MPI_Type_create_subarray(int ndims,
                                            ints, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
-
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
@@ -307,7 +303,6 @@ int MPI_Type_create_subarray(int ndims,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

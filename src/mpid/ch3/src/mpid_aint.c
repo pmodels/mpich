@@ -20,11 +20,7 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
 
-
-
-
     result = (MPI_Aint) ((char *) base + disp);
-
 
     return result;
 }
@@ -43,11 +39,7 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
 
-
-
-
     result = (MPI_Aint) ((char *) addr1 - (char *) addr2);
-
 
     return result;
 }

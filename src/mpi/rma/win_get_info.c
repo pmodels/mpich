@@ -32,7 +32,6 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
 MPI_Win_get_info - Returns a new info object containing the hints of the window
 associated with win.
 
-
 The current setting of all hints actually used by the system related to this
 window is returned in info_used. If no such hints exist, a handle to a newly
 created info object is returned that contains no key/value pair. The user is
@@ -70,12 +69,10 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
     MPIR_Win *win_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -117,11 +114,9 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

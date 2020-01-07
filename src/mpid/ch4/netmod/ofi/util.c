@@ -17,10 +17,7 @@ int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
 {
     int mpi_errno;
 
-
-
     mpi_errno = MPIDI_OFI_handle_cq_error(vci_idx, ret);
-
 
     return mpi_errno;
 }
@@ -121,8 +118,6 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
 
-
-
     /* Look up the communicator */
     comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
 
@@ -176,8 +171,6 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     recv_elem->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
-
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -217,7 +210,6 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
   fn_exit:
     return mpi_errno;
 }
-
 
 /* MPI Datatype Processing for RMA */
 #define isS_INT(x) ((x)==MPI_INTEGER ||                                \

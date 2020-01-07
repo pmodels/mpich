@@ -61,7 +61,6 @@ int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, 
 
 #endif
 
-
 /*@
  MPI_Graph_neighbors - Returns the neighbors of a node associated
                        with a graph topology
@@ -91,10 +90,7 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -131,13 +127,10 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
     mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, rank, maxneighbors, neighbors);
     MPIR_ERR_CHECK(mpi_errno);
 
-
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

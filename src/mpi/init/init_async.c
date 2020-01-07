@@ -32,7 +32,6 @@ cvars:
         highly system dependent but may be substantial in some cases,
         hence this recommendation.
 
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -104,10 +103,6 @@ int MPIR_Init_async_thread(void)
     MPIR_Comm *comm_self_ptr;
     int err = 0;
 
-
-
-
-
     /* Dup comm world for the progress thread */
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
@@ -125,8 +120,6 @@ int MPIR_Init_async_thread(void)
     MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
                          strerror(err));
 
-
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -140,9 +133,6 @@ int MPIR_Finalize_async_thread(void)
     MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
-
-
-
 
     mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
@@ -177,8 +167,6 @@ int MPIR_Finalize_async_thread(void)
 
     MPID_Thread_mutex_destroy(&progress_mutex, &mpi_errno);
     MPIR_Assert(!mpi_errno);
-
-
 
     return mpi_errno;
 }

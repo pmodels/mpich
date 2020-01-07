@@ -28,7 +28,6 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 
 #endif
 
-
 /*@
    MPI_Get_address - Get the address of a location in memory
 
@@ -70,10 +69,7 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -114,7 +110,6 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

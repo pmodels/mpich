@@ -22,9 +22,6 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm_ptr->revoked) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
@@ -42,9 +39,7 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
     MPIR_ERR_CHECK(mpi_errno);
     /* MPIU_PG_Printall( stdout ); */
 
-
 fn_exit:
-
     return mpi_errno;
 fn_fail:
     goto fn_exit;

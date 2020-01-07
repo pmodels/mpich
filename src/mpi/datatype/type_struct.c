@@ -153,7 +153,6 @@ int MPIR_Type_struct(int count,
 
     if (count == 0)
         return MPII_Type_zerolen(newtype);
-
 #ifdef MPID_STRUCT_DEBUG
     MPII_Datatype_printf(oldtype_array[0], 1, displacement_array[0], blocklength_array[0], 1);
     for (i = 1; i < count; i++) {
@@ -381,7 +380,6 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
                                  array_of_displacements, array_of_types, &new_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
-
     MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array",
                         MPL_MEM_BUFFER);
 
@@ -482,12 +480,10 @@ int MPI_Type_struct(int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -531,11 +527,9 @@ int MPI_Type_struct(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

@@ -20,9 +20,6 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     if (src == NULL || dest == NULL || len == 0)
         goto fn_exit;
 
@@ -49,7 +46,6 @@ static inline int immed_copy(void *src, void *dest, size_t len)
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -67,9 +63,6 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
     MPI_Aint _total_sz = 0, stream_hdr_sz = 0;
     void *flattened_type, *total_hdr;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /*
      * The extended header consists of two parts:
@@ -115,7 +108,6 @@ static int init_stream_dtype_ext_pkt(int pkt_flags,
     (*ext_hdr_sz) = _total_sz;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     MPL_free((*ext_hdr_ptr));
@@ -145,9 +137,6 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     int pkt_flags;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* Judge if origin buffer is empty (this can only happens for
      * GACC and FOP when op is MPI_NO_OP). */
@@ -283,7 +272,6 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         MPIR_Datatype_ptr_release(target_dtp);
     (*req_ptr) = req;
 
-
     return mpi_errno;
   fn_fail:
     if (req) {
@@ -297,7 +285,6 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     goto fn_exit;
 }
 
-
 /* issue_put_op() issues PUT packet header and data. */
 static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
@@ -309,9 +296,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPI_Datatype target_datatype;
     MPIR_Datatype*target_dtp_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     put_pkt->pkt_flags |= pkt_flags;
 
@@ -359,7 +343,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -388,9 +371,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -517,7 +497,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     if (rma_op->reqs_size == 1) {
@@ -530,7 +509,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     rma_op->reqs_size = 0;
     goto fn_exit;
 }
-
 
 /* issue_get_acc_op() send GACC packet header and data. */
 static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
@@ -548,9 +526,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -732,7 +707,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -763,7 +737,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     /* --END ERROR HANDLING-- */
 }
 
-
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
@@ -776,9 +749,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Request *req = NULL;
     MPIR_Request *curr_req = NULL;
     MPL_IOV iov[MPL_IOV_LIMIT];
-
-
-
 
     rma_op->reqs_size = 1;
 
@@ -871,7 +841,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     rma_op->single_req = curr_req;
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -880,7 +849,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
@@ -892,9 +860,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *rmw_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     rma_op->reqs_size = 1;
 
@@ -930,7 +895,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = curr_req;
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -939,7 +903,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
@@ -951,9 +914,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *resp_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     rma_op->reqs_size = 1;
 
@@ -998,7 +958,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = resp_req;
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1008,16 +967,12 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     /* --END ERROR HANDLING-- */
 }
 
-
 /* issue_rma_op() is called by ch3u_rma_progress.c, it triggers
    proper issuing functions according to packet type. */
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, int pkt_flags)
 {
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     switch (op_ptr->pkt.type) {
     case (MPIDI_CH3_PKT_PUT):
@@ -1049,7 +1004,6 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

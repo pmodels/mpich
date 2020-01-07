@@ -39,9 +39,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     void *tmp_recvbuf = NULL, *tmp_results = NULL;
     int tag;
 
-
-
-
     if (recvcount == 0) {
         return mpi_errno;
     }
@@ -77,7 +74,6 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     in_step2 = (step1_sendto == -1);    /* whether this rank participates in Step 2 */
     tmp_results = MPIR_TSP_sched_malloc(total_count * extent, sched);
     tmp_recvbuf = MPIR_TSP_sched_malloc(total_count * extent, sched);
-
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Beforeinitial dt copy\n"));
 
@@ -199,11 +195,8 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPL_free(step2_nbrs);
     MPL_free(step1_recvfrom);
 
-
-
     return mpi_errno;
 }
-
 
 /* Non-blocking recexch based REDUCE_SCATTER_BLOCK */
 int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recvbuf, int recvcount,
@@ -212,9 +205,6 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -233,7 +223,6 @@ int MPIR_TSP_Ireduce_scatter_block_intra_recexch(const void *sendbuf, void *recv
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

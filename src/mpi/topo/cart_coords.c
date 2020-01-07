@@ -59,10 +59,7 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
     MPIR_Topology *cart_ptr;
     int i, nnodes;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -132,7 +129,6 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 #endif
 
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

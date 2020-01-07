@@ -500,7 +500,6 @@ static int vector_m2m(MPI_Aint * blocks_p, MPI_Aint count ATTRIBUTE((unused)), M
             }
         }
     } else {    /* M2M_FROM_USERBUF */
-
         if (el_size == 8 MPIR_ALIGN8_TEST(cbufp, paramp->streambuf)) {
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, stride, int64_t, blksz, whole_count);
             MPII_COPY_FROM_VEC(cbufp, paramp->streambuf, 0, int64_t, blocks_left, 1);
@@ -649,9 +648,6 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     int src_el_size, dest_el_size;
     struct piece_params *paramp = v_paramp;
 
-
-
-
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
     dest_el_size = MPII_Datatype_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
@@ -684,7 +680,6 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     }
     paramp->u.pack.pack_buffer += (dest_el_size * (*blocks_p));
 
-
     return 0;
 }
 
@@ -694,9 +689,6 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
 {
     int src_el_size, dest_el_size;
     struct piece_params *paramp = v_paramp;
-
-
-
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
     dest_el_size = MPII_Datatype_get_basic_size_external32(el_type);
@@ -733,7 +725,6 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     }
     paramp->u.unpack.unpack_buffer += (dest_el_size * (*blocks_p));
 
-
     return 0;
 }
 
@@ -742,15 +733,11 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
 {
     struct piece_params pack_params;
 
-
-
-
     pack_params.u.pack.pack_buffer = (void *) pack_buffer;
     MPII_Segment_manipulate(segp, first, lastp, contig_pack_external32_to_buf, NULL,    /* MPIR_Segment_vector_pack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_pack_external32_to_buf, */
                             MPII_Datatype_get_basic_size_external32, &pack_params);
-
 
     return;
 }
@@ -760,15 +747,11 @@ void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
 {
     struct piece_params pack_params;
 
-
-
-
     pack_params.u.unpack.unpack_buffer = unpack_buffer;
     MPII_Segment_manipulate(segp, first, lastp, contig_unpack_external32_to_buf, NULL,  /* MPIR_Segment_vector_unpack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_unpack_external32_to_buf, */
                             MPII_Datatype_get_basic_size_external32, &pack_params);
-
 
     return;
 }
@@ -843,9 +826,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
 {
     struct piece_params packvec_params;
 
-
-
-
     packvec_params.u.pack_vector.vectorp = vectorp;
     packvec_params.u.pack_vector.index = 0;
     packvec_params.u.pack_vector.length = *lengthp;
@@ -862,7 +842,6 @@ void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
     return;
 }
 
-
 /*
 * EVERYTHING BELOW HERE IS USED ONLY WITHIN THIS FILE
 */
@@ -876,9 +855,6 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
     MPI_Aint size;
     char *last_end = NULL;
     struct piece_params *paramp = v_paramp;
-
-
-
 
     el_size = MPIR_Datatype_get_basic_size(el_type);
     size = *blocks_p * (MPI_Aint) el_size;
@@ -936,9 +912,6 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
     int i;
     MPI_Aint size, blocks_left, basic_size;
     struct piece_params *paramp = v_paramp;
-
-
-
 
     basic_size = (MPI_Aint) MPIR_Datatype_get_basic_size(el_type);
     blocks_left = *blocks_p;

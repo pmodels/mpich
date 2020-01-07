@@ -18,7 +18,6 @@ int MPII_Recexchalgo_init(void)
     return mpi_errno;
 }
 
-
 int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -26,14 +25,12 @@ int MPII_Recexchalgo_comm_init(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-
 int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
     return mpi_errno;
 }
-
 
 /* This function calculates the ranks to/from which the
  * data is sent/recvd in various steps/phases of recursive exchange
@@ -54,9 +51,6 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     int p_of_k = 1, log_p_of_k = 0, rem, T, newrank;
     int **step2_nbrs;
     int *step1_recvfrom;
-
-
-
 
     k = *k_;
     if (nranks < k)     /* If size of the communicator is less than k, reduce the value of k */
@@ -96,7 +90,6 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     T = (rem * k) / (k - 1);
     *T_ = T;
     *p_of_k_ = p_of_k;
-
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "step 1 nbr calculation started. T is %d", T));
@@ -188,41 +181,26 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
         MPL_free(digit);
     }
 
-
-
     return mpi_errno;
 }
-
 
 int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 {
     int step2rank;
 
-
-
-
     step2rank = (rank < T) ? rank / k : rank - rem;
-
-
 
     return step2rank;
 }
-
 
 int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
 {
     int orig_rank;
 
-
-
-
     orig_rank = (rank < rem / (k - 1)) ? (rank * k) + (k - 1) : rank + rem;
-
-
 
     return orig_rank;
 }
-
 
 /* This function calculates the offset and count for send and receive for a given
  * phase in recursive exchange algorithms in collective operations like Allgather,
@@ -235,9 +213,6 @@ int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks
     int step2rank, min, max, orig_max, orig_min;
     int k_power_phase = 1;
     int p_of_k = 1, rem, T;
-
-
-
 
     /* p_of_k is the largest power of k that is less than nranks */
     while (p_of_k <= nranks) {
@@ -265,11 +240,8 @@ int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks
     *count = orig_max - orig_min;
     *offset = orig_min + 1;
 
-
-
     return mpi_errno;
 }
-
 
 /* This function calculates the digit reversed (in base 'k' representation) rank of a given rank participating in Step 2. It does so in the following steps:
  * 1. Converts the given rank to its Step2 rank
@@ -283,9 +255,6 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int *digit, *digit_reverse;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(2);
-
-
-
 
     while (pofk <= comm_size) {
         pofk *= k;
@@ -333,8 +302,6 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     step2_reverse_rank = MPII_Recexchalgo_step2rank_to_origrank(step2_reverse_rank, rem, T, k);
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "reverse_rank is %d", step2_reverse_rank));
-
-
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

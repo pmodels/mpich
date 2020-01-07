@@ -12,22 +12,14 @@
 
 int MPIDI_STUBSHM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }
 
 int MPIDI_STUBSHM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
-
-
-
     MPIR_Assert(0);
-
 
     return MPI_SUCCESS;
 }

@@ -24,11 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
 {
     int ret;
 
-
-
-
     ret = MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
-
 
     return ret;
 }
@@ -39,11 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 {
     int ret;
 
-
-
-
     ret = MPIDIG_mpi_imrecv(buf, count, datatype, message);
-
 
     return ret;
 }
@@ -58,11 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 {
     int ret;
 
-
-
-
     ret = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
-
 
     return ret;
 }
@@ -71,11 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int ret;
 
-
-
-
     ret = MPIDIG_mpi_cancel_recv(rreq);
-
 
     return ret;
 }

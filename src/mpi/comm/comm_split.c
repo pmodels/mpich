@@ -70,13 +70,11 @@ static int sorttype_compare(const void *v1, const void *v2)
         return 1;
     if (s1->key < s2->key)
         return -1;
-
     /* (s1->key == s2->key), maintain original order */
     if (s1->orig_idx > s2->orig_idx)
         return 1;
     else if (s1->orig_idx < s2->orig_idx)
         return -1;
-
     /* --BEGIN ERROR HANDLING-- */
     return 0;   /* should never happen */
     /* --END ERROR HANDLING-- */
@@ -272,7 +270,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
 
     /* Now, create the new communicator structure if necessary */
     if (in_newcomm) {
-
         mpi_errno = MPIR_Comm_create(newcomm_ptr);
         if (mpi_errno)
             goto fn_fail;
@@ -384,9 +381,6 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
 
 #endif
 
-
-
-
 /*@
 
 MPI_Comm_split - Creates new communicators based on colors and keys
@@ -428,12 +422,10 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -478,11 +470,9 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

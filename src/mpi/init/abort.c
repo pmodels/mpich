@@ -73,7 +73,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     MPIR_Comm *comm_ptr = NULL;
     int len = MPI_MAX_OBJECT_NAME;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: It isn't clear that Abort should wait for a critical section,
@@ -82,7 +81,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
      * comment in the description of MPI_Abort above. */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -139,11 +137,9 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* It is not clear that doing aborting abort makes sense.  We may

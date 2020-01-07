@@ -12,7 +12,6 @@
 #ifndef NETMOD_IMPL_H_INCLUDED
 #define NETMOD_IMPL_H_INCLUDED
 
-
 #ifndef NETMOD_INLINE
 #ifndef NETMOD_DISABLE_INLINES
 
@@ -21,11 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, in
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
-
 
     return ret;
 }
@@ -37,12 +32,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int h
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_isend(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype,
                                   sreq);
-
 
     return ret;
 }
@@ -54,12 +45,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_isendv(rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype,
                                    sreq);
-
 
     return ret;
 }
@@ -70,11 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_send_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz);
-
 
     return ret;
 }
@@ -87,12 +70,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_isend_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data,
                                         count, datatype, sreq);
-
 
     return ret;
 }
@@ -101,11 +80,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_hdr_max_sz();
-
 
     return ret;
 }
@@ -114,11 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->am_recv(req);
-
 
     return ret;
 }
@@ -128,11 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int id
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->comm_get_lpid(comm_ptr, idx, lpid_ptr, is_remote);
-
 
     return ret;
 }
@@ -141,11 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->rma_win_cmpl_hook(win);
-
 
     return ret;
 }
@@ -154,11 +117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->rma_win_local_cmpl_hook(win);
-
 
     return ret;
 }
@@ -167,11 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->rma_target_cmpl_hook(rank, win);
-
 
     return ret;
 }
@@ -180,32 +135,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_func->rma_target_local_cmpl_hook(rank, win);
-
 
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
-
-
-
     MPIDI_NM_func->am_request_init(req);
-
 
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
-
-
-
     MPIDI_NM_func->am_request_finalize(req);
-
 
 }
 
@@ -216,13 +159,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_send(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                        request);
-
 
     return ret;
 }
@@ -235,12 +174,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
 {
     int ret;
 
-
-
     ret =
         MPIDI_NM_native_func->send_coll(buf, count, datatype, rank, tag, comm, context_offset,
                                         addr, request, errflag);
-
 
     return ret;
 }
@@ -252,13 +188,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                         request);
-
 
     return ret;
 }
@@ -270,13 +202,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                         request);
-
 
     return ret;
 }
@@ -289,13 +217,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->isend_coll(buf, count, datatype, rank, tag, comm, context_offset,
                                          addr, request, errflag);
-
 
     return ret;
 }
@@ -307,13 +231,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_issend(buf, count, datatype, rank, tag, comm, context_offset,
                                          addr, request);
-
 
     return ret;
 }
@@ -322,11 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_cancel_send(sreq);
-
 
     return ret;
 }
@@ -338,13 +254,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf, MPI_Aint count, MPI_Da
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                        status, request);
-
 
     return ret;
 }
@@ -356,13 +268,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, MPI_Aint count, MPI_D
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, addr,
                                         request);
-
 
     return ret;
 }
@@ -372,11 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, MPI_Aint count, MPI_
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_imrecv(buf, count, datatype, message);
-
 
     return ret;
 }
@@ -385,11 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_cancel_recv(rreq);
-
 
     return ret;
 }
@@ -401,12 +301,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source, int tag, MPIR_Comm
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_improbe(source, tag, comm, context_offset, addr, flag, message,
                                             status);
-
 
     return ret;
 }
@@ -417,11 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source, int tag, MPIR_Comm 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iprobe(source, tag, comm, context_offset, addr, flag, status);
-
 
     return ret;
 }
@@ -432,11 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win, int r
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
-
 
     return ret;
 }
@@ -449,12 +337,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr, int origi
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                         target_disp, target_count, target_datatype, win, addr);
-
 
     return ret;
 }
@@ -463,11 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_start(MPIR_Group * group, int asse
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_start(group, assert, win);
-
 
     return ret;
 }
@@ -476,11 +356,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_complete(win);
-
 
     return ret;
 }
@@ -489,11 +365,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_post(MPIR_Group * group, int asser
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_post(group, assert, win);
-
 
     return ret;
 }
@@ -502,11 +374,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_wait(win);
-
 
     return ret;
 }
@@ -515,11 +383,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_test(win, flag);
-
 
     return ret;
 }
@@ -529,11 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_lock(lock_type, rank, assert, win, addr);
-
 
     return ret;
 }
@@ -543,11 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_unlock(rank, win, addr);
-
 
     return ret;
 }
@@ -560,12 +416,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr, int origin_coun
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                         target_disp, target_count, target_datatype, win, addr);
-
 
     return ret;
 }
@@ -574,11 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_fence(assert, win);
-
 
     return ret;
 }
@@ -591,13 +439,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr, in
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                                target_rank, target_disp, target_count,
                                                target_datatype, op, win, addr);
-
 
     return ret;
 }
@@ -610,13 +454,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr, int orig
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                          target_disp, target_count, target_datatype, win, addr,
                                          request);
-
 
     return ret;
 }
@@ -626,11 +466,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * w
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_flush_local(rank, win, addr);
-
 
     return ret;
 }
@@ -644,12 +480,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                      datatype, target_rank, target_disp, win, addr);
-
 
     return ret;
 }
@@ -664,13 +496,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr, i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                                 target_rank, target_disp, target_count,
                                                 target_datatype, op, win, addr, request);
-
 
     return ret;
 }
@@ -688,14 +516,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                     result_addr, result_count, result_datatype,
                                                     target_rank, target_disp, target_count,
                                                     target_datatype, op, win, addr, request);
-
 
     return ret;
 }
@@ -707,12 +531,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr, 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
                                                  target_disp, op, win, addr);
-
 
     return ret;
 }
@@ -722,11 +542,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_flush(rank, win, addr);
-
 
     return ret;
 }
@@ -735,11 +551,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_flush_local_all(win);
-
 
     return ret;
 }
@@ -748,11 +560,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_unlock_all(win);
-
 
     return ret;
 }
@@ -765,13 +573,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr, int origin_cou
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                          target_disp, target_count, target_datatype, win, addr,
                                          request);
-
 
     return ret;
 }
@@ -780,11 +584,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_sync(win);
-
 
     return ret;
 }
@@ -793,11 +593,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_flush_all(win);
-
 
     return ret;
 }
@@ -813,14 +609,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                    result_addr, result_count, result_datatype,
                                                    target_rank, target_disp, target_count,
                                                    target_datatype, op, win, addr);
-
 
     return ret;
 }
@@ -829,11 +621,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * wi
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_win_lock_all(assert, win);
-
 
     return ret;
 }
@@ -842,11 +630,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int target, MPIR_Comm * comm
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->rank_is_local(target, comm);
-
 
     return ret;
 }
@@ -855,11 +639,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->av_is_local(av);
-
 
     return ret;
 }
@@ -869,11 +649,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_barrier(comm, errflag, algo_parameters_container);
-
 
     return ret;
 }
@@ -885,13 +661,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Dat
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_bcast(buffer, count, datatype, root, comm, errflag,
                                         algo_parameters_container);
-
 
     return ret;
 }
@@ -903,13 +675,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                             algo_parameters_container);
-
 
     return ret;
 }
@@ -922,12 +690,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgather(const void *sendbuf, int sen
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                               recvtype, comm, errflag, algo_parameters_container);
-
 
     return ret;
 }
@@ -941,13 +705,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int se
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                                displs, recvtype, comm, errflag,
                                                algo_parameters_container);
-
 
     return ret;
 }
@@ -960,13 +720,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendc
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                             recvtype, root, comm, errflag,
                                             algo_parameters_container);
-
 
     return ret;
 }
@@ -980,13 +736,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scatterv(const void *sendbuf, const in
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                              recvcount, recvtype, root, comm_ptr, errflag,
                                              algo_parameters_container);
-
 
     return ret;
 }
@@ -999,13 +751,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gather(const void *sendbuf, int sendco
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                            recvtype, root, comm, errflag,
                                            algo_parameters_container);
-
 
     return ret;
 }
@@ -1019,13 +767,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendc
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                             displs, recvtype, root, comm, errflag,
                                             algo_parameters_container);
-
 
     return ret;
 }
@@ -1038,12 +782,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoall(const void *sendbuf, int send
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                              recvtype, comm, errflag, algo_parameters_container);
-
 
     return ret;
 }
@@ -1057,13 +797,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                               recvcounts, rdispls, recvtype, comm, errflag,
                                               algo_parameters_container);
-
 
     return ret;
 }
@@ -1078,13 +814,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                               recvcounts, rdispls, recvtypes, comm, errflag,
                                               algo_parameters_container);
-
 
     return ret;
 }
@@ -1096,12 +828,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                            errflag, algo_parameters_container);
-
 
     return ret;
 }
@@ -1115,12 +843,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, vo
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op,
                                                    comm_ptr, errflag, algo_parameters_container);
-
 
     return ret;
 }
@@ -1134,13 +858,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter_block(const void *sendb
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op,
                                                          comm_ptr, errflag,
                                                          algo_parameters_container);
-
 
     return ret;
 }
@@ -1152,13 +872,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbu
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_scan(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                        algo_parameters_container);
-
 
     return ret;
 }
@@ -1170,13 +886,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recv
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_exscan(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                          algo_parameters_container);
-
 
     return ret;
 }
@@ -1188,12 +900,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_allgather(const void *sendbuf
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcount, recvtype, comm);
-
 
     return ret;
 }
@@ -1207,12 +915,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_allgatherv(const void *sendbu
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
                                                         recvcounts, displs, recvtype, comm);
-
 
     return ret;
 }
@@ -1228,13 +932,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_alltoallv(const void *sendbuf
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
                                                        recvbuf, recvcounts, rdispls, recvtype,
                                                        comm);
-
 
     return ret;
 }
@@ -1250,13 +950,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_alltoallw(const void *sendbuf
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                                        recvbuf, recvcounts, rdispls, recvtypes,
                                                        comm);
-
 
     return ret;
 }
@@ -1268,12 +964,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_alltoall(const void *sendbuf,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_neighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcount, recvtype, comm);
-
 
     return ret;
 }
@@ -1285,12 +977,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgather(const void *sendbu
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf,
                                                         recvcount, recvtype, comm, req);
-
 
     return ret;
 }
@@ -1306,12 +994,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgatherv(const void *sendb
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
                                                          recvcounts, displs, recvtype, comm, req);
-
 
     return ret;
 }
@@ -1323,12 +1007,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoall(const void *sendbuf
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                                        recvcount, recvtype, comm, req);
-
 
     return ret;
 }
@@ -1344,13 +1024,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallv(const void *sendbu
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
                                                         recvbuf, recvcounts, rdispls, recvtype,
                                                         comm, req);
-
 
     return ret;
 }
@@ -1366,13 +1042,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallw(const void *sendbu
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                                         recvbuf, recvcounts, rdispls, recvtypes,
                                                         comm, req);
-
 
     return ret;
 }
@@ -1381,11 +1053,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm, MPIR_Reques
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ibarrier(comm, req);
-
 
     return ret;
 }
@@ -1395,11 +1063,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Da
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ibcast(buffer, count, datatype, root, comm, req);
-
 
     return ret;
 }
@@ -1411,12 +1075,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather(const void *sendbuf, int se
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                recvtype, comm, req);
-
 
     return ret;
 }
@@ -1429,12 +1089,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgatherv(const void *sendbuf, int s
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                                 displs, recvtype, comm, req);
-
 
     return ret;
 }
@@ -1445,11 +1101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce(const void *sendbuf, void *
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iallreduce(sendbuf, recvbuf, count, datatype, op, comm, req);
-
 
     return ret;
 }
@@ -1461,12 +1113,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoall(const void *sendbuf, int sen
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                               recvtype, comm, req);
-
 
     return ret;
 }
@@ -1479,12 +1127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallv(const void *sendbuf, const 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                                recvcounts, rdispls, recvtype, comm, req);
-
 
     return ret;
 }
@@ -1498,12 +1142,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallw(const void *sendbuf, const 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                                recvcounts, rdispls, recvtypes, comm, req);
-
 
     return ret;
 }
@@ -1514,11 +1154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iexscan(const void *sendbuf, void *rec
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iexscan(sendbuf, recvbuf, count, datatype, op, comm, req);
-
 
     return ret;
 }
@@ -1530,12 +1166,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igather(const void *sendbuf, int sendc
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_igather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                             recvtype, root, comm, req);
-
 
     return ret;
 }
@@ -1548,12 +1180,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igatherv(const void *sendbuf, int send
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                              displs, recvtype, root, comm, req);
-
 
     return ret;
 }
@@ -1566,12 +1194,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter_block(const void *send
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
                                                           op, comm, req);
-
 
     return ret;
 }
@@ -1583,12 +1207,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter(const void *sendbuf, v
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op,
                                                     comm, req);
-
 
     return ret;
 }
@@ -1599,13 +1219,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *rec
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_ireduce(sendbuf, recvbuf, count, datatype, op, root,
                                           comm_ptr, req);
-
 
     return ret;
 }
@@ -1616,11 +1232,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscan(const void *sendbuf, void *recvb
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscan(sendbuf, recvbuf, count, datatype, op, comm, req);
-
 
     return ret;
 }
@@ -1632,12 +1244,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatter(const void *sendbuf, int send
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                              recvtype, root, comm, req);
-
 
     return ret;
 }
@@ -1650,12 +1258,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                               recvcount, recvtype, root, comm_ptr, req);
-
 
     return ret;
 }
@@ -1664,11 +1268,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ibarrier_sched(comm, s);
-
 
     return ret;
 }
@@ -1679,11 +1279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ibcast_sched(buffer, count, datatype, root, comm, s);
-
 
     return ret;
 }
@@ -1695,12 +1291,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iallgather_sched(sendbuf, sendcount, sendtype, recvbuf,
                                                      recvcount, recvtype, comm, s);
-
 
     return ret;
 }
@@ -1714,12 +1306,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgatherv_sched(const void *sendbuf,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcounts, displs, recvtype, comm, s);
-
 
     return ret;
 }
@@ -1731,12 +1319,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, 
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
-
 
     return ret;
 }
@@ -1748,12 +1332,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoall_sched(const void *sendbuf, i
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoall_sched(sendbuf, sendcount, sendtype, recvbuf,
                                                     recvcount, recvtype, comm, s);
-
 
     return ret;
 }
@@ -1769,13 +1349,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallv_sched(const void *sendbuf,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype,
                                                      recvbuf, recvcounts, rdispls, recvtype, comm,
                                                      s);
-
 
     return ret;
 }
@@ -1791,13 +1367,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallw_sched(const void *sendbuf,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
                                                      recvbuf, recvcounts, rdispls, recvtypes, comm,
                                                      s);
-
 
     return ret;
 }
@@ -1808,11 +1380,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iexscan_sched(const void *sendbuf, voi
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
-
 
     return ret;
 }
@@ -1824,12 +1392,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igather_sched(const void *sendbuf, int
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_igather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                   recvtype, root, comm, s);
-
 
     return ret;
 }
@@ -1842,13 +1406,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igatherv_sched(const void *sendbuf, in
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_igatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                                  displs, recvtype, root, comm, s);
-
 
     return ret;
 }
@@ -1861,12 +1421,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter_block_sched(const void
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount,
                                                                 datatype, op, comm, s);
-
 
     return ret;
 }
@@ -1878,12 +1434,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter_sched(const void *send
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ireduce_scatter_sched(sendbuf, recvbuf, recvcounts, datatype,
                                                           op, comm, s);
-
 
     return ret;
 }
@@ -1894,13 +1446,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, voi
 {
     int ret;
 
-
-
-
     ret =
         MPIDI_NM_native_func->mpi_ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm,
                                                 s);
-
 
     return ret;
 }
@@ -1911,11 +1459,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscan_sched(const void *sendbuf, void 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscan_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
-
 
     return ret;
 }
@@ -1927,12 +1471,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatter_sched(const void *sendbuf, in
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                    recvtype, root, comm, s);
-
 
     return ret;
 }
@@ -1946,12 +1486,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv_sched(const void *sendbuf,
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                                     recvcount, recvtype, root, comm, s);
-
 
     return ret;
 }
@@ -1966,12 +1502,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgather_sched(const void *
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_allgather_sched(sendbuf, sendcount, sendtype, recvbuf,
                                                               recvcount, recvtype, comm, s);
-
 
     return ret;
 }
@@ -1988,13 +1520,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgatherv_sched(const void 
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_allgatherv_sched(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcounts, displs,
                                                                recvtype, comm, s);
-
 
     return ret;
 }
@@ -2008,12 +1536,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoall_sched(const void *s
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoall_sched(sendbuf, sendcount, sendtype, recvbuf,
                                                              recvcount, recvtype, comm, s);
-
 
     return ret;
 }
@@ -2031,13 +1555,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallv_sched(const void *
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoallv_sched(sendbuf, sendcounts, sdispls,
                                                               sendtype, recvbuf, recvcounts,
                                                               rdispls, recvtype, comm, s);
-
 
     return ret;
 }
@@ -2055,13 +1575,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallw_sched(const void *
 {
     int ret;
 
-
-
-
     ret = MPIDI_NM_native_func->mpi_ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls,
                                                               sendtypes, recvbuf, recvcounts,
                                                               rdispls, recvtypes, comm, s);
-
 
     return ret;
 }

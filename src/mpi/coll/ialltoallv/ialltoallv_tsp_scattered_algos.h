@@ -42,9 +42,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-
-
-
     /* Alltoall: each process need send #size msgs and recv #size msgs
      * This algorithm does #bblock send/recv first
      * followed by addition batchs of #batch_size each.
@@ -109,7 +106,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPIR_CHKLMEM_FREEALL();
 
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -124,9 +120,6 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -144,7 +137,6 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -19,7 +19,6 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, c;
     MPIDIG_ssend_ack_msg_t ack_msg;
 
-
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
 
@@ -40,12 +39,10 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
@@ -58,9 +55,6 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     void *buf;
     MPI_Aint count;
     MPI_Datatype datatype;
-
-
-
 
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
@@ -114,7 +108,6 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

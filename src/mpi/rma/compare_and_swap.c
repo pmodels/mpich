@@ -33,7 +33,6 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 /*@
 MPI_Compare_and_swap - Perform one-sided atomic compare-and-swap.
 
-
 This function compares one element of type datatype in the compare buffer
 compare_addr with the buffer at offset target_disp in the target window
 specified by target_rank and win and replaces the value at the target with the
@@ -76,12 +75,10 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -145,11 +142,9 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

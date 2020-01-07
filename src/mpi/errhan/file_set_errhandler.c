@@ -52,10 +52,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     MPI_Errhandler old_errhandler;
 #endif
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
 #ifdef MPI_MODE_RDONLY
 
@@ -133,7 +130,6 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

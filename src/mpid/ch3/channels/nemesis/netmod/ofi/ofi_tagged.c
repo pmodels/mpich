@@ -38,15 +38,11 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     MPIDI_CH3U_Recvq_DP(REQ_OFI(rreq)->parent);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(REQ_OFI(rreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -61,11 +57,9 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPL_free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -75,7 +69,6 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 #define DO_CANCEL(req, _FCID)                           \
   int mpi_errno = MPI_SUCCESS;                          \
   int ret;                                              \
-
 
   MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);             \
   ret = fi_cancel((fid_t)gl_data.endpoint,              \
@@ -94,7 +87,6 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
   }                                                     \
 
   return mpi_errno;
-
 int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *sreq)
 {
     DO_CANCEL(sreq, MPID_NEM_OFI_CANCEL_SEND);
@@ -105,12 +97,10 @@ int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPI
     DO_CANCEL(rreq, MPID_NEM_OFI_CANCEL_RECV);
 }
 
-
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;
     int ret;
-
 
     /* ----------------------------------------------------- */
     /* Netmod has notified us that it has matched an any     */

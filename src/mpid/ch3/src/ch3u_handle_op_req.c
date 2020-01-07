@@ -7,15 +7,11 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-
 int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *ureq = NULL;
     MPIR_Win *win_ptr = NULL;
-
-
-
 
     if (sreq->dev.rma_target_ptr != NULL) {
         (sreq->dev.rma_target_ptr)->num_pkts_wait_for_local_completion--;
@@ -35,9 +31,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }

@@ -22,9 +22,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                        int k, MPIR_TSP_sched_t * sched)
 {
-
-
-
     int mpi_errno = MPI_SUCCESS;
     int size, rank;
     int i, j, is_inplace = false;
@@ -186,7 +183,6 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-
 /* Non-blocking tree based scatter */
 int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
                                  MPI_Datatype sendtype, void *recvbuf, int recvcount,
@@ -195,9 +191,6 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
-
-
-
 
     *req = NULL;
 
@@ -217,7 +210,6 @@ int MPIR_TSP_Iscatter_intra_tree(const void *sendbuf, int sendcount,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

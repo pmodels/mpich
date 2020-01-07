@@ -55,7 +55,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
     uo_msg = MPL_malloc(uo_msg_len, MPL_MEM_BUFFER);
     if (uo_msg == NULL)
         return MPI_ERR_NO_MEM;
-
     packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->data_sz;
     MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
 
@@ -102,9 +101,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
-
-
-
 
     /* note: msg_hdr + 1 points to the payload */
     p_data = in_data = (char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz;
@@ -170,7 +166,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -179,9 +174,6 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
-
-
-
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        NULL, NULL, 0 /* is_local */ ,
@@ -196,7 +188,6 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
     }
 
   fn_exit:
-
     return mpi_errno;
 }
 
@@ -210,8 +201,6 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     size_t done = 0, curr_len, rem = 0;
     MPIDI_OFI_am_request_t *am_req;
     MPIR_Comm *comm;
-
-
 
     rem = data_sz;
 
@@ -255,7 +244,6 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -270,9 +258,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     size_t data_sz, rem, done, curr_len, in_data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
-
-
-
 
     in_data_sz = data_sz = msg_hdr->data_sz;
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
@@ -361,9 +346,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     }
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -373,8 +356,6 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
 
-
-
     /* note: msg_hdr + 1 points to the payload */
     lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ((char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz);
     mpi_errno = MPIDI_OFI_do_handle_long_am(msg_hdr, lmt_msg, msg_hdr + 1);
@@ -382,9 +363,7 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -395,8 +374,6 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_Request *sreq;
     MPIDI_OFI_ack_msg_payload_t *ack_msg;
     int handler_id;
-
-
 
     ack_msg = (MPIDI_OFI_ack_msg_payload_t *) (msg_hdr + 1);
     sreq = ack_msg->sreq_ptr;
@@ -417,7 +394,6 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -429,9 +405,6 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;
     MPIR_Comm *comm;
-
-
-
 
     comm = MPIDIG_context_id_to_comm(context_id);
 
@@ -445,11 +418,9 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, &msg, sizeof(msg),
                                       MPIDI_OFI_comm_to_phys(comm, rank)), inject);
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 #endif /* OFI_AM_EVENTS_H_INCLUDED */

@@ -73,7 +73,6 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
         }
     }
 
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -114,10 +113,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -162,9 +158,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

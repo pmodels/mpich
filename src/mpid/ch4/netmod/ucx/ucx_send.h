@@ -17,15 +17,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *req = ucp_request->req;
 
-
-
-
     if (unlikely(status == UCS_ERR_CANCELED))
         MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
     MPIDIU_request_complete(req);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
-
 
 }
 
@@ -48,9 +44,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
-
-
-
 
     ep = MPIDI_UCX_AV_TO_EP(addr);
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
@@ -100,7 +93,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     *request = req;
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -114,9 +106,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     switch (*errflag) {
         case MPIR_ERR_NONE:
             break;
@@ -129,8 +118,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
 
     mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                                0, 0);
-
-
 
     return mpi_errno;
 }
@@ -167,9 +154,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
 {
     int mpi_errno = MPI_SUCCESS;
 
-
-
-
     switch (*errflag) {
         case MPIR_ERR_NONE:
             break;
@@ -182,8 +166,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
 
     return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
                           addr, request, 1, 0);
-
-
 
     return mpi_errno;
 }

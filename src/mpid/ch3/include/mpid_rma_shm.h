@@ -38,7 +38,6 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
 
     if (MPIR_DATATYPE_IS_PREDEFINED(stype) && MPIR_DATATYPE_IS_PREDEFINED(dtype) &&
         scount <= SHM_OPS_THRESHOLD) {
-
         /* FIXME: We currently only optimize a few predefined datatypes, which
          * have a direct C datatype mapping. */
 
@@ -255,9 +254,6 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     void *base = NULL;
     int disp_unit;
 
-
-
-
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
         MPIR_Assert(local_target_rank >= 0);
@@ -274,14 +270,12 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
@@ -298,9 +292,6 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     MPI_Aint total_len, rest_len;
     MPI_Aint origin_dtp_size;
     MPIR_Datatype*origin_dtp_ptr = NULL;
-
-
-
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -384,14 +375,12 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
                                             origin_datatype, void *result_addr, int result_count,
@@ -411,9 +400,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPIR_Datatype*origin_dtp_ptr = NULL;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     /* Judge if origin buffer is empty */
     if (op == MPI_NO_OP)
@@ -438,7 +424,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPIR_ERR_CHECK(mpi_errno);
 
     if (is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-
         mpi_errno = do_accumulate_op((void *) origin_addr, origin_count, origin_datatype,
                                      (void *) ((char *) base + disp_unit * target_disp),
                                      target_count, target_datatype, 0, op,
@@ -502,7 +487,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -513,7 +497,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     /* --END ERROR HANDLING-- */
 }
 
-
 static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
                                         MPI_Datatype origin_datatype, int target_rank,
                                         MPI_Aint target_disp, int target_count,
@@ -522,9 +505,6 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     void *base = NULL;
     int disp_unit;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -542,14 +522,12 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *compare_addr,
                                         void *result_addr, MPI_Datatype datatype, int target_rank,
@@ -560,9 +538,6 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     MPI_Aint len;
     int shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -593,7 +568,6 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -603,7 +577,6 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_addr,
                                         MPI_Datatype datatype, int target_rank,
@@ -615,9 +588,6 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     MPI_Aint len;
     int one, shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
-
-
-
 
     if ((*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype) != MPI_SUCCESS)
         goto fn_exit;
@@ -652,7 +622,6 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     }
 
   fn_exit:
-
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -662,6 +631,5 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 #endif /* MPID_RMA_SHM_H_INCLUDED */

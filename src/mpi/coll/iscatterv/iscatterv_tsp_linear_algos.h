@@ -29,9 +29,6 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendc
     int i;
     int tag;
 
-
-
-
     rank = comm_ptr->rank;
 
     /* For correctness, transport based collectives need to get the
@@ -79,12 +76,10 @@ int MPIR_TSP_Iscatterv_sched_allcomm_linear(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 /* Non-blocking linear algorithm for scatterv */
 int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[],
@@ -95,9 +90,6 @@ int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
-
-
-
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -115,7 +107,6 @@ int MPIR_TSP_Iscatterv_allcomm_linear(const void *sendbuf, const int sendcounts[
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;

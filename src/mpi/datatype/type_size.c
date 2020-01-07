@@ -52,10 +52,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     int mpi_errno = MPI_SUCCESS;
     MPI_Count size_x = MPI_UNDEFINED;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -105,9 +102,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {

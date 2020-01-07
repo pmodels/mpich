@@ -30,7 +30,6 @@ int MPI_Win_unlock_all(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_unlock
 /*@
 MPI_Win_unlock_all - Completes an RMA access epoch at all processes on the given window.
 
-
 Completes a shared RMA access epoch started by a call to
 'MPI_Win_lock_all'. RMA operations issued during this epoch will
 have completed both at the origin and at the target when the call returns.
@@ -58,12 +57,10 @@ int MPI_Win_unlock_all(MPI_Win win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -105,11 +102,9 @@ int MPI_Win_unlock_all(MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

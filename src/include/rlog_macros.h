@@ -119,52 +119,13 @@ extern RLOGI_Struct *g_pRLOG;
         RLOG_PT2PT_FUNC_EXIT(a);                                \
     }
 
-
 /* MPI layer definitions */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #if defined(HAVE_TIMING) && (HAVE_TIMING == MPICH_TIMING_KIND__LOG_DETAILED || HAVE_TIMING == MPICH_TIMING_KIND__ALL)
 
 /* device layer definitions */
 
-
-
-
-
-
-
-
 #else
-
-
-
-
-
-
-
-
 
 #endif /* (HAVE_TIMING == MPICH_TIMING_KIND__LOG_DETAILED || HAVE_TIMING == MPICH_TIMING_KIND__ALL) */
 

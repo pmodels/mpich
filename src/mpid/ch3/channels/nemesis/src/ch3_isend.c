@@ -17,9 +17,6 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
     int again = 0;
     int in_cs = FALSE;
 
-
-
-
     if (vc->state == MPIDI_VC_STATE_MORIBUND) {
         sreq->status.MPI_ERROR = MPI_SUCCESS;
         MPIR_ERR_SET1(sreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
@@ -79,12 +76,10 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hd
 	goto enqueue_it;
     }
 
-
  fn_exit:
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-
 
     return mpi_errno;
  fn_fail:

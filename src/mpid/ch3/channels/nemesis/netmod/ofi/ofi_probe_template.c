@@ -17,7 +17,6 @@
 static int ADD_SUFFIX(peek_callback) (cq_tagged_entry_t * wc, MPIR_Request * rreq) {
     int mpi_errno = MPI_SUCCESS;
 
-
     REQ_OFI(rreq)->match_state = PEEK_FOUND;
 #if API_SET == API_SET_1
     rreq->status.MPI_SOURCE = get_source(wc->tag);
@@ -43,8 +42,6 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
     uint64_t match_bits, mask_bits;
     size_t len;
     MPIR_Request rreq_s, *rreq;
-
-
 
     if (rreq_ptr) {
         MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_create_req(&rreq, 1));
@@ -125,12 +122,10 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
         MPIR_Request_add_ref(rreq);
     *flag = 1;
   fn_exit:
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
 
 int ADD_SUFFIX(MPID_nem_ofi_iprobe) (struct MPIDI_VC * vc,
                                      int source,
@@ -138,7 +133,6 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe) (struct MPIDI_VC * vc,
                                      MPIR_Comm * comm, int context_offset, int *flag,
                                      MPI_Status * status) {
     int rc;
-
 
     *flag = 0;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (vc, source,
@@ -156,7 +150,6 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe) (struct MPIDI_VC * vc,
     int old_error = status->MPI_ERROR;
     int s;
 
-
     *flag = CLAIM_PEEK;
     s = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (vc, source,
                                               tag, comm, context_offset, flag, status, message);
@@ -173,7 +166,6 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe) (int tag,
                                                int context_offset, int *flag, MPI_Status * status) {
     int rc;
 
-
     *flag = NORMAL_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe) (NULL, MPI_ANY_SOURCE,
                                           tag, comm, context_offset, flag, status);
@@ -187,7 +179,6 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_improbe) (int tag,
                                                 int *flag, MPIR_Request ** message,
                                                 MPI_Status * status) {
     int rc;
-
 
     *flag = CLAIM_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_improbe) (NULL, MPI_ANY_SOURCE, tag, comm,

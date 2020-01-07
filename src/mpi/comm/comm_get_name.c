@@ -36,7 +36,6 @@ void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultl
 
 #endif
 
-
 /*@
   MPI_Comm_get_name - Return the print name from the communicator
 
@@ -65,10 +64,7 @@ int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -112,7 +108,6 @@ int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
 #endif
 
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:

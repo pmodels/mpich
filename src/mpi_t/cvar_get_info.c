@@ -61,10 +61,8 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     int mpi_errno = MPI_SUCCESS;
     const cvar_table_entry_t *cvar;
 
-
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-
 
     /* Validate parameters */
 #ifdef HAVE_ERROR_CHECKING
@@ -109,7 +107,6 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
 
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

@@ -28,7 +28,6 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
 
 #endif
 
-
 /*@
    MPI_Status_set_elements - Set the number of elements in a status
 
@@ -50,10 +49,7 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
 {
     int mpi_errno = MPI_SUCCESS;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -85,9 +81,7 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
     /* ... end of body of routine ... */
 
   fn_exit:
-
     return mpi_errno;
-
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {

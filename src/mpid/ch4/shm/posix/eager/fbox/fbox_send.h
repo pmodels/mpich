@@ -36,9 +36,6 @@ MPIDI_POSIX_eager_send(int grank,
     size_t fbox_payload_size_left = MPIDI_POSIX_FBOX_DATA_LEN;
     int ret = MPIDI_POSIX_OK;
 
-
-
-
     fbox_out =
         MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[MPIDI_POSIX_global.local_ranks[grank]];
 
@@ -122,7 +119,6 @@ MPIDI_POSIX_eager_send(int grank,
     }
 
   fn_exit:
-
     return ret;
 }
 

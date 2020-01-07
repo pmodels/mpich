@@ -33,7 +33,6 @@ MPI_Win_create_dynamic - Create an MPI Window object for one-sided
 communication.  This window allows memory to be dynamically exposed and
 un-exposed for RMA operations.
 
-
 This is a collective call executed by all processes in the group of comm. It
 returns a window win without memory attached. Existing process memory can be
 attached as described below. This routine returns a window object that can be
@@ -69,7 +68,6 @@ addition to using 'MPI_Win_create_dynamic' to create an MPI window, the user mus
 use 'MPI_Win_attach' before any local memory may be the target of an MPI RMA
 operation. Only memory that is currently accessible may be attached.
 
-
 .N ThreadSafe
 .N Fortran
 
@@ -90,12 +88,10 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -144,11 +140,9 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

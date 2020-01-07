@@ -67,7 +67,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
 
     if (count == 0)
         return 0;
-
     /* determine the maximum number of bytes we should take from the
      * byte count.
      */
@@ -137,7 +136,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
     return elements;
 }
 
-
 /* MPIR_Type_get_elements
  *
  * Arguments:
@@ -187,7 +185,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
         MPIR_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
         if (!ints || !aints || !types)
             return MPI_ERR_TYPE;
-
         switch (datatype_ptr->contents->combiner) {
             case MPI_COMBINER_NAMED:
             case MPI_COMBINER_DUP:
@@ -226,7 +223,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
                  * We need to keep going until we get less elements than expected
                  * or we run out of bytes.
                  */
-
 
                 last_nr_elements = 1;   /* seed value */
                 for (j = 0; (count < 0 || j < count) && *bytes_p > 0 && last_nr_elements > 0; j++) {
@@ -324,7 +320,6 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
             (*elements) = 0;
         }
     } else {    /* derived type with weird element type or weird size */
-
         MPIR_Assert(datatype_ptr->builtin_element_size == -1);
 
         *elements = MPIR_Type_get_elements(byte_count, -1, datatype);
@@ -360,10 +355,8 @@ int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Cou
     int mpi_errno = MPI_SUCCESS;
     MPI_Count byte_count;
 
-
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -411,11 +404,9 @@ int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Cou
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

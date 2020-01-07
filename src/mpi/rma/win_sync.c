@@ -30,7 +30,6 @@ int MPI_Win_sync(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_sync")));
 /*@
 MPI_Win_sync - Synchronize public and private copies of the given window.
 
-
 The call 'MPI_Win_sync' synchronizes the private and public window copies of win.
 For the purposes of synchronizing the private and public window, 'MPI_Win_sync'
 has the effect of ending and reopening an access and exposure epoch on the
@@ -57,12 +56,10 @@ int MPI_Win_sync(MPI_Win win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
 
-
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -102,11 +99,9 @@ int MPI_Win_sync(MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING

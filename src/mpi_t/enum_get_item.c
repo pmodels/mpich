@@ -53,10 +53,8 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
     int mpi_errno = MPI_SUCCESS;
     enum_item_t *item;
 
-
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-
 
     /* Validate parameters */
 #ifdef HAVE_ERROR_CHECKING
@@ -88,7 +86,6 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
 
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
-
 #ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
