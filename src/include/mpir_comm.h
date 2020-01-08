@@ -68,6 +68,27 @@ int MPIR_Comm_map_dup(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
                       MPIR_Comm_map_dir_t dir);
 int MPIR_Comm_map_free(struct MPIR_Comm *comm);
 
+/* Communicator info hint */
+#define MPIR_COMM_HINT_TYPE_BOOL 0
+#define MPIR_COMM_HINT_TYPE_INT  1
+
+/* Communicator attr (bitmask)
+ * If local bit is set, the hint is local. Default (0) will require the hint value be
+ * the same across communicator.
+ */
+#define MPIR_COMM_HINT_ATTR_LOCAL 0x1
+
+#define MPIR_COMM_HINT_MAX 100
+
+enum MPIR_COMM_HINT_PREDEFINED_t {
+    MPIR_COMM_HINT_INVALID = 0,
+    MPIR_COMM_HINT_NO_ANY_TAG,
+    MPIR_COMM_HINT_NO_ANY_SOURCE,
+    MPIR_COMM_HINT_EXACT_LENGTH,
+    MPIR_COMM_HINT_ALLOW_OVERTAKING,
+    MPIR_COMM_HINT_PREDEFINED_COUNT
+};
+
 /*S
   MPIR_Comm - Description of the Communicator data structure
 
@@ -172,7 +193,8 @@ struct MPIR_Comm {
 
     int revoked;                /* Flag to track whether the communicator
                                  * has been revoked */
-    MPIR_Info *info;            /* Hints to the communicator */
+    int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator
+                                         * use int array for fast access */
 
 #if defined HAVE_LIBHCOLL
     hcoll_comm_priv_t hcoll_priv;
@@ -254,9 +276,22 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
-/* Communicator info hint functions */
-typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, MPIR_Info *, void *);
-int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
+/* Comm hint registration.
+ *
+ * Hint function is optional. If it is NULL, MPIR_layer will set corresponding
+ * hints array directly. If it is supplied, MPIR_layer will *NOT* set hints array.
+ * The hint function is responsible for setting it, as well as validating it and
+ * update whatever side-effects.
+ *
+ * Current supported type is boolean and int and the value parsed accordingly.
+ *
+ * If the attr is 0, it is requires the hint value to be consistent across the
+ * communicator. If the LOCAL bit is set, the hint values is treated as local.
+ * Additional attributes may be added in the future.
+ */
+typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, val */
+int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
+                            int type, int attr);
 
 int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
@@ -268,7 +303,7 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
                                      MPI_Errhandler * errhandler);
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
                                  MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
@@ -330,10 +365,7 @@ int MPII_Comm_init(MPIR_Comm *);
 
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 
-/* applies the specified info chain to the specified communicator */
-int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
-
-int MPII_Comm_copy(MPIR_Comm *, int, MPIR_Comm **);
+int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);
 
 int MPII_Setup_intercomm_localcomm(MPIR_Comm *);
@@ -347,5 +379,9 @@ int MPII_Comm_create_map(int local_n,
                          int remote_n,
                          int *local_mapping,
                          int *remote_mapping, MPIR_Comm * mapping_comm, MPIR_Comm * newcomm);
+
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
+int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info);
+int MPII_Comm_check_hints(MPIR_Comm * comm_ptr);
 
 #endif /* MPIR_COMM_H_INCLUDED */

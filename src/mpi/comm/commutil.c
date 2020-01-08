@@ -37,13 +37,132 @@ MPIR_Object_alloc_t MPIR_Comm_mem = {
 
 /* Communicator creation functions */
 struct MPIR_Commops *MPIR_Comm_fns = NULL;
-struct MPIR_Comm_hint_fn_elt {
-    char name[MPI_MAX_INFO_KEY];
+static int MPIR_Comm_commit_internal(MPIR_Comm * comm);
+
+/* Communicator hint functions */
+/* For balance of simplicity and feature, we'll internally use integers for both keys
+ * and values, and provide facilities to translate from and to string-based infos.
+ */
+
+struct MPIR_HINT {
+    const char *key;
     MPIR_Comm_hint_fn_t fn;
-    void *state;
-    UT_hash_handle hh;
+    int type;
+    int attr;                   /* e.g. whether this key is local */
 };
-static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
+static struct MPIR_HINT MPIR_comm_hint_list[MPIR_COMM_HINT_MAX];
+static int next_comm_hint_index = MPIR_COMM_HINT_PREDEFINED_COUNT;
+
+int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
+                            int type, int attr)
+{
+    if (index == 0) {
+        index = next_comm_hint_index;
+        next_comm_hint_index++;
+        MPIR_Assert(index < MPIR_COMM_HINT_MAX);
+    } else {
+        MPIR_Assert(index > 0 && index < MPIR_COMM_HINT_PREDEFINED_COUNT);
+    }
+    MPIR_comm_hint_list[index] = (struct MPIR_HINT) {
+    hint_key, fn, type, attr};
+    return index;
+}
+
+static int parse_string_value(const char *s, int type, int *val)
+{
+    if (type == MPIR_COMM_HINT_TYPE_BOOL) {
+        if (strcmp(s, "true") == 0) {
+            *val = 1;
+        } else if (strcmp(s, "false") == 0) {
+            *val = 0;
+        } else {
+            *val = atoi(s);
+        }
+    } else if (type == MPIR_COMM_HINT_TYPE_INT) {
+        *val = atoi(s);
+    } else {
+        return -1;
+    }
+    return 0;
+}
+
+static int get_string_value(char *s, int type, int val)
+{
+    if (type == MPIR_COMM_HINT_TYPE_BOOL) {
+        strncpy(s, val ? "true" : "false", MPI_MAX_INFO_VAL);
+    } else if (type == MPIR_COMM_HINT_TYPE_INT) {
+        MPL_snprintf(s, MPI_MAX_INFO_VAL, "%d", val);
+    } else {
+        return -1;
+    }
+    return 0;
+}
+
+/* Hints are stored as hints array inside MPIR_Comm.
+ * All hints are initialized to zero. Communitcator creation hook can be used to
+ * to customize initialization value (make sure only do that when the value is zero
+ * or risk resetting user hints).
+ * If the hint is registered with callback function, it can be used for customization
+ * at both creation time and run-time.
+ */
+int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
+{
+    MPIR_Info *curr_info;
+    LL_FOREACH(info, curr_info) {
+        if (curr_info->key == NULL)
+            continue;
+        for (int i = 0; i < next_comm_hint_index; i++) {
+            if (MPIR_comm_hint_list[i].key &&
+                strcmp(curr_info->key, MPIR_comm_hint_list[i].key) == 0) {
+                int val;
+                int ret = parse_string_value(curr_info->value, MPIR_comm_hint_list[i].type, &val);
+                if (ret == 0) {
+                    if (MPIR_comm_hint_list[i].fn) {
+                        MPIR_comm_hint_list[i].fn(comm_ptr, i, val);
+                    } else {
+                        comm_ptr->hints[i] = val;
+                    }
+                }
+            }
+        }
+    }
+    /* FIXME: run collective to ensure hints consistency */
+    return MPI_SUCCESS;
+}
+
+int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
+{
+    char hint_val_str[MPI_MAX_INFO_VAL];
+    for (int i = 0; i < next_comm_hint_index; i++) {
+        if (MPIR_comm_hint_list[i].key) {
+            get_string_value(hint_val_str, MPIR_comm_hint_list[i].type, comm_ptr->hints[i]);
+            MPIR_Info_set_impl(info, MPIR_comm_hint_list[i].key, hint_val_str);
+        }
+    }
+    return MPI_SUCCESS;
+}
+
+int MPII_Comm_check_hints(MPIR_Comm * comm)
+{
+    /* for all non-local hints and non-zero hint values, run collective
+     * to check whether they are equal across the communicator */
+    /* TODO */
+    return MPI_SUCCESS;
+}
+
+/* AUTOGEN-MPIR_Init */
+void MPIR_Comm_hint_init(void);
+void MPIR_Comm_hint_init(void)
+{
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_SOURCE, "mpi_assert_no_any_source",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EXACT_LENGTH, "mpi_assert_exact_length",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+}
 
 /* FIXME :
    Reusing context ids can lead to a race condition if (as is desirable)
@@ -89,7 +208,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->local_group = NULL;
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
-    comm_p->info = NULL;
+    memset(comm_p->hints, 0, sizeof(comm_p->hints));
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
@@ -527,7 +646,7 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
  *
  * Used by cart_create, graph_create, and dup_create
  */
-int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
+int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t new_context_id, new_recvcontext_id;
@@ -628,20 +747,21 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
+#if 1
+    /* FIXME: only copy over hints for MPI 3.1 and earlier */
+    memcpy((void *) (newcomm_ptr->hints), (void *) (comm_ptr->hints), sizeof(comm_ptr->hints));
+#endif
+
+    if (info) {
+        MPII_Comm_set_hints(newcomm_ptr, info);
+    }
+
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
-
-    /* Copy over the info hints from the original communicator. */
-    mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPII_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
 
     *outcomm_ptr = newcomm_ptr;
 
@@ -765,11 +885,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        /* Free info hints */
-        if (comm_ptr->info != NULL) {
-            MPIR_Info_free(comm_ptr->info);
-        }
-
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)
             MPIR_Comm_release(comm_ptr->local_comm);
 
@@ -862,84 +977,4 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-/* Apply all known info hints in the specified info chain to the given
- * communicator. */
-int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *hint = NULL;
-    char hint_name[MPI_MAX_INFO_KEY] = { 0 };
-    struct MPIR_Comm_hint_fn_elt *hint_fn = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-
-    LL_FOREACH(info_ptr, hint) {
-        /* Have we hit the default, empty info hint? */
-        if (hint->key == NULL)
-            continue;
-
-        MPL_strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
-
-        HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
-
-        /* Skip hints that MPICH doesn't recognize. */
-        if (hint_fn) {
-            mpi_errno = hint_fn->fn(comm_ptr, hint, hint_fn->state);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-        }
-    }
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_APPLY_HINTS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static int free_hint_handles(void *ignore)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Comm_hint_fn_elt *curr_hint = NULL, *tmp = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-
-    if (MPID_hint_fns) {
-        HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
-            HASH_DEL(MPID_hint_fns, curr_hint);
-            MPL_free(curr_hint);
-        }
-    }
-
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
-    return mpi_errno;
-}
-
-/* The hint logic is stored in a uthash, with hint name as key and
- * the function responsible for applying the hint as the value. */
-int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Comm_hint_fn_elt *hint_elt = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-
-    if (MPID_hint_fns == NULL) {
-        MPIR_Add_finalize(free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
-    }
-
-    hint_elt = MPL_malloc(sizeof(struct MPIR_Comm_hint_fn_elt), MPL_MEM_COMM);
-    MPL_strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
-    hint_elt->state = state;
-    hint_elt->fn = fn;
-
-    HASH_ADD_STR(MPID_hint_fns, name, hint_elt, MPL_MEM_COMM);
-
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
-    return mpi_errno;
 }

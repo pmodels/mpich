@@ -36,6 +36,8 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    MPII_Comm_get_hints(comm_ptr, *info_p_p);
+
   fn_exit:
     return mpi_errno;
   fn_fail:

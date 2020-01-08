@@ -26,7 +26,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm) __attribute__ ((weak, alias(
 #undef MPI_Comm_dup
 #define MPI_Comm_dup PMPI_Comm_dup
 
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *new_attributes = 0;
@@ -48,7 +48,7 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
     /* We must use the local size, because this is compared to the
      * rank of the process in the communicator.  For intercomms,
      * this must be the local size */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, newcomm_ptr);
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, info, newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -151,7 +151,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &newcomm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

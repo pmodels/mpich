@@ -69,7 +69,7 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
             MPIR_ERR_POP(mpi_errno);
     } else {
         /* Just use the first nnodes processes in the communicator */
-        mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, nnodes, &newcomm_ptr);
+        mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, nnodes, NULL, &newcomm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
