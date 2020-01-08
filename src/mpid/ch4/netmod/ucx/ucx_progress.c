@@ -10,7 +10,7 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
-static void *am_buf; /* message buffer has global scope because ucx executes am_handler */
+static void *am_buf;            /* message buffer has global scope because ucx executes am_handler */
 static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
 {
     MPIR_Request *rreq = NULL;
