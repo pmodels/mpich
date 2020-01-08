@@ -54,7 +54,7 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     }
 
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, newcomm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, newcomm_ptr);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
