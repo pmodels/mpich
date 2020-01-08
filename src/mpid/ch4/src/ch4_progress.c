@@ -29,11 +29,9 @@ int MPIDI_Progress_test(int flags)
 
     if (flags & MPIDI_PROGRESS_HOOKS) {
         for (i = 0; i < MPIDI_global.registered_progress_hooks; i++) {
-            progress_func_ptr_t func_ptr = NULL;
             if (MPIDI_global.progress_hooks[i].active == TRUE) {
-                func_ptr = MPIDI_global.progress_hooks[i].func_ptr;
-                MPIR_Assert(func_ptr != NULL);
-                mpi_errno = func_ptr(&made_progress);
+                MPIR_Assert(MPIDI_global.progress_hooks[i].func_ptr != NULL);
+                mpi_errno = MPIDI_global.progress_hooks[i].func_ptr(&made_progress);
                 MPIR_ERR_CHECK(mpi_errno);
             }
         }
