@@ -86,6 +86,10 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_NO_ANY_SOURCE,
     MPIR_COMM_HINT_EXACT_LENGTH,
     MPIR_COMM_HINT_ALLOW_OVERTAKING,
+    /* device specific hints.
+     * Potentially, we can use macros and configure to hide them */
+    MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
+    /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
 
