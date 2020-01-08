@@ -394,12 +394,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     size = MPIR_Process.size;
     appnum = MPIR_Process.appnum;
 
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-    MPIR_Add_mutex(&MPIDI_global.vci_lock);
-
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
@@ -819,4 +813,17 @@ int MPID_Op_free_hook(MPIR_Op * op)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* components init */
+
+/* AUTOGEN-MPID_CH4_INIT */
+void init_ch4_mutexes(void);
+void init_ch4_mutexes(void)
+{
+    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
+    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+    MPIR_Add_mutex(&MPIDI_global.vci_lock);
 }
