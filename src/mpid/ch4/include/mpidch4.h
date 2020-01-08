@@ -158,6 +158,7 @@ MPIDI_CH4I_API_NOINLINE(int, Intercomm_exchange_map, MPIR_Comm *, int, MPIR_Comm
 MPIDI_CH4I_API_NOINLINE(int, Create_intercomm_from_lpids, MPIR_Comm *, int, const int[]);
 MPIDI_CH4I_API_NOINLINE(int, Comm_create_hook, MPIR_Comm *);
 MPIDI_CH4I_API_NOINLINE(int, Comm_free_hook, MPIR_Comm *);
+MPIDI_CH4I_API_NOINLINE(int, Coll_comm_init_hook, MPIR_Comm *);
 MPIDI_CH4I_API(int, Barrier, MPIR_Comm *, MPIR_Errflag_t *);
 MPIDI_CH4I_API(int, Bcast, void *, int, MPI_Datatype, int, MPIR_Comm *, MPIR_Errflag_t *);
 MPIDI_CH4I_API(int, Allreduce, const void *, void *, int, MPI_Datatype, MPI_Op, MPIR_Comm *,

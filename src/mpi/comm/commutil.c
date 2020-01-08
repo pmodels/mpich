@@ -310,10 +310,6 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     mpi_errno = MPID_Comm_create_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Create collectives-specific infrastructure */
-    mpi_errno = MPIR_Coll_comm_init(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
     MPIR_Comm_map_free(comm);
 
   fn_exit:
@@ -461,6 +457,20 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
         mpi_errno = MPIR_Comm_create_subcomms(comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    /* Create collectives-specific infrastructure */
+    mpi_errno = MPIR_Coll_comm_init(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm->node_comm) {
+        mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (comm->node_roots_comm) {
+        mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
