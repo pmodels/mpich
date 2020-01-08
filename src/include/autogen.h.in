@@ -46,4 +46,15 @@ static inline int MPID_ch4_init_components(void)
     goto fn_exit;
 }
 
+static inline int MPID_ch3_init_components(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* PLACEHOLDER-MPID_CH3_INIT */
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif

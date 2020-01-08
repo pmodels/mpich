@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "autogen.h"
 
 #define MAX_JOBID_LEN 1024
 
@@ -273,6 +274,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_RMA_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* run components init, which are aggregated in autogen.h by script */
+    mpi_errno = MPID_ch3_init_components();
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
