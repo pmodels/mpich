@@ -21,9 +21,8 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 /* Callback function setup by handler register function */
 /* for short cases, output arguments are NULL */
 typedef int (*MPIDIG_am_target_msg_cb)
- (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
-  size_t * data_sz, int is_local,       /* SHM or NM directly specifies locality */
-  int *is_contig, MPIDIG_am_target_cmpl_cb * target_cmpl_cb,    /* completion handler */
+ (int handler_id, void *am_hdr, void *data, size_t data_sz, int is_local,       /* SHM or NM directly specifies locality */
+  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,    /* completion handler */
   MPIR_Request ** req);         /* if allocated, need pointer to completion function */
 
 typedef struct MPIDIG_global_t {

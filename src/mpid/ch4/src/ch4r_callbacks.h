@@ -23,30 +23,30 @@ void MPIDIG_progress_compl_list(void);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);
 int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq);
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req);
-int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                              int is_local, int *is_contig,
+int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, size_t p_data_sz,
+                              int is_local,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
-int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       size_t p_data_sz, int is_local,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req);
-int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       size_t p_data_sz, int is_local,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req);
-int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                               int is_local, int *is_contig,
+int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, size_t p_data_sz,
+                               int is_local,
                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
-int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                   size_t * p_data_sz, int is_local, int *is_contig,
+int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                   size_t p_data_sz, int is_local,
                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
-int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
+int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       size_t p_data_sz, int is_local,
                                        MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                        MPIR_Request ** req);
 int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq);
-int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                                    int is_local, int *is_contig,
+int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void *data, size_t p_data_sz,
+                                    int is_local,
                                     MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 
 #endif /* CH4R_CALLBACKS_H_INCLUDED */

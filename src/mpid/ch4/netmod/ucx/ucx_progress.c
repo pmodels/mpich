@@ -15,64 +15,18 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
 {
     MPIR_Request *rreq = NULL;
     void *p_data;
-    void *in_data;
-    size_t data_sz, in_data_sz;
+    size_t data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
-    struct iovec *iov;
-    int i, is_contig, iov_len;
-    size_t done, curr_len, rem;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
-    p_data = in_data =
-        (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
-    in_data_sz = data_sz = msg_hdr->data_sz;
+    p_data = (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
+    data_sz = msg_hdr->data_sz;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                       &p_data, &data_sz, 0 /* is_local */ ,
-                                                       &is_contig, &target_cmpl_cb, &rreq);
+                                                       p_data, data_sz, 0 /* is_local */ ,
+                                                       &target_cmpl_cb, &rreq);
 
-    if (!rreq)
-        return;
-
-    if ((!p_data || !data_sz) && target_cmpl_cb) {
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        target_cmpl_cb(rreq);
-        return;
-    }
-
-    if (is_contig) {
-        if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
-        }
-
-        data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIR_Memcpy(p_data, in_data, data_sz);
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    } else {
-        done = 0;
-        rem = in_data_sz;
-        iov = (struct iovec *) p_data;
-        iov_len = data_sz;
-
-        for (i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIR_Memcpy(iov[i].iov_base, (char *) in_data + done, curr_len);
-            rem -= curr_len;
-            done += curr_len;
-        }
-
-        if (rem) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
-        }
-
-        MPIR_STATUS_SET_COUNT(rreq->status, done);
-    }
-
-    if (target_cmpl_cb) {
+    if (target_cmpl_cb && rreq != NULL) {
         target_cmpl_cb(rreq);
     }
 }
