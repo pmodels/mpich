@@ -34,7 +34,7 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
 
     /* FIXME: We just ignore the info argument for now and just call
      * Comm_dup */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, newcomm_p_p);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, info_ptr, newcomm_p_p);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
