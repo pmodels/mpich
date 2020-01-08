@@ -269,7 +269,7 @@ int MPII_Genutil_progress_hook(int *made_progress)
     }
 
     if (MPII_coll_queue.head == NULL)
-        MPID_Progress_deactivate_hook(MPII_Genutil_progress_hook_id);
+        MPIR_Progress_hook_deactivate(MPII_Genutil_progress_hook_id);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 

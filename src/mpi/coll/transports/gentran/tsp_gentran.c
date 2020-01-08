@@ -434,7 +434,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     DL_APPEND(MPII_coll_queue.head, &(reqp->u.nbc.coll));
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 
-    MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
+    MPIR_Progress_hook_activate(MPII_Genutil_progress_hook_id);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
