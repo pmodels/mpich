@@ -499,7 +499,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     DL_APPEND(all_schedules.head, s);
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
-    MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
+    MPIR_Progress_hook_activate(MPIR_Nbc_progress_hook_id);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -990,7 +990,7 @@ int MPIDU_Sched_progress(int *made_progress)
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
     if (!mpi_errno && all_schedules.head == NULL)
-        MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
+        MPIR_Progress_hook_deactivate(MPIR_Nbc_progress_hook_id);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 

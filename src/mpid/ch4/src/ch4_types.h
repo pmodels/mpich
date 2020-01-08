@@ -19,8 +19,6 @@
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
-#define MAX_PROGRESS_HOOKS 4
-
 /* VCI attributes */
 enum {
     MPIDI_VCI_TX = 0x1,         /* Can send */
@@ -29,12 +27,6 @@ enum {
 
 #define MPIDIU_BUF_POOL_NUM (1024)
 #define MPIDIU_BUF_POOL_SZ (256)
-
-typedef int (*progress_func_ptr_t) (int *made_progress);
-typedef struct progress_hook_slot {
-    progress_func_ptr_t func_ptr;
-    int active;
-} progress_hook_slot_t;
 
 /* Flags for MPIDI_Progress_test
  *
@@ -303,9 +295,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_ch4u_initialized;
     int **node_map, max_node_id;
     MPIDIG_comm_req_list_t *comm_req_lists;
-    int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
-    progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
