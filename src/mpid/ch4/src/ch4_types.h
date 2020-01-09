@@ -292,7 +292,7 @@ typedef struct MPIDI_vci {
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_t workqueue;    /* WorkQ for this VCI */
 #endif
-} MPIDI_vci_t;
+} MPIDI_vci_t MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
 
 #define MPIDI_VCI(i) MPIDI_global.vci[i]
 
