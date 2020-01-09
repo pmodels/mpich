@@ -135,6 +135,9 @@ int MPII_init_global(int *p_thread_required)
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
+    /* Init communicator hints */
+    MPIR_Comm_hint_init();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
