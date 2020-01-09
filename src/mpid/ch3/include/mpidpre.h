@@ -178,7 +178,6 @@ typedef struct MPIDI_VC * MPIDI_VCR;
 
 typedef struct MPIDI_CH3I_comm
 {
-    int eager_max_msg_sz;   /* comm-wide eager/rendezvous message threshold */
     int anysource_enabled;  /* TRUE iff this anysource recvs can be posted on this communicator */
     int last_ack_rank;      /* The rank of the last acknowledged failure */
     int waiting_for_revoke; /* The number of other processes from which we are

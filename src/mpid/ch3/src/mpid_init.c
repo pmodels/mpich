@@ -37,7 +37,6 @@ static int init_pg( int *argc_p, char ***argv_p,
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
-static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state);
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
@@ -67,28 +66,6 @@ static int finalize_failed_procs_group(void *param)
  fn_fail:
     return mpi_errno;
 }
-
-static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    char *endptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-
-    comm_ptr->dev.eager_max_msg_sz = strtol(info->value, &endptr, 0);
-
-    MPIR_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
-                         "**infohintparse", "**infohintparse %s",
-                         info->key);
-
- fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 int MPID_Init(int *argc, char ***argv, int requested, int *provided, 
 	      int *has_args, int *has_env)
@@ -345,10 +322,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	    MPICH_THREAD_LEVEL : requested;
     }
 
-    mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
-                                        set_eager_threshold,
-                                        NULL);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGER_THRESH, "eager_rendezvous_threshold",
+                            NULL, MPIR_COMM_HINT_TYPE_INT, 0);
 
     mpi_errno = MPIDI_RMA_init();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
