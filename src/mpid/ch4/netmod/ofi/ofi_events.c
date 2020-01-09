@@ -842,7 +842,7 @@ int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
     goto fn_exit;
 }
 
-int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
@@ -852,7 +852,7 @@ int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
 
     switch (ret) {
         case -FI_EAVAIL:
-            fi_cq_readerr(MPIDI_OFI_global.ctx[vci_idx].cq, &e, 0);
+            fi_cq_readerr(MPIDI_OFI_global.ctx[vni_idx].cq, &e, 0);
 
             switch (e.err) {
                 case FI_ETRUNC:
