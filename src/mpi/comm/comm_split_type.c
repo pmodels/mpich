@@ -194,7 +194,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-
+ 
   fn_exit:
     return mpi_errno;
 
@@ -1062,6 +1062,10 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     } else {
         mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Comm_set_info_impl(*newcomm_ptr, info_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
