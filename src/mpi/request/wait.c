@@ -86,7 +86,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 
                 /* Avoid blocking other threads since I am inside an infinite loop */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             }
         } else {
             mpi_errno = MPID_Wait(request_ptr, status);
