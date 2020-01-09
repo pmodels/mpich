@@ -18,7 +18,7 @@
 
 /* These typedef function definitions are used when not inlining the shared memory module along
  * with the struct of function pointers below. */
-typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *n_vcis_provided, int *tag_bits);
+typedef int (*MPIDI_SHM_mpi_init_hook_t) (int rank, int size, int *tag_bits);
 typedef int (*MPIDI_SHM_mpi_finalize_hook_t) (void);
 typedef int (*MPIDI_SHM_get_vci_attr_t) (int vci);
 typedef int (*MPIDI_SHM_progress_t) (int vci, int blocking);
@@ -568,7 +568,7 @@ typedef struct MPIDI_SHM_native_funcs {
 extern MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs;
 extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 
-int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_SHM_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_SHM_mpi_finalize_hook(void);
 int MPIDI_SHM_get_vci_attr(int vci);
 int MPIDI_SHM_progress(int vci, int blocking);
