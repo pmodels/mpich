@@ -29,6 +29,14 @@ typedef MPIDU_thread_mutex_state_t MPID_Thread_mutex_state_t;
 #define MPID_THREAD_CS_EXIT_ST     MPIDU_THREAD_CS_EXIT_ST
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+#define MPID_THREAD_CS_ENTER_DEVICE(mutex)
+#define MPID_THREAD_CS_EXIT_DEVICE(mutex)
+#else
+#define MPID_THREAD_CS_ENTER_DEVICE(mutex) MPID_THREAD_CS_ENTER(VCI, mutex)
+#define MPID_THREAD_CS_EXIT_DEVICE(mutex) MPID_THREAD_CS_EXIT(VCI, mutex)
+#endif
+
 #define MPID_THREAD_SAFE_BEGIN(name, mutex, cs_acq)                     \
 do {                                                                    \
     cs_acq = 1;                                                         \
