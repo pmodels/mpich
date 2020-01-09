@@ -86,6 +86,9 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     }
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Comm_set_info_impl(*newcomm_ptr, info_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
