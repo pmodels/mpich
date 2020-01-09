@@ -44,4 +44,4 @@ noinst_PROGRAMS =     \
     comm_idup_comm2   \
     comm_create_group_idup \
     comm_info \
-    comm_infokey_hint_infrstr
+    comm_info2
