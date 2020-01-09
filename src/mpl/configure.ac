@@ -991,6 +991,12 @@ if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "y
    AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
 fi
 
+# Define some configurabel constants
+AC_ARG_WITH([cacheline],
+[AS_HELP_STRING([--with-cacheline=SIZE], [Define cacheline size (default is 64)])],
+[],[with_cacheline=64])
+AC_DEFINE([CACHELINE_SIZE],[$with_cacheline], [Define cacheline size.])
+
 # Check for execinfo backtrace support
 AX_EXECINFO
 
