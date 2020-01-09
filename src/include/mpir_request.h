@@ -244,11 +244,9 @@ static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
 {
     MPIR_Request *req;
 
-    if (use_lock == LOCK)
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
-    if (use_lock == LOCK)
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
 
     if (req != NULL) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
