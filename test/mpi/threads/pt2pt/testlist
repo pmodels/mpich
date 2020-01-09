@@ -10,3 +10,53 @@ multisend4 5 arg=-mode=1
 greq_wait 1
 greq_test 1
 ibsend 2
+mt_sendrecv 2 arg=-iter=1024 arg=-count=1
+mt_bsendrecv 2 arg=-iter=1024 arg=-count=1
+mt_ssendrecv 2 arg=-iter=1024 arg=-count=1
+mt_isendirecv 2 arg=-iter=1024 arg=-count=1
+mt_ibsendirecv 2 arg=-iter=1024 arg=-count=1
+mt_issendirecv 2 arg=-iter=1024 arg=-count=1
+
+mt_sendrecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_bsendrecv_huge 2 arg=-iter=8 arg=-count=4096
+mt_ssendrecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_isendirecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_ibsendirecv_huge 2 arg=-iter=8 arg=-count=4096
+mt_issendirecv_huge 2 arg=-iter=64 arg=-count=4096
+
+mt_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_bsendrecv_huge 2 arg=-iter=8 arg=-count=4194304
+mt_ssendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_isendirecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_ibsendirecv_huge 2 arg=-iter=8 arg=-count=4194304
+mt_issendirecv_huge 2 arg=-iter=64 arg=-count=4194304
+
+mt_probe_isendrecv 2 arg=-iter=1024 arg=-count=1
+mt_probe_sendrecv 2 arg=-iter=1024 arg=-count=1
+mt_iprobe_isendrecv 2 arg=-iter=1024 arg=-count=1
+mt_iprobe_sendrecv 2 arg=-iter=1024 arg=-count=1
+mt_mprobe_isendrecv 2 arg=-iter=1024 arg=-count=1
+mt_mprobe_sendrecv 2 arg=-iter=1024 arg=-count=1
+mt_mprobe_sendirecv 2 arg=-iter=1024 arg=-count=1
+mt_improbe_isendrecv 2 arg=-iter=1024 arg=-count=1
+mt_improbe_sendrecv 2 arg=-iter=1024 arg=-count=1
+
+mt_probe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_iprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_mprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096
+mt_improbe_sendrecv_huge 2 arg=-iter=64 arg=-count=4096
+
+mt_probe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_iprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_mprobe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+mt_improbe_sendrecv_huge 2 arg=-iter=64 arg=-count=4194304
+
+mt_sendrecv_pers_huge 2 arg=-iter=64 arg=-count=4096
+mt_bsendrecv_pers_huge 2 arg=-iter=8 arg=-count=4096
+mt_ssendrecv_pers_huge 2 arg=-iter=64 arg=-count=4096
+
+mt_sendrecv_pers_huge 2 arg=-iter=64 arg=-count=4194304
+mt_bsendrecv_pers_huge 2 arg=-iter=8 arg=-count=4194304
+mt_ssendrecv_pers_huge 2 arg=-iter=64 arg=-count=4194304
+
+mt_mpicancel 2
