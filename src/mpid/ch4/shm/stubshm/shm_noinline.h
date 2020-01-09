@@ -9,7 +9,7 @@
 
 #include "shm_impl.h"
 
-int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_STUBSHM_mpi_finalize_hook(void);
 int MPIDI_STUBSHM_get_vci_attr(int vci);
 

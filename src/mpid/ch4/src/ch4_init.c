@@ -381,10 +381,6 @@ int MPID_Init(void)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
-    int n_nm_vcis_provided;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vcis_provided;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -455,15 +451,14 @@ int MPID_Init(void)
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm,
-                                           &n_nm_vcis_provided);
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }

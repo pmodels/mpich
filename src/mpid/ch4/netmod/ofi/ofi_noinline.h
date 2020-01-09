@@ -84,8 +84,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win);
 #endif
 
 /* ofi_init.h */
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided);
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm);
 int MPIDI_OFI_mpi_finalize_hook(void);
 int MPIDI_OFI_get_vci_attr(int vci);
 void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
