@@ -239,7 +239,10 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
 
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+
     if (req != NULL) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
