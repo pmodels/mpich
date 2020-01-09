@@ -331,7 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             rma_key = ctrl.rma_key;
         }
 
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.domain,       /* In:  Domain Object       */
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
                                  send_buf,      /* In:  Lower memory address */
                                  data_sz,       /* In:  Length              */
                                  FI_REMOTE_READ,        /* In:  Expose MR for read  */

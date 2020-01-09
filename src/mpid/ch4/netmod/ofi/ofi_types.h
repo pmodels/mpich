@@ -26,6 +26,10 @@
      ? strrchr(__FILE__,'/')+1                  \
      : __FILE__                                 \
 )
+
+/* TODO: make it a configure option */
+#define MPIDI_OFI_MAX_CONTEXTS                  16
+
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
@@ -139,15 +143,10 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
  * whether we're using scalable endpoints or not. */
 static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
 {
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    return (av)->ep_idx;
-#else /* This is necessary for older GCC compilers that don't properly do this
-       * detection when using elif */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return (av)->ep_idx;
 #else
     return 0;
-#endif
 #endif
 }
 
@@ -156,15 +155,10 @@ static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
  * whether we're using scalable endpoints or not. */
 static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 {
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
-#else /* This is necessary for older GCC compilers that don't properly do this
-       * detection when using elif */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
 #else
     return 0;
-#endif
 #endif
 }
 
@@ -252,6 +246,11 @@ typedef struct {
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
+    struct fid_domain *domain;
+    struct fid_av *av;
+    struct fid_ep *ep;
+    struct fid_cntr *rma_cmpl_cntr;
+
     struct fid_ep *tx;
     struct fid_ep *rx;
     struct fid_cq *cq;
@@ -323,14 +322,12 @@ typedef struct {
     /* OFI objects */
     int avtid;
     struct fi_info *prov_use;
-    struct fid_domain *domain;
     struct fid_fabric *fabric;
-    struct fid_av *av;
-    struct fid_ep *ep;
-    struct fid_cq *p2p_cq;
-    struct fid_cntr *rma_cmpl_cntr;
+
     struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
     struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
+
+    int got_named_av;
 
     /* Queryable limits */
     uint64_t max_buffered_send;
@@ -345,19 +342,15 @@ typedef struct {
     size_t tx_iov_limit;
     size_t rx_iov_limit;
     size_t rma_iov_limit;
-    int max_ch4_vcis;
     int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
     size_t max_order_waw;
 
-    /* Mutexex and endpoints */
+    /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
-#else
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS];
-#endif
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_CONTEXTS];
+    int num_ctx;
 
     /* Window/RMA Globals */
     void *win_map;

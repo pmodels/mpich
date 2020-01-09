@@ -25,6 +25,11 @@
 
 /* Defines */
 
+/* configure option --enable-ofi-domain */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+#define MPIDI_OFI_VNI_USE_SEPCTX       1
+#endif
+
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
@@ -203,13 +208,8 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-#else                           /* This is necessary for older GCC compilers that don't properly detect
-                                 * elif statements */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-#endif
 #endif
 } MPIDI_OFI_addr_t;
 
