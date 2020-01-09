@@ -513,8 +513,7 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided)
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS, i;
     void *table = NULL;
@@ -565,7 +564,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         num_vnis = MPIDI_OFI_MAX_CONTEXTS;
     }
     MPIDI_OFI_global.num_ctx = num_vnis;
-    *n_vcis_provided = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */
     mpi_errno = create_vni_context(0);

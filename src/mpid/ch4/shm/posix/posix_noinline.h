@@ -9,7 +9,7 @@
 
 #include "posix_impl.h"
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits);
+int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_POSIX_mpi_finalize_hook(void);
 int MPIDI_POSIX_get_vci_attr(int vci);
 

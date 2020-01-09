@@ -17,7 +17,7 @@
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
-                                    MPIR_Comm * init_comm, int *n_vcis_provided);
+                                    MPIR_Comm * init_comm);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef int (*MPIDI_NM_get_vci_attr_t) (int vci);
 typedef int (*MPIDI_NM_progress_t) (int vci, int blocking);
@@ -643,8 +643,7 @@ extern MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 extern int MPIDI_num_netmods;
 extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
-int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                           int *n_vcis_provided);
+int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm);
 int MPIDI_NM_mpi_finalize_hook(void);
 int MPIDI_NM_get_vci_attr(int vci);
 int MPIDI_NM_progress(int vci, int blocking);
