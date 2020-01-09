@@ -610,6 +610,17 @@ install-pdf-local:
 	if [ -s $(srcdir)/doc/installguide/install.pdf ] ; then $(INSTALL_DATA) $(srcdir)/doc/installguide/install.pdf ${DESTDIR}${docdir}/install.pdf ; fi
 	if [ -s $(srcdir)/doc/logging/logging.pdf ] ; then $(INSTALL_DATA) $(srcdir)/doc/logging/logging.pdf ${DESTDIR}${docdir}/logging.pdf ; fi
 
+INSTALL_DATA_LOCAL_TARGETS += install-legal-local
+install-legal-local:
+	if [ ! -e ${DESTDIR}${docdir} ] ; then $(MKDIR_P) ${DESTDIR}${docdir} ; fi
+	if [ -s $(srcdir)/doc/legal/third-party-programs.txt ] ; then $(INSTALL_DATA) $(srcdir)/doc/legal/third-party-programs.txt ${DESTDIR}${docdir}/third-party-programs.txt ; fi
+
+INSTALL_DATA_LOCAL_TARGETS += install-releasenotes-local
+install-releasenotes-local:
+	if [ ! -e ${DESTDIR}${docdir} ] ; then $(MKDIR_P) ${DESTDIR}${docdir} ; fi
+	if [ -s $(srcdir)/doc/mpich/RELEASE_NOTES ] ; then $(INSTALL_DATA) $(srcdir)/doc/mpich/RELEASE_NOTES ${DESTDIR}${docdir}/RELEASE_NOTES; fi
+	if [ -s $(srcdir)/doc/mpich/TUNING_PARAMETERS ] ; then $(INSTALL_DATA) $(srcdir)/doc/mpich/TUNING_PARAMETERS ${DESTDIR}${docdir}/TUNING_PARAMETERS; fi
+
 include $(top_srcdir)/doc/Makefile.mk
 
 # use the _TARGETS var as a workaround for being unable to define multiple
