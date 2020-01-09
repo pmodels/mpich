@@ -51,15 +51,13 @@ int main(int argc, char **argv)
 
     /* process 0 broadcasts the file name to other processes */
     if (!mynod) {
-        filename = "testfile";
+        filename = strdup("testfile");
         len = strlen(filename);
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *) malloc(len + 1);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
+    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (mynod)
+        filename = (char *) malloc(len + 1);
+    MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 
 
     /* create the distributed array filetype */
@@ -189,8 +187,7 @@ int main(int argc, char **argv)
     MPI_Type_free(&newtype);
     free(readbuf);
     free(writebuf);
-    if (mynod)
-        free(filename);
+    free(filename);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
