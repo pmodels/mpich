@@ -588,7 +588,8 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         char conname[FI_NAME_MAX];
         mpi_errno = get_conn_name_from_port(port_name, conname);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, conname, 1, &conn, 0ULL, NULL), avmap);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
+                       avmap);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -770,7 +771,8 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                  &child_root, &remote_size, &remote_upid_size, &remote_upids,
                                  &remote_node_ids);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, conname, 1, &conn, 0ULL, NULL), avmap);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
+                       avmap);
         mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
