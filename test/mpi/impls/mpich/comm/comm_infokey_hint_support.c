@@ -48,7 +48,6 @@ int main(int argc, char **argv)
     char query_key[MPI_MAX_INFO_KEY];
     char buf[MPI_MAX_INFO_VAL];
     char val[MPI_MAX_INFO_VAL];
-    bool hint_mutable;          /* a hint is mutable or immutable based on an MPI implementation */
     MPI_Comm comm_dup1;
     MPI_Comm comm_dup2;
     MPI_Comm comm_dup3;
@@ -64,24 +63,15 @@ int main(int argc, char **argv)
     char new_key[MPI_MAX_INFO_KEY];
 
     /* Read arguments: info key and value */
-    if (argc < 4) {
-        fprintf(stdout,
-                "Usage: %s -comminfohint=[infokey] -value=[VALUE] -hintmutable=[true/false]\n",
-                argv[0]);
+    if (argc < 3) {
+        fprintf(stdout, "Usage: %s -comminfohint=[infokey] -value=[VALUE]\n", argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
             if (!strncmp(argv[i], "-comminfohint=", strlen("-comminfohint="))) {
-                snprintf(query_key, MPI_MAX_INFO_KEY, argv[i] + strlen("-comminfohint="));
+                strncpy(query_key, argv[i] + strlen("-comminfohint="), MPI_MAX_INFO_KEY);
             } else if (!strncmp(argv[i], "-value=", strlen("-value="))) {
-                snprintf(val, MPI_MAX_INFO_VAL, argv[i] + strlen("-value="));
-            } else if (!strncmp(argv[i], "-hintmutable=", strlen("-hintmutable="))) {
-                char is_hint_mutable[10];
-                snprintf(is_hint_mutable, 10, argv[i] + strlen("-hintmutable="));
-                if (!strcmp(is_hint_mutable, "true"))
-                    hint_mutable = true;
-                else
-                    hint_mutable = false;
+                strncpy(val, argv[i] + strlen("-value="), MPI_MAX_INFO_KEY);
             }
         }
     }
@@ -98,10 +88,7 @@ int main(int argc, char **argv)
     MPI_Comm_set_info(comm_dup1, info_in1);
     MPI_Comm_get_info(comm_dup1, &info_out1);
 
-    /* Validate the value only if the hint is mutable */
-    /* For immutable, the supplied value is now ignored by MPI_comm_set_info */
-    if (hint_mutable)
-        errors += ReadCommInfo(info_out1, query_key, val, buf, "MPI_Comm_{set,get}_info");
+    errors += ReadCommInfo(info_out1, query_key, val, buf, "MPI_Comm_{set,get}_info");
     MPI_Info_free(&info_out1);
     /* Release comm_dup1 later, still using */
 
@@ -114,10 +101,7 @@ int main(int argc, char **argv)
     /* Note: For MPICH, we currently expect MPI_Comm_dup to copy hints from source
      * to dup comm. Such copying with not be done after we align behavior of MPICH
      * with the new MPI standard (MPI 3.2 onwards). */
-    /* If the hint is immutable, user provided value is not set in comm,
-     * so skip the validation */
-    if (hint_mutable)
-        errors += ReadCommInfo(info_out2, query_key, val, buf, "MPI_Comm_dup");
+    errors += ReadCommInfo(info_out2, query_key, val, buf, "MPI_Comm_dup");
     MPI_Info_free(&info_out2);
 
     /* Test 3: Comm_dup_with_info with comm=MPI_COMM_WORLD */
