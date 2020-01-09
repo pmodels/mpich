@@ -150,8 +150,6 @@ int MPII_Comm_check_hints(MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
-/* AUTOGEN-MPIR_Init */
-void MPIR_Comm_hint_init(void);
 void MPIR_Comm_hint_init(void)
 {
     MPIR_Comm_register_hint(MPIR_COMM_HINT_NO_ANY_TAG, "mpi_assert_no_any_tag",

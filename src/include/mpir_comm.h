@@ -294,6 +294,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
  * communicator. If the LOCAL bit is set, the hint values is treated as local.
  * Additional attributes may be added in the future.
  */
+void MPIR_Comm_hint_init(void);
 typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, val */
 int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
                             int type, int attr);

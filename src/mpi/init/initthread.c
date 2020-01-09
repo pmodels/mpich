@@ -559,6 +559,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
+    /* Init communicator hints */
+    MPIR_Comm_hint_init();
+    
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, &has_args, &has_env);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
