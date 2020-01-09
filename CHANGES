@@ -28,6 +28,8 @@
 
 # Fix several static analysis and compiler warnings.
 
+# Add MPID_Pre_init to ADI, and change the signature of MPID_Init.
+
 ===============================================================================
                                Changes in 3.3.2
 ===============================================================================
