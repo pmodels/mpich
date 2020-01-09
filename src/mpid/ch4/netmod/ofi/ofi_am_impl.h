@@ -140,9 +140,11 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                        &MPIDI_OFI_global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), repost);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     return mpi_errno;
@@ -160,7 +162,9 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     ret = fi_cq_read(MPIDI_OFI_global.ctx[vci_idx].cq, &cq_entry, 1);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
@@ -239,9 +243,11 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 2,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     return mpi_errno;
@@ -295,6 +301,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
     MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
                 MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
                              data,
                              data_sz,
@@ -324,6 +331,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
     return mpi_errno;
@@ -373,9 +381,11 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
     return mpi_errno;
@@ -478,9 +488,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
     OPA_incr_int(&MPIDI_OFI_global.am_inflight_inject_emus);
 
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[0].tx, ibuf, len,
                                     NULL /* desc */ , addr, &(MPIDI_OFI_REQUEST(sreq, context))),
                             send);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -526,7 +538,9 @@ static inline int MPIDI_OFI_do_inject(int rank,
     memcpy(buff, &msg_hdr, sizeof(msg_hdr));
     memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
 
+    MPID_THREAD_CS_ENTER_DEVICE(&MPIDI_global.vci_lock);
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, buff, buff_len, addr), inject);
+    MPID_THREAD_CS_EXIT_DEVICE(&MPIDI_global.vci_lock);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
