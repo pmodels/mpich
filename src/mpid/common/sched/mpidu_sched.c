@@ -136,12 +136,16 @@ struct MPIDU_Sched_state {
 };
 
 /* holds on to all incomplete schedules on which progress should be made */
-struct MPIDU_Sched_state all_schedules = { NULL };
+static struct MPIDU_Sched_state all_schedules = { NULL };
 
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
 int MPIDU_Sched_are_pending(void)
 {
+    /* this function is only called within a critical section to decide whether
+     * yield is necessary. (ref: .../ch3/.../mpid_nem_inline.h)
+     * therefore, there is no need for additional lock protection.
+     */
     return (all_schedules.head != NULL);
 }
 
@@ -174,11 +178,13 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
         end = tag_ub / 2;
     }
     if (start != MPI_UNDEFINED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
         DL_FOREACH(all_schedules.head, elt) {
             if (elt->tag >= start && elt->tag < end) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
             }
         }
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     }
 #endif
 
@@ -488,10 +494,12 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
-    if (all_schedules.head == NULL)
-        MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     DL_APPEND(all_schedules.head, s);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+
+    MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -978,13 +986,13 @@ int MPIDU_Sched_progress(int *made_progress)
 {
     int mpi_errno;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
     if (!mpi_errno && all_schedules.head == NULL)
         MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
     return mpi_errno;
 }

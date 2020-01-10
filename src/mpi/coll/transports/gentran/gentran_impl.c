@@ -32,7 +32,7 @@ cvars:
 #include "tsp_gentran.h"
 #include "gentran_utils.h"
 
-MPII_Coll_queue_t coll_queue = { NULL };
+MPII_Coll_queue_t MPII_coll_queue = { NULL };
 
 int MPII_Genutil_progress_hook_id = 0;
 
@@ -80,5 +80,9 @@ int MPII_Gentran_finalize(void)
 
 int MPII_Gentran_scheds_are_pending(void)
 {
-    return coll_queue.head != NULL;
+    /* this function is only called within a critical section to decide whether
+     * yield is necessary. (ref: .../ch3/.../mpid_nem_inline.h)
+     * therefore, there is no need for additional lock protection.
+     */
+    return MPII_coll_queue.head != NULL;
 }

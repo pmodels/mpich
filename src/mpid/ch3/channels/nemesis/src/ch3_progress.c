@@ -348,8 +348,7 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
-                progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
+    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = TRUE;
 
   fn_exit:
