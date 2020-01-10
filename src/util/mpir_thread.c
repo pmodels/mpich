@@ -10,7 +10,7 @@
 /* use MPIR_Add_mutex to register mutex, they will be created/destroyed together
  * at init/finalize */
 
-#define MAX_MUTEX_COUNT 64
+#define MAX_MUTEX_COUNT 128
 static MPID_Thread_mutex_t *mutex_list[MAX_MUTEX_COUNT];
 static int mutex_count = 0;
 
