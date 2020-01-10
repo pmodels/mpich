@@ -189,6 +189,7 @@
 /comm/icm
 /comm/icsplit
 /comm/probe_intercomm
+/comm/testlist
 /confdb
 /cxx/attr/attricx
 /cxx/attr/attrtx
@@ -1039,6 +1040,7 @@
 /impls/hydra/dummy
 /impls/hydra/proc_binding.sh
 /impls/mpich/testlist
+/impls/mpich/comm/testlist
 /impls/testlist
 /info/infodel
 /info/infodup

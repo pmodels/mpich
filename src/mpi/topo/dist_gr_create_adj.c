@@ -145,7 +145,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, NULL, &comm_dist_graph_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Create the topology structure */

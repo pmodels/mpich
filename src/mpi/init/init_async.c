@@ -110,7 +110,7 @@ int MPIR_Init_async_thread(void)
 
     /* Dup comm world for the progress thread */
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, &progress_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPID_Thread_cond_create(&progress_cond, &err);
