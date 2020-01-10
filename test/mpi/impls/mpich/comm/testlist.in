@@ -1,0 +1,8 @@
+# To add a ch4 comm hints support test:
+# start with @ch4_commhints_tests_enabled@
+# use @ch3_tests@, @ch4_tests@, @ch4_ucx_tests@, or @ch4_ofi_tests@ for specific tests
+comm_info_hint 1 arg=-hint=mpi_assert_no_any_source arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_no_any_tag arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_allow_overtaking arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_exact_length arg=-value=true
+@ch4_ofi_tests@comm_info_hint 1 arg=-hint=eagain arg=-value=true

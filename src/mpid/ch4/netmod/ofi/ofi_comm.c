@@ -27,7 +27,9 @@ int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_COMM(comm).conn_id = -1;
 
     /* eagain defaults to off */
-    MPIDI_OFI_COMM(comm).eagain = FALSE;
+    if (comm->hints[MPIR_COMM_HINT_EAGAIN] == 0) {
+        comm->hints[MPIR_COMM_HINT_EAGAIN] = FALSE;
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_MPI_COMM_CREATE_HOOK);

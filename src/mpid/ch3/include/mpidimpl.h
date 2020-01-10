@@ -1848,8 +1848,8 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request *);
 
 #define MPIDI_CH3_GET_EAGER_THRESHOLD(eager_threshold_p, comm, vc)  \
     do {                                                            \
-        if ((comm)->dev.eager_max_msg_sz != -1)                     \
-            *(eager_threshold_p) = (comm)->dev.eager_max_msg_sz;    \
+        if ((comm)->hints[MPIR_COMM_HINT_EAGER_THRESH] != -1)                     \
+            *(eager_threshold_p) = (comm)->hints[MPIR_COMM_HINT_EAGER_THRESH];    \
         else                                                        \
             *(eager_threshold_p) = (vc)->eager_max_msg_sz;          \
     } while (0)

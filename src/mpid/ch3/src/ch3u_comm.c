@@ -430,8 +430,10 @@ int comm_created(MPIR_Comm *comm, void *param)
 
     comm->dev.anysource_enabled = TRUE;
 
-    /* Use the VC's eager threshold by default. */
-    comm->dev.eager_max_msg_sz = -1;
+    /* Use the VC's eager threshold by default if it is not set. */
+    if (comm->hints[MPIR_COMM_HINT_EAGER_THRESH] == 0) {
+        comm->hints[MPIR_COMM_HINT_EAGER_THRESH] = -1;
+    }
 
     /* Initialize the last acked failure to -1 */
     comm->dev.last_ack_rank = -1;
