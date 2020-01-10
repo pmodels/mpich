@@ -64,12 +64,12 @@ int main(int argc, char **argv)
 
     /* Read arguments: info key and value */
     if (argc < 3) {
-        fprintf(stdout, "Usage: %s -comminfohint=[infokey] -value=[VALUE]\n", argv[0]);
+        fprintf(stdout, "Usage: %s -hint=[infokey] -value=[VALUE]\n", argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
-            if (!strncmp(argv[i], "-comminfohint=", strlen("-comminfohint="))) {
-                strncpy(query_key, argv[i] + strlen("-comminfohint="), MPI_MAX_INFO_KEY);
+            if (!strncmp(argv[i], "-hint=", strlen("-hint="))) {
+                strncpy(query_key, argv[i] + strlen("-hint="), MPI_MAX_INFO_KEY);
             } else if (!strncmp(argv[i], "-value=", strlen("-value="))) {
                 strncpy(val, argv[i] + strlen("-value="), MPI_MAX_INFO_KEY);
             }
