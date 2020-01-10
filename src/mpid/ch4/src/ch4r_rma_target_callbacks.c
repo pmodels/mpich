@@ -1231,8 +1231,8 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, s
     MPIR_Request *areq;
 
     size_t data_sz;
-    int dt_contig, n_iov;
-    MPI_Aint dt_true_lb, num_iov;
+    int dt_contig;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_ACK_TARGET_MSG_CB);
@@ -1364,12 +1364,12 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, size_t p_
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     size_t data_sz;
-    struct iovec *iov, *dt_iov;
+    struct iovec *iov;
     uintptr_t base;             /* Base address of the window */
     size_t offset;
 
-    int dt_contig, n_iov;
-    MPI_Aint dt_true_lb, num_iov;
+    int dt_contig;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     MPIR_Win *win;
     MPIDIG_put_msg_t *msg_hdr = (MPIDIG_put_msg_t *) am_hdr;
@@ -2046,8 +2046,8 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, size_
     MPIR_Request *get_req;
     size_t data_sz;
 
-    int dt_contig, n_iov;
-    MPI_Aint dt_true_lb, num_iov;
+    int dt_contig;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
 
     MPIDIG_get_ack_msg_t *msg_hdr = (MPIDIG_get_ack_msg_t *) am_hdr;
