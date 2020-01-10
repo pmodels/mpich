@@ -719,13 +719,31 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
 fi
 AC_SUBST(largetest)
 
-# Enable comm hints support tests for ch4
-device_name=`echo $with_device | sed -e 's/:.*$//'`
-ch4_commhints_tests_enabled="#"
-if test "$device_name" = "ch4" ; then
-    ch4_commhints_tests_enabled=""
-fi
-AC_SUBST(ch4_commhints_tests_enabled)
+# Enable device specific tests in impls/mpich
+ch3_tests="#"
+ch4_tests="#"
+case $with_device in
+    ch3*)
+        ch3_tests=""
+        ;;
+    ch4*)
+        ch4_tests=""
+        ;;
+esac
+ch4_ucx_tests="#"
+ch4_ofi_tests="#"
+case $with_device in
+    ch4:ucx*)
+        ch4_ucx_tests=""
+        ;;
+    ch4:ofi*)
+        ch4_ofi_tests=""
+        ;;
+esac
+AC_SUBST(ch3_tests)
+AC_SUBST(ch4_tests)
+AC_SUBST(ch4_ucx_tests)
+AC_SUBST(ch4_ofi_tests)
 
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
