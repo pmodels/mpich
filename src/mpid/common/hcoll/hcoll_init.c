@@ -76,8 +76,7 @@ int hcoll_initialize(void)
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
-        !MPIR_ThreadInfo.isThreaded;
+    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL);
     if (0 >= hcoll_enable) {
         goto fn_exit;
     }
@@ -158,6 +157,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
+
     comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
     if (NULL == comm_ptr->hcoll_priv.hcoll_context) {
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
@@ -198,7 +198,12 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 int hcoll_do_progress(int *made_progress)
 {
     *made_progress = 1;
-    hcoll_progress_fn();
 
+    /* hcoll_progress_fn() has been deprecated since v4.0. */
+#if HCOLL_API < HCOLL_VERSION(4,0)
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+    hcoll_progress_fn();
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+#endif
     return MPI_SUCCESS;
 }
