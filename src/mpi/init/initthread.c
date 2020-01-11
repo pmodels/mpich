@@ -81,6 +81,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     int mpi_errno = MPI_SUCCESS;
 
     MPII_init_thread_and_enter_cs();
+    /* ---- Entered CS ------------------------------------------------ */
 
     MPID_Wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
@@ -100,6 +101,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     }
 
     MPL_set_threaded(MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+
+    /* ---- MPII_Pre_init --------------------------------------------- */
 
     /* Init various components */
     MPII_hwtopo_init();
@@ -132,9 +135,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_Datatype_init_predefined();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* ---- MPID_Init -------------------------------------------------- */
     mpi_errno = MPID_Init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* ---- MPII_Post_init --------------------------------------------- */
     /* Commit pairtypes after device hooks are activated */
     mpi_errno = MPIR_Datatype_commit_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
@@ -160,6 +165,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* create fine-grained mutexes */
     MPIR_Thread_CS_Init();
 
+    /* ---- MPID_Post_init --------------------------------------------- */
     /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
         mpi_errno = MPID_Init_spawn();
@@ -168,6 +174,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
+    /* ---- Exit CS --------------------------------------------------- */
     MPII_init_thread_and_exit_cs();
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
