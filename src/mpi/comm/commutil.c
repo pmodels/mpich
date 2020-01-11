@@ -130,14 +130,21 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     char hint_val_str[MPI_MAX_INFO_VAL];
     for (int i = 0; i < next_comm_hint_index; i++) {
         if (MPIR_comm_hint_list[i].key) {
             get_string_value(hint_val_str, MPIR_comm_hint_list[i].type, comm_ptr->hints[i]);
-            MPIR_Info_set_impl(info, MPIR_comm_hint_list[i].key, hint_val_str);
+            mpi_errno = MPIR_Info_set_impl(info, MPIR_comm_hint_list[i].key, hint_val_str);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
-    return MPI_SUCCESS;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_Comm_check_hints(MPIR_Comm * comm)

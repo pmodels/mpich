@@ -102,7 +102,8 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    MPIR_Info_set_impl(info_ptr, key, value);
+    mpi_errno = MPIR_Info_set_impl(info_ptr, key, value);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
