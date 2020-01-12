@@ -394,7 +394,8 @@ static int conn_manager_destroy()
         for (i = 0; i < max_n_conn; ++i) {
             switch (MPIDI_OFI_global.conn_mgr.conn_list[i].state) {
                 case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-                    dynproc_send_disconnect(i);
+                    mpi_errno = dynproc_send_disconnect(i);
+                    MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT:
                 case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
@@ -727,7 +728,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_FINALIZE);
 
     /* clean dynamic process connections */
-    conn_manager_destroy();
+    mpi_errno = conn_manager_destroy();
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight RMA send long buffers */
     while (OPA_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
