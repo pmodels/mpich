@@ -35,15 +35,12 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_ISEND);
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(rank, comm, handler_id,
                                           am_hdr, am_hdr_sz, data, count, datatype, sreq);
     else
         mpi_errno = MPIDI_OFI_do_am_isend_header(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISEND);
     return mpi_errno;
 }
 
@@ -59,8 +56,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
     size_t am_hdr_sz = 0, i;
     char *am_hdr_buf;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_ISENDV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_ISENDV);
 
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
@@ -90,7 +85,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
     else
         MPIDIU_release_buf(am_hdr_buf);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_AM_ISENDV);
     return mpi_errno;
 }
 
@@ -104,8 +98,6 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_ISEND_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_ISEND_REPLY);
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id),
                                           handler_id, am_hdr, am_hdr_sz, data, count, datatype,
@@ -113,7 +105,6 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     else
         mpi_errno = MPIDI_OFI_do_am_isend_header(src_rank, MPIDIG_context_id_to_comm(context_id),
                                                  handler_id, am_hdr, am_hdr_sz, sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISEND_REPLY);
     return mpi_errno;
 }
 
@@ -133,14 +124,11 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
                                        int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_SEND_HDR);
     mpi_errno = MPIDI_OFI_do_inject(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_AM_SEND_HDR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -152,8 +140,6 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_SEND_HDR_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_SEND_HDR_REPLY);
 
     mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDIG_context_id_to_comm(context_id), handler_id,
                                     am_hdr, am_hdr_sz);
@@ -161,7 +147,6 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_AM_SEND_HDR_REPLY);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -172,8 +157,6 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_send_long_ack_msg_t msg;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_AM_RECV);
 
     msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = req;
@@ -185,7 +168,6 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_AM_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

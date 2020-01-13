@@ -68,11 +68,9 @@ int MPI_Pack(const void *inbuf,
     MPI_Aint position_x;
     MPIR_Comm *comm_ptr = NULL;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PACK);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -167,7 +165,6 @@ int MPI_Pack(const void *inbuf,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PACK);
     return mpi_errno;
 
   fn_fail:

@@ -20,12 +20,9 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_ADD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_ADD);
 
     result = (MPI_Aint) ((char *) base + disp);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_ADD);
     return result;
 }
 
@@ -43,11 +40,8 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_AINT_DIFF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_AINT_DIFF);
 
     result = (MPI_Aint) ((char *) addr1 - (char *) addr2);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_AINT_DIFF);
     return result;
 }

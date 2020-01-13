@@ -47,8 +47,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     size_t cur_o = 0;
     struct fi_msg_tagged msg;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
 
     /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
      *  fallback to the pack path */
@@ -161,7 +159,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[0].rx, &msg, flags), trecv, FALSE);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RECV_IOV);
     return mpi_errno;
 
   unpack:
@@ -193,8 +190,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     struct fi_msg_tagged msg;
     char *recv_buf;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
         MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(rreq, MPIR_REQUEST_KIND__RECV);
@@ -287,7 +282,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_IRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -305,8 +299,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int src_vci, int dst_vci)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -319,7 +311,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                        context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
     return mpi_errno;
 }
 
@@ -330,8 +321,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIDI_av_entry_t *av;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -347,7 +336,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                        &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
     return mpi_errno;
 }
 
@@ -361,8 +349,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 int src_vci, int dst_vci)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IRECV);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -375,7 +361,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                        context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
     return mpi_errno;
 }
 
@@ -384,8 +369,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 
     int mpi_errno = MPI_SUCCESS;
     ssize_t ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -426,7 +409,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -25,9 +25,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     int in_cs = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
@@ -73,7 +71,6 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

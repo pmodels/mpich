@@ -29,8 +29,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     struct fi_msg_tagged msg;
     int ofi_err;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);
 
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
@@ -97,7 +95,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -111,8 +108,6 @@ static inline int MPIDI_NM_mpi_improbe(int source,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -133,7 +128,6 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
     return mpi_errno;
 }
 
@@ -144,8 +138,6 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
                                       MPI_Status * status)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IPROBE);
 
 #ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
@@ -157,7 +149,6 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
             MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     return mpi_errno;
 }
 

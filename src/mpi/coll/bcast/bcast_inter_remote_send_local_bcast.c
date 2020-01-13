@@ -23,9 +23,7 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST_INTER);
 
 
     if (root == MPI_PROC_NULL) {
@@ -88,7 +86,6 @@ int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
         }
     }
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

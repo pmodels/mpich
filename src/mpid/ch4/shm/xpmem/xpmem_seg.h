@@ -45,8 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_create(MPIDI_XPMEM_seg_t ** seg_
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEM_seg_t *seg = NULL;
     struct xpmem_addr xpmem_addr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_DO_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_DO_CREATE);
 
     *seg_ptr = MPIR_Handle_obj_alloc(&MPIDI_XPMEM_seg_mem);
     MPIR_ERR_CHKANDJUMP1(!(*seg_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -63,7 +61,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_create(MPIDI_XPMEM_seg_t ** seg_
     MPIR_ERR_CHKANDJUMP(seg->vaddr == (void *) -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_attach");
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_DO_CREATE);
     return mpi_errno;
   fn_fail:
     if (seg)    /* in case xpmem_attach fails */
@@ -76,8 +73,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_release(MPIDI_XPMEM_seg_t * seg)
 {
     int ret;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_DO_RELEASE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_DO_RELEASE);
 
     MPIR_Assert(MPIR_Object_get_ref(seg) == 0);
     ret = xpmem_detach((void *) seg->vaddr);
@@ -85,7 +80,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_release(MPIDI_XPMEM_seg_t * seg)
     MPIR_Handle_obj_free(&MPIDI_XPMEM_seg_mem, seg);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_DO_RELEASE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -94,14 +88,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_do_release(MPIDI_XPMEM_seg_t * seg)
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_update_node_info(MPIDI_XPMEM_seg_t * node)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_AVL_DO_UPDATE_NODE_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_AVL_DO_UPDATE_NODE_INFO);
 
     int lheight = node->left == NULL ? 0 : node->left->height;
     int rheight = node->right == NULL ? 0 : node->right->height;
     node->height = (lheight < rheight ? rheight : lheight) + 1;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_UPDATE_NODE_INFO);
     return mpi_errno;
 }
 
@@ -109,8 +100,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_right_rotation(MPIDI_XPMEM_seg_t
                                                                MPIDI_XPMEM_seg_t * left_child)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_ROTATION);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_ROTATION);
 
     parent->left = left_child->right;
     left_child->right = parent;
@@ -133,7 +122,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_right_rotation(MPIDI_XPMEM_seg_t
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_ROTATION);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -143,8 +131,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_left_rotation(MPIDI_XPMEM_seg_t 
                                                               MPIDI_XPMEM_seg_t * right_child)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_ROTATION);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_ROTATION);
 
     parent->right = right_child->left;
     right_child->left = parent;
@@ -167,7 +153,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_left_rotation(MPIDI_XPMEM_seg_t 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_ROTATION);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -177,8 +162,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_left_right_rotation(MPIDI_XPMEM_
                                                                     MPIDI_XPMEM_seg_t * left_child)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_RIGHT_ROTATION);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_RIGHT_ROTATION);
 
     MPIDI_XPMEM_seg_t *lr_child = left_child->right;
     /* Left rotate */
@@ -189,7 +172,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_left_right_rotation(MPIDI_XPMEM_
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_LEFT_RIGHT_ROTATION);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -199,8 +181,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_right_left_rotation(MPIDI_XPMEM_
                                                                     MPIDI_XPMEM_seg_t * right_child)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_LEFT_ROTATION);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_LEFT_ROTATION);
 
     MPIDI_XPMEM_seg_t *rl_child = right_child->left;
     mpi_errno = MPIDI_XPMEM_avl_do_right_rotation(right_child, rl_child);
@@ -209,7 +189,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_avl_do_right_left_rotation(MPIDI_XPMEM_
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_AVL_DO_RIGHT_LEFT_ROTATION);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -223,8 +202,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_do_create_node(uint64_t low,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEM_seg_t *seg = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_CREATE_NODE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_CREATE_NODE);
 
     mpi_errno = MPIDI_XPMEM_seg_do_create(seg_ptr, low, high, apid);
     MPIR_ERR_CHECK(mpi_errno);
@@ -236,7 +213,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_do_create_node(uint64_t low,
     seg->right = NULL;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_CREATE_NODE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -283,8 +259,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_do_search_and_insert_safe(MPIDI
     int direction;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEM_seg_t *sub_root = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_SEARCH_AND_INSERT_SAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_SEARCH_AND_INSERT_SAFE);
 
     MPID_THREAD_CS_ENTER(VCI, tree->lock);
 
@@ -399,7 +373,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_do_search_and_insert_safe(MPIDI
 
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, tree->lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEGTREE_DO_SEARCH_AND_INSERT_SAFE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -414,14 +387,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_do_search_and_insert_safe(MPIDI
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_init(MPIDI_XPMEM_segtree_t * tree)
 {
     int mpi_errno = MPI_SUCCESS, ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEGTREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEGTREE_INIT);
 
     tree->root = NULL;
     tree->tree_size = 0;
     MPID_Thread_mutex_create(&tree->lock, &ret);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEGTREE_INIT);
     return mpi_errno;
 }
 
@@ -431,8 +401,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
 {
     uint8_t direction;
     int mpi_errno = MPI_SUCCESS, ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEGTREE_DELETE_ALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEGTREE_DELETE_ALL);
 
     MPIDI_XPMEM_AVL_DECLARE_STACK(node_stack, MPIDI_XPMEM_seg_t *, MPIDI_XPMEM_AVL_STACK_SIZE);
     MPIDI_XPMEM_AVL_DECLARE_STACK(direction_stack, uint8_t, MPIDI_XPMEM_AVL_STACK_SIZE);
@@ -478,7 +446,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_segtree_delete_all(MPIDI_XPMEM_segtree_
 
     MPID_Thread_mutex_destroy(&tree->lock, &ret);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEGTREE_DELETE_ALL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -511,8 +478,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
     MPIDI_XPMEM_seg_t *seg = NULL;
     off_t offset_diff = 0, voffset = 0;
     uint64_t seg_low, seg_size, seg_high;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_REGIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_REGIST);
     /* Get apid if it is the first time registered on the local process. */
     if (segmap->apid == -1) {
         segmap->apid = xpmem_get(segmap->remote_segid, XPMEM_RDWR, XPMEM_PERMIT_MODE,
@@ -542,7 +507,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
                 MPIR_Object_get_ref(seg), node_rank, (uint64_t) segmap->apid, size, seg_size,
                 remote_vaddr, seg->low, seg->vaddr, *vaddr);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_REGIST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -553,13 +517,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_deregist(MPIDI_XPMEM_seg_t * seg)
 {
     int mpi_errno = MPI_SUCCESS, c = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
     MPIR_Object_release_ref(seg, &c);
     XPMEM_TRACE("seg: deregister segment %p(refcount %d) vaddr=%p\n", seg,
                 MPIR_Object_get_ref(seg), seg->vaddr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_SEG_DEREGIST);
     return mpi_errno;
 }
 

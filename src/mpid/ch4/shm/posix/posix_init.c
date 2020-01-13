@@ -41,8 +41,6 @@ static int choose_posix_eager(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_CHOOSE_POSIX_EAGER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_CHOOSE_POSIX_EAGER);
 
     MPIR_Assert(MPIR_CVAR_CH4_SHM_POSIX_EAGER != NULL);
 
@@ -65,7 +63,6 @@ static int choose_posix_eager(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch4|invalid_shm_posix_eager",
                          "**ch4|invalid_shm_posix_eager %s", MPIR_CVAR_CH4_SHM_POSIX_EAGER);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_CHOOSE_POSIX_EAGER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -85,8 +82,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 
     MPIR_CHKPMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
 
     /* Populate these values with transformation information about each rank and its original
      * information in MPI_COMM_WORLD. */
@@ -132,7 +127,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -144,8 +138,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
 int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
 
     mpi_errno = MPIDI_POSIX_eager_finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -161,7 +153,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     /* MPL_free(MPIDI_POSIX_global.local_procs); */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -170,8 +161,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
 int MPIDI_POSIX_coll_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
@@ -186,7 +175,6 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPL_atomic_relaxed_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -196,15 +184,12 @@ int MPIDI_POSIX_coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
 
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -42,13 +42,10 @@ double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 double MPI_Wtick(void)
 {
     double tick;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTICK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTICK);
     MPID_Wtick(&tick);
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTICK);
 
     return tick;
 }

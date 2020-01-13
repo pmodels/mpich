@@ -72,8 +72,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                                     MPIDI_POSIX_release_gather_opcode_t
                                                                     operation)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -261,7 +259,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -280,8 +277,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                                    MPIDI_POSIX_release_gather_opcode_t
                                                                    operation)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
 
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
@@ -417,7 +412,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;

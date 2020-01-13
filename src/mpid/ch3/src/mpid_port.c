@@ -40,9 +40,7 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_OPEN_PORT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_OPEN_PORT);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -65,7 +63,6 @@ int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
     }
 
  fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_OPEN_PORT);
     return mpi_errno;
 }
 
@@ -85,9 +82,7 @@ Input Parameters:
 int MPID_Close_port(const char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CLOSE_PORT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CLOSE_PORT);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -108,7 +103,6 @@ int MPID_Close_port(const char *port_name)
     }
 
  fn_fail:	
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CLOSE_PORT);
     return mpi_errno;
 }
 
@@ -116,9 +110,7 @@ int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
 		     MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_ACCEPT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_ACCEPT);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -140,7 +132,6 @@ int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
     }
 
  fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_ACCEPT);
     return mpi_errno;
 }
 
@@ -148,9 +139,7 @@ int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
 		      MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_CONNECT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_CONNECT);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -172,7 +161,6 @@ int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
     }
 
  fn_fail:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_CONNECT);
     return mpi_errno;
 }
 
@@ -261,9 +249,7 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
     int port_name_tag = 0; /* this tag is added to the business card,
                               which is then returned as the port name */
     int myRank = MPIR_Process.comm_world->rank;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OPEN_PORT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OPEN_PORT);
 
     mpi_errno = get_port_name_tag(&port_name_tag);
     MPIR_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
@@ -287,7 +273,6 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
     mpi_errno = MPIDI_CH3I_Port_init(port_name_tag);
 
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OPEN_PORT);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -300,9 +285,7 @@ static int MPIDI_Close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     int port_name_tag;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CLOSE_PORT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CLOSE_PORT);
 
     mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
@@ -312,7 +295,6 @@ static int MPIDI_Close_port(const char *port_name)
     mpi_errno = MPIDI_CH3I_Port_destroy(port_name_tag);
 
 fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CLOSE_PORT);
     return mpi_errno;
 fn_fail:
     goto fn_exit;

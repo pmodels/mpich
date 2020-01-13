@@ -51,11 +51,9 @@ int MPI_Group_size(MPI_Group group, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_SIZE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -96,7 +94,6 @@ int MPI_Group_size(MPI_Group group, int *size)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_SIZE);
     return mpi_errno;
 
 #ifdef HAVE_ERROR_CHECKING

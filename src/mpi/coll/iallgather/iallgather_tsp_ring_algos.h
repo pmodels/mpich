@@ -35,8 +35,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RING);
 
     /* Find out the buffer which has the send data and point data_buf to it */
     if (is_inplace) {
@@ -146,7 +144,6 @@ int MPIR_TSP_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
     return mpi_errno;
 
   fn_fail:
@@ -162,8 +159,6 @@ int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datat
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RING);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RING);
 
 
     /* Generate the schedule */
@@ -181,7 +176,6 @@ int MPIR_TSP_Iallgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datat
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_INTRA_RING);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

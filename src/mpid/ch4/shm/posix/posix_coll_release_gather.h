@@ -24,8 +24,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
                                                                   int root, MPIR_Comm * comm_ptr,
                                                                   MPIR_Errflag_t * errflag)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_BCAST_RELEASE_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_BCAST_RELEASE_GATHER);
 
     int i, my_rank, num_chunks, chunk_count_floor, chunk_count_ceil;
     int offset = 0, is_contig, ori_count = count;
@@ -162,7 +160,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BCAST_RELEASE_GATHER);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -186,8 +183,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
 
     /* If there is no data, return */
     if (count == 0) {
@@ -280,7 +275,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_REDUCE_RELEASE_GATHER);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -303,8 +297,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint lb, true_extent, extent, type_size;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
 
     if ((MPIR_Comm_size(comm_ptr) == 1) && (sendbuf != MPI_IN_PLACE)) {
         /* Simply copy the data from sendbuf to recvbuf if there is only 1 rank and MPI_IN_PLACE
@@ -392,7 +384,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
     return mpi_errno_ret;
 }
 

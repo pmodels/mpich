@@ -26,9 +26,7 @@ static int barrier_init = 0;
 
 static int Init_shm_barrier_init(int init_values)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
     barrier = (Init_shm_barrier_t *) memory.base_addr;
     if (init_values) {
@@ -39,7 +37,6 @@ static int Init_shm_barrier_init(int init_values)
     sense = 0;
     barrier_init = 1;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
     return MPI_SUCCESS;
 }
@@ -48,9 +45,7 @@ static int Init_shm_barrier_init(int init_values)
 static int Init_shm_barrier()
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER);
 
     if (local_size == 1)
         goto fn_exit;
@@ -70,7 +65,6 @@ static int Init_shm_barrier()
 
   fn_fail:
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_SHM_BARRIER);
     return mpi_errno;
 }
 
@@ -87,8 +81,6 @@ int MPIDU_Init_shm_init(void)
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_INIT);
 
     rank = MPIR_Process.rank;
     local_size = MPIR_Process.local_size;
@@ -219,7 +211,6 @@ int MPIDU_Init_shm_init(void)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_INIT);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -230,8 +221,6 @@ int MPIDU_Init_shm_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
 
     mpi_errno = Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
@@ -245,7 +234,6 @@ int MPIDU_Init_shm_finalize(void)
 
   fn_exit:
     MPL_shm_hnd_finalize(&(memory.hnd));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -255,12 +243,9 @@ int MPIDU_Init_shm_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
     mpi_errno = Init_shm_barrier();
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_BARRIER);
 
     return mpi_errno;
 }
@@ -269,13 +254,10 @@ int MPIDU_Init_shm_put(void *orig, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_PUT);
 
     MPIR_Assert(len <= sizeof(MPIDU_Init_shm_block_t));
     MPIR_Memcpy((char *) baseaddr + my_local_rank * sizeof(MPIDU_Init_shm_block_t), orig, len);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_PUT);
 
     return mpi_errno;
 }
@@ -284,13 +266,10 @@ int MPIDU_Init_shm_get(int local_rank, size_t len, void *target)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_GET);
 
     MPIR_Assert(local_rank < local_size && len <= sizeof(MPIDU_Init_shm_block_t));
     MPIR_Memcpy(target, (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t), len);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_GET);
 
     return mpi_errno;
 }
@@ -299,13 +278,10 @@ int MPIDU_Init_shm_query(int local_rank, void **target_addr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_QUERY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_QUERY);
 
     MPIR_Assert(local_rank < local_size);
     *target_addr = (char *) baseaddr + local_rank * sizeof(MPIDU_Init_shm_block_t);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_INIT_SHM_QUERY);
 
     return mpi_errno;
 }

@@ -234,8 +234,6 @@ Notes for Fortran:
 int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
-    MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT_THREAD);
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -261,7 +259,6 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 
     /* ... end of body of routine ... */
 
-    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
     return mpi_errno;
 
   fn_fail:
@@ -275,7 +272,6 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);

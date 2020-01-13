@@ -10,8 +10,6 @@ int MPID_Init_spawn(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char * parent_port;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 
     /* FIXME: To allow just the "root" process to
@@ -48,7 +46,6 @@ int MPID_Init_spawn(void)
     /* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
        if not already freed.  */
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
   fn_exit:
     return mpi_errno;
   fn_fail:

@@ -14,9 +14,7 @@
 int MPID_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
     /*
      * Wait for all posted receives to complete.  For now we are not doing 
@@ -150,7 +148,6 @@ int MPID_Finalize(void)
     MPL_free(MPIDI_failed_procs_string);
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

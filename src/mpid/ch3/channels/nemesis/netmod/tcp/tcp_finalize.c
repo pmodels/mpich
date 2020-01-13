@@ -10,9 +10,7 @@ int MPID_nem_tcp_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
     mpi_errno = MPID_nem_tcp_send_finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -26,7 +24,6 @@ int MPID_nem_tcp_finalize(void)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

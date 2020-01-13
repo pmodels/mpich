@@ -55,11 +55,9 @@ int MPI_Pack_external_size(const char datarep[],
                            int incount, MPI_Datatype datatype, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -102,7 +100,6 @@ int MPI_Pack_external_size(const char datarep[],
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

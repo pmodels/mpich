@@ -49,11 +49,9 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_SET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -95,7 +93,6 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_SET_NAME);
     return mpi_errno;
 
 #ifdef HAVE_ERROR_CHECKING

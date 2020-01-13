@@ -17,8 +17,6 @@
 static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t ** req_hdr_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_RELEASE_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_RELEASE_REQ_HDR);
 
     if ((*req_hdr_ptr)->am_hdr != &(*req_hdr_ptr)->am_hdr_buf[0]) {
         MPL_free((*req_hdr_ptr)->am_hdr);
@@ -27,7 +25,6 @@ static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t
     MPIDIU_release_buf((*req_hdr_ptr));
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_RELEASE_REQ_HDR);
     return mpi_errno;
 }
 
@@ -38,8 +35,6 @@ static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_request_header_t *req_hdr = *req_hdr_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_INIT_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_INIT_REQ_HDR);
 
 #ifdef POSIX_AM_REQUEST_INLINE
     if (req_hdr == NULL && sreq != NULL) {
@@ -77,7 +72,6 @@ static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
     *req_hdr_ptr = req_hdr;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_INIT_REQ_HDR);
     return mpi_errno;
 
   fn_fail:

@@ -32,9 +32,7 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INCL_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INCL_IMPL);
 
     if (n == 0) {
         *new_group_ptr = MPIR_Group_empty;
@@ -58,7 +56,6 @@ int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
 
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INCL_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -100,13 +97,11 @@ int MPI_Group_incl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL, *new_group_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_INCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_INCL);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -157,7 +152,6 @@ int MPI_Group_incl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_INCL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;

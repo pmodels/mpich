@@ -32,9 +32,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, nnew, i, k, size1, size2, mylpid;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_UNION_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_UNION_IMPL);
 
     /* Determine the size of the new group.  The new group consists of all
      * members of group1 plus the members of group2 that are not in group1.
@@ -126,7 +124,6 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* TODO calculate is_local_dense_monotonic */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_UNION_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -164,13 +161,11 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
     MPIR_Group *new_group_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_UNION);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_UNION);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -216,7 +211,6 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_UNION);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;

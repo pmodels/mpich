@@ -30,8 +30,6 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int se
     MPI_Aint sendtype_extent, recvtype_extent;
     int tag;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_SCHED_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_SCHED_ALLCOMM_LINEAR);
 
     MPIR_CHKLMEM_DECL(2);
 
@@ -65,7 +63,6 @@ int MPIR_TSP_Ineighbor_alltoall_sched_allcomm_linear(const void *sendbuf, int se
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_SCHED_ALLCOMM_LINEAR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -82,8 +79,6 @@ int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, int sendcoun
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_ALLCOMM_LINEAR);
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -101,7 +96,6 @@ int MPIR_TSP_Ineighbor_alltoall_allcomm_linear(const void *sendbuf, int sendcoun
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLTOALL_ALLCOMM_LINEAR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

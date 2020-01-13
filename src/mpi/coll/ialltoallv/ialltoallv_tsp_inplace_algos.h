@@ -32,8 +32,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendc
     void *tmp_buf = NULL;
     int tag = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
@@ -79,7 +77,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendc
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_INPLACE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -96,8 +93,6 @@ int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
 
 
     /* generate the schedule */
@@ -115,7 +110,6 @@ int MPIR_TSP_Ialltoallv_intra_inplace(const void *sendbuf, const int sendcounts[
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_INPLACE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

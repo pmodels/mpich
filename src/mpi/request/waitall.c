@@ -289,12 +289,10 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAITALL);
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -328,7 +326,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAITALL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

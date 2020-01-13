@@ -55,13 +55,11 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PUBLISH_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PUBLISH_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -119,7 +117,6 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PUBLISH_NAME);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;

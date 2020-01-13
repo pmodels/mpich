@@ -41,10 +41,8 @@ int MPI_T_cvar_get_num(int *num_cvar)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_GET_NUM);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_GET_NUM);
 
     /* Validate parameters */
 #ifdef HAVE_ERROR_CHECKING
@@ -67,7 +65,6 @@ int MPI_T_cvar_get_num(int *num_cvar)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_GET_NUM);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

@@ -17,8 +17,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_STARTALL);
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
@@ -87,7 +85,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
 }
 

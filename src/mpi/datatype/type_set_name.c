@@ -49,11 +49,9 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_SET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -100,7 +98,6 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_SET_NAME);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

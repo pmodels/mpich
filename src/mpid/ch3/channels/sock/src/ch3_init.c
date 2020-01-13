@@ -23,9 +23,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
     char *publish_bc_orig = NULL;
     char *bc_val = NULL;
     int val_max_remaining;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CH3_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CH3_INIT);
 
     mpi_errno = MPIDI_CH3I_Progress_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -49,7 +47,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CH3_INIT);
     return mpi_errno;
   fn_fail:
     MPL_free(publish_bc_orig);

@@ -40,10 +40,7 @@ void MPIDI_CH3U_Buffer_copy(
     intptr_t rdata_sz;
     MPIR_Datatype* sdt_ptr;
     MPIR_Datatype* rdt_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MEMCPY);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
     *smpi_errno = MPI_SUCCESS;
     *rmpi_errno = MPI_SUCCESS;
 
@@ -69,9 +66,7 @@ void MPIDI_CH3U_Buffer_copy(
     
     if (sdt_contig && rdt_contig)
     {
-	MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MEMCPY);
 	MPIR_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
-	MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MEMCPY);
 	*rsz = sdata_sz;
     }
     else if (sdt_contig)
@@ -160,7 +155,6 @@ void MPIDI_CH3U_Buffer_copy(
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
 }
 
 

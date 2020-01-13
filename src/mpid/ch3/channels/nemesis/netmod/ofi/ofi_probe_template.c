@@ -16,8 +16,6 @@
 /* ------------------------------------------------------------------------ */
 static int ADD_SUFFIX(peek_callback) (cq_tagged_entry_t * wc, MPIR_Request * rreq) {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PEEK_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PEEK_CALLBACK);
     REQ_OFI(rreq)->match_state = PEEK_FOUND;
 #if API_SET == API_SET_1
     rreq->status.MPI_SOURCE = get_source(wc->tag);
@@ -27,7 +25,6 @@ static int ADD_SUFFIX(peek_callback) (cq_tagged_entry_t * wc, MPIR_Request * rre
     rreq->status.MPI_TAG = get_tag(wc->tag);
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
     rreq->status.MPI_ERROR = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PEEK_CALLBACK);
     return mpi_errno;
 }
 
@@ -44,8 +41,6 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
     size_t len;
     MPIR_Request rreq_s, *rreq;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_IPROBE_IMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_IPROBE_IMPL);
     if (rreq_ptr) {
         MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_create_req(&rreq, 1));
         rreq->kind = MPIR_REQUEST_KIND__RECV;
@@ -125,7 +120,6 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
         MPIR_Request_add_ref(rreq);
     *flag = 1;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_IPROBE_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -138,12 +132,9 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe) (struct MPIDI_VC * vc,
                                      MPIR_Comm * comm, int context_offset, int *flag,
                                      MPI_Status * status) {
     int rc;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_IPROBE);
     *flag = 0;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (vc, source,
                                                tag, comm, context_offset, flag, status, NULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_IPROBE);
     return rc;
 }
 
@@ -155,8 +146,6 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe) (struct MPIDI_VC * vc,
                                       int *flag, MPIR_Request ** message, MPI_Status * status) {
     int old_error = status->MPI_ERROR;
     int s;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_IMPROBE);
     *flag = CLAIM_PEEK;
     s = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (vc, source,
                                               tag, comm, context_offset, flag, status, message);
@@ -164,7 +153,6 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe) (struct MPIDI_VC * vc,
         status->MPI_ERROR = old_error;
         (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_IMPROBE);
     return s;
 }
 
@@ -172,12 +160,9 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe) (int tag,
                                                MPIR_Comm * comm,
                                                int context_offset, int *flag, MPI_Status * status) {
     int rc;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IPROBE);
     *flag = NORMAL_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe) (NULL, MPI_ANY_SOURCE,
                                           tag, comm, context_offset, flag, status);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IPROBE);
     return rc;
 }
 
@@ -187,11 +172,8 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_improbe) (int tag,
                                                 int *flag, MPIR_Request ** message,
                                                 MPI_Status * status) {
     int rc;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IMPROBE);
     *flag = CLAIM_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_improbe) (NULL, MPI_ANY_SOURCE, tag, comm,
                                            context_offset, flag, message, status);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_ANYSOURCE_IMPROBE);
     return rc;
 }

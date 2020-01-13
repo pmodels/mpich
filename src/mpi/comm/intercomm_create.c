@@ -38,9 +38,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     int comm_info[3];
     int is_low_group = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
     /* Shift tag into the tagged coll space */
     tag |= MPIR_TAG_COLL_BIT;
@@ -139,7 +137,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
   fn_exit:
     MPL_free(remote_lpids);
     remote_lpids = NULL;
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -204,13 +201,11 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     MPIR_Comm *local_comm_ptr = NULL;
     MPIR_Comm *peer_comm_ptr = NULL;
     MPIR_Comm *new_intercomm_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INTERCOMM_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INTERCOMM_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -308,7 +303,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INTERCOMM_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;

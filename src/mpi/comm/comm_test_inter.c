@@ -52,11 +52,9 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_TEST_INTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_TEST_INTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -97,7 +95,6 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_TEST_INTER);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

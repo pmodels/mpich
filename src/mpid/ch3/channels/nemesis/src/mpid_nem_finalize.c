@@ -16,9 +16,7 @@
 int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_FINALIZE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_FINALIZE);
 
     /* this test is not the right one */
 /*     MPIR_Assert(MPID_nem_queue_empty( MPID_nem_mem_region.RecvQ[MPID_nem_mem_region.rank])); */
@@ -58,7 +56,6 @@ int MPID_nem_finalize(void)
     }
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

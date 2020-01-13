@@ -60,9 +60,7 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
     MPIDI_VCRT_t * vcrt;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VCRT_CREATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VCRT_CREATE);
 
     MPIR_CHKPMEM_MALLOC(vcrt, MPIDI_VCRT_t *, sizeof(MPIDI_VCRT_t) + (size - 1) * sizeof(MPIDI_VC_t *),	mpi_errno, "**nomem", MPL_MEM_ADDRESS);
     vcrt->handle = HANDLE_SET_KIND(0, HANDLE_KIND_INVALID);
@@ -72,7 +70,6 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
 
  fn_exit:
     MPIR_CHKPMEM_COMMIT();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VCRT_CREATE);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -92,12 +89,9 @@ int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr)
   @*/
 int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VCRT_ADD_REF);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VCRT_ADD_REF);
     MPIR_Object_add_ref(vcrt);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Incr VCRT %p ref count",vcrt));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VCRT_ADD_REF);
     return MPI_SUCCESS;
 }
 
@@ -113,9 +107,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_VCRT_RELEASE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_VCRT_RELEASE);
 
     MPIR_Object_release_ref(vcrt, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Decr VCRT %p ref count",vcrt));
@@ -201,7 +193,6 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
     }
 
  fn_exit:    
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VCRT_RELEASE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -223,9 +214,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
   @*/
 int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_VCR_DUP);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_VCR_DUP);
 
     /* We are allowed to create a vc that belongs to no process group 
      as part of the initial connect/accept action, so in that case,
@@ -242,7 +231,6 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
     }
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST,"Incr VCR %p ref count",orig_vcr));
     *new_vcr = orig_vcr;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_VCR_DUP);
     return MPI_SUCCESS;
 }
 
@@ -251,9 +239,7 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
   @*/
 int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, bool is_remote)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_VCR_GET_LPID);
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
@@ -262,7 +248,6 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, bool is_rem
     else
         *lpid_ptr = comm_ptr->dev.local_vcrt->vcr_table[idx]->lpid;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_VCR_GET_LPID);
     return MPI_SUCCESS;
 }
 
@@ -280,9 +265,7 @@ int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
     int *gpid = (int*)&local_gpids[0];
     int lastPGID = -1, pgid;
     MPIDI_VCR vc;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GPID_GETALLINCOMM);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GPID_GETALLINCOMM);
 
     MPIR_Assert(comm_ptr->local_size == local_size);
     
@@ -306,7 +289,6 @@ int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                          pgid, vc->pg_rank));
     }
     
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GPID_GETALLINCOMM);
     return mpi_errno;
 }
 

@@ -106,9 +106,7 @@ int MPID_Init(void)
     MPIR_Comm * comm;
     int p;
     int val;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
@@ -272,7 +270,6 @@ int MPID_Init(void)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -35,29 +35,23 @@ int MPID_nem_network_poll(int in_blocking_progress);
 
 static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
 
     MPID_NEM_SET_REL_NULL(cell->next);
     memset((void *)&cell->pkt, 0, sizeof(MPID_nem_pkt_header_t));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
 }
 
 #if defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
 
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
 }
 
 #define MPID_NEM_USE_SHADOW_HEAD
@@ -233,16 +227,13 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 /* must be called by exactly one process per queue */
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
     MPID_nem_queue_mutex_create(&qhead->lock, NULL);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
 }
 
 static inline void

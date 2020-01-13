@@ -33,13 +33,11 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -113,7 +111,6 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
@@ -168,11 +165,9 @@ Notes for C:
 int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
 
     /* ... body of routine ...  */
     mpi_errno = MPII_Type_get_attr(datatype, type_keyval, attribute_val, flag, MPIR_ATTR_PTR);
@@ -182,7 +177,6 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

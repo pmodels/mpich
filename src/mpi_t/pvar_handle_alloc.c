@@ -194,10 +194,8 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     int mpi_errno = MPI_SUCCESS;
     pvar_table_entry_t *entry;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
     /* Validate parameters  */
 #ifdef HAVE_ERROR_CHECKING
@@ -229,7 +227,6 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

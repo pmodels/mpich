@@ -19,9 +19,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RPUT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RPUT);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -55,7 +53,6 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RPUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -73,9 +70,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RGET);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -109,7 +104,6 @@ int MPID_Rget(void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -127,9 +121,7 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIR_Request *ureq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -163,7 +155,6 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -182,9 +173,7 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz, trg_data_sz;
     MPIR_Request *ureq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RGET_ACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -221,7 +210,6 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RGET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

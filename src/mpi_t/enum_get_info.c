@@ -50,10 +50,8 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_INFO);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_ENUM_GET_INFO);
 
     /* Validate parameters */
 #ifdef HAVE_ERROR_CHECKING
@@ -80,7 +78,6 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_ENUM_GET_INFO);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

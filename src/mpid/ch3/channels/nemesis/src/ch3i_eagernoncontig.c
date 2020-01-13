@@ -20,9 +20,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     intptr_t orig_msg_offset = sreq->dev.msg_offset;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 
@@ -102,7 +100,6 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, 
 
  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

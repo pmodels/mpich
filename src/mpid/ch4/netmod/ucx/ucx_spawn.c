@@ -48,13 +48,10 @@ int MPIDI_UCX_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_DISCONNECT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_DISCONNECT);
 
 
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_DISCONNECT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -65,13 +62,10 @@ int MPIDI_UCX_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_ACCEPT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_ACCEPT);
 
 
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_ACCEPT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

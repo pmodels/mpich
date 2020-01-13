@@ -51,10 +51,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     int redscat_algo_type = IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_HALVING;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
 
     is_inplace = (sendbuf == MPI_IN_PLACE);
     nranks = MPIR_Comm_size(comm);
@@ -177,8 +173,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch_reduce_scatter_recexch_allgatherv(co
     if (in_step2)
         MPL_free(step1_recvbuf);
 
-    MPIR_FUNC_VERBOSE_EXIT
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
 
     return mpi_errno;
   fn_fail:
@@ -197,10 +191,6 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
-    MPIR_FUNC_VERBOSE_ENTER
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
 
 
     /* generate the schedule */
@@ -221,8 +211,6 @@ int MPIR_TSP_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(const vo
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT
-        (MPID_STATE_MPIR_TSP_IALLREDUCE_INTRA_RECEXCH_REDUCE_SCATTER_RECEXCH_ALLGATHERV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

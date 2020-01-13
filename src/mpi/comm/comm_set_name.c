@@ -48,11 +48,9 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -95,7 +93,6 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SET_NAME);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

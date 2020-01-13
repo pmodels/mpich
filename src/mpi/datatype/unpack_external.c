@@ -61,11 +61,9 @@ int MPI_Unpack_external(const char datarep[],
                         MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_UNPACK_EXTERNAL);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -111,7 +109,6 @@ int MPI_Unpack_external(const char datarep[],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_UNPACK_EXTERNAL);
     return mpi_errno;
 
   fn_fail:

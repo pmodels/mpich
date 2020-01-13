@@ -52,11 +52,9 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CARTDIM_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CARTDIM_GET);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -100,7 +98,6 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CARTDIM_GET);
     return mpi_errno;
 
   fn_fail:

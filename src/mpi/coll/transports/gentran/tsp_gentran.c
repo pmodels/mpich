@@ -405,8 +405,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     int made_progress;
     MPIR_Request *reqp;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
 
     /* Create a request */
     reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
@@ -437,7 +435,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

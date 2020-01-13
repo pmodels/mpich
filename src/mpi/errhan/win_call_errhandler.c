@@ -54,11 +54,9 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     int in_cs = FALSE;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -148,7 +146,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
     }
 
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

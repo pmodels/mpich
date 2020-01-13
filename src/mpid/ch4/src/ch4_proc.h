@@ -16,8 +16,6 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RANK_IS_LOCAL);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
@@ -27,7 +25,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rank_is_local(int rank, MPIR_Comm * comm)
     ret = MPIDIU_rank_is_local(rank, comm);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RANK_IS_LOCAL);
     return ret;
 }
 
@@ -35,8 +32,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AV_IS_LOCAL);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     /* Ask the netmod for locality information. If it decided not to build it,
@@ -46,7 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
     ret = MPIDIU_av_is_local(av);
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AV_IS_LOCAL);
     return ret;
 }
 

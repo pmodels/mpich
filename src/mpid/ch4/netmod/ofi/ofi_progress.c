@@ -18,8 +18,6 @@ int MPIDI_OFI_progress(int vci, int blocking)
     int mpi_errno;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS);
 
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
@@ -34,7 +32,6 @@ int MPIDI_OFI_progress(int vci, int blocking)
             mpi_errno = MPIDI_OFI_handle_cq_error(vci, ret);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
 
     return mpi_errno;
 }

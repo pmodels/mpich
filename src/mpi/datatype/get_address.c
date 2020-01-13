@@ -69,11 +69,9 @@ Output Parameters:
 int MPI_Get_address(const void *location, MPI_Aint * address)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ADDRESS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_ADDRESS);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -112,7 +110,6 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_ADDRESS);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

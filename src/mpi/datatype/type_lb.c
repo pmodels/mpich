@@ -64,11 +64,9 @@ The replacement for this routine is 'MPI_Type_Get_extent'.
 int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_LB);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_LB);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -110,7 +108,6 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_LB);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

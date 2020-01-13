@@ -150,8 +150,6 @@ MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type, MPIDI_POSIX_
 /* Initialize the release_gather struct to NULL */
 int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
 
     MPIDI_POSIX_COMM(comm_ptr)->release_gather = NULL;
 
@@ -173,7 +171,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
     else
         MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
     return MPI_SUCCESS;
 }
 
@@ -182,8 +179,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
 int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                              const MPIDI_POSIX_release_gather_opcode_t operation)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT);
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -460,7 +455,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -469,8 +463,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 /* Cleanup the release_gather data structures and free the allocated memory */
 int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_FREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_FREE);
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -525,6 +517,5 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPL_free(MPIDI_POSIX_COMM(comm_ptr)->release_gather);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_FREE);
     return mpi_errno_ret;
 }

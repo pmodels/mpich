@@ -47,11 +47,9 @@ Input Parameters:
 int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 
 #ifdef HAVE_ERROR_CHECKING
     {
@@ -72,7 +70,6 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_STATUS_SET_CANCELLED);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

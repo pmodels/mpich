@@ -151,13 +151,10 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
 static int win_init(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_UCX_WIN_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_UCX_WIN_INIT);
 
     memset(&MPIDI_UCX_WIN(win), 0, sizeof(MPIDI_UCX_win_t));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_UCX_PROGRESS_WIN_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -215,8 +212,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
@@ -229,7 +224,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -239,8 +233,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
@@ -253,7 +245,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 #endif
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -282,8 +273,6 @@ int MPIDI_UCX_mpi_win_detach_hook(MPIR_Win * win, const void *base)
 int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
 
 #ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win)) {
@@ -301,6 +290,5 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     }
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
     return mpi_errno;
 }

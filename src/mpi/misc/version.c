@@ -45,12 +45,10 @@ Output Parameters:
 int MPI_Get_version(int *version, int *subversion)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_VERSION);
 
     /* Note that this routine may be called before MPI_Init */
     /* MPIR_ERRTEST_INITIALIZED_ORDIE(); */
 
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_VERSION);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -74,7 +72,6 @@ int MPI_Get_version(int *version, int *subversion)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_VERSION);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

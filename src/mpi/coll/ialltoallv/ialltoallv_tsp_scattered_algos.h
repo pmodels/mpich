@@ -42,8 +42,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
     MPI_Aint sendtype_lb, sendtype_extent;
     MPI_Aint sendtype_true_extent, recvtype_true_extent;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
 
     /* Alltoall: each process need send #size msgs and recv #size msgs
      * This algorithm does #bblock send/recv first
@@ -107,7 +105,6 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_SCHED_INTRA_SCATTERED);
     return mpi_errno;
 
   fn_fail:
@@ -125,8 +122,6 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_SCATTERED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_SCATTERED);
 
     /* Generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
@@ -144,7 +139,6 @@ int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcount
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALLV_INTRA_SCATTERED);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

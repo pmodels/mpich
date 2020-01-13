@@ -17,12 +17,9 @@ static inline int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RANK_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RANK_IS_LOCAL);
 
     ret = MPIDIU_rank_is_local(rank, comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RANK_IS_LOCAL);
     return ret;
 }
 
@@ -30,12 +27,9 @@ static inline int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AV_IS_LOCAL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AV_IS_LOCAL);
 
     ret = MPIDIU_av_is_local(av);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AV_IS_LOCAL);
     return ret;
 }
 

@@ -13,9 +13,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
 
     if (win_ptr->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
@@ -57,7 +55,6 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
     return mpi_errno;
 
   fn_fail:
@@ -68,9 +65,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
-    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         goto fn_exit;
@@ -143,7 +138,6 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
     return mpi_errno;
 
   fn_fail:
