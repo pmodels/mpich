@@ -597,6 +597,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIDI_OFI_am_request_t *ofi_req;
+    MPIDI_OFI_lmt_msg_payload_t *lmt_info;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
@@ -607,10 +608,10 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     if (ofi_req->req_hdr->lmt_cntr)
         goto fn_exit;
 
-    rreq = (MPIR_Request *) ofi_req->req_hdr->rreq_ptr;
-    mpi_errno = MPIDI_OFI_dispatch_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
-                                       MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
-                                       MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr,
+    lmt_info = &ofi_req->req_hdr->lmt_info;
+    mpi_errno = MPIDI_OFI_dispatch_ack(lmt_info->src_rank,
+                                       lmt_info->context_id,
+                                       lmt_info->sreq_ptr,
                                        MPIDI_AMTYPE_LMT_ACK);
 
     MPIR_ERR_CHECK(mpi_errno);
