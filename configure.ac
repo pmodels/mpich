@@ -1399,6 +1399,19 @@ fi
 # ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
+# config time:
+# * MPID_MAX_THREAD_LEVEL, set in one of the device subconfigure.m4,
+#    determines the maximum thread level, typically MPI_THREAD_MULTIPLE.
+#    If missing, equivallent to single.
+# * --enable-threads, explict user config option, raise error if beyond
+#    MPID_MAX_THREAD_LEVEL.
+#    It default to MPID_MAX_THREAD_LEVEL.
+# * MPICH_THREAD_LEVEL is set by enable_threads
+# * MPICH_IS_THREADED is set when MPICH_THREAD_LEVEL==MPI_THREAD_MULTIPLE
+# runtime:
+# * MPI_Init checks MPIR_CVAR_DEFAULT_THREAD_LEVEL, default to single
+# * MPI_Init_thread may request thread level explicitly
+# * MPID_Init_thread_level may overwrite the requested thread level
 #
 # Threads must be supported by the device.  First, set the default to
 # be the highest supported by the device

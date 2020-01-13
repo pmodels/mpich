@@ -144,13 +144,9 @@ int MPII_init_global(int *p_thread_required)
     goto fn_exit;
 }
 
-int MPII_post_init_global()
+int MPII_post_init_global(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-#if defined MPICH_IS_THREADED
-    MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
-#endif
 
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;

@@ -79,8 +79,12 @@ extern MPIR_Per_thread_t MPIR_Per_thread;
 
 extern MPID_Thread_tls_t MPIR_Per_thread_key;
 
+/* During Init time, `isThreaded` is not set until the very end of init -- preventing
+ * usage of mutexes during init-time; `thread_provided` is set by MPID_Init_thread_level
+ * early in the stage so it can be used instead.
+ */
 #if defined(MPICH_IS_THREADED)
-#define MPIR_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
+#define MPIR_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
 #define MPIR_THREAD_CHECK_END   }
 #else
 #define MPIR_THREAD_CHECK_BEGIN
@@ -91,9 +95,56 @@ void MPIR_Add_mutex(MPID_Thread_mutex_t * p_mutex);
 void MPIR_Thread_CS_Init(void);
 void MPIR_Thread_CS_Finalize(void);
 
-#if defined(MPICH_IS_THREADED)
+/* ------------------------------------------------------------ */
+/* Global thread model, used for non-performance-critical paths */
+/* CONSIDER:
+ * - should we restrict to MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX only?
+ * - once we isolate the mutexes, we should replace MPID with MPL
+ */
 
+#if defined(MPICH_IS_THREADED)
 MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
+
+/* DIRECT macros are only to be used in MPI_Init/MPI_Finalize, and
+ * MPIR_ThreadInfo.isThreaded should be set to 0 to disable other CS
+ */
+#define MPIR_THREAD_CS_ENTER_DIRECT(mutex) \
+    do { \
+        int err_ = 0; \
+        MPID_Thread_mutex_lock(&mutex, &err_); \
+        MPIR_Assert(err_ == 0); \
+    } while (0)
+
+#define MPIR_THREAD_CS_EXIT_DIRECT(mutex) \
+    do { \
+        int err_ = 0; \
+        MPID_Thread_mutex_unlock(&mutex, &err_); \
+        MPIR_Assert(err_ == 0); \
+    } while (0)
+
+/* CS macros with runtime bypass
+ */
+#define MPIR_THREAD_CS_ENTER(mutex) \
+    if (MPIR_ThreadInfo.isThreaded) { \
+        MPIR_THREAD_CS_ENTER_DIRECT(mutex); \
+    }
+
+#define MPIR_THREAD_CS_EXIT(mutex) \
+    if (MPIR_ThreadInfo.isThreaded) { \
+        MPIR_THREAD_CS_EXIT_DIRECT(mutex); \
+    }
+
+#else
+#define MPIR_THREAD_CS_ENTER_DIRECT(mutex)
+#define MPIR_THREAD_CS_EXIT_DIRECT(mutex)
+#define MPIR_THREAD_CS_ENTER(mutex)
+#define MPIR_THREAD_CS_EXIT(mutex)
+#endif
+
+/* ------------------------------------------------------------ */
+/* Other thread models, for performance-critical paths          */
+
+#if defined(MPICH_IS_THREADED)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
@@ -131,8 +182,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Thread_sync_alloc(MPIR_Thread_sync_t ** sync,
 {
     int rc;
     MPIR_Per_thread_t *per_thread = NULL;
-    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                 MPIR_Per_thread, per_thread, &rc);
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_Per_thread_key, MPIR_Per_thread, per_thread, &rc);
     *sync = &per_thread->sync;
     (*sync)->is_server = FALSE;
     OPA_store_int(&((*sync)->count), count);

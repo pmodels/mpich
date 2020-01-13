@@ -80,7 +80,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPII_init_thread_and_enter_cs(required);
+    MPII_init_thread_and_enter_cs();
+    /* ---- Entered CS ------------------------------------------------ */
 
     MPID_Wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
@@ -88,6 +89,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Certain features may potentially change required thread-level */
     mpi_errno = MPII_init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
@@ -98,6 +100,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPIR_ThreadInfo.thread_provided = MPICH_THREAD_LEVEL;
     }
 
+    MPL_set_threaded(MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+
+    /* ---- MPII_Pre_init --------------------------------------------- */
+
+    /* Init various components */
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -110,13 +117,12 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
         MPII_debugger_hold();
     }
 
-    /* Setting MPICH_MPI_STATE__IN_INIT allows MPI_Initialized and
+    /* Setting mpich_state from `PRE_INIT` allows MPI_Initialized and
      * MPI_Finalized to call MPIR_Err_return_comm(0, ...) on error,
      * which checks errhandler in comm_world structure, which should
      * NULL by default before or during init, and treated as fatal.
      */
-    /* FIXME: remove MPICH_MPI_STATE__IN_INIT */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     MPII_pre_init_memory_tracing();
 
@@ -129,9 +135,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     mpi_errno = MPIR_Datatype_init_predefined();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* ---- MPID_Init -------------------------------------------------- */
     mpi_errno = MPID_Init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* ---- MPII_Post_init --------------------------------------------- */
     /* Commit pairtypes after device hooks are activated */
     mpi_errno = MPIR_Datatype_commit_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
@@ -157,6 +165,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* create fine-grained mutexes */
     MPIR_Thread_CS_Init();
 
+    /* ---- MPID_Post_init --------------------------------------------- */
     /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
         mpi_errno = MPID_Init_spawn();
@@ -165,11 +174,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
+    /* ---- Exit CS --------------------------------------------------- */
     MPII_init_thread_and_exit_cs();
-    /* Make fields of MPIR_Process global visible and set mpich_state
-     * atomically so that MPI_Initialized() etc. are thread safe */
-    OPA_write_barrier();
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
@@ -178,7 +186,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
     MPII_init_thread_failed_exit_cs();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
@@ -233,7 +241,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+            if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
                 mpi_errno =
                     MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread",
                                          __LINE__, MPI_ERR_OTHER, "**inittwice", 0);

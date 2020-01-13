@@ -17,6 +17,22 @@ typedef struct MPL_atomic_int64_t MPL_atomic_int64_t;
 typedef struct MPL_atomic_uint64_t MPL_atomic_uint64_t;
 typedef struct MPL_atomic_ptr_t MPL_atomic_ptr_t;
 
+/* By default, we use stronger atomic sematics for load and store. However,
+ * the relaxed semantics still can be used where it deemed approprate.
+ */
+#define MPL_atomic_load_int MPL_atomic_acquire_load_int
+#define MPL_atomic_load_int32 MPL_atomic_acquire_load_int32
+#define MPL_atomic_load_int32 MPL_atomic_acquire_load_int32
+#define MPL_atomic_load_int64 MPL_atomic_acquire_load_int64
+#define MPL_atomic_load_int64 MPL_atomic_acquire_load_int64
+#define MPL_atomic_load_ptr MPL_atomic_acquire_load_ptr
+#define MPL_atomic_store_int MPL_atomic_release_store_int
+#define MPL_atomic_store_int32 MPL_atomic_release_store_int32
+#define MPL_atomic_store_int32 MPL_atomic_release_store_int32
+#define MPL_atomic_store_int64 MPL_atomic_release_store_int64
+#define MPL_atomic_store_int64 MPL_atomic_release_store_int64
+#define MPL_atomic_store_ptr MPL_atomic_release_store_ptr
+
 /* Forward declarations of atomic functions */
 /* MPL_atomic_relaxed_load */
 static int MPL_atomic_relaxed_load_int(const MPL_atomic_int_t * ptr);
