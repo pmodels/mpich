@@ -107,7 +107,6 @@ typedef struct {
     uint64_t lmt_cntr;
     struct fid_mr *lmt_mr;
     void *pack_buffer;
-    MPIR_Request *rreq_ptr;
     void *am_hdr;
     int (*target_cmpl_cb) (struct MPIR_Request * req);
     uint16_t am_hdr_sz;

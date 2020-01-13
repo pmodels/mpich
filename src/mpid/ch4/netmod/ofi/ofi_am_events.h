@@ -299,7 +299,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     MPIDI_OFI_AMREQUEST_HDR(rreq, msg_hdr) = *msg_hdr;
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
     if (is_contig) {
         if (in_data_sz > data_sz) {

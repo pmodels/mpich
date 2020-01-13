@@ -607,7 +607,6 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     if (ofi_req->req_hdr->lmt_cntr)
         goto fn_exit;
 
-    rreq = (MPIR_Request *) ofi_req->req_hdr->rreq_ptr;
     mpi_errno = MPIDI_OFI_dispatch_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr,
