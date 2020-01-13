@@ -14,10 +14,8 @@
  * MPICH_THREAD_GRANULARITY (if MPICH_IS_THREADED).
  */
 
-static int required_is_threaded;
-
 /* called the first thing in init so it can enter critical section immediately */
-void MPII_init_thread_and_enter_cs(int thread_required)
+void MPII_init_thread_and_enter_cs(void)
 {
     int thread_err;
     MPL_thread_init(&thread_err);
@@ -28,24 +26,16 @@ void MPII_init_thread_and_enter_cs(int thread_required)
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    /* We don't know requested or provided thread level yet, set isThreaded
-     * to TRUE so we'll protect the init with critical section anyway.
-     */
-    /* To ensure consistency, we save the required isThreaded */
-    required_is_threaded = (thread_required == MPI_THREAD_MULTIPLE);
-    MPIR_ThreadInfo.isThreaded = required_is_threaded;
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_THREAD_CS_ENTER_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
+    /* Setting isThreaded to 0 to ensure no mutexes are used during Init. */
+    MPIR_ThreadInfo.isThreaded = 0;
 }
 
 void MPII_init_thread_and_exit_cs(void)
 {
-    /* need to ensure consistency here */
-    int save_is_threaded = MPIR_ThreadInfo.isThreaded;
-    MPIR_ThreadInfo.isThreaded = required_is_threaded;
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_ThreadInfo.isThreaded = save_is_threaded;
+    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 }
 
 /* called only when encounter failure during during init */
@@ -59,16 +49,16 @@ void MPII_init_thread_failed_exit_cs(void)
 /* similar set of functions for finalize. */
 void MPII_finalize_thread_and_enter_cs(void)
 {
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    /* Setting isThreaded to 0 to ensure no mutexes are used during Finalize. */
+    MPIR_ThreadInfo.isThreaded = 0;
+    MPIR_THREAD_CS_ENTER_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 void MPII_finalize_thread_and_exit_cs(void)
 {
     int err;
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
@@ -79,13 +69,12 @@ void MPII_finalize_thread_and_exit_cs(void)
 
 void MPII_finalize_thread_failed_exit_cs(void)
 {
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 #else
 /* not MPICH_IS_THREADED, empty stubs */
-void MPII_init_thread_and_enter_cs(int thread_required)
+void MPII_init_thread_and_enter_cs(void)
 {
 }
 

@@ -76,7 +76,8 @@ int hcoll_initialize(void)
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL);
+    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
+        MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE;
     if (0 >= hcoll_enable) {
         goto fn_exit;
     }

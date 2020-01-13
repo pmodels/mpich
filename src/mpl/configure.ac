@@ -685,9 +685,7 @@ esac
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 # check for compiler-support for thread-local storage (MPL_TLS)
-if test "${with_thread_package}" != "argobots" ; then
-    PAC_CC_CHECK_TLS
-fi
+PAC_CC_CHECK_TLS
 
 #######################################################################
 ## END OF THREADS CODE

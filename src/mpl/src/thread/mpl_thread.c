@@ -6,7 +6,13 @@
 
 #include "mpl.h"
 
-MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+int MPL_is_threaded = -1;
+
+void MPL_set_threaded(int isThreaded)
+{
+    assert(MPL_is_threaded == -1);
+    MPL_is_threaded = isThreaded;
+}
 
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE) && !defined(MPL_TLS)
 

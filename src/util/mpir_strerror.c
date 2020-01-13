@@ -22,8 +22,7 @@ const char *MPIR_Strerror(int errnum)
     MPIR_Per_thread_t *per_thread = NULL;
     int err = 0;
 
-    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                 MPIR_Per_thread, per_thread, &err);
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_Per_thread_key, MPIR_Per_thread, per_thread, &err);
     MPIR_Assert(err == 0);
     buf = per_thread->strerrbuf;
 #if defined(STRERROR_R_CHAR_P)

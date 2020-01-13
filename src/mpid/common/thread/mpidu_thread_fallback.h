@@ -750,8 +750,7 @@ do {                                                                    \
 #else /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)
-#define MPIDU_THREADPRIV_KEY_GET_ADDR(is_threaded, key, var, addr, err_ptr_) \
-    MPL_THREADPRIV_KEY_GET_ADDR(0, key, var, addr, err_ptr_)
+#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
 #define MPIDU_THREADPRIV_KEY_DESTROY(key, err_ptr_)
 #endif /* MPICH_IS_THREADED */
 #endif /* MPIDU_THREAD_FALLBACK_H_INCLUDED */

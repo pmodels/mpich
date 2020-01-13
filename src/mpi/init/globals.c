@@ -8,7 +8,7 @@
 #include <mpiimpl.h>
 #undef MPIR_GLOBAL
 
-MPIR_Process_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
+MPIR_Process_t MPIR_Process = { MPL_ATOMIC_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
 
 MPIR_Thread_info_t MPIR_ThreadInfo;
 
@@ -46,8 +46,7 @@ void _dummy_touch_tls(void)
     MPIR_Per_thread_t *per_thread = NULL;
     int err;
 
-    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                 MPIR_Per_thread, per_thread, &err);
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_Per_thread_key, MPIR_Per_thread, per_thread, &err);
     MPIR_Assert(err == 0);
     memset(per_thread, 0, sizeof(MPIR_Per_thread_t));
 }
