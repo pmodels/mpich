@@ -185,6 +185,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
+#include "mpir_func.h"
 #include "mpir_misc.h"
 #include "mpir_dbg.h"
 #include "mpir_objects.h"
@@ -235,7 +236,6 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_request.h"
 #include "mpir_win.h"
 #include "mpir_coll.h"
-#include "mpir_func.h"
 #include "mpir_err.h"
 #include "mpir_nbc.h"
 #include "mpir_process.h"
