@@ -142,8 +142,9 @@ int PMISetupSockets(int usePort, PMISetup * pmiinfo)
         pmiinfo->fdpair[0] = -1;
         pmiinfo->fdpair[1] = -1;
         /* Check for a non-null portName */
-        if (!pmiinfo->portName || !pmiinfo->portName[0])
+        if (!pmiinfo->portName || !pmiinfo->portName[0]) {
             return 1;
+        }
     }
     return 0;
 }
@@ -232,8 +233,9 @@ PMIProcess *PMISetupNewProcess(int fd, ProcessState * pState)
     PMIProcess *pmiprocess;
 
     pmiprocess = (PMIProcess *) MPL_malloc(sizeof(PMIProcess), MPL_MEM_PM);
-    if (!pmiprocess)
+    if (!pmiprocess) {
         return 0;
+    }
     pmiprocess->fd = fd;
     pmiprocess->nextChar = pmiprocess->readBuf;
     pmiprocess->endChar = pmiprocess->readBuf;
@@ -261,16 +263,18 @@ int PMISetupNewGroup(int nProcess, PMIKVSpace * kvs)
 {
     PMIGroup *g;
     curPMIGroup = (PMIGroup *) MPL_malloc(sizeof(PMIGroup), MPL_MEM_PM);
-    if (!curPMIGroup)
+    if (!curPMIGroup) {
         return 1;
+    }
 
     curPMIGroup->nProcess = nProcess;
     curPMIGroup->groupID = pmimaster.nGroups++;
     curPMIGroup->nInBarrier = 0;
     curPMIGroup->pmiProcess =
         (PMIProcess **) MPL_malloc(sizeof(PMIProcess *) * nProcess, MPL_MEM_PM);
-    if (!curPMIGroup->pmiProcess)
+    if (!curPMIGroup->pmiProcess) {
         return 1;
+    }
     curPMIGroup->nextGroup = 0;
     curNprocess = 0;
 
@@ -987,8 +991,9 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
 
     if (!pentry->spawnWorld) {
         pWorld = (ProcessWorld *) MPL_malloc(sizeof(ProcessWorld), MPL_MEM_PM);
-        if (!pWorld)
+        if (!pWorld) {
             return 1;
+        }
 
         pentry->spawnWorld = pWorld;
         pWorld->apps = 0;
@@ -1012,8 +1017,9 @@ static int fPMI_Handle_spawn(PMIProcess * pentry)
 
     /* Create a new app */
     app = (ProcessApp *) MPL_malloc(sizeof(ProcessApp), MPL_MEM_PM);
-    if (!app)
+    if (!app) {
         return 1;
+    }
     app->myAppNum = 0;
     app->exename = 0;
     app->arch = 0;

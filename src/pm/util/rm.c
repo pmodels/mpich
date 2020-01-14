@@ -97,8 +97,9 @@ int MPIE_ChooseHosts(ProcessWorld * pWorld,
         }
         app = app->nextApp;
     }
-    if (nNeeded == 0)
+    if (nNeeded == 0) {
         return 0;
+    }
 
     /* Now, for each app, find the hostnames by reading the
      * machine table associated with the architecture */

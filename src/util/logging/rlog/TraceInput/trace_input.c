@@ -36,8 +36,9 @@ RLOG_BOOL PackQuadChar(char *str, int *length, char *base, int *pos, const int m
 {
     /* Am I supposed to include the terminating NULL character? */
     /* This function does not. */
-    if (*pos + (int) strlen(str) > max)
+    if (*pos + (int) strlen(str) > max) {
         return FALSE;
+    }
     *length = strlen(str);
     memcpy(&base[*pos], str, *length);
     *pos += *length;
@@ -46,8 +47,9 @@ RLOG_BOOL PackQuadChar(char *str, int *length, char *base, int *pos, const int m
 
 RLOG_BOOL PackQuadInt(int n1, int n2, int *length, int *base, int *pos, const int max)
 {
-    if (*pos + 2 > max)
+    if (*pos + 2 > max) {
         return FALSE;
+    }
     *length = 2;
     base[*pos] = n1;
     base[*pos + 1] = n2;
@@ -57,8 +59,9 @@ RLOG_BOOL PackQuadInt(int n1, int n2, int *length, int *base, int *pos, const in
 
 RLOG_BOOL PackQuadDouble(double d1, double d2, int *length, double *base, int *pos, const int max)
 {
-    if (*pos + 2 > max)
+    if (*pos + 2 > max) {
         return FALSE;
+    }
     *length = 2;
     base[*pos] = d1;
     base[*pos + 1] = d2;
@@ -71,8 +74,9 @@ TRACE_EXPORT int TRACE_Open(const char filespec[], TRACE_file * fp)
     int i, j;
     RLOG_IOStruct *pInput;
 
-    if (filespec == NULL || fp == NULL)
+    if (filespec == NULL || fp == NULL) {
         return TRACEINPUT_FAIL;
+    }
 
     if (strcmp(filespec, "-h") == 0) {
         *fp = NULL;
@@ -80,8 +84,9 @@ TRACE_EXPORT int TRACE_Open(const char filespec[], TRACE_file * fp)
     }
 
     *fp = (_trace_file *) MPL_malloc(sizeof(_trace_file), MPL_MEM_DEBUG);
-    if (*fp == NULL)
+    if (*fp == NULL) {
         return TRACEINPUT_FAIL;
+    }
 
     (*fp)->pInput = pInput = RLOG_CreateInputStruct(filespec);
     if (pInput == NULL) {
@@ -126,8 +131,9 @@ TRACE_EXPORT int TRACE_Close(TRACE_file * fp)
 {
     int i;
 
-    if (*fp == NULL)
+    if (*fp == NULL) {
         return TRACEINPUT_SUCCESS;
+    }
 
     if ((*fp)->pInput) {
         for (i = 0; i < (*fp)->pInput->nNumRanks; i++) {
@@ -179,11 +185,13 @@ TRACE_EXPORT int TRACE_Get_next_method(const TRACE_file fp,
 TRACE_EXPORT int TRACE_Peek_next_category(const TRACE_file fp,
                                           int *n_legend, int *n_label, int *n_methodIDs)
 {
-    if (fp->pInput->nCurState >= fp->pInput->nNumStates)
+    if (fp->pInput->nCurState >= fp->pInput->nNumStates) {
         return TRACEINPUT_FAIL;
+    }
 
-    if (RLOG_GetNextState(fp->pInput, &fp->state) != 0)
+    if (RLOG_GetNextState(fp->pInput, &fp->state) != 0) {
         return TRACEINPUT_FAIL;
+    }
     *n_legend = strlen(fp->state.description) + 1;
     *n_label = 0;
     *n_methodIDs = 0;
@@ -223,8 +231,9 @@ TRACE_EXPORT int TRACE_Get_next_category(const TRACE_file fp,
         head->shape = TRACE_SHAPE_STATE;
     head->width = 1;
 
-    if (!PackQuadChar(fp->state.description, n_legend, legend_base, legend_pos, legend_max))
+    if (!PackQuadChar(fp->state.description, n_legend, legend_base, legend_pos, legend_max)) {
         return TRACEINPUT_FAIL;
+    }
 
     *n_label = 0;
     *n_methodIDs = 0;
@@ -274,8 +283,9 @@ TRACE_EXPORT int TRACE_Peek_next_primitive(const TRACE_file fp,
         }
     }
     if (level == -1) {
-        if (!fp->bArrowAvail)
+        if (!fp->bArrowAvail) {
             return TRACEINPUT_FAIL;
+        }
         *starttime = fp->arrow.start_time;
         *endtime = fp->arrow.end_time;
         return TRACEINPUT_SUCCESS;
@@ -330,8 +340,9 @@ TRACE_EXPORT int TRACE_Get_next_primitive(const TRACE_file fp,
         }
     }
     if (level == -1) {
-        if (!fp->bArrowAvail)
+        if (!fp->bArrowAvail) {
             return TRACEINPUT_FAIL;
+        }
         *category_index = RLOG_ARROW_EVENT_ID;
         if (fp->arrow.leftright == RLOG_ARROW_RIGHT) {
             PackQuadDouble(fp->arrow.start_time,

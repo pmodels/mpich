@@ -13,8 +13,9 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
-    if (sreq == NULL)
+    if (sreq == NULL) {
         return NULL;
+    }
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_KIND__SEND;

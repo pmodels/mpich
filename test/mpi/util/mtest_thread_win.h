@@ -45,13 +45,15 @@ int MTest_Join_threads(void)
 int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE * lock)
 {
     int errs = 0;
-    if (lock == NULL)
+    if (lock == NULL) {
         return -1;
+    }
 
     /* Create an unnamed uninheritable mutex */
     *lock = CreateMutex(NULL, FALSE, NULL);
-    if (*lock == NULL)
+    if (*lock == NULL) {
         return -1;
+    }
 
     return MTestReturnValue(errs);
 }
@@ -59,8 +61,9 @@ int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE * lock)
 int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 {
     int errs = 0;
-    if (lock == NULL)
+    if (lock == NULL) {
         return -1;
+    }
 
     /* Wait infinitely for the mutex */
     if (WaitForSingleObject(*lock, INFINITE) != WAIT_OBJECT_0) {
@@ -72,8 +75,9 @@ int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE * lock)
 int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE * lock)
 {
     int errs = 0;
-    if (lock == NULL)
+    if (lock == NULL) {
         return -1;
+    }
     if (ReleaseMutex(*lock) == 0) {
         return -1;
     }

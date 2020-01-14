@@ -19,43 +19,49 @@ int (*MPL_wtick_fn) (double *tick) = NULL;
 
 int MPL_wtime(MPL_time_t * timeval)
 {
-    if (MPL_wtime_fn == NULL)
+    if (MPL_wtime_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtime_fn(timeval);
 }
 
 int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
-    if (MPL_wtime_diff_fn == NULL)
+    if (MPL_wtime_diff_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtime_diff_fn(t1, t2, diff);
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
 {
-    if (MPL_wtime_touint_fn == NULL)
+    if (MPL_wtime_touint_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtime_touint_fn(t, val);
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
-    if (MPL_wtime_todouble_fn == NULL)
+    if (MPL_wtime_todouble_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtime_todouble_fn(t, val);
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
-    if (MPL_wtime_acc_fn == NULL)
+    if (MPL_wtime_acc_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtime_acc_fn(t1, t2, t3);
 }
 
 int MPL_wtick(double *wtick)
 {
-    if (MPL_wtick_fn == NULL)
+    if (MPL_wtick_fn == NULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
+    }
     return MPL_wtick_fn(wtick);
 }
 

@@ -64,8 +64,9 @@ void ADIOI_LUSTRE_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int
                 }
                 ADIO_WriteContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                  done, &status, error_code);
-                if (*error_code != MPI_SUCCESS)
+                if (*error_code != MPI_SUCCESS) {
                     return;
+                }
                 done += len;
             }
 
@@ -77,8 +78,9 @@ void ADIOI_LUSTRE_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int
                     len = MPL_MIN(alloc_size - done, ADIOI_PREALLOC_BUFSZ);
                     ADIO_WriteContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                                      done, &status, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     done += len;
                 }
             }

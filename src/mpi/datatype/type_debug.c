@@ -139,87 +139,125 @@ char *MPIR_Datatype_builtin_to_string(MPI_Datatype type)
     static char t_2doubleprecision[] = "MPI_2DOUBLE_PRECISION";
     static char t_character[] = "MPI_CHARACTER";
 
-    if (type == MPI_CHAR)
+    if (type == MPI_CHAR) {
         return t_char;
-    if (type == MPI_UNSIGNED_CHAR)
+    }
+    if (type == MPI_UNSIGNED_CHAR) {
         return t_uchar;
-    if (type == MPI_SIGNED_CHAR)
+    }
+    if (type == MPI_SIGNED_CHAR) {
         return t_schar;
-    if (type == MPI_BYTE)
+    }
+    if (type == MPI_BYTE) {
         return t_byte;
-    if (type == MPI_WCHAR)
+    }
+    if (type == MPI_WCHAR) {
         return t_wchar_t;
-    if (type == MPI_SHORT)
+    }
+    if (type == MPI_SHORT) {
         return t_short;
-    if (type == MPI_UNSIGNED_SHORT)
+    }
+    if (type == MPI_UNSIGNED_SHORT) {
         return t_ushort;
-    if (type == MPI_INT)
+    }
+    if (type == MPI_INT) {
         return t_int;
-    if (type == MPI_UNSIGNED)
+    }
+    if (type == MPI_UNSIGNED) {
         return t_uint;
-    if (type == MPI_LONG)
+    }
+    if (type == MPI_LONG) {
         return t_long;
-    if (type == MPI_UNSIGNED_LONG)
+    }
+    if (type == MPI_UNSIGNED_LONG) {
         return t_ulong;
-    if (type == MPI_FLOAT)
+    }
+    if (type == MPI_FLOAT) {
         return t_float;
-    if (type == MPI_DOUBLE)
+    }
+    if (type == MPI_DOUBLE) {
         return t_double;
-    if (type == MPI_LONG_DOUBLE)
+    }
+    if (type == MPI_LONG_DOUBLE) {
         return t_longdouble;
-    if (type == MPI_LONG_LONG_INT)
+    }
+    if (type == MPI_LONG_LONG_INT) {
         return t_longlongint;
-    if (type == MPI_LONG_LONG)
+    }
+    if (type == MPI_LONG_LONG) {
         return t_longlong;
-    if (type == MPI_UNSIGNED_LONG_LONG)
+    }
+    if (type == MPI_UNSIGNED_LONG_LONG) {
         return t_ulonglong;
+    }
 
-    if (type == MPI_PACKED)
+    if (type == MPI_PACKED) {
         return t_packed;
-    if (type == MPI_LB)
+    }
+    if (type == MPI_LB) {
         return t_lb;
-    if (type == MPI_UB)
+    }
+    if (type == MPI_UB) {
         return t_ub;
+    }
 
-    if (type == MPI_FLOAT_INT)
+    if (type == MPI_FLOAT_INT) {
         return t_floatint;
-    if (type == MPI_DOUBLE_INT)
+    }
+    if (type == MPI_DOUBLE_INT) {
         return t_doubleint;
-    if (type == MPI_LONG_INT)
+    }
+    if (type == MPI_LONG_INT) {
         return t_longint;
-    if (type == MPI_SHORT_INT)
+    }
+    if (type == MPI_SHORT_INT) {
         return t_shortint;
-    if (type == MPI_2INT)
+    }
+    if (type == MPI_2INT) {
         return t_2int;
-    if (type == MPI_LONG_DOUBLE_INT)
+    }
+    if (type == MPI_LONG_DOUBLE_INT) {
         return t_longdoubleint;
+    }
 
-    if (type == MPI_COMPLEX)
+    if (type == MPI_COMPLEX) {
         return t_complex;
-    if (type == MPI_DOUBLE_COMPLEX)
+    }
+    if (type == MPI_DOUBLE_COMPLEX) {
         return t_doublecomplex;
-    if (type == MPI_LOGICAL)
+    }
+    if (type == MPI_LOGICAL) {
         return t_logical;
-    if (type == MPI_REAL)
+    }
+    if (type == MPI_REAL) {
         return t_real;
-    if (type == MPI_DOUBLE_PRECISION)
+    }
+    if (type == MPI_DOUBLE_PRECISION) {
         return t_doubleprecision;
-    if (type == MPI_INTEGER)
+    }
+    if (type == MPI_INTEGER) {
         return t_integer;
-    if (type == MPI_2INTEGER)
+    }
+    if (type == MPI_2INTEGER) {
         return t_2integer;
+    }
 #ifdef MPICH_DEFINE_2COMPLEX
-    if (type == MPI_2COMPLEX)
+    if (type == MPI_2COMPLEX) {
         return t_2complex;
-    if (type == MPI_2DOUBLE_COMPLEX)
+    }
+    if (type == MPI_2DOUBLE_COMPLEX) {
         return t_2doublecomplex;
+    }
 #endif
-    if (type == MPI_2REAL)
+    if (type == MPI_2REAL) {
         return t_2real;
-    if (type == MPI_2DOUBLE_PRECISION)
+    }
+    if (type == MPI_2DOUBLE_PRECISION) {
         return t_2doubleprecision;
-    if (type == MPI_CHARACTER)
+    }
+    if (type == MPI_CHARACTER) {
         return t_character;
+    }
 
     return NULL;
 }
@@ -252,44 +290,63 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
     static char c_f90_integer[] = "f90_integer";
     static char c_resized[] = "resized";
 
-    if (combiner == MPI_COMBINER_NAMED)
+    if (combiner == MPI_COMBINER_NAMED) {
         return c_named;
-    if (combiner == MPI_COMBINER_CONTIGUOUS)
+    }
+    if (combiner == MPI_COMBINER_CONTIGUOUS) {
         return c_contig;
-    if (combiner == MPI_COMBINER_VECTOR)
+    }
+    if (combiner == MPI_COMBINER_VECTOR) {
         return c_vector;
-    if (combiner == MPI_COMBINER_HVECTOR)
+    }
+    if (combiner == MPI_COMBINER_HVECTOR) {
         return c_hvector;
-    if (combiner == MPI_COMBINER_INDEXED)
+    }
+    if (combiner == MPI_COMBINER_INDEXED) {
         return c_indexed;
-    if (combiner == MPI_COMBINER_HINDEXED)
+    }
+    if (combiner == MPI_COMBINER_HINDEXED) {
         return c_hindexed;
-    if (combiner == MPI_COMBINER_STRUCT)
+    }
+    if (combiner == MPI_COMBINER_STRUCT) {
         return c_struct;
-    if (combiner == MPI_COMBINER_DUP)
+    }
+    if (combiner == MPI_COMBINER_DUP) {
         return c_dup;
-    if (combiner == MPI_COMBINER_HVECTOR_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_HVECTOR_INTEGER) {
         return c_hvector_integer;
-    if (combiner == MPI_COMBINER_HINDEXED_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
         return c_hindexed_integer;
-    if (combiner == MPI_COMBINER_INDEXED_BLOCK)
+    }
+    if (combiner == MPI_COMBINER_INDEXED_BLOCK) {
         return c_indexed_block;
-    if (combiner == MPI_COMBINER_HINDEXED_BLOCK)
+    }
+    if (combiner == MPI_COMBINER_HINDEXED_BLOCK) {
         return c_hindexed_block;
-    if (combiner == MPI_COMBINER_STRUCT_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
         return c_struct_integer;
-    if (combiner == MPI_COMBINER_SUBARRAY)
+    }
+    if (combiner == MPI_COMBINER_SUBARRAY) {
         return c_subarray;
-    if (combiner == MPI_COMBINER_DARRAY)
+    }
+    if (combiner == MPI_COMBINER_DARRAY) {
         return c_darray;
-    if (combiner == MPI_COMBINER_F90_REAL)
+    }
+    if (combiner == MPI_COMBINER_F90_REAL) {
         return c_f90_real;
-    if (combiner == MPI_COMBINER_F90_COMPLEX)
+    }
+    if (combiner == MPI_COMBINER_F90_COMPLEX) {
         return c_f90_complex;
-    if (combiner == MPI_COMBINER_F90_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_F90_INTEGER) {
         return c_f90_integer;
-    if (combiner == MPI_COMBINER_RESIZED)
+    }
+    if (combiner == MPI_COMBINER_RESIZED) {
         return c_resized;
+    }
 
     return NULL;
 }
@@ -330,8 +387,9 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         string));
 #endif
 
-    if (is_builtin)
+    if (is_builtin) {
         return;
+    }
 
     MPIR_Datatype_get_ptr(type, dtp);
     MPIR_Assert(dtp != NULL);

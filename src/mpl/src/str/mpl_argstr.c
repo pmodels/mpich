@@ -55,12 +55,14 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
     int value;
     int n = 0;
 
-    if (str == NULL || dest == NULL || num_decoded == NULL)
+    if (str == NULL || dest == NULL || num_decoded == NULL) {
         return MPL_STR_FAIL;
+    }
     if (length < 1) {
         *num_decoded = 0;
-        if (*str == '\0')
+        if (*str == '\0') {
             return MPL_STR_SUCCESS;
+        }
         return MPL_STR_TRUNCATED;
     }
     if (*str == MPL_STR_QUOTE_CHAR)
@@ -71,8 +73,9 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
         str++;
         hex[1] = *str;
         str++;
-        if (0 == sscanf(hex, "%X", &value))
+        if (0 == sscanf(hex, "%X", &value)) {
             return MPL_STR_TRUNCATED;
+        }
         *dest = (char) value;
         /*MPL_DBG_MSG_FMT(STRING,VERBOSE,(MPL_DBG_FDEST," %s = %c",
          * hex, *dest)); */
@@ -82,36 +85,42 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
     }
     *num_decoded = n;
     if (length == 0) {
-        if (*str != '\0' && *str != MPL_STR_SEPAR_CHAR && *str != MPL_STR_QUOTE_CHAR)
+        if (*str != '\0' && *str != MPL_STR_SEPAR_CHAR && *str != MPL_STR_QUOTE_CHAR) {
             return MPL_STR_TRUNCATED;
+        }
     }
     return MPL_STR_SUCCESS;
 }
 
 static const char *first_token(const char *str)
 {
-    if (str == NULL)
+    if (str == NULL) {
         return NULL;
+    }
     /* isspace is defined only if isascii is true */
     while (/*isascii(*str) && isspace(*str) */ *str == MPL_STR_SEPAR_CHAR)
         str++;
-    if (*str == '\0')
+    if (*str == '\0') {
         return NULL;
+    }
     return str;
 }
 
 static const char *next_token(const char *str)
 {
-    if (str == NULL)
+    if (str == NULL) {
         return NULL;
+    }
     str = first_token(str);
-    if (str == NULL)
+    if (str == NULL) {
         return NULL;
+    }
     if (*str == MPL_STR_QUOTE_CHAR) {
         /* move over string */
         str++;  /* move over the first quote */
-        if (*str == '\0')
+        if (*str == '\0') {
             return NULL;
+        }
         while (*str != MPL_STR_QUOTE_CHAR) {
             /* move until the last quote, ignoring escaped quotes */
             if (*str == MPL_STR_ESCAPE_CHAR) {
@@ -121,8 +130,9 @@ static const char *next_token(const char *str)
             } else {
                 str++;
             }
-            if (*str == '\0')
+            if (*str == '\0') {
                 return NULL;
+            }
         }
         str++;  /* move over the last quote */
     } else {
@@ -142,8 +152,9 @@ static const char *next_token(const char *str)
 
 static int compare_token(const char *token, const char *str)
 {
-    if (token == NULL || str == NULL)
+    if (token == NULL || str == NULL) {
         return -1;
+    }
 
     if (*token == MPL_STR_QUOTE_CHAR) {
         /* compare quoted strings */
@@ -168,12 +179,15 @@ static int compare_token(const char *token, const char *str)
             token++;
             str++;
         }
-        if (*str == '\0' && *token == MPL_STR_QUOTE_CHAR)
+        if (*str == '\0' && *token == MPL_STR_QUOTE_CHAR) {
             return 0;
-        if (*token == MPL_STR_QUOTE_CHAR)
+        }
+        if (*token == MPL_STR_QUOTE_CHAR) {
             return 1;
-        if (*str < *token)
+        }
+        if (*str < *token) {
             return -1;
+        }
         return 1;
     }
 
@@ -181,12 +195,14 @@ static int compare_token(const char *token, const char *str)
     if (*token == MPL_STR_DELIM_CHAR) {
         if (*str == MPL_STR_DELIM_CHAR) {
             str++;
-            if (*str == '\0')
+            if (*str == '\0') {
                 return 0;
+            }
             return 1;
         }
-        if (*token < *str)
+        if (*token < *str) {
             return -1;
+        }
         return 1;
     }
 
@@ -199,8 +215,9 @@ static int compare_token(const char *token, const char *str)
     if ((*str == '\0') &&
         (*token == MPL_STR_DELIM_CHAR || (*token == MPL_STR_SEPAR_CHAR) || *token == '\0'))
         return 0;
-    if (*token == MPL_STR_DELIM_CHAR || (*token == MPL_STR_SEPAR_CHAR) || *token < *str)
+    if (*token == MPL_STR_DELIM_CHAR || (*token == MPL_STR_SEPAR_CHAR) || *token < *str) {
         return -1;
+    }
     return 1;
 }
 
@@ -208,12 +225,14 @@ static int compare_token(const char *token, const char *str)
 static int token_copy(const char *token, char *str, int maxlen)
 {
     /* check parameters */
-    if (token == NULL || str == NULL)
+    if (token == NULL || str == NULL) {
         return MPL_STR_FAIL;
+    }
 
     /* check special buffer lengths */
-    if (maxlen < 1)
+    if (maxlen < 1) {
         return MPL_STR_FAIL;
+    }
     if (maxlen == 1) {
         *str = '\0';
         return (str[0] == '\0') ? MPL_STR_SUCCESS : MPL_STR_TRUNCATED;
@@ -298,13 +317,15 @@ Output Parameters:
   @*/
 int MPL_str_get_string_arg(const char *str, const char *flag, char *val, int maxlen)
 {
-    if (maxlen < 1)
+    if (maxlen < 1) {
         return MPL_STR_FAIL;
+    }
 
     /* line up with the first token */
     str = first_token(str);
-    if (str == NULL)
+    if (str == NULL) {
         return MPL_STR_FAIL;
+    }
 
     /* This loop will match the first instance of "flag = value" in the string. */
     do {
@@ -312,8 +333,9 @@ int MPL_str_get_string_arg(const char *str, const char *flag, char *val, int max
             str = next_token(str);
             if (compare_token(str, MPL_STR_DELIM_STR) == 0) {
                 str = next_token(str);
-                if (str == NULL)
+                if (str == NULL) {
                     return MPL_STR_FAIL;
+                }
                 return token_copy(str, val, maxlen);
             }
         } else {
@@ -350,13 +372,15 @@ Output Parameters:
 int MPL_str_get_binary_arg(const char *str, const char *flag, char *buffer,
                            int maxlen, int *out_length)
 {
-    if (maxlen < 1)
+    if (maxlen < 1) {
         return MPL_STR_FAIL;
+    }
 
     /* line up with the first token */
     str = first_token(str);
-    if (str == NULL)
+    if (str == NULL) {
         return MPL_STR_FAIL;
+    }
 
     /* This loop will match the first instance of "flag = value" in the string. */
     do {
@@ -364,8 +388,9 @@ int MPL_str_get_binary_arg(const char *str, const char *flag, char *buffer,
             str = next_token(str);
             if (compare_token(str, MPL_STR_DELIM_STR) == 0) {
                 str = next_token(str);
-                if (str == NULL)
+                if (str == NULL) {
                     return MPL_STR_FAIL;
+                }
                 return decode_buffer(str, buffer, maxlen, out_length);
             }
         } else {
@@ -411,8 +436,9 @@ int MPL_str_get_int_arg(const char *str, const char *flag, int *val_ptr)
 static int quoted_printf(char *str, int maxlen, const char *val)
 {
     int count = 0;
-    if (maxlen < 1)
+    if (maxlen < 1) {
         return 0;
+    }
     *str = MPL_STR_QUOTE_CHAR;
     str++;
     maxlen--;
@@ -425,8 +451,9 @@ static int quoted_printf(char *str, int maxlen, const char *val)
             str++;
             maxlen--;
             count++;
-            if (maxlen == 0)
+            if (maxlen == 0) {
                 return count;
+            }
         }
         *str = *val;
         str++;
@@ -439,8 +466,9 @@ static int quoted_printf(char *str, int maxlen, const char *val)
         str++;
         maxlen--;
         count++;
-        if (maxlen == 0)
+        if (maxlen == 0) {
             return count;
+        }
         *str = '\0';
     }
     return count;
@@ -600,13 +628,15 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
     int num_chars;
     char **orig_str_ptr;
 
-    if (maxlen_ptr == NULL)
+    if (maxlen_ptr == NULL) {
         return MPL_STR_FAIL;
+    }
 
     orig_str_ptr = str_ptr;
 
-    if (*maxlen_ptr < 1)
+    if (*maxlen_ptr < 1) {
         return MPL_STR_FAIL;
+    }
 
     /* add the flag */
     if (strstr(flag, MPL_STR_SEPAR_STR) || strstr(flag, MPL_STR_DELIM_STR) ||
@@ -717,13 +747,15 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     int num_chars;
     char **orig_str_ptr;
 
-    if (maxlen_ptr == NULL)
+    if (maxlen_ptr == NULL) {
         return MPL_STR_FAIL;
+    }
 
     orig_str_ptr = str_ptr;
 
-    if (*maxlen_ptr < 1)
+    if (*maxlen_ptr < 1) {
         return MPL_STR_FAIL;
+    }
 
     /* add the flag */
     if (strstr(flag, MPL_STR_SEPAR_STR) || strstr(flag, MPL_STR_DELIM_STR) ||

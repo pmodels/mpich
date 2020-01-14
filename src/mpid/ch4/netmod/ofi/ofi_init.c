@@ -320,10 +320,11 @@ static int dynproc_send_disconnect(int conn_id);
 
 static int get_ofi_version(void)
 {
-    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1) {
         return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
-    else
+    } else {
         return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+    }
 }
 
 static int conn_manager_init()

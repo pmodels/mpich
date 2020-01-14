@@ -66,16 +66,19 @@ static int sorttype_compare(const void *v1, const void *v2)
     const sorttype *s1 = v1;
     const sorttype *s2 = v2;
 
-    if (s1->key > s2->key)
+    if (s1->key > s2->key) {
         return 1;
-    if (s1->key < s2->key)
+    }
+    if (s1->key < s2->key) {
         return -1;
+    }
 
     /* (s1->key == s2->key), maintain original order */
-    if (s1->orig_idx > s2->orig_idx)
+    if (s1->orig_idx > s2->orig_idx) {
         return 1;
-    else if (s1->orig_idx < s2->orig_idx)
+    } else if (s1->orig_idx < s2->orig_idx) {
         return -1;
+    }
 
     /* --BEGIN ERROR HANDLING-- */
     return 0;   /* should never happen */

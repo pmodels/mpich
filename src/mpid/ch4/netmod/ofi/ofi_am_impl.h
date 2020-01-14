@@ -81,8 +81,9 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 
     req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
 
-    if (!req_hdr)
+    if (!req_hdr) {
         return;
+    }
 
     if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0]) {
         MPL_free(req_hdr->am_hdr);

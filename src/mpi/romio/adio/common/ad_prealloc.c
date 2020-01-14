@@ -59,8 +59,9 @@ void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset diskspace, int *error_code)
         ADIO_WriteContig(fd, buf, (int) len,    /* len is ADIO_Offset but is <= ADIOI_PREALLOC_BUFSZ (16M),
                                                  * so it fits in an int parameter */
                          MPI_BYTE, ADIO_EXPLICIT_OFFSET, done, &status, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
         done += len;
     }
 
@@ -73,8 +74,9 @@ void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset diskspace, int *error_code)
             ADIO_WriteContig(fd, buf, (int) len,        /* len is ADIO_Offset but is <= ADIOI_PREALLOC_BUFSZ (16M),
                                                          * so it fits in an int parameter */
                              MPI_BYTE, ADIO_EXPLICIT_OFFSET, done, &status, error_code);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
             done += len;
         }
     }

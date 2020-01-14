@@ -57,8 +57,9 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
 
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_CONTIG, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
-        if (!new_dlp)
+        if (!new_dlp) {
             return -1;
+        }
         /* --END ERROR HANDLING-- */
         new_loop_sz = new_dlp->dloop_sz;
 
@@ -80,8 +81,9 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
             /* make a copy of the old loop and multiply the count */
             MPIR_Dataloop_dup(old_loop_ptr, (void **) &new_dlp);
             /* --BEGIN ERROR HANDLING-- */
-            if (!new_dlp)
+            if (!new_dlp) {
                 return -1;
+            }
             /* --END ERROR HANDLING-- */
 
             new_dlp->loop_params.c_t.count *= count;
@@ -91,8 +93,9 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
             /* allocate space for new loop including copy of old */
             MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_CONTIG, count, old_loop_ptr, &new_dlp);
             /* --BEGIN ERROR HANDLING-- */
-            if (!new_dlp)
+            if (!new_dlp) {
                 return -1;
+            }
             /* --END ERROR HANDLING-- */
             new_loop_sz = new_dlp->dloop_sz;
 

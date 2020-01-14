@@ -129,8 +129,9 @@ int MPIR_Alltoall_intra_auto(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS, nbytes;
     int sendtype_size;
 
-    if (recvcount == 0)
+    if (recvcount == 0) {
         return MPI_SUCCESS;
+    }
 
     comm_size = comm_ptr->local_size;
 

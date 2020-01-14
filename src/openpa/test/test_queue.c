@@ -245,8 +245,9 @@ static int test_queue_threaded_dequeue(void *_udata)
     int i;
 
     /* Allocate expect_sn array */
-    if (NULL == (expect_sn = (int *) calloc(nenqueuers, sizeof(int))))
+    if (NULL == (expect_sn = (int *) calloc(nenqueuers, sizeof(int)))) {
         return (1);
+    }
 
     /* Main loop.  Terminates when either the expected number of elements have
      * been dequeued or the loop has continued too many times. */
@@ -264,8 +265,9 @@ static int test_queue_threaded_dequeue(void *_udata)
                 if (NULL == (peek_element = OPA_Queue_peek_head(udata->qhead)))
                     nerrors++;
                 peek_counter = 0;
-                if (OPA_Queue_is_empty(udata->qhead))
+                if (OPA_Queue_is_empty(udata->qhead)) {
                     return (1);
+                }
             }
 
             /* end if */

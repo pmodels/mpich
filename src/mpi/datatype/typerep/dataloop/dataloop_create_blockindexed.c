@@ -140,8 +140,9 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
     if (is_builtin) {
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_BLOCKINDEXED, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
-        if (!new_dlp)
+        if (!new_dlp) {
             return -1;
+        }
         /* --END ERROR HANDLING-- */
         new_loop_sz = new_dlp->dloop_sz;
 
@@ -158,8 +159,9 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_BLOCKINDEXED,
                                      count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
-        if (!new_dlp)
+        if (!new_dlp) {
             return -1;
+        }
         /* --END ERROR HANDLING-- */
         new_loop_sz = new_dlp->dloop_sz;
 

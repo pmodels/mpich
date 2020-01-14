@@ -111,8 +111,9 @@ int BGQ_IO_node_id()
 {
     static unsigned long IO_node_id = ULONG_MAX;
 
-    if (IO_node_id != ULONG_MAX)
+    if (IO_node_id != ULONG_MAX) {
         return (int) (IO_node_id >> 32);
+    }
 
     int rc;
     int fd;

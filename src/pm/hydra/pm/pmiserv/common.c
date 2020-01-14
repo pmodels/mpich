@@ -112,8 +112,9 @@ char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, c
     int i;
 
     for (i = 0; i < count; i++) {
-        if (!strcmp(tokens[i].key, key))
+        if (!strcmp(tokens[i].key, key)) {
             return tokens[i].val;
+        }
     }
 
     return NULL;

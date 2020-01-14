@@ -125,8 +125,9 @@ int MPII_Timer_init(int rank, int size)
         return -1;
     }
     g_pRLOG = RLOG_InitLog(rank, size);
-    if (g_pRLOG == NULL)
+    if (g_pRLOG == NULL) {
         return -1;
+    }
 
     RLOG_EnableLogging(g_pRLOG);
 
@@ -145,10 +146,12 @@ int MPII_Timer_init(int rank, int size)
 
 int MPII_Timer_finalize()
 {
-    if (g_pRLOG == NULL)
+    if (g_pRLOG == NULL) {
         return -1;
-    if (!s_RLOG_Initialized)
+    }
+    if (!s_RLOG_Initialized) {
         return 0;
+    }
 
     RLOG_DisableLogging(g_pRLOG);
 

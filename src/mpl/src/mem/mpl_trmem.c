@@ -215,8 +215,9 @@ void MPL_trconfig(int rank, int need_thread_safety)
 {
     world_rank = rank;
 
-    if (is_configured)
+    if (is_configured) {
         return;
+    }
 
     /* If the upper layer asked for thread safety and there's no
      * threading package available, we need to return an error. */
@@ -248,17 +249,20 @@ void MPL_trconfig(int rank, int need_thread_safety)
 MPL_STATIC_INLINE_PREFIX int is_valid_alignment(size_t a)
 {
     /* No alignment constraints - okay */
-    if (a == 0)
+    if (a == 0) {
         return 1;
+    }
 
     /* Alignment should be multiple of sizeof(void *), as in posix_memalign(3) */
-    if (a % sizeof(void *) != 0)
+    if (a % sizeof(void *) != 0) {
         return 0;
+    }
 
     /* Check if it's power of two */
     while (a > 1) {
-        if (a % 2 == 1)
+        if (a % 2 == 1) {
             return 0;   /* Don't allow non-power-of-two numbers */
+        }
         a /= 2;
     }
 
@@ -455,12 +459,14 @@ static void trfree(void *a_ptr, int line, const char file[])
     int l;
 
 /* Don't try to handle empty blocks */
-    if (!a_ptr)
+    if (!a_ptr) {
         return;
+    }
 
     if (TRdebugLevel > 0) {
-        if (MPL_trvalid2("Invalid MALLOC arena detected by FREE at line %d in %s\n", line, file))
+        if (MPL_trvalid2("Invalid MALLOC arena detected by FREE at line %d in %s\n", line, file)) {
             return;
+        }
     }
 
     /* Alignment guaranteed by the way a_ptr was allocated.  Use

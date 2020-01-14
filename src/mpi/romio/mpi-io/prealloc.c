@@ -101,8 +101,9 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
     ROMIO_THREAD_CS_EXIT();
 
     /* TODO: bcast result? */
-    if (!mynod)
+    if (!mynod) {
         return error_code;
-    else
+    } else {
         return MPI_SUCCESS;
+    }
 }

@@ -163,12 +163,13 @@ static void dup_vcrt(struct MPIDI_VCRT *src_vcrt, struct MPIDI_VCRT **dest_vcrt,
 
 static inline int map_size(MPIR_Comm_map_t map)
 {
-    if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
+    if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR) {
         return map.src_mapping_size;
-    else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
+    } else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R) {
         return map.src_comm->local_size;
-    else
+    } else {
         return map.src_comm->remote_size;
+    }
 }
 
 int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)

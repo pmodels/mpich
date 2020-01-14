@@ -35,8 +35,9 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     MPI_Datatype el_type;
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (count == 0) {
         return MPII_Type_zerolen(newtype);
+    }
 
     /* allocate new datatype object and handle */
     new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);

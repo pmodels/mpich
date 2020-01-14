@@ -15,8 +15,9 @@
 int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno)
 {
     int error_code = MPI_SUCCESS;
-    if (!my_errno)
+    if (!my_errno) {
         return MPI_SUCCESS;
+    }
 
     /* --BEGIN ERROR HANDLING-- */
     switch (my_errno) {

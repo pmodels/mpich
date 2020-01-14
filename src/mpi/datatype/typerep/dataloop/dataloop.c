@@ -61,9 +61,9 @@ void MPIR_Dataloop_free(void **dataloop_)
 {
     MPII_Dataloop **dataloop = (MPII_Dataloop **) dataloop_;
 
-    if (*dataloop == NULL)
+    if (*dataloop == NULL) {
         return;
-
+    }
 #ifdef DEBUG_MEMORY
     MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "MPIR_Dataloop_free: freeing loop @ %x.\n",
                   (int) *dataloop);

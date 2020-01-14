@@ -117,17 +117,20 @@ int MTest_thread_barrier(int nt)
         if (bcount != nt) {
             if (bcount > 0) {
                 err = pthread_barrier_destroy(&barrier);
-                if (err)
+                if (err) {
                     return err;
+                }
             }
             err = pthread_barrier_init(&barrier, NULL, nt);
-            if (err)
+            if (err) {
                 return err;
+            }
             bcount = nt;
         }
         err = MTest_thread_unlock(&barrierLock);
-        if (err)
+        if (err) {
             return err;
+        }
     }
     return pthread_barrier_wait(&barrier);
 }

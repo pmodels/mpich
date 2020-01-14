@@ -15,8 +15,9 @@
 static inline int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
 #ifdef HAVE_LIBHCOLL
-    if (MPI_SUCCESS == hcoll_Barrier(comm, errflag))
+    if (MPI_SUCCESS == hcoll_Barrier(comm, errflag)) {
         return MPI_SUCCESS;
+    }
 #endif
     return MPIR_Barrier_impl(comm, errflag);
 }
@@ -25,8 +26,9 @@ static inline int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype, int
                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
 #ifdef HAVE_LIBHCOLL
-    if (MPI_SUCCESS == hcoll_Bcast(buffer, count, datatype, root, comm, errflag))
+    if (MPI_SUCCESS == hcoll_Bcast(buffer, count, datatype, root, comm, errflag)) {
         return MPI_SUCCESS;
+    }
 #endif
     return MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
 }
@@ -36,8 +38,9 @@ static inline int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
                                  MPIR_Errflag_t * errflag)
 {
 #ifdef HAVE_LIBHCOLL
-    if (MPI_SUCCESS == hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag))
+    if (MPI_SUCCESS == hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag)) {
         return MPI_SUCCESS;
+    }
 #endif
     return MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 }

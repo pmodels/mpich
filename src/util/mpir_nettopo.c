@@ -112,9 +112,9 @@ MPIR_nettopo_node_type_e MPIR_nettopo_get_node_type(MPIR_nettopo_node_t node)
 {
     MPIR_nettopo_node_type_e type = MPIR_NETTOPO_NODE_TYPE__INVALID;
 
-    if (node == NULL)
+    if (node == NULL) {
         return type;
-
+    }
 #ifdef HAVE_NETLOC
     type = get_nettopo_type(((netloc_node_t *) node)->node_type);
 #endif
@@ -137,9 +137,9 @@ MPIR_nettopo_node_t MPIR_nettopo_get_edge_dest_node(MPIR_nettopo_edge_t edge)
 {
     MPIR_nettopo_node_t node = NULL;
 
-    if (edge == NULL)
+    if (edge == NULL) {
         return node;
-
+    }
 #ifdef HAVE_NETLOC
     node = ((netloc_edge_t *) edge)->dest_node;
 #endif
@@ -151,9 +151,9 @@ int MPIR_nettopo_get_node_uid(MPIR_nettopo_node_t node)
 {
     int uid = -1;
 
-    if (node == NULL)
+    if (node == NULL) {
         return uid;
-
+    }
 #ifdef HAVE_NETLOC
     uid = ((netloc_node_t *) node)->__uid__;
 #endif
@@ -180,9 +180,9 @@ int MPIR_nettopo_get_all_edges(MPIR_nettopo_node_t node, int *num_edges,
     *num_edges = 0;
     *edges = NULL;
 
-    if (node == NULL)
+    if (node == NULL) {
         return MPI_ERR_OTHER;
-
+    }
 #ifdef HAVE_NETLOC
     mpi_errno = netloc_get_all_edges(netloc_topology, node, num_edges, (netloc_edge_t ***) edges);
 #endif

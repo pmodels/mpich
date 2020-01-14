@@ -288,8 +288,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * se
         MPIDI_OFI_NEXT_SEG_STATE(origin, ORIGIN);
         return MPIDI_OFI_SEG_EAGAIN;
     } else {
-        if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0)))
+        if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0))) {
             return MPIDI_OFI_SEG_ERROR;
+        }
         return MPIDI_OFI_SEG_DONE;
     }
 }
@@ -336,8 +337,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state(MPIDI_OFI_seg_state_t * se
                             seg_state->origin_iov_len), seg_state->buf_limit_left);
         return MPIDI_OFI_SEG_EAGAIN;
     } else {
-        if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0)))
+        if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0))) {
             return MPIDI_OFI_SEG_ERROR;
+        }
 
         return MPIDI_OFI_SEG_DONE;
     }

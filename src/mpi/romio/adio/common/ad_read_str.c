@@ -140,8 +140,9 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 
         ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE,
                         ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
 
         for (j = 0; j < count; j++) {
             for (i = 0; i < flat_buf->count; i++) {

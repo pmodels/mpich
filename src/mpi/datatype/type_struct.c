@@ -151,9 +151,9 @@ int MPIR_Type_struct(int count,
 
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (count == 0) {
         return MPII_Type_zerolen(newtype);
-
+    }
 #ifdef MPID_STRUCT_DEBUG
     MPII_Datatype_printf(oldtype_array[0], 1, displacement_array[0], blocklength_array[0], 1);
     for (i = 1; i < count; i++) {

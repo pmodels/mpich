@@ -470,8 +470,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, send_buf_idx, curr_to_proc,
                               done_to_proc, &hole, m, buftype_extent, buf_idx, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
 
         flag = 0;
         for (i = 0; i < nprocs; i++)
@@ -482,8 +483,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
             ADIOI_Assert(size == (int) size);
             ADIO_WriteContig(fd, write_buf, (int) size, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              off, &status, error_code);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
 
         off += size;
@@ -504,8 +506,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                               others_req, send_buf_idx,
                               curr_to_proc, done_to_proc, &hole, m,
                               buftype_extent, buf_idx, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
     }
 
     ADIOI_Free(curr_offlen_ptr);

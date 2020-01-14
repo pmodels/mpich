@@ -50,8 +50,9 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
 
     new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
-    if (!new_dtp)
+    if (!new_dtp) {
         return MPII_Type_create_resized_memory_error();
+    }
     /* --END ERROR HANDLING-- */
 
     /* handle is filled in by MPIR_Handle_obj_alloc() */

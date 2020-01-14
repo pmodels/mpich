@@ -30,12 +30,14 @@ static void ADIOI_LUSTRE_Aligned_Mem_File_Write(ADIO_File fd, const void *buf, M
         rem = len % fd->d_miniosz;
         size = len - rem;
         *err = pwrite(fd->fd_direct, buf, size, offset);
-        if (*err == -1)
+        if (*err == -1) {
             return;
+        }
         nbytes = *err;
         *err = pwrite(fd->fd_sys, ((char *) buf) + size, rem, offset + size);
-        if (*err == -1)
+        if (*err == -1) {
             return;
+        }
         *err += nbytes;
     }
 }
@@ -55,12 +57,14 @@ static void ADIOI_LUSTRE_Aligned_Mem_File_Read(ADIO_File fd, const void *buf, MP
         rem = len % fd->d_miniosz;
         size = len - rem;
         *err = pread(fd->fd_direct, (void *) buf, size, offset);
-        if (*err == -1)
+        if (*err == -1) {
             return;
+        }
         nbytes = *err;
         *err = pread(fd->fd_sys, ((char *) buf) + size, rem, offset + size);
-        if (*err == -1)
+        if (*err == -1) {
             return;
+        }
         *err += nbytes;
     }
 }
@@ -81,8 +85,9 @@ static ssize_t ADIOI_LUSTRE_Directio(ADIO_File fd, const void *buf, MPI_Count le
             nbytes = pwrite(fd->fd_sys, (void *) buf, diff, offset);
         else
             nbytes = pread(fd->fd_sys, (void *) buf, diff, offset);
-        if (nbytes == -1)
+        if (nbytes == -1) {
             return -1;
+        }
         buf = ((char *) buf) + diff;
         offset += diff;
         size = len - diff;
@@ -95,45 +100,51 @@ static ssize_t ADIOI_LUSTRE_Directio(ADIO_File fd, const void *buf, MPI_Count le
     if (rw) {   /* direct I/O enabled */
         if (!(((long) buf) % fd->d_mem)) {
             ADIOI_LUSTRE_Aligned_Mem_File_Write(fd, buf, size, offset, &err);
-            if (err == -1)
+            if (err == -1) {
                 return -1;
+            }
             nbytes += err;
         } else {
             newbuf = (void *) memalign(LUSTRE_MEMALIGN, size);
             if (newbuf) {
                 memcpy(newbuf, buf, size);
                 ADIOI_LUSTRE_Aligned_Mem_File_Write(fd, newbuf, size, offset, &err);
-                if (err == -1)
+                if (err == -1) {
                     return -1;
+                }
                 nbytes += err;
                 ADIOI_Free(newbuf);
             } else {
                 err = pwrite(fd->fd_sys, buf, size, offset);
-                if (err == -1)
+                if (err == -1) {
                     return -1;
+                }
                 nbytes += err;
             }
         }
     } else {
         if (!(((long) buf) % fd->d_mem)) {
             ADIOI_LUSTRE_Aligned_Mem_File_Read(fd, buf, size, offset, &err);
-            if (err == -1)
+            if (err == -1) {
                 return -1;
+            }
             nbytes += err;
         } else {
             newbuf = (void *) memalign(LUSTRE_MEMALIGN, size);
             if (newbuf) {
                 ADIOI_LUSTRE_Aligned_Mem_File_Read(fd, newbuf, size, offset, &err);
-                if (err == -1)
+                if (err == -1) {
                     return -1;
+                }
                 if (err > 0)
                     memcpy((void *) buf, newbuf, err);
                 nbytes += err;
                 ADIOI_Free(newbuf);
             } else {
                 err = pread(fd->fd_sys, (void *) buf, size, offset);
-                if (err == -1)
+                if (err == -1) {
                     return -1;
+                }
                 nbytes += err;
             }
         }

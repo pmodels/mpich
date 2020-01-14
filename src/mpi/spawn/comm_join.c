@@ -60,8 +60,9 @@ PMPI_LOCAL int MPIR_fd_send(int fd, void *buffer, int length)
 #endif
             if (result == SOCKET_EINTR)
                 continue;
-            else
+            else {
                 return result;
+            }
         }
         /* --END ERROR HANDLING-- */
         else {
@@ -88,8 +89,9 @@ PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
 #endif
             if (result == SOCKET_EINTR)
                 continue;
-            else
+            else {
                 return result;
+            }
         }
         /* --END ERROR HANDLING-- */
         else {

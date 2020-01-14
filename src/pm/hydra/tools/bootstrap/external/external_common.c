@@ -20,8 +20,9 @@ int HYDTI_bscd_in_env_list(const char *env_name, const char *env_list[])
     int i;
 
     for (i = 0; env_list[i]; i++)
-        if (!strcmp(env_name, env_list[i]))
+        if (!strcmp(env_name, env_list[i])) {
             return 1;
+        }
 
     return 0;
 }

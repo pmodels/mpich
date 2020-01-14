@@ -72,8 +72,9 @@ int mkstemp (char *template)
     {
         randchar (X);
         fd = open (template, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-        if (fd != -1)
+        if (fd != -1) {
             return fd;
+        }
     }
 
     errno = EEXIST;

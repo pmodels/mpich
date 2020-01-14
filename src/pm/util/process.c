@@ -388,8 +388,9 @@ ProcessState *MPIE_FindProcessByPid(pid_t pid)
              * from handle_sigchild. */
             if (pState) {
                 for (i = 0; i < app->nProcess; i++) {
-                    if (pState[i].pid == pid)
+                    if (pState[i].pid == pid) {
                         return &pState[i];
+                    }
                 }
             }
             app = app->nextApp;
@@ -474,8 +475,9 @@ static void handle_sigchild(int sig)
 
     /* Set a flag to indicate that we're in the handler, and check
      * to see if we should ignore the signal */
-    if (inHandler)
+    if (inHandler) {
         return;
+    }
     inHandler = 1;
 
     if (skipHandler) {
@@ -791,8 +793,9 @@ static int inKillWorld = 0;
  @*/
 int MPIE_KillWorld(ProcessWorld * world)
 {
-    if (inKillWorld)
+    if (inKillWorld) {
         return 0;
+    }
     inKillWorld = 1;
     DBG_PRINTF(("Entering KillWorld\n"));
     MPIE_SignalWorld(world, SIGINT);

@@ -281,8 +281,9 @@ MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size,
     int ret;
 
     ret = posix_memalign(&ptr, alignment, size);
-    if (ret != 0)
+    if (ret != 0) {
         return NULL;
+    }
     return ptr;
 #else
 #error "MPL_DEFINE_ALIGNED_ALLOC defined but no underlying support function found - should not reach here."

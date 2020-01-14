@@ -21,8 +21,9 @@ static void append_lhost(const char *host)
     int i;
 
     for (i = 0; i < lhost_count; i++)
-        if (!strcmp(lhost[i], host))
+        if (!strcmp(lhost[i], host)) {
             return;
+        }
 
     MPL_strncpy(lhost[lhost_count], host, MAX_HOSTNAME_LEN);
     lhost_count++;
@@ -31,9 +32,9 @@ static void append_lhost(const char *host)
 static void init_lhost_list(void)
 {
     /* if the local host list is already initialized, return */
-    if (lhost_count)
+    if (lhost_count) {
         return;
-
+    }
 #if defined(MPL_HAVE_GETIFADDRS) && defined (MPL_HAVE_INET_NTOP)
     char tmp_lhost[MAX_HOSTNAME_LEN];
     int ret;
@@ -86,8 +87,9 @@ int MPL_host_is_local(const char *host)
     init_lhost_list();
 
     for (i = 0; i < lhost_count; i++)
-        if (!strcmp(lhost[i], host))
+        if (!strcmp(lhost[i], host)) {
             return 1;
+        }
 
     return 0;
 }

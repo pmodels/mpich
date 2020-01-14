@@ -36,8 +36,9 @@ int MPIR_Allgather_intra_ring(const void *sendbuf,
     int j, i;
     int left, right, jnext;
 
-    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
+    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0)) {
         return MPI_SUCCESS;
+    }
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;

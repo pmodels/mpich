@@ -86,8 +86,9 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
                                 (char *) buf + userbuf_off,
                                 req_len,
                                 MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                if (*error_code != MPI_SUCCESS)
+                if (*error_code != MPI_SUCCESS) {
                     return;
+                }
 
                 /* off is (potentially) used to save the final offset later */
                 off += flat_buf->blocklens[b_index];
@@ -238,8 +239,9 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
                                     (char *) buf + userbuf_off,
                                     req_len,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                 }
                 userbuf_off += frd_size;
 
@@ -301,8 +303,9 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
                                     (char *) buf + userbuf_off,
                                     req_len,
                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                 }
 
                 if (size == frd_size) {

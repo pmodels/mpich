@@ -315,8 +315,9 @@ int PMIServSetupPort(ProcessUniverse * mypUniv, char *portString, int portLen)
     int rc = 0;
 
     rc = PMIServGetPort(&listenfd, portString, portLen);
-    if (rc)
+    if (rc) {
         return rc;
+    }
     rc = MPIE_IORegister(listenfd, IO_READ, PMIServAcceptFromPort, mypUniv);
     if (mypUniv->OnNone) {
         MPL_internal_error_printf("pUniv.OnNone already set; cannot set to PMIServEndPort\n");

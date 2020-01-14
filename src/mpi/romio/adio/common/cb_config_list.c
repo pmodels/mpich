@@ -617,10 +617,11 @@ static int find_name(char *name,
             break;
     }
 
-    if (i < nr_procnames)
+    if (i < nr_procnames) {
         return i;
-    else
+    } else {
         return -1;
+    }
 }
 
 /* get_max_procs() - grab the maximum number of processes to use out of
@@ -645,8 +646,9 @@ static int get_max_procs(int cb_nodes)
             return 1;
         case AGG_COLON:
             token = cb_config_list_lex();
-            if (token != AGG_WILDCARD && token != AGG_STRING)
+            if (token != AGG_WILDCARD && token != AGG_STRING) {
                 return -1;
+            }
             if (token == AGG_WILDCARD)
                 max_procs = cb_nodes;
             else if (token == AGG_STRING) {
@@ -658,14 +660,16 @@ static int get_max_procs(int cb_nodes)
             }
             /* strip off next comma (if there is one) */
             token = cb_config_list_lex();
-            if (token != AGG_COMMA && token != AGG_EOS)
+            if (token != AGG_COMMA && token != AGG_EOS) {
                 return -1;
+            }
 
             /* return max_procs */
-            if (max_procs < 0)
+            if (max_procs < 0) {
                 return -1;
-            else
+            } else {
                 return max_procs;
+            }
     }
     return -1;
 }
@@ -692,8 +696,9 @@ static int cb_config_list_lex(void)
 {
     int slen;
 
-    if (*token_ptr == '\0')
+    if (*token_ptr == '\0') {
         return AGG_EOS;
+    }
 
     slen = (int) strcspn(token_ptr, DELIMS);
 
@@ -711,8 +716,9 @@ static int cb_config_list_lex(void)
         if (slen == 1) {
             token_ptr++;
             return AGG_WILDCARD;
-        } else
+        } else {
             return AGG_ERROR;
+        }
     }
 
     /* last case: some kind of string.  for now we copy the string. */

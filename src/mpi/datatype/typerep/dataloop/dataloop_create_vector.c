@@ -62,8 +62,9 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
 
         MPII_Dataloop_alloc(MPII_DATALOOP_KIND_VECTOR, count, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
-        if (!new_dlp)
+        if (!new_dlp) {
             return -1;
+        }
         /* --END ERROR HANDLING-- */
 
         MPIR_Datatype_get_size_macro(oldtype, basic_sz);
@@ -80,8 +81,9 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
 
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_VECTOR, count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */
-        if (!new_dlp)
+        if (!new_dlp) {
             return -1;
+        }
         /* --END ERROR HANDLING-- */
 
         new_dlp->kind = MPII_DATALOOP_KIND_VECTOR;

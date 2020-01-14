@@ -434,8 +434,9 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
         MPIR_CHKLMEM_DECL(1);
         int *newdivs;
         MPIR_CHKLMEM_MALLOC(newdivs, int *, ndivs * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
-        if (mpi_errno)
+        if (mpi_errno) {
             return mpi_errno;
+        }
 
         /* At least 3 divisors to set (0...idx).  We try all choices
          * recursively, but stop looking when we can easily tell that

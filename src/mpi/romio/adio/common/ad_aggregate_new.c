@@ -240,8 +240,9 @@ int ADIOI_Agg_idx(int rank, ADIO_File fd)
     ranklist = fd->hints->ranklist;
 
     for (i = 0; i < cb_nodes; i++) {
-        if (ranklist[i])
+        if (ranklist[i]) {
             return i;
+        }
     }
     return -1;
 }

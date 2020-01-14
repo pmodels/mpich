@@ -80,8 +80,9 @@ int adio_daos_hash_init(void)
     int rc;
 
     rc = d_hash_table_create(0, 16, NULL, &hdl_hash_ops, &poh_hash);
-    if (rc)
+    if (rc) {
         return rc;
+    }
 
     return d_hash_table_create(0, 16, NULL, &hdl_hash_ops, &coh_hash);
 }
@@ -97,8 +98,9 @@ struct adio_daos_hdl *adio_daos_poh_lookup(const uuid_t uuid)
     d_list_t *rlink;
 
     rlink = d_hash_rec_find(poh_hash, uuid, sizeof(uuid_t));
-    if (rlink == NULL)
+    if (rlink == NULL) {
         return NULL;
+    }
 
     return hdl_obj(rlink);
 }
@@ -114,8 +116,9 @@ int adio_daos_poh_insert(uuid_t uuid, daos_handle_t poh, struct adio_daos_hdl **
     int rc;
 
     phdl = (struct adio_daos_hdl *) ADIOI_Calloc(1, sizeof(struct adio_daos_hdl));
-    if (phdl == NULL)
+    if (phdl == NULL) {
         return -1;
+    }
 
     phdl->type = DAOS_POOL;
     uuid_copy(phdl->uuid, uuid);
@@ -149,8 +152,9 @@ int adio_daos_poh_lookup_connect(uuid_t uuid, struct adio_daos_hdl **hdl)
     }
 
     phdl = (struct adio_daos_hdl *) ADIOI_Calloc(1, sizeof(struct adio_daos_hdl));
-    if (phdl == NULL)
+    if (phdl == NULL) {
         return -1;
+    }
 
     phdl->type = DAOS_POOL;
     uuid_copy(phdl->uuid, uuid);
@@ -203,8 +207,9 @@ struct adio_daos_hdl *adio_daos_coh_lookup(const uuid_t uuid)
     d_list_t *rlink;
 
     rlink = d_hash_rec_find(coh_hash, uuid, sizeof(uuid_t));
-    if (rlink == NULL)
+    if (rlink == NULL) {
         return NULL;
+    }
 
     return hdl_obj(rlink);
 }
@@ -220,8 +225,9 @@ int adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **
     int rc;
 
     co_hdl = (struct adio_daos_hdl *) ADIOI_Calloc(1, sizeof(struct adio_daos_hdl));
-    if (co_hdl == NULL)
+    if (co_hdl == NULL) {
         return -1;
+    }
 
     co_hdl->type = DAOS_CONT;
     uuid_copy(co_hdl->uuid, uuid);
@@ -258,8 +264,9 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
     }
 
     co_hdl = (struct adio_daos_hdl *) ADIOI_Calloc(1, sizeof(struct adio_daos_hdl));
-    if (co_hdl == NULL)
+    if (co_hdl == NULL) {
         return -1;
+    }
 
     co_hdl->type = DAOS_CONT;
     uuid_copy(co_hdl->uuid, uuid);

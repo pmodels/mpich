@@ -1086,10 +1086,11 @@ int main(int argc, char **argv)
 
   fn_exit:
     HYD_FUNC_EXIT();
-    if (status != HYD_SUCCESS)
+    if (status != HYD_SUCCESS) {
         return -1;
-    else
+    } else {
         return exit_status;
+    }
 
   fn_fail:
     goto fn_exit;

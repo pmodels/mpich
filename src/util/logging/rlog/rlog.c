@@ -64,8 +64,9 @@ RLOG_Struct *RLOG_InitLog(int rank, int size)
     RLOG_Struct *pRLOG;
 
     pRLOG = (RLOG_Struct *) MPL_malloc(sizeof(RLOG_Struct), MPL_MEM_DEBUG);
-    if (pRLOG == NULL)
+    if (pRLOG == NULL) {
         return NULL;
+    }
 
     pRLOG->nRank = rank;
     pRLOG->nSize = size;
@@ -167,8 +168,9 @@ void WriteCurrentDataAndLogEvent(RLOG_Struct * pRLOG, int event, double starttim
 #ifndef RLOG_LogEvent
 void RLOG_LogEvent(RLOG_Struct * pRLOG, int event, double starttime, double endtime, int recursion)
 {
-    if (pRLOG->bLogging == FALSE)
+    if (pRLOG->bLogging == FALSE) {
         return;
+    }
 
     if (pRLOG->pOutput->pCurHeader + sizeof(RLOG_HEADER) + sizeof(RLOG_EVENT) >
         pRLOG->pOutput->pEnd) {
@@ -191,8 +193,9 @@ void RLOG_LogEvent(RLOG_Struct * pRLOG, int event, double starttime, double endt
 
 void RLOG_LogSend(RLOG_Struct * pRLOG, int dest, int tag, int size)
 {
-    if (pRLOG->bLogging == FALSE)
+    if (pRLOG->bLogging == FALSE) {
         return;
+    }
 
     if (pRLOG->pOutput->pCurHeader + sizeof(RLOG_HEADER) + sizeof(RLOG_IARROW) >
         pRLOG->pOutput->pEnd) {
@@ -219,8 +222,9 @@ void RLOG_LogSend(RLOG_Struct * pRLOG, int dest, int tag, int size)
 
 void RLOG_LogRecv(RLOG_Struct * pRLOG, int src, int tag, int size)
 {
-    if (pRLOG->bLogging == FALSE)
+    if (pRLOG->bLogging == FALSE) {
         return;
+    }
 
     if (pRLOG->pOutput->pCurHeader + sizeof(RLOG_HEADER) + sizeof(RLOG_IARROW) >
         pRLOG->pOutput->pEnd) {
@@ -250,8 +254,9 @@ void RLOG_LogCommID(RLOG_Struct * pRLOG, int comm_id)
     RLOG_HEADER *pHeader;
     RLOG_COMM *pComm;
 
-    if (pRLOG->bLogging == FALSE)
+    if (pRLOG->bLogging == FALSE) {
         return;
+    }
 
     if (pRLOG->pOutput->pCurHeader + sizeof(RLOG_HEADER) + sizeof(RLOG_COMM) > pRLOG->pOutput->pEnd) {
         MarkDiskStart(pRLOG);
@@ -374,8 +379,9 @@ void RLOG_DescribeState(RLOG_Struct * pRLOG, int state, char *name, char *color)
     RLOG_HEADER *pHeader;
     RLOG_STATE *pState;
 
-    if (pRLOG->bLogging == FALSE)
+    if (pRLOG->bLogging == FALSE) {
         return;
+    }
 
     if (pRLOG->pOutput->pCurHeader + sizeof(RLOG_HEADER) + sizeof(RLOG_STATE) >
         pRLOG->pOutput->pEnd) {

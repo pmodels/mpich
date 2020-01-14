@@ -122,8 +122,9 @@ static int mergesort_lpidarray(MPII_Group_pmap_t maparray[], int n)
         maparray[0].next_lpid = -1;
         return 0;
     }
-    if (n == 0)
+    if (n == 0) {
         return -1;
+    }
 
     /* Sort each half */
     idx2_offset = n / 2;

@@ -150,8 +150,9 @@ int MPIR_Iallgather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Dat
     int comm_size, recvtype_size;
     int tot_bytes;
 
-    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
+    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0)) {
         return MPI_SUCCESS;
+    }
 
     comm_size = comm_ptr->local_size;
 

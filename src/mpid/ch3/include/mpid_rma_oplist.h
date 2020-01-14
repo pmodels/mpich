@@ -162,9 +162,9 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPIR_Win * win_ptr)
 
     if (win_ptr->op_pool_head == NULL) {
         /* local pool is empty, try to find something in the global pool */
-        if (global_rma_op_pool_head == NULL)
+        if (global_rma_op_pool_head == NULL) {
             return NULL;
-        else {
+        } else {
             e = global_rma_op_pool_head;
             DL_DELETE(global_rma_op_pool_head, e);
         }
@@ -216,9 +216,9 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPIR_Win * win_ptr
 
     if (win_ptr->target_pool_head == NULL) {
         /* local pool is empty, try to find something in the global pool */
-        if (global_rma_target_pool_head == NULL)
+        if (global_rma_target_pool_head == NULL) {
             return NULL;
-        else {
+        } else {
             e = global_rma_target_pool_head;
             DL_DELETE(global_rma_target_pool_head, e);
         }

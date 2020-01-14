@@ -707,8 +707,9 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
             ADIOI_LUSTRE_RD_LOCK_AHEAD(fd, fd->hints->cb_nodes, off, error_code);
             ADIO_ReadContig(fd, read_buf + for_curr_iter, (int) size, MPI_BYTE,
                             ADIO_EXPLICIT_OFFSET, off, &status, error_code);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
 
         for_curr_iter = for_next_iter;

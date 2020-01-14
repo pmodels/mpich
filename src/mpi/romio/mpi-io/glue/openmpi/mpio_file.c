@@ -51,8 +51,9 @@ MPI_File MPIO_File_f2c(MPI_Fint fh)
      * longlongs, which may be 8-byte aligned. But MPI_Fint itself
      * may not be 8-byte aligned. */
 #else
-    if (!fh)
+    if (!fh) {
         return MPI_FILE_NULL;
+    }
     if ((fh < 0) || (fh > ADIOI_Ftable_ptr)) {
         FPRINTF(stderr, "MPI_File_f2c: Invalid file handle\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -68,8 +69,9 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
 #else
     int i;
 
-    if ((fh == NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
+    if ((fh == NULL) || (fh->cookie != ADIOI_FILE_COOKIE)) {
         return (MPI_Fint) 0;
+    }
     if (!ADIOI_Ftable) {
         ADIOI_Ftable_max = 1024;
         ADIOI_Ftable = (MPI_File *)

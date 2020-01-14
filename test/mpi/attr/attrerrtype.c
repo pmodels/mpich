@@ -55,8 +55,9 @@ static int deleteCalled = 0;
 int deletebomb_fn(MPI_Datatype type, int keyval, void *attribute_val, void *extra_state)
 {
     deleteCalled++;
-    if (delete_flag)
+    if (delete_flag) {
         return MPI_SUCCESS;
+    }
     return MPI_ERR_OTHER;
 }
 

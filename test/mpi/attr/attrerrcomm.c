@@ -53,8 +53,9 @@ static int delete_flag = 0;
 
 int deletebomb_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
-    if (delete_flag)
+    if (delete_flag) {
         return MPI_SUCCESS;
+    }
     return MPI_ERR_OTHER;
 }
 

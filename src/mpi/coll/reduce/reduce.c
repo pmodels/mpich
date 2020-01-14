@@ -174,8 +174,9 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
     int is_commutative, type_size, pof2;
     int nbytes = 0;
 
-    if (count == 0)
+    if (count == 0) {
         return MPI_SUCCESS;
+    }
 
     /* is the op commutative? We do SMP optimizations only if it is. */
     is_commutative = MPIR_Op_is_commutative(op);

@@ -29,8 +29,9 @@ void ADIOI_NFS_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset * share
                                      ADIO_CREATE | ADIO_RDWR | ADIO_DELETE_ON_CLOSE,
                                      0, MPI_BYTE, MPI_BYTE, MPI_INFO_NULL,
                                      ADIO_PERM_NULL, error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
         *shared_fp = 0;
         ADIOI_WRITE_LOCK(fd->shared_fp_fd, 0, SEEK_SET, sizeof(ADIO_Offset));
 #ifdef ADIOI_MPE_LOGGING

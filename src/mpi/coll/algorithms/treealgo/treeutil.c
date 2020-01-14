@@ -181,8 +181,9 @@ int MPII_Treeutil_tree_knomial_2_init(int rank, int nranks, int k, int root,
     ct->parent = -1;
 
     MPIR_Assert(nranks >= 0);
-    if (nranks <= 0)
+    if (nranks <= 0) {
         return mpi_errno;
+    }
 
     lrank = (rank + (nranks - root)) % nranks;
     MPIR_Assert(k >= 2);

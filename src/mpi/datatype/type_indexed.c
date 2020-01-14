@@ -44,8 +44,9 @@ int MPIR_Type_indexed(int count,
 
     MPIR_Datatype *new_dtp;
 
-    if (count == 0)
+    if (count == 0) {
         return MPII_Type_zerolen(newtype);
+    }
 
     /* sanity check that blocklens are all non-negative */
     for (i = 0; i < count; ++i) {

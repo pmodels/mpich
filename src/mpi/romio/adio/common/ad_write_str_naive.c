@@ -87,8 +87,9 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                              (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                 ADIO_WriteContig(fd, (char *) buf + userbuf_off, (int) req_len, MPI_BYTE,
                                  ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                if (*error_code != MPI_SUCCESS)
+                if (*error_code != MPI_SUCCESS) {
                     return;
+                }
 
                 /* off is (potentially) used to save the final offset later */
                 off += flat_buf->blocklens[b_index];
@@ -236,8 +237,9 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                                  (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                     ADIO_WriteContig(fd, (char *) buf + userbuf_off, (int) req_len, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                 }
                 userbuf_off += fwr_size;
 
@@ -297,8 +299,9 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                                  (ADIO_Offset) (uintptr_t) ((uintptr_t) buf + userbuf_off));
                     ADIO_WriteContig(fd, (char *) buf + userbuf_off, (int) req_len, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, req_off, &status1, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                 }
 
                 if (size == fwr_size) {

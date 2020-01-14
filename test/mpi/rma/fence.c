@@ -67,9 +67,9 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
 #endif
     } else if (rank == orig) {
         origbuf = malloc(orig_obj.DTP_bufsize);
-        if (origbuf == NULL)
+        if (origbuf == NULL) {
             return ++errs;
-
+        }
 #if defined(USE_GET)
         err = DTP_obj_buf_init(orig_obj, origbuf, -1, -1, count);
         if (err != DTP_SUCCESS) {

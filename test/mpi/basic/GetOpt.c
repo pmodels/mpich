@@ -10,8 +10,9 @@
 bool GetOpt(int *argc, LPTSTR ** argv, CLPTSTR flag)
 {
     int i, j;
-    if (flag == NULL)
+    if (flag == NULL) {
         return false;
+    }
 
     for (i = 0; i < *argc; i++) {
         if (_tcsicmp((*argv)[i], flag) == 0) {
@@ -28,13 +29,15 @@ bool GetOpt(int *argc, LPTSTR ** argv, CLPTSTR flag)
 bool GetOptInt(int *argc, LPTSTR ** argv, CLPTSTR flag, int *n)
 {
     int i, j;
-    if (flag == NULL)
+    if (flag == NULL) {
         return false;
+    }
 
     for (i = 0; i < *argc; i++) {
         if (_tcsicmp((*argv)[i], flag) == 0) {
-            if (i + 1 == *argc)
+            if (i + 1 == *argc) {
                 return false;
+            }
             *n = _ttoi((*argv)[i + 1]);
             for (j = i; j < *argc - 1; j++) {
                 (*argv)[j] = (*argv)[j + 2];
@@ -60,13 +63,15 @@ bool GetOptDouble(int *argc, LPTSTR ** argv, CLPTSTR flag, double *d)
 {
     int i, j;
 
-    if (flag == NULL)
+    if (flag == NULL) {
         return false;
+    }
 
     for (i = 0; i < *argc; i++) {
         if (_tcsicmp((*argv)[i], flag) == 0) {
-            if (i + 1 == *argc)
+            if (i + 1 == *argc) {
                 return false;
+            }
             *d = _tcstod((*argv)[i + 1], NULL);
             for (j = i; j < *argc - 1; j++) {
                 (*argv)[j] = (*argv)[j + 2];
@@ -82,13 +87,15 @@ bool GetOptString(int *argc, LPTSTR ** argv, CLPTSTR flag, char *str)
 {
     int i, j;
 
-    if (flag == NULL)
+    if (flag == NULL) {
         return false;
+    }
 
     for (i = 0; i < *argc; i++) {
         if (_tcsicmp((*argv)[i], flag) == 0) {
-            if (i + 1 == *argc)
+            if (i + 1 == *argc) {
                 return false;
+            }
             strcpy(str, (*argv)[i + 1]);
             for (j = i; j < *argc - 1; j++) {
                 (*argv)[j] = (*argv)[j + 2];

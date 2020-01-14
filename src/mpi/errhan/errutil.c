@@ -347,8 +347,9 @@ int MPIR_Err_return_win(MPIR_Win * win_ptr, const char fcname[], int errcode)
 {
     const int error_class = ERROR_GET_CLASS(errcode);
 
-    if (win_ptr == NULL || win_ptr->errhandler == NULL)
+    if (win_ptr == NULL || win_ptr->errhandler == NULL) {
         return MPIR_Err_return_comm(NULL, fcname, errcode);
+    }
 
     /* We don't test for MPI initialized because to call this routine,
      * we will have had to call an MPI routine that would make that test */
@@ -507,17 +508,21 @@ int MPIR_Err_combine_codes(int error1, int error2)
     int error2_class;
 
     /* If either error code is success, return the other */
-    if (error1_code == MPI_SUCCESS)
+    if (error1_code == MPI_SUCCESS) {
         return error2_code;
-    if (error2_code == MPI_SUCCESS)
+    }
+    if (error2_code == MPI_SUCCESS) {
         return error1_code;
+    }
 
     /* If an error code is dynamic, return that.  If both are, we choose
      * error1. */
-    if (error1_code & ERROR_DYN_MASK)
+    if (error1_code & ERROR_DYN_MASK) {
         return error1_code;
-    if (error2_code & ERROR_DYN_MASK)
+    }
+    if (error2_code & ERROR_DYN_MASK) {
         return error2_code;
+    }
 
     error2_class = MPIR_ERR_GET_CLASS(error2_code);
     if (error2_class < MPI_SUCCESS || error2_class > MPICH_ERR_LAST_MPIX) {
@@ -1275,12 +1280,14 @@ static int FindSpecificMsgIndex(const char msg[])
             break;
         }
         c = strcmp(specific_err_msgs[i].short_name, msg);
-        if (c == 0)
+        if (c == 0) {
             return i;
+        }
         if (c > 0) {
             /* don't return here if the string partially matches */
-            if (strncmp(specific_err_msgs[i].short_name, msg, strlen(msg)) != 0)
+            if (strncmp(specific_err_msgs[i].short_name, msg, strlen(msg)) != 0) {
                 return -1;
+            }
         }
     }
     return -1;
@@ -1384,8 +1391,9 @@ static const char *GetDTypeString(MPI_Datatype d)
         return "INVALID DATATYPE";
 
 
-    if (d == MPI_DATATYPE_NULL)
+    if (d == MPI_DATATYPE_NULL) {
         return "MPI_DATATYPE_NULL";
+    }
 
     if (d == 0) {
         MPL_strncpy(default_str, "dtype=0x0", sizeof(default_str));
@@ -1767,8 +1775,9 @@ static int checkErrcodeIsValid(int errcode)
     int ring_id, generic_idx, ring_idx;
 
     /* If the errcode is a class, then it is valid */
-    if (errcode <= MPIR_MAX_ERROR_CLASS_INDEX && errcode >= 0)
+    if (errcode <= MPIR_MAX_ERROR_CLASS_INDEX && errcode >= 0) {
         return 0;
+    }
 
     if (convertErrcodeToIndexes(errcode, &ring_idx, &ring_id, &generic_idx) != 0) {
         /* --BEGIN ERROR HANDLING-- */
@@ -1781,14 +1790,17 @@ static int checkErrcodeIsValid(int errcode)
                     (MPL_DBG_FDEST, "code=%#010x ring_idx=%d ring_id=%#010x generic_idx=%d",
                      errcode, ring_idx, ring_id, generic_idx));
 
-    if (ring_idx < 0 || ring_idx >= MAX_ERROR_RING || (unsigned int) ring_idx > max_error_ring_loc)
+    if (ring_idx < 0 || ring_idx >= MAX_ERROR_RING || (unsigned int) ring_idx > max_error_ring_loc) {
         return 1;
-    if (ErrorRing[ring_idx].id != ring_id)
+    }
+    if (ErrorRing[ring_idx].id != ring_id) {
         return 2;
+    }
     /* It looks like the code uses a generic idx of -1 to indicate no
      * generic message */
-    if (generic_idx < -1 || generic_idx > generic_msgs_len)
+    if (generic_idx < -1 || generic_idx > generic_msgs_len) {
         return 3;
+    }
     return 0;
 }
 
@@ -1932,8 +1944,9 @@ static int ErrGetInstanceString(int errorcode, char msg[], int num_remaining)
         error_ring_mutex_unlock();
     }
     /* FIXME: How do we determine that we failed to unwind the stack? */
-    if (errorcode != MPI_SUCCESS)
+    if (errorcode != MPI_SUCCESS) {
         return 1;
+    }
 
     return 0;
 }
@@ -1969,15 +1982,17 @@ static int FindGenericMsgIndex(const char msg[])
             break;
         }
         c = strcmp(generic_err_msgs[i].short_name, msg);
-        if (c == 0)
+        if (c == 0) {
             return i;
+        }
         if (c > 0) {
             /* In case the generic messages are not sorted exactly the
              * way that strcmp compares, we check for the case that
              * the short msg matches the current generic message.  If
              * that is the case, we do *not* fail */
-            if (strncmp(generic_err_msgs[i].short_name, msg, strlen(msg)) != 0)
+            if (strncmp(generic_err_msgs[i].short_name, msg, strlen(msg)) != 0) {
                 return -1;
+            }
         }
     }
     /* --BEGIN ERROR HANDLING-- */

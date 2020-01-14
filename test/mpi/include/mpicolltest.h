@@ -23,8 +23,9 @@ static inline int MTest_Barrier(MPI_Comm comm)
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Ibarrier(comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -36,8 +37,9 @@ static inline int MTest_Bcast(void *buffer, int count, MPI_Datatype datatype, in
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Ibcast(buffer, count, datatype, root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -51,8 +53,9 @@ static inline int MTest_Gather(const void *sendbuf, int sendcount, MPI_Datatype 
 
     mpi_errno = MPI_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
                             root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -66,8 +69,9 @@ static inline int MTest_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype
 
     mpi_errno = MPI_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                              recvtype, root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -81,8 +85,9 @@ static inline int MTest_Scatter(const void *sendbuf, int sendcount, MPI_Datatype
 
     mpi_errno = MPI_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                              recvtype, root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -96,8 +101,9 @@ static inline int MTest_Scatterv(const void *sendbuf, const int *sendcounts, con
 
     mpi_errno = MPI_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
                               recvcount, recvtype, root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -111,8 +117,9 @@ static inline int MTest_Allgather(const void *sendbuf, int sendcount, MPI_Dataty
 
     mpi_errno = MPI_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                recvtype, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -126,8 +133,9 @@ static inline int MTest_Allgatherv(const void *sendbuf, int sendcount, MPI_Datat
 
     mpi_errno = MPI_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                 displs, recvtype, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -140,8 +148,9 @@ static inline int MTest_Alltoall(const void *sendbuf, int sendcount, MPI_Datatyp
 
     mpi_errno = MPI_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                               recvtype, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -155,8 +164,9 @@ static inline int MTest_Alltoallv(const void *sendbuf, const int *sendcounts, co
 
     mpi_errno = MPI_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
                                recvcounts, rdispls, recvtype, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -171,8 +181,9 @@ static inline int MTest_Alltoallw(const void *sendbuf, const int *sendcounts, co
 
     mpi_errno = MPI_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
                                recvcounts, rdispls, recvtypes, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -184,8 +195,9 @@ static inline int MTest_Reduce(const void *sendbuf, void *recvbuf, int count, MP
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -197,8 +209,9 @@ static inline int MTest_Allreduce(const void *sendbuf, void *recvbuf, int count,
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -210,8 +223,9 @@ static inline int MTest_Reduce_scatter(const void *sendbuf, void *recvbuf, const
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -223,8 +237,9 @@ static inline int MTest_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -236,8 +251,9 @@ static inline int MTest_Scan(const void *sendbuf, void *recvbuf, int count, MPI_
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Iscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }
@@ -249,8 +265,9 @@ static inline int MTest_Exscan(const void *sendbuf, void *recvbuf, int count, MP
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Iexscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
 }

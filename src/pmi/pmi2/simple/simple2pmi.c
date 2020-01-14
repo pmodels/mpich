@@ -442,8 +442,9 @@ int PMI2_Job_Spawn(int count, const char *cmds[],
     int total_pairs = 0;
 
     /* Connect to the PM if we haven't already */
-    if (PMIi_InitIfSingleton() != 0)
+    if (PMIi_InitIfSingleton() != 0) {
         return -1;
+    }
 
     total_num_processes = 0;
 
@@ -1099,8 +1100,9 @@ static void freepairs(PMI2_Keyvalpair ** pairs, int npairs)
 {
     int i;
 
-    if (!pairs)
+    if (!pairs) {
         return;
+    }
 
     for (i = 0; i < npairs; ++i)
         if (pairs[i]->isCopy) {
@@ -1139,15 +1141,18 @@ static int getvalint(PMI2_Keyvalpair * const pairs[], int npairs, const char *ke
     /* char *endptr; */
 
     found = getval(pairs, npairs, key, &value, &vallen);
-    if (found != 1)
+    if (found != 1) {
         return found;
+    }
 
-    if (vallen == 0)
+    if (vallen == 0) {
         return -1;
+    }
 
     ret = sscanf(value, "%d", val);
-    if (ret != 1)
+    if (ret != 1) {
         return -1;
+    }
 
     /* *val = strtoll(value, &endptr, 0); */
     /* if (endptr - value != vallen) */
@@ -1166,15 +1171,18 @@ static int getvalptr(PMI2_Keyvalpair * const pairs[], int npairs, const char *ke
     /* char *endptr; */
 
     found = getval(pairs, npairs, key, &value, &vallen);
-    if (found != 1)
+    if (found != 1) {
         return found;
+    }
 
-    if (vallen == 0)
+    if (vallen == 0) {
         return -1;
+    }
 
     ret = sscanf(value, "%p", val_);
-    if (ret != 1)
+    if (ret != 1) {
         return -1;
+    }
 
     /* *val_ = (void *)(PMI2R_Upint)strtoll(value, &endptr, 0); */
     /* if (endptr - value != vallen) */
@@ -1192,15 +1200,17 @@ static int getvalbool(PMI2_Keyvalpair * const pairs[], int npairs, const char *k
 
 
     found = getval(pairs, npairs, key, &value, &vallen);
-    if (found != 1)
+    if (found != 1) {
         return found;
+    }
 
     if (strlen("TRUE") == vallen && !strncmp(value, "TRUE", vallen))
         *val = TRUE;
     else if (strlen("FALSE") == vallen && !strncmp(value, "FALSE", vallen))
         *val = FALSE;
-    else
+    else {
         return -1;
+    }
 
     return 1;
 }

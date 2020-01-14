@@ -41,8 +41,9 @@ static inline int check_valid_fixed_mmap_range(void *shm_addr, intptr_t seg_sz)
     int rc = 0, is_valid = 1;
     size_t page_sz = 0, mapsize = 0, num_pages = 0, i;
 
-    if (shm_addr == NULL)
+    if (shm_addr == NULL) {
         return 0;       /* NULL is not a valid maprage */
+    }
 
     page_sz = sysconf(_SC_PAGESIZE);
     mapsize = (seg_sz + (page_sz - 1)) & (~(page_sz - 1));

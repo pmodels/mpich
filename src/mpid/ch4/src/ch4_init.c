@@ -135,8 +135,9 @@ static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
 
 static const char *get_mt_model_name(int mt)
 {
-    if (mt < 0 || mt >= MPIDI_CH4_NUM_MT_MODELS)
+    if (mt < 0 || mt >= MPIDI_CH4_NUM_MT_MODELS) {
         return "(invalid)";
+    }
 
     return mt_model_names[mt];
 }
@@ -154,12 +155,14 @@ static int parse_mt_model(const char *name)
 {
     int i;
 
-    if (!strcmp("", name))
+    if (!strcmp("", name)) {
         return 0;       /* default */
+    }
 
     for (i = 0; i < MPIDI_CH4_NUM_MT_MODELS; i++) {
-        if (!strcasecmp(name, mt_model_names[i]))
+        if (!strcasecmp(name, mt_model_names[i])) {
             return i;
+        }
     }
     return -1;
 }
@@ -373,9 +376,9 @@ int MPID_Init(void)
 
 
     mpi_errno = set_runtime_configurations();
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
-
+    }
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
     MPIDI_CH4_DBG_MAP = MPL_dbg_class_alloc("CH4_MAP", "ch4_map");

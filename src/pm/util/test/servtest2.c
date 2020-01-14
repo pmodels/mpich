@@ -62,10 +62,12 @@ int mypreamble(void *data)
 {
     iosetup *rundata = (iosetup *) data;
     /* Each pipe call creates 2 fds, 0 for reading, 1 for writing */
-    if (pipe(rundata->stdio.readOut))
+    if (pipe(rundata->stdio.readOut)) {
         return -1;
-    if (pipe(rundata->stdio.readErr))
+    }
+    if (pipe(rundata->stdio.readErr)) {
         return -1;
+    }
 
     /* Ask PMI to create the sockets that it wants */
     PMISetupSockets(0, &rundata->pmi);

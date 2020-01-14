@@ -31,8 +31,9 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
                                                        &p_data, &data_sz, 0 /* is_local */ ,
                                                        &is_contig, &target_cmpl_cb, &rreq);
 
-    if (!rreq)
+    if (!rreq) {
         return;
+    }
 
     if ((!p_data || !data_sz) && target_cmpl_cb) {
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);

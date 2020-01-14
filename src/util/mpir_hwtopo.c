@@ -238,9 +238,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_leaf(void)
 {
     MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
-    if (!bindset_is_valid)
+    if (!bindset_is_valid) {
         return gid;
-
+    }
 #ifdef HAVE_HWLOC
     hwloc_obj_t leaf = hwloc_get_obj_covering_cpuset(hwloc_topology, bindset);
     hwtopo_class_e class = get_type_class(leaf->type);
@@ -283,8 +283,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_ancestor(MPIR_hwtopo_gid_t gid, int depth)
     int hwloc_obj_depth = HWTOPO_GET_DEPTH(gid);
 
     hwloc_obj_t obj = hwloc_get_obj_by_depth(hwloc_topology, hwloc_obj_depth, hwloc_obj_index);
-    if (obj == NULL)
+    if (obj == NULL) {
         return ancestor_gid;
+    }
 
     while (obj && obj->parent && obj->depth != depth)
         obj = obj->parent;
@@ -351,9 +352,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_type(MPIR_hwtopo_type_e type)
 {
     MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
-    if (!bindset_is_valid || type <= MPIR_HWTOPO_TYPE__NONE || type >= MPIR_HWTOPO_TYPE__MAX)
+    if (!bindset_is_valid || type <= MPIR_HWTOPO_TYPE__NONE || type >= MPIR_HWTOPO_TYPE__MAX) {
         return gid;
-
+    }
 #ifdef HAVE_HWLOC
     hwloc_obj_type_t hw_obj_type = get_hwloc_obj_type(type);
 
@@ -389,16 +390,19 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 {
     if (!strncmp(resource, devname, strlen(devname))) {
         /* device type does not match */
-        if (io_device->attr->osdev.type != obj_type)
+        if (io_device->attr->osdev.type != obj_type) {
             return 0;
+        }
 
         /* device prefix does not match */
-        if (strncmp(io_device->name, devname, strlen(devname)))
+        if (strncmp(io_device->name, devname, strlen(devname))) {
             return 0;
+        }
 
         /* specific device is supplied, but does not match */
-        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
+        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource)) {
             return 0;
+        }
     }
 
     return 1;
@@ -409,9 +413,9 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
 {
     MPIR_hwtopo_gid_t gid = MPIR_HWTOPO_GID_ROOT;
 
-    if (!name || !bindset_is_valid)
+    if (!name || !bindset_is_valid) {
         return gid;
-
+    }
 #ifdef HAVE_HWLOC
     hwloc_obj_t io_device = NULL;
     hwloc_obj_t non_io_ancestor = NULL;
@@ -520,9 +524,9 @@ uint64_t MPIR_hwtopo_get_node_mem(void)
 {
     uint64_t size = 0;
 
-    if (!bindset_is_valid)
+    if (!bindset_is_valid) {
         return size;
-
+    }
 #ifdef HAVE_HWLOC
     hwloc_obj_t tmp = NULL;
     while ((tmp = hwloc_get_next_obj_by_type(hwloc_topology, HWLOC_OBJ_NUMANODE, tmp)))

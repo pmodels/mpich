@@ -169,8 +169,9 @@ int ADIOI_PVFS2_aio_poll_fn(void *extra_state, MPI_Status * status)
         aio_req->nbytes = aio_req->resp_io.total_completed;
         MPI_Grequest_complete(aio_req->req);
         return MPI_SUCCESS;
-    } else
+    } else {
         return MPI_UNDEFINED;   /* TODO: what's this error? */
+    }
 }
 
 /* wait for multiple requests to complete */

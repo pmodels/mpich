@@ -67,10 +67,12 @@ void IOLabelSetDefault(int flag)
 int IOLabelSetupFDs(IOLabelSetup * iofds)
 {
     /* Each pipe call creates 2 fds, 0 for reading, 1 for writing */
-    if (pipe(iofds->readOut))
+    if (pipe(iofds->readOut)) {
         return -1;
-    if (pipe(iofds->readErr))
+    }
+    if (pipe(iofds->readErr)) {
         return -1;
+    }
     return 0;
 }
 
@@ -149,8 +151,9 @@ static int IOLabelWriteLine(int fd, int rdwr, void *data)
         }
         c = *p++;
         n--;
-        if (fputc(c, label->dest) != c)
+        if (fputc(c, label->dest) != c) {
             return 1;
+        }
         label->lastNL = (c == '\n');
     }
     return 0;

@@ -243,8 +243,9 @@ int is_aggregator(int rank, ADIO_File fd)
             }
         }
         fd->my_cb_nodes_index = -1;
-    } else if (fd->my_cb_nodes_index != -1)
+    } else if (fd->my_cb_nodes_index != -1) {
         return 1;
+    }
 
     return 0;
 }
@@ -255,15 +256,17 @@ int is_aggregator(int rank, ADIO_File fd)
  */
 static int uses_generic_read(ADIO_File fd)
 {
-    if (ADIO_Feature(fd, ADIO_TWO_PHASE))
+    if (ADIO_Feature(fd, ADIO_TWO_PHASE)) {
         return 1;
+    }
     return 0;
 }
 
 static int uses_generic_write(ADIO_File fd)
 {
-    if (ADIO_Feature(fd, ADIO_TWO_PHASE))
+    if (ADIO_Feature(fd, ADIO_TWO_PHASE)) {
         return 1;
+    }
     return 0;
 }
 

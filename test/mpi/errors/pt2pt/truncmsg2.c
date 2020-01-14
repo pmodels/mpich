@@ -26,8 +26,9 @@
 void if_error(const char *function, const char *data, int ret);
 void if_error(const char *function, const char *data, int ret)
 {
-    if (ret == 0)
+    if (ret == 0) {
         return;
+    }
 
     if (data)
         printf("%s for %s returned %d (%#x)\n", function, data, ret, ret);

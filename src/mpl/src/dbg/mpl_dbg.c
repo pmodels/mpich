@@ -461,11 +461,13 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 
     /* if the DBG_MSG system was already initialized, say by the
      * device, then return immediately */
-    if (dbg_initialized != DBG_UNINIT)
+    if (dbg_initialized != DBG_UNINIT) {
         return MPL_DBG_SUCCESS;
+    }
 
-    if (dbg_init_tls())
+    if (dbg_init_tls()) {
         return MPL_DBG_ERR_OTHER;
+    }
 
     /* Check to see if any debugging was selected.  The order of these
      * tests is important, as they allow general defaults to be set,
@@ -507,12 +509,14 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
      * device, then return immediately.  Note that the device is then
      * responsible for handling the file mode (e.g., reopen when the
      * rank become available) */
-    if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR)
+    if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR) {
         return MPL_DBG_SUCCESS;
+    }
 
     if (dbg_initialized != DBG_PREINIT) {
-        if (dbg_init_tls())
+        if (dbg_init_tls()) {
             return MPL_DBG_ERR_OTHER;
+        }
     }
 
     dbg_fp = get_fp();

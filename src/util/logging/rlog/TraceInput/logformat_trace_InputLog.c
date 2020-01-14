@@ -136,9 +136,9 @@ JNIEXPORT jboolean JNICALL Java_logformat_trace_InputLog_close(JNIEnv * env, job
     fprintf(outfile, "C: Closing trace ..... \n");
     fflush(outfile);
     ierr = TRACE_Close(&tracefile);
-    if (ierr == 0 || tracefile == NULL)
+    if (ierr == 0 || tracefile == NULL) {
         return JNI_TRUE;
-    else {
+    } else {
         fprintf(errfile, "%s\n", TRACE_Get_err_string(ierr));
         fflush(errfile);
         return JNI_FALSE;
@@ -621,8 +621,9 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextComposite(JNIEnv 
     }
 
     /* return when there is no primitives */
-    if (n_primitives <= 0)
+    if (n_primitives <= 0) {
         return NULL;
+    }
 
     j_cm_infos = NULL;
     if (cm_info_sz > 0) {
@@ -655,8 +656,9 @@ JNIEXPORT jobject JNICALL Java_logformat_trace_InputLog_getNextComposite(JNIEnv 
 
     /* Create Primitives[] */
     primes = (*env)->NewObjectArray(env, n_primitives, cid4Prime, NULL);
-    if (primes == NULL)
+    if (primes == NULL) {
         return NULL;
+    }
 
     /*  Create the Primitive[] inside the Composite from the TRACE */
     for (idx = 0; idx < n_primitives; idx++) {

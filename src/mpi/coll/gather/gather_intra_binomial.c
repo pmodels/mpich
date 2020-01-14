@@ -66,8 +66,9 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    if (((rank == root) && (recvcount == 0)) || ((rank != root) && (sendcount == 0)))
+    if (((rank == root) && (recvcount == 0)) || ((rank != root) && (sendcount == 0))) {
         return MPI_SUCCESS;
+    }
 
     /* Use binomial tree algorithm. */
 

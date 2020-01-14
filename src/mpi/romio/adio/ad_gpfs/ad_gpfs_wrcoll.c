@@ -837,8 +837,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                             others_req, send_buf_idx, curr_to_proc,
                                             done_to_proc, &hole, m, buftype_extent, buf_idx,
                                             error_code);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
 #ifdef PROFILE
         MPE_Log_event(8, 0, "end communication");
 #endif
@@ -862,8 +863,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                 if (!pthread_equal(io_thread, pthread_self())) {
                     pthread_join(io_thread, &thread_ret);
                     *error_code = *(int *) thread_ret;
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     io_thread = pthread_self();
 
                 }
@@ -884,8 +886,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
             } else {
                 ADIO_WriteContig(fd, write_buf, (int) size, MPI_BYTE,
                                  ADIO_EXPLICIT_OFFSET, off, &status, error_code);
-                if (*error_code != MPI_SUCCESS)
+                if (*error_code != MPI_SUCCESS) {
                     return;
+                }
             }
         }
 
@@ -926,8 +929,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                                             others_req, send_buf_idx,
                                             curr_to_proc, done_to_proc, &hole, m,
                                             buftype_extent, buf_idx, error_code);
-    if (*error_code != MPI_SUCCESS)
+    if (*error_code != MPI_SUCCESS) {
         return;
+    }
 #ifdef PROFILE
     MPE_Log_event(8, 0, "end communication");
 #endif

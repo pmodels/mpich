@@ -204,8 +204,9 @@ int PMIU_parse_keyvals(char *st)
     char *p, *keystart, *valstart;
     int offset;
 
-    if (!st)
+    if (!st) {
         return PMI_FAIL;
+    }
 
     PMIU_keyval_tab_idx = 0;
     p = st;
@@ -217,8 +218,9 @@ int PMIU_parse_keyvals(char *st)
             PMIU_printf(1, "PMIU_parse_keyvals:  unexpected = at character %d in %s\n", p - st, st);
             return PMI_FAIL;
         }
-        if (*p == '\n' || *p == '\0')
+        if (*p == '\n' || *p == '\0') {
             return PMI_SUCCESS; /* normal exit */
+        }
         /* got normal character */
         keystart = p;   /* remember where key started */
         while (*p != ' ' && *p != '=' && *p != '\n' && *p != '\0')
@@ -247,8 +249,9 @@ int PMIU_parse_keyvals(char *st)
         PMIU_keyval_tab_idx++;
         if (*p == ' ')
             continue;
-        if (*p == '\n' || *p == '\0')
+        if (*p == '\n' || *p == '\0') {
             return PMI_SUCCESS; /* value has been set to empty */
+        }
     }
 }
 

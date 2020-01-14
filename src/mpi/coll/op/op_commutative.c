@@ -41,10 +41,11 @@ int MPIR_Op_is_commutative(MPI_Op op)
     } else {
         MPIR_Op_get_ptr(op, op_ptr);
         MPIR_Assert(op_ptr != NULL);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) {
             return FALSE;
-        else
+        } else {
             return TRUE;
+        }
     }
 }
 

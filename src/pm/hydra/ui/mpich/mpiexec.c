@@ -385,11 +385,11 @@ int main(int argc, char **argv)
   fn_exit:
     HYDU_dbg_finalize();
     HYDU_FUNC_EXIT();
-    if (status == HYD_GRACEFUL_ABORT)
+    if (status == HYD_GRACEFUL_ABORT) {
         return 0;
-    else if (status != HYD_SUCCESS)
+    } else if (status != HYD_SUCCESS) {
         return -1;
-    else if (WIFSIGNALED(exit_status)) {
+    } else if (WIFSIGNALED(exit_status)) {
         printf("YOUR APPLICATION TERMINATED WITH THE EXIT STRING: %s (signal %d)\n",
                strsignal(WTERMSIG(exit_status)), WTERMSIG(exit_status));
         printf("This typically refers to a problem with your application.\n");

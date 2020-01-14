@@ -245,8 +245,9 @@ int MPL_strncpy(char *dest, const char *src, size_t n)
     const char *restrict s_ptr = src;
     register int i;
 
-    if (n == 0)
+    if (n == 0) {
         return 0;
+    }
 
     i = (int) n;
     while (*s_ptr && i-- > 0) {
@@ -287,8 +288,9 @@ char *MPL_strsep(char **stringp, const char *delim)
     int i, j;
     char *ret;
 
-    if (!*stringp)
+    if (!*stringp) {
         return NULL;
+    }
 
     ret = *stringp;
     i = 0;
@@ -351,8 +353,9 @@ int MPL_strnapp(char *dest, const char *src, size_t n)
     i = (int) n;
     while (i-- > 0 && *d_ptr)
         d_ptr++;
-    if (i <= 0)
+    if (i <= 0) {
         return 1;
+    }
 
     /* Append.  d_ptr points at first null and i is remaining space. */
     while (*s_ptr && i-- > 0) {

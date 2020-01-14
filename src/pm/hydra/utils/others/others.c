@@ -12,10 +12,11 @@ int HYDU_dceil(int x, int y)
 
     z = x / y;
 
-    if (z * y == x)
+    if (z * y == x) {
         return z;
-    else
+    } else {
         return z + 1;
+    }
 }
 
 HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node ** node_list)
@@ -61,8 +62,9 @@ void HYDU_delay(unsigned long delay)
 {
     struct timeval start, end;
 
-    if (delay == 0)
+    if (delay == 0) {
         return;
+    }
 
     gettimeofday(&start, NULL);
     while (1) {

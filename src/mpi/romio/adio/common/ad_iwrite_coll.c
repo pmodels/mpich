@@ -304,8 +304,9 @@ void ADIOI_GEN_IwriteStridedColl(ADIO_File fd, const void *buf, int count,
         *error_code = MPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
                                      vars->st_offsets, 1, ADIO_OFFSET,
                                      fd->comm, &vars->req_offset[0]);
-        if (*error_code != MPI_SUCCESS)
+        if (*error_code != MPI_SUCCESS) {
             return;
+        }
         *error_code = MPI_Iallgather(&vars->end_offset, 1, ADIO_OFFSET,
                                      vars->end_offsets, 1, ADIO_OFFSET,
                                      fd->comm, &vars->req_offset[1]);

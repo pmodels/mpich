@@ -49,10 +49,12 @@ int mypreamble(void *data)
 {
     struct iofds *newfds = (struct iofds *) data;
     /* Each pipe call creates 2 fds, 0 for reading, 1 for writing */
-    if (pipe(newfds->readOut))
+    if (pipe(newfds->readOut)) {
         return -1;
-    if (pipe(newfds->readErr))
+    }
+    if (pipe(newfds->readErr)) {
         return -1;
+    }
 }
 
 /* Close one side of each pipe pair and replace stdout/err with the pipes */

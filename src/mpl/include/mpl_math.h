@@ -37,10 +37,11 @@ static inline int MPL_is_pof2(int val, int *ceil_pof2)
     if (ceil_pof2)
         *ceil_pof2 = pof2;
 
-    if (pof2 == val)
+    if (pof2 == val) {
         return 1;
-    else
+    } else {
         return 0;
+    }
 }
 
 /* Routine to calculate log_k of an integer */

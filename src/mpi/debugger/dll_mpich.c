@@ -219,8 +219,9 @@ int mqs_setup_image(mqs_image * image, const mqs_image_callbacks * icb)
 {
     mpich_image_info *i_info = (mpich_image_info *) dbgr_malloc(sizeof(mpich_image_info));
 
-    if (!i_info)
+    if (!i_info) {
         return err_no_store;
+    }
 
     memset((void *) i_info, 0, sizeof(mpich_image_info));
     i_info->image_callbacks = icb;      /* Before we do *ANYTHING* */
@@ -435,8 +436,9 @@ int mqs_setup_process(mqs_process * process, const mqs_process_callbacks * pcb)
         dbgr_put_process_info(process, (mqs_process_info *) p_info);
 
         return mqs_ok;
-    } else
+    } else {
         return err_no_store;
+    }
 }
 
 int mqs_process_has_queues(mqs_process * proc, char **msg)
@@ -458,12 +460,14 @@ int mqs_process_has_queues(mqs_process * proc, char **msg)
 
     /* Check for the receive and send queues */
 #ifndef HAVE_CH4_DEBUGGER_SUPPORT
-    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_posted_head_ptr", &head_ptr) != mqs_ok)
+    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_posted_head_ptr", &head_ptr) != mqs_ok) {
         return err_posted;
+    }
     p_info->posted_base = fetch_pointer(proc, head_ptr, p_info);
 
-    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_unexpected_head_ptr", &head_ptr) != mqs_ok)
+    if (dbgr_find_symbol(image, (char *) "MPID_Recvq_unexpected_head_ptr", &head_ptr) != mqs_ok) {
         return err_unexpected;
+    }
     p_info->unexpected_base = fetch_pointer(proc, head_ptr, p_info);
 #endif
 
@@ -518,10 +522,11 @@ const char *mqs_dll_error_string(int errcode)
  */
 int mqs_update_communicator_list(mqs_process * proc)
 {
-    if (communicators_changed(proc))
+    if (communicators_changed(proc)) {
         return rebuild_communicator_list(proc);
-    else
+    } else {
         return mqs_ok;
+    }
 }
 
 /* These three routines (setup_communicator_iterator, get_communicator,
@@ -547,8 +552,9 @@ int mqs_get_communicator(mqs_process * proc, mqs_communicator * comm)
     if (p_info->current_communicator) {
         *comm = p_info->current_communicator->comm_info;
         return mqs_ok;
-    } else
+    } else {
         return err_no_current_communicator;
+    }
 }
 
 int mqs_next_communicator(mqs_process * proc)
@@ -579,9 +585,9 @@ int mqs_setup_operation_iterator(mqs_process * proc, int op)
 
     switch (op) {
         case mqs_pending_sends:
-            if (!p_info->has_sendq)
+            if (!p_info->has_sendq) {
                 return mqs_no_information;
-            else {
+            } else {
                 p_info->next_msg = p_info->sendq_base;
                 return mqs_ok;
             }
@@ -592,8 +598,9 @@ int mqs_setup_operation_iterator(mqs_process * proc, int op)
 #ifdef HAVE_CH4_DEBUGGER_SUPPORT
             /* CH4 defines message queue head in every communicator. */
             p_info->next_msg = p_info->current_communicator->posted_base;
-            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0)
+            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0) {
                 return mqs_end_of_list;
+            }
 #else
             p_info->next_msg = p_info->posted_base;
 #endif
@@ -603,8 +610,9 @@ int mqs_setup_operation_iterator(mqs_process * proc, int op)
 #ifdef HAVE_CH4_DEBUGGER_SUPPORT
             /* CH4 defines message queue head in every communicator. */
             p_info->next_msg = p_info->current_communicator->unexp_base;
-            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0)
+            if (fetch_pointer(proc, p_info->next_msg, p_info) == 0) {
                 return mqs_end_of_list;
+            }
 #else
             p_info->next_msg = p_info->unexpected_base;
 #endif
@@ -836,9 +844,9 @@ static int fetch_send(mqs_process * proc, mpich_process_info * p_info, mqs_pendi
     int wanted_context = comm->context_id;
     mqs_taddr_t base = fetch_pointer(proc, p_info->next_msg, p_info);
 
-    if (!p_info->has_sendq)
+    if (!p_info->has_sendq) {
         return mqs_no_information;
-
+    }
 #ifdef DEBUG_LIST_ITER
     if (base) {
         initLogFile();
@@ -959,8 +967,9 @@ static communicator_t *find_communicator(mpich_process_info * p_info,
     communicator_t *comm = p_info->communicator_list;
 
     for (; comm; comm = comm->next) {
-        if (comm->comm_info.unique_id == comm_base && comm->recvcontext_id == recv_ctx)
+        if (comm->comm_info.unique_id == comm_base && comm->recvcontext_id == recv_ctx) {
             return comm;
+        }
     }
 
     return NULL;
@@ -1021,8 +1030,9 @@ static int rebuild_communicator_list(mqs_process * proc)
             communicator_t *nc;
 
 #if 0
-            if (!g)
+            if (!g) {
                 return err_group_corrupt;
+            }
 #endif
 
             nc = (communicator_t *) dbgr_malloc(sizeof(communicator_t));

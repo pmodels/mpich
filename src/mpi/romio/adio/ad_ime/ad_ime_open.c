@@ -57,8 +57,9 @@ void ADIOI_IME_Open(ADIO_File fd, int *error_code)
     /* init IME */
     MPI_Comm_rank(fd->comm, &rank);
     ADIOI_IME_Init(rank, error_code);
-    if (*error_code != MPI_SUCCESS)
+    if (*error_code != MPI_SUCCESS) {
         return;
+    }
 
     ime_fs = (ADIOI_IME_fs *) ADIOI_Malloc(sizeof(ADIOI_IME_fs));
 

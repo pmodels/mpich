@@ -15,8 +15,9 @@ void ADIOI_IME_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     int ret;
     static char myname[] = "ADIOI_IME_RESIZE";
 
-    if (!error_code)
+    if (!error_code) {
         return;
+    }
     if (!fd) {
         *error_code = MPI_ERR_FILE;
         return;

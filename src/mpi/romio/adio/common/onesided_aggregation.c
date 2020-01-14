@@ -1457,8 +1457,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 if (!pthread_equal(io_thread, pthread_self())) {
                     pthread_join(io_thread, &thread_ret);
                     *error_code = *(int *) thread_ret;
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     io_thread = pthread_self();
 
                 }
@@ -2328,8 +2329,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                         if (!pthread_equal(io_thread, pthread_self())) {
                             pthread_join(io_thread, &thread_ret);
                             *error_code = *(int *) thread_ret;
-                            if (*error_code != MPI_SUCCESS)
+                            if (*error_code != MPI_SUCCESS) {
                                 return;
+                            }
                             io_thread = pthread_self();
 
                         }
@@ -2360,8 +2362,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                         if (!pthread_equal(io_thread, pthread_self())) {
                             pthread_join(io_thread, &thread_ret);
                             *error_code = *(int *) thread_ret;
-                            if (*error_code != MPI_SUCCESS)
+                            if (*error_code != MPI_SUCCESS) {
                                 return;
+                            }
                             io_thread = pthread_self();
 
                         }

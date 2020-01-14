@@ -65,8 +65,9 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count * bytes_p,
 {
     MPI_Count elements, usable_bytes, used_bytes, type1_sz, type2_sz;
 
-    if (count == 0)
+    if (count == 0) {
         return 0;
+    }
 
     /* determine the maximum number of bytes we should take from the
      * byte count.
@@ -185,8 +186,9 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
 
         /* Establish locations of arrays */
         MPIR_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
-        if (!ints || !aints || !types)
+        if (!ints || !aints || !types) {
             return MPI_ERR_TYPE;
+        }
 
         switch (datatype_ptr->contents->combiner) {
             case MPI_COMBINER_NAMED:

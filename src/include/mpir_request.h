@@ -222,10 +222,11 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
  * A handle is "active" if it is neither null nor "inactive". */
 static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
 {
-    if (req_ptr == NULL)
+    if (req_ptr == NULL) {
         return 0;
-    else
+    } else {
         return (!MPIR_Request_is_persistent(req_ptr) || (req_ptr)->u.persist.real_request != NULL);
+    }
 }
 
 #define MPIR_REQUESTS_PROPERTY__NO_NULL        (1 << 1)

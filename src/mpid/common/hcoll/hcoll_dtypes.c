@@ -104,8 +104,9 @@ int hcoll_type_commit_hook(MPIR_Datatype * dtype_p)
 
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
-        if (mpi_errno)
+        if (mpi_errno) {
             return MPI_ERR_OTHER;
+        }
     }
 
     if (0 == hcoll_enable) {

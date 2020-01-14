@@ -488,8 +488,9 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                              ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code);
             if (!(fd->atomicity))
                 ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
         if (fd->atomicity)
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);

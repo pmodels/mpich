@@ -1739,8 +1739,9 @@ static int MPIDI_CH3I_Port_connreq_free(MPIDI_CH3I_Port_connreq_t * connreq)
 
     /* Skip if connection request is still in revoked state.
      * Because packet handler may be talking to server. */
-    if (connreq->stat == MPIDI_CH3I_PORT_CONNREQ_REVOKE)
+    if (connreq->stat == MPIDI_CH3I_PORT_CONNREQ_REVOKE) {
         return mpi_errno;
+    }
 
     /* Expected free, the remote side should also start closing too,
      * thus we blocking close VC here. */

@@ -139,8 +139,9 @@ int MPIU_external32_buffer_setup(const void *buf, int count, MPI_Datatype type, 
     int error_code;
 
     error_code = MPIU_datatype_full_size(type, &datatype_size);
-    if (error_code != MPI_SUCCESS)
+    if (error_code != MPI_SUCCESS) {
         return error_code;
+    }
 
     bytes = datatype_size * count;
     *newbuf = ADIOI_Malloc(bytes);

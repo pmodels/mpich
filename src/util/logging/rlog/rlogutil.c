@@ -22,8 +22,9 @@ static int ReadFileData(char *pBuffer, int length, FILE * fin)
             MPL_error_printf("Error: fread failed - %s\n", strerror(errno));
             return errno;
         }
-        if (num_read == 0 && length)
+        if (num_read == 0 && length) {
             return -1;
+        }
 
         /*printf("fread(%d)", num_read);fflush(stdout); */
 
@@ -43,8 +44,9 @@ static int WriteFileData(const char *pBuffer, int length, FILE * fout)
             MPL_error_printf("Error: fwrite failed - %s\n", strerror(errno));
             return errno;
         }
-        if (num_written == 0 && length)
+        if (num_written == 0 && length) {
             return -1;
+        }
 
         /*printf("fwrite(%d)", num_written);fflush(stdout); */
 
@@ -222,10 +224,12 @@ RLOG_IOStruct *RLOG_CreateInputStruct(const char *filename)
 
 static int compareArrows(const RLOG_ARROW * pLeft, const RLOG_ARROW * pRight)
 {
-    if (pLeft->end_time < pRight->end_time)
+    if (pLeft->end_time < pRight->end_time) {
         return -1;
-    if (pLeft->end_time == pRight->end_time)
+    }
+    if (pLeft->end_time == pRight->end_time) {
         return 0;
+    }
     return 1;
 }
 
@@ -239,8 +243,9 @@ static int ModifyArrows(FILE * f, int nNumArrows, int nMin, double *pOffsets, in
 
     fseek(f, 0, SEEK_CUR);
     arrow_pos = ftell(f);
-    if (arrow_pos == -1)
+    if (arrow_pos == -1) {
         return errno;
+    }
     pArray = (RLOG_ARROW *) MPL_malloc(nNumArrows * sizeof(RLOG_ARROW), MPL_MEM_DEBUG);
     if (pArray) {
         MPL_msg_printf("Modifying %d arrows\n", nNumArrows);
@@ -499,8 +504,9 @@ int RLOG_ModifyEvents(const char *filename, double *pOffsets, int n)
 int RLOG_CloseInputStruct(RLOG_IOStruct ** ppInput)
 {
     int i;
-    if (ppInput == NULL)
+    if (ppInput == NULL) {
         return -1;
+    }
     fclose((*ppInput)->f);
     for (i = 0; i < (*ppInput)->nNumRanks; i++) {
         MPL_free((*ppInput)->ppCurEvent[i]);
@@ -523,23 +529,26 @@ int RLOG_CloseInputStruct(RLOG_IOStruct ** ppInput)
 
 int RLOG_GetFileHeader(RLOG_IOStruct * pInput, RLOG_FILE_HEADER * pHeader)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     memcpy(pHeader, &pInput->header, sizeof(RLOG_FILE_HEADER));
     return 0;
 }
 
 int RLOG_GetNumStates(RLOG_IOStruct * pInput)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     return pInput->nNumStates;
 }
 
 int RLOG_GetState(RLOG_IOStruct * pInput, int i, RLOG_STATE * pState)
 {
-    if (pInput == NULL || pState == NULL || i < 0 || i >= pInput->nNumStates)
+    if (pInput == NULL || pState == NULL || i < 0 || i >= pInput->nNumStates) {
         return -1;
+    }
     fseek(pInput->f, pInput->nStateOffset + (i * sizeof(RLOG_STATE)), SEEK_SET);
     if (ReadFileData((char *) pState, sizeof(RLOG_STATE), pInput->f)) {
         rlog_err_printf("Error reading rlog state\n");
@@ -553,18 +562,21 @@ int RLOG_GetState(RLOG_IOStruct * pInput, int i, RLOG_STATE * pState)
 
 int RLOG_ResetStateIter(RLOG_IOStruct * pInput)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     pInput->nCurState = 0;
     return 0;
 }
 
 int RLOG_GetNextState(RLOG_IOStruct * pInput, RLOG_STATE * pState)
 {
-    if (pInput == NULL || pState == NULL)
+    if (pInput == NULL || pState == NULL) {
         return -1;
-    if (pInput->nCurState >= pInput->nNumStates)
+    }
+    if (pInput->nCurState >= pInput->nNumStates) {
         return 1;
+    }
     fseek(pInput->f, pInput->nStateOffset + (pInput->nCurState * sizeof(RLOG_STATE)), SEEK_SET);
     if (ReadFileData((char *) pState, sizeof(RLOG_STATE), pInput->f)) {
         rlog_err_printf("Error reading next rlog state\n");
@@ -576,15 +588,17 @@ int RLOG_GetNextState(RLOG_IOStruct * pInput, RLOG_STATE * pState)
 
 int RLOG_GetNumArrows(RLOG_IOStruct * pInput)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     return pInput->nNumArrows;
 }
 
 int RLOG_GetArrow(RLOG_IOStruct * pInput, int i, RLOG_ARROW * pArrow)
 {
-    if (pInput == NULL || pArrow == NULL || i < 0 || i >= pInput->nNumArrows)
+    if (pInput == NULL || pArrow == NULL || i < 0 || i >= pInput->nNumArrows) {
         return -1;
+    }
     fseek(pInput->f, pInput->nArrowOffset + (i * sizeof(RLOG_ARROW)), SEEK_SET);
     if (ReadFileData((char *) pArrow, sizeof(RLOG_ARROW), pInput->f)) {
         rlog_err_printf("Error reading rlog arrow\n");
@@ -598,18 +612,21 @@ int RLOG_GetArrow(RLOG_IOStruct * pInput, int i, RLOG_ARROW * pArrow)
 
 int RLOG_ResetArrowIter(RLOG_IOStruct * pInput)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     pInput->nCurArrow = 0;
     return 0;
 }
 
 int RLOG_GetNextArrow(RLOG_IOStruct * pInput, RLOG_ARROW * pArrow)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
-    if (pInput->nCurArrow >= pInput->nNumArrows)
+    }
+    if (pInput->nCurArrow >= pInput->nNumArrows) {
         return 1;
+    }
     fseek(pInput->f, pInput->nArrowOffset + (pInput->nCurArrow * sizeof(RLOG_ARROW)), SEEK_SET);
     if (ReadFileData((char *) pArrow, sizeof(RLOG_ARROW), pInput->f)) {
         rlog_err_printf("Error reading next rlog arrow\n");
@@ -621,8 +638,9 @@ int RLOG_GetNextArrow(RLOG_IOStruct * pInput, RLOG_ARROW * pArrow)
 
 int RLOG_GetNumEventRecursions(RLOG_IOStruct * pInput, int rank)
 {
-    if (pInput == NULL || rank < pInput->header.nMinRank || rank > pInput->header.nMaxRank)
+    if (pInput == NULL || rank < pInput->header.nMinRank || rank > pInput->header.nMaxRank) {
         return -1;
+    }
     return pInput->pNumEventRecursions[rank - pInput->header.nMinRank];
 }
 
@@ -633,8 +651,9 @@ int RLOG_GetNumEvents(RLOG_IOStruct * pInput, int rank, int recursion_level)
         rank > pInput->header.nMaxRank)
         return -1;
     rank_index = rank - pInput->header.nMinRank;
-    if (recursion_level >= pInput->pNumEventRecursions[rank_index])
+    if (recursion_level >= pInput->pNumEventRecursions[rank_index]) {
         return -1;
+    }
     return pInput->ppNumEvents[rank_index][recursion_level];
 }
 
@@ -646,10 +665,12 @@ int RLOG_GetEvent(RLOG_IOStruct * pInput, int rank, int recursion_level, int ind
         rank > pInput->header.nMaxRank)
         return -1;
     rank_index = rank - pInput->header.nMinRank;
-    if (recursion_level < 0 || recursion_level >= pInput->pNumEventRecursions[rank_index])
+    if (recursion_level < 0 || recursion_level >= pInput->pNumEventRecursions[rank_index]) {
         return -1;
-    if (index < 0 || index >= pInput->ppNumEvents[rank_index][recursion_level])
+    }
+    if (index < 0 || index >= pInput->ppNumEvents[rank_index][recursion_level]) {
         return -1;
+    }
 
     fseek(pInput->f,
           pInput->ppEventOffset[rank_index][recursion_level] + (index * sizeof(RLOG_EVENT)),
@@ -676,8 +697,9 @@ int RLOG_FindEventBeforeTimestamp(RLOG_IOStruct * pInput, int rank, int recursio
         rank > pInput->header.nMaxRank)
         return -1;
     rank_index = rank - pInput->header.nMinRank;
-    if (recursion_level < 0 || recursion_level >= pInput->pNumEventRecursions[rank_index])
+    if (recursion_level < 0 || recursion_level >= pInput->pNumEventRecursions[rank_index]) {
         return -1;
+    }
 
     low = 0;
     high = pInput->ppNumEvents[rank_index][recursion_level] - 1;
@@ -715,8 +737,9 @@ int RLOG_FindAnyEventBeforeTimestamp(RLOG_IOStruct * pInput, int rank, double ti
         return -1;
     rank_index = rank - pInput->header.nMinRank;
 
-    if (RLOG_FindEventBeforeTimestamp(pInput, rank, 0, timestamp, &event, &index) == -1)
+    if (RLOG_FindEventBeforeTimestamp(pInput, rank, 0, timestamp, &event, &index) == -1) {
         return -1;
+    }
     for (i = 1; i < pInput->pNumEventRecursions[rank_index]; i++) {
         if (RLOG_FindEventBeforeTimestamp(pInput, rank, i, timestamp, &cur_event, &index) != -1) {
             if (cur_event.start_time > event.start_time)
@@ -768,8 +791,9 @@ int RLOG_GetNextEvent(RLOG_IOStruct * pInput, int rank, int recursion_level, RLO
 
 int RLOG_GetRankRange(RLOG_IOStruct * pInput, int *pMin, int *pMax)
 {
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
     *pMin = pInput->header.nMinRank;
     *pMax = pInput->header.nMaxRank;
     return 0;
@@ -781,8 +805,9 @@ RLOG_BOOL FindMinGlobalEvent(RLOG_IOStruct * pInput, int *rank, int *level, int 
     double dmin = RLOG_MAX_DOUBLE;
     RLOG_BOOL found = FALSE;
 
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return FALSE;
+    }
 
     for (i = 0; i < pInput->nNumRanks; i++) {
         for (j = 0; j < pInput->pNumEventRecursions[i]; j++) {
@@ -807,8 +832,9 @@ RLOG_BOOL FindMaxGlobalEvent(RLOG_IOStruct * pInput, int *rank, int *level, int 
     double dmax = RLOG_MIN_DOUBLE;
     RLOG_BOOL found = FALSE;
 
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return FALSE;
+    }
 
     for (i = 0; i < pInput->nNumRanks; i++) {
         for (j = 0; j < pInput->pNumEventRecursions[i]; j++) {
@@ -833,8 +859,9 @@ int RLOG_ResetGlobalIter(RLOG_IOStruct * pInput)
     RLOG_EVENT min_event = { 0 };
     RLOG_BOOL bMinSet = FALSE;
 
-    if (pInput == NULL)
+    if (pInput == NULL) {
         return -1;
+    }
 
     pInput->gnCurRank = 0;
     pInput->gnCurLevel = 0;
@@ -882,8 +909,9 @@ int RLOG_GetNextGlobalEvent(RLOG_IOStruct * pInput, RLOG_EVENT * pEvent)
 {
     int n;
 
-    if (pInput == NULL || pEvent == NULL)
+    if (pInput == NULL || pEvent == NULL) {
         return -1;
+    }
 
     /* put the current in the previous slot */
     pInput->gppPrevEvent[pInput->gnCurRank][pInput->gnCurLevel] = pInput->gCurEvent;
@@ -921,8 +949,9 @@ int RLOG_GetPreviousGlobalEvent(RLOG_IOStruct * pInput, RLOG_EVENT * pEvent)
 {
     int n;
 
-    if (pInput == NULL || pEvent == NULL)
+    if (pInput == NULL || pEvent == NULL) {
         return -1;
+    }
 
     /* put the current back in its next slot */
     pInput->gppCurEvent[pInput->gnCurRank][pInput->gnCurLevel] = pInput->gCurEvent;
@@ -960,10 +989,12 @@ int RLOG_GetPreviousGlobalEvent(RLOG_IOStruct * pInput, RLOG_EVENT * pEvent)
 
 int RLOG_GetCurrentGlobalEvent(RLOG_IOStruct * pInput, RLOG_EVENT * pEvent)
 {
-    if (pInput == NULL || pEvent == NULL)
+    if (pInput == NULL || pEvent == NULL) {
         return -1;
-    if (pInput->gnCurRank < 0 || pInput->gnCurRank >= pInput->nNumRanks)
+    }
+    if (pInput->gnCurRank < 0 || pInput->gnCurRank >= pInput->nNumRanks) {
         return -1;
+    }
     if (pInput->gnCurLevel < 0 ||
         pInput->gnCurLevel >= pInput->pNumEventRecursions[pInput->gnCurRank])
         return -1;
@@ -998,8 +1029,9 @@ int RLOG_FindGlobalEventBeforeTimestamp(RLOG_IOStruct * pInput, double timestamp
 {
     int i, j, n;
 
-    if (pInput == NULL || pEvent == NULL)
+    if (pInput == NULL || pEvent == NULL) {
         return -1;
+    }
 
     pInput->gnCurRank = 0;
     pInput->gnCurLevel = 0;
@@ -1061,8 +1093,9 @@ int RLOG_FindArrowBeforeTimestamp(RLOG_IOStruct * pInput, double timestamp, RLOG
     RLOG_ARROW arrow;
     int low, high, mid;
 
-    if (pInput == NULL || pArrow == NULL)
+    if (pInput == NULL || pArrow == NULL) {
         return -1;
+    }
 
     low = 0;
     high = pInput->nNumArrows - 1;
@@ -1092,12 +1125,15 @@ int RLOG_FindArrowBeforeTimestamp(RLOG_IOStruct * pInput, double timestamp, RLOG
 int RLOG_HitTest(RLOG_IOStruct * pInput, int rank, int level, double timestamp, RLOG_EVENT * pEvent)
 {
     int rank_index;
-    if (pInput == NULL || pEvent == NULL || level < 0)
+    if (pInput == NULL || pEvent == NULL || level < 0) {
         return -1;
-    if (rank < pInput->header.nMinRank || rank >= pInput->header.nMaxRank)
+    }
+    if (rank < pInput->header.nMinRank || rank >= pInput->header.nMaxRank) {
         return -1;
+    }
     rank_index = rank - pInput->header.nMinRank;
-    if (level >= pInput->pNumEventRecursions[rank_index])
+    if (level >= pInput->pNumEventRecursions[rank_index]) {
         return -1;
+    }
     return 0;
 }

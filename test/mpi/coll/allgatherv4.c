@@ -211,8 +211,9 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max
             recvcounts[i] = (int) tmp;
 
             /* If the maximum message size is too large, don't run */
-            if (tmp > MAX_BUF)
+            if (tmp > MAX_BUF) {
                 return MTestReturnValue(errs);
+            }
         } else if (test_type == BELL_CURVE) {
             for (j = 0; j < i; j++) {
                 if (i - 1 + j >= comm_size)
@@ -222,8 +223,9 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max
                 displs[i - 1 + j] = 0;
 
                 /* If the maximum message size is too large, don't run */
-                if (tmp > MAX_BUF)
+                if (tmp > MAX_BUF) {
                     return MTestReturnValue(errs);
+                }
             }
         }
 

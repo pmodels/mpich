@@ -965,8 +965,9 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_Win *win ATTRIBUTE((unused)) = NULL;
 
 
-    if (!MPIDIG_check_cmpl_order(rreq, cswap_target_cmpl_cb))
+    if (!MPIDIG_check_cmpl_order(rreq, cswap_target_cmpl_cb)) {
         return mpi_errno;
+    }
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
     origin_addr = MPIDIG_REQUEST(rreq, req->creq.data);
@@ -1013,8 +1014,9 @@ static int acc_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDIG_check_cmpl_order(rreq, acc_target_cmpl_cb))
+    if (!MPIDIG_check_cmpl_order(rreq, acc_target_cmpl_cb)) {
         return mpi_errno;
+    }
 
     mpi_errno = handle_acc_cmpl(rreq);
     MPIR_ERR_CHECK(mpi_errno);
@@ -1030,8 +1032,9 @@ static int get_acc_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDIG_check_cmpl_order(rreq, get_acc_target_cmpl_cb))
+    if (!MPIDIG_check_cmpl_order(rreq, get_acc_target_cmpl_cb)) {
         return mpi_errno;
+    }
 
     mpi_errno = handle_get_acc_cmpl(rreq);
     MPIR_ERR_CHECK(mpi_errno);

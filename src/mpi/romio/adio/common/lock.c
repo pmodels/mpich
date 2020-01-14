@@ -63,8 +63,9 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 
     MPL_UNREFERENCED_ARG(whence);
 
-    if (len == 0)
+    if (len == 0) {
         return MPI_SUCCESS;
+    }
 
     dwFlags = type;
 
@@ -127,8 +128,9 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     int err, error_code, err_count = 0, sav_errno;
     struct flock lock;
 
-    if (len == 0)
+    if (len == 0) {
         return MPI_SUCCESS;
+    }
 
 
     /* Depending on the compiler flags and options, struct flock
@@ -206,8 +208,9 @@ int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whenc
     struct flock lock;
 #endif
 
-    if (len == 0)
+    if (len == 0) {
         return MPI_SUCCESS;
+    }
 
     lock.l_type = type;
     lock.l_start = offset;

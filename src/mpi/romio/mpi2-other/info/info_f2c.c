@@ -39,8 +39,9 @@ MPI_Info MPI_Info_f2c(MPI_Fint info)
 #ifndef INT_LT_POINTER
     return (MPI_Info) info;
 #else
-    if (!info)
+    if (!info) {
         return MPI_INFO_NULL;
+    }
     if ((info < 0) || (info > MPIR_Infotable_ptr)) {
         FPRINTF(stderr, "MPI_Info_f2c: Invalid info handle\n");
         MPI_Abort(MPI_COMM_WORLD, 1);

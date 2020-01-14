@@ -168,8 +168,9 @@ int init_dbr(void)
     } else {
         fprintf(stderr, "Failed to get queues from image: %s\n", msg);
     }
-    if (hasQ != mqs_ok)
+    if (hasQ != mqs_ok) {
         return 1;
+    }
 
     return 0;
 }

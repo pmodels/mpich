@@ -88,8 +88,9 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
         ADIOI_Datatype_iscontig(fd->etype, &etype_is_contig);
     }
     flat_etype = ADIOI_Flatten_and_find(fd->etype);
-    if (0 == check_type(flat_etype, fd->orig_access_mode, myname, "etype", error_code))
+    if (0 == check_type(flat_etype, fd->orig_access_mode, myname, "etype", error_code)) {
         return;
+    }
 
     MPI_Type_get_envelope(filetype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED) {
@@ -103,8 +104,9 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
     }
 
     flat_file = ADIOI_Flatten_and_find(fd->filetype);
-    if (0 == check_type(flat_file, fd->orig_access_mode, myname, "filetype", error_code))
+    if (0 == check_type(flat_file, fd->orig_access_mode, myname, "filetype", error_code)) {
         return;
+    }
 
     MPI_Type_size_x(fd->etype, &(fd->etype_size));
     fd->disp = disp;

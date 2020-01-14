@@ -75,8 +75,9 @@ int IsendIrecvTest2(int rank, int buf_size)
     char *buffer;
 
     buffer = (char *) malloc(buf_size);
-    if (buffer == NULL)
+    if (buffer == NULL) {
         return FALSE;
+    }
     if (rank == 0) {
         strcpy(buffer, "Hello process one.");
         MPI_Isend(buffer, buf_size, MPI_BYTE, 1, tag1, MPI_COMM_WORLD, &request1);
@@ -104,8 +105,9 @@ int OutOfOrderTest(int rank, int buf_size)
     char *buffer;
 
     buffer = (char *) malloc(buf_size);
-    if (buffer == NULL)
+    if (buffer == NULL) {
         return FALSE;
+    }
     if (rank == 0) {
         strcpy(buffer, "Hello process one.");
         MPI_Isend(buffer, buf_size, MPI_BYTE, 1, tag1, MPI_COMM_WORLD, &request1);
@@ -133,8 +135,9 @@ int ForceUnexpectedTest(int rank, int buf_size)
     char *buffer;
 
     buffer = (char *) malloc(buf_size);
-    if (buffer == NULL)
+    if (buffer == NULL) {
         return FALSE;
+    }
 
     if (rank == 0) {
         strcpy(buffer, "Hello process one.");

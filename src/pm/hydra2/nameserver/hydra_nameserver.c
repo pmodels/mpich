@@ -60,8 +60,9 @@ static struct HYD_arg_match_table match_table[] = {
 
 static void free_publish_element(struct nameserv_publish *publish)
 {
-    if (publish == NULL)
+    if (publish == NULL) {
         return;
+    }
 
     MPL_free(publish->name);
     MPL_free(publish->info);

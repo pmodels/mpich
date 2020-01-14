@@ -226,8 +226,9 @@ void MTest_Finalize(int errs)
  */
 int MTestReturnValue(int errors)
 {
-    if (returnWithVal)
+    if (returnWithVal) {
         return errors ? 1 : 0;
+    }
     return 0;
 }
 
@@ -974,15 +975,17 @@ int MTestTestComm(MPI_Comm comm)
 {
     int is_inter;
 
-    if (comm == MPI_COMM_NULL)
+    if (comm == MPI_COMM_NULL) {
         return 0;
+    }
 
     MPI_Comm_test_inter(comm, &is_inter);
 
-    if (is_inter)
+    if (is_inter) {
         return MTestTestIntercomm(comm);
-    else
+    } else {
         return MTestTestIntracomm(comm);
+    }
 }
 
 /* Return the name of an intercommunicator */

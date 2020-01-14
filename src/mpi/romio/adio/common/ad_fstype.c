@@ -328,8 +328,9 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
             ADIOI_Free(dir);
         } else {
             *error_code = ADIOI_Err_create_code(myname, filename, errno);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
     }
 
@@ -380,8 +381,9 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
             ADIOI_Free(dir);
         } else {
             *error_code = ADIOI_Err_create_code(myname, filename, errno);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
     }
 
@@ -508,8 +510,9 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
             ADIOI_Free(dir);
         } else {
             *error_code = ADIOI_Err_create_code(myname, filename, errno);
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
     }
 

@@ -17,8 +17,9 @@ static void MTest_abt_error(int err, const char *msg, const char *file, int line
     size_t len;
     int ret;
 
-    if (err == ABT_SUCCESS)
+    if (err == ABT_SUCCESS) {
         return;
+    }
 
     ret = ABT_error_get_str(err, NULL, &len);
     if (ret != ABT_SUCCESS) {

@@ -36,10 +36,11 @@ int ADIOI_Heap_create(heap_t * heap, int size)
 {
     heap->size = size;
     heap->nodes = (heap_node_t *) ADIOI_Calloc(size, sizeof(heap_node_t));
-    if (heap->nodes == NULL)
+    if (heap->nodes == NULL) {
         return 1;
-    else
+    } else {
         return 0;
+    }
 }
 
 void ADIOI_Heap_free(heap_t * heap)

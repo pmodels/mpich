@@ -53,8 +53,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
      * We are doing this because the original am_hdr comes from FI_MULTI_RECV
      * buffer, which may be reused soon by OFI. */
     uo_msg = MPL_malloc(uo_msg_len, MPL_MEM_BUFFER);
-    if (uo_msg == NULL)
+    if (uo_msg == NULL) {
         return MPI_ERR_NO_MEM;
+    }
 
     packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->data_sz;
     MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);

@@ -336,9 +336,9 @@ static void *threaded_loadstore_int_helper(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_loadstore_int_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -533,9 +533,9 @@ static void *threaded_loadstore_ptr_helper(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_loadstore_ptr_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -734,9 +734,9 @@ static void *threaded_add_helper(void *_udata)
         OPA_add_int(udata->shared_val, udata->unique_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_add_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -866,9 +866,9 @@ static void *threaded_incr_helper(void *_udata)
         OPA_incr_int(udata->shared_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_incr_helper() */
 
@@ -899,9 +899,9 @@ static void *threaded_decr_helper(void *_udata)
         OPA_decr_int(udata->shared_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_decr_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -1082,9 +1082,9 @@ static void *threaded_decr_and_test_helper(void *_udata)
             udata->ntrue++;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_decr_and_test_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -1354,9 +1354,9 @@ static void *threaded_faa_helper(void *_udata)
         (void) OPA_fetch_and_add_int(udata->shared_val, udata->unique_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_add_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -1504,9 +1504,9 @@ static void *threaded_faa_ret_helper(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_faa_ret_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -1816,9 +1816,9 @@ static void *threaded_fai_ret_helper(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_fai_ret_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -1977,9 +1977,9 @@ static void *threaded_fad_ret_helper(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_fad_ret_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -2241,9 +2241,9 @@ static void *threaded_cas_int_helper(void *_udata)
             udata->nsuccess++;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_cas_int_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -2401,9 +2401,9 @@ static void *threaded_cas_ptr_helper(void *_udata)
             udata->nsuccess++;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_cas_ptr_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -2560,9 +2560,9 @@ static void *grouped_cas_int_helper(void *_udata)
             udata->nsuccess++;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end grouped_cas_int_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -2742,9 +2742,9 @@ static void *grouped_cas_ptr_helper(void *_udata)
             udata->nsuccess++;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end grouped_cas_ptr_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -2952,9 +2952,9 @@ static void *threaded_cas_int_fairness_helper(void *_udata)
         udata->terminated = 1;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_cas_int_fairness_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -3155,9 +3155,9 @@ static void *threaded_cas_ptr_fairness_helper(void *_udata)
         udata->terminated = 1;
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_cas_ptr_fairness_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -3431,9 +3431,9 @@ static void *threaded_swap_int_helper(void *_udata)
         udata->local_val = OPA_swap_int(udata->shared_val, udata->local_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_swap_int_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -3590,9 +3590,9 @@ static void *threaded_swap_ptr_helper(void *_udata)
         udata->local_val = OPA_swap_ptr(udata->shared_val, udata->local_val);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_swap_ptr_helper() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -4452,9 +4452,9 @@ static void *threaded_llsc_int_stack_push(void *_udata)
     OPA_decr_int(udata->npushers);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_llsc_int_stack_push() */
 
@@ -4573,8 +4573,9 @@ static int test_threaded_llsc_int_stack(void)
     int i;
 
     /* Don't test with only 1 thread */
-    if (nthreads < 2)
+    if (nthreads < 2) {
         return 0;
+    }
 
     TESTING("integer LL/SC stack", nthreads);
 
@@ -4795,9 +4796,9 @@ static void *threaded_llsc_ptr_stack_push(void *_udata)
     OPA_decr_int(udata->npushers);
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end threaded_llsc_ptr_stack_push() */
 
@@ -4917,8 +4918,9 @@ static int test_threaded_llsc_ptr_stack(void)
     int i;
 
     /* Don't test with only 1 thread */
-    if (nthreads < 2)
+    if (nthreads < 2) {
         return 0;
+    }
 
     TESTING("pointer LL/SC stack", nthreads);
 

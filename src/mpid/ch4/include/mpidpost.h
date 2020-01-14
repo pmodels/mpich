@@ -90,8 +90,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
     int i;
     MPIR_Thread_sync_t *sync = NULL;
 
-    if (likely(single_threaded))
+    if (likely(single_threaded)) {
         return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+    }
 
     MPIR_Thread_sync_alloc(&sync, count);
 
@@ -125,8 +126,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Thread_sync_t *sync = NULL;
 
-    if (likely(single_threaded))
+    if (likely(single_threaded)) {
         return MPIR_Wait_impl(request_ptr, status);
+    }
 
     if (request_ptr == NULL || MPIR_Request_is_complete(request_ptr))
         goto fn_exit;

@@ -12,8 +12,9 @@ int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
     int rc = -1;
     MPI_Comm comm = comm_ptr->handle;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOL BARRIER.");
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
@@ -28,8 +29,9 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
     dte_data_representation_t dtype;
     int rc = -1;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL BCAST.");
     dtype = mpi_dtype_2_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
@@ -56,8 +58,9 @@ int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     hcoll_dte_op_t *Op;
     int rc = -1;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL REDUCE.");
     dtype = mpi_dtype_2_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
@@ -88,8 +91,9 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     int rc = -1;
     MPI_Comm comm = comm_ptr->handle;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOL ALLREDUCE.");
     Dtype = mpi_dtype_2_hcoll_dtype(datatype, count, TRY_FIND_DERIVED);
@@ -119,8 +123,9 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
     dte_data_representation_t rtype;
     int rc = -1;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
     rtype = mpi_dtype_2_hcoll_dtype(rdtype, rcount, TRY_FIND_DERIVED);
@@ -153,8 +158,9 @@ int hcoll_Alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
     dte_data_representation_t rtype;
     int rc = -1;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
     rtype = mpi_dtype_2_hcoll_dtype(rdtype, rcount, TRY_FIND_DERIVED);
@@ -187,8 +193,9 @@ int hcoll_Alltoallv(const void *sbuf, const int *scounts, const int *sdispls, MP
     dte_data_representation_t rtype;
     int rc = -1;
 
-    if (!comm_ptr->hcoll_priv.is_hcoll_init)
+    if (!comm_ptr->hcoll_priv.is_hcoll_init) {
         return rc;
+    }
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL ALLGATHER.");
     rtype = mpi_dtype_2_hcoll_dtype(rdtype, 0, TRY_FIND_DERIVED);

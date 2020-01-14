@@ -42,8 +42,9 @@ void ADIOI_DAOS_Init(int *error_code)
     *error_code = MPI_SUCCESS;
 
     /** nothing to do if already initialized */
-    if (ADIOI_DAOS_Initialized != MPI_KEYVAL_INVALID)
+    if (ADIOI_DAOS_Initialized != MPI_KEYVAL_INVALID) {
         return;
+    }
 
     rc = daos_init();
     if (rc) {
@@ -96,8 +97,9 @@ int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)
 {
     int error_code = MPI_SUCCESS;
 
-    if (rc == 0)
+    if (rc == 0) {
         return MPI_SUCCESS;
+    }
 
     switch (rc) {
         case -DER_NO_PERM:

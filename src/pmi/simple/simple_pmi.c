@@ -269,8 +269,9 @@ int PMI_Get_universe_size(int *size)
     char size_c[PMIU_MAXLINE];
 
     /* Connect to the PM if we haven't already */
-    if (PMIi_InitIfSingleton() != 0)
+    if (PMIi_InitIfSingleton() != 0) {
         return PMI_FAIL;
+    }
 
     if (PMI_initialized > SINGLETON_INIT_BUT_NO_PM) {
         err = GetResponse("cmd=get_universe_size\n", "universe_size", 0);
@@ -278,8 +279,9 @@ int PMI_Get_universe_size(int *size)
             PMIU_getval("size", size_c, PMIU_MAXLINE);
             *size = atoi(size_c);
             return PMI_SUCCESS;
-        } else
+        } else {
             return err;
+        }
     } else
         *size = 1;
     return PMI_SUCCESS;
@@ -296,8 +298,9 @@ int PMI_Get_appnum(int *appnum)
             PMIU_getval("appnum", appnum_c, PMIU_MAXLINE);
             *appnum = atoi(appnum_c);
             return PMI_SUCCESS;
-        } else
+        } else {
             return err;
+        }
 
     } else
         *appnum = -1;
@@ -370,24 +373,27 @@ int PMI_KVS_Get_my_name(char kvsname[], int length)
 
 int PMI_KVS_Get_name_length_max(int *maxlen)
 {
-    if (maxlen == NULL)
+    if (maxlen == NULL) {
         return PMI_ERR_INVALID_ARG;
+    }
     *maxlen = PMI_kvsname_max;
     return PMI_SUCCESS;
 }
 
 int PMI_KVS_Get_key_length_max(int *maxlen)
 {
-    if (maxlen == NULL)
+    if (maxlen == NULL) {
         return PMI_ERR_INVALID_ARG;
+    }
     *maxlen = PMI_keylen_max;
     return PMI_SUCCESS;
 }
 
 int PMI_KVS_Get_value_length_max(int *maxlen)
 {
-    if (maxlen == NULL)
+    if (maxlen == NULL) {
         return PMI_ERR_INVALID_ARG;
+    }
     *maxlen = PMI_vallen_max;
     return PMI_SUCCESS;
 }
@@ -400,22 +406,26 @@ int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
-        if (cached_singinit_inuse)
+        if (cached_singinit_inuse) {
             return PMI_FAIL;
+        }
         rc = MPL_strncpy(cached_singinit_key, key, PMI_keylen_max);
-        if (rc != 0)
+        if (rc != 0) {
             return PMI_FAIL;
+        }
         rc = MPL_strncpy(cached_singinit_val, value, PMI_vallen_max);
-        if (rc != 0)
+        if (rc != 0) {
             return PMI_FAIL;
+        }
         cached_singinit_inuse = 1;
         return PMI_SUCCESS;
     }
 
     rc = MPL_snprintf(buf, PMIU_MAXLINE,
                       "cmd=put kvsname=%s key=%s value=%s\n", kvsname, key, value);
-    if (rc < 0)
+    if (rc < 0) {
         return PMI_FAIL;
+    }
     err = GetResponse(buf, "put_result", 1);
     return err;
 }
@@ -438,12 +448,14 @@ int PMI_KVS_Get(const char kvsname[], const char key[], char value[], int length
      * we're doing an MPI_Comm_join or MPI_Comm_connect/accept from
      * the singleton init case.  This test is here because, in the way in
      * which MPICH uses PMI, this is where the test needs to be. */
-    if (PMIi_InitIfSingleton() != 0)
+    if (PMIi_InitIfSingleton() != 0) {
         return PMI_FAIL;
+    }
 
     rc = MPL_snprintf(buf, PMIU_MAXLINE, "cmd=get kvsname=%s key=%s\n", kvsname, key);
-    if (rc < 0)
+    if (rc < 0) {
         return PMI_FAIL;
+    }
 
     err = GetResponse(buf, "get_result", 0);
     if (err == PMI_SUCCESS) {
@@ -556,8 +568,9 @@ int PMI_Spawn_multiple(int count,
     char *lead, *lag;
 
     /* Connect to the PM if we haven't already */
-    if (PMIi_InitIfSingleton() != 0)
+    if (PMIi_InitIfSingleton() != 0) {
         return PMI_FAIL;
+    }
 
     total_num_processes = 0;
 
@@ -605,8 +618,9 @@ int PMI_Spawn_multiple(int count,
                 }
                 argcnt++;
                 rc = PMIU_writeline(PMI_fd, buf);
-                if (rc)
+                if (rc) {
                     return PMI_FAIL;
+                }
                 buf[0] = 0;
 
             }
@@ -1220,8 +1234,9 @@ static int PMIi_InitIfSingleton(void)
     int rc;
     static int firstcall = 1;
 
-    if (PMI_initialized != SINGLETON_INIT_BUT_NO_PM || !firstcall)
+    if (PMI_initialized != SINGLETON_INIT_BUT_NO_PM || !firstcall) {
         return PMI_SUCCESS;
+    }
 
     /* We only try to init as a singleton the first time */
     firstcall = 0;
@@ -1230,8 +1245,9 @@ static int PMIi_InitIfSingleton(void)
      * and start the singleton init handshake */
     rc = PMII_singinit();
 
-    if (rc < 0)
+    if (rc < 0) {
         return PMI_FAIL;
+    }
     PMI_initialized = SINGLETON_INIT_WITH_PM;   /* do this right away */
     PMI_size = 1;
     PMI_rank = 0;

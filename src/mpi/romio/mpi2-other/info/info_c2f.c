@@ -40,8 +40,9 @@ MPI_Fint MPI_Info_c2f(MPI_Info info)
 #else
     int i;
 
-    if ((info <= (MPI_Info) 0) || (info->cookie != MPIR_INFO_COOKIE))
+    if ((info <= (MPI_Info) 0) || (info->cookie != MPIR_INFO_COOKIE)) {
         return (MPI_Fint) 0;
+    }
     if (!MPIR_Infotable) {
         MPIR_Infotable_max = 1024;
         MPIR_Infotable = (MPI_Info *)

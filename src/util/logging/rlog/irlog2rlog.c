@@ -129,8 +129,9 @@ ArrowNode *GetArrowNode(int rank)
     ArrowNode *pNode = g_pArrowList;
 
     while (pNode) {
-        if (pNode->rank == rank)
+        if (pNode->rank == rank) {
             return pNode;
+        }
         pNode = pNode->pNext;
     }
 
@@ -147,8 +148,9 @@ ArrowNode *GetArrowNode(int rank)
 EndArrowStruct *ExtractEndNode(ArrowNode * pNode, int src, int tag)
 {
     EndArrowStruct *pIter, *pRet;
-    if (pNode->pEndList == NULL)
+    if (pNode->pEndList == NULL) {
         return NULL;
+    }
     if ((pNode->pEndList->src == src) && (pNode->pEndList->tag == tag)) {
         pRet = pNode->pEndList;
         pNode->pEndList = pNode->pEndList->next;
@@ -169,8 +171,9 @@ EndArrowStruct *ExtractEndNode(ArrowNode * pNode, int src, int tag)
 StartArrowStruct *ExtractStartNode(ArrowNode * pNode, int src, int tag)
 {
     StartArrowStruct *pIter, *pRet;
-    if (pNode->pStartList == NULL)
+    if (pNode->pStartList == NULL) {
         return NULL;
+    }
     if ((pNode->pStartList->src == src) && (pNode->pStartList->tag == tag)) {
         pRet = pNode->pStartList;
         pNode->pStartList = pNode->pStartList->next;
@@ -277,8 +280,9 @@ RecursionStruct *GetLevel(int rank, int recursion)
     pLevel = g_pLevel;
 
     while (pLevel) {
-        if (pLevel->level == recursion && pLevel->rank == rank)
+        if (pLevel->level == recursion && pLevel->rank == rank) {
             return pLevel;
+        }
         pLevel = pLevel->next;
     }
 
@@ -477,8 +481,9 @@ void ReadAllArrows(IRLOG_IOStruct ** ppInput, int nNumInputs)
     double dMin;
     int index;
 
-    if (nNumInputs < 1)
+    if (nNumInputs < 1) {
         return;
+    }
 
     /* make sure all the inputs are currently on an iarrow record */
     for (i = 0; i < nNumInputs; i++) {
@@ -517,11 +522,13 @@ void ReadAllArrows(IRLOG_IOStruct ** ppInput, int nNumInputs)
 
 BOOL IsNumber(char *str)
 {
-    if (str == NULL)
+    if (str == NULL) {
         return FALSE;
+    }
     while (*str != '\0') {
-        if (!isdigit(*str))
+        if (!isdigit(*str)) {
             return FALSE;
+        }
         str++;
     }
     return TRUE;

@@ -182,8 +182,9 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
     int rc = 0;
 
     f1 = ADIOI_Strdup(path);
-    if (f1 == NULL)
+    if (f1 == NULL) {
         return ENOMEM;
+    }
 
     f2 = ADIOI_Strdup(path);
     if (f2 == NULL) {
@@ -471,17 +472,20 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
         uuid_unparse(cont->cuuid, buf + 37);
     }
     rc = MPI_Bcast(buf, sizeof(buf), MPI_BYTE, 0, comm);
-    if (rc != MPI_SUCCESS)
+    if (rc != MPI_SUCCESS) {
         return rc;
+    }
 
     if (rank != 0) {
         rc = uuid_parse(buf, cont->puuid);
-        if (rc)
+        if (rc) {
             return rc;
+        }
 
         rc = uuid_parse(buf + 37, cont->cuuid);
-        if (rc)
+        if (rc) {
             return rc;
+        }
     }
     return 0;
 }
@@ -496,8 +500,9 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
     static char myname[] = "ADIOI_DAOS_OPENCOLL";
 
     ADIOI_DAOS_Init(error_code);
-    if (*error_code != MPI_SUCCESS)
+    if (*error_code != MPI_SUCCESS) {
         return;
+    }
 
     MPI_Comm_size(comm, &mpi_size);
 
@@ -592,8 +597,9 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     int rc;
 
     ADIOI_DAOS_Init(error_code);
-    if (*error_code != MPI_SUCCESS)
+    if (*error_code != MPI_SUCCESS) {
         return;
+    }
 
     parse_filename(filename, &obj_name, &cont_name);
     if (rc) {

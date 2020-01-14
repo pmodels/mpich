@@ -343,8 +343,9 @@ MPII_Keyval_set_proxy(int keyval,
 {
     MPII_Keyval *keyval_ptr;
     MPII_Keyval_get_ptr(keyval, keyval_ptr);
-    if (keyval_ptr == NULL)
+    if (keyval_ptr == NULL) {
         return;
+    }
 
     keyval_ptr->copyfn.proxy = copy_proxy;
     keyval_ptr->delfn.proxy = delete_proxy;

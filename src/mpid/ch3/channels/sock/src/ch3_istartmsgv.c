@@ -14,8 +14,9 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     /* --BEGIN ERROR HANDLING-- */
-    if (sreq == NULL)
+    if (sreq == NULL) {
         return NULL;
+    }
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref(sreq, 2);
 

@@ -29,8 +29,9 @@ void add_to_node_list(char *string, struct list **node_list)
 
 void cleanup_node_list(struct list **node_list)
 {
-    if (!(*node_list))
+    if (!(*node_list)) {
         return;
+    }
 
     struct list *tmp = *node_list;
     struct list *next = tmp->next;

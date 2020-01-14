@@ -41,8 +41,9 @@ void ADIOI_Info_print_keyvals(MPI_Info info)
     char key[MPI_MAX_INFO_KEY + 1];
     char value[MPI_MAX_INFO_VAL + 1];
 
-    if (info == MPI_INFO_NULL)
+    if (info == MPI_INFO_NULL) {
         return;
+    }
 
     MPI_Info_get_nkeys(info, &nkeys);
 

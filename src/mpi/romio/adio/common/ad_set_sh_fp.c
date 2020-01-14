@@ -34,8 +34,9 @@ void ADIO_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code)
                                      MPI_INFO_NULL, ADIO_PERM_NULL, error_code);
     }
 
-    if (*error_code != MPI_SUCCESS)
+    if (*error_code != MPI_SUCCESS) {
         return;
+    }
 
     ADIOI_WRITE_LOCK(fd->shared_fp_fd, 0, SEEK_SET, sizeof(ADIO_Offset));
     ADIO_WriteContig(fd->shared_fp_fd, &offset, sizeof(ADIO_Offset),

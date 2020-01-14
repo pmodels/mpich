@@ -112,8 +112,9 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
     MPI_Aint tot_bytes;
     int type_size;
 
-    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
+    if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0)) {
         return MPI_SUCCESS;
+    }
 
     comm_size = comm_ptr->local_size;
 

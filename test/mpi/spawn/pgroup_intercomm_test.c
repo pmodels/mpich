@@ -33,8 +33,9 @@ void pgroup_free(MPI_Comm * group);
 void pgroup_free(MPI_Comm * group)
 {
     /* Note: It's ok to compare predefined handles */
-    if (*group == MPI_COMM_NULL || *group == MPI_COMM_SELF)
+    if (*group == MPI_COMM_NULL || *group == MPI_COMM_SELF) {
         return;
+    }
 
     MPI_Comm_free((MPI_Comm *) group);
 }

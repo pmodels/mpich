@@ -53,9 +53,9 @@ ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
             } while (tmp == -1 && errno == EINTR);
         }
 
-        if (tmp < 0)
+        if (tmp < 0) {
             return tmp;
-        else if (tmp < iov[i].iov_len) {
+        } else if (tmp < iov[i].iov_len) {
             total_size += tmp;
             return total_size;
         } else
@@ -103,9 +103,9 @@ ssize_t MPL_large_readv(int fd, const struct iovec * iov, int iovcnt)
             } while (tmp == -1 && errno == EINTR);
         }
 
-        if (tmp < 0)
+        if (tmp < 0) {
             return tmp;
-        else if (tmp < iov[i].iov_len) {
+        } else if (tmp < iov[i].iov_len) {
             total_size += tmp;
             return total_size;
         } else

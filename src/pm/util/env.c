@@ -60,8 +60,9 @@ int MPIE_ArgsCheckForEnv(int argc, char *argv[], ProcessWorld * pWorld, EnvInfo 
         }
         env = pWorld->genv;
         cmd = argv[0] + 5;
-    } else
+    } else {
         return 0;
+    }
 
     /* genv and env commands have the same form, just affect different
      * env structures.  We handle this by identifying which structure,
@@ -293,13 +294,15 @@ int MPIE_Putenv(ProcessWorld * pWorld, const char *env_string)
     genv = pWorld->genv;
 
     p = (EnvData *) MPL_malloc(sizeof(EnvData), MPL_MEM_PM);
-    if (!p)
+    if (!p) {
         return 1;
+    }
     p->name = 0;
     p->value = 0;
     p->envvalue = (const char *) MPL_strdup(env_string);
-    if (!p->envvalue)
+    if (!p->envvalue) {
         return 1;
+    }
     p->nextData = genv->envPairs;
     genv->envPairs = p;
 

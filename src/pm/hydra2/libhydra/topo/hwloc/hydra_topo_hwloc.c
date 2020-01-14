@@ -145,16 +145,18 @@ static int parse_cache_string(const char *str)
 {
     char *t1, *t2;
 
-    if (str[0] != 'l')
+    if (str[0] != 'l') {
         return 0;
+    }
 
     t1 = MPL_strdup(str + 1);
     for (t2 = t1;; t2++) {
         if (*t2 == 'c') {
             *t2 = 0;
             break;
-        } else if (*t2 < '0' || *t2 > '9')
+        } else if (*t2 < '0' || *t2 > '9') {
             return 0;
+        }
     }
 
     return atoi(t1);

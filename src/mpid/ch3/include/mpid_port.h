@@ -132,8 +132,9 @@ static inline int MPIDI_CH3I_Port_issue_accept_ack(MPIDI_VC_t * vc, int ack)
                     (MPL_DBG_FDEST, "issuing accpet_ack packet to vc %p, ack=%d", vc, ack));
 
     mpi_errno = MPIDI_CH3_iStartMsg(vc, ack_pkt, sizeof(MPIDI_CH3_Pkt_t), &req_ptr);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
 
     if (req_ptr != NULL)
         MPIR_Request_free(req_ptr);     /* Only reduce reference, released after pkt sent. */
@@ -162,8 +163,9 @@ static inline int MPIDI_CH3I_Port_issue_conn_ack(MPIDI_VC_t * vc, int ack)
                     (MPL_DBG_FDEST, "issuing conn_ack packet to vc %p, ack=%d", vc, ack));
 
     mpi_errno = MPIDI_CH3_iStartMsg(vc, ack_pkt, sizeof(MPIDI_CH3_Pkt_t), &req_ptr);
-    if (mpi_errno != MPI_SUCCESS)
+    if (mpi_errno != MPI_SUCCESS) {
         return mpi_errno;
+    }
 
     if (req_ptr != NULL)
         MPIR_Request_free(req_ptr);     /* Only reduce reference, released after pkt sent. */

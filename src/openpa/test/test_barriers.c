@@ -233,9 +233,9 @@ static void *test_barriers_linear_array_write(void *_udata)
         }       /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end test_barriers_linear_array_write() */
 
@@ -288,9 +288,9 @@ static void *test_barriers_linear_array_read(void *_udata)
     }   /* end for */
 
     /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (nerrors ? (void *) 1 : NULL);
-    else
+    } else
         pthread_exit(nerrors ? (void *) 1 : NULL);
 }       /* end test_barriers_linear_array_read() */
 #endif /* OPA_HAVE_PTHREAD_H */
@@ -465,9 +465,9 @@ static void *test_barriers_variables_write(void *_udata)
     }   /* end for */
 
     /* Exit */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (NULL);
-    else
+    } else
         pthread_exit(NULL);
 }       /* end test_barriers_variables_write() */
 
@@ -547,9 +547,9 @@ static void *test_barriers_variables_read(void *_udata)
     }   /* end for */
 
     /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
-    if (udata->master_thread)
+    if (udata->master_thread) {
         return (nerrors ? (void *) 1 : NULL);
-    else
+    } else
         pthread_exit(nerrors ? (void *) 1 : NULL);
 }       /* end test_barriers_variables_read() */
 #endif /* OPA_HAVE_PTHREAD_H */

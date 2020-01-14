@@ -142,8 +142,9 @@ static void insert_delay(unsigned long delay)
 {
     struct timeval start, end;
 
-    if (delay == 0)
+    if (delay == 0) {
         return;
+    }
 
     gettimeofday(&start, NULL);
     while (1) {

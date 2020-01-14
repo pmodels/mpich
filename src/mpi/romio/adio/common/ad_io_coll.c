@@ -325,8 +325,9 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                     ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_READ, status, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     MPI_Type_free(&agg_dtype);
                 }
 #ifdef DEBUG
@@ -490,8 +491,9 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                     ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_WRITE, status, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     MPI_Type_free(&agg_dtype);
                 }
 
@@ -506,8 +508,9 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                     ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_READ, status, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     MPI_Type_free(&agg_dtype);
                 }
 #ifdef AGGREGATION_PROFILE
@@ -535,8 +538,9 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
                     ADIOI_IOFiletype(fd, cb_buf, buffered_io_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, agg_disp, agg_dtype,
                                      ADIOI_WRITE, status, error_code);
-                    if (*error_code != MPI_SUCCESS)
+                    if (*error_code != MPI_SUCCESS) {
                         return;
+                    }
                     MPI_Type_free(&agg_dtype);
                 }
             }

@@ -698,8 +698,9 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
             DBG_FPRINTF(stderr, "\n");
 #endif
 
-            if (*error_code != MPI_SUCCESS)
+            if (*error_code != MPI_SUCCESS) {
                 return;
+            }
         }
 
         for_curr_iter = for_next_iter;

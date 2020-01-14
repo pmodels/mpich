@@ -75,8 +75,9 @@ static inline uint64_t getClockMHz()
         while (endBase <= startBase);
 
         return (uint64_t) (ticks / sampleTime);
-    } else
+    } else {
         return clockMHz;
+    }
 }
 
 int MPL_wtick(double *wtick)
@@ -90,10 +91,11 @@ int MPL_wtime_init(void)
 {
     clockMHz = getClockMHz();
     seconds_per_tick = 1.0 / ((double) clockMHz * 1000000.0);
-    if (clockMHz == -1ULL)
+    if (clockMHz == -1ULL) {
         return MPL_TIMER_ERR_NOT_INITIALIZED;
-    else
+    } else {
         return MPL_TIMER_SUCCESS;
+    }
 }
 
 int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)

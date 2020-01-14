@@ -785,43 +785,61 @@ char *combiner_to_string(int combiner)
     static char c_resized[] = "resized";
 #endif
 
-    if (combiner == MPI_COMBINER_NAMED)
+    if (combiner == MPI_COMBINER_NAMED) {
         return c_named;
-    if (combiner == MPI_COMBINER_CONTIGUOUS)
+    }
+    if (combiner == MPI_COMBINER_CONTIGUOUS) {
         return c_contig;
-    if (combiner == MPI_COMBINER_VECTOR)
+    }
+    if (combiner == MPI_COMBINER_VECTOR) {
         return c_vector;
-    if (combiner == MPI_COMBINER_HVECTOR)
+    }
+    if (combiner == MPI_COMBINER_HVECTOR) {
         return c_hvector;
-    if (combiner == MPI_COMBINER_INDEXED)
+    }
+    if (combiner == MPI_COMBINER_INDEXED) {
         return c_indexed;
-    if (combiner == MPI_COMBINER_HINDEXED)
+    }
+    if (combiner == MPI_COMBINER_HINDEXED) {
         return c_hindexed;
-    if (combiner == MPI_COMBINER_STRUCT)
+    }
+    if (combiner == MPI_COMBINER_STRUCT) {
         return c_struct;
+    }
 #ifdef HAVE_MPI2_COMBINERS
-    if (combiner == MPI_COMBINER_DUP)
+    if (combiner == MPI_COMBINER_DUP) {
         return c_dup;
-    if (combiner == MPI_COMBINER_HVECTOR_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_HVECTOR_INTEGER) {
         return c_hvector_integer;
-    if (combiner == MPI_COMBINER_HINDEXED_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
         return c_hindexed_integer;
-    if (combiner == MPI_COMBINER_INDEXED_BLOCK)
+    }
+    if (combiner == MPI_COMBINER_INDEXED_BLOCK) {
         return c_indexed_block;
-    if (combiner == MPI_COMBINER_STRUCT_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
         return c_struct_integer;
-    if (combiner == MPI_COMBINER_SUBARRAY)
+    }
+    if (combiner == MPI_COMBINER_SUBARRAY) {
         return c_subarray;
-    if (combiner == MPI_COMBINER_DARRAY)
+    }
+    if (combiner == MPI_COMBINER_DARRAY) {
         return c_darray;
-    if (combiner == MPI_COMBINER_F90_REAL)
+    }
+    if (combiner == MPI_COMBINER_F90_REAL) {
         return c_f90_real;
-    if (combiner == MPI_COMBINER_F90_COMPLEX)
+    }
+    if (combiner == MPI_COMBINER_F90_COMPLEX) {
         return c_f90_complex;
-    if (combiner == MPI_COMBINER_F90_INTEGER)
+    }
+    if (combiner == MPI_COMBINER_F90_INTEGER) {
         return c_f90_integer;
-    if (combiner == MPI_COMBINER_RESIZED)
+    }
+    if (combiner == MPI_COMBINER_RESIZED) {
         return c_resized;
+    }
 #endif
 
     return NULL;

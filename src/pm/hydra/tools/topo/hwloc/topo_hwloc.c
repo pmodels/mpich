@@ -178,16 +178,19 @@ static int io_device_found(const char *resource, const char *devname, hwloc_obj_
 {
     if (!strncmp(resource, devname, strlen(devname))) {
         /* device type does not match */
-        if (io_device->attr->osdev.type != obj_type)
+        if (io_device->attr->osdev.type != obj_type) {
             return 0;
+        }
 
         /* device prefix does not match */
-        if (strncmp(io_device->name, devname, strlen(devname)))
+        if (strncmp(io_device->name, devname, strlen(devname))) {
             return 0;
+        }
 
         /* specific device is supplied, but does not match */
-        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
+        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource)) {
             return 0;
+        }
     }
 
     return 1;

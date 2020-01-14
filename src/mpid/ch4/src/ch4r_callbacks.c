@@ -254,8 +254,9 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
     *target_cmpl_cb = recv_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
 
-    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
+    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count)) {
         return MPI_SUCCESS;
+    }
 
     MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype), dt_contig,
                             data_sz, dt_ptr, dt_true_lb);
@@ -303,8 +304,9 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 
 
     /* Check if this request is supposed to complete next or if it should be delayed. */
-    if (!MPIDIG_check_cmpl_order(rreq, recv_target_cmpl_cb))
+    if (!MPIDIG_check_cmpl_order(rreq, recv_target_cmpl_cb)) {
         return mpi_errno;
+    }
 
     /* If the request contained noncontiguous data, free the iov array that described it. */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
