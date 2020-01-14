@@ -155,6 +155,7 @@ void MPIDI_CH3U_Buffer_copy(
     }
 
   fn_exit:
+    return;
 }
 
 

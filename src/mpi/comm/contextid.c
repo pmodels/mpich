@@ -1144,4 +1144,5 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
                      "Freed context %d, mask[%d] bit %d (prefix=%#x)",
                      context_id, idx, bitpos, raw_prefix));
   fn_exit:
+    return;
 }

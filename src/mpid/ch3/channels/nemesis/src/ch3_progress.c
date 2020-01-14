@@ -1233,6 +1233,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
     }
 
  fn_exit:
+    return;
 }
 
 /* returns non-zero when req has been matched by channel */
