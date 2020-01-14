@@ -276,9 +276,9 @@ int ${fn_ns}_init(void)
     static int initialized = FALSE;
     MPIR_T_cvar_value_t defaultval;
 
-    /* FIXME any MT issues here? */
-    if (initialized)
+    if (initialized) {
         return MPI_SUCCESS;
+    }
     initialized = TRUE;
 
 EOT
