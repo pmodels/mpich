@@ -20,8 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int tag,
                                                MPIR_Comm * comm,
                                                int context_offset, MPIDI_av_entry_t * addr,
-                                               MPI_Status * status, MPIR_Request ** request,
-                                               int src_vci, int dst_vci)
+                                               MPI_Status * status, MPIR_Request ** request)
 {
     int ret;
 
@@ -55,8 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 int rank,
                                                 int tag,
                                                 MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                int src_vci, int dst_vci)
+                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int ret;
 
