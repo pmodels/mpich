@@ -22,15 +22,15 @@ typedef struct MPL_atomic_ptr_t MPL_atomic_ptr_t;
  */
 #define MPL_atomic_load_int MPL_atomic_acquire_load_int
 #define MPL_atomic_load_int32 MPL_atomic_acquire_load_int32
-#define MPL_atomic_load_int32 MPL_atomic_acquire_load_int32
+#define MPL_atomic_load_uint32 MPL_atomic_acquire_load_uint32
 #define MPL_atomic_load_int64 MPL_atomic_acquire_load_int64
-#define MPL_atomic_load_int64 MPL_atomic_acquire_load_int64
+#define MPL_atomic_load_uint64 MPL_atomic_acquire_load_uint64
 #define MPL_atomic_load_ptr MPL_atomic_acquire_load_ptr
 #define MPL_atomic_store_int MPL_atomic_release_store_int
 #define MPL_atomic_store_int32 MPL_atomic_release_store_int32
-#define MPL_atomic_store_int32 MPL_atomic_release_store_int32
+#define MPL_atomic_store_uint32 MPL_atomic_release_store_uint32
 #define MPL_atomic_store_int64 MPL_atomic_release_store_int64
-#define MPL_atomic_store_int64 MPL_atomic_release_store_int64
+#define MPL_atomic_store_uint64 MPL_atomic_release_store_uint64
 #define MPL_atomic_store_ptr MPL_atomic_release_store_ptr
 
 /* Forward declarations of atomic functions */
