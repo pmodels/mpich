@@ -41,7 +41,7 @@ int MPII_Gentran_init(void)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPID_Progress_register_hook(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
+        MPIR_Progress_hook_register(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -72,7 +72,7 @@ int MPII_Gentran_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Progress_deregister_hook(MPII_Genutil_progress_hook_id);
+    MPIR_Progress_hook_deregister(MPII_Genutil_progress_hook_id);
 
     return mpi_errno;
 }

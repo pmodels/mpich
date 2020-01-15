@@ -26,7 +26,6 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     int one = 1;
     uint16_t low_port, high_port;
     char *port_str;
-    uint16_t i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
