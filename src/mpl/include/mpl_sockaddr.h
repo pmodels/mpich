@@ -21,6 +21,9 @@
 
 typedef struct sockaddr_storage MPL_sockaddr_t;
 
+/* The following functions when return an int, it returns 0 on success,
+ * non-zero indicates error. It is consistent with posix socket functions.
+ */
 void MPL_sockaddr_set_aftype(int type);
 int MPL_get_sockaddr(const char *s_hostname, MPL_sockaddr_t * p_addr);
 int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr);
