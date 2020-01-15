@@ -1820,7 +1820,7 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     *req = rreq;
 
     *target_cmpl_cb = cswap_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -1884,7 +1884,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     }
 
     *target_cmpl_cb = acc_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -2009,7 +2009,7 @@ int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     *data = (void *) dt_iov;
 
     *target_cmpl_cb = acc_iov_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
