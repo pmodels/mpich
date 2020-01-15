@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request, 0, 0);
+        MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
@@ -36,8 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     else
         mpi_errno =
-            MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request, 0,
-                              0);
+            MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS && *request)
         MPIDI_REQUEST(*request, is_local) = r;
 #endif
@@ -107,8 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno =
-        MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request, 0,
-                           0);
+        MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     int r;
     if ((r = MPIDI_av_is_local(av)))
@@ -116,8 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *buf,
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     else
         mpi_errno =
-            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request,
-                               0, 0);
+            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, av, request);
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_REQUEST(*request, is_local) = r;
 #endif
