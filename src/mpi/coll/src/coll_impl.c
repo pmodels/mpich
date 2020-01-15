@@ -71,7 +71,7 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
     /* register non blocking collectives progress hook */
-    mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
+    mpi_errno = MPIR_Progress_hook_register(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
@@ -99,7 +99,7 @@ int MPII_Coll_finalize(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* deregister non blocking collectives progress hook */
-    MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
+    MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
 
     mpi_errno = MPII_Gentran_finalize();
     MPIR_ERR_CHECK(mpi_errno);

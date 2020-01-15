@@ -554,11 +554,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 
 #define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
 
-#define MPID_Progress_register_hook(fn_, id_) MPID_Progress_register(fn_, id_)
-#define MPID_Progress_deregister_hook(id_) MPID_Progress_deregister(id_)
-#define MPID_Progress_activate_hook(id_) MPID_Progress_activate(id_)
-#define MPID_Progress_deactivate_hook(id_) MPID_Progress_deactivate(id_)
-
 #define HAVE_DEV_COMM_HOOK
 
 /*

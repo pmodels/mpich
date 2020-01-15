@@ -53,8 +53,8 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
 {
     if (1 == hcoll_initialized) {
         hcoll_finalize();
-        MPID_Progress_deactivate_hook(hcoll_progress_hook_id);
-        MPID_Progress_deregister_hook(hcoll_progress_hook_id);
+        MPIR_Progress_hook_deactivate(hcoll_progress_hook_id);
+        MPIR_Progress_hook_deregister(hcoll_progress_hook_id);
     }
     hcoll_initialized = 0;
     return 0;
@@ -102,10 +102,10 @@ int hcoll_initialize(void)
 
     if (!hcoll_initialized) {
         hcoll_initialized = 1;
-        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress, &hcoll_progress_hook_id);
+        mpi_errno = MPIR_Progress_hook_register(hcoll_do_progress, &hcoll_progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPID_Progress_activate_hook(hcoll_progress_hook_id);
+        MPIR_Progress_hook_activate(hcoll_progress_hook_id);
     }
     MPIR_Add_finalize(hcoll_destroy, 0, 0);
 

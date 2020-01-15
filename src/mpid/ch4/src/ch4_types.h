@@ -19,8 +19,6 @@
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
-#define MAX_PROGRESS_HOOKS 4
-
 /* VCI attributes */
 enum {
     MPIDI_VCI_TX = 0x1,         /* Can send */
@@ -29,12 +27,6 @@ enum {
 
 #define MPIDIU_BUF_POOL_NUM (1024)
 #define MPIDIU_BUF_POOL_SZ (256)
-
-typedef int (*progress_func_ptr_t) (int *made_progress);
-typedef struct progress_hook_slot {
-    progress_func_ptr_t func_ptr;
-    int active;
-} progress_hook_slot_t;
 
 /* Flags for MPIDI_Progress_test
  *
@@ -280,17 +272,16 @@ typedef struct {
 /* Defining them in the global struct avoids duplicate of declarations and
  * definitions; However, it makes debugging a bit cryptic */
 #define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
-#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX MPIDI_global.m[1]
-#define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[2]
-#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[3]
-#define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[4]
-#define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[5]
+#define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[1]
+#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[2]
+#define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
+#define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
 #ifdef HAVE_LIBHCOLL
-#define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[6]
+#define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
 #endif
 /* Protects MPIDIG global structures (e.g. global unexpected message queue) */
 
-#define MAX_CH4_MUTEXES 7
+#define MAX_CH4_MUTEXES 6
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
@@ -304,9 +295,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_ch4u_initialized;
     int **node_map, max_node_id;
     MPIDIG_comm_req_list_t *comm_req_lists;
-    int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
-    progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE

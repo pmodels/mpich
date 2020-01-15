@@ -49,10 +49,6 @@ extern struct MPIR_Request *MPIDI_CH3I_shm_active_send;
 int MPIDI_CH3I_Shm_supported(void);
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id);
-int MPIDI_CH3I_Progress_deregister_hook(int id);
-int MPIDI_CH3I_Progress_activate_hook(int id);
-int MPIDI_CH3I_Progress_deactivate_hook(int id);
 int MPIDI_CH3I_Shm_send_progress(void);
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 
