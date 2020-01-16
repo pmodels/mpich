@@ -30,10 +30,8 @@ int usleep(useconds_t usec);
 #define MPL_TIMER_KIND__GETTIMEOFDAY            3
 #define MPL_TIMER_KIND__LINUX86_CYCLE           4
 #define MPL_TIMER_KIND__GCC_IA64_CYCLE          5
-/* The value "MPL_TIMER_KIND__DEVICE" means that the ADI device provides the timer */
-#define MPL_TIMER_KIND__DEVICE                  6
-#define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      7
-#define MPL_TIMER_KIND__PPC64_CYCLE             8
+#define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      6
+#define MPL_TIMER_KIND__PPC64_CYCLE             7
 #define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
@@ -41,10 +39,10 @@ int usleep(useconds_t usec);
 typedef @MPL_TIMER_TYPE@ MPL_time_t;
 /* *INDENT-ON* */
 
-/* The timer code is allowed to return "NOT_INITIALIZED" before the
- * device is initialized.  Once the device is initialized, it must
- * always return SUCCESS, so the upper layers do not need to check for
- * the return code.  */
+/* The timer code is allowed to return "NOT_INITIALIZED" before it is
+ * initialized.  Once it is initialized, it must always return
+ * SUCCESS, so the upper layers do not need to check for the return
+ * code.  */
 #define MPL_TIMER_SUCCESS                0
 #define MPL_TIMER_ERR_NOT_INITIALIZED    1
 
@@ -58,8 +56,6 @@ typedef @MPL_TIMER_TYPE@ MPL_time_t;
 #include "mpl_timer_linux86_cycle.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__GCC_IA64_CYCLE
 #include "mpl_timer_gcc_ia64_cycle.h"
-#elif MPL_TIMER_KIND == MPL_TIMER_KIND__DEVICE
-#include "mpl_timer_device.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
 #include "mpl_timer_mach_absolute_time.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__PPC64_CYCLE
