@@ -90,6 +90,7 @@ enum MPIR_COMM_HINT_PREDEFINED_t {
     MPIR_COMM_HINT_EAGAIN,      /* ch4:ofi */
     MPIR_COMM_HINT_VCI_IDX_SENDER,      /* ch4 */
     MPIR_COMM_HINT_VCI_IDX_RECEIVER,    /* ch4 */
+    MPIR_COMM_HINT_THREAD_ID,   /* ch4. Used to map comm to vci_idx, aligns the behavior with IMPI */
     /* dynamic hints starts here */
     MPIR_COMM_HINT_PREDEFINED_COUNT
 };
