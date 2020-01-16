@@ -63,14 +63,13 @@ int MPL_wtick(double *wtick)
     struct timespec res;
     int rc;
 
+    /* May return -1 for unimplemented.  If not implemented (POSIX
+     * allows that), then we need to return the generic tick value. */
     rc = clock_getres(CLOCK_REALTIME, &res);
     if (!rc)
-        /* May return -1 for unimplemented ! */
         *wtick = res.tv_sec + 1.0e-9 * res.tv_nsec;
-
-    /* Sigh.  If not implemented (POSIX allows that),
-     * then we need to return the generic tick value */
-    *wtick = tickval;
+    else
+        *wtick = tickval;
 
     return MPL_TIMER_SUCCESS;
 }
