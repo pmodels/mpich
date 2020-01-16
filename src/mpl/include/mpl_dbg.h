@@ -145,7 +145,7 @@ void MPL_dbg_class_register(MPL_dbg_class cls, const char *ucname, const char *l
 int MPL_dbg_outevent(const char *, int, int, int, const char *, ...) ATTRIBUTE((format(printf, 5, 6)));
 /* *INDENT-ON* */
 
-int MPL_dbg_init(int *, char ***, int, int, int, int, int);
+int MPL_dbg_init(int *, char ***, int, int, int, int);
 int MPL_dbg_pre_init(int *, char ***, int);
 
 #endif /* MPL_DBG_H_INCLUDED */
