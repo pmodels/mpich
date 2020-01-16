@@ -15,7 +15,6 @@ static time_t time_epoch;
 
 int MPL_wtime(MPL_time_t * timeval)
 {
-    /* POSIX timer (14.2.1, page 311) */
     clock_gettime(CLOCK_REALTIME, timeval);
 
     return MPL_TIMER_SUCCESS;
