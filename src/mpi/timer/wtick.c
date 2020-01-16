@@ -47,7 +47,7 @@ double MPI_Wtick(void)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTICK);
-    MPID_Wtick(&tick);
+    MPL_wtick(&tick);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTICK);
 
     return tick;
