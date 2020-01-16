@@ -253,7 +253,6 @@ AC_ARG_ENABLE(timer-type,
         gcc_ia64_cycle     - IPF ar.itc timer*
 	mach_absolute_time - Mach absolute time (alternative to clock_gettime
                              for OSX)
-        device             - The timer is provided by the device
 
         *Note that the cycle timers are intended to be used by
         developers for internal low-level timing.  Normal users should
@@ -504,11 +503,6 @@ pac_cv_ia64_cycle,[
     AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
     AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
     MPL_TIMER_TYPE="uint64_t"
-    ;;
-
-    device)
-    # The device selected should export the datatype for the timer
-    MPL_TIMER_TYPE="void *"
     ;;
 
     ppc64_cycle)
