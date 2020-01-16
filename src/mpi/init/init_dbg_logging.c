@@ -27,11 +27,8 @@ MPL_dbg_class MPIR_DBG_STRING;
 
 void MPII_pre_init_dbg_logging(int *argc, char ***argv)
 {
-    /* set last arg, wtimeNotReady, to 0 will cause reset time_origin
-     * (for dbg messages), which should be OK here.
-     */
     /* we are ignoring any argument error here as they shouldn't affect MPI operations */
-    MPL_dbg_pre_init(argc, argv, 0);
+    MPL_dbg_pre_init(argc, argv);
 }
 
 void MPII_init_dbg_logging(void)

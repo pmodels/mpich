@@ -146,6 +146,6 @@ int MPL_dbg_outevent(const char *, int, int, int, const char *, ...) ATTRIBUTE((
 /* *INDENT-ON* */
 
 int MPL_dbg_init(int *, char ***, int, int, int, int);
-int MPL_dbg_pre_init(int *, char ***, int);
+int MPL_dbg_pre_init(int *, char ***);
 
 #endif /* MPL_DBG_H_INCLUDED */

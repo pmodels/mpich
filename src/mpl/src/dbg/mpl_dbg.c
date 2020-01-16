@@ -50,7 +50,6 @@ static char temp_filename[MAXPATHLEN] = "";
 static int world_num = 0;
 static int world_rank = -1;
 static int which_rank = -1;     /* all ranks */
-static int reset_time_origin = 1;
 static double time_origin = 0.0;
 
 static int dbg_usage(const char *, const char *);
@@ -445,7 +444,7 @@ MPL_dbg_class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
  * full initialization is not required for updating the environment
  * and/or command-line arguments.
  */
-int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
+int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
 {
     MPL_time_t t;
 
@@ -465,11 +464,9 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 
     dbg_process_args(argc_p, argv_p);
 
-    if (wtimeNotReady == 0) {
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
+    MPL_wtime_init();
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &time_origin);
 
     /* Allocate the predefined classes */
     MPL_DBG_ROUTINE_ENTER = MPL_dbg_class_alloc("ROUTINE_ENTER", "routine_enter");
@@ -506,14 +503,6 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env, int wnu
 
     dbg_fp = get_fp();
 
-    /* We may need to wait until the device is set up to initialize
-     * the timer */
-    if (reset_time_origin) {
-        MPL_time_t t;
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
     /* Check to see if any debugging was selected.  The order of these
      * tests is important, as they allow general defaults to be set,
      * followed by more specific modifications. */
