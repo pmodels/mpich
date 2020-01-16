@@ -29,14 +29,11 @@ int usleep(useconds_t usec);
 #define MPL_TIMER_KIND__CLOCK_GETTIME           2
 #define MPL_TIMER_KIND__GETTIMEOFDAY            3
 #define MPL_TIMER_KIND__LINUX86_CYCLE           4
-#define MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER 6
-#define MPL_TIMER_KIND__WIN86_CYCLE             7
-#define MPL_TIMER_KIND__GCC_IA64_CYCLE          8
+#define MPL_TIMER_KIND__GCC_IA64_CYCLE          5
 /* The value "MPL_TIMER_KIND__DEVICE" means that the ADI device provides the timer */
-#define MPL_TIMER_KIND__DEVICE                  9
-#define MPL_TIMER_KIND__WIN64_CYCLE             10
-#define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      11
-#define MPL_TIMER_KIND__PPC64_CYCLE             12
+#define MPL_TIMER_KIND__DEVICE                  6
+#define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      7
+#define MPL_TIMER_KIND__PPC64_CYCLE             8
 #define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
@@ -59,10 +56,6 @@ typedef @MPL_TIMER_TYPE@ MPL_time_t;
 #include "mpl_timer_gettimeofday.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__LINUX86_CYCLE
 #include "mpl_timer_linux86_cycle.h"
-#elif MPL_TIMER_KIND == MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER
-#include "mpl_timer_query_performance_counter.h"
-#elif MPL_TIMER_KIND == MPL_TIMER_KIND__WIN86_CYCLE || MPL_TIMER_KIND == MPL_TIMER_KIND__WIN64_CYCLE
-#include "mpl_timer_win86_cycle.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__GCC_IA64_CYCLE
 #include "mpl_timer_gcc_ia64_cycle.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__DEVICE
