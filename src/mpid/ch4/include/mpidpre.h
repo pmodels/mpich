@@ -21,7 +21,6 @@
 
 #include "mpid_thread.h"
 #include "mpid_sched.h"
-#include "mpid_timers_fallback.h"
 #include "netmodpre.h"
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "shmpre.h"

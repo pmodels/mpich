@@ -244,7 +244,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     uint64_t mask_bits = 0;
     struct fi_msg_tagged msg;
     int buf = 0;
-    MPID_Time_t time_sta, time_now;
+    MPL_time_t time_sta, time_now;
     double time_gap;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_HANDSHAKE);
@@ -271,7 +271,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                          "connecting port_id %d, conn %" PRIu64
                          ", waiting for dynproc_handshake", port_id, *conn));
         time_gap = 0.0;
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         while (req.done != MPIDI_OFI_PEEK_FOUND) {
             req.done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
@@ -281,8 +281,8 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                 mpi_errno = MPID_Progress_test();
                 MPIR_ERR_CHECK(mpi_errno);
 
-                MPID_Wtime(&time_now);
-                MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+                MPL_wtime(&time_now);
+                MPL_wtime_diff(&time_sta, &time_now, &time_gap);
             } while (req.done == MPIDI_OFI_PEEK_START && (int) time_gap < timeout);
             if ((int) time_gap >= timeout) {
                 /* connection is timed out */
@@ -304,13 +304,13 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                       NULL,
                                       *conn, match_bits, mask_bits, &req.context), trecv, FALSE);
         time_gap = 0.0;
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_test();
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPID_Wtime(&time_now);
-            MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+            MPL_wtime(&time_now);
+            MPL_wtime_diff(&time_sta, &time_now, &time_gap);
         } while (!req.done && (int) time_gap < timeout);
         if ((int) time_gap >= timeout) {
             /* connection is mismatched */
