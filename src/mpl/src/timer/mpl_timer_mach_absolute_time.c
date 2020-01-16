@@ -13,14 +13,21 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "mpl_timer_common.h"
 
 static double wtime_mult;
+static int is_initialized = 0;
 
 int MPL_wtime_init(void)
 {
+    if (is_initialized)
+        goto fn_exit;
+
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
     wtime_mult = 1.0e-9 * ((double) info.numer / (double) info.denom);
     init_wtick();
 
+    is_initialized = 1;
+
+  fn_exit:
     return MPL_TIMER_SUCCESS;
 }
 

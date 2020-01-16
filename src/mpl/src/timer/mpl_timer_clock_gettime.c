@@ -12,6 +12,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #include "mpl_timer_common.h"
 static time_t time_epoch;
+static int is_initialized = 0;
 
 int MPL_wtime(MPL_time_t * timeval)
 {
@@ -76,6 +77,9 @@ int MPL_wtick(double *wtick)
 
 int MPL_wtime_init(void)
 {
+    if (is_initialized)
+        goto fn_exit;
+
     /* set a closer time_epoch so MPL_wtime_todouble retain ns resolution */
     /* time across process are still relavant within 1 hour */
     MPL_time_t t;
@@ -84,6 +88,9 @@ int MPL_wtime_init(void)
 
     init_wtick();
 
+    is_initialized = 1;
+
+  fn_exit:
     return MPL_TIMER_SUCCESS;
 }
 

@@ -10,6 +10,8 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__GETHRTIME
 
+static int is_initialized = 0;
+
 /*
  * MPL_time_t is hrtime_t, which under Solaris is defined as a 64bit
  * longlong_t .  However, the Solaris header files will define
@@ -70,6 +72,12 @@ int MPL_wtick(double *wtick)
 
 int MPL_wtime_init(void)
 {
+    if (is_initialized)
+        goto fn_exit;
+
+    is_initialized = 1;
+
+  fn_exit:
     return MPL_TIMER_SUCCESS;
 }
 
