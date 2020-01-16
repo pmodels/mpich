@@ -13,6 +13,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <sys/time.h>
 
 static double seconds_per_tick = 0.0;
+static int is_initialized = 0;
 
 int MPL_wtick(double *wtick)
 {
@@ -27,6 +28,9 @@ int MPL_wtime_init(void)
     struct timeval tv1, tv2;
     double td1, td2;
 
+    if (is_initialized)
+        goto fn_exit;
+
     gettimeofday(&tv1, NULL);
     MPL_wtime(&t1);
     usleep(250000);
@@ -38,6 +42,9 @@ int MPL_wtime_init(void)
 
     seconds_per_tick = (td2 - td1) / (double) (t2 - t1);
 
+    is_initialized = 1;
+
+  fn_exit:
     return MPL_TIMER_SUCCESS;
 }
 
