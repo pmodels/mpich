@@ -39,17 +39,74 @@ static int cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
-    size_t count;
+    int mpi_errno = MPI_SUCCESS;
+    size_t count = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
     rreq->status.MPI_SOURCE = cqe_get_source(wc, false);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    count = wc->len;
     rreq->status.MPI_ERROR = MPI_SUCCESS;
+
+    if (MPIDI_OFI_HUGE_SEND & wc->tag) {
+        MPIDI_OFI_huge_recv_t *list_ptr;
+        bool found_msg = false;
+
+        /* If this is a huge message, find the control message on the unexpected list that matches
+         * with this and return the size in that. */
+        LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
+            uint64_t context_id = MPIDI_OFI_CONTEXT_MASK & wc->tag;
+            uint64_t tag = MPIDI_OFI_TAG_MASK & wc->tag;
+            if (list_ptr->remote_info.comm_id == context_id &&
+                list_ptr->remote_info.origin_rank == cqe_get_source(wc, false) &&
+                list_ptr->remote_info.tag == tag) {
+                count = list_ptr->remote_info.msgsize;
+                found_msg = true;
+            }
+        }
+        if (!found_msg) {
+            MPIDI_OFI_huge_recv_t *recv_elem;
+            MPIDI_OFI_huge_recv_list_t *huge_list_ptr;
+
+            /* Create an element in the posted list that only indicates a peek and will be
+             * deleted as soon as it's fulfilled without being matched. */
+            recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
+            MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            recv_elem->peek = true;
+            MPIR_Comm *comm_ptr = MPIDIG_context_id_to_comm(MPIDI_OFI_CONTEXT_MASK & wc->tag);
+            recv_elem->comm_ptr = comm_ptr;
+            MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+                           MPL_MEM_BUFFER);
+
+            huge_list_ptr =
+                (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*huge_list_ptr), 1, MPL_MEM_COMM);
+            MPIR_ERR_CHKANDJUMP(huge_list_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            recv_elem->remote_info.comm_id = huge_list_ptr->comm_id =
+                MPIDI_OFI_CONTEXT_MASK & wc->tag;
+            recv_elem->remote_info.origin_rank = huge_list_ptr->rank = cqe_get_source(wc, false);
+            recv_elem->remote_info.tag = huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
+            recv_elem->localreq = huge_list_ptr->rreq = rreq;
+            recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+            recv_elem->done_fn = recv_event;
+            recv_elem->wc = *wc;
+            recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+
+            LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, huge_list_ptr);
+            goto fn_exit;
+        }
+    } else {
+        /* Otherwise just get the size of the message we've already received. */
+        count = wc->len;
+    }
     MPIR_STATUS_SET_COUNT(rreq->status, count);
+    /* util_id should be the last thing to change in rreq. Reason is
+     * we use util_id to indicate peek_event has completed and all the
+     * relevant values have been copied to rreq. */
+    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
@@ -237,6 +294,8 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* Plug the information for the huge event into the receive request and go
      * to the MPIDI_OFI_get_huge_event function. */
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+    recv_elem->peek = false;
+    recv_elem->comm_ptr = comm_ptr;
     recv_elem->localreq = rreq;
     recv_elem->done_fn = recv_event;
     recv_elem->wc = *wc;
