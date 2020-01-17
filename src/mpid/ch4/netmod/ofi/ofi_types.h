@@ -128,7 +128,6 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MAX_OFI_MUTEXES 4
 
 /* Field accessor macros */
-#define MPIDI_OFI_OBJECT_HEADER_SIZE       offsetof(MPIDI_OFI_offset_checker_t,  pad)
 #define MPIDI_OFI_AMREQUEST(req,field)     ((req)->dev.ch4.am.netmod_am.ofi.field)
 #define MPIDI_OFI_AMREQUEST_HDR(req,field) ((req)->dev.ch4.am.netmod_am.ofi.req_hdr->field)
 #define MPIDI_OFI_AMREQUEST_HDR_PTR(req)   ((req)->dev.ch4.am.netmod_am.ofi.req_hdr)
@@ -419,11 +418,6 @@ typedef struct {
     int tag;
 } MPIDI_OFI_send_control_t;
 
-typedef struct {
-    MPIR_OBJECT_HEADER;
-    void *pad;
-} MPIDI_OFI_offset_checker_t;
-
 typedef struct MPIDI_OFI_seg_state {
     MPI_Aint buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
                                  * This value remains constant once seg_state is initialized. */
@@ -502,7 +496,6 @@ typedef struct {
 
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
-    char pad[MPIDI_REQUEST_HDR_SIZE - MPIDI_OFI_OBJECT_HEADER_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
