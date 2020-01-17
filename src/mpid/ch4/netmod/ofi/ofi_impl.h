@@ -278,14 +278,26 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
     return max_size;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
+extern MPIR_Object_alloc_t MPIDI_OFI_win_request_mem;
+
+MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(void)
+{
+    MPIDI_OFI_win_request_t *winreq;
+    winreq = MPIR_Handle_obj_alloc(&MPIDI_OFI_win_request_mem);
+    if (winreq) {
+        MPIR_Object_set_ref(winreq, 1);
+    }
+    return winreq;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
     int in_use;
-    MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-    MPIR_Object_release_ref(req, &in_use);
+    MPIR_Assert(HANDLE_GET_MPI_KIND(winreq->handle) == MPIR_INTERNAL);
+    MPIR_Object_release_ref(winreq, &in_use);
     if (!in_use) {
-        MPL_free(req->noncontig);
-        MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
+        MPL_free(winreq->noncontig);
+        MPIR_Handle_obj_free(&MPIDI_OFI_win_request_mem, (winreq));
     }
 }
 
