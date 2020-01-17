@@ -5,4 +5,3 @@
 ###     See COPYRIGHT in top-level directory.
 ###
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/timers
-noinst_HEADERS += src/mpid/common/timers/mpid_timers_fallback.h

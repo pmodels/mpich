@@ -12,10 +12,10 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #include "mpl_timer_common.h"
 static time_t time_epoch;
+static int is_initialized = 0;
 
 int MPL_wtime(MPL_time_t * timeval)
 {
-    /* POSIX timer (14.2.1, page 311) */
     clock_gettime(CLOCK_REALTIME, timeval);
 
     return MPL_TIMER_SUCCESS;
@@ -64,20 +64,22 @@ int MPL_wtick(double *wtick)
     struct timespec res;
     int rc;
 
+    /* May return -1 for unimplemented.  If not implemented (POSIX
+     * allows that), then we need to return the generic tick value. */
     rc = clock_getres(CLOCK_REALTIME, &res);
     if (!rc)
-        /* May return -1 for unimplemented ! */
         *wtick = res.tv_sec + 1.0e-9 * res.tv_nsec;
-
-    /* Sigh.  If not implemented (POSIX allows that),
-     * then we need to return the generic tick value */
-    *wtick = tickval;
+    else
+        *wtick = tickval;
 
     return MPL_TIMER_SUCCESS;
 }
 
 int MPL_wtime_init(void)
 {
+    if (is_initialized)
+        goto fn_exit;
+
     /* set a closer time_epoch so MPL_wtime_todouble retain ns resolution */
     /* time across process are still relavant within 1 hour */
     MPL_time_t t;
@@ -86,6 +88,9 @@ int MPL_wtime_init(void)
 
     init_wtick();
 
+    is_initialized = 1;
+
+  fn_exit:
     return MPL_TIMER_SUCCESS;
 }
 

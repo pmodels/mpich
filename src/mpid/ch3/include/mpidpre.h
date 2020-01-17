@@ -36,10 +36,6 @@ typedef struct {
 
 #include "mpid_sched.h"
 
-/* We simply use the fallback timer functionality and do not define
- * our own */
-#include "mpid_timers_fallback.h"
-
 union MPIDI_CH3_Pkt;
 struct MPIDI_VC;
 struct MPIR_Request;
