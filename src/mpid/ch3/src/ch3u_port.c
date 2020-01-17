@@ -281,19 +281,19 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
      * before timed out. The response is handled in MPIDI_CH3_PktHandler_ConnResp
      * in progress.*/
     {
-        MPID_Time_t time_sta, time_now;
+        MPL_time_t time_sta, time_now;
         double time_gap = 0;
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE,
                        (MPL_DBG_FDEST, "connect: waiting accept in %d(s)", timeout));
 
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_poke();
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPID_Wtime(&time_now);
-            MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+            MPL_wtime(&time_now);
+            MPL_wtime_diff(&time_sta, &time_now, &time_gap);
 
             /* Avoid blocking other threads since I am inside an infinite loop */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

@@ -83,7 +83,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPII_init_thread_and_enter_cs();
     /* ---- Entered CS ------------------------------------------------ */
 
-    MPID_Wtime_init();
+    MPL_wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
 
     mpi_errno = MPIR_T_env_init();

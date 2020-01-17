@@ -21,9 +21,9 @@
 static double RLOG_timestamp(void)
 {
     double d;
-    MPID_Time_t t;
-    MPID_Wtime(&t);
-    MPID_Wtime_todouble(&t, &d);
+    MPL_time_t t;
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &d);
     return d;
 }
 

@@ -25,7 +25,7 @@ int MPII_Describe_timer_states(void);
 extern RLOGI_Struct *g_pRLOG;
 
 /* state declaration macros */
-#define RLOG_STATE_DECL(a) MPID_Time_t time_stamp_in##a , time_stamp_out##a
+#define RLOG_STATE_DECL(a) MPL_time_t time_stamp_in##a , time_stamp_out##a
 #define RLOG_INIT_STATE_DECL(a)
 #define RLOG_FINALIZE_STATE_DECL(a)
 
@@ -34,7 +34,7 @@ extern RLOGI_Struct *g_pRLOG;
     if (g_pRLOG)                                \
     {                                           \
         g_pRLOG->nRecursion++;                  \
-        MPID_Wtime(&time_stamp_in##a);          \
+        MPL_wtime(&time_stamp_in##a);          \
     }
 
 #define RLOGI_MACRO_HEADER_CAST() ((RLOGI_HEADER*)g_pRLOG->pOutput->pCurHeader)
@@ -46,7 +46,7 @@ extern RLOGI_Struct *g_pRLOG;
         if (g_pRLOG->bLogging)                                          \
         {                                                               \
             double d1, d2;                                              \
-            MPID_Wtime(&time_stamp_out##a);                             \
+            MPL_wtime(&time_stamp_out##a);                             \
             MPIDM_Wtime_todouble((&time_stamp_in##a), &d1);             \
             MPIDM_Wtime_todouble((&time_stamp_out##a), &d2);            \
             g_pRLOG->nRecursion--;                                      \
@@ -85,7 +85,7 @@ extern RLOGI_Struct *g_pRLOG;
     if (g_pRLOG)                                        \
     {                                                   \
         g_pRLOG->nRecursion++;                          \
-        MPID_Wtime(&time_stamp_in##a);                  \
+        MPL_wtime(&time_stamp_in##a);                  \
         RLOGI_LogSend(g_pRLOG, dest, tag, count);       \
     }
 
@@ -93,7 +93,7 @@ extern RLOGI_Struct *g_pRLOG;
     if (g_pRLOG)                                        \
     {                                                   \
         g_pRLOG->nRecursion++;                          \
-        MPID_Wtime(&time_stamp_in##a);                  \
+        MPL_wtime(&time_stamp_in##a);                  \
         RLOGI_LogRecv(g_pRLOG, source, tag, count);     \
     }
 
@@ -101,7 +101,7 @@ extern RLOGI_Struct *g_pRLOG;
     if (g_pRLOG)                                                \
     {                                                           \
         g_pRLOG->nRecursion++;                                  \
-        MPID_Wtime(&time_stamp_in##a);                          \
+        MPL_wtime(&time_stamp_in##a);                          \
         RLOGI_LogSend(g_pRLOG, dest, sendtag, sendcount);       \
     }
 
