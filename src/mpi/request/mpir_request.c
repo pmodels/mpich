@@ -9,12 +9,8 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
-MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
-
-MPIR_Object_alloc_t MPIR_Request_mem = {
-    0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct,
-    MPIR_REQUEST_PREALLOC
-};
+MPIR_Request MPIR_Request_direct[MPIR_REQUEST_NUM_POOLS][MPIR_REQUEST_PREALLOC];
+MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 
 /* Complete a request, saving the status data if necessary.
    If debugger information is being provided for pending (user-initiated)
