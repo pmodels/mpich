@@ -264,15 +264,13 @@ int main(int argc, char **argv)
     /* process 0 takes the file name as a command-line argument and
      * broadcasts it to other processes */
     if (!mynod) {
-        filename = "testfile";
+        filename = strdup("testfile");
         len = strlen(filename);
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    } else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *) malloc(len + 1);
-        MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
+    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (mynod)
+        filename = (char *) malloc(len + 1);
+    MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     /* want to hint the cb_config_list, but do so in a non-sequential way */
     cb_gather_name_array(MPI_COMM_WORLD, &array);
@@ -322,8 +320,7 @@ int main(int argc, char **argv)
     errs += test_file(filename, mynod, nprocs, cb_config_string,
                       "collective w/ hinting: permutation2", verbose);
 
-    if (mynod)
-        free(filename);
+    free(filename);
     free(cb_config_string);
     for (i = 0; i < array->namect; i++)
         free(array->names[i]);
