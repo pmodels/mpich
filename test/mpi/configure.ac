@@ -1439,8 +1439,10 @@ if test $enable_strictmpi != "yes" ; then
    else
        AC_CACHE_CHECK([Is the MPI derived from MPICH],
        pac_cv_ismpich,[
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;]),
-       pac_cv_ismpich=yes,pac_cv_ismpich=no])])
+           AC_COMPILE_IFELSE([
+               AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;])
+           ],[pac_cv_ismpich=yes],[pac_cv_ismpich=no])
+       ])
        if test "$pac_cv_ismpich" = "yes" ; then
            impldir="mpich"
        fi
