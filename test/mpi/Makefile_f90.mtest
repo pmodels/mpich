@@ -9,14 +9,14 @@
 # F90 code itself
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 
-LDADD = $(top_builddir)/util/mtest_f90.o
+LDADD = $(top_builddir)/util/mtest_f90.$(OBJEXT)
 
 # This is right for many platforms, but not all.  The right fix involves a
 # configure test, but this version is no worse than the simplemake version was.
 AM_FFLAGS = -I.
 
-$(top_builddir)/util/mtest_f90.o: $(top_srcdir)/util/mtest_f90.f90
-	(cd $(top_builddir)/util && $(MAKE) mtest_f90.o)
+$(top_builddir)/util/mtest_f90.$(OBJEXT): $(top_srcdir)/util/mtest_f90.f90
+	(cd $(top_builddir)/util && $(MAKE) mtest_f90.$(OBJEXT))
 
 
 testing:

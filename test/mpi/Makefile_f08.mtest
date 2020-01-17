@@ -9,14 +9,14 @@
 # F08 code itself
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 
-LDADD = $(top_builddir)/util/mtest_f08.o
+LDADD = $(top_builddir)/util/mtest_f08.$(OBJEXT)
 
 # This is right for many platforms, but not all.  The right fix involves a
 # configure test, but this version is no worse than the simplemake version was.
 AM_FFLAGS = -I.
 
-$(top_builddir)/util/mtest_f08.o: $(top_srcdir)/util/mtest_f08.f90
-	(cd $(top_builddir)/util && $(MAKE) mtest_f08.o)
+$(top_builddir)/util/mtest_f08.$(OBJEXT): $(top_srcdir)/util/mtest_f08.f90
+	(cd $(top_builddir)/util && $(MAKE) mtest_f08.$(OBJEXT))
 
 
 testing:
