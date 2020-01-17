@@ -365,7 +365,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     MPIR_Request *req;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind);
+    req = MPIR_Request_create(kind, 0);
     MPIR_cc_set(&req->cc, 0);
 #else
     req = MPIR_Process.lw_req;
