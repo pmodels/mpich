@@ -484,7 +484,7 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
     return MPL_DBG_SUCCESS;
 }
 
-int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env, int wnum, int wrank)
+int MPL_dbg_init(int wnum, int wrank)
 {
     int ret;
     FILE *dbg_fp = NULL;
@@ -502,20 +502,6 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env, int wnu
     }
 
     dbg_fp = get_fp();
-
-    /* Check to see if any debugging was selected.  The order of these
-     * tests is important, as they allow general defaults to be set,
-     * followed by more specific modifications. */
-    /* Both of these may have already been set in the PreInit call; if
-     * the command line and/or environment variables are set before
-     * the full initialization, then don't call the routines to check
-     * those values (as they were already handled in DBG_PreInit) */
-    /* First, the environment variables */
-    if (!has_env)
-        dbg_process_env();
-    /* Now the command-line arguments */
-    if (!has_args)
-        dbg_process_args(argc_p, argv_p);
 
     world_num = wnum;
     world_rank = wrank;
