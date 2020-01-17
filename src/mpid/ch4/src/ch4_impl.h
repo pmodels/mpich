@@ -361,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 
 #define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)        \
     do {                                                                \
-        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);         \
+        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);         \
         if ((rreq_) != NULL) {                                          \
             MPIR_cc_set(&(rreq_)->cc, 0);                               \
             MPIR_Status_set_procnull(&(rreq_)->status);                 \

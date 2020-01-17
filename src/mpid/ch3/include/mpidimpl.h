@@ -277,7 +277,7 @@ extern MPIDI_Process_t MPIDI_Process;
 */
 #define MPIDI_Request_create_sreq(sreq_, mpi_errno_, FAIL_)	\
 {								\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);     \
+    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);     \
     MPIR_Object_set_ref((sreq_), 2);				\
     (sreq_)->comm = comm;					\
     (sreq_)->dev.partner_request   = NULL;                         \
@@ -294,7 +294,7 @@ extern MPIDI_Process_t MPIDI_Process;
 /* This is the receive request version of MPIDI_Request_create_sreq */
 #define MPIDI_Request_create_rreq(rreq_, mpi_errno_, FAIL_)	\
 {								\
-    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);           \
+    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);           \
     MPIR_Object_set_ref((rreq_), 2);				\
     (rreq_)->dev.partner_request   = NULL;                         \
 }
@@ -303,7 +303,7 @@ extern MPIDI_Process_t MPIDI_Process;
  * returning when a user passed MPI_PROC_NULL */
 #define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)           \
     do {                                                                   \
-        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);               \
+        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);               \
         if ((rreq_) != NULL) {                                             \
             MPIR_Object_set_ref((rreq_), 1);                               \
             /* MT FIXME should these be handled by MPIR_Request_create? */ \
