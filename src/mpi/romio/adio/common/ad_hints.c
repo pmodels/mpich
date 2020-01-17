@@ -28,7 +28,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* if we've already set up default hints and the user has not asked us to
      * process any hints (MPI_INFO_NULL), then we can short-circuit hint
      * processing */
-    if (fd->hints->initialized && fd->info == MPI_INFO_NULL) {
+    if (fd->hints->initialized && users_info == MPI_INFO_NULL) {
         *error_code = MPI_SUCCESS;
         return;
     }
