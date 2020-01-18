@@ -458,6 +458,17 @@ int MPID_Init(void)
     mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize multiple VCIs */
+    /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
+    MPIDI_global.n_vcis = 1;
+    if (MPIR_CVAR_CH4_NUM_VCIS > 1)
+        MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPIR_Add_mutex(&MPIDI_VCI(i).lock);
+        /* TODO: lw_req, workq */
+    }
+
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD

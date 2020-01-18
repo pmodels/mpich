@@ -287,6 +287,14 @@ typedef struct {
 
 #define MAX_CH4_MUTEXES 6
 
+/* per-VCI structure */
+typedef struct MPIDI_vci {
+    int attr;
+    MPID_Thread_mutex_t lock;
+} MPIDI_vci_t MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+
+#define MPIDI_VCI(i) MPIDI_global.vci[i]
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -318,7 +326,10 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
+    int n_vcis;
+    MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    /* TODO: move into MPIDI_vci to have per-vci workqueue */
     MPIDI_workq_t workqueue;
 #endif
     MPIDI_CH4_configurations_t settings;
