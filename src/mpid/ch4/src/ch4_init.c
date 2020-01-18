@@ -91,6 +91,16 @@ cvars:
         If the number is negative, underlying netmod or shmmod automatically uses an optimal number depending on
         the underlying fabric or shared memory architecture.
 
+    - name        : MPIR_CVAR_CH4_NUM_VCIS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
