@@ -544,7 +544,7 @@ AC_ARG_ENABLE(thread-cs,
 AC_ARG_ENABLE(vci-method,
 	AC_HELP_STRING([--enable-vci-method=type],
 			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
-                          Values may be zero (default), communicator, tag, implicit, explicit),,enable_vci_method=zero)
+                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_vci_method=zero)
 
 AC_ARG_ENABLE(mdta,
     AC_HELP_STRING([--enable-mdta],
