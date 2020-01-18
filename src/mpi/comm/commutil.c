@@ -211,6 +211,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->local_group = NULL;
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
+    comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
+    comm_p->seq_table = NULL;
     memset(comm_p->hints, 0, sizeof(comm_p->hints));
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
@@ -433,6 +435,15 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     mpi_errno = MPID_Comm_create_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    if (comm->seq > 0) {
+        int n = comm->local_size;
+        comm->seq_table = MPL_calloc(n, sizeof(int), MPL_MEM_OTHER);
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        mpi_errno = MPIR_Allgather(&comm->seq, 1, MPI_INT, comm->seq_table, n, MPI_INT, comm,
+                                   &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     MPIR_Comm_map_free(comm);
 
   fn_exit:
@@ -581,6 +592,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
         mpi_errno = MPIR_Comm_create_subcomms(comm);
         MPIR_ERR_CHECK(mpi_errno);
+
+        /* Every user-level communicator gets a unique vci sequence. */
+        static int vci_seq = 0;
+        comm->seq = vci_seq;
+        vci_seq++;
     }
 
     /* Create collectives-specific infrastructure */
@@ -588,11 +604,13 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->node_comm) {
+        comm->node_comm->seq = comm->seq;
         mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (comm->node_roots_comm) {
+        comm->node_roots_comm->seq = comm->seq;
         mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -886,6 +904,9 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         if (comm_ptr->remote_group)
             MPIR_Group_release(comm_ptr->remote_group);
 
+        if (comm_ptr->seq_table) {
+            MPL_free(comm_ptr->seq_table);
+        }
         /* free the intra/inter-node communicators, if they exist */
         if (comm_ptr->node_comm)
             MPIR_Comm_release(comm_ptr->node_comm);
