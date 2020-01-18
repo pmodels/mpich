@@ -227,6 +227,7 @@ static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
 
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
 {
+    /* ptr points to object to allocate */
     MPIR_Handle_common *ptr;
 
     if (objmem->avail) {
@@ -235,13 +236,14 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
         /* We do not clear ptr->next as we set it to an invalid pattern
          * when doing memory debugging and we don't need to set it
          * for the production/default case */
-        /* ptr points to object to allocate */
     } else {
+        /* slow path */
         int objsize, objkind;
 
         objsize = objmem->size;
         objkind = objmem->kind;
 
+        ptr = NULL;
         if (!objmem->initialized) {
             MPL_VG_CREATE_MEMPOOL(objmem, 0 /*rzB */ , 0 /*is_zeroed */);
 
@@ -261,10 +263,10 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
                               MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO);
 #endif
             MPIR_Add_finalize(MPIR_Handle_finalize, objmem, 0);
-            /* ptr points to object to allocate */
-        } else {
-            /* no space left in direct block; setup the indirect block. */
+        }
 
+        if (!ptr) {
+            /* setup a new indirect block (index at objmem->indirect_size). */
             ptr = MPIR_Handle_indirect_init(&objmem->indirect,
                                             &objmem->indirect_size,
                                             HANDLE_NUM_BLOCKS,
@@ -272,8 +274,6 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
             if (ptr) {
                 objmem->avail = ptr->next;
             }
-
-            /* ptr points to object to allocate */
         }
     }
 
