@@ -250,13 +250,14 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If set to positive, this CVAR specifies the maximum number of CH4 VNIs
-        that OFI netmod exposes.
+        that OFI netmod exposes. If set to 0 (the default) or bigger than
+        MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
 
     - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
       category    : CH4_OFI
@@ -540,7 +541,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ------------------------------------------------------------------------ */
 
     int num_vnis = 1;
-    if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 1) {
+    if (MPIR_CVAR_CH4_OFI_MAX_VNIS == 0 || MPIR_CVAR_CH4_OFI_MAX_VNIS > MPIDI_global.n_vcis) {
+        num_vnis = MPIDI_global.n_vcis;
+    } else {
         num_vnis = MPIR_CVAR_CH4_OFI_MAX_VNIS;
     }
 
