@@ -144,6 +144,9 @@ int MPIR_Finalize_async_thread(void)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+
     mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
@@ -151,7 +154,6 @@ int MPIR_Finalize_async_thread(void)
     mpi_errno = MPIR_Wait(&request, &status);
     MPIR_Assert(!mpi_errno);
 
-    /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
@@ -168,9 +170,6 @@ int MPIR_Finalize_async_thread(void)
 
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
     MPIR_Assert(!mpi_errno);
-
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     MPID_Thread_cond_destroy(&progress_cond, &mpi_errno);
     MPIR_Assert(!mpi_errno);
