@@ -228,7 +228,7 @@ struct MPIR_Request {
 #define MPIR_REQUEST_PREALLOC 8
 
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
-extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_NUM_POOLS][MPIR_REQUEST_PREALLOC];
+extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
 #define MPIR_Request_get_ptr(a, ptr) \
     do { \
@@ -236,7 +236,8 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_NUM_POOLS][MPIR_REQUEST_PRE
         pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
         switch (HANDLE_GET_KIND(a)) { \
         case HANDLE_KIND_DIRECT: \
-            ptr = MPIR_Request_direct[pool] + HANDLE_INDEX(a); \
+            MPIR_Assert(pool == 0); \
+            ptr = MPIR_Request_direct + HANDLE_INDEX(a); \
             break; \
         case HANDLE_KIND_INDIRECT: \
             blk = ((a) & REQUEST_BLOCK_MASK) >> REQUEST_BLOCK_SHIFT; \
@@ -252,8 +253,9 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_NUM_POOLS][MPIR_REQUEST_PRE
 static inline void MPII_init_request(void)
 {
     /* *INDENT-OFF* */
-    for (int i = 0; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct[i], MPIR_REQUEST_PREALLOC };
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC };
+    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0 };
     }
     /* *INDENT-ON* */
 }
