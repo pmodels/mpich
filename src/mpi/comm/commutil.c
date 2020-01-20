@@ -51,19 +51,19 @@ struct MPIR_HINT {
 static struct MPIR_HINT MPIR_comm_hint_list[MPIR_COMM_HINT_MAX];
 static int next_comm_hint_index = MPIR_COMM_HINT_PREDEFINED_COUNT;
 
-int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
+int MPIR_Comm_register_hint(int idx, const char *hint_key, MPIR_Comm_hint_fn_t fn,
                             int type, int attr)
 {
-    if (index == 0) {
-        index = next_comm_hint_index;
+    if (idx == 0) {
+        idx = next_comm_hint_index;
         next_comm_hint_index++;
-        MPIR_Assert(index < MPIR_COMM_HINT_MAX);
+        MPIR_Assert(idx < MPIR_COMM_HINT_MAX);
     } else {
-        MPIR_Assert(index > 0 && index < MPIR_COMM_HINT_PREDEFINED_COUNT);
+        MPIR_Assert(idx > 0 && idx < MPIR_COMM_HINT_PREDEFINED_COUNT);
     }
-    MPIR_comm_hint_list[index] = (struct MPIR_HINT) {
+    MPIR_comm_hint_list[idx] = (struct MPIR_HINT) {
     hint_key, fn, type, attr};
-    return index;
+    return idx;
 }
 
 static int parse_string_value(const char *s, int type, int *val)
@@ -130,14 +130,21 @@ int MPII_Comm_set_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 
 int MPII_Comm_get_hints(MPIR_Comm * comm_ptr, MPIR_Info * info)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     char hint_val_str[MPI_MAX_INFO_VAL];
     for (int i = 0; i < next_comm_hint_index; i++) {
         if (MPIR_comm_hint_list[i].key) {
             get_string_value(hint_val_str, MPIR_comm_hint_list[i].type, comm_ptr->hints[i]);
-            MPIR_Info_set_impl(info, MPIR_comm_hint_list[i].key, hint_val_str);
+            mpi_errno = MPIR_Info_set_impl(info, MPIR_comm_hint_list[i].key, hint_val_str);
+            MPIR_ERR_CHECK(mpi_errno);
         }
     }
-    return MPI_SUCCESS;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_Comm_check_hints(MPIR_Comm * comm)

@@ -5024,18 +5024,10 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
-# Find the size of OPA_ptr_t. This step needs to come after the OPA
-# configure above in order to get the size OPA_ptr_t evaluated for
-# this platform.
-AC_CHECK_SIZEOF(OPA_ptr_t,0,[
-#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"
-pthread_mutex_t *OPA_emulation_lock;
-])
-
-# Find the size of MPL_atomic_ptr_t. This step needs to come after the MPL
-# configuration in order to get the size MPL_atomic_ptr_t evaluated for this
-# platform.
+# SIZEOF_MPL_ATOMIC_PTR_T is needed by ch3:nemesis. Only works after the MPL
+# configuration is done.
 AC_CHECK_SIZEOF(MPL_atomic_ptr_t,0,[
+#include <pthread.h>
 #include "${master_top_srcdir}/src/mpl/include/mpl_atomic.h"
 pthread_mutex_t *MPL_atomic_emulation_lock;
 ])

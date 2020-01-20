@@ -116,13 +116,13 @@
    
 */
 
-#if (SIZEOF_MPL_ATOMIC_PTR_T > 8)
-#  if (SIZEOF_MPL_ATOMIC_PTR_T > 16)
-#    error unexpected size for MPL_atomic_ptr_t
-#  endif
-#  define MPID_NEM_CELL_HEAD_LEN  16 /* We use this to keep elements 64-bit aligned */
+/* define MPID_NEM_CELL_HEAD_LEN to keep elements 64-bit aligned */
+#if (SIZEOF_MPL_ATOMIC_PTR_T == 0 || SIZEOF_MPL_ATOMIC_PTR_T > 16)
+#error "Unexpected size for MPL_atomic_ptr_t."
+#elif (SIZEOF_MPL_ATOMIC_PTR_T > 8)
+#  define MPID_NEM_CELL_HEAD_LEN  16
 #else /* (SIZEOF_MPL_ATOMIC_PTR_T <= 8) */
-#  define MPID_NEM_CELL_HEAD_LEN  8 /* We use this to keep elements 64-bit aligned */
+#  define MPID_NEM_CELL_HEAD_LEN  8
 #endif
 
 #define MPID_NEM_CELL_PAYLOAD_LEN (MPID_NEM_CELL_LEN - MPID_NEM_CELL_HEAD_LEN)
