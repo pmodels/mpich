@@ -757,7 +757,7 @@ if test -n "$FILE_SYSTEM" ; then
    # we could set the IFS to tokenize FILE_SYSTEM, but the FILE_SYSTEM env var
    # is used in multiple places in the build system: get rid of the '+'s so we
    # can use the 'for x in $FILE_SYSTEM ...' idiom 
-   FILE_SYSTEM=`echo $FILE_SYSTEM|sed -e 's/\+/ /g'`
+   FILE_SYSTEM=`echo $FILE_SYSTEM|tr '+' ' '`
    for x in $FILE_SYSTEM
    do
       found=no
