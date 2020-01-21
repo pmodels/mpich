@@ -327,11 +327,6 @@ typedef OPA_int_t Handle_ref_count;
 #error invalid value for MPICH_THREAD_REFCOUNT
 #endif
 
-/* TODO someday we should probably always suppress predefined object refcounting,
- * but we don't have total confidence in it yet.  So until we gain sufficient
- * confidence, this is a configurable option. */
-#if defined(MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS)
-
 /* The assumption here is that objects with handles of type HANDLE_KIND_BUILTIN
  * will be created/destroyed only at MPI_Init/MPI_Finalize time and don't need
  * to be reference counted.  This can be a big performance win on some
@@ -373,16 +368,6 @@ typedef OPA_int_t Handle_ref_count;
                                                      MPIR_Object_get_ref(objptr_))) \
                 }                                                       \
     } while (0)
-
-#else /* !defined(MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS) */
-
-/* the base case, where we just always manipulate the reference counts */
-#define MPIR_Object_add_ref(objptr_)            \
-    MPIR_Object_add_ref_always((objptr_))
-#define MPIR_Object_release_ref(objptr_,inuse_ptr_)             \
-    MPIR_Object_release_ref_always((objptr_),(inuse_ptr_))
-
-#endif
 
 
 /* end reference counting macros */

@@ -71,25 +71,13 @@ extern MPIR_Object_alloc_t MPIR_Errhandler_mem;
 extern MPIR_Errhandler MPIR_Errhandler_builtin[];
 extern MPIR_Errhandler MPIR_Errhandler_direct[];
 
-/* We never reference count the builtin error handler objects, regardless of how
- * we decide to reference count the other predefined objects.  If we get to the
- * point where we never reference count *any* of the builtin objects then we
- * should probably remove these checks and let them fall through to the checks
- * for BUILTIN down in the MPIR_Object_* routines. */
 #define MPIR_Errhandler_add_ref(_errhand)                               \
     do {                                                                  \
-        if (!HANDLE_IS_BUILTIN((_errhand)->handle)) { \
-            MPIR_Object_add_ref(_errhand);                              \
-        }                                                                 \
+        MPIR_Object_add_ref(_errhand);                                  \
     } while (0)
 #define MPIR_Errhandler_release_ref(_errhand, _inuse)                   \
     do {                                                                  \
-        if (!HANDLE_IS_BUILTIN((_errhand)->handle)) { \
-            MPIR_Object_release_ref((_errhand), (_inuse));              \
-        }                                                                 \
-        else {                                                            \
-            *(_inuse) = 1;                                                \
-        }                                                                 \
+        MPIR_Object_release_ref((_errhand), (_inuse));                  \
     } while (0)
 
 void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr);

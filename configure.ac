@@ -561,13 +561,6 @@ AC_ARG_ENABLE(mutex-timing,
 	AC_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
 	AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes]))
 
-AC_ARG_ENABLE([predefined-refcount],
-	AS_HELP_STRING([--enable-predefined-refcount],
-                       [control whether predefined objects like
-		       MPI_COMM_WORLD are reference counted (default
-		       depends on --enable-thread-cs choice)]),[],
-              [enable_predefined_refcount=default])
-
 AC_ARG_ENABLE(weak-symbols,
 	AC_HELP_STRING([--enable-weak-symbols],
 			[Use weak symbols to implement PMPI routines (default)]),,
@@ -1524,7 +1517,6 @@ if test "$enable_threads" = "multiple" ; then
     lock-free|lock_free|lockfree)
     thread_granularity=MPICH_THREAD_GRANULARITY__LOCKFREE
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
-    if test "$enable_predefined_refcount" = "default" ; then enable_predefined_refcount=no ; fi
     AC_MSG_ERROR([--enable-thread-cs=lock-free is not supported yet, please select a different granularity])
     ;;
     *)
@@ -1558,10 +1550,6 @@ if test "$enable_mdta" = "yes" ; then
     if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
         AC_MSG_ERROR([--enable-mdta is not supported for this setting])
     fi
-fi
-
-if test "$enable_predefined_refcount" = "no" ; then
-    AC_DEFINE([MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])
 fi
 
 AC_DEFINE_UNQUOTED([MPICH_THREAD_REFCOUNT],$thread_refcount,[Method used to implement refcount updates])
