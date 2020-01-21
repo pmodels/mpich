@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -33,10 +33,10 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 {
     MPI_Count datatype_size;
     uint64_t len;
-    daos_array_iod_t *iod, loc_iod;
     daos_range_t *rg, loc_rg;
     d_sg_list_t *sgl, loc_sgl;
     d_iov_t *iov, loc_iov;
+    daos_size_t *nbytes, loc_nbytes;
     int ret;
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     struct ADIO_DAOS_req *aio_req;
@@ -49,10 +49,9 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
         aio_req = (struct ADIO_DAOS_req *) ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
 
-        iod = &aio_req->iod;
-        rg = &aio_req->rg;
         sgl = &aio_req->sgl;
         iov = &aio_req->iov;
+        nbytes = &aio_req->nbytes;
 
         if (ADIOI_DAOS_greq_class == 0) {
             MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
@@ -62,17 +61,16 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
         }
         MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
         memcpy(&(aio_req->req), request, sizeof(MPI_Request));
-
-        aio_req->nbytes = len;
     } else {
-        iod = &loc_iod;
-        rg = &loc_rg;
         sgl = &loc_sgl;
         iov = &loc_iov;
+        nbytes = &loc_nbytes;
     }
 
-    if (len == 0)
+    if (len == 0) {
+        *nbytes = 0;
         goto done;
+    }
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         offset = fd->fp_ind;
@@ -86,15 +84,6 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 #ifdef D_PRINT_IO_MEM
     printf("MEM : off %lld len %zu\n", buf, len);
 #endif
-    /** set array location */
-    iod->arr_nr = 1;
-    rg->rg_len = len;
-    rg->rg_idx = offset;
-    iod->arr_rgs = rg;
-
-#ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event(ADIOI_MPE_write_a, 0, NULL);
-#endif
 
 #ifdef D_PRINT_IO
     int mpi_rank;
@@ -104,25 +93,23 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 #endif
 
     if (flag == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
-                               (request ? &aio_req->daos_event : NULL));
+        ret = dfs_write(cont->dfs, cont->obj, sgl, offset,
+                        (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
+            PRINT_MSG(stderr, "dfs_write() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
+        *nbytes = len;
     } else if (flag == DAOS_READ) {
-        ret = daos_array_read(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
-                              (request ? &aio_req->daos_event : NULL));
+        ret = dfs_read(cont->dfs, cont->obj, sgl, offset, nbytes,
+                       (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
+            PRINT_MSG(stderr, "dfs_read() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
     }
-#ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event(ADIOI_MPE_write_b, 0, NULL);
-#endif
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         fd->fp_ind += len;
@@ -130,10 +117,10 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 
     fd->fp_sys_posn = offset + len;
 
-  done:
+done:
 #ifdef HAVE_STATUS_SET_BYTES
-    if (status)
-        MPIR_Status_set_bytes(status, datatype, len);
+    if (request == NULL && status)
+        MPIR_Status_set_bytes(status, datatype, *nbytes);
 #endif
 
     *error_code = MPI_SUCCESS;

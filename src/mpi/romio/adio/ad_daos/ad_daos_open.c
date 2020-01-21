@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -249,6 +249,289 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
     return rc;
 }
 
+static int cache_handles(struct ADIO_DAOS_cont *cont)
+{
+    char *uuid_str;
+    static char myname[] = "ADIOI_DAOS_OPEN";
+    int rc;
+
+    cont->c = adio_daos_coh_lookup(cont->cuuid);
+    if (cont->c == NULL) {
+        /** insert handle into container hashtable */
+        rc = adio_daos_coh_insert(cont->cuuid, cont->coh, &cont->c);
+    } else {
+        /** g2l handle not needed, already cached */
+        daos_cont_close(cont->coh, NULL);
+        cont->coh = cont->c->open_hdl;
+    }
+    if (rc)
+        return rc;
+
+    cont->p = adio_daos_poh_lookup(cont->puuid);
+    if (cont->p == NULL) {
+        /** insert handle into pool hashtable */
+        rc = adio_daos_poh_insert(cont->puuid, cont->poh, &cont->p);
+    } else {
+        /** g2l handle not needed, already cached */
+        rc = daos_pool_disconnect(cont->poh, NULL);
+        cont->poh = cont->p->open_hdl;
+    }
+
+    return rc;
+}
+
+static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
+{
+    char uuid_buf[74];
+    d_iov_t pool_hdl = { NULL, 0, 0 };
+    d_iov_t cont_hdl = { NULL, 0, 0 };
+    d_iov_t dfs_hdl = { NULL, 0, 0 };
+    d_iov_t file_hdl = { NULL, 0, 0 };
+    char *buf = NULL;
+    uint64_t total_size = 0;
+    int rc = 0;
+
+    if (rank == 0) {
+        rc = daos_pool_local2global(cont->poh, &pool_hdl);
+        if (rc)
+            return rc;
+        rc = daos_cont_local2global(cont->coh, &cont_hdl);
+        if (rc)
+            return rc;
+        rc = dfs_local2global(cont->dfs, &dfs_hdl);
+        if (rc)
+            return rc;
+        rc = dfs_obj_local2global(cont->dfs, cont->obj, &file_hdl);
+        if (rc)
+            return rc;
+
+        total_size = sizeof(uuid_buf) + pool_hdl.iov_buf_len + cont_hdl.iov_buf_len +
+            dfs_hdl.iov_buf_len + file_hdl.iov_buf_len + sizeof(daos_size_t) * 4;
+    }
+
+    /** broadcast size to all peers */
+    rc = MPI_Bcast(&total_size, 1, MPI_UINT64_T, 0, comm);
+    if (rc != MPI_SUCCESS)
+        return -1;
+
+    /** allocate buffers */
+    buf = ADIOI_Malloc(total_size);
+    if (buf == NULL)
+        return -1;
+
+    if (rank == 0) {
+        char *ptr = buf;
+
+        uuid_unparse(cont->puuid, ptr);
+        ptr += 37;
+        uuid_unparse(cont->cuuid, ptr);
+        ptr += 37;
+
+        *((daos_size_t *)ptr) = pool_hdl.iov_buf_len;
+        ptr += sizeof(daos_size_t);
+        pool_hdl.iov_buf = ptr;
+        pool_hdl.iov_len = pool_hdl.iov_buf_len;
+        rc = daos_pool_local2global(cont->poh, &pool_hdl);
+        if (rc)
+            goto out;
+        ptr += pool_hdl.iov_buf_len;
+
+        *((daos_size_t *)ptr) = cont_hdl.iov_buf_len;
+        ptr += sizeof(daos_size_t);
+        cont_hdl.iov_buf = ptr;
+        cont_hdl.iov_len = cont_hdl.iov_buf_len;
+        rc = daos_cont_local2global(cont->coh, &cont_hdl);
+        if (rc)
+            goto out;
+        ptr += cont_hdl.iov_buf_len;
+
+        *((daos_size_t *)ptr) = dfs_hdl.iov_buf_len;
+        ptr += sizeof(daos_size_t);
+        dfs_hdl.iov_buf = ptr;
+        dfs_hdl.iov_len = dfs_hdl.iov_buf_len;
+        rc = dfs_local2global(cont->dfs, &dfs_hdl);
+        if (rc)
+            goto out;
+        ptr += dfs_hdl.iov_buf_len;
+
+        *((daos_size_t *)ptr) = file_hdl.iov_buf_len;
+        ptr += sizeof(daos_size_t);
+        file_hdl.iov_buf = ptr;
+        file_hdl.iov_len = file_hdl.iov_buf_len;
+        rc = dfs_obj_local2global(cont->dfs, cont->obj, &file_hdl);
+        if (rc)
+            goto out;
+    }
+
+    rc = MPI_Bcast(buf, total_size, MPI_BYTE, 0, comm);
+    if (rc != MPI_SUCCESS)
+        goto out;
+
+    if (rank != 0) {
+        char *ptr = buf;
+
+        rc = uuid_parse(ptr, cont->puuid);
+        if (rc)
+            goto out;
+        ptr += 37;
+
+        rc = uuid_parse(ptr, cont->cuuid);
+        if (rc)
+            goto out;
+        ptr += 37;
+
+        pool_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        ptr += sizeof(daos_size_t);
+        pool_hdl.iov_buf = ptr;
+        pool_hdl.iov_len = pool_hdl.iov_buf_len;
+        rc = daos_pool_global2local(pool_hdl, &cont->poh);
+        if (rc)
+            goto out;
+        ptr += pool_hdl.iov_buf_len;
+
+        cont_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        ptr += sizeof(daos_size_t);
+        cont_hdl.iov_buf = ptr;
+        cont_hdl.iov_len = cont_hdl.iov_buf_len;
+        rc = daos_cont_global2local(cont->poh, cont_hdl, &cont->coh);
+        if (rc)
+            goto out;
+        ptr += cont_hdl.iov_buf_len;
+
+        rc = cache_handles(cont);
+        if (rc)
+            goto out;
+
+        dfs_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        ptr += sizeof(daos_size_t);
+        dfs_hdl.iov_buf = ptr;
+        dfs_hdl.iov_len = dfs_hdl.iov_buf_len;
+        rc = dfs_global2local(cont->poh, cont->coh, O_RDWR, dfs_hdl, &cont->dfs);
+        if (rc)
+            goto out;
+        ptr += dfs_hdl.iov_buf_len;
+
+        if (rank != 0) {
+            if (cont->c->dfs == NULL) {
+                cont->c->dfs = cont->dfs;
+            } else {
+                dfs_umount(cont->dfs);
+                cont->dfs = cont->c->dfs;
+            }
+        }
+
+        file_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        ptr += sizeof(daos_size_t);
+        file_hdl.iov_buf = ptr;
+        file_hdl.iov_len = file_hdl.iov_buf_len;
+        rc = dfs_obj_global2local(cont->dfs, 0, file_hdl, &cont->obj);
+        if (rc)
+            goto out;
+    }
+
+out:
+    ADIOI_Free(buf);
+    return rc;
+}
+
+enum {
+    HANDLE_POOL,
+    HANDLE_CO,
+    HANDLE_DFS,
+    HANDLE_OBJ
+};
+
+static inline int
+handle_share(daos_handle_t *poh, daos_handle_t *coh, dfs_t **dfs,
+             dfs_obj_t **obj, int type, int rank, MPI_Comm comm)
+{
+    d_iov_t ghdl = { NULL, 0, 0 };
+    int rc;
+
+    if (rank == 0) {
+        switch (type) {
+        case HANDLE_POOL:
+            rc = daos_pool_local2global(*poh, &ghdl);
+            break;
+        case HANDLE_CO:
+            rc = daos_cont_local2global(*coh, &ghdl);
+            break;
+        case HANDLE_DFS:
+            rc = dfs_local2global(*dfs, &ghdl);
+            break;
+        case HANDLE_OBJ:
+            rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
+            break;
+        default:
+            assert(0);
+        }
+        if (rc)
+            ghdl.iov_buf_len = 0;
+    }
+
+    /** broadcast size of global handle to all peers */
+    rc = MPI_Bcast(&ghdl.iov_buf_len, 1, MPI_UINT64_T, 0, comm);
+    if (rc != MPI_SUCCESS)
+        return -1;
+
+    if (ghdl.iov_buf_len == 0)
+        return -1;
+
+    /** allocate buffer for global handle */
+    ghdl.iov_buf = ADIOI_Malloc(ghdl.iov_buf_len);
+    ghdl.iov_len = ghdl.iov_buf_len;
+
+    if (rank == 0) {
+        /** generate actual global handle to share with peer tasks */
+        switch (type) {
+        case HANDLE_POOL:
+            rc = daos_pool_local2global(*poh, &ghdl);
+            break;
+        case HANDLE_CO:
+            rc = daos_cont_local2global(*coh, &ghdl);
+            break;
+        case HANDLE_DFS:
+            rc = dfs_local2global(*dfs, &ghdl);
+            break;
+        case HANDLE_OBJ:
+            rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
+            break;
+        default:
+            assert(0);
+        }
+    }
+
+    /** broadcast global handle to all peers */
+    rc = MPI_Bcast(ghdl.iov_buf, ghdl.iov_len, MPI_BYTE, 0, comm);
+    if (rc != MPI_SUCCESS) {
+        ADIOI_Free(ghdl.iov_buf);
+        return -1;
+    }
+
+    if (rank != 0) {
+        /** unpack global handle */
+        switch (type) {
+        case HANDLE_POOL:
+            rc = daos_pool_global2local(ghdl, poh);
+            break;
+        case HANDLE_CO:
+            rc = daos_cont_global2local(*poh, ghdl, coh);
+            break;
+        case HANDLE_DFS:
+            rc = dfs_global2local(*poh, *coh, O_RDWR, ghdl, dfs);
+            break;
+        case HANDLE_OBJ:
+            rc = dfs_obj_global2local(*dfs, 0, ghdl, obj);
+            break;
+        default:
+            assert(0);
+        }
+    }
+
+    ADIOI_Free(ghdl.iov_buf);
+    return rc;
+}
+
 int
 get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
                     daos_oclass_id_t * oclass, daos_size_t * chunk_size)
@@ -361,18 +644,8 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     cont->coh = cont->c->open_hdl;
 
-    if (cont->c->dfs == NULL) {
-        /* Mount a DFS namespace on the container */
-        rc = dfs_mount(cont->p->open_hdl, cont->coh, O_RDWR, &cont->dfs);
-        if (rc) {
-            PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
-            *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
-            goto err_cont;
-        }
-        cont->c->dfs = cont->dfs;
-    } else {
-        cont->dfs = cont->c->dfs;
-    }
+    assert(cont->c->dfs);
+    cont->dfs = cont->c->dfs;
 
     /* Set file access flags */
     amode = 0;
@@ -404,13 +677,6 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         goto err_cont;
     }
 
-    rc = dfs_get_file_oh(cont->obj, &cont->oh);
-    if (rc) {
-        PRINT_MSG(stderr, "Failed to get DFS object handle (%d)\n", rc);
-        *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
-        goto err_obj;
-    }
-
   out:
     return;
   err_obj:
@@ -426,42 +692,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     goto out;
 }
 
-static int cache_handles(struct ADIO_DAOS_cont *cont, int *error_code)
-{
-    char *uuid_str;
-    static char myname[] = "ADIOI_DAOS_OPEN";
-    int rc;
-
-    cont->c = adio_daos_coh_lookup(cont->cuuid);
-    if (cont->c == NULL) {
-        /** insert handle into container hashtable */
-        rc = adio_daos_coh_insert(cont->cuuid, cont->coh, &cont->c);
-    } else {
-        /** g2l handle not needed, already cached */
-        rc = daos_cont_close(cont->coh, NULL);
-        cont->coh = cont->c->open_hdl;
-    }
-    if (rc) {
-        *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
-        return rc;
-    }
-
-    cont->p = adio_daos_poh_lookup(cont->puuid);
-    if (cont->p == NULL) {
-        /** insert handle into pool hashtable */
-        rc = adio_daos_poh_insert(cont->puuid, cont->poh, &cont->p);
-    } else {
-        /** g2l handle not needed, already cached */
-        rc = daos_pool_disconnect(cont->poh, NULL);
-        cont->poh = cont->p->open_hdl;
-    }
-    if (rc)
-        *error_code = ADIOI_DAOS_err(myname, uuid_str, __LINE__, rc);
-
-    return rc;
-}
-
-static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
+static int share_uuid_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
 {
     char buf[74];
     int rc;
@@ -489,7 +720,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
 void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
 {
     struct ADIO_DAOS_cont *cont;
-    int amode;
+    int amode, orig_amode_wronly;
     MPI_Comm comm = fd->comm;
     int mpi_size;
     int rc;
@@ -500,6 +731,13 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
         return;
 
     MPI_Comm_size(comm, &mpi_size);
+
+    orig_amode_wronly = access_mode;
+    if (access_mode & ADIO_WRONLY) {
+        access_mode = access_mode ^ ADIO_WRONLY;
+        access_mode = access_mode | ADIO_RDWR;
+    }
+    fd->access_mode = access_mode;
 
     amode = 0;
     if (access_mode & ADIO_RDONLY)
@@ -546,18 +784,64 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
         goto err_free;
 
     if (mpi_size > 1) {
-        share_cont_info(cont, rank, comm);
-        handle_share(&cont->poh, HANDLE_POOL, rank, cont->poh, comm);
-        handle_share(&cont->coh, HANDLE_CO, rank, cont->poh, comm);
+        rc = share_cont_info(cont, rank, comm);
+        if (rc) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
+                                               __LINE__, rc, "File Open error", 0);
+            goto err_free;
+        }
+#if 0
+        share_uuid_info(cont, rank, comm);
+        rc = handle_share(&cont->poh, NULL, NULL, NULL,
+                          HANDLE_POOL, rank, comm);
+        if (rc) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
+                                               __LINE__, rc, "File Open error", 0);
+            goto err_free;
+        }
+        rc = handle_share(&cont->poh, &cont->coh, NULL, NULL,
+                          HANDLE_CO, rank, comm);
+        if (rc) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
+                                               __LINE__, rc, "File Open error", 0);
+            goto err_free;
+        }
+
         if (rank != 0) {
             rc = cache_handles(cont, error_code);
             if (rc)
                 goto err_free;
         }
-        handle_share(&cont->oh, HANDLE_OBJ, rank, cont->coh, comm);
+
+        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, NULL,
+                          HANDLE_DFS, rank, comm);
+        if (rc) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
+                                               __LINE__, rc, "File Open error", 0);
+            goto err_free;
+        }
+
+        if (rank != 0) {
+            if (cont->c->dfs == NULL) {
+                cont->c->dfs = cont->dfs;
+            } else {
+                dfs_umount(cont->dfs);
+                cont->dfs = cont->c->dfs;
+            }
+        }
+
+        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, &cont->obj,
+                          HANDLE_OBJ, rank, comm);
+        if (rc) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
+                                               __LINE__, rc, "File Open error", 0);
+            goto err_free;
+        }
+#endif
     }
 
     fd->is_open = 1;
+    fd->access_mode = orig_amode_wronly;
 
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event(ADIOI_MPE_open_b, 0, NULL);
@@ -565,7 +849,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
 
     return;
 
-  err_free:
+err_free:
     if (cont->obj_name)
         ADIOI_Free(cont->obj_name);
     if (cont->cont_name)
