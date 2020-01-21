@@ -553,6 +553,10 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     if (num_vnis > MPIDI_OFI_MAX_CONTEXTS) {
         num_vnis = MPIDI_OFI_MAX_CONTEXTS;
     }
+    /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
+    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
+    MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
+
     MPIDI_OFI_global.num_ctx = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */
