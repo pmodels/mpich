@@ -367,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -472,7 +472,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -521,7 +521,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -632,7 +632,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);

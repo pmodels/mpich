@@ -204,11 +204,61 @@ struct MPIR_Request {
 #endif
 };
 
+/* Multiple Request Pools
+ * Request objects creation and freeing is in a hot path. Multiple pools allow different
+ * threads to access different pools without incurring global locks. Because only request
+ * objects benefit from this multi-pool scheme, the normal handlemem macros and functions
+ * are extended here for request objects. It is separate from the other objects, and the
+ * bit patterns for POOL and BLOCK sizes can be adjusted if necessary.
+ *
+ * NOTE: MPIR_Request_create/free are patched to work with pools.
+ */
+/* Handle Bits - 2+4+6+8+12 - Type, Kind, Pool_idx, Block_idx, Object_idx */
+#define REQUEST_POOL_MASK    0x03f00000
+#define REQUEST_POOL_SHIFT   20
+#define REQUEST_POOL_MAX     64
+#define REQUEST_BLOCK_MASK   0x000ff000
+#define REQUEST_BLOCK_SHIFT  12
+#define REQUEST_BLOCK_MAX    256
+#define REQUEST_OBJECT_MASK  0x00000fff
+#define REQUEST_OBJECT_SHIFT 0
+#define REQUEST_OBJECT_MAX   4096
+
+#define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
-extern MPIR_Object_alloc_t MPIR_Request_mem;
-/* Preallocated request objects */
-extern MPIR_Request MPIR_Request_direct[];
+extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
+extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
+
+#define MPIR_Request_get_ptr(a, ptr) \
+    do { \
+        int pool, blk, idx; \
+        pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
+        switch (HANDLE_GET_KIND(a)) { \
+        case HANDLE_KIND_DIRECT: \
+            MPIR_Assert(pool == 0); \
+            ptr = MPIR_Request_direct + HANDLE_INDEX(a); \
+            break; \
+        case HANDLE_KIND_INDIRECT: \
+            blk = ((a) & REQUEST_BLOCK_MASK) >> REQUEST_BLOCK_SHIFT; \
+            idx = ((a) & REQUEST_OBJECT_MASK) >> REQUEST_OBJECT_SHIFT; \
+            ptr = ((MPIR_Request *) MPIR_Request_mem[pool].indirect[blk]) + idx; \
+            break; \
+        default: \
+            ptr = NULL; \
+            break; \
+        } \
+    } while (0)
+
+static inline void MPII_init_request(void)
+{
+    /* *INDENT-OFF* */
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC };
+    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0 };
+    }
+    /* *INDENT-ON* */
+}
 
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
@@ -235,11 +285,23 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
-static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int pool)
 {
     MPIR_Request *req;
 
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    /* NOTE: observes HANDLE_NUM_BLOCKS and HANDLE_NUM_INDICES */
+    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem[pool]);
+    if (req != NULL) {
+        /* Patch the handle.
+         * Or, we could use a custom "Request_obj_alloc" to save some cycles */
+        if (HANDLE_BLOCK(req->handle) >= REQUEST_BLOCK_MAX) {
+            /* FIXME: free the request */
+            req = NULL;
+        } else {
+            req->handle |= (pool << REQUEST_POOL_SHIFT);
+        }
+    }
+
     if (req != NULL) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
@@ -305,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     MPIR_Request *req;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind);
+    req = MPIR_Request_create(kind, 0);
     MPIR_cc_set(&req->cc, 0);
 #else
     req = MPIR_Process.lw_req;
@@ -369,7 +431,8 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         MPID_Request_destroy_hook(req);
 
-        MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+        MPIR_Handle_obj_free(&MPIR_Request_mem[pool], req);
     }
 }
 

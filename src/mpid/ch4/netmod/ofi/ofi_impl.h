@@ -129,7 +129,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
-        (req) = MPIR_Request_create(kind);  \
+        (req) = MPIR_Request_create(kind, 0);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
@@ -174,7 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           if (MPIDI_OFI_need_request_creation(req)) {                   \
               MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
                           (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind);                        \
+              (req) = MPIR_Request_create(kind, 0);                        \
               MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                   "**nomemreq");                        \
           }                                                             \
@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
         } else {                                                        \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
-                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);   \
+                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);   \
                 MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                     "**nomemreq");                      \
             }                                                           \
@@ -278,14 +278,26 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
     return max_size;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
+extern MPIR_Object_alloc_t MPIDI_OFI_win_request_mem;
+
+MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(void)
+{
+    MPIDI_OFI_win_request_t *winreq;
+    winreq = MPIR_Handle_obj_alloc(&MPIDI_OFI_win_request_mem);
+    if (winreq) {
+        MPIR_Object_set_ref(winreq, 1);
+    }
+    return winreq;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
     int in_use;
-    MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-    MPIR_Object_release_ref(req, &in_use);
+    MPIR_Assert(HANDLE_GET_MPI_KIND(winreq->handle) == MPIR_INTERNAL);
+    MPIR_Object_release_ref(winreq, &in_use);
     if (!in_use) {
-        MPL_free(req->noncontig);
-        MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
+        MPL_free(winreq->noncontig);
+        MPIR_Handle_obj_free(&MPIDI_OFI_win_request_mem, (winreq));
     }
 }
 

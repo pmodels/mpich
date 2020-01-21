@@ -280,7 +280,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         data_len = *buflen;
         data_buf = (char *) data;
 
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         MPIR_Object_set_ref(req, 1);
 
         req->dev.user_buf = put_pkt->addr;
@@ -412,7 +412,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         goto fn_exit;
     }
 
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
     req->dev.target_win_handle = get_pkt->target_win_handle;
     req->dev.pkt_flags = get_pkt->pkt_flags;
 
@@ -634,7 +634,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
     else {
         MPIR_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
 
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         MPIR_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -833,7 +833,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
 
-        resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
         resp_req->dev.pkt_flags = get_accum_pkt->pkt_flags;
 
@@ -908,7 +908,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
         MPIR_Assert(pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         MPIR_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -1353,7 +1353,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         if (fop_pkt->op == MPI_NO_OP)
             is_empty_origin = TRUE;
 
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         MPIR_Object_set_ref(req, 1);
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_FOP_RECV);
         *rreqp = req;
