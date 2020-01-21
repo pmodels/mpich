@@ -348,8 +348,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         aio_req->rgs = rgs;
 
     if (rw_type == DAOS_WRITE) {
-        ret = dfs_writex(cont->dfs, cont->obj, iod, sgl,
-                         (request ? &aio_req->daos_event : NULL));
+        ret = dfs_writex(cont->dfs, cont->obj, iod, sgl, (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "dfs_writex() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);

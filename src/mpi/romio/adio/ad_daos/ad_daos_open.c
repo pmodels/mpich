@@ -327,7 +327,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
         uuid_unparse(cont->cuuid, ptr);
         ptr += 37;
 
-        *((daos_size_t *)ptr) = pool_hdl.iov_buf_len;
+        *((daos_size_t *) ptr) = pool_hdl.iov_buf_len;
         ptr += sizeof(daos_size_t);
         pool_hdl.iov_buf = ptr;
         pool_hdl.iov_len = pool_hdl.iov_buf_len;
@@ -336,7 +336,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
         ptr += pool_hdl.iov_buf_len;
 
-        *((daos_size_t *)ptr) = cont_hdl.iov_buf_len;
+        *((daos_size_t *) ptr) = cont_hdl.iov_buf_len;
         ptr += sizeof(daos_size_t);
         cont_hdl.iov_buf = ptr;
         cont_hdl.iov_len = cont_hdl.iov_buf_len;
@@ -345,7 +345,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
         ptr += cont_hdl.iov_buf_len;
 
-        *((daos_size_t *)ptr) = dfs_hdl.iov_buf_len;
+        *((daos_size_t *) ptr) = dfs_hdl.iov_buf_len;
         ptr += sizeof(daos_size_t);
         dfs_hdl.iov_buf = ptr;
         dfs_hdl.iov_len = dfs_hdl.iov_buf_len;
@@ -354,7 +354,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
         ptr += dfs_hdl.iov_buf_len;
 
-        *((daos_size_t *)ptr) = file_hdl.iov_buf_len;
+        *((daos_size_t *) ptr) = file_hdl.iov_buf_len;
         ptr += sizeof(daos_size_t);
         file_hdl.iov_buf = ptr;
         file_hdl.iov_len = file_hdl.iov_buf_len;
@@ -380,7 +380,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
         ptr += 37;
 
-        pool_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        pool_hdl.iov_buf_len = *((daos_size_t *) ptr);
         ptr += sizeof(daos_size_t);
         pool_hdl.iov_buf = ptr;
         pool_hdl.iov_len = pool_hdl.iov_buf_len;
@@ -389,7 +389,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
         ptr += pool_hdl.iov_buf_len;
 
-        cont_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        cont_hdl.iov_buf_len = *((daos_size_t *) ptr);
         ptr += sizeof(daos_size_t);
         cont_hdl.iov_buf = ptr;
         cont_hdl.iov_len = cont_hdl.iov_buf_len;
@@ -402,7 +402,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
         if (rc)
             goto out;
 
-        dfs_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        dfs_hdl.iov_buf_len = *((daos_size_t *) ptr);
         ptr += sizeof(daos_size_t);
         dfs_hdl.iov_buf = ptr;
         dfs_hdl.iov_len = dfs_hdl.iov_buf_len;
@@ -420,7 +420,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             }
         }
 
-        file_hdl.iov_buf_len = *((daos_size_t *)ptr);
+        file_hdl.iov_buf_len = *((daos_size_t *) ptr);
         ptr += sizeof(daos_size_t);
         file_hdl.iov_buf = ptr;
         file_hdl.iov_len = file_hdl.iov_buf_len;
@@ -429,7 +429,7 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
             goto out;
     }
 
-out:
+  out:
     ADIOI_Free(buf);
     return rc;
 }
@@ -442,28 +442,28 @@ enum {
 };
 
 static inline int
-handle_share(daos_handle_t *poh, daos_handle_t *coh, dfs_t **dfs,
-             dfs_obj_t **obj, int type, int rank, MPI_Comm comm)
+handle_share(daos_handle_t * poh, daos_handle_t * coh, dfs_t ** dfs,
+             dfs_obj_t ** obj, int type, int rank, MPI_Comm comm)
 {
     d_iov_t ghdl = { NULL, 0, 0 };
     int rc;
 
     if (rank == 0) {
         switch (type) {
-        case HANDLE_POOL:
-            rc = daos_pool_local2global(*poh, &ghdl);
-            break;
-        case HANDLE_CO:
-            rc = daos_cont_local2global(*coh, &ghdl);
-            break;
-        case HANDLE_DFS:
-            rc = dfs_local2global(*dfs, &ghdl);
-            break;
-        case HANDLE_OBJ:
-            rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
-            break;
-        default:
-            assert(0);
+            case HANDLE_POOL:
+                rc = daos_pool_local2global(*poh, &ghdl);
+                break;
+            case HANDLE_CO:
+                rc = daos_cont_local2global(*coh, &ghdl);
+                break;
+            case HANDLE_DFS:
+                rc = dfs_local2global(*dfs, &ghdl);
+                break;
+            case HANDLE_OBJ:
+                rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
+                break;
+            default:
+                assert(0);
         }
         if (rc)
             ghdl.iov_buf_len = 0;
@@ -484,20 +484,20 @@ handle_share(daos_handle_t *poh, daos_handle_t *coh, dfs_t **dfs,
     if (rank == 0) {
         /** generate actual global handle to share with peer tasks */
         switch (type) {
-        case HANDLE_POOL:
-            rc = daos_pool_local2global(*poh, &ghdl);
-            break;
-        case HANDLE_CO:
-            rc = daos_cont_local2global(*coh, &ghdl);
-            break;
-        case HANDLE_DFS:
-            rc = dfs_local2global(*dfs, &ghdl);
-            break;
-        case HANDLE_OBJ:
-            rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
-            break;
-        default:
-            assert(0);
+            case HANDLE_POOL:
+                rc = daos_pool_local2global(*poh, &ghdl);
+                break;
+            case HANDLE_CO:
+                rc = daos_cont_local2global(*coh, &ghdl);
+                break;
+            case HANDLE_DFS:
+                rc = dfs_local2global(*dfs, &ghdl);
+                break;
+            case HANDLE_OBJ:
+                rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
+                break;
+            default:
+                assert(0);
         }
     }
 
@@ -511,20 +511,20 @@ handle_share(daos_handle_t *poh, daos_handle_t *coh, dfs_t **dfs,
     if (rank != 0) {
         /** unpack global handle */
         switch (type) {
-        case HANDLE_POOL:
-            rc = daos_pool_global2local(ghdl, poh);
-            break;
-        case HANDLE_CO:
-            rc = daos_cont_global2local(*poh, ghdl, coh);
-            break;
-        case HANDLE_DFS:
-            rc = dfs_global2local(*poh, *coh, O_RDWR, ghdl, dfs);
-            break;
-        case HANDLE_OBJ:
-            rc = dfs_obj_global2local(*dfs, 0, ghdl, obj);
-            break;
-        default:
-            assert(0);
+            case HANDLE_POOL:
+                rc = daos_pool_global2local(ghdl, poh);
+                break;
+            case HANDLE_CO:
+                rc = daos_cont_global2local(*poh, ghdl, coh);
+                break;
+            case HANDLE_DFS:
+                rc = dfs_global2local(*poh, *coh, O_RDWR, ghdl, dfs);
+                break;
+            case HANDLE_OBJ:
+                rc = dfs_obj_global2local(*dfs, 0, ghdl, obj);
+                break;
+            default:
+                assert(0);
         }
     }
 
@@ -792,15 +792,13 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
         }
 #if 0
         share_uuid_info(cont, rank, comm);
-        rc = handle_share(&cont->poh, NULL, NULL, NULL,
-                          HANDLE_POOL, rank, comm);
+        rc = handle_share(&cont->poh, NULL, NULL, NULL, HANDLE_POOL, rank, comm);
         if (rc) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
                                                __LINE__, rc, "File Open error", 0);
             goto err_free;
         }
-        rc = handle_share(&cont->poh, &cont->coh, NULL, NULL,
-                          HANDLE_CO, rank, comm);
+        rc = handle_share(&cont->poh, &cont->coh, NULL, NULL, HANDLE_CO, rank, comm);
         if (rc) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
                                                __LINE__, rc, "File Open error", 0);
@@ -813,8 +811,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
                 goto err_free;
         }
 
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, NULL,
-                          HANDLE_DFS, rank, comm);
+        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, NULL, HANDLE_DFS, rank, comm);
         if (rc) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
                                                __LINE__, rc, "File Open error", 0);
@@ -830,8 +827,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
             }
         }
 
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, &cont->obj,
-                          HANDLE_OBJ, rank, comm);
+        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, &cont->obj, HANDLE_OBJ, rank, comm);
         if (rc) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
                                                __LINE__, rc, "File Open error", 0);
@@ -849,7 +845,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
 
     return;
 
-err_free:
+  err_free:
     if (cont->obj_name)
         ADIOI_Free(cont->obj_name);
     if (cont->cont_name)

@@ -93,8 +93,7 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 #endif
 
     if (flag == DAOS_WRITE) {
-        ret = dfs_write(cont->dfs, cont->obj, sgl, offset,
-                        (request ? &aio_req->daos_event : NULL));
+        ret = dfs_write(cont->dfs, cont->obj, sgl, offset, (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "dfs_write() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
@@ -117,7 +116,7 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 
     fd->fp_sys_posn = offset + len;
 
-done:
+  done:
 #ifdef HAVE_STATUS_SET_BYTES
     if (request == NULL && status)
         MPIR_Status_set_bytes(status, datatype, *nbytes);
