@@ -195,60 +195,6 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_do_am_isend_header(int rank,
-                                               MPIR_Comm * comm,
-                                               int handler_id,
-                                               const void *am_hdr,
-                                               size_t am_hdr_sz, MPIR_Request * sreq)
-{
-    struct iovec *iov;
-    MPIDI_OFI_am_header_t *msg_hdr;
-    int mpi_errno = MPI_SUCCESS, c;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
-
-    MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
-    mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
-    msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
-    msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = am_hdr_sz;
-    msg_hdr->data_sz = 0;
-    msg_hdr->am_type = MPIDI_AMTYPE_SHORT_HDR;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
-    msg_hdr->fi_src_addr
-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
-
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
-
-    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
-    MPIR_cc_incr(sreq->cc_ptr, &c);
-
-    iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
-
-    iov[0].iov_base = msg_hdr;
-    iov[0].iov_len = sizeof(*msg_hdr);
-
-    MPIR_Assert((sizeof(*msg_hdr) + am_hdr_sz) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-    iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
-    iov[1].iov_len = am_hdr_sz;
-    MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 2,
-                                     MPIDI_OFI_comm_to_phys(comm, rank),
-                                     &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static inline int MPIDI_OFI_am_isend_long(int rank,
                                           MPIR_Comm * comm,
                                           int handler_id,
