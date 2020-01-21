@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -60,8 +60,7 @@ static void rec_free(struct d_hash_table *htable, d_list_t * rlink)
     if (hdl->type == DAOS_POOL)
         daos_pool_disconnect(hdl->open_hdl, NULL);
     else if (hdl->type == DAOS_CONT) {
-        if (hdl->dfs)
-            dfs_umount(hdl->dfs);
+        dfs_umount(hdl->dfs);
         daos_cont_close(hdl->open_hdl, NULL);
     } else
         assert(0);
@@ -226,7 +225,6 @@ int adio_daos_coh_insert(uuid_t uuid, daos_handle_t coh, struct adio_daos_hdl **
     co_hdl->type = DAOS_CONT;
     uuid_copy(co_hdl->uuid, uuid);
     co_hdl->open_hdl.cookie = coh.cookie;
-    co_hdl->dfs = NULL;
 
     rc = d_hash_rec_insert(coh_hash, co_hdl->uuid, sizeof(uuid_t), &co_hdl->entry, true);
     if (rc) {

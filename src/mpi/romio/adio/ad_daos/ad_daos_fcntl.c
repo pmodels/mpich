@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -24,7 +24,7 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *
             {
                 daos_size_t fsize;
 
-                rc = daos_array_get_size(cont->oh, DAOS_TX_NONE, &fsize, NULL);
+                rc = dfs_get_size(cont->dfs, cont->obj, &fsize);
                 if (rc != 0) {
                     *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
                     break;
