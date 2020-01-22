@@ -371,10 +371,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                                comm->rank, dst_rank, tag, comm,
                                                context_offset, addr);
         if (!noreq) {
-            MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
-            /* If we set CC>0 in case of injection, we need to decrement the CC
-             * to tell the main thread we completed the injection. */
-            MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
+            *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         }
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank, tag, comm,
