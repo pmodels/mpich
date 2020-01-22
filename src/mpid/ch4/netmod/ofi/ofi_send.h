@@ -40,38 +40,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
-                                                                size_t data_sz, int src_rank,
-                                                                int dst_rank,
-                                                                int tag,
-                                                                MPIR_Comm * comm,
-                                                                int context_offset,
-                                                                MPIDI_av_entry_t * addr,
-                                                                MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    uint64_t match_bits;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
-    match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
-    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
-                                        buf,
-                                        data_sz,
-                                        src_rank,
-                                        MPIDI_OFI_av_to_phys(addr),
-                                        match_bits),
-                         tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
-    /* If we set CC>0 in case of injection, we need to decrement the CC
-     * to tell the main thread we completed the injection. */
-    MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #define MPIDI_OFI_SEND_NEEDS_PACK (-1)  /* Could not use iov; needs packing */
 
 /*
@@ -398,19 +366,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
-        if (noreq)
-            mpi_errno =
-                MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz, comm->rank, dst_rank,
-                                           tag, comm, context_offset, addr);
-        else
-            mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           comm->rank, dst_rank, tag,
-                                                           comm, context_offset, addr, request);
-    else
+    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
+        mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
+                                               comm->rank, dst_rank, tag, comm,
+                                               context_offset, addr);
+        if (!noreq) {
+            MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
+            /* If we set CC>0 in case of injection, we need to decrement the CC
+             * to tell the main thread we completed the injection. */
+            MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
+        }
+    } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank, tag, comm,
                                           context_offset, addr, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND);
     return mpi_errno;
@@ -440,32 +410,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_coll(const void *buf, MPI_Aint count
                                                  int noreq, uint64_t syncflag,
                                                  MPIR_Errflag_t * errflag)
 {
-    int dt_contig, mpi_errno;
-    size_t data_sz;
-    MPI_Aint dt_true_lb;
-    MPIR_Datatype *dt_ptr;
-    uint64_t src_rank;
+    int mpi_errno;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_COLL);
 
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    src_rank = comm->rank;
+    uint64_t src_rank = comm->rank;
     MPIDI_OFI_idata_set_error_bits(&src_rank, *errflag);
 
-    if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send)))
-        if (noreq)
-            mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
-                                                   src_rank, dst_rank, tag, comm, context_offset,
-                                                   addr);
-        else
-            mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           src_rank, dst_rank, tag, comm,
-                                                           context_offset, addr, request);
-    else
-        mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, dst_rank,
-                                          tag, comm, context_offset, addr, request, dt_contig,
-                                          data_sz, dt_ptr, dt_true_lb, syncflag);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, dst_rank, tag, comm, context_offset, addr,
+                               request, noreq, syncflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_COLL);
     return mpi_errno;
