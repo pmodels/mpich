@@ -351,7 +351,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
     if (handler_id == MPIDIG_SEND &&
         am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) > MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
-        MPIDIG_send_long_req_mst_t lreq_hdr;
+        MPIDIG_send_long_req_msg_t lreq_hdr;
 
         MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
         lreq_hdr.data_sz = data_sz;
