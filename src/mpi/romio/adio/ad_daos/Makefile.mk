@@ -1,7 +1,7 @@
 ## -*- Mode: Makefile; -*-
 ## vim: set ft=automake :
 ##
-## (C) 2018 by Intel Corporation
+## (C) 2018-2020 by Intel Corporation
 ##
 ## GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
 ## The Government's rights to use, modify, reproduce, release, perform, display,

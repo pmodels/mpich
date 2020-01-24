@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -57,8 +57,6 @@ struct ADIO_DAOS_cont {
     dfs_obj_t *obj;
     /** Array Object ID for the MPI file */
     daos_obj_id_t oid;
-    /** Array OH for the MPI file */
-    daos_handle_t oh;
     /** Object class of the DAOS object associated with the file */
     daos_oclass_id_t obj_class;
     /** data size to store in a dkey */
@@ -75,78 +73,15 @@ struct ADIO_DAOS_cont {
 
 struct ADIO_DAOS_req {
     MPI_Request req;
-    MPI_Offset nbytes;
+    daos_size_t nbytes;
     daos_event_t daos_event;
-    daos_array_iod_t iod;
+    dfs_iod_t iod;
     daos_range_t rg;
     d_sg_list_t sgl;
     d_iov_t iov;
     daos_range_t *rgs;
     d_iov_t *iovs;
 };
-
-enum {
-    HANDLE_POOL,
-    HANDLE_CO,
-    HANDLE_OBJ
-};
-
-static inline void
-handle_share(daos_handle_t * hdl, int type, int rank, daos_handle_t parent, MPI_Comm comm)
-{
-    d_iov_t ghdl = { NULL, 0, 0 };
-    int rc;
-
-    if (rank == 0) {
-        /** fetch size of global handle */
-        if (type == HANDLE_POOL)
-            rc = daos_pool_local2global(*hdl, &ghdl);
-        else if (type == HANDLE_CO)
-            rc = daos_cont_local2global(*hdl, &ghdl);
-        else {
-            assert(type == HANDLE_OBJ);
-            rc = daos_array_local2global(*hdl, &ghdl);
-        }
-        assert(rc == 0);
-    }
-
-    /** broadcast size of global handle to all peers */
-    rc = MPI_Bcast(&ghdl.iov_buf_len, 1, MPI_UINT64_T, 0, comm);
-    assert(rc == MPI_SUCCESS);
-
-    /** allocate buffer for global pool handle */
-    ghdl.iov_buf = ADIOI_Malloc(ghdl.iov_buf_len);
-    ghdl.iov_len = ghdl.iov_buf_len;
-
-    if (rank == 0) {
-        /** generate actual global handle to share with peer tasks */
-        if (type == HANDLE_POOL)
-            rc = daos_pool_local2global(*hdl, &ghdl);
-        else if (type == HANDLE_CO)
-            rc = daos_cont_local2global(*hdl, &ghdl);
-        else
-            rc = daos_array_local2global(*hdl, &ghdl);
-        assert(rc == 0);
-    }
-
-    /** broadcast global handle to all peers */
-    rc = MPI_Bcast(ghdl.iov_buf, ghdl.iov_len, MPI_BYTE, 0, comm);
-    assert(rc == MPI_SUCCESS);
-
-    if (rank != 0) {
-        /** unpack global handle */
-        if (type == HANDLE_POOL)
-            rc = daos_pool_global2local(ghdl, hdl);
-        else if (type == HANDLE_CO)
-            rc = daos_cont_global2local(parent, ghdl, hdl);
-        else
-            rc = daos_array_global2local(parent, ghdl, 0, hdl);
-        assert(rc == 0);
-    }
-
-    ADIOI_Free(ghdl.iov_buf);
-    MPI_Barrier(comm);
-}
 
 /** initialize the DAOS library and hashtables for handles */
 void ADIOI_DAOS_Init(int *error_code);
