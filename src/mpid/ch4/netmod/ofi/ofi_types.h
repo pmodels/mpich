@@ -316,6 +316,32 @@ typedef struct MPIDI_OFI_conn_manager_t {
                                          * outstanding dynamic process connections. */
 } MPIDI_OFI_conn_manager_t;
 
+typedef struct MPIDI_OFI_am_t {
+#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+#else
+    /* need bigger alignment */
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+#endif
+    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDIU_buf_pool_t *am_buf_pool;
+    OPA_int_t am_inflight_inject_emus;
+    OPA_int_t am_inflight_rma_send_mrs;
+    /* Sequence number trackers for active messages */
+    void *am_send_seq_tracker;
+    void *am_recv_seq_tracker;
+    /* Queue (utlist) to store early-arrival active messages */
+    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
+
+    /* Completion queue buffering */
+    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
+    int cq_buffered_static_head;
+    int cq_buffered_static_tail;
+    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
+} MPIDI_OFI_am_t;
+
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 typedef struct {
@@ -361,29 +387,7 @@ typedef struct {
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
-    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-#else
-    /* need bigger alignment */
-    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-#endif
-    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDIU_buf_pool_t *am_buf_pool;
-    OPA_int_t am_inflight_inject_emus;
-    OPA_int_t am_inflight_rma_send_mrs;
-    /* Sequence number trackers for active messages */
-    void *am_send_seq_tracker;
-    void *am_recv_seq_tracker;
-    /* Queue (utlist) to store early-arrival active messages */
-    MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
-
-    /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
-    int cq_buffered_static_head;
-    int cq_buffered_static_tail;
-    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
+    MPIDI_OFI_am_t am;
 
     /* Process management and PMI globals */
     int pname_set;

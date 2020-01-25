@@ -509,7 +509,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     int mpi_errno = MPI_SUCCESS, i;
     void *table = NULL;
     fi_addr_t *mapped_table;
-    size_t optlen;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_INIT);
@@ -646,51 +645,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ---------------------------------- */
     /* Initialize Active Message          */
     /* ---------------------------------- */
-    if (MPIDI_OFI_ENABLE_AM) {
-        /* Maximum possible message size for short message send (=eager send)
-         * See MPIDI_OFI_do_am_isend for short/long switching logic */
-        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
-        MPIDI_OFI_global.am_buf_pool =
-            MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-
-        MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
-            NULL;
-        MPIDI_OFI_global.cq_buffered_static_head = MPIDI_OFI_global.cq_buffered_static_tail = 0;
-        optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
-
-        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[0].rx->fid),
-                                 FI_OPT_ENDPOINT,
-                                 FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
-
-        MPIDIU_map_create(&MPIDI_OFI_global.am_recv_seq_tracker, MPL_MEM_BUFFER);
-        MPIDIU_map_create(&MPIDI_OFI_global.am_send_seq_tracker, MPL_MEM_BUFFER);
-        MPIDI_OFI_global.am_unordered_msgs = NULL;
-
-        for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIDI_OFI_global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
-            MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
-            MPIDI_OFI_global.am_reqs[i].index = i;
-            MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
-            MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_OFI_global.am_iov[i]);
-            MPIDI_OFI_global.am_iov[i].iov_base = MPIDI_OFI_global.am_bufs[i];
-            MPIDI_OFI_global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
-            MPIDI_OFI_global.am_msg[i].msg_iov = &MPIDI_OFI_global.am_iov[i];
-            MPIDI_OFI_global.am_msg[i].desc = NULL;
-            MPIDI_OFI_global.am_msg[i].addr = FI_ADDR_UNSPEC;
-            MPIDI_OFI_global.am_msg[i].context = &MPIDI_OFI_global.am_reqs[i].context;
-            MPIDI_OFI_global.am_msg[i].iov_count = 1;
-            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
-                                            &MPIDI_OFI_global.am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), prepost, FALSE);
-        }
-
-        /* Grow the header handlers down */
-        MPIDIG_global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] =
-            MPIDI_OFI_control_handler;
-        MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
-    }
-    OPA_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
-    OPA_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
+    MPIDI_OFI_am_init();
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -729,7 +684,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight RMA send long buffers */
-    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
+    while (OPA_load_int(&MPIDI_OFI_global.am.am_inflight_rma_send_mrs) > 0)
         MPIDI_OFI_PROGRESS();
 
     /* Destroy RMA key allocator */
@@ -743,9 +698,9 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
-    while (OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
+    while (OPA_load_int(&MPIDI_OFI_global.am.am_inflight_inject_emus) > 0)
         MPIDI_OFI_PROGRESS();
-    MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
+    MPIR_Assert(OPA_load_int(&MPIDI_OFI_global.am.am_inflight_inject_emus) == 0);
 
     /* Tearing down endpoints */
     for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
@@ -762,23 +717,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
 
-    if (MPIDI_OFI_ENABLE_AM) {
-        while (MPIDI_OFI_global.am_unordered_msgs) {
-            MPIDI_OFI_am_unordered_msg_t *uo_msg = MPIDI_OFI_global.am_unordered_msgs;
-            DL_DELETE(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
-        }
-        MPIDIU_map_destroy(MPIDI_OFI_global.am_send_seq_tracker);
-        MPIDIU_map_destroy(MPIDI_OFI_global.am_recv_seq_tracker);
-
-        for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-            MPL_free(MPIDI_OFI_global.am_bufs[i]);
-
-        MPIDIU_destroy_buf_pool(MPIDI_OFI_global.am_buf_pool);
-
-        MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
-                    MPIDI_OFI_global.cq_buffered_static_tail);
-        MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
-    }
+    MPIDI_OFI_am_finalize();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FINALIZE);

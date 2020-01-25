@@ -18,11 +18,11 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t add
     uint64_t id = addr;
     void *r;
 
-    r = MPIDIU_map_lookup(MPIDI_OFI_global.am_recv_seq_tracker, id);
+    r = MPIDIU_map_lookup(MPIDI_OFI_global.am.am_recv_seq_tracker, id);
     if (r == MPIDIU_MAP_NOT_FOUND) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "First time adding recv seqno addr=%" PRIx64 "\n", addr));
-        MPIDIU_map_set(MPIDI_OFI_global.am_recv_seq_tracker, id, 0, MPL_MEM_OTHER);
+        MPIDIU_map_set(MPIDI_OFI_global.am.am_recv_seq_tracker, id, 0, MPL_MEM_OTHER);
         return 0;
     } else {
         return (uint16_t) (uintptr_t) r;
@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_set_next_recv_seqno(fi_addr_t addr, u
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "Next recv seqno=%d addr=%" PRIx64 "\n", seqno, addr));
 
-    MPIDIU_map_update(MPIDI_OFI_global.am_recv_seq_tracker, id, (void *) (uintptr_t) seqno,
+    MPIDIU_map_update(MPIDI_OFI_global.am.am_recv_seq_tracker, id, (void *) (uintptr_t) seqno,
                       MPL_MEM_OTHER);
 }
 
@@ -59,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
     packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->data_sz;
     MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
 
-    DL_APPEND(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
+    DL_APPEND(MPIDI_OFI_global.am.am_unordered_msgs, uo_msg);
 
     return MPI_SUCCESS;
 }
@@ -76,13 +76,13 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
      * in the queue is extremely small.
      * If it's not the case, we should consider using better data structure and algorithm
      * to look up. */
-    DL_FOREACH(MPIDI_OFI_global.am_unordered_msgs, uo_msg) {
+    DL_FOREACH(MPIDI_OFI_global.am.am_unordered_msgs, uo_msg) {
         if (uo_msg->am_hdr.fi_src_addr == addr && uo_msg->am_hdr.seqno == seqno) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                             (MPL_DBG_FDEST,
                              "Found unordered message in the queue: addr=%" PRIx64 ", seqno=%d\n",
                              addr, seqno));
-            DL_DELETE(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
+            DL_DELETE(MPIDI_OFI_global.am.am_unordered_msgs, uo_msg);
             return uo_msg;
         }
     }
@@ -219,7 +219,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         curr_len = MPL_MIN(rem, MPIDI_OFI_global.max_msg_size);
 
         MPIR_Assert(sizeof(MPIDI_OFI_am_request_t) <= MPIDI_OFI_BUF_POOL_SIZE);
-        am_req = (MPIDI_OFI_am_request_t *) MPIDIU_get_buf(MPIDI_OFI_global.am_buf_pool);
+        am_req = (MPIDI_OFI_am_request_t *) MPIDIU_get_buf(MPIDI_OFI_global.am.am_buf_pool);
         MPIR_Assert(am_req);
 
         am_req->req_hdr = MPIDI_OFI_AMREQUEST(rreq, req_hdr);
@@ -406,7 +406,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
         MPIDI_OFI_mr_key_free(mr_key);
     }
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
-    OPA_decr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
+    OPA_decr_int(&MPIDI_OFI_global.am.am_inflight_rma_send_mrs);
 
     MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 

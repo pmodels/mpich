@@ -23,14 +23,14 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
     uint64_t id = addr;
     uint16_t seq, old_seq;
     void *ret;
-    ret = MPIDIU_map_lookup(MPIDI_OFI_global.am_send_seq_tracker, id);
+    ret = MPIDIU_map_lookup(MPIDI_OFI_global.am.am_send_seq_tracker, id);
     if (ret == MPIDIU_MAP_NOT_FOUND)
         old_seq = 0;
     else
         old_seq = (uint16_t) (uintptr_t) ret;
 
     seq = old_seq + 1;
-    MPIDIU_map_update(MPIDI_OFI_global.am_send_seq_tracker, id, (void *) (uintptr_t) seq,
+    MPIDIU_map_update(MPIDI_OFI_global.am.am_send_seq_tracker, id, (void *) (uintptr_t) seq,
                       MPL_MEM_OTHER);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -106,7 +106,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
-            MPIDIU_get_buf(MPIDI_OFI_global.am_buf_pool);
+            MPIDIU_get_buf(MPIDI_OFI_global.am.am_buf_pool);
         MPIR_Assert(req_hdr);
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 
@@ -141,7 +141,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
-                                       &MPIDI_OFI_global.am_msg[am->index],
+                                       &MPIDI_OFI_global.am.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), repost);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
@@ -150,6 +150,11 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     goto fn_exit;
 }
 
+/* NOTE: cq_buffered_static_head/tail seems have opposite of usual meaning */
+#define S_HEAD MPIDI_OFI_global.am.cq_buffered_static_head
+#define S_TAIL MPIDI_OFI_global.am.cq_buffered_static_tail
+#define D_HEAD MPIDI_OFI_global.am.cq_buffered_dynamic_head
+#define D_TAIL MPIDI_OFI_global.am.cq_buffered_dynamic_tail
 static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
 {
     int mpi_errno = MPI_SUCCESS, ret;
@@ -172,24 +177,100 @@ static inline int MPIDI_OFI_progress_do_queue(int vci_idx)
 
     /* If the statically allocated buffered list is full or we've already
      * started using the dynamic list, continue using it. */
-    if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
-         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
-        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
+    if (((S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED == S_TAIL) || (NULL != D_HEAD)) {
         MPIDI_OFI_cq_list_t *list_entry =
             (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
         MPIR_Assert(list_entry);
         list_entry->cq_entry = cq_entry;
-        LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                  MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
+        LL_APPEND(D_HEAD, D_TAIL, list_entry);
     } else {
-        MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                 cq_buffered_static_head].cq_entry = cq_entry;
-        MPIDI_OFI_global.cq_buffered_static_head =
-            (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        MPIDI_OFI_global.am.cq_buffered_static_list[S_HEAD].cq_entry = cq_entry;
+        S_HEAD = (S_HEAD + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
     }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *wc, ssize_t num)
+{
+    int rc = 0;
+
+    if ((S_HEAD != S_TAIL) || (NULL != D_HEAD)) {
+        /* If the static list isn't empty, do so first */
+        if (S_HEAD != S_TAIL) {
+            wc[0] = MPIDI_OFI_global.am.cq_buffered_static_list[S_TAIL].cq_entry;
+            S_TAIL = (S_TAIL + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        }
+        /* If there's anything in the dynamic list, it goes second. */
+        else if (NULL != D_HEAD) {
+            MPIDI_OFI_cq_list_t *cq_list_entry = D_HEAD;
+            LL_DELETE(D_HEAD, D_TAIL, cq_list_entry);
+            wc[0] = cq_list_entry->cq_entry;
+            MPL_free(cq_list_entry);
+        }
+        rc = 1;
+    }
+    return rc;
+}
+
+#undef S_HEAD
+#undef S_TAIL
+#undef D_HEAD
+#undef D_TAIL
+
+static inline int MPIDI_OFI_do_am_isend_header(int rank,
+                                               MPIR_Comm * comm,
+                                               int handler_id,
+                                               const void *am_hdr,
+                                               size_t am_hdr_sz, MPIR_Request * sreq)
+{
+    struct iovec *iov;
+    MPIDI_OFI_am_header_t *msg_hdr;
+    int mpi_errno = MPI_SUCCESS, c;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
+
+    MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
+    mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
+    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+    msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
+    msg_hdr->handler_id = handler_id;
+    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->data_sz = 0;
+    msg_hdr->am_type = MPIDI_AMTYPE_SHORT_HDR;
+    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
+    msg_hdr->fi_src_addr
+        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
+
+    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
+
+    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    MPIR_cc_incr(sreq->cc_ptr, &c);
+
+    iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
+
+    iov[0].iov_base = msg_hdr;
+    iov[0].iov_len = sizeof(*msg_hdr);
+
+    MPIR_Assert((sizeof(*msg_hdr) + am_hdr_sz) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+    iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
+    iov[1].iov_len = am_hdr_sz;
+    MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 2,
+                                     MPIDI_OFI_comm_to_phys(comm, rank),
+                                     &MPIDI_OFI_AMREQUEST(sreq, context)), sendv);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -248,7 +329,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                              0ULL,
                              lmt_info->rma_key,
                              0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
-    OPA_incr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
+    OPA_incr_int(&MPIDI_OFI_global.am.am_inflight_rma_send_mrs);
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
         /* MR_BASIC */
@@ -422,7 +503,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
 
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
     MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
-    OPA_incr_int(&MPIDI_OFI_global.am_inflight_inject_emus);
+    OPA_incr_int(&MPIDI_OFI_global.am.am_inflight_inject_emus);
 
     MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[0].tx, ibuf, len,
                                     NULL /* desc */ , addr, &(MPIDI_OFI_REQUEST(sreq, context))),
@@ -482,4 +563,80 @@ static inline int MPIDI_OFI_do_inject(int rank,
     goto fn_exit;
 }
 
+static inline int MPIDI_OFI_am_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_am_t *am = &MPIDI_OFI_global.am;
+    if (MPIDI_OFI_ENABLE_AM) {
+        /* Maximum possible message size for short message send (=eager send)
+         * See MPIDI_OFI_do_am_isend for short/long switching logic */
+        MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
+
+        struct fid_ep *rx = MPIDI_OFI_global.ctx[0].rx;
+
+        am->am_buf_pool = MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
+
+        am->cq_buffered_dynamic_head = am->cq_buffered_dynamic_tail = NULL;
+        am->cq_buffered_static_head = am->cq_buffered_static_tail = 0;
+
+        int optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
+        MPIDI_OFI_CALL(fi_setopt(&(rx->fid), FI_OPT_ENDPOINT,
+                                 FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
+
+        MPIDIU_map_create(&am->am_recv_seq_tracker, MPL_MEM_BUFFER);
+        MPIDIU_map_create(&am->am_send_seq_tracker, MPL_MEM_BUFFER);
+        am->am_unordered_msgs = NULL;
+
+        for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
+            am->am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
+            am->am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
+            am->am_reqs[i].index = i;
+            MPIR_Assert(am->am_bufs[i]);
+            MPIDI_OFI_ASSERT_IOVEC_ALIGN(&am->am_iov[i]);
+            am->am_iov[i].iov_base = am->am_bufs[i];
+            am->am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
+            am->am_msg[i].msg_iov = &am->am_iov[i];
+            am->am_msg[i].desc = NULL;
+            am->am_msg[i].addr = FI_ADDR_UNSPEC;
+            am->am_msg[i].context = &am->am_reqs[i].context;
+            am->am_msg[i].iov_count = 1;
+            MPIDI_OFI_CALL_RETRY(fi_recvmsg(rx, &am->am_msg[i], FI_MULTI_RECV | FI_COMPLETION),
+                                 prepost, FALSE);
+        }
+
+        /* Grow the header handlers down */
+        MPIDIG_global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] =
+            MPIDI_OFI_control_handler;
+        MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
+    }
+    OPA_store_int(&am->am_inflight_inject_emus, 0);
+    OPA_store_int(&am->am_inflight_rma_send_mrs, 0);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline void MPIDI_OFI_am_finalize(void)
+{
+    MPIDI_OFI_am_t *am = &MPIDI_OFI_global.am;
+    if (MPIDI_OFI_ENABLE_AM) {
+        while (am->am_unordered_msgs) {
+            MPIDI_OFI_am_unordered_msg_t *uo_msg = am->am_unordered_msgs;
+            DL_DELETE(am->am_unordered_msgs, uo_msg);
+        }
+        MPIDIU_map_destroy(am->am_send_seq_tracker);
+        MPIDIU_map_destroy(am->am_recv_seq_tracker);
+
+        for (int i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
+            MPL_free(am->am_bufs[i]);
+
+        MPIDIU_destroy_buf_pool(am->am_buf_pool);
+
+        MPIR_Assert(am->cq_buffered_static_head == am->cq_buffered_static_tail);
+        MPIR_Assert(NULL == am->cq_buffered_dynamic_head);
+    }
+}
 #endif /* OFI_AM_IMPL_H_INCLUDED */
