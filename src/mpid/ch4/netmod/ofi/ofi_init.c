@@ -1463,6 +1463,7 @@ static int find_provider(struct fi_info *hints)
         init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
         hints->caps = prov_use->caps;
+        hints->addr_format = prov_use->addr_format;
 
         fi_freeinfo(prov_list);
     } else {
@@ -1560,6 +1561,11 @@ static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_lis
         if (!match_global_settings(prov)) {
             prov = prov->next;
             continue;
+#ifdef MPIDI_CH4_OFI_SKIP_IPV6
+        } else if (prov->addr_format == FI_SOCKADDR_IN6) {
+            prov = prov->next;
+            continue;
+#endif
         } else {
             prov_use = prov;
             break;
