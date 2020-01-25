@@ -106,26 +106,24 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
     MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_SET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_set", "**mpi_info_set %I %s %s", info, key, value);
     }
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-#endif
 }
 
 
