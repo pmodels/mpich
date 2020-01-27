@@ -19,5 +19,7 @@ include $(top_srcdir)/src/mpid/ch4/netmod/Makefile.mk
 if BUILD_CH4_SHM
 include $(top_srcdir)/src/mpid/ch4/shm/Makefile.mk
 endif BUILD_CH4_SHM
-
+if BUILD_CH4_GPU
+include $(top_srcdir)/src/mpid/ch4/gpu/Makefile.mk
+endif BUILD_CH4_GPU
 endif BUILD_CH4
