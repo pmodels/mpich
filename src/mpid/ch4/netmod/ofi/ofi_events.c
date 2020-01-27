@@ -100,7 +100,7 @@ static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* util_id should be the last thing to change in rreq. Reason is
      * we use util_id to indicate peek_event has completed and all the
      * relevant values have been copied to rreq. */
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+    MPL_atomic_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)), MPIDI_OFI_PEEK_FOUND);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PEEK_EVENT);
     return mpi_errno;
@@ -120,7 +120,8 @@ static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             /* util_id should be the last thing to change in rreq. Reason is
              * we use util_id to indicate peek_event has completed and all the
              * relevant values have been copied to rreq. */
-            MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_NOT_FOUND;
+            MPL_atomic_store_int(&(MPIDI_OFI_REQUEST(rreq, util_id)),
+                                         MPIDI_OFI_PEEK_NOT_FOUND);
             break;
 
         case MPIDI_OFI_EVENT_ACCEPT_PROBE:
@@ -189,9 +190,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
 
     /* If synchronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
-        uint64_t ss_bits = MPIDI_OFI_init_sendtag(MPIDI_OFI_REQUEST(rreq, util_id),
-                                                  rreq->status.MPI_TAG,
-                                                  MPIDI_OFI_SYNC_SEND_ACK);
+        /* Read ordering unnecessary for context_id stored in util_id here, so use relaxed load */
+        uint64_t ss_bits =
+            MPIDI_OFI_init_sendtag(MPL_atomic_relaxed_load_int(&MPIDI_OFI_REQUEST(rreq, util_id)),
+                                   rreq->status.MPI_TAG,
+                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
