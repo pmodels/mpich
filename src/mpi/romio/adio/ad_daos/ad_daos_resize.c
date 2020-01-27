@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -24,7 +24,7 @@ void ADIOI_DAOS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     MPI_Barrier(fd->comm);
 
     if (rank == fd->hints->ranklist[0])
-        ret = daos_array_set_size(cont->oh, DAOS_TX_NONE, size, NULL);
+        ret = dfs_punch(cont->dfs, cont->obj, size, DFS_MAX_FSIZE);
 
     MPI_Bcast(&ret, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
     if (ret != 0)
