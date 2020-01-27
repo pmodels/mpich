@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- * Copyright (C) 2018-2019 Intel Corporation
+ * Copyright (C) 2018-2020 Intel Corporation
  *
  * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
  * The Government's rights to use, modify, reproduce, release, perform, display,
@@ -120,14 +120,16 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
 
     d_sg_list_t *sgl, loc_sgl;
     d_iov_t *iovs;
-    daos_array_iod_t *iod, loc_iod;
+    dfs_iod_t *iod, loc_iod;
     daos_range_t *rgs;
+    daos_size_t *nbytes, loc_nbytes;
 
     if (request) {
         aio_req = (struct ADIO_DAOS_req *) ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
         iod = &aio_req->iod;
         sgl = &aio_req->sgl;
+        nbytes = &aio_req->nbytes;
 
         if (ADIOI_DAOS_greq_class == 0) {
             MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
@@ -137,10 +139,10 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         }
         MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
         memcpy(&(aio_req->req), request, sizeof(MPI_Request));
-        aio_req->nbytes = 0;
     } else {
         iod = &loc_iod;
         sgl = &loc_sgl;
+        nbytes = &loc_nbytes;
     }
 
     if (filetype_size == 0) {
@@ -219,9 +221,6 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
 #ifdef D_PRINT_IO
         printf("(%d) Single: idx %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
 #endif
-
-        if (request)
-            aio_req->nbytes = bufsize;
     } else {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
         disp = fd->disp;
@@ -317,8 +316,6 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
             if (!i) {
                 rgs[i].rg_idx = start_off;
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);
-                if (request)
-                    aio_req->nbytes += rgs[i].rg_len;
 #ifdef D_PRINT_IO
                 printf("(%d) %d: idx %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
 #endif
@@ -331,8 +328,6 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                     printf("(%d) %d: idx %lld len %zu\n",
                            mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
 #endif
-                    if (request)
-                        aio_req->nbytes += rgs[i].rg_len;
                 } else
                     i--;
             }
@@ -347,24 +342,24 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     }
 
     /** set array location */
-    iod->arr_nr = n_write_lists;
-    iod->arr_rgs = rgs;
+    iod->iod_nr = n_write_lists;
+    iod->iod_rgs = rgs;
     if (request)
         aio_req->rgs = rgs;
 
     if (rw_type == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
-                               (request ? &aio_req->daos_event : NULL));
+        ret = dfs_writex(cont->dfs, cont->obj, iod, sgl, (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
+            PRINT_MSG(stderr, "dfs_writex() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
+        *nbytes = bufsize;
     } else if (rw_type == DAOS_READ) {
-        ret = daos_array_read(cont->oh, DAOS_TX_NONE, iod, sgl, NULL,
-                              (request ? &aio_req->daos_event : NULL));
+        ret = dfs_readx(cont->dfs, cont->obj, iod, sgl, nbytes,
+                        (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
+            PRINT_MSG(stderr, "dfs_readx() failed with %d\n", ret);
             *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, ret);
             return;
         }
@@ -383,8 +378,9 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     fd->fp_sys_posn = -1;       /* clear this. */
 
 #ifdef HAVE_STATUS_SET_BYTES
-    if (status)
-        MPIR_Status_set_bytes(status, datatype, bufsize);
+    if (request == NULL && status) {
+        MPIR_Status_set_bytes(status, datatype, *nbytes);
+    }
 #endif
 
     if (!request) {
