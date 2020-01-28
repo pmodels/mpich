@@ -557,7 +557,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-    MPIDIG_send_long_req_mst_t *lreq_hdr = (MPIDIG_send_long_req_mst_t *) am_hdr;
+    MPIDIG_send_long_req_msg_t *lreq_hdr = (MPIDIG_send_long_req_msg_t *) am_hdr;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIR_Request *anysource_partner = NULL;

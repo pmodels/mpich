@@ -142,13 +142,13 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
-                                            &am_iov[0], 2, origin_addr, origin_count,
+                                            am_iov, 2, origin_addr, origin_count,
                                             origin_datatype, sreq);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
-                                           &am_iov[0], 2, origin_addr, origin_count,
+                                           am_iov, 2, origin_addr, origin_count,
                                            origin_datatype, sreq);
         }
     } else {
@@ -458,14 +458,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                            &am_iov[0], 2, origin_addr,
+                                            am_iov, 2, origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
                                             sreq);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                           &am_iov[0], 2, origin_addr,
+                                           am_iov, 2, origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
                                            sreq);
         }
@@ -654,14 +654,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
-                                            &am_iov[0], 2, origin_addr,
+                                            am_iov, 2, origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
                                             sreq);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
-                                           &am_iov[0], 2, origin_addr,
+                                           am_iov, 2, origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
                                            sreq);
         }
