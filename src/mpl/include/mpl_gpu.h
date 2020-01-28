@@ -10,8 +10,11 @@
 
 #ifdef MPL_HAVE_CUDA
 #include "mpl_gpu_cuda.h"
+#elif defined MPL_HAVE_ZE
+#include "mpl_gpu_ze.h"
 #else
 #include "mpl_gpu_fallback.h"
+
 #endif
 
 typedef enum {
