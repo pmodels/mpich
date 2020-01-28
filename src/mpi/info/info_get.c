@@ -140,9 +140,8 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 
     /* ... body of routine ...  */
     mpi_errno = MPIR_Info_get_impl(info_ptr, key, valuelen, value, flag);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
-    if (mpi_errno)
-        goto fn_fail;
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_GET);
@@ -160,8 +159,8 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
                                          "**mpi_info_get %I %s %d %p %p", info, key, valuelen,
                                          value, flag);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
 #endif
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
