@@ -6,5 +6,9 @@
 if MPL_HAVE_CUDA
 lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda.c
 else
+if MPL_HAVE_ZE
+lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_ze.c
+else
 lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_fallback.c
+endif
 endif
