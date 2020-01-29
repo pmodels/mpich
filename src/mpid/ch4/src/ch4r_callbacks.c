@@ -656,24 +656,3 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
   fn_fail:
     goto fn_exit;
 }
-
-int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    return MPI_SUCCESS;
-}
-
-int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req)
-{
-    MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPL_exit(hdr->tag);
-    return MPI_SUCCESS;
-}

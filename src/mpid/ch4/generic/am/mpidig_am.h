@@ -94,4 +94,9 @@ int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg
 int MPIDIG_am_init(void);
 void MPIDIG_am_finalize(void);
 
+/* am protocol prototypes */
+
+void MPIDIG_am_comm_abort_init(void);
+int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code);
+
 #endif /* MPIDIG_AM_H_INCLUDED */
