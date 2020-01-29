@@ -37,6 +37,7 @@ int MPIDIG_am_reg_cb(int handler_id,
 int MPIDIG_init(void);
 void MPIDIG_finalize(void);
 
+int MPIDIG_am_comm_abort_init(void);
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
 
 #endif /* MPIDIG_H_INCLUDED */

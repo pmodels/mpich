@@ -158,8 +158,7 @@ int MPIDIG_init(void)
                                  &MPIDIG_get_acc_data_target_msg_cb);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_COMM_ABORT,
-                                 &MPIDIG_comm_abort_origin_cb, &MPIDIG_comm_abort_target_msg_cb);
+    mpi_errno = MPIDIG_am_comm_abort_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
