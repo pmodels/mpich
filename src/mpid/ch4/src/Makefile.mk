@@ -31,7 +31,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_recvq.h   \
                   src/mpid/ch4/src/ch4r_recv.h    \
                   src/mpid/ch4/src/ch4r_buf.h     \
-                  src/mpid/ch4/src/ch4r_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_origin_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_target_callbacks.h     \
                   src/mpid/ch4/src/ch4r_request.h
@@ -49,7 +48,6 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4r_comm.c          \
                     src/mpid/ch4/src/ch4r_proc.c          \
                     src/mpid/ch4/src/ch4r_recvq.c         \
-                    src/mpid/ch4/src/ch4r_callbacks.c     \
                     src/mpid/ch4/src/ch4r_rma_origin_callbacks.c     \
                     src/mpid/ch4/src/ch4r_rma_target_callbacks.c     \
                     src/mpid/ch4/src/ch4r_win.c           \
