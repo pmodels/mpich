@@ -54,8 +54,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .am_isendv = MPIDI_NM_am_isendv,
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
-    .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
-    .am_recv = MPIDI_NM_am_recv
+    .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {

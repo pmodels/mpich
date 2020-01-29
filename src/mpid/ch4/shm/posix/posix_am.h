@@ -423,30 +423,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_RECV);
-
-    MPIDIG_send_long_ack_msg_t msg;
-
-    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = req;
-    MPIR_Assert((void *) msg.sreq_ptr != NULL);
-
-    mpi_errno =
-        MPIDI_POSIX_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
-                                      MPIDIG_REQUEST(req, rank), MPIDI_POSIX_AM_HDR_CH4,
-                                      MPIDIG_SEND_LONG_ACK, &msg, sizeof(msg));
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* POSIX_AM_H_INCLUDED */
