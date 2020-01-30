@@ -1703,9 +1703,8 @@ static void update_global_settings(struct fi_info *prov_use, struct fi_info *hin
                                prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
     } else {
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov_use->domain_attr->mr_mode == FI_MR_VIRT_ADDR);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
-                               prov_use->domain_attr->mr_mode == FI_MR_PROV_KEY);
+                               prov_use->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
+        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov_use->domain_attr->mr_mode & FI_MR_PROV_KEY);
     }
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov_use->caps & FI_TAGGED) &&
