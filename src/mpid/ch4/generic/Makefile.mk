@@ -21,5 +21,11 @@ mpi_core_sources += src/mpid/ch4/generic/mpidig_globals.c \
                     src/mpid/ch4/generic/mpidig_am_send.c \
                     src/mpid/ch4/generic/mpidig_am_ssend.c \
                     src/mpid/ch4/generic/mpidig_am_long.c \
+                    src/mpid/ch4/generic/mpidig_am_put.c \
+                    src/mpid/ch4/generic/mpidig_am_get.c \
+                    src/mpid/ch4/generic/mpidig_am_cswap.c \
+                    src/mpid/ch4/generic/mpidig_am_acc.c \
+                    src/mpid/ch4/generic/mpidig_am_get_acc.c \
+                    src/mpid/ch4/generic/mpidig_am_win_sync.c \
                     src/mpid/ch4/generic/mpidig_am_comm_abort.c \
                     src/mpid/ch4/generic/mpidig_init.c

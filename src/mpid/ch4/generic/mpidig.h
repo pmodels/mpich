@@ -37,6 +37,40 @@ int MPIDIG_am_reg_cb(int handler_id,
 int MPIDIG_init(void);
 void MPIDIG_finalize(void);
 
+int MPIDIG_RMA_Init_targetcb_pvars(void);
+
+int MPIDIG_am_put_init(void);
+int MPIDIG_do_put(const void *origin_addr, int origin_count,
+                  MPI_Datatype origin_datatype, int target_rank,
+                  MPI_Aint target_disp, int target_count,
+                  MPI_Datatype target_datatype, MPIR_Win * win, MPIR_Request ** sreq_ptr);
+
+int MPIDIG_am_get_init(void);
+int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                  int target_rank, MPI_Aint target_disp, int target_count,
+                  MPI_Datatype target_datatype, MPIR_Win * win, MPIR_Request ** sreq_ptr);
+
+int MPIDIG_am_cswap_init(void);
+int MPIDIG_do_cswap(const void *origin_addr, const void *compare_addr,
+                    void *result_addr, MPI_Datatype datatype,
+                    int target_rank, MPI_Aint target_disp, MPIR_Win * win);
+
+int MPIDIG_am_acc_init(void);
+int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, int target_rank,
+                         MPI_Aint target_disp, int target_count,
+                         MPI_Datatype target_datatype,
+                         MPI_Op op, MPIR_Win * win, MPIR_Request ** sreq_ptr);
+
+int MPIDIG_am_get_acc_init(void);
+int MPIDIG_do_get_accumulate(const void *origin_addr, int origin_count,
+                             MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                             MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                             int target_count, MPI_Datatype target_datatype,
+                             MPI_Op op, MPIR_Win * win, MPIR_Request ** sreq_ptr);
+
+int MPIDIG_am_win_sync_init(void);
+
 int MPIDIG_am_comm_abort_init(void);
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
 
