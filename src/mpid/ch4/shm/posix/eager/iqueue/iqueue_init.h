@@ -20,7 +20,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS
       category    : CH4
       type        : int
-      default     : 32
+      default     : 64
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
