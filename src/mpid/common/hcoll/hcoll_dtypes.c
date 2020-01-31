@@ -1,5 +1,5 @@
-#include "hcoll/api/hcoll_dte.h"
 #include "mpiimpl.h"
+#include "hcoll/api/hcoll_dte.h"
 #include "hcoll_dtypes.h"
 
 extern int hcoll_initialized;
