@@ -153,14 +153,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
                  * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-            mpi_errno = MPIDI_NM_am_recv(unexp_req);
-#else
-            if (MPIDI_REQUEST(unexp_req, is_local))
-                mpi_errno = MPIDI_SHM_am_recv(unexp_req);
-            else
-                mpi_errno = MPIDI_NM_am_recv(unexp_req);
-#endif
+            mpi_errno = MPIDIG_do_long_ack(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
@@ -264,14 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_NM_am_recv(message);
-#else
-        if (MPIDI_REQUEST(message, is_local))
-            mpi_errno = MPIDI_SHM_am_recv(message);
-        else
-            mpi_errno = MPIDI_NM_am_recv(message);
-#endif
+        MPIDIG_do_long_ack(message);
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
