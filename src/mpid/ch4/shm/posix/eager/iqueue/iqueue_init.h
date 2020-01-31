@@ -27,6 +27,16 @@ cvars:
       description : >-
         The number of cells used for the depth of the iqueue.
 
+    - name        : MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE
+      category    : CH4
+      type        : int
+      default     : 69632
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of each cell. 4KB * 17 is default to avoid a cache aliasing issue.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -46,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
-    transport->size_of_cell = MPIDI_POSIX_EAGER_IQUEUE_DEFAULT_CELL_SIZE;
+    transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
     /* Create one terminal for each process with which we will be able to communicate. */
     size_of_terminals =
