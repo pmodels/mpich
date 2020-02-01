@@ -99,9 +99,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
     size_t data_sz, in_data_sz;
     MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
-    struct iovec *iov;
-    int i, is_contig, iov_len;
-    size_t done, curr_len, rem;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
@@ -110,6 +107,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     p_data = in_data = (char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz;
     in_data_sz = data_sz = msg_hdr->data_sz;
 
+    int is_contig;
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, (msg_hdr + 1),
                                                        &p_data, &data_sz, 0 /* is_local */ ,
                                                        &is_contig, &target_cmpl_cb, &rreq);
@@ -117,53 +115,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     if (!rreq)
         goto fn_exit;
 
-    if (!p_data || !data_sz) {
-        if (target_cmpl_cb) {
-            MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-            target_cmpl_cb(rreq);
-        }
-        goto fn_exit;
-    }
-
-    if (is_contig) {
-        if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, __func__,
-                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
-                                                          "**truncate %d %d %d %d",
-                                                          rreq->status.MPI_SOURCE,
-                                                          rreq->status.MPI_TAG, data_sz,
-                                                          in_data_sz);
-        }
-
-        data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIR_Memcpy(p_data, in_data, data_sz);
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    } else {
-        done = 0;
-        rem = in_data_sz;
-        iov = (struct iovec *) p_data;
-        iov_len = data_sz;
-
-        for (i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIR_Memcpy(iov[i].iov_base, (char *) in_data + done, curr_len);
-            rem -= curr_len;
-            done += curr_len;
-        }
-
-        if (rem) {
-            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, __func__,
-                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
-                                                          "**truncate %d %d %d %d",
-                                                          rreq->status.MPI_SOURCE,
-                                                          rreq->status.MPI_TAG, data_sz,
-                                                          in_data_sz);
-        }
-
-        MPIR_STATUS_SET_COUNT(rreq->status, done);
-    }
+    MPIDIG_recv_copy(in_data, in_data_sz, p_data, data_sz, is_contig, rreq);
 
     if (target_cmpl_cb) {
         target_cmpl_cb(rreq);

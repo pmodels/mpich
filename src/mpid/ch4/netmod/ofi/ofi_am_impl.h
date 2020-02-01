@@ -430,27 +430,6 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
 
-    if (handler_id == MPIDIG_SEND &&
-        am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) > MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
-        MPIDIG_send_long_req_msg_t lreq_hdr;
-
-        MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
-        lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = sreq;
-        MPIDIG_REQUEST(sreq, req->lreq).src_buf = buf;
-        MPIDIG_REQUEST(sreq, req->lreq).count = count;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDIG_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
-        MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
-        MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
-        MPIDIG_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr));
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    }
-
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
     MPIR_ERR_CHECK(mpi_errno);
