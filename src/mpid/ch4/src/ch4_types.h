@@ -141,10 +141,6 @@ typedef struct MPIDIG_ssend_req_msg_t {
     MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_req_msg_t;
 
-typedef struct MPIDIG_ssend_ack_msg_t {
-    MPIR_Request *sreq_ptr;
-} MPIDIG_ssend_ack_msg_t;
-
 typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;

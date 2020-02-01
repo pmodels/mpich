@@ -50,28 +50,12 @@ int MPIDIG_init(void)
     MPIDI_global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM, MPIDIU_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_global.buf_pool);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDIG_send_origin_cb, &MPIDIG_send_target_msg_cb);
+    mpi_errno = MPIDIG_am_send_init();
+    MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIDIG_am_ssend_init();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_REQ, NULL /* Injection only */ ,
-                                 &MPIDIG_send_long_req_target_msg_cb);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_ACK, NULL /* Injection only */ ,
-                                 &MPIDIG_send_long_ack_target_msg_cb);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_LMT,
-                                 &MPIDIG_send_long_lmt_origin_cb,
-                                 &MPIDIG_send_long_lmt_target_msg_cb);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ,
-                                 &MPIDIG_send_origin_cb, &MPIDIG_ssend_target_msg_cb);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK,
-                                 &MPIDIG_ssend_ack_origin_cb, &MPIDIG_ssend_ack_target_msg_cb);
+    mpi_errno = MPIDIG_am_long_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDIG_put_origin_cb, &MPIDIG_put_target_msg_cb);
