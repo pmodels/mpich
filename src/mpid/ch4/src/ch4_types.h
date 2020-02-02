@@ -114,13 +114,6 @@ enum {
     MPIDIG_ACC_SRCBUF_PACKED = 1
 };
 
-typedef struct MPIDIG_hdr_t {
-    int src_rank;
-    int tag;
-    MPIR_Context_id_t context_id;
-    int error_bits;
-} MPIDIG_hdr_t;
-
 typedef struct MPIDIG_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;

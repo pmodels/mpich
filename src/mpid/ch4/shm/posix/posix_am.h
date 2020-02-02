@@ -185,10 +185,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 #endif
 
     POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
+                ", data_sz %" PRIu64 ", seq_num = %d], " "] to %d\n",
                 (uint64_t) msg_hdr_p->handler_id,
-                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM,
-                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
+                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM, grank);
 
     result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
 
