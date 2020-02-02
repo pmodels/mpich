@@ -74,4 +74,49 @@ int MPIDIG_am_win_sync_init(void);
 int MPIDIG_am_comm_abort_init(void);
 int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
 
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+#define MPIDIG_AM_SEND(is_local, rank, comm, ID, data, count, datatype, req) \
+    mpi_errno = MPIDI_NM_am_isend(rank, comm, ID, &am_hdr, sizeof(am_hdr), \
+                                  data, count, datatype, req)
+
+#define MPIDIG_AM_SENDV(is_local, rank, comm, ID, iov, iov_len, data, count, datatype, req) \
+    mpi_errno = MPIDI_NM_am_isendv(rank, comm, ID, iov, iov_len, \
+                                   data, count, datatype, req)
+
+#define MPIDIG_AM_SEND_HDR(is_local, rank, comm, ID) \
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, ID, &am_hdr, sizeof(am_hdr))
+
+#else
+#define MPIDIG_AM_SEND(is_local, rank, comm, ID, data, count, datatype, req) \
+    do { \
+        if (is_local) { \
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, ID, &am_hdr, sizeof(am_hdr), \
+                                           data, count, datatype, req); \
+        } else { \
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, ID, &am_hdr, sizeof(am_hdr), \
+                                          data, count, datatype, req); \
+        } \
+    } while (0)
+
+#define MPIDIG_AM_SENDV(is_local, rank, comm, ID, iov, iov_len, data, count, datatype, req) \
+    do { \
+        if (is_local) { \
+            mpi_errno = MPIDI_SHM_am_isendv(rank, comm, ID, iov, iov_len, \
+                                            data, count, datatype, req); \
+        } else { \
+            mpi_errno = MPIDI_NM_am_isendv(rank, comm, ID, iov, iov_len, \
+                                           data, count, datatype, req); \
+        } \
+    } while (0)
+
+#define MPIDIG_AM_SEND_HDR(is_local, rank, comm, ID) \
+    do { \
+        if (is_local) { \
+            mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, ID, &am_hdr, sizeof(am_hdr)); \
+        } else { \
+            mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, ID, &am_hdr, sizeof(am_hdr)); \
+        } \
+    } while (0)
+#endif
+
 #endif /* MPIDIG_H_INCLUDED */
