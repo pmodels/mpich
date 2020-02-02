@@ -39,19 +39,8 @@ int MPIDIG_do_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
     am_hdr.context_id = comm->context_id + context_offset;
     am_hdr.error_bits = errflag;
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND,
-                                  &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-#else
-    if (MPIDI_av_is_local(addr)) {
-        mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND,
-                                       &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-    } else {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND,
-                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-    }
-#endif
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDIG_AM_SEND(MPIDI_rank_is_local(rank, comm), rank, comm, MPIDIG_SEND,
+                   buf, count, datatype, sreq);
 
   fn_exit:
     return mpi_errno;

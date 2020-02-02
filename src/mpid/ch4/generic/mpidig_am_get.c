@@ -70,16 +70,9 @@ int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datat
     size_t data_sz;
     MPI_Aint num_iov;
     struct iovec *dt_iov;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int is_local;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_GET);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
-#endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -124,25 +117,17 @@ int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datat
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    int is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
+#endif
+
     if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.n_iov = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->greq.dt_iov) = NULL;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr,
-                                           MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                           NULL, 0, MPI_DATATYPE_NULL, sreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr,
-                                          MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                          NULL, 0, MPI_DATATYPE_NULL, sreq);
-        }
-
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIDIG_AM_SEND(is_local, target_rank, win->comm_ptr, MPIDIG_GET_REQ,
+                       NULL, 0, MPI_DATATYPE_NULL, sreq);
         goto fn_exit;
     }
 
@@ -164,20 +149,8 @@ int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datat
 
     MPIDIG_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local)
-        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
-                                       &am_hdr, sizeof(am_hdr), dt_iov,
-                                       sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
-                                      &am_hdr, sizeof(am_hdr), dt_iov,
-                                      sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
-    }
-
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDIG_AM_SEND(is_local, target_rank, win->comm_ptr, MPIDIG_GET_REQ,
+                   dt_iov, sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
 
   fn_exit:
     if (sreq_ptr)
@@ -272,7 +245,6 @@ static int do_get_ack(MPIR_Request * req)
     struct iovec *iov;
     char *p_data;
     MPIR_Win *win;
-    MPIR_Context_id_t context_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
@@ -284,28 +256,17 @@ static int do_get_ack(MPIR_Request * req)
     struct am_get_ack_hdr am_hdr;
     am_hdr.greq_ptr = MPIDIG_REQUEST(req, req->greq.greq_ptr);
     win = MPIDIG_REQUEST(req, req->greq.win_ptr);
-    context_id = MPIDIG_win_to_context(win);
 
-    if (MPIDIG_REQUEST(req, req->greq.n_iov) == 0) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_REQUEST(req, is_local))
-            mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDIG_REQUEST(req, rank),
-                                                 MPIDIG_GET_ACK, &am_hdr, sizeof(am_hdr),
-                                                 (void *) MPIDIG_REQUEST(req, req->greq.addr),
-                                                 MPIDIG_REQUEST(req, req->greq.count),
-                                                 MPIDIG_REQUEST(req, req->greq.datatype), req);
-        else
+    int is_local = MPIDI_REQUEST(req, is_local);
 #endif
-        {
-            mpi_errno = MPIDI_NM_am_isend_reply(context_id, MPIDIG_REQUEST(req, rank),
-                                                MPIDIG_GET_ACK, &am_hdr, sizeof(am_hdr),
-                                                (void *) MPIDIG_REQUEST(req, req->greq.addr),
-                                                MPIDIG_REQUEST(req, req->greq.count),
-                                                MPIDIG_REQUEST(req, req->greq.datatype), req);
-        }
+    int rank = MPIDIG_REQUEST(req, rank);
+    if (MPIDIG_REQUEST(req, req->greq.n_iov) == 0) {
+        MPIDIG_AM_SEND(is_local, rank, win->comm_ptr, MPIDIG_GET_ACK,
+                       MPIDIG_REQUEST(req, req->greq.addr), MPIDIG_REQUEST(req, req->greq.count),
+                       MPIDIG_REQUEST(req, req->greq.datatype), req);
 
         MPID_Request_complete(req);
-        MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
 
@@ -330,21 +291,9 @@ static int do_get_ack(MPIR_Request * req)
     MPL_free(MPIDIG_REQUEST(req, req->greq.dt_iov));
     MPIDIG_REQUEST(req, req->greq.dt_iov) = (void *) p_data;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(req, is_local))
-        mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDIG_REQUEST(req, rank),
-                                             MPIDIG_GET_ACK, &am_hdr, sizeof(am_hdr), p_data,
-                                             data_sz, MPI_BYTE, req);
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend_reply(context_id, MPIDIG_REQUEST(req, rank),
-                                            MPIDIG_GET_ACK, &am_hdr, sizeof(am_hdr), p_data,
-                                            data_sz, MPI_BYTE, req);
-    }
-
+    MPIDIG_AM_SEND(is_local, rank, win->comm_ptr, MPIDIG_GET_ACK, p_data, data_sz, MPI_BYTE, req);
     MPID_Request_complete(req);
-    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_TARGET_CMPL_CB);
     return mpi_errno;

@@ -49,10 +49,11 @@ int MPIDIG_am_win_sync_init(void)
     goto fn_exit;
 }
 
-static int win_lock_advance(MPIR_Win * win);
-static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
+static int win_lock_advance(MPIR_Win * win, int is_local);
+static void win_lock_req_proc(int handler_id, int is_local,
+                              const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
 static void win_lock_ack_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
-static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, MPIR_Win * win);
+static int win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, MPIR_Win * win);
 static void win_complete_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
 static void win_post_proc(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
 static void win_unlock_done(const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win);
@@ -79,7 +80,7 @@ static int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 
         case MPIDIG_WIN_LOCK:
         case MPIDIG_WIN_LOCKALL:
-            win_lock_req_proc(handler_id, msg_hdr, win);
+            win_lock_req_proc(handler_id, is_local, msg_hdr, win);
             break;
 
         case MPIDIG_WIN_LOCK_ACK:
@@ -89,7 +90,8 @@ static int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 
         case MPIDIG_WIN_UNLOCK:
         case MPIDIG_WIN_UNLOCKALL:
-            win_unlock_proc(msg_hdr, is_local, win);
+            mpi_errno = win_unlock_proc(msg_hdr, is_local, win);
+            MPIR_ERR_CHECK(mpi_errno);
             break;
 
         case MPIDIG_WIN_UNLOCK_ACK:
@@ -116,12 +118,15 @@ static int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
         *target_cmpl_cb = NULL;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_win_ctrl);
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_CTRL_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* internal functions */
-static int win_lock_advance(MPIR_Win * win)
+static int win_lock_advance(MPIR_Win * win, int is_local)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_lock_recvd_t *lock_recvd_q = &MPIDIG_WIN(win, sync).lock_recvd;
@@ -141,10 +146,10 @@ static int win_lock_advance(MPIR_Win * win)
         ++lock_recvd_q->count;
         lock_recvd_q->type = lock->type;
 
-        MPIDIG_win_cntrl_msg_t msg;
+        MPIDIG_win_cntrl_msg_t am_hdr;
         int handler_id;
-        msg.win_id = MPIDIG_WIN(win, win_id);
-        msg.origin_rank = win->comm_ptr->rank;
+        am_hdr.win_id = MPIDIG_WIN(win, win_id);
+        am_hdr.origin_rank = win->comm_ptr->rank;
 
         if (lock->mtype == MPIDIG_WIN_LOCK)
             handler_id = MPIDIG_WIN_LOCK_ACK;
@@ -153,21 +158,12 @@ static int win_lock_advance(MPIR_Win * win)
         else
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmasync");
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(lock->rank, win->comm_ptr))
-            mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                                    lock->rank, handler_id, &msg, sizeof(msg));
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                                   lock->rank, handler_id, &msg, sizeof(msg));
-        }
-
+        MPIDIG_AM_SEND_HDR(is_local, lock->rank, win->comm_ptr, handler_id);
         MPIR_ERR_CHECK(mpi_errno);
+
         MPL_free(lock);
 
-        mpi_errno = win_lock_advance(win);
+        mpi_errno = win_lock_advance(win, is_local);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -178,7 +174,8 @@ static int win_lock_advance(MPIR_Win * win)
     goto fn_exit;
 }
 
-static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
+static void win_lock_req_proc(int handler_id, int is_local,
+                              const MPIDIG_win_cntrl_msg_t * info, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_LOCK_REQ_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_LOCK_REQ_PROC);
@@ -200,7 +197,7 @@ static void win_lock_req_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * inf
 
     lock_recvd_q->tail = lock;
 
-    win_lock_advance(win);
+    win_lock_advance(win, is_local);
     MPIR_T_PVAR_TIMER_END(RMA, rma_winlock_getlocallock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_LOCK_REQ_PROC);
     return;
@@ -226,7 +223,7 @@ static void win_lock_ack_proc(int handler_id, const MPIDIG_win_cntrl_msg_t * inf
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_LOCK_ACK_PROC);
 }
 
-static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, MPIR_Win * win)
+static int win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, MPIR_Win * win)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -237,29 +234,17 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
     /* NOTE: origin blocking waits in lock or lockall call till lock granted. */
     --MPIDIG_WIN(win, sync).lock_recvd.count;
     MPIR_Assert((int) MPIDIG_WIN(win, sync).lock_recvd.count >= 0);
-    win_lock_advance(win);
+    win_lock_advance(win, is_local);
 
-    MPIDIG_win_cntrl_msg_t msg;
-    msg.win_id = MPIDIG_WIN(win, win_id);
-    msg.origin_rank = win->comm_ptr->rank;
+    MPIDIG_win_cntrl_msg_t am_hdr;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local)
-        mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                                info->origin_rank,
-                                                MPIDIG_WIN_UNLOCK_ACK, &msg, sizeof(msg));
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                               info->origin_rank,
-                                               MPIDIG_WIN_UNLOCK_ACK, &msg, sizeof(msg));
-    }
+    MPIDIG_AM_SEND_HDR(is_local, info->origin_rank, win->comm_ptr, MPIDIG_WIN_UNLOCK_ACK);
 
-    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_UNLOCK_PROC);
-    return;
+    return mpi_errno;
   fn_fail:
     goto fn_exit;
 }

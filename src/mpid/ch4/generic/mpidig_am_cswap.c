@@ -106,17 +106,10 @@ int MPIDIG_do_cswap(const void *origin_addr, const void *compare_addr,
     /* Increase remote completion counter for acc. */
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_rank_is_local(target_rank, win->comm_ptr))
-        mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
-                                       &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq);
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
-                                      &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDIG_AM_SEND(MPIDI_rank_is_local(target_rank, win->comm_ptr),
+                   target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
+                   (void *) p_data, 2, datatype, sreq);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -266,26 +259,12 @@ static int ack_cswap(MPIR_Request * rreq)
     struct am_cswap_ack_hdr am_hdr;
     am_hdr.req_ptr = MPIDIG_REQUEST(rreq, req->creq.creq_ptr);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context
-                                     (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
-                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &am_hdr,
-                                     sizeof(am_hdr), result_addr, 1,
-                                     MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_win_to_context
-                                    (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
-                                    MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &am_hdr,
-                                    sizeof(am_hdr), result_addr, 1,
-                                    MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
-    }
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_REQUEST(rreq, req->creq.win_ptr)->comm_ptr;
+    MPI_Datatype datatype = MPIDIG_REQUEST(rreq, req->creq.datatype);
+    MPIDIG_AM_SEND(MPIDI_REQUEST(rreq, is_local), rank, comm, MPIDIG_CSWAP_ACK,
+                   result_addr, 1, datatype, rreq);
 
-    MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_CSWAP);
     return mpi_errno;

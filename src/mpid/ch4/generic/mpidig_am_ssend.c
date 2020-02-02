@@ -56,19 +56,8 @@ int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
     int c;
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SSEND_REQ,
-                                  &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-#else
-    if (MPIDI_av_is_local(addr)) {
-        mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SSEND_REQ,
-                                       &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-    } else {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SSEND_REQ,
-                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-    }
-#endif
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIDIG_AM_SEND(MPIDI_av_is_local(addr), rank, comm, MPIDIG_SSEND_REQ,
+                   buf, count, datatype, sreq);
 
   fn_exit:
     return mpi_errno;
@@ -120,22 +109,12 @@ int MPIDIG_reply_ssend(MPIR_Request * rreq)
     /* add ref for origin_cb */
     int c;
     MPIR_cc_incr(rreq->cc_ptr, &c);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
-                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &am_hdr,
-                                     sizeof(am_hdr), NULL, 0, MPI_DATATYPE_NULL, rreq);
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(rreq, context_id),
-                                    MPIDIG_REQUEST(rreq, rank), MPIDIG_SSEND_ACK, &am_hdr,
-                                    sizeof(am_hdr), NULL, 0, MPI_DATATYPE_NULL, rreq);
-    }
 
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+    int src_rank = MPIDIG_REQUEST(rreq, rank);
+    MPIDIG_AM_SEND(MPIDI_REQUEST(rreq, is_local), src_rank, comm, MPIDIG_SSEND_ACK,
+                   NULL, 0, MPI_DATATYPE_NULL, rreq);
+
   fn_exit:
     return mpi_errno;
   fn_fail:

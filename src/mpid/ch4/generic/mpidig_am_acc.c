@@ -136,16 +136,9 @@ int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int is_local;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_ACCUMULATE);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
-#endif
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
@@ -190,6 +183,10 @@ int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
     /* Increase remote completion counter for acc. */
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    int is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
+#endif
+
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_IS_BUILTIN(target_datatype)) {
@@ -197,22 +194,9 @@ int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDIG_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                           &am_hdr, sizeof(am_hdr), origin_addr,
-                                           (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                          &am_hdr, sizeof(am_hdr), origin_addr,
-                                          (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                          sreq);
-        }
-
-        MPIR_ERR_CHECK(mpi_errno);
+        MPI_Aint count = (op == MPI_NO_OP) ? 0 : origin_count;
+        MPIDIG_AM_SEND(is_local, target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
+                       origin_addr, count, origin_datatype, sreq);
         goto fn_exit;
     }
 
@@ -249,38 +233,17 @@ int MPIDIG_do_accumulate(const void *origin_addr, int origin_count,
 #endif
 
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= am_hdr_max_sz) {
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local)
-            mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                            &am_iov[0], 2, origin_addr,
-                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                            sreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
-                                           &am_iov[0], 2, origin_addr,
-                                           (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
-        }
+        MPI_Aint count = (op == MPI_NO_OP) ? 0 : origin_count;
+        MPIDIG_AM_SENDV(is_local, target_rank, win->comm_ptr, MPIDIG_ACC_REQ, am_iov, 2,
+                        origin_addr, count, origin_datatype, sreq);
     } else {
         MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDIG_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDIG_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
-                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
-                                          &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                          am_iov[1].iov_len, MPI_BYTE, sreq);
-        }
+        MPIDIG_AM_SEND(is_local, target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
+                       am_iov[1].iov_base, am_iov[1].iov_len, MPI_BYTE, sreq);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -425,24 +388,11 @@ static int ack_acc(MPIR_Request * rreq)
 
     struct am_acc_ack_hdr am_hdr;
     am_hdr.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
-                                        (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
-                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_ACK,
-                                        &am_hdr, sizeof(am_hdr));
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
-                                       (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
-                                       MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_ACK,
-                                       &am_hdr, sizeof(am_hdr));
-    }
 
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm *comm = MPIDIG_REQUEST(rreq, req->areq.win_ptr)->comm_ptr;
+    int src_rank = MPIDIG_REQUEST(rreq, rank);
+    MPIDIG_AM_SEND_HDR(MPIDI_REQUEST(rreq, is_local), src_rank, comm, MPIDIG_ACC_ACK);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACK_ACC);
     return mpi_errno;
@@ -579,24 +529,9 @@ static int do_acc_iov_ack(MPIR_Request * rreq)
     am_hdr.origin_preq_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
     am_hdr.target_preq_ptr = rreq;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(rreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
-                                        (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
-                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_IOV_ACK,
-                                        &am_hdr, sizeof(am_hdr));
-    else
-#endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
-                                       (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
-                                       MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_IOV_ACK,
-                                       &am_hdr, sizeof(am_hdr));
-    }
-
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm *comm = MPIDIG_REQUEST(rreq, req->areq.win_ptr)->comm_ptr;
+    int src_rank = MPIDIG_REQUEST(rreq, rank);
+    MPIDIG_AM_SEND_HDR(MPIDI_REQUEST(rreq, is_local), src_rank, comm, MPIDIG_ACC_IOV_ACK);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACC_IOV_TARGET_CMPL_CB);
@@ -645,28 +580,12 @@ static int do_acc_data(MPIR_Request * target_req, MPIR_Request * origin_req, MPI
     am_hdr.preq_ptr = target_req;
 
     MPIR_Win *win = MPIDIG_REQUEST(origin_req, req->areq.win_ptr);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (is_local)
-        mpi_errno = MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context(win),
-                                             MPIDIG_REQUEST(origin_req, rank),
-                                             MPIDIG_ACC_DAT_REQ,
-                                             &am_hdr, sizeof(am_hdr),
-                                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
-                                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                             rreq);
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend_reply(MPIDIG_win_to_context(win),
-                                            MPIDIG_REQUEST(origin_req, rank),
-                                            MPIDIG_ACC_DAT_REQ,
-                                            &am_hdr, sizeof(am_hdr),
-                                            MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
-                                            MPIDIG_REQUEST(origin_req, req->areq.origin_count),
-                                            MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                            rreq);
-    }
+    MPIR_Comm *comm = win->comm_ptr;
+    int src_rank = MPIDIG_REQUEST(origin_req, rank);
+    void *data = MPIDIG_REQUEST(origin_req, req->areq.origin_addr);
+    MPI_Aint count = MPIDIG_REQUEST(origin_req, req->areq.origin_count);
+    MPI_Datatype datatype = MPIDIG_REQUEST(origin_req, req->areq.origin_datatype);
+    MPIDIG_AM_SEND(is_local, src_rank, comm, MPIDIG_ACC_DAT_REQ, data, count, datatype, rreq);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(origin_req, req->areq.origin_datatype));
 
     return mpi_errno;

@@ -118,7 +118,7 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
 static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDIG_win_cntrl_msg_t msg;
+    MPIDIG_win_cntrl_msg_t am_hdr;
     int win_grp_idx, peer;
     MPIR_Group *group;
     int *ranks_in_win_grp = NULL;
@@ -141,8 +141,8 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    msg.win_id = MPIDIG_WIN(win, win_id);
-    msg.origin_rank = win->comm_ptr->rank;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
 
     /* Ensure completion of AM operations */
     ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
@@ -163,16 +163,8 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(peer, win->comm_ptr))
-            mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_COMPLETE, &msg, sizeof(msg));
-        }
+        MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(peer, win->comm_ptr),
+                           peer, win->comm_ptr, MPIDIG_WIN_COMPLETE);
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
@@ -197,7 +189,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDIG_win_cntrl_msg_t msg;
+    MPIDIG_win_cntrl_msg_t am_hdr;
     int win_grp_idx, peer;
     int *ranks_in_win_grp = NULL;
 
@@ -216,8 +208,8 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
         goto no_check;
     }
 
-    msg.win_id = MPIDIG_WIN(win, win_id);
-    msg.origin_rank = win->comm_ptr->rank;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
 
     ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
     MPIR_Assert(ranks_in_win_grp);
@@ -228,17 +220,8 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(peer, win->comm_ptr))
-            mpi_errno = MPIDI_SHM_am_send_hdr(peer, win->comm_ptr,
-                                              MPIDIG_WIN_POST, &msg, sizeof(msg));
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                             MPIDIG_WIN_POST, &msg, sizeof(msg));
-        }
-
+        MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(peer, win->comm_ptr),
+                           peer, win->comm_ptr, MPIDIG_WIN_POST);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -330,21 +313,14 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
         goto no_check;
     }
 
-    MPIDIG_win_cntrl_msg_t msg;
-    msg.win_id = MPIDIG_WIN(win, win_id);
-    msg.origin_rank = win->comm_ptr->rank;
-    msg.lock_type = lock_type;
+    MPIDIG_win_cntrl_msg_t am_hdr;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
+    am_hdr.lock_type = lock_type;
 
     locked = slock->locked + 1;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_rank_is_local(rank, win->comm_ptr))
-        mpi_errno = MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_LOCK, &msg, sizeof(msg));
-    }
-
+    MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(rank, win->comm_ptr),
+                       rank, win->comm_ptr, MPIDIG_WIN_LOCK);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -366,7 +342,7 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned unlocked;
-    MPIDIG_win_cntrl_msg_t msg;
+    MPIDIG_win_cntrl_msg_t am_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK);
@@ -406,20 +382,12 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
         goto no_check;
     }
 
-    msg.win_id = MPIDIG_WIN(win, win_id);
-    msg.origin_rank = win->comm_ptr->rank;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
     unlocked = slock->locked - 1;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_rank_is_local(rank, win->comm_ptr))
-        mpi_errno =
-            MPIDI_SHM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
-    else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDIG_WIN_UNLOCK, &msg, sizeof(msg));
-    }
-
+    MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(rank, win->comm_ptr),
+                       rank, win->comm_ptr, MPIDIG_WIN_UNLOCK);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -660,22 +628,13 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
         MPIDIG_WIN(win, sync).lockall.allLocked = 0;
         goto no_check;
     }
+
+    MPIDIG_win_cntrl_msg_t am_hdr;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
     for (i = 0; i < win->comm_ptr->local_size; i++) {
-        MPIDIG_win_cntrl_msg_t msg;
-        msg.win_id = MPIDIG_WIN(win, win_id);
-        msg.origin_rank = win->comm_ptr->rank;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(i, win->comm_ptr))
-            mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_UNLOCKALL, &msg, sizeof(msg));
-        }
-
+        MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(i, win->comm_ptr),
+                           i, win->comm_ptr, MPIDIG_WIN_UNLOCKALL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -807,24 +766,15 @@ static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
         goto no_check;
     }
 
+    MPIDIG_win_cntrl_msg_t am_hdr;
+    am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_rank = win->comm_ptr->rank;
+    am_hdr.lock_type = MPI_LOCK_SHARED;
+
     int i;
     for (i = 0; i < size; i++) {
-        MPIDIG_win_cntrl_msg_t msg;
-        msg.win_id = MPIDIG_WIN(win, win_id);
-        msg.origin_rank = win->comm_ptr->rank;
-        msg.lock_type = MPI_LOCK_SHARED;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_rank_is_local(i, win->comm_ptr))
-            mpi_errno = MPIDI_SHM_am_send_hdr(i, win->comm_ptr,
-                                              MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                             MPIDIG_WIN_LOCKALL, &msg, sizeof(msg));
-        }
-
+        MPIDIG_AM_SEND_HDR(MPIDI_rank_is_local(i, win->comm_ptr),
+                           i, win->comm_ptr, MPIDIG_WIN_LOCKALL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
