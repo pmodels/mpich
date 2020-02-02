@@ -79,6 +79,18 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     return req;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDIG_request_finalize(MPIR_Request * req)
+{
+    if (MPIDIG_REQUEST(req, req)) {
+        MPIDIU_release_buf(MPIDIG_REQUEST(req, req));
+        MPIDIG_REQUEST(req, req) = NULL;
+        MPIDI_NM_am_request_finalize(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_SHM_am_request_finalize(req);
+#endif
+    }
+}
+
 /* This function should be called any time an anysource request is matched so
  * the upper layer will have a chance to arbitrate who wins the race between
  * the netmod and the shmod. This will cancel the request of the other side and

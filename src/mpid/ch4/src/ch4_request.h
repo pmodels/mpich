@@ -78,6 +78,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    the request because it does not know about the internals of
    the ch4r/netmod/shmmod fields of the request.
 */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_request_finalize(MPIR_Request * req);
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
     int incomplete, notify_counter;
@@ -94,14 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         if (req->completion_notification)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
-        if (MPIDIG_REQUEST(req, req)) {
-            MPIDIU_release_buf(MPIDIG_REQUEST(req, req));
-            MPIDIG_REQUEST(req, req) = NULL;
-            MPIDI_NM_am_request_finalize(req);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-            MPIDI_SHM_am_request_finalize(req);
-#endif
-        }
+        MPIDIG_request_finalize(req);
         MPIR_Request_free(req);
     }
 
