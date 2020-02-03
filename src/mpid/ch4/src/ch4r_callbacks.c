@@ -71,17 +71,12 @@ void MPIDIG_progress_compl_list(void)
 static int handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, in_use;
-    MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     size_t nbytes;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
@@ -103,77 +98,23 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     }
     /* MPIDI_CS_EXIT(); */
 
-    root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
-
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (unlikely(match_req && MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req))) {
-            anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req);
-            if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                mpi_errno = MPID_Cancel_recv(anysource_partner);
-                if (mpi_errno != MPI_SUCCESS) {
-                    goto fn_fail;
-                }
-                /* What should we do if the anysource partner request is not canceled? */
-                MPIR_Assertp(MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status));
-            }
-            MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req));
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-        }
+        int is_cancelled;
+        mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* `is_cancelled` is assumed to be always true.
+         * In typical config, anysrc partners won't occur if matching unexpected
+         * message already exist.
+         * In workq setup, since we will always progress shm first, when unexpected
+         * message match, the NM partner wouldn't have progressed yet, so the cancel
+         * should always succeed.
+         */
+        MPIR_Assert(is_cancelled);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
-
-    } else {
-        /* If this message hasn't been matched yet, look for it in the posted queue. */
-        /* MPIDI_CS_ENTER(); */
-        if (root_comm) {
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-            match_req =
-                MPIDIG_dequeue_posted(MPIDIG_REQUEST(rreq, rank),
-                                      MPIDIG_REQUEST(rreq, tag),
-                                      MPIDIG_REQUEST(rreq, context_id),
-                                      &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
-            int continue_matching = 1;
-            while (continue_matching) {
-                match_req =
-                    MPIDIG_dequeue_posted(MPIDIG_REQUEST(rreq, rank),
-                                          MPIDIG_REQUEST(rreq, tag),
-                                          MPIDIG_REQUEST(rreq, context_id),
-                                          &MPIDIG_COMM(root_comm, posted_list));
-
-                if (match_req && MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req)) {
-                    anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req);
-
-                    mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                        MPIDI_REQUEST(rreq, is_local) ?
-                                                        MPIDI_SHM : MPIDI_NETMOD,
-                                                        &continue_matching);
-
-                    MPIR_ERR_CHECK(mpi_errno);
-
-                    MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req));
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-                }
-
-                break;
-            }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-        }
-
-        /* If we found a matching request, remove it from the unexpected queue and clean things up
-         * before we move the data around. */
-        if (match_req) {
-            MPIDIG_delete_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
-            /* Decrement the counter twice, one for posted_list and the other for unexp_list */
-            MPIR_Comm_release(root_comm);
-            MPIR_Comm_release(root_comm);
-        }
-        /* MPIDI_CS_EXIT(); */
     }
 
     /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
@@ -233,10 +174,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (unlikely(anysource_partner)) {
-        anysource_partner->status = match_req->status;
-    }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
+    MPIDI_anysrc_free_partner(match_req);
+#endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
     MPL_free(MPIDIG_REQUEST(rreq, buffer));
@@ -339,29 +278,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-        int continue_matching = 1;
-        if (MPIDI_REQUEST(rreq, is_local)) {
-            MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_SHM,
-                                    &continue_matching);
-        } else {
-            MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq),
-                                    MPIDI_NETMOD, &continue_matching);
-        }
-
-        MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq));
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-        /* In case of anysource recieve, a request object generated by
-         * the shmmod is always returned to the user. Thus, the user-level
-         * request cleanup functions (e.g. MPI_Wait) will only free the
-         * request object from shmmod. Therefore, netmod should decrement
-         * its request object by itself, otherwise it will leak.
-         *
-         * This logic follows what the OFI netmod is already doing (see
-         * MPIDI_OFI_recv_event.) */
-        MPIR_Request_free(rreq);
-    }
+    MPIDI_anysrc_free_partner(rreq);
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
@@ -428,47 +345,29 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
     if (root_comm) {
       root_comm_retry:
         /* MPIDI_CS_ENTER(); */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                     &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
         while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDIG_COMM(root_comm, posted_list));
-
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-                if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                    mpi_errno = MPID_Cancel_recv(anysource_partner);
-                    if (mpi_errno != MPI_SUCCESS) {
-                        goto fn_fail;
-                    }
-                    if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                        anysource_partner = NULL;
-                        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
-                        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-                        continue;
-                    }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+                MPIR_ERR_CHECK(mpi_errno);
+                if (!is_cancelled) {
+                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                    continue;
                 }
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-
-                MPIR_Request_free(anysource_partner);
             }
-
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
             break;
         }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -535,12 +434,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
 
     mpi_errno = do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (unlikely(anysource_partner)) {
-        anysource_partner->status = rreq->status;
-    }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     return mpi_errno;
@@ -559,10 +452,6 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     MPIDIG_send_long_req_msg_t *lreq_hdr = (MPIDIG_send_long_req_msg_t *) am_hdr;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
 
@@ -570,31 +459,23 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
   root_comm_retry:
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                     &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
-        int continue_matching = 1;
-        while (continue_matching) {
+        while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDIG_COMM(root_comm, posted_list));
-
-            if (unlikely(rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-
-                mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                    MPIDI_REQUEST(rreq, is_local) ?
-                                                    MPIDI_SHM : MPIDI_NETMOD, &continue_matching);
-
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
                 MPIR_ERR_CHECK(mpi_errno);
-
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+                if (!is_cancelled) {
+                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                    continue;
+                }
             }
-
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
             break;
         }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -667,12 +548,6 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         }
 
         MPIR_ERR_CHECK(mpi_errno);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (unlikely(anysource_partner)) {
-            anysource_partner->status = rreq->status;
-        }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
