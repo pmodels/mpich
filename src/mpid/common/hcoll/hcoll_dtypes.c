@@ -1,5 +1,11 @@
-#include "hcoll/api/hcoll_dte.h"
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2014 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 #include "mpiimpl.h"
+#include "hcoll/api/hcoll_dte.h"
 #include "hcoll_dtypes.h"
 
 extern int hcoll_initialized;
