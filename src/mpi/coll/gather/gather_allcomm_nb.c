@@ -16,6 +16,7 @@ int MPIR_Gather_allcomm_nb(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype
     mpi_errno =
         MPIR_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr,
                      &req_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIC_Wait(req_ptr, errflag);
     MPIR_ERR_CHECK(mpi_errno);
