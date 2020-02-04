@@ -301,6 +301,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
+/* This function implements netmod vci to vni(context) mapping.
+ * Currently, we only support one-to-one mapping.
+ */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni(int vci)
 {
     /* MPIR_Assert(MPIDI_OFI_global.num_ctx == MPIDI_global.n_vcis); */
