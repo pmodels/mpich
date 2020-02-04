@@ -79,55 +79,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     return req;
 }
 
-/* This function should be called any time an anysource request is matched so
- * the upper layer will have a chance to arbitrate who wins the race between
- * the netmod and the shmod. This will cancel the request of the other side and
- * take care of copying any relevant data. */
-static inline int MPIDI_anysource_matched(MPIR_Request * rreq, int caller, int *continue_matching)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
-
-    MPIR_Assert(MPIDI_NETMOD == caller || MPIDI_SHM == caller);
-
-    if (MPIDI_NETMOD == caller) {
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        int c;
-        /* MPIDI_SHM_mpi_cancel_recv may complete the request, but we do not
-         * want it to be visible until we copy the request status below.
-         * This is important when an asynchronous progress is on, because
-         * a user thread may immediately see the (incomplete) status.
-         * Bump the request refcount by one to prevent request completion inside
-         * MPIDI_SHM_mpi_cancel_recv. */
-        MPIR_cc_incr(rreq->cc_ptr, &c);
-        mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
-
-        /* If the netmod is cancelling the request, then shared memory will
-         * just copy the status from the shared memory side because the netmod
-         * will always win the race condition here. */
-        if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
-            /* If the request is cancelled, copy the status object from the
-             * partner request */
-            rreq->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)->status;
-        }
-        /* Now it's safe to complete the request */
-        MPID_Request_complete(rreq);
-#endif
-        *continue_matching = 0;
-    } else if (MPIDI_SHM == caller) {
-        mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
-
-        /* If the netmod has already matched this request, shared memory will
-         * lose and should stop matching this request */
-        *continue_matching = !MPIR_STATUS_GET_CANCEL_BIT(rreq->status);
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ANYSOURCE_MATCHED);
-    return mpi_errno;
-}
-
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 /* mpi-layer request handle is connected to one of the request (the one with shm),
  * so we can't simply free one at matching time. Both need be completed and freed
