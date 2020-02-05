@@ -23,6 +23,8 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     MPIR_Request *sreq = *request;
     MPIDIG_hdr_t am_hdr;
     MPIDIG_ssend_req_msg_t ssend_req;
+    void *hdr = &am_hdr;
+    size_t hdr_sz = sizeof(am_hdr);;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ISEND_IMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ISEND_IMPL);
@@ -46,50 +48,27 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, buffer) = (char *) buf;
     MPIDIG_REQUEST(sreq, count) = count;
 #endif
+
     /* Synchronous send requires a special kind of AM header to track the return message so check
      * for that and fill in the appropriate struct if necessary. */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    if (type == MPIDIG_SSEND_REQ) {
-        ssend_req.hdr = am_hdr;
-
-        /* Increment the completion counter once to account for the extra message that needs to come
-         * back from the receiver to indicate completion. */
-        ssend_req.sreq_ptr = sreq;
-        MPIR_cc_incr(sreq->cc_ptr, &c);
-
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, type,
-                                      &ssend_req, sizeof(ssend_req), buf, count, datatype, sreq);
-    } else {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, type,
-                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-    }
-#else
     if (type == MPIDIG_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = sreq;
+        hdr = &ssend_req;
+        hdr_sz = sizeof(ssend_req);
 
         /* Increment the completion counter once to account for the extra message that needs to come
          * back from the receiver to indicate completion. */
         MPIR_cc_incr(sreq->cc_ptr, &c);
-        if (MPIDI_av_is_local(addr)) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, type,
-                                           &ssend_req, sizeof(ssend_req), buf,
-                                           count, datatype, sreq);
-        } else {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, type,
-                                          &ssend_req, sizeof(ssend_req), buf,
-                                          count, datatype, sreq);
-        }
-    } else {
-        if (MPIDI_av_is_local(addr)) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, type,
-                                           &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-        } else {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, type,
-                                          &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-        }
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_av_is_local(addr)) {
+        mpi_errno = MPIDI_SHM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq);
+    } else
 #endif
+    {
+        mpi_errno = MPIDI_NM_am_isend(rank, comm, type, hdr, hdr_sz, buf, count, datatype, sreq);
+    }
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
