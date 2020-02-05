@@ -34,9 +34,9 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     if (!rreq)
         return;
 
-    if ((!p_data || !data_sz) && target_cmpl_cb) {
+    if (!p_data || !data_sz) {
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        target_cmpl_cb(rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         return;
     }
 
@@ -72,9 +72,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
         MPIR_STATUS_SET_COUNT(rreq->status, done);
     }
 
-    if (target_cmpl_cb) {
-        target_cmpl_cb(rreq);
-    }
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 }
 
 int MPIDI_UCX_progress(int vci, int blocking)
