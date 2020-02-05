@@ -118,10 +118,8 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
         goto fn_exit;
 
     if (!p_data || !data_sz) {
-        if (target_cmpl_cb) {
-            MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-            target_cmpl_cb(rreq);
-        }
+        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         goto fn_exit;
     }
 
@@ -165,9 +163,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
         MPIR_STATUS_SET_COUNT(rreq->status, done);
     }
 
-    if (target_cmpl_cb) {
-        target_cmpl_cb(rreq);
-    }
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
@@ -190,10 +186,11 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
     if (!rreq)
         goto fn_exit;
 
-    if (target_cmpl_cb) {
-        MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        target_cmpl_cb(rreq);
-    }
+    /* TODO: am message without payload never needs a callback. It will be much cleaner if
+     *       we have separate msg handler interface for am_send_hdr.
+     */
+    MPIR_STATUS_SET_COUNT(rreq->status, 0);
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
@@ -289,11 +286,9 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     MPIR_cc_incr(rreq->cc_ptr, &c);
 
-    MPIDI_OFI_AMREQUEST_HDR(rreq, target_cmpl_cb) = target_cmpl_cb;
-
-    if ((!p_data || !data_sz) && target_cmpl_cb) {
-        target_cmpl_cb(rreq);
-        MPID_Request_complete(rreq);    /* FIXME: Should not call MPIDI in NM ? */
+    if (!p_data || !data_sz) {
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPID_Request_complete(rreq);
         goto fn_exit;
     }
 
