@@ -152,6 +152,7 @@ typedef struct MPIDIG_acc_req_t {
     MPI_Datatype result_datatype;
 } MPIDIG_acc_req_t;
 
+typedef int (*MPIDIG_req_cmpl_cb) (MPIR_Request * req);
 typedef struct MPIDIG_req_ext_t {
     union {
         MPIDIG_sreq_t sreq;
@@ -164,7 +165,7 @@ typedef struct MPIDIG_req_ext_t {
     };
 
     struct iovec *iov;
-    void *target_cmpl_cb;
+    MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
     MPIR_Request *request;
     uint64_t status;
