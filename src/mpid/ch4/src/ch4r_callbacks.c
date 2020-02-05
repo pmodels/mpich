@@ -18,6 +18,34 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
                           MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
+int MPIDIG_do_long_ack(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_send_long_ack_msg_t am_hdr;
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
+    am_hdr.rreq_ptr = rreq;
+    MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
+
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
+#else
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK,
+                                          &am_hdr, sizeof(am_hdr));
+    } else {
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
+    }
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't
  * supposed to finish next, it is appended to a list of requests to be retrieved later. */
 int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_cmpl_cb)
@@ -657,15 +685,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
          * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_REQUEST(rreq, is_local))
-            mpi_errno = MPIDI_SHM_am_recv(rreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_recv(rreq);
-        }
-
+        mpi_errno = MPIDIG_do_long_ack(rreq);
         MPIR_ERR_CHECK(mpi_errno);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
