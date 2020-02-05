@@ -39,8 +39,6 @@
 #define MPIDI_OFI_BUF_POOL_SIZE            (1024)
 #define MPIDI_OFI_BUF_POOL_NUM             (1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
-#define MPIDI_OFI_INTERNAL_HANDLER_CONTROL (MPIDI_AM_HANDLERS_MAX-1)
-#define MPIDI_OFI_INTERNAL_HANDLER_NEXT    (MPIDI_AM_HANDLERS_MAX-2)
 
 /* The number of bits in the immediate data field allocated to the source rank. */
 #define MPIDI_OFI_IDATA_SRC_BITS (30)
