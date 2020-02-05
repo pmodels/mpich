@@ -17,7 +17,6 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -29,7 +28,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
                                                        &p_data, &data_sz, 0 /* is_local */ ,
-                                                       &is_contig, &target_cmpl_cb, &rreq);
+                                                       &is_contig, &rreq);
 
     if (!rreq)
         return;
