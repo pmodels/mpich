@@ -1293,6 +1293,7 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     }
 
     *req = areq;
+    MPIDIG_REQUEST(areq, req->target_cmpl_cb) = get_acc_ack_target_cmpl_cb;
     *target_cmpl_cb = get_acc_ack_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_ack);
@@ -1320,6 +1321,7 @@ int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
     *is_contig = 1;
 
     *req = creq;
+    MPIDIG_REQUEST(creq, req->target_cmpl_cb) = cswap_ack_target_cmpl_cb;
     *target_cmpl_cb = cswap_ack_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas_ack);
@@ -1423,6 +1425,7 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 
     MPIDIG_REQUEST(rreq, req->preq.win_ptr) = win;
 
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
     *target_cmpl_cb = put_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
@@ -1517,6 +1520,7 @@ int MPIDIG_put_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     offset = win->disp_unit * msg_hdr->target_disp;
     base = MPIDIG_win_base_at_target(win);
 
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_iov_target_cmpl_cb;
     *target_cmpl_cb = put_iov_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
@@ -1744,6 +1748,7 @@ int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     *is_contig = 0;
     *p_data_sz = MPIDIG_REQUEST(rreq, req->preq.n_iov);
     *req = rreq;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
     *target_cmpl_cb = put_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_data);
@@ -1767,6 +1772,7 @@ int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     handle_acc_data(data, p_data_sz, is_contig, rreq);
 
     *req = rreq;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_target_cmpl_cb;
     *target_cmpl_cb = acc_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_data);
@@ -1791,6 +1797,7 @@ int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void **data,
     handle_acc_data(data, p_data_sz, is_contig, rreq);
 
     *req = rreq;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_target_cmpl_cb;
     *target_cmpl_cb = get_acc_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_data);
@@ -1819,6 +1826,7 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = cswap_target_cmpl_cb;
     *target_cmpl_cb = cswap_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1883,6 +1891,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
         MPIR_Assert(p_data);
     }
 
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_target_cmpl_cb;
     *target_cmpl_cb = acc_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1953,6 +1962,7 @@ int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size
         MPIDIG_acc_target_msg_cb(handler_id, am_hdr, data, p_data_sz, is_local, is_contig,
                                  target_cmpl_cb, req);
 
+    MPIDIG_REQUEST(*req, req->target_cmpl_cb) = get_acc_target_cmpl_cb;
     *target_cmpl_cb = get_acc_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc);
@@ -2008,6 +2018,7 @@ int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     *p_data_sz = sizeof(struct iovec) * msg_hdr->n_iov;
     *data = (void *) dt_iov;
 
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_iov_target_cmpl_cb;
     *target_cmpl_cb = acc_iov_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -2036,6 +2047,7 @@ int MPIDIG_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, 
     mpi_errno = MPIDIG_acc_iov_target_msg_cb(handler_id, am_hdr, data,
                                              p_data_sz, is_local, is_contig, target_cmpl_cb, req);
 
+    MPIDIG_REQUEST(*req, req->target_cmpl_cb) = get_acc_iov_target_cmpl_cb;
     *target_cmpl_cb = get_acc_iov_target_cmpl_cb;
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_iov);
@@ -2061,6 +2073,7 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *req = rreq;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_target_cmpl_cb;
     *target_cmpl_cb = get_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(rreq, is_local) = is_local;
@@ -2122,6 +2135,7 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size
 
     MPL_free(MPIDIG_REQUEST(get_req, req->greq.dt_iov));
 
+    MPIDIG_REQUEST(get_req, req->target_cmpl_cb) = get_ack_target_cmpl_cb;
     *target_cmpl_cb = get_ack_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_REQUEST(get_req, is_local) = is_local;
