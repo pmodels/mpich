@@ -71,9 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 
     /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
     mpi_errno = MPIDU_Init_shm_alloc(size_of_shared_memory, &transport->pointer_to_shared_memory);
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Set up the appropriate pointers for each of the parts of the queues. */
     transport->terminals =
@@ -99,9 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 
     /* Run local procs barrier */
     mpi_errno = MPIDU_Init_shm_barrier();
-    if (mpi_errno) {
-        MPIR_ERR_POP(mpi_errno);
-    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_EAGER_INIT);
