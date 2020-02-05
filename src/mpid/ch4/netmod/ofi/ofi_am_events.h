@@ -98,7 +98,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     void *in_data;
 
     size_t data_sz, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -112,7 +111,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, (msg_hdr + 1),
                                                        &p_data, &data_sz, 0 /* is_local */ ,
-                                                       &is_contig, &target_cmpl_cb, &rreq);
+                                                       &is_contig, &rreq);
 
     if (!rreq)
         goto fn_exit;
@@ -174,14 +173,13 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        NULL, NULL, 0 /* is_local */ ,
-                                                       NULL, &target_cmpl_cb, &rreq);
+                                                       NULL, &rreq);
 
     if (!rreq)
         goto fn_exit;
@@ -265,7 +263,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     MPIR_Request *rreq = NULL;
     void *p_data;
     size_t data_sz, rem, done, curr_len, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
@@ -274,7 +271,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     in_data_sz = data_sz = msg_hdr->data_sz;
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                        &p_data, &data_sz, 0 /* is_local */ ,
-                                                       &is_contig, &target_cmpl_cb, &rreq);
+                                                       &is_contig, &rreq);
 
     if (!rreq)
         goto fn_exit;

@@ -38,7 +38,6 @@ static int progress_recv(int blocking)
     int i;
     int result = MPIDI_POSIX_OK;
     MPIR_Request *rreq = NULL;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     MPIDI_POSIX_am_request_header_t *curr_rreq_hdr = NULL;
     void *p_data = NULL;
     size_t p_data_sz = 0;
@@ -90,11 +89,10 @@ static int progress_recv(int blocking)
                                                            &p_data,
                                                            &p_data_sz,
                                                            1 /* is_local */ , &is_contig,
-                                                           &target_cmpl_cb, &rreq);
+                                                           &rreq);
         POSIX_TRACE("POSIX AM target callback: handler_id = %d, am_hdr = %p, p_data = %p "
-                    "p_data_sz = %lu, is_contig = %d, target_cmpl_cb = %p rreq = %p\n",
-                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, target_cmpl_cb,
-                    rreq);
+                    "p_data_sz = %lu, is_contig = %d, rreq = %p\n",
+                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, rreq);
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
