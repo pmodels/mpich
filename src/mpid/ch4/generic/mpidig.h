@@ -31,8 +31,8 @@ typedef struct MPIDIG_global_t {
 } MPIDIG_global_t;
 extern MPIDIG_global_t MPIDIG_global;
 
-int MPIDIG_am_reg_cb(int handler_id,
-                     MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
+void MPIDIG_am_reg_cb(int handler_id,
+                      MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 int MPIDIG_init(void);
 void MPIDIG_finalize(void);
 
