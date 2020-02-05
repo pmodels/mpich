@@ -13,6 +13,19 @@
 #include "mpidig.h"
 #include "mpidch4r.h"
 
+static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
+
+int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
+{
+    if (dynamic_am_handler_id < MPIDI_AM_HANDLERS_MAX) {
+        MPIDIG_am_reg_cb(dynamic_am_handler_id, origin_cb, target_msg_cb);
+        dynamic_am_handler_id++;
+        return dynamic_am_handler_id - 1;
+    } else {
+        return -1;
+    }
+}
+
 void MPIDIG_am_reg_cb(int handler_id,
                       MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
 {
@@ -47,6 +60,7 @@ int MPIDIG_init(void)
 
     MPIDI_global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM, MPIDIU_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_global.buf_pool);
+    MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
     MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDIG_send_origin_cb, &MPIDIG_send_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_REQ, NULL, &MPIDIG_send_long_req_target_msg_cb);
