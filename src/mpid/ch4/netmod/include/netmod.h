@@ -44,7 +44,6 @@ typedef int (*MPIDI_NM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src_
                                           const void *data, MPI_Count count, MPI_Datatype datatype,
                                           MPIR_Request * sreq);
 typedef size_t(*MPIDI_NM_am_hdr_max_sz_t) (void);
-typedef int (*MPIDI_NM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
                                          bool is_remote);
 typedef int (*MPIDI_NM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
@@ -502,7 +501,6 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_send_hdr_reply_t am_send_hdr_reply;
     MPIDI_NM_am_isend_reply_t am_isend_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
-    MPIDI_NM_am_recv_t am_recv;
 } MPIDI_NM_funcs_t;
 
 typedef struct MPIDI_NM_native_funcs {
@@ -674,7 +672,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      MPI_Count count, MPI_Datatype datatype,
                                                      MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                     int *lpid_ptr,
                                                     bool is_remote) MPL_STATIC_INLINE_SUFFIX;

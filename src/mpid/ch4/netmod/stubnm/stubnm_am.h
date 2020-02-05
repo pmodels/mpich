@@ -70,10 +70,4 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id, int s
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_am_recv(MPIR_Request * req)
-{
-    MPIR_Assert(0);
-    return 0;
-}
-
 #endif /* STUBNM_AM_H_INCLUDED */
