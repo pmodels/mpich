@@ -811,9 +811,6 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (target_cmpl_cb)
-        *target_cmpl_cb = MPIDIG_send_origin_cb;
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_ACK_TARGET_MSG_CB);
 
   fn_exit:
