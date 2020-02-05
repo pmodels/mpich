@@ -14,8 +14,7 @@
 #include "ch4r_callbacks.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
-                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq);
+static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
 int MPIDIG_do_long_ack(MPIR_Request * rreq)
@@ -279,8 +278,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 }
 
 
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
-                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
+static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq)
 {
     int dt_contig;
     MPI_Aint dt_true_lb, num_iov;
@@ -290,7 +288,7 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
 
-    *target_cmpl_cb = recv_target_cmpl_cb;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 
     if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
@@ -561,7 +559,8 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
 
     *req = rreq;
 
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
+    mpi_errno = do_send_target(data, p_data_sz, is_contig, rreq);
+    *target_cmpl_cb = MPIDIG_REQUEST(rreq, req->target_cmpl_cb);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (unlikely(anysource_partner)) {
@@ -716,7 +715,8 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data
 
     rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
     MPIR_Assert(rreq);
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
+    mpi_errno = do_send_target(data, p_data_sz, is_contig, rreq);
+    *target_cmpl_cb = MPIDIG_REQUEST(rreq, req->target_cmpl_cb);
     *req = rreq;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_LMT_TARGET_MSG_CB);
