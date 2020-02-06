@@ -1,7 +1,7 @@
 NAME    := mpich
 SRC_EXT := gz
 
-PR_REPOS      := daos@PR-1588:6
+PR_REPOS      := #leave blank
 EL_7_PR_REPOS := automake libtool
 
 GIT_TAG := v3.3
