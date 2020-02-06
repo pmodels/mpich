@@ -23,6 +23,9 @@ static void MPIDI_POSIX_eager_iqueue_enqueue_cell(MPIDI_POSIX_eager_iqueue_trans
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IQUEUE_ENQUEUE_CELL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IQUEUE_ENQUEUE_CELL);
 
+    /* TODO: is there any better way than recursion? Can we avoid
+     * this invertion if we switch to SPSC queue?*/
+
     /* Ingress queue of cells is inverted. Thus, we need to re-invert it. */
     if (cell->prev) {
         MPIDI_POSIX_eager_iqueue_cell_t *prev =
@@ -60,6 +63,12 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
             transport->first_cell = cell->next;
         }
     } else {
+        /* TODO: current code sets one terminal per receiver. Contention may occur
+         * when multiple senders insert cells into the same receiver simultaneously.
+         * Can we expand the design to be one terminal per sender-receiver peer? I.e.,
+         * the queue will become SPSC, and there will be ppn^2 terminals on each node.
+         * How much performance can be improved by this change?*/
+
         /* If first_cell wasn't set, grab the next cell from the appropriate terminal */
         terminal = &transport->terminals[MPIDI_POSIX_global.my_local_rank];
 

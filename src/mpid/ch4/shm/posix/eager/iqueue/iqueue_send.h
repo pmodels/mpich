@@ -60,6 +60,13 @@ MPIDI_POSIX_eager_send(int grank,
     /* Get the transport object that holds all of the global variables. */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
+    /* TODO: This function can only send one cell at a time. For a large
+     * message that require multiple cells this function has to be invoked
+     * multiple times. Can we try to send all data in this call? Moreover,
+     * we have to traverse the transport to find an empty cell, can we find
+     * all needed cells in single traversal? When putting them into the terminal,
+     * can we put all in single insertion? */
+
     /* Try to get a new cell to hold the message */
     cell = MPIDI_POSIX_eager_iqueue_new_cell(transport);
 
