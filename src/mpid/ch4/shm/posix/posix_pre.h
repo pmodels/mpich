@@ -79,8 +79,6 @@ typedef struct MPIDI_POSIX_am_request_header {
 
     uint8_t am_hdr_buf[MPIDI_POSIX_MAX_AM_HDR_SIZE];
 
-    int (*cmpl_handler_fn) (MPIR_Request * req);
-
     int handler_id;
     int dst_grank;
 

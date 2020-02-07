@@ -197,15 +197,11 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
-                              size_t * data_sz,
-                              int is_local,
-                              int *is_contig,
-                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+                              size_t * data_sz, int is_local, int *is_contig, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
     *req = NULL;
-    *target_cmpl_cb = NULL;
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{
