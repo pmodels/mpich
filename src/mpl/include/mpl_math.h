@@ -42,17 +42,6 @@ static inline int MPL_is_pof2(int val, int *ceil_pof2)
         return 0;
 }
 
-/* Routine to calculate log_k of an integer */
-static inline int MPL_ilog(int k, int number)
-{
-    int i = 1, p = k - 1;
-
-    for (; p - 1 < number; i++)
-        p *= k;
-
-    return i;
-}
-
 /* Routing to calculate base^exp for integers */
 static inline int MPL_ipow(int base, int exp)
 {
