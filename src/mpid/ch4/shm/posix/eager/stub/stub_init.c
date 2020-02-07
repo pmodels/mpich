@@ -11,15 +11,15 @@
 #ifndef POSIX_EAGER_STUB_INIT_H_INCLUDED
 #define POSIX_EAGER_STUB_INIT_H_INCLUDED
 
-#include "stub_impl.h"
+#include "stub_noinline.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
+int MPIDI_POSIX_stub_init(int rank, int size)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
+int MPIDI_POSIX_stub_finalize()
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

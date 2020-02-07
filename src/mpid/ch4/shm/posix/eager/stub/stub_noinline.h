@@ -8,11 +8,18 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef POSIX_EAGER_STUB_DIRECT_H_INCLUDED
-#define POSIX_EAGER_STUB_DIRECT_H_INCLUDED
 
-#include "stub_noinline.h"
-#include "stub_send.h"
-#include "stub_recv.h"
+#ifndef POSIX_EAGER_STUB_NOINLINE_H_INCLUDED
+#define POSIX_EAGER_STUB_NOINLINE_H_INCLUDED
 
-#endif /* POSIX_EAGER_STUB_DIRECT_H_INCLUDED */
+#include "stub_impl.h"
+
+int MPIDI_POSIX_stub_init(int rank, int size);
+int MPIDI_POSIX_stub_finalize(void);
+
+#ifdef POSIX_EAGER_INLINE
+#define MPIDI_POSIX_eager_init MPIDI_POSIX_stub_init
+#define MPIDI_POSIX_eager_finalize MPIDI_POSIX_stub_finalize
+#endif
+
+#endif /* POSIX_EAGER_STUB_NOINLINE_H_INCLUDED */
