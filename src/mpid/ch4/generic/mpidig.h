@@ -23,8 +23,7 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_target_msg_cb)
  (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
   size_t * data_sz, int is_local,       /* SHM or NM directly specifies locality */
-  int *is_contig, MPIDIG_am_target_cmpl_cb * target_cmpl_cb,    /* completion handler */
-  MPIR_Request ** req);         /* if allocated, need pointer to completion function */
+  int *is_contig, MPIR_Request ** req); /* if allocated, need pointer to completion function */
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];
@@ -32,8 +31,9 @@ typedef struct MPIDIG_global_t {
 } MPIDIG_global_t;
 extern MPIDIG_global_t MPIDIG_global;
 
-int MPIDIG_am_reg_cb(int handler_id,
-                     MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
+void MPIDIG_am_reg_cb(int handler_id,
+                      MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
+int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb);
 int MPIDIG_init(void);
 void MPIDIG_finalize(void);
 

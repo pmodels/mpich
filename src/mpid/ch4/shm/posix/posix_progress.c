@@ -38,7 +38,6 @@ static int progress_recv(int blocking)
     int i;
     int result = MPIDI_POSIX_OK;
     MPIR_Request *rreq = NULL;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     MPIDI_POSIX_am_request_header_t *curr_rreq_hdr = NULL;
     void *p_data = NULL;
     size_t p_data_sz = 0;
@@ -90,11 +89,10 @@ static int progress_recv(int blocking)
                                                            &p_data,
                                                            &p_data_sz,
                                                            1 /* is_local */ , &is_contig,
-                                                           &target_cmpl_cb, &rreq);
+                                                           &rreq);
         POSIX_TRACE("POSIX AM target callback: handler_id = %d, am_hdr = %p, p_data = %p "
-                    "p_data_sz = %lu, is_contig = %d, target_cmpl_cb = %p rreq = %p\n",
-                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, target_cmpl_cb,
-                    rreq);
+                    "p_data_sz = %lu, is_contig = %d, rreq = %p\n",
+                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, rreq);
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
@@ -108,9 +106,7 @@ static int progress_recv(int blocking)
                 rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
                 rreq->status.MPI_ERROR = MPI_SUCCESS;
 
-                if (target_cmpl_cb) {
-                    target_cmpl_cb(rreq);
-                }
+                MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
                 MPIDI_POSIX_eager_recv_commit(&transaction);
 
@@ -137,9 +133,7 @@ static int progress_recv(int blocking)
                 MPIDI_POSIX_eager_recv_memcpy(&transaction, p_data, payload, recv_data_sz);
 
                 /* Call the function to handle the completed receipt of the message. */
-                if (target_cmpl_cb) {
-                    target_cmpl_cb(rreq);
-                }
+                MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
                 MPIDI_POSIX_eager_recv_commit(&transaction);
 
@@ -154,7 +148,6 @@ static int progress_recv(int blocking)
 
             curr_rreq_hdr = MPIDI_POSIX_AMREQUEST(rreq, req_hdr);
 
-            curr_rreq_hdr->cmpl_handler_fn = target_cmpl_cb;
             curr_rreq_hdr->dst_grank = transaction.src_grank;
 
             if (is_contig) {
@@ -251,10 +244,7 @@ static int progress_recv(int blocking)
         /* All fragments have been received */
 
         MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
-
-        if (curr_rreq_hdr->cmpl_handler_fn) {
-            curr_rreq_hdr->cmpl_handler_fn(rreq);
-        }
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
   recv_commit:

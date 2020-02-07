@@ -674,8 +674,8 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPID_Request_complete(rreq);        /* FIXME: Should not call MPIDI in NM ? */
-    ofi_req->req_hdr->target_cmpl_cb(rreq);
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    MPID_Request_complete(rreq);
   fn_exit:
     MPIDIU_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
