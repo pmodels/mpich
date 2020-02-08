@@ -17,9 +17,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    struct iovec *iov;
-    int i, is_contig, iov_len;
-    size_t done, curr_len, rem;
+    int is_contig;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
     p_data = in_data =
@@ -33,43 +31,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     if (!rreq)
         return;
 
-    if (!p_data || !data_sz) {
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-        return;
-    }
-
-    if (is_contig) {
-        if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
-        }
-
-        data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIR_Memcpy(p_data, in_data, data_sz);
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    } else {
-        done = 0;
-        rem = in_data_sz;
-        iov = (struct iovec *) p_data;
-        iov_len = data_sz;
-
-        for (i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIR_Memcpy(iov[i].iov_base, (char *) in_data + done, curr_len);
-            rem -= curr_len;
-            done += curr_len;
-        }
-
-        if (rem) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        } else {
-            rreq->status.MPI_ERROR = MPI_SUCCESS;
-        }
-
-        MPIR_STATUS_SET_COUNT(rreq->status, done);
-    }
+    MPIDIG_recv_copy(in_data, in_data_sz, p_data, data_sz, is_contig, rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 }
