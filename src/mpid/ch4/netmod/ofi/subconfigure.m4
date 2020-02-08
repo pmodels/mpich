@@ -22,6 +22,14 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     if [test "x$ofi_direct_provider" != "x"]; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
     fi
+
+        AC_ARG_ENABLE(ch4-ofi-ipv6,
+            AC_HELP_STRING([--disable-ch4-ofi-ipv6], [Skip providers with addr_format FI_SOCKADDR_IN6])
+        )
+
+        if test "x$enable_ch4_ofi_ipv6" = "xno" ; then
+            AC_DEFINE(MPIDI_CH4_OFI_SKIP_IPV6, 1, [CH4-OFI should skip providers with IPv6])
+        fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 ])dnl
