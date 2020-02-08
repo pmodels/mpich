@@ -106,8 +106,8 @@ static int progress_recv(int blocking)
         } else {
             if (is_contig && (in_total_data_sz == payload_left)) {
                 /* got single complete payload */
-                MPIDIG_recv_copy(payload, payload_left, p_data, p_data_sz, is_contig, rreq);
-                /* Call the function to handle the completed receipt of the message. */
+                MPIDIG_recv_copy(payload, rreq);
+
                 MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
                 MPIDI_POSIX_eager_recv_commit(&transaction);
@@ -116,7 +116,7 @@ static int progress_recv(int blocking)
             }
 
             /* prepare for asynchronous transfer */
-            MPIDIG_recv_setup(is_contig, in_total_data_sz, p_data, p_data_sz, rreq);
+            MPIDIG_recv_setup(rreq);
 
             MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
             MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;

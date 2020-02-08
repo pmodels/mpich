@@ -36,15 +36,19 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
 }
 
 /* synchronous single-payload data transfer. This is the common case */
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPI_Aint in_data_sz,
-                                               void *data, MPI_Aint data_sz,
-                                               int is_contig, MPIR_Request * rreq)
+/* TODO: if transport flag callback, synchronous copy can/should be done inside the callback */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rreq)
 {
-    if (!data || !data_sz) {
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    int is_contig = p->is_contig;
+    MPI_Aint in_data_sz = p->in_data_sz;
+    if (is_contig && !p->iov_one.iov_len) {
         /* empty case */
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
     } else if (is_contig) {
         /* contig case */
+        void *data = p->iov_one.iov_base;
+        MPI_Aint data_sz = p->iov_one.iov_len;
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
         }
@@ -54,8 +58,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPI_Aint in_data_s
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
     } else {
         /* noncontig case */
-        struct iovec *iov = (struct iovec *) data;
-        int iov_len = data_sz;
+        struct iovec *iov = p->iov_ptr;
+        int iov_len = p->iov_num;
 
         int done = 0;
         int rem = in_data_sz;
@@ -67,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPI_Aint in_data_s
         }
 
         if (rem) {
-            data_sz = in_data_sz - rem;
+            MPI_Aint data_sz = in_data_sz - rem;
             rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
         }
 
@@ -77,17 +81,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPI_Aint in_data_s
 }
 
 /* setup for asynchronous multi-segment data transfer (ref posix_progress) */
-MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(int is_contig, MPI_Aint in_data_sz,
-                                                void *data, MPI_Aint data_sz, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
-    p->is_contig = is_contig;
-    p->in_data_sz = in_data_sz;
-    if (is_contig) {
-        p->iov_one.iov_base = data;
-        p->iov_one.iov_len = data_sz;
+    if (p->is_contig) {
         p->iov_ptr = &(p->iov_one);
         p->iov_num = 1;
+
+        MPI_Aint in_data_sz = p->in_data_sz;
+        MPI_Aint data_sz = p->iov_one.iov_len;
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
             MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
@@ -95,9 +97,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(int is_contig, MPI_Aint in_data_
             MPIR_STATUS_SET_COUNT(rreq->status, in_data_sz);
         }
     } else {
-        p->iov_ptr = data;
-        p->iov_num = data_sz;
-
+        MPI_Aint in_data_sz = p->in_data_sz;
         MPI_Aint recv_sz = 0;
         for (int i = 0; i < p->iov_num; i++) {
             recv_sz += p->iov_ptr[i].iov_len;

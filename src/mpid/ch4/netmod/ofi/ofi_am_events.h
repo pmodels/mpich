@@ -96,8 +96,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
-
-    size_t data_sz, in_data_sz;
+    size_t data_sz;
     int is_contig;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
@@ -105,7 +104,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
     /* note: msg_hdr + 1 points to the payload */
     p_data = in_data = (char *) (msg_hdr + 1) + msg_hdr->am_hdr_sz;
-    in_data_sz = data_sz = msg_hdr->data_sz;
+    data_sz = msg_hdr->data_sz;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, (msg_hdr + 1),
                                                        &p_data, &data_sz, 0 /* is_local */ ,
@@ -115,7 +114,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
         goto fn_exit;
 
     /* TODO: if we pass a flag, the callback could do all the following */
-    MPIDIG_recv_copy(in_data, in_data_sz, p_data, data_sz, is_contig, rreq);
+    MPIDIG_recv_copy(in_data, rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
