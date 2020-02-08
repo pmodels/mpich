@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -244,7 +244,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,
