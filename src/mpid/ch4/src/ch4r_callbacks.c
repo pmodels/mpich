@@ -288,8 +288,12 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 
-    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
+    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count)) {
+        MPIDIG_recv_init(1, 0, NULL, 0, rreq);
         return MPI_SUCCESS;
+    }
+
+    MPI_Aint in_total_data_sz = *p_data_sz;
 
     MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype), dt_contig,
                             data_sz, dt_ptr, dt_true_lb);
@@ -325,6 +329,8 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_
         *p_data_sz = actual_iov_len;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
     }
+
+    MPIDIG_recv_init(dt_contig, in_total_data_sz, *data, *p_data_sz, rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     return MPI_SUCCESS;

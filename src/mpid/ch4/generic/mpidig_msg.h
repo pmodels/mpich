@@ -19,6 +19,22 @@
                          rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, \
                          (int) data_sz, (int) in_data_sz)
 
+/* caching recv buffer information */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
+                                               void *data, MPI_Aint data_sz, MPIR_Request * rreq)
+{
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    p->is_contig = is_contig;
+    p->in_data_sz = in_data_sz;
+    if (is_contig) {
+        p->iov_one.iov_base = data;
+        p->iov_one.iov_len = data_sz;
+    } else {
+        p->iov_ptr = data;
+        p->iov_num = data_sz;
+    }
+}
+
 /* synchronous single-payload data transfer. This is the common case */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPI_Aint in_data_sz,
                                                void *data, MPI_Aint data_sz,
