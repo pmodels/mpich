@@ -35,15 +35,11 @@ static int progress_recv(int blocking)
 
     MPIDI_POSIX_eager_recv_transaction_t transaction;
     int mpi_errno = MPI_SUCCESS;
-    int i;
     int result = MPIDI_POSIX_OK;
     MPIR_Request *rreq = NULL;
-    MPIDI_POSIX_am_request_header_t *curr_rreq_hdr = NULL;
     void *p_data = NULL;
     size_t p_data_sz = 0;
-    size_t recv_data_sz = 0;
     size_t in_total_data_sz = 0;
-    int iov_done = 0;
     int is_contig;
     void *am_hdr = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr;
@@ -66,7 +62,11 @@ static int progress_recv(int blocking)
     payload = transaction.payload;
     payload_left = transaction.payload_sz;
 
-    if (msg_hdr) {
+    if (!msg_hdr) {
+        /* Fragment handling. Set currently active recv request */
+        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
+    } else {
+        /* First segment */
         am_hdr = payload;
         p_data = payload + msg_hdr->am_hdr_sz;
 
@@ -74,12 +74,15 @@ static int progress_recv(int blocking)
         p_data_sz = msg_hdr->data_sz;
 
         /* This is a SHM internal control header */
+        /* TODO: internal control can use the generic am interface,
+         *       just need register callbacks */
         if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
             mpi_errno = MPIDI_SHM_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
 
             /* TODO: discard payload for now as we only handle header in
              * current internal control protocols. */
-            goto recv_commit;
+            MPIDI_POSIX_eager_recv_commit(&transaction);
+            goto fn_exit;
         }
 
         /* Call the MPIDIG function to handle the initial receipt of the message. This will attempt
@@ -96,158 +99,36 @@ static int progress_recv(int blocking)
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
-        /* We're receiving a new message here. */
-        if (rreq) {
-            /* zero message size optimization */
-            if ((p_data_sz == 0) && (in_total_data_sz == 0)) {
-
-                MPIR_STATUS_SET_COUNT(rreq->status, 0);
-                rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-                rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
-                rreq->status.MPI_ERROR = MPI_SUCCESS;
-
-                MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-
-                MPIDI_POSIX_eager_recv_commit(&transaction);
-
-                goto fn_exit;
-            }
-
-            /* Received immediately */
+        if (!rreq) {
+            /* no rreq, no payload */
+            MPIDI_POSIX_eager_recv_commit(&transaction);
+            goto fn_exit;
+        } else {
             if (is_contig && (in_total_data_sz == payload_left)) {
-
-                if (in_total_data_sz > p_data_sz) {
-                    rreq->status.MPI_ERROR =
-                        MPIR_Err_create_code(rreq->status.MPI_ERROR, MPIR_ERR_RECOVERABLE, __func__,
-                                             __LINE__, MPI_ERR_TRUNCATE, "**truncate",
-                                             "**truncate %d %d %d %d", rreq->status.MPI_SOURCE,
-                                             rreq->status.MPI_TAG, p_data_sz, in_total_data_sz);
-                }
-
-                recv_data_sz = MPL_MIN(p_data_sz, in_total_data_sz);
-
-                MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-                rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-                rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
-
-                MPIDI_POSIX_eager_recv_memcpy(&transaction, p_data, payload, recv_data_sz);
-
+                /* got single complete payload */
+                MPIDIG_recv_copy(payload, payload_left, p_data, p_data_sz, is_contig, rreq);
                 /* Call the function to handle the completed receipt of the message. */
                 MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 
                 MPIDI_POSIX_eager_recv_commit(&transaction);
-
                 MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
-
                 goto fn_exit;
             }
 
-            /* Allocate aux data */
-
-            MPIDI_POSIX_am_init_req_hdr(NULL, 0, &MPIDI_POSIX_AMREQUEST(rreq, req_hdr), rreq);
-
-            curr_rreq_hdr = MPIDI_POSIX_AMREQUEST(rreq, req_hdr);
-
-            curr_rreq_hdr->dst_grank = transaction.src_grank;
-
-            if (is_contig) {
-                curr_rreq_hdr->iov_ptr = curr_rreq_hdr->iov;
-
-                curr_rreq_hdr->iov_ptr[0].iov_base = p_data;
-                curr_rreq_hdr->iov_ptr[0].iov_len = p_data_sz;
-
-                curr_rreq_hdr->iov_num = 1;
-
-                recv_data_sz = p_data_sz;
-            } else {
-                curr_rreq_hdr->iov_ptr = ((struct iovec *) p_data);
-
-                for (i = 0; i < p_data_sz; i++) {
-                    recv_data_sz += curr_rreq_hdr->iov_ptr[i].iov_len;
-                }
-
-                curr_rreq_hdr->iov_num = p_data_sz;
-            }
-
-            /* Set final request status */
-
-            if (in_total_data_sz > recv_data_sz) {
-                rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                              MPIR_ERR_RECOVERABLE,
-                                                              __func__, __LINE__, MPI_ERR_TRUNCATE,
-                                                              "**truncate",
-                                                              "**truncate %d %d %d %d",
-                                                              rreq->status.MPI_SOURCE,
-                                                              rreq->status.MPI_TAG, recv_data_sz,
-                                                              in_total_data_sz);
-            }
-
-            recv_data_sz = MPL_MIN(recv_data_sz, in_total_data_sz);
-
-            MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-            rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-            rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
-
-            curr_rreq_hdr->is_contig = is_contig;
-            curr_rreq_hdr->in_total_data_sz = in_total_data_sz;
-
-            /* Make it active */
+            /* prepare for asynchronous transfer */
+            MPIDIG_recv_setup(is_contig, in_total_data_sz, p_data, p_data_sz, rreq);
 
             MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
-
             MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
-        } else {
-            MPIDI_POSIX_eager_recv_commit(&transaction);
-
-            goto fn_exit;
         }
-    } else {
-        /* Fragment handling. Set currently active recv request */
-
-        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
-
-        curr_rreq_hdr = MPIDI_POSIX_AMREQUEST(rreq, req_hdr);
     }
 
-    curr_rreq_hdr->in_total_data_sz -= payload_left;
-
-    /* Generic handling for contig and non contig data */
-    for (i = 0; i < curr_rreq_hdr->iov_num; i++) {
-        if (payload_left < curr_rreq_hdr->iov_ptr[i].iov_len) {
-            MPIDI_POSIX_eager_recv_memcpy(&transaction,
-                                          curr_rreq_hdr->iov_ptr[i].iov_base, payload,
-                                          payload_left);
-
-            curr_rreq_hdr->iov_ptr[i].iov_base =
-                (char *) curr_rreq_hdr->iov_ptr[i].iov_base + payload_left;
-            curr_rreq_hdr->iov_ptr[i].iov_len -= payload_left;
-
-            break;
-        }
-
-        MPIDI_POSIX_eager_recv_memcpy(&transaction,
-                                      curr_rreq_hdr->iov_ptr[i].iov_base,
-                                      payload, curr_rreq_hdr->iov_ptr[i].iov_len);
-
-        payload += curr_rreq_hdr->iov_ptr[i].iov_len;
-        payload_left -= curr_rreq_hdr->iov_ptr[i].iov_len;
-
-        iov_done++;
-    }
-
-    if (curr_rreq_hdr->iov_num) {
-        curr_rreq_hdr->iov_num -= iov_done;
-        curr_rreq_hdr->iov_ptr += iov_done;
-    }
-
-    if (curr_rreq_hdr->in_total_data_sz == 0) {
-        /* All fragments have been received */
-
+    int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
+    if (is_done) {
         MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
-  recv_commit:
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:
