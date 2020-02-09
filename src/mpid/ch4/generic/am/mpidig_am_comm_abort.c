@@ -25,9 +25,7 @@ void MPIDIG_am_comm_abort_init(void)
 /* MPIDIG_COMM_ABORT */
 
 struct am_comm_abort_hdr {
-    int src_rank;
-    int tag;
-    MPIR_Context_id_t context_id;
+    int exit_code;
 };
 
 int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
@@ -41,9 +39,7 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT);
 
     struct am_comm_abort_hdr am_hdr;
-    am_hdr.src_rank = comm->rank;
-    am_hdr.tag = exit_code;
-    am_hdr.context_id = comm->context_id + MPIR_CONTEXT_INTRA_PT2PT;
+    am_hdr.exit_code = exit_code;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         size = comm->local_size;
@@ -92,7 +88,7 @@ static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
 
     struct am_comm_abort_hdr *hdr = am_hdr;
 
-    MPL_exit(hdr->tag);
+    MPL_exit(hdr->exit_code);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
     return MPI_SUCCESS;
