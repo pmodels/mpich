@@ -1558,11 +1558,6 @@ static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_lis
         if (!match_global_settings(prov)) {
             prov = prov->next;
             continue;
-#ifdef MPIDI_CH4_OFI_SKIP_IPV6
-        } else if (prov->addr_format == FI_SOCKADDR_IN6) {
-            prov = prov->next;
-            continue;
-#endif
         } else {
             prov_use = prov;
             break;
@@ -1586,6 +1581,11 @@ bool match_global_settings(struct fi_info * prov)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
+#ifdef MPIDI_CH4_OFI_SKIP_IPV6
+    if (prov->addr_format == FI_SOCKADDR_IN6) {
+        return false;
+    }
+#endif
     CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
