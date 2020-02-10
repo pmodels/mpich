@@ -8,11 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef POSIX_EAGER_FBOX_INIT_H_INCLUDED
-#define POSIX_EAGER_FBOX_INIT_H_INCLUDED
-
-#include "fbox_types.h"
-#include "fbox_impl.h"
+#include "mpidimpl.h"
+#include "fbox_noinline.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -33,16 +30,14 @@ cvars:
 
 #define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver) ((MPIDI_POSIX_global.num_local) * (sender) + (receiver))
 
-extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
+int MPIDI_POSIX_fbox_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
@@ -102,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -111,12 +106,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     /* --END ERROR HANDLING-- */
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
+int MPIDI_POSIX_fbox_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
 
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
@@ -125,10 +120,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
-#endif /* POSIX_EAGER_FBOX_INIT_H_INCLUDED */
