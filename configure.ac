@@ -5356,6 +5356,7 @@ PAC_GET_EXENAME("mpif90", MPIF90_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
 
 AC_CONFIG_SUBDIRS([test/mpi])
+AC_CONFIG_SUBDIRS([test/mpl])
 dnl
 dnl Generate the Makefiles from Makefile.in
 dnl Also generate mpi.h from mpi.h.in so that we can eliminate all ifdefs
@@ -5381,7 +5382,7 @@ CFLAGS="$CFLAGS"
 export LIBDIR ; export MPILIBNAME ; export CC ; export CPPFLAGS
 export PMPILIBNAME
 export CFLAGS
-# For test/mpi/configure
+# For test/mpi/configure and test/mpl/configure
 MPI_SRCDIR=$MPI_SRCDIR
 MPI_NO_SPAWN=$MPID_NO_SPAWN
 export MPI_SRCDIR

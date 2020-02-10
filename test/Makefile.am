@@ -17,3 +17,5 @@ testing:
 	export XMLFILE && export XMLCONTINUE && \
 	cd commands && $(MAKE) testing)
 
+testing-mpl:
+	(cd mpl && $(MAKE) testing)

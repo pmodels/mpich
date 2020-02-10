@@ -128,6 +128,7 @@ apply-xfail.sh
 /src/pm/hydra/version.m4
 /src/pm/hydra2/version.m4
 /test/mpi/version.m4
+/test/mpl/version.m4
 
 # created by the build process in the test dirs
 gen-src-stamp
@@ -610,3 +611,6 @@ Makefile.am-stamp
 /test/mpi/pt2pt/testlist.dtp
 /test/mpi/coll/testlist.dtp
 /test/mpi/rma/testlist.dtp
+
+/test/mpl/confdb
+/test/mpl/aclocal.m4

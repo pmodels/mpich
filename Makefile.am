@@ -212,6 +212,13 @@ EXTRA_DIST += README.vin
 testing:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
 
+testing-mpl:
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing-mpl )
+
+testing-all:
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing-mpl )
+	( cd test && $(MAKE) $(AM_MAKEFLAGS) testing )
+
 test-clean:
 	( cd test && $(MAKE) $(AM_MAKEFLAGS) clean )
 CLEAN_LOCAL_TARGETS += test-clean

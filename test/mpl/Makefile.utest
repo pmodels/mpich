@@ -1,0 +1,29 @@
+## -*- Mode: Makefile; -*-
+## vim: set ft=automake :
+##
+## (C) 2011 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
+
+## This is an automake makefile fragment that should be included by:
+##
+##   include $(top_srcdir)/Makefile.mtest
+##
+## It provides a "testing" rule that uses runtests, cleanup for summary.xml, and
+## adds appropriate includes and linker flags for using the MTest framework.
+## The goal is to reduce the amount of boilerplate that needs to exist in each
+## Makefile.am
+
+# AM_CPPFLAGS are used for C++ code as well
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include -I$(mpich_top_srcdir)/src/mpl/include
+LDADD = $(top_builddir)/utest/utest.$(OBJEXT)
+
+$(top_builddir)/utest/utest.$(OBJEXT): $(top_srcdir)/utest/utest.c
+	(cd $(top_builddir)/utest && $(MAKE) utest.$(OBJEXT))
+
+SUMMARY_BASENAME ?= summary
+
+testing:
+	echo "SUCCESS"
+
+CLEANFILES = $(SUMMARY_BASENAME).xml $(SUMMARY_BASENAME).tap $(SUMMARY_BASENAME).junit.xml

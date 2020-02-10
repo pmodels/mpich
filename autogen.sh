@@ -646,6 +646,7 @@ confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra2/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/dtpools/confdb"
+confdb_dirs="${confdb_dirs} test/mpl/confdb"
 
 # hydra's copies of mpl and hwloc
 sync_external src/mpl src/pm/hydra/mpl
@@ -672,6 +673,7 @@ if [ -f maint/version.m4 ] ; then
     cp -pPR maint/version.m4 src/pm/hydra2/version.m4
     cp -pPR maint/version.m4 src/mpi/romio/version.m4
     cp -pPR maint/version.m4 test/mpi/version.m4
+    cp -pPR maint/version.m4 test/mpl/version.m4
 fi
 
 # Now sanity check that some of the above sync was successful
