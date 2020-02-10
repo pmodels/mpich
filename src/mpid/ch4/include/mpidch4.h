@@ -314,6 +314,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
    them in the NETMOD_INLINE mode */
 #include "ch4_request.h"
 
+/* Active message and generic implementatiions */
+#include "mpidig_am.h"
+#include "mpidch4r.h"
+
 /* Include netmod and shm implementations  */
 /* Prototypes are split from impl to avoid */
 /* circular dependencies                   */
