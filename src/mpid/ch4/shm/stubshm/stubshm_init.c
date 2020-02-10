@@ -11,7 +11,7 @@
 
 #include "stubshm_impl.h"
 
-int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_provided)
+int MPIDI_STUBSHM_mpi_init_hook(int rank, int size)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);

@@ -250,13 +250,14 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If set to positive, this CVAR specifies the maximum number of CH4 VNIs
-        that OFI netmod exposes.
+        that OFI netmod exposes. If set to 0 (the default) or bigger than
+        MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
 
     - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
       category    : CH4_OFI
@@ -503,8 +504,7 @@ static int dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided)
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS, i;
     void *table = NULL;
@@ -541,7 +541,9 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ------------------------------------------------------------------------ */
 
     int num_vnis = 1;
-    if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 1) {
+    if (MPIR_CVAR_CH4_OFI_MAX_VNIS == 0 || MPIR_CVAR_CH4_OFI_MAX_VNIS > MPIDI_global.n_vcis) {
+        num_vnis = MPIDI_global.n_vcis;
+    } else {
         num_vnis = MPIR_CVAR_CH4_OFI_MAX_VNIS;
     }
 
@@ -551,8 +553,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     if (num_vnis > MPIDI_OFI_MAX_CONTEXTS) {
         num_vnis = MPIDI_OFI_MAX_CONTEXTS;
     }
+    /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
+    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
+    MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
+
     MPIDI_OFI_global.num_ctx = num_vnis;
-    *n_vcis_provided = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */
     mpi_errno = create_vni_context(0);

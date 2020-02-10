@@ -9,7 +9,7 @@
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 
-int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
+int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
