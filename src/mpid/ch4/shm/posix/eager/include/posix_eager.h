@@ -51,8 +51,8 @@ extern MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func;
 extern int MPIDI_num_posix_eager_fabrics;
 extern char MPIDI_POSIX_eager_strings[][MPIDI_MAX_POSIX_EAGER_STRING_LEN];
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize(void) MPL_STATIC_INLINE_SUFFIX;
+int MPIDI_POSIX_eager_init(int rank, int size);
+int MPIDI_POSIX_eager_finalize(void);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
