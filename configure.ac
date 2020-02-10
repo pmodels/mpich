@@ -541,6 +541,11 @@ AC_ARG_ENABLE(thread-cs,
                          threads are present.  Values may be global
                          (default), per-object, per-vci, lock-free]),,enable_thread_cs=global)
 
+AC_ARG_ENABLE(vci-method,
+	AC_HELP_STRING([--enable-vci-method=type],
+			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
+                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_vci_method=zero)
+
 AC_ARG_ENABLE(mdta,
     AC_HELP_STRING([--enable-mdta],
             [Optimize global granularity using message-driven thread activation.
@@ -1545,6 +1550,35 @@ if test "$enable_threads" = "multiple" ; then
     esac
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+
+# Check for enable-vci-method choice
+vci_method=MPICH_VCI__ZERO
+case $enable_vci_method in
+    zero)
+    # Essentially single VCI
+    vci_method=MPICH_VCI__ZERO
+    ;;
+    communicator)
+    # Every communicator gets a new VCI in a round-robin fashion
+    vci_method=MPICH_VCI__COMM
+    ;;
+    tag)
+    # Explicit VCI info embedded with a tag scheme (5 bit src vci, 5 bit dst vci, plus 5 bit user)
+    vci_method=MPICH_VCI__TAG
+    ;;
+    implicit)
+    # An automatic scheme taking into account of user hints
+    vci_method=MPICH_VCI__IMPLICIT
+    ;;
+    explicit)
+    # Directly passing down vci in parameters (MPIX or Endpoint rank)
+    vci_method=MPICH_VCI__EXPLICIT
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $enable_vci_method for --enable-vci-method])
+    ;;
+esac
+AC_DEFINE_UNQUOTED([MPIDI_CH4_VCI_METHOD], $vci_method, [Method used to select vci])
 
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
     AC_MSG_ERROR([the ch4 device does not support the per-object critical section])

@@ -91,6 +91,16 @@ cvars:
         If the number is negative, underlying netmod or shmmod automatically uses an optimal number depending on
         the underlying fabric or shared memory architecture.
 
+    - name        : MPIR_CVAR_CH4_NUM_VCIS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -381,10 +391,6 @@ int MPID_Init(void)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
-    int n_nm_vcis_provided;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vcis_provided;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -452,18 +458,28 @@ int MPID_Init(void)
     mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize multiple VCIs */
+    /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
+    MPIDI_global.n_vcis = 1;
+    if (MPIR_CVAR_CH4_NUM_VCIS > 1)
+        MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPIR_Add_mutex(&MPIDI_VCI(i).lock);
+        /* TODO: lw_req, workq */
+    }
+
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm,
-                                           &n_nm_vcis_provided);
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
