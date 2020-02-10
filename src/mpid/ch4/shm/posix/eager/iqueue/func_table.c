@@ -15,8 +15,8 @@
 #include "posix_eager_inline.h"
 
 MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_iqueue_funcs = {
-    MPIDI_POSIX_eager_init,
-    MPIDI_POSIX_eager_finalize,
+    MPIDI_POSIX_iqueue_init,
+    MPIDI_POSIX_iqueue_finalize,
 
     MPIDI_POSIX_eager_send,
 
