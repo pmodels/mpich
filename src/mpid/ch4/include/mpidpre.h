@@ -153,6 +153,17 @@ typedef struct MPIDIG_acc_req_t {
 } MPIDIG_acc_req_t;
 
 typedef int (*MPIDIG_req_cmpl_cb) (MPIR_Request * req);
+
+/* structure used for supporting asynchronous payload transfer */
+typedef struct MPIDIG_req_async {
+    int is_contig;
+    MPI_Aint in_data_sz;
+    struct iovec *iov_ptr;      /* used for non-contig data */
+    int iov_num;
+    struct iovec iov_one;       /* used for contig data */
+    MPI_Aint offset;            /* used for direct unpack (is_contig == -1) */
+} MPIDIG_rreq_async_t;
+
 typedef struct MPIDIG_req_ext_t {
     union {
         MPIDIG_sreq_t sreq;
@@ -164,6 +175,7 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_acc_req_t areq;
     };
 
+    MPIDIG_rreq_async_t async;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
