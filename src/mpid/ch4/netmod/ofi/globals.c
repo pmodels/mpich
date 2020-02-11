@@ -166,7 +166,3 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .major_version = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
      .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
 };
-
-/* MPIDI_OFI_win_request_t objects */
-MPIR_Object_alloc_t MPIDI_OFI_win_request_mem =
-    { 0, 0, 0, 0, MPIR_INTERNAL, sizeof(MPIDI_OFI_win_request_t), NULL, 0 };

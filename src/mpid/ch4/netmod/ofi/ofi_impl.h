@@ -278,27 +278,17 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
     return max_size;
 }
 
-extern MPIR_Object_alloc_t MPIDI_OFI_win_request_mem;
-
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(void)
 {
     MPIDI_OFI_win_request_t *winreq;
-    winreq = MPIR_Handle_obj_alloc(&MPIDI_OFI_win_request_mem);
-    if (winreq) {
-        MPIR_Object_set_ref(winreq, 1);
-    }
+    winreq = MPL_malloc(sizeof(*winreq), MPL_MEM_OTHER);
     return winreq;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
-    int in_use;
-    MPIR_Assert(HANDLE_GET_MPI_KIND(winreq->handle) == MPIR_INTERNAL);
-    MPIR_Object_release_ref(winreq, &in_use);
-    if (!in_use) {
-        MPL_free(winreq->noncontig);
-        MPIR_Handle_obj_free(&MPIDI_OFI_win_request_mem, (winreq));
-    }
+    MPL_free(winreq->noncontig);
+    MPL_free(winreq);
 }
 
 /* This function implements netmod vci to vni(context) mapping.
