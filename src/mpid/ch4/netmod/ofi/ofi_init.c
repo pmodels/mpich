@@ -797,18 +797,12 @@ int MPIDI_OFI_get_vci_attr(int vci)
 
 void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-
-    void *ap;
-    ap = MPL_malloc(size, MPL_MEM_USER);
-    return ap;
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 int MPIDI_OFI_mpi_free_mem(void *ptr)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPL_free(ptr);
-
-    return mpi_errno;
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
