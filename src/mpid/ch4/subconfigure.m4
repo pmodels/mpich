@@ -245,27 +245,6 @@ AC_ARG_ENABLE(ch4-direct,
                       or through shared memory based on locality
     ],,enable_ch4_direct=default)
 
-AC_ARG_ENABLE(ch4-shm-inline,
-    [--enable-ch4-shm-inline
-       Enables inlined shared memory build when a single shared memory module is used
-       level:
-         yes       - Enabled (default)
-         no        - Disabled (may improve build times and code size)
-    ],,enable_ch4_shm_inline=yes)
-
-AC_ARG_ENABLE(ch4-shm-direct,
-    [--enable-ch4-shm-direct
-       (Deprecated in favor of ch4-shm-inline)
-       Enables inlined shared memory build when a single shared memory module is used
-       level:
-         yes       - Enabled (default)
-         no        - Disabled (may improve build times and code size)
-    ],,)
-
-if test "$enable_ch4_shm_inline" = "yes" || test "$enable_ch4_shm_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
-fi
-
 # setup shared memory submodules
 AC_ARG_WITH(ch4-shmmods,
     [  --with-ch4-shmmods@<:@=ARG@:>@ Specify the shared memory submodules for MPICH/CH4.
