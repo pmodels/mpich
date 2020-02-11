@@ -217,6 +217,11 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 Reconfigure mpich with --enable-izem=atomic --with-zm-prefix=yes
 **sockaddrfailed: MPL_get_sockaddr failed
 
+**nomembind: hwloc_set_area_membind() is not available
+**invalidmembind: Invalid bind object identifier.
+**invalidmembind %d: cannot bind memory to object (%d). \
+A memory object id was expected but a non-memory object id was passed instead
+
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #
