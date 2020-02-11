@@ -359,9 +359,6 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int po
 #define MPIR_Request_add_ref(req_p_) \
     do { MPIR_Object_add_ref(req_p_); } while (0)
 
-#define MPIR_Request_release_ref(req_p_, inuse_) \
-    do { MPIR_Object_release_ref(req_p_, inuse_); } while (0)
-
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
@@ -381,7 +378,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 {
     int inuse;
 
-    MPIR_Request_release_ref(req, &inuse);
+    MPIR_Object_release_ref(req, &inuse);
 
     /* inform the device that we are decrementing the ref-count on
      * this request */
