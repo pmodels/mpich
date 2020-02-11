@@ -57,7 +57,6 @@ void *MPIDI_SHMI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_SHMI_mpi_free_mem(void *ptr);
 int MPIDI_SHMI_progress(int vci, int blocking);
 
-#ifdef SHM_INLINE
 #define MPIDI_SHM_mpi_init_hook MPIDI_SHMI_mpi_init_hook
 #define MPIDI_SHM_mpi_finalize_hook MPIDI_SHMI_mpi_finalize_hook
 #define MPIDI_SHM_get_vci_attr MPIDI_SHMI_get_vci_attr
@@ -95,6 +94,5 @@ int MPIDI_SHMI_progress(int vci, int blocking);
 #define MPIDI_SHM_mpi_alloc_mem MPIDI_SHMI_mpi_alloc_mem
 #define MPIDI_SHM_mpi_free_mem MPIDI_SHMI_mpi_free_mem
 #define MPIDI_SHM_progress MPIDI_SHMI_progress
-#endif
 
 #endif
