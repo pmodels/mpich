@@ -43,8 +43,8 @@ int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_D
         MPIR_SCHED_BARRIER(s);
     } else {
         mpi_errno = MPIR_Sched_copy((char *) recvbuf + rank * recvcount * recvtype_extent,
-                                    recvcount, recvtype,
-                                    tmp_buf, recvcount * recvtype_sz, MPI_BYTE, s);
+                                    recvcount, recvtype, tmp_buf, recvcount * recvtype_sz, MPI_BYTE,
+                                    s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }

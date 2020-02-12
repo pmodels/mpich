@@ -246,8 +246,8 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
     mpi_errno = MPIR_Sched_create(&s);
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPIR_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
-                                               recvbuf, recvcounts, rdispls, recvtypes,
-                                               comm_ptr, s);
+                                               recvbuf, recvcounts, rdispls, recvtypes, comm_ptr,
+                                               s);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);

@@ -100,8 +100,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
             }
         }
 
-        mpi_errno = MPIR_Type_create_indexed_block_impl(count, recvcount,
-                                                        displs, recvtype, &newtype);
+        mpi_errno =
+            MPIR_Type_create_indexed_block_impl(count, recvcount, displs, recvtype, &newtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);

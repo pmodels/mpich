@@ -54,8 +54,8 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */
         mpi_errno = MPIR_Sched_copy(((char *) sendbuf + disps[rank] * extent),
-                                    recvcounts[rank], datatype,
-                                    recvbuf, recvcounts[rank], datatype, s);
+                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype,
+                                    s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -105,8 +105,8 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
      * recvbuf. already done for rank 0. */
     if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
         mpi_errno = MPIR_Sched_copy(((char *) recvbuf + disps[rank] * extent),
-                                    recvcounts[rank], datatype,
-                                    recvbuf, recvcounts[rank], datatype, s);
+                                    recvcounts[rank], datatype, recvbuf, recvcounts[rank], datatype,
+                                    s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
