@@ -114,7 +114,7 @@ int MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(const void *sendbuf
         newrank = rank - rem;
 
     if (newrank != -1) {
-        /* recalculate the recvcnts and disps arrays because the
+        /* recalculate the recvcounts and disps arrays because the
          * even-numbered processes who no longer participate will
          * have their result calculated by the process to their
          * right (rank+1). */

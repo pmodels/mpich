@@ -94,8 +94,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     /* Step1: copy own data from sendbuf to top of recvbuf. */
     if (is_inplace && rank != 0)
         MPIR_TSP_sched_localcopy((char *) recvbuf + rank * recvcount * recvtype_extent,
-                                 recvcount, recvtype, tmp_recvbuf, recvcount,
-                                 recvtype, sched, 0, NULL);
+                                 recvcount, recvtype, tmp_recvbuf, recvcount, recvtype, sched, 0,
+                                 NULL);
     else if (!is_inplace)
         MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf,
                                  recvcount, recvtype, sched, 0, NULL);

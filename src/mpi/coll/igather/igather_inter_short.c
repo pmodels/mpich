@@ -60,8 +60,8 @@ int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datat
 
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
-                                       tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
-                                       0, newcomm_ptr, s);
+                                       tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0, newcomm_ptr,
+                                       s);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (rank == 0) {

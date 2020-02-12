@@ -137,8 +137,8 @@ int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
                                                                 comm_ptr, s);
     } else {
         mpi_errno = MPIR_Iscatter_sched_inter_linear(sendbuf, sendcount, sendtype,
-                                                     recvbuf, recvcount, recvtype,
-                                                     root, comm_ptr, s);
+                                                     recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                     s);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
