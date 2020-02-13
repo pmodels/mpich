@@ -65,11 +65,6 @@ typedef struct {
 } MPIDU_Thread_mutex_t;
 typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
 
-typedef struct {
-    MPL_thread_id_t owner;
-    int count;
-} MPIDU_thread_mutex_state_t;
-
 typedef MPL_thread_id_t MPIDU_Thread_id_t;
 typedef MPL_thread_tls_t MPIDU_Thread_tls_t;
 typedef MPL_thread_func_t MPIDU_Thread_func_t;
@@ -99,14 +94,6 @@ M*/
 
 M*/
 
-/* MPIDU_THREAD_CS_ENTER_ST - Stateful version of CS_ENTER
- * It takes a MPIDU_thread_state_t variable to pass the state between ENTER and EXIT.
- */
-
-/* MPIDU_THREAD_CS_EXIT_ST - Stateful version of CS_EXIT
- * It takes a MPIDU_thread_state_t variable to pass the state between ENTER and EXIT.
- */
-
 /* NOTE: Stateful CS_{ENTER,EXIT} currently is only used by ch3:sock and only with
  * GRANULARITY_GLOBAL */
 
@@ -114,15 +101,11 @@ M*/
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
 #define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
-#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st) MPIDUI_THREAD_CS_ENTER_ST_##name(mutex,st)
-#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st) MPIDUI_THREAD_CS_EXIT_ST_##name(mutex,st)
 
 #else
 #define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
 #define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
 #define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
-#define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st)       /* NOOP */
-#define MPIDU_THREAD_CS_EXIT_ST(name, mutex, st)        /* NOOP */
 
 #endif
 
@@ -181,41 +164,6 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_ENTER_ST(mutex, st)                            \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_;                                                   \
-            MPIR_Assert(st.owner != 0);                                 \
-            MPIR_Assert(st.count > 0);                                  \
-            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
-            MPIR_Assert(err_ == 0);                                     \
-            MPIR_Assert(mutex.count == 0);                              \
-            /* restore mutex state */                                   \
-            mutex.owner = st.owner;                                     \
-            mutex.count = st.count;                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_EXIT_ST(mutex, st)                             \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_;                                                   \
-            MPIR_Assert(mutex.owner != 0);                              \
-            MPIR_Assert(mutex.count > 0);                               \
-            /* save current mutex state */                              \
-            st.owner = mutex.owner;                                     \
-            st.count = mutex.count;                                     \
-            mutex.owner = 0;                                            \
-            mutex.count = 0;                                            \
-            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
-            MPIR_Assert(err_ == 0);                                     \
-        } else {                                                        \
-            /* silence warnings: -Wmaybe-uninitialized */               \
-            st.owner = 0;                                               \
-            st.count = 0;                                               \
-        }                                                               \
-    } while (0)
-
 /* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
 
 /* GLOBAL is only enabled with MPICH_THREAD_GRANULARITY__GLOBAL */
@@ -223,14 +171,10 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)  MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)   MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD(mutex)
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex, st)    MPIDUI_THREAD_CS_ENTER_ST(mutex, st)
-#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex, st)     MPIDUI_THREAD_CS_EXIT_ST(mutex, st)
 #else
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)    /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)     /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)    /* NOOP */
-#define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex, st)     /* NOOP */
-#define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex, st)      /* NOOP */
 #endif
 
 /* POBJ is only enabled with GRANULARITY__POBJ */
