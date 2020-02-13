@@ -269,7 +269,7 @@ static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
     }
 
-    MPIDIG_recv_init(dt_contig, in_total_data_sz, *data, *p_data_sz, rreq);
+    MPIDIG_recv_type_init(in_total_data_sz, rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     return MPI_SUCCESS;
