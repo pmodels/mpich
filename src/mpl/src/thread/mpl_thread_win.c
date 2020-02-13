@@ -89,6 +89,11 @@ void MPL_thread_self(MPL_thread_id_t * id)
     *id = GetCurrentThread();
 }
 
+void MPL_thread_join(MPL_thread_id_t * id)
+{
+    WaitForSingleObject(id, INFINITE);
+}
+
 void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same)
 {
     *same = (*id1 == *id2) ? TRUE : FALSE;
