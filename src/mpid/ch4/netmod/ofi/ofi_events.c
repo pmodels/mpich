@@ -24,7 +24,7 @@ static int chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
-static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int am_isend_event(void *context);
 static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
@@ -524,15 +524,17 @@ static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
     return MPI_SUCCESS;
 }
 
-static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+static int am_isend_event(void *context)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *msg_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
 
-    msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
+    MPIR_Request *sreq = MPIDI_OFI_context_to_request(context);
+    MPIDI_OFI_am_request_t *req_hdr = ((MPIDI_OFI_am_request_t *) context)->req_hdr;
+    MPIDI_OFI_am_header_t *msg_hdr = req_hdr->msg_hdr;
+
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
     switch (msg_hdr->am_type) {
@@ -705,7 +707,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         mpi_errno = MPIDI_OFI_rma_done_event(wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
-        mpi_errno = am_isend_event(wc, req);
+        mpi_errno = am_isend_event(wc->op_context);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
         if (wc->flags & FI_RECV)
