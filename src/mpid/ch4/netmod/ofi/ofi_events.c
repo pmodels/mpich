@@ -25,7 +25,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_isend_event(void *context);
-static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
+static int am_recv_event(void *context, void *buf);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 
@@ -560,19 +560,16 @@ static int am_isend_event(void *context)
     goto fn_exit;
 }
 
-static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
+static int am_recv_event(void *context, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_header_t *am_hdr;
-    MPIDI_OFI_am_unordered_msg_t *uo_msg = NULL;
-    fi_addr_t fi_src_addr;
-    uint16_t expected_seqno, next_seqno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
 
-    am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
+    MPIR_Request *rreq = MPIDI_OFI_context_to_request(context);
+    MPIDI_OFI_am_header_t *am_hdr = buf;
 
-    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
+    uint64_t expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
          * Put it in the queue to process it later. */
@@ -587,55 +584,58 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     }
 
     /* Received an expected message */
-  repeat:
-    fi_src_addr = am_hdr->fi_src_addr;
-    next_seqno = am_hdr->seqno + 1;
-    switch (am_hdr->am_type) {
-        case MPIDI_AMTYPE_SHORT_HDR:
-            mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr + 1 /* payload */);
+    MPIDI_OFI_am_unordered_msg_t *uo_msg = NULL;
+    while (true) {
+        fi_src_addr = am_hdr->fi_src_addr;
+        next_seqno = am_hdr->seqno + 1;
+        switch (am_hdr->am_type) {
+            case MPIDI_AMTYPE_SHORT_HDR:
+                mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr + 1 /* payload */);
 
-            MPIR_ERR_CHECK(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
-            break;
+                break;
 
-        case MPIDI_AMTYPE_SHORT:
-            mpi_errno = MPIDI_OFI_handle_short_am(am_hdr);
+            case MPIDI_AMTYPE_SHORT:
+                mpi_errno = MPIDI_OFI_handle_short_am(am_hdr);
 
-            MPIR_ERR_CHECK(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
-            break;
+                break;
 
-        case MPIDI_AMTYPE_LMT_REQ:
-            mpi_errno = MPIDI_OFI_handle_long_am(am_hdr);
+            case MPIDI_AMTYPE_LMT_REQ:
+                mpi_errno = MPIDI_OFI_handle_long_am(am_hdr);
 
-            MPIR_ERR_CHECK(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
-            break;
+                break;
 
-        case MPIDI_AMTYPE_LMT_ACK:
-            mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
+            case MPIDI_AMTYPE_LMT_ACK:
+                mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
 
-            MPIR_ERR_CHECK(mpi_errno);
+                MPIR_ERR_CHECK(mpi_errno);
 
-            break;
+                break;
 
-        default:
-            MPIR_Assert(0);
+            default:
+                MPIR_Assert(0);
+        }
+
+        if (uo_msg) {
+            MPL_free(uo_msg);
+        }
+
+        /* See if we can process other messages in the queue */
+        uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno);
+        if (uo_msg) {
+            am_hdr = &uo_msg->am_hdr;
+            continue;
+        }
+
+        /* Record the next expected sequence number from fi_src_addr */
+        MPIDI_OFI_am_set_next_recv_seqno(fi_src_addr, next_seqno);
+        break;
     }
-
-    /* For the first iteration (=in case we can process the message just received
-     * from OFI immediately), uo_msg is NULL, so freeing it is no-op.
-     * Otherwise, free it here before getting another uo_msg. */
-    MPL_free(uo_msg);
-
-    /* See if we can process other messages in the queue */
-    if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
-        am_hdr = &uo_msg->am_hdr;
-        goto repeat;
-    }
-
-    /* Record the next expected sequence number from fi_src_addr */
-    MPIDI_OFI_am_set_next_recv_seqno(fi_src_addr, next_seqno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
@@ -711,7 +711,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
         if (wc->flags & FI_RECV)
-            mpi_errno = am_recv_event(wc, req);
+            mpi_errno = am_recv_event(wc->op_context, wc->buf);
 
         if (unlikely(wc->flags & FI_MULTI_RECV))
             mpi_errno = am_repost_event(wc, req);
