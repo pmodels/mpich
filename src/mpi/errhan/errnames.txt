@@ -213,8 +213,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **treetype: Invalid tree type used for initializing Tree algorithms
 **treetype %d: Invalid tree type (%d) used for initializing Tree algorithms
 
-**noizem: release_gather based intra-node collectives cannot be used without izem submodule. \
-Reconfigure mpich with --enable-izem=atomic --with-zm-prefix=yes
+**invalidcollid: Invalid collective ID used.
 **sockaddrfailed: MPL_get_sockaddr failed
 
 **nomembind: hwloc_set_area_membind() is not available
