@@ -168,6 +168,8 @@ int MPIR_Finalize_async_thread(void)
     MPID_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
     MPIR_Assert(!mpi_errno);
 
+    MPID_Thread_join(progress_thread_id);
+
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
     MPIR_Assert(!mpi_errno);
 
