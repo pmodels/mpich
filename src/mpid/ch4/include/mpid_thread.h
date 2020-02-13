@@ -36,8 +36,8 @@ typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 #define MPID_Thread_exit         MPIDU_Thread_exit
 #define MPID_Thread_self         MPIDU_Thread_self
 #define MPID_Thread_join         MPIDU_Thread_join
-#define MPID_Thread_same       MPIDU_Thread_same
-#define MPID_Thread_same       MPIDU_Thread_same
+#define MPID_Thread_same         MPIDU_Thread_same
+#define MPID_Thread_yield        MPIDU_Thread_yield
 
 #define MPID_Thread_cond_create MPIDU_Thread_cond_create
 #define MPID_Thread_cond_destroy MPIDU_Thread_cond_destroy
