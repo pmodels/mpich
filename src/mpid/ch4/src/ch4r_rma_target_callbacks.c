@@ -780,15 +780,7 @@ static void handle_acc_data(void **data, size_t * p_data_sz, int *is_contig, MPI
     for (i = 0; i < MPIDIG_REQUEST(rreq, req->areq.n_iov); i++)
         iov[i].iov_base = (char *) iov[i].iov_base + base;
 
-    /* Progress engine may pass NULL here if received data sizeis zero */
-    if (data)
-        *data = p_data;
-    if (is_contig)
-        *is_contig = 1;
-    if (p_data_sz) {
-        MPIDIG_recv_init(1, *p_data_sz, p_data, data_sz, rreq);
-        *p_data_sz = data_sz;
-    }
+    MPIDIG_recv_init(1, *p_data_sz, p_data, data_sz, rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_ACC_DATA);
 }
@@ -1276,12 +1268,9 @@ int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
 
     creq = (MPIR_Request *) msg_hdr->req_ptr;
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(creq, req->creq.datatype), 1, data_sz);
-    *data = MPIDIG_REQUEST(creq, req->creq.result_addr);
+    void *result_addr = MPIDIG_REQUEST(creq, req->creq.result_addr);
 
-    MPIDIG_recv_init(1, *p_data_sz, *data, data_sz, creq);
-
-    *p_data_sz = data_sz;
-    *is_contig = 1;
+    MPIDIG_recv_init(1, *p_data_sz, result_addr, data_sz, creq);
 
     *req = creq;
     MPIDIG_REQUEST(creq, req->target_cmpl_cb) = cswap_ack_target_cmpl_cb;
@@ -1396,14 +1385,9 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
             dt_iov[i].iov_len = iov[i].iov_len;
         }
 
-        MPI_Aint in_total_data_sz = *p_data_sz;
-
         MPIDIG_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDIG_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
-        *is_contig = 0;
-        *data = dt_iov;
-        *p_data_sz = msg_hdr->n_iov;
-        MPIDIG_recv_init(0, in_total_data_sz, dt_iov, msg_hdr->n_iov, rreq);
+        MPIDIG_recv_init(0, *p_data_sz, dt_iov, msg_hdr->n_iov, rreq);
         goto fn_exit;
     }
 
@@ -1463,16 +1447,12 @@ int MPIDIG_put_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
     MPIR_Assert(dt_iov);
 
-    MPI_Aint in_total_data_sz = *p_data_sz;
-
     MPIDIG_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
     MPIDIG_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
     MPIDIG_REQUEST(*req, req->preq.target_addr) = (void *) (offset + base);
-    *is_contig = 1;
-    *data = dt_iov;
-    *p_data_sz = msg_hdr->n_iov * sizeof(struct iovec);
 
-    MPIDIG_recv_init(1, in_total_data_sz, dt_iov, *p_data_sz, rreq);
+    int data_sz = msg_hdr->n_iov * sizeof(struct iovec);
+    MPIDIG_recv_init(1, *p_data_sz, dt_iov, data_sz, rreq);
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_iov);
@@ -1675,14 +1655,12 @@ int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void **data, siz
     for (i = 0; i < MPIDIG_REQUEST(rreq, req->preq.n_iov); i++)
         iov[i].iov_base = (char *) iov[i].iov_base + base;
 
-    MPI_Aint in_total_data_sz = *p_data_sz;
-    *data = MPIDIG_REQUEST(rreq, req->preq.dt_iov);
-    *is_contig = 0;
-    *p_data_sz = MPIDIG_REQUEST(rreq, req->preq.n_iov);
+    void *dt_iov = MPIDIG_REQUEST(rreq, req->preq.dt_iov);
+    int n_iov = MPIDIG_REQUEST(rreq, req->preq.n_iov);
     *req = rreq;
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_target_cmpl_cb;
 
-    MPIDIG_recv_init(0, in_total_data_sz, *data, *p_data_sz, rreq);
+    MPIDIG_recv_init(0, *p_data_sz, dt_iov, n_iov, rreq);
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_data);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PUT_DATA_TARGET_MSG_CB);
     return mpi_errno;
@@ -1759,7 +1737,6 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
 #endif
 
     MPIDI_Datatype_check_contig_size(msg_hdr->datatype, 1, dt_contig, data_sz);
-    *is_contig = dt_contig;
 
     win = (MPIR_Win *) MPIDIU_map_lookup(MPIDI_global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
@@ -1777,12 +1754,9 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     p_data = MPL_malloc(data_sz * 2, MPL_MEM_RMA);
     MPIR_Assert(p_data);
 
-    MPI_Aint in_total_data_sz = *p_data_sz;
-    *p_data_sz = data_sz * 2;
-    *data = p_data;
     MPIDIG_REQUEST(*req, req->creq.data) = p_data;
 
-    MPIDIG_recv_init(1, in_total_data_sz, p_data, data_sz * 2, *req);
+    MPIDIG_recv_init(1, *p_data_sz, p_data, data_sz * 2, *req);
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CSWAP_TARGET_MSG_CB);
@@ -1825,9 +1799,6 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 
     if (is_contig) {
         MPIDIG_recv_init(1, *p_data_sz, p_data, data_sz, rreq);
-        *is_contig = 1;
-        *p_data_sz = data_sz;
-        *data = p_data;
     } else {
         /* I guess we are assuming 0 payload here */
         MPIR_Assert(p_data_sz == NULL || *p_data_sz == 0);
@@ -1937,13 +1908,10 @@ int MPIDIG_acc_iov_target_msg_cb(int handler_id, void *am_hdr, void **data, size
     MPIDIG_REQUEST(rreq, req->areq.dt_iov) = dt_iov;
     MPIR_Assert(dt_iov);
 
-    MPI_Aint in_total_data_sz = *p_data_sz;
     /* Base adjustment for iov will be done after we get the entire iovs,
      * at MPIDIG_acc_data_target_msg_cb */
-    *is_contig = 1;
-    *p_data_sz = sizeof(struct iovec) * msg_hdr->n_iov;
-    *data = (void *) dt_iov;
-    MPIDIG_recv_init(1, in_total_data_sz, *data, *p_data_sz, rreq);
+    int data_sz = sizeof(struct iovec) * msg_hdr->n_iov;
+    MPIDIG_recv_init(1, *p_data_sz, dt_iov, data_sz, rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_iov_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
@@ -2020,16 +1988,11 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
         iov = (struct iovec *) MPL_malloc(msg_hdr->n_iov * sizeof(*iov), MPL_MEM_RMA);
         MPIR_Assert(iov);
 
-        MPI_Aint in_total_data_sz = *p_data_sz;
-        *data = (void *) iov;
-        *is_contig = 1;
-        *p_data_sz = msg_hdr->n_iov * sizeof(*iov);
+        int data_sz = msg_hdr->n_iov * sizeof(*iov);
         MPIDIG_REQUEST(rreq, req->greq.dt_iov) = iov;
-        MPIDIG_recv_init(1, in_total_data_sz, *data, *p_data_sz, rreq);
+        MPIDIG_recv_init(1, *p_data_sz, iov, data_sz, rreq);
     } else {
         MPIR_Assert(!p_data_sz || *p_data_sz == 0);
-        *is_contig = 0;
-        *p_data_sz = 0;
         MPIDIG_recv_init(1, 0, NULL, 0, rreq);
     }
 
