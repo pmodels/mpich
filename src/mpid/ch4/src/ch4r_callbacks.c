@@ -216,60 +216,13 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
 static int do_send_target(void **data, size_t * p_data_sz, int *is_contig, MPIR_Request * rreq)
 {
-    int dt_contig;
-    MPI_Aint dt_true_lb, num_iov;
-    MPIR_Datatype *dt_ptr;
-    size_t data_sz;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
     MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 
-    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count)) {
-        MPIDIG_recv_init(1, 0, NULL, 0, rreq);
-        return MPI_SUCCESS;
-    }
-
-    MPI_Aint in_total_data_sz = *p_data_sz;
-
-    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype), dt_contig,
-                            data_sz, dt_ptr, dt_true_lb);
-    *is_contig = dt_contig;
-
-    if (dt_contig) {
-        *p_data_sz = data_sz;
-        *data = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
-    } else {
-        if (*p_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-            *p_data_sz = data_sz;
-        }
-
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                             MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
-
-        MPIR_Assert(num_iov > 0);
-        MPIDIG_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
-        MPIR_Assert(MPIDIG_REQUEST(rreq, req->iov));
-
-        int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
-        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
-                            (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
-
-        if (actual_iov_bytes != (MPI_Aint) * p_data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TYPE;
-        }
-        *data = MPIDIG_REQUEST(rreq, req->iov);
-        *p_data_sz = actual_iov_len;
-        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
-    }
-
-    MPIDIG_recv_type_init(in_total_data_sz, rreq);
+    MPIDIG_recv_type_init(*p_data_sz, rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);
     return MPI_SUCCESS;
