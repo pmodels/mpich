@@ -26,7 +26,7 @@ static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_isend_event(void *context);
 static int am_recv_event(void *context, void *buf);
-static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
+static int am_read_event(void *context);
 
 static int cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
@@ -643,7 +643,7 @@ static int am_recv_event(void *context, void *buf)
     goto fn_exit;
 }
 
-static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
+static int am_read_event(void *context)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -652,7 +652,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
 
-    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
+    ofi_req = MPL_container_of(context, MPIDI_OFI_am_request_t, context);
     ofi_req->req_hdr->lmt_cntr--;
 
     if (ofi_req->req_hdr->lmt_cntr)
@@ -705,7 +705,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
 
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
-        mpi_errno = am_read_event(wc, req);
+        mpi_errno = am_read_event(wc->op_context);
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {
