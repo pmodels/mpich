@@ -355,7 +355,7 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for allgather to test MPIR algorithms
+#disable device collectives for alltoall to test MPIR algorithms
 testing_env="${testing_env} env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
@@ -425,12 +425,12 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for neighbor_alltoallw to test mpir algorithms
-testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0"
+#disable device collectives for ineighbor_alltoallw to test mpir algorithms
+testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=nb"
-testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0"
+testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE=0"
 algo_names="gentran_linear"
 
 for algo_name in ${algo_names}; do
@@ -486,12 +486,12 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for neighbor_allgather to test MPIR algorithms
-testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0"
+#disable device collectives for ineighbor_allgather to test MPIR algorithms
+testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHER_INTRA_ALGORITHM=nb"
-testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0"
+testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE=0"
 algo_names="gentran_linear"
 
 for algo_name in ${algo_names}; do
@@ -507,12 +507,12 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for neighbor_allgatherv to test MPIR algorithms
-testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0"
+#disable device collectives for ineighbor_allgatherv to test MPIR algorithms
+testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTRA_ALGORITHM=nb"
-testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0"
+testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE=0"
 algo_names="gentran_linear"
 
 for algo_name in ${algo_names}; do
@@ -528,12 +528,12 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for neighbor_alltoall to test MPIR algorithms
-testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0"
+#disable device collectives for ineighbor_alltoall to test MPIR algorithms
+testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALL_INTRA_ALGORITHM=nb"
-testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0"
+testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE=0"
 algo_names="gentran_linear"
 
 for algo_name in ${algo_names}; do
@@ -549,12 +549,12 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for neighbor_alltoallv to test MPIR algorithms
-testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0"
+#disable device collectives for ineighbor_alltoallv to test MPIR algorithms
+testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=nb"
-testing_env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0"
+testing_env="${testing_env} env=MPIR_CVAR_NEIGHBOR_ALLTOALLV_DEVICE_COLLECTIVE=0"
 algo_names="gentran_linear"
 
 for algo_name in ${algo_names}; do
@@ -571,7 +571,7 @@ done
 testing_env=${global_env}
 
 #disable device collectives for gatherv to test MPIR algorithms
-testing_env="${testing_env} env=MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE=0 "
+testing_env="${testing_env} env=MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
 testing_env="${testing_env} env=MPIR_CVAR_GATHERV_INTRA_ALGORITHM=nb"
@@ -700,7 +700,7 @@ done
 #start with the global environment variables
 testing_env=${global_env}
 
-#disable device collectives for gather to test MPIR algorithms
+#disable device collectives for scatterv to test MPIR algorithms
 testing_env="${testing_env} env=MPIR_CVAR_SCATTERV_DEVICE_COLLECTIVE=0"
 
 #test nb algorithms
