@@ -1355,7 +1355,6 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    struct iovec *iov, *dt_iov;
     uintptr_t base;             /* Base address of the window */
     size_t offset;
 
@@ -1384,19 +1383,20 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t *
     MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
 
-    MPI_Aint in_total_data_sz = *p_data_sz;
-
     offset = win->disp_unit * msg_hdr->target_disp;
     if (msg_hdr->n_iov) {
-        int i;
+        struct iovec *iov, *dt_iov;
+
         dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
         MPIR_Assert(dt_iov);
 
         iov = (struct iovec *) ((char *) am_hdr + sizeof(*msg_hdr));
-        for (i = 0; i < msg_hdr->n_iov; i++) {
+        for (int i = 0; i < msg_hdr->n_iov; i++) {
             dt_iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
             dt_iov[i].iov_len = iov[i].iov_len;
         }
+
+        MPI_Aint in_total_data_sz = *p_data_sz;
 
         MPIDIG_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDIG_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
