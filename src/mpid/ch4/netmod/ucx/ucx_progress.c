@@ -16,13 +16,13 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
-    size_t data_sz, in_data_sz;
+    size_t data_sz;
     int is_contig;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
     p_data = in_data =
         (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
-    in_data_sz = data_sz = msg_hdr->data_sz;
+    data_sz = msg_hdr->data_sz;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
                                                        &p_data, &data_sz, 0 /* is_local */ ,
@@ -31,7 +31,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     if (!rreq)
         return;
 
-    MPIDIG_recv_copy(in_data, in_data_sz, p_data, data_sz, is_contig, rreq);
+    MPIDIG_recv_copy(in_data, rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 }
