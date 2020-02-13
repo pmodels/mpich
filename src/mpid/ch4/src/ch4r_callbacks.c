@@ -396,7 +396,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_LONG_RTS) &&
         MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
-        /* This block is executed only when the receive is enqueued (trylock/handoff) &&
+        /* This block is executed only when the receive is enqueued (handoff) &&
          * receive was matched with an unexpected long RTS message.
          * `rreq` is the unexpected message received and `sigreq` is the message
          * that came from CH4 (e.g. MPIDI_recv_safe) */

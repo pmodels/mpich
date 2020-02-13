@@ -33,8 +33,6 @@
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
 #elif defined MPIDI_CH4_USE_MT_HANDOFF
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
-#elif defined MPIDI_CH4_USE_MT_TRYLOCK
-#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
 #define MPIDI_CH4_MT_MODEL MPIDI_global.settings.mt_model
 #else
@@ -249,7 +247,7 @@ typedef struct {
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
 /* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
- * the operations are enqueued with trylock/handoff models. */
+ * the operations are enqueued with the handoff model. */
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req && ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS))
 #else
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)

@@ -77,7 +77,6 @@ cvars:
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
         handoff
-        trylock
 
     - name        : MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE
       category    : CH4
@@ -155,7 +154,6 @@ static int choose_netmod(void)
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
-    "trylock",
 };
 
 static const char *get_mt_model_name(int mt)
