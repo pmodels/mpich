@@ -42,6 +42,30 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
     }
 }
 
+/* Transport-specific data copy, such as RDMA, need explicit iov pointers.
+ * Providing helper routine keeps the internal of MPIDIG_rreq_async_t here.
+ */
+MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq);
+MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data,
+                                                   MPI_Aint * p_data_sz, MPIR_Request * rreq)
+{
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    if (p->is_contig == -1) {
+        mpidig_convert_datatype(rreq);
+        MPIR_Assert(p->is_contig != -1);
+    }
+
+    if (p->is_contig) {
+        *is_contig = 1;
+        *p_data = p->iov_one.iov_base;
+        *p_data_sz = p->iov_one.iov_len;
+    } else {
+        *is_contig = 0;
+        *p_data = p->iov_ptr;
+        *p_data_sz = p->iov_num;
+    }
+}
+
 /* synchronous single-payload data transfer. This is the common case */
 /* TODO: if transport flag callback, synchronous copy can/should be done inside the callback */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rreq)
@@ -186,6 +210,50 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
             /* not done */
             return 0;
         }
+    }
+}
+
+/* internal routines */
+MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq)
+{
+    int dt_contig;
+    MPI_Aint data_sz;
+    MPIR_Datatype *dt_ptr;
+    MPI_Aint dt_true_lb;
+    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
+                            dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    if (dt_contig) {
+        p->is_contig = 1;
+        p->iov_one.iov_base = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
+        p->iov_one.iov_len = data_sz;
+    } else {
+        struct iovec *iov;
+        MPI_Aint num_iov;
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                             MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
+        MPIR_Assert(num_iov > 0);
+
+        iov = MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_OTHER);
+        MPIR_Assert(iov);
+        /* save it to be freed at cmpl */
+        MPIDIG_REQUEST(rreq, req->iov) = iov;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
+
+        int actual_iov_len;
+        MPI_Aint actual_iov_bytes;
+        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
+                            MPIDIG_REQUEST(rreq, datatype), 0, iov, num_iov,
+                            p->in_data_sz, &actual_iov_len, &actual_iov_bytes);
+
+        if (actual_iov_bytes != p->in_data_sz) {
+            rreq->status.MPI_ERROR = MPI_ERR_TYPE;
+        }
+
+        p->is_contig = 0;
+        p->iov_ptr = iov;
+        p->iov_num = num_iov;
     }
 }
 
