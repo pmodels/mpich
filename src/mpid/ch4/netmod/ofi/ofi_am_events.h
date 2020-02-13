@@ -210,14 +210,16 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     goto fn_exit;
 }
 
+static inline void do_long_am_recv(int is_contig, void *p_data, MPI_Aint data_sz,
+                                   MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                   MPIDI_OFI_lmt_msg_payload_t * lmt_msg);
 static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
                                               MPIDI_OFI_lmt_msg_payload_t * lmt_msg, void *am_hdr)
 {
-    int num_reads, i, iov_len, c, mpi_errno = MPI_SUCCESS, is_contig = 0;
+    int c, mpi_errno = MPI_SUCCESS, is_contig = 0;
     MPIR_Request *rreq = NULL;
     void *p_data;
-    size_t data_sz, rem, done, curr_len, in_data_sz;
-    struct iovec *iov;
+    size_t data_sz, in_data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
@@ -247,64 +249,8 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
-    if (is_contig) {
-        if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, __func__,
-                                                          __LINE__, MPI_ERR_TRUNCATE, "**truncate",
-                                                          "**truncate %d %d %d %d",
-                                                          rreq->status.MPI_SOURCE,
-                                                          rreq->status.MPI_TAG, data_sz,
-                                                          in_data_sz);
-        }
-
-        data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
-            ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-        MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz, lmt_msg->context_id,
-                               lmt_msg->src_rank, rreq);
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    } else {
-        done = 0;
-        rem = in_data_sz;
-        iov = (struct iovec *) p_data;
-        iov_len = data_sz;
-
-        /* FIXME: optimize iov processing part */
-
-        /* set lmt counter */
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = 0;
-
-        for (i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-            MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
-            rem -= curr_len;
-        }
-
-        done = 0;
-        rem = in_data_sz;
-
-        for (i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIDI_OFI_do_rdma_read(iov[i].iov_base, lmt_msg->src_offset + done,
-                                   curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
-            rem -= curr_len;
-            done += curr_len;
-        }
-
-        if (rem) {
-            rreq->status.MPI_ERROR = MPIR_Err_create_code(rreq->status.MPI_ERROR,
-                                                          MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                                          MPI_ERR_TRUNCATE, "**truncate",
-                                                          "**truncate %d %d %d %d",
-                                                          rreq->status.MPI_SOURCE,
-                                                          rreq->status.MPI_TAG, data_sz,
-                                                          in_data_sz);
-        }
-
-        MPIR_STATUS_SET_COUNT(rreq->status, done);
-    }
+    MPIDIG_get_recv_data(&is_contig, &p_data, &data_sz, rreq);
+    do_long_am_recv(is_contig, p_data, data_sz, in_data_sz, rreq, lmt_msg);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
@@ -397,5 +343,56 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     goto fn_exit;
 }
 
+/* internal routines */
+static inline void do_long_am_recv(int is_contig, void *p_data, MPI_Aint data_sz,
+                                   MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                   MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+{
+    if (is_contig) {
+        if (in_data_sz > data_sz) {
+            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
+        }
+        data_sz = MPL_MIN(data_sz, in_data_sz);
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
+            ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
+        MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz, lmt_msg->context_id,
+                               lmt_msg->src_rank, rreq);
+        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+    } else {
+        struct iovec *iov = (struct iovec *) p_data;
+        int iov_len = (int) data_sz;
+
+        MPI_Aint rem, curr_len;
+        int num_reads;
+        /* FIXME: optimize iov processing part */
+
+        /* set lmt counter */
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = 0;
+
+        rem = in_data_sz;
+        for (int i = 0; i < iov_len && rem > 0; i++) {
+            curr_len = MPL_MIN(rem, iov[i].iov_len);
+            num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
+            MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
+            rem -= curr_len;
+        }
+
+        int done = 0;
+        rem = in_data_sz;
+        for (int i = 0; i < iov_len && rem > 0; i++) {
+            curr_len = MPL_MIN(rem, iov[i].iov_len);
+            MPIDI_OFI_do_rdma_read(iov[i].iov_base, lmt_msg->src_offset + done,
+                                   curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
+            rem -= curr_len;
+            done += curr_len;
+        }
+
+        if (rem) {
+            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(done, in_data_sz);
+        }
+
+        MPIR_STATUS_SET_COUNT(rreq->status, done);
+    }
+}
 
 #endif /* OFI_AM_EVENTS_H_INCLUDED */
