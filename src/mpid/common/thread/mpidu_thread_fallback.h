@@ -129,19 +129,7 @@ M*/
 /* ***************************************** */
 #if defined(MPICH_IS_THREADED)
 
-#define MPIDUI_THREAD_CS_ENTER_NREC(mutex)                              \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_ENTER_REC(mutex)                               \
+#define MPIDUI_THREAD_CS_ENTER(mutex)                                   \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int equal_ = 0;                                             \
@@ -151,7 +139,9 @@ M*/
             MPL_thread_same(&self_, &owner_, &equal_);                  \
             if (!equal_) {                                              \
                 int err_ = 0;                                           \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
                 MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
                 MPIR_Assert(err_ == 0);                                 \
                 MPIR_Assert(mutex.count == 0);                          \
                 MPL_thread_self(&mutex.owner);                          \
@@ -160,18 +150,7 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_EXIT_NREC(mutex)                               \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
-            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_EXIT_REC(mutex)                                \
+#define MPIDUI_THREAD_CS_EXIT(mutex)                                    \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             mutex.count--;                                              \
@@ -186,19 +165,7 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_YIELD_NREC(mutex)                              \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding mutex"); \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_YIELD_REC(mutex)                               \
+#define MPIDUI_THREAD_CS_YIELD(mutex)                                   \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0, equal_ = 0;                                   \
@@ -206,7 +173,6 @@ M*/
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
             if (equal_ && mutex.count > 0) {                            \
-                MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive yielding mutex"); \
                 MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
                 MPIDU_Thread_yield(&mutex, &err_);                          \
                 MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
@@ -254,9 +220,9 @@ M*/
 
 /* GLOBAL is only enabled with MPICH_THREAD_GRANULARITY__GLOBAL */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)  MPIDUI_THREAD_CS_ENTER_REC(mutex)
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)   MPIDUI_THREAD_CS_EXIT_REC(mutex)
-#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD_REC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)  MPIDUI_THREAD_CS_ENTER(mutex)
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)   MPIDUI_THREAD_CS_EXIT(mutex)
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD(mutex)
 #define MPIDUI_THREAD_CS_ENTER_ST_GLOBAL(mutex, st)    MPIDUI_THREAD_CS_ENTER_ST(mutex, st)
 #define MPIDUI_THREAD_CS_EXIT_ST_GLOBAL(mutex, st)     MPIDUI_THREAD_CS_EXIT_ST(mutex, st)
 #else
@@ -269,9 +235,9 @@ M*/
 
 /* POBJ is only enabled with GRANULARITY__POBJ */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_NREC(mutex)
-#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)   MPIDUI_THREAD_CS_EXIT_NREC(mutex)
-#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD_NREC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER(mutex)
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)   MPIDUI_THREAD_CS_EXIT(mutex)
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)      /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)       /* NOOP */
@@ -280,9 +246,9 @@ M*/
 
 /* VCI is only enabled with MPICH_THREAD_GRANULARITY__VCI */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
-#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
-#define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD_REC(mutex)
+#define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER(mutex)
+#define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT(mutex)
+#define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
