@@ -27,8 +27,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
     MPI_Aint type_size = 0;
 
     if (MPIR_CVAR_ENUM_IS(BCAST_POSIX_INTRA_ALGORITHM, release_gather)) {
-        /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
-         * and MPICH is not multi-threaded */
+        /* release_gather based algorithm can be used only if MPICH is not multi-threaded */
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */
@@ -74,9 +73,9 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Allreduce_select(const void *send
     if (MPIR_CVAR_ENUM_IS(ALLREDUCE_POSIX_INTRA_ALGORITHM, release_gather) &&
         (count * type_size) <= MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
         MPIR_Op_is_commutative(op)) {
-        /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
-         * and MPICH is not multi-threaded. Also when the message size is less than the threshold (for
-         * performance reasons) and op is commutative */
+        /* release_gather based algorithm can be used only if MPICH is not multi-threaded.
+         * Also when the message size is less than the threshold (for performance reasons)
+         * and op is commutative */
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */
@@ -113,8 +112,8 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
 
     if (MPIR_CVAR_ENUM_IS(REDUCE_POSIX_INTRA_ALGORITHM, release_gather) &&
         MPIR_Op_is_commutative(op)) {
-        /* release_gather based algorithm can be used only if izem submodule is built (and enabled)
-         * and MPICH is not multi-threaded. Also when the op is commutative */
+        /* release_gather based algorithm can be used only if MPICH is not multi-threaded.
+         * Also when the op is commutative */
 #ifdef MPICH_IS_THREADED
         if (!MPIR_ThreadInfo.isThreaded) {
             /* MPICH configured with threading support but not actually used */

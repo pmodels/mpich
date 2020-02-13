@@ -17,7 +17,6 @@ typedef enum {
     MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id,
     MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id,
     MPIDI_POSIX_Bcast_intra_auto_id,
-    MPIDI_POSIX_Bcast_intra_invalid_id,
     MPIDI_POSIX_Bcast_intra_release_gather_id
 } MPIDI_POSIX_Bcast_id_t;
 
@@ -44,7 +43,6 @@ typedef enum {
     MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id,
     MPIDI_POSIX_Reduce_intra_binomial_id,
     MPIDI_POSIX_Reduce_intra_auto_id,
-    MPIDI_POSIX_Reduce_intra_invalid_id,
     MPIDI_POSIX_Reduce_intra_release_gather_id
 } MPIDI_POSIX_Reduce_id_t;
 
@@ -67,7 +65,6 @@ typedef enum {
     MPIDI_POSIX_Allreduce_intra_recursive_doubling_id,
     MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id,
     MPIDI_POSIX_Allreduce_intra_auto_id,
-    MPIDI_POSIX_Allreduce_intra_invalid_id,
     MPIDI_POSIX_Allreduce_intra_release_gather_id
 } MPIDI_POSIX_Allreduce_id_t;
 

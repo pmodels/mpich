@@ -22,10 +22,6 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_scatter_ring_all
     .id = MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id
 };
 
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_invalid_cnt = {
-    .id = MPIDI_POSIX_Bcast_intra_invalid_id
-};
-
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_release_gather_cnt = {
     .id = MPIDI_POSIX_Bcast_intra_release_gather_id
 };
@@ -39,10 +35,6 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_binomial_cnt = 
     .id = MPIDI_POSIX_Reduce_intra_binomial_id
 };
 
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_invalid_cnt = {
-    .id = MPIDI_POSIX_Reduce_intra_invalid_id
-};
-
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_release_gather_cnt = {
     .id = MPIDI_POSIX_Reduce_intra_release_gather_id
 };
@@ -54,10 +46,6 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_recursive_do
 
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_cnt = {
     .id = MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id
-};
-
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_invalid_cnt = {
-    .id = MPIDI_POSIX_Allreduce_intra_invalid_id
 };
 
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_release_gather_cnt = {

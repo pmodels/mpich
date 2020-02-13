@@ -81,8 +81,6 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
-        case MPIDI_POSIX_Bcast_intra_invalid_id:
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
         default:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
             break;
@@ -582,8 +580,6 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                 MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype,
                                                       op, root, comm, errflag);
             break;
-        case MPIDI_POSIX_Reduce_intra_invalid_id:
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
         default:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
                                          root, comm, errflag);
