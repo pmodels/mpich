@@ -9,6 +9,16 @@
             }
         }
     },
+    "collective=barrier":
+    {
+        "comm_type=intra":
+        {
+            "is_multi_threaded=no":
+            {
+                "algorithm=MPIDI_POSIX_mpi_barrier_release_gather":{}
+            }
+        }
+    },
     "collective=allreduce":
     {
         "comm_type=intra":

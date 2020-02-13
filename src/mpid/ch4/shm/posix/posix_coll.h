@@ -60,6 +60,20 @@ cvars:
         release_gather - Force shm optimized algo using release, gather primitives
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
+    - name        : MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM
+      category    : COLLECTIVE
+      type        : enum
+      group       : MPIR_CVAR_GROUP_COLL_ALGO
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select algorithm for intra-node barrier
+        mpir           - Fallback to MPIR collectives
+        release_gather - Force shm optimized algo using release, gather primitives
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -67,17 +81,53 @@ cvars:
 static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BARRIER,
+        .comm_ptr = comm,
+    };
+    MPIDI_POSIX_csel_container_s *cnt;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
 
-    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    switch (MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM) {
+        case MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded, mpi_errno);
+            mpi_errno = MPIDI_POSIX_mpi_barrier_release_gather(comm, errflag);
+            break;
+
+        case MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM_mpir:
+            goto fallback;
+
+        case MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM_auto:
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
+            if (cnt == NULL)
+                goto fallback;
+
+            switch (cnt->id) {
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather:
+                    mpi_errno =
+                        MPIDI_POSIX_mpi_barrier_release_gather(comm, errflag);
+                    break;
+
+                default:
+                    MPIR_Assert(0);
+            }
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm, errflag);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
