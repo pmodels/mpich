@@ -82,15 +82,6 @@ typedef MPL_thread_func_t MPIDU_Thread_func_t;
 
 M*/
 
-/*M MPIDU_THREAD_CS_TRYENTER - Try enter a named critical section
-
-  Input Parameters:
-+ _name - name of the critical section
-- _context - A context (typically an object) of the critical section
-- _cs_acq  - A flag that indicates whether the critical section was acquired
-
-M*/
-
 /*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
 
   Input Parameters:
@@ -121,7 +112,6 @@ M*/
 
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
-#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq) MPIDUI_THREAD_CS_TRYENTER_##name(mutex, cs_acq)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
 #define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
 #define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st) MPIDUI_THREAD_CS_ENTER_ST_##name(mutex,st)
@@ -129,7 +119,6 @@ M*/
 
 #else
 #define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
-#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq)   /* NOOP */
 #define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
 #define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
 #define MPIDU_THREAD_CS_ENTER_ST(name, mutex, st)       /* NOOP */
@@ -168,41 +157,6 @@ M*/
                 MPL_thread_self(&mutex.owner);                          \
             }                                                           \
             mutex.count++;                                              \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_TRYENTER_NREC(mutex, cs_acq)                   \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive try locking mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_trylock %p", &mutex); \
-            MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);         \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_trylock %p", &mutex); \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_TRYENTER_REC(mutex, cs_acq)                    \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int equal_ = 0;                                             \
-            MPL_thread_id_t self_;                                      \
-            MPL_thread_self(&self_);                                    \
-            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
-            if (!equal_) {                                              \
-                int err_ = 0;                                           \
-                MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);     \
-                MPIR_Assert(err_ == 0);                                 \
-                if (cs_acq) {                                           \
-                    MPIR_Assert(mutex.count == 0);                      \
-                    MPL_thread_self(&mutex.owner);                      \
-                    mutex.count++;                                      \
-                }                                                       \
-            } else {                                                    \
-                cs_acq = 1;                                             \
-                mutex.count++;                                          \
-            }                                                           \
         }                                                               \
     } while (0)
 
@@ -329,12 +283,10 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER_REC(mutex)
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT_REC(mutex)
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD_REC(mutex)
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq) MPIDUI_THREAD_CS_TRYENTER_REC(mutex,cs_acq)
 #else
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex)       /* NOOP */
-#define MPIDUI_THREAD_CS_TRYENTER_VCI(mutex,cs_acq)     /* NOOP */
 #endif
 
 #endif /* MPICH_IS_THREADED */
@@ -414,8 +366,6 @@ M*/
     MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)           \
     MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)
-#define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
-    MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_cond_create(cond_ptr_, err_ptr_)                  \
@@ -477,14 +427,6 @@ M*/
         MPIDUI_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_, prio_);\
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
-    } while (0)
-
-#define MPIDU_Thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)       \
-    do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_trylock %p", &(mutex_ptr_)->mutex); \
-        MPIDUI_thread_mutex_trylock(&(mutex_ptr_)->mutex, err_ptr_, cs_acq_ptr);\
-        MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_trylock %p", &(mutex_ptr_)->mutex); \
     } while (0)
 
 /*@

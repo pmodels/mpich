@@ -23,7 +23,6 @@ typedef MPIDU_Thread_func_t MPID_Thread_func_t;
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 typedef MPIDU_thread_mutex_state_t MPID_Thread_mutex_state_t;
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
-#define MPID_THREAD_CS_TRYENTER    MPIDU_THREAD_CS_TRYENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_ENTER_ST    MPIDU_THREAD_CS_ENTER_ST
 #define MPID_THREAD_CS_EXIT_ST     MPIDU_THREAD_CS_EXIT_ST
@@ -32,9 +31,7 @@ typedef MPIDU_thread_mutex_state_t MPID_Thread_mutex_state_t;
 #define MPID_THREAD_SAFE_BEGIN(name, mutex, cs_acq)                     \
 do {                                                                    \
     cs_acq = 1;                                                         \
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {                   \
-        MPID_THREAD_CS_TRYENTER(name, mutex, cs_acq);                   \
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {            \
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {            \
         cs_acq = 0;                                                     \
     } else {                                                            \
         /* Direct */                                                    \

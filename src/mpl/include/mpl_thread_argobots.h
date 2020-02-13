@@ -97,24 +97,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         *(int *)(err_ptr_) = err__;                                           \
     } while (0)
 
-#define MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)      \
-    do {                                                                \
-        int err__;                                                      \
-        *(int*)cs_acq_ptr = 1;                                          \
-        err__ = ABT_mutex_trylock(mutex_ptr_);                          \
-        if (unlikely(err__ != ABT_SUCCESS && err__ != ABT_ERR_MUTEX_LOCKED)) { \
-            *(int*)cs_acq_ptr = 0;                                      \
-            MPL_internal_sys_error_printf("ABT_mutex_trylock", err__,   \
-                                          "    %s:%d\n", __FILE__, __LINE__); \
-        }                                                               \
-        else {                                                          \
-            if (unlikely(err__ != 0))                                   \
-                *(int*)cs_acq_ptr = 0;                                  \
-             err__ = 0;                                                 \
-        }                                                               \
-        *(int *)(err_ptr_) = err__;                                     \
-    } while (0)
-
 #define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)                         \
     do {                                                                      \
         int err__;                                                            \
