@@ -73,7 +73,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
     int is_contig = p->is_contig;
     MPI_Aint in_data_sz = p->in_data_sz;
-    if (is_contig == -1) {
+    if (in_data_sz == 0) {
+        /* otherwise if recv size = 0, it is at least a truncation error */
+        MPIR_STATUS_SET_COUNT(rreq->status, 0);
+    } else if (is_contig == -1) {
         MPI_Aint actual_unpack_bytes;
         MPIR_Typerep_unpack(in_data, in_data_sz,
                             MPIDIG_REQUEST(rreq, buffer),
@@ -83,9 +86,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
             rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(actual_unpack_bytes, in_data_sz);
         }
         MPIR_STATUS_SET_COUNT(rreq->status, actual_unpack_bytes);
-    } else if (is_contig && !p->iov_one.iov_len) {
-        /* empty case */
-        MPIR_STATUS_SET_COUNT(rreq->status, 0);
     } else if (is_contig) {
         /* contig case */
         void *data = p->iov_one.iov_base;
