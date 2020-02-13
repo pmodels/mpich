@@ -217,11 +217,7 @@ M*/
   The thread is created in a detach state, meaning that is may not be waited upon.  If another thread needs to wait for this
   thread to complete, the threads must provide their own synchronization mechanism.
 @*/
-#define MPIDU_Thread_create(func_, data_, id_, err_ptr_)        \
-    do {                                                        \
-        MPL_thread_create(func_, data_, id_, err_ptr_);         \
-        MPIR_Assert(*err_ptr_ == 0);                            \
-    } while (0)
+#define MPIDU_Thread_create       MPL_thread_create
 
 /*@
   MPIDU_Thread_exit - exit from the current thread
