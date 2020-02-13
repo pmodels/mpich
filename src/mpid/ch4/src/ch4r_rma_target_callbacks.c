@@ -1399,15 +1399,14 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
         MPIDIG_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
         MPIDIG_REQUEST(rreq, req->preq.n_iov) = msg_hdr->n_iov;
         MPIDIG_recv_init(0, in_data_sz, dt_iov, msg_hdr->n_iov, rreq);
-        goto fn_exit;
+    } else {
+        MPIDIG_REQUEST(rreq, req->preq.dt_iov) = NULL;
+
+        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->count;
+        MPIDIG_REQUEST(rreq, datatype) = msg_hdr->datatype;
+        MPIDIG_recv_type_init(in_data_sz, rreq);
     }
-
-    MPIDIG_REQUEST(rreq, req->preq.dt_iov) = NULL;
-
-    MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
-    MPIDIG_REQUEST(rreq, count) = msg_hdr->count;
-    MPIDIG_REQUEST(rreq, datatype) = msg_hdr->datatype;
-    MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
         *req = rreq;
@@ -1867,21 +1866,17 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
 
     if (!msg_hdr->n_iov) {
         MPIDIG_REQUEST(rreq, req->areq.dt_iov) = NULL;
-        if (is_async) {
-            *req = NULL;
+    } else {
+        dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
+        MPIR_Assert(dt_iov);
+
+        iov = (struct iovec *) ((char *) msg_hdr + sizeof(*msg_hdr));
+        for (i = 0; i < msg_hdr->n_iov; i++) {
+            dt_iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
+            dt_iov[i].iov_len = iov[i].iov_len;
         }
-        goto fn_exit;
+        MPIDIG_REQUEST(rreq, req->areq.dt_iov) = dt_iov;
     }
-
-    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
-    MPIR_Assert(dt_iov);
-
-    iov = (struct iovec *) ((char *) msg_hdr + sizeof(*msg_hdr));
-    for (i = 0; i < msg_hdr->n_iov; i++) {
-        dt_iov[i].iov_base = (char *) iov[i].iov_base + base + offset;
-        dt_iov[i].iov_len = iov[i].iov_len;
-    }
-    MPIDIG_REQUEST(rreq, req->areq.dt_iov) = dt_iov;
 
     if (is_async) {
         *req = rreq;
@@ -1914,6 +1909,13 @@ int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     mpi_errno = MPIDIG_acc_target_msg_cb(handler_id, am_hdr, data, in_data_sz, is_local, 1, &rreq);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_target_cmpl_cb;
+
+    if (is_async) {
+        *req = rreq;
+    } else {
+        MPIDIG_recv_copy(data, rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    }
 
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_TARGET_MSG_CB);
