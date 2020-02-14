@@ -58,8 +58,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->xpmem_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
-    MPIR_Request *anysource_partner;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
 
@@ -74,34 +72,24 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
      * we increase its refcount at enqueue time. */
     root_comm = MPIDIG_context_id_to_comm(slmt_rts_hdr->context_id);
     if (root_comm) {
-        int continue_matching = 1;
-        while (continue_matching) {
-            anysource_partner = NULL;
-
+        while (TRUE) {
             rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
                                          slmt_rts_hdr->context_id,
                                          &MPIDIG_COMM(root_comm, posted_list));
-
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-                /* Try to cancel NM parter request */
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-                mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                    MPIDI_SHM, &continue_matching);
-                MPIR_ERR_CHECK(mpi_errno);
-
-                if (continue_matching) {
-                    /* NM partner request has already been matched, we need to continue until
-                     * no matching rreq. This SHM rreq will be cancelled by NM. */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+                if (!is_cancelled) {
                     MPIR_Comm_release(root_comm);       /* -1 for posted_list */
                     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
                     continue;
                 }
-
-                /* Release cancelled NM partner request (only SHM request is returned to user) */
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-                MPIR_Request_free(anysource_partner);
+                /* NOTE: NM partner is freed at MPIDI_anysrc_try_cancel_partner,
+                 * no need to call MPIDI_anysrc_free_partner at completions
+                 */
             }
+#endif
             break;
         }
     }
