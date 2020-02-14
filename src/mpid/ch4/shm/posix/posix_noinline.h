@@ -61,5 +61,7 @@ void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_POSIX_mpi_free_mem(void *ptr);
 
 int MPIDI_POSIX_progress(int blocking);
+int MPIDI_POSIX_ctrl_send_lmt_msg_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_POSIX_ctrl_send_lmt_ack_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
 
 #endif

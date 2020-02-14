@@ -12,8 +12,8 @@
 #ifndef POSIX_PRE_H_INCLUDED
 #define POSIX_PRE_H_INCLUDED
 
-#include <mpi.h>
 #include "release_gather_types.h"
+#include "posix_lmt_pre.h"
 
 #define MPIDI_POSIX_MAX_AM_HDR_SIZE     (32)
 
@@ -112,6 +112,10 @@ typedef struct MPIDI_POSIX_am_request {
     int eager_recv_posted_hook_grank;
 
     MPIDI_POSIX_am_request_header_t *req_hdr;
+
+    struct {
+        MPIDI_SHM_LMT_AM_DECL;
+    } lmt;
 
 #ifdef POSIX_AM_REQUEST_INLINE
     MPIDI_POSIX_am_request_header_t req_hdr_buffer;

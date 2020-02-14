@@ -12,6 +12,8 @@
 #ifndef SHM_TYPES_H_INCLUDED
 #define SHM_TYPES_H_INCLUDED
 
+#include "posix_types.h"
+
 typedef enum {
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     MPIDI_SHM_XPMEM_SEND_LMT_RTS,       /* issued by sender to initialize XPMEM protocol with sbuf info */
@@ -20,6 +22,8 @@ typedef enum {
     MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN,  /* issued by receiver to notify completion of coop copy or single copy */
     MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE,  /* issued by sender to notify free counter obj in coop copy */
 #endif
+    MPIDI_SHM_SEND_LMT_MSG,
+    MPIDI_SHM_SEND_LMT_ACK,
     MPIDI_SHM_CTRL_IDS_MAX
 } MPIDI_SHM_ctrl_id_t;
 
@@ -61,6 +65,7 @@ typedef MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t MPIDI_SHM_ctrl_xpmem_send_lmt_r
 #endif
 
 typedef union {
+    MPIDI_SHM_POSIX_CTRL_MESSAGE_TYPES
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t xpmem_slmt_rts;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t xpmem_slmt_cts;

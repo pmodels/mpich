@@ -34,6 +34,7 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_progress.c \
+                    src/mpid/ch4/shm/posix/posix_callbacks.c \
                     src/mpid/ch4/shm/posix/posix_comm.c \
                     src/mpid/ch4/shm/posix/posix_init.c \
                     src/mpid/ch4/shm/posix/posix_op.c \
@@ -43,5 +44,6 @@ mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
                     src/mpid/ch4/shm/posix/posix_eager_array.c
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/Makefile.mk
+include $(top_srcdir)/src/mpid/ch4/shm/posix/lmt/Makefile.mk
 
 endif

@@ -195,9 +195,12 @@ typedef struct MPIDIG_req_t {
     MPIDIG_req_ext_t *req;
     void *buffer;
     MPI_Aint count;
+    MPI_Aint user_count; /* Count in terms of number of datatypes as opposed to bytes. */
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
+    int error_bits; /* Keeps track of any error bits being transferred that need to be reported back
+                       to the user when the call is completed. */
     MPI_Datatype datatype;
 } MPIDIG_req_t;
 

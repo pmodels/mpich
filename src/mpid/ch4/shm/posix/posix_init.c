@@ -128,6 +128,9 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_POSIX_lmt_init(rank, size);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIR_CHKPMEM_COMMIT();
 
   fn_exit:
@@ -154,6 +157,9 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPL_free(MPIDI_POSIX_global.active_rreq);
 
     mpi_errno = MPIDI_POSIX_coll_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIDI_POSIX_lmt_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_free(MPIDI_POSIX_global.local_ranks);

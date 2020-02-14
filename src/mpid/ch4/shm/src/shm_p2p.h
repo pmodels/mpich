@@ -18,6 +18,17 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_CH4_SHM_LMT_MSG_SIZE
+      category    : CH4
+      type        : int
+      default     : 65536
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If a send message size is larger than MPIR_CVAR_CH4_SHM_LMT_MSG_SIZE (in bytes),
+        then enable large message transfer protocols for intranode communication.
+
     - name        : MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE
       category    : CH4
       type        : int

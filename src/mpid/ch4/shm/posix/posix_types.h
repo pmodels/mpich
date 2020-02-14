@@ -12,6 +12,7 @@
 #ifndef POSIX_TYPES_H_INCLUDED
 #define POSIX_TYPES_H_INCLUDED
 
+#include "posix_lmt_pre.h"
 #include "mpidu_init_shm.h"
 
 enum {
@@ -29,6 +30,8 @@ enum {
 #define MPIDI_POSIX_AMREQUEST_HDR_PTR(req)    ((req)->dev.ch4.am.shm_am.posix.req_hdr)
 #define MPIDI_POSIX_REQUEST(req, field)       ((req)->dev.ch4.shm.posix.field)
 #define MPIDI_POSIX_COMM(comm)                (&(comm)->dev.ch4.shm.posix)
+
+#define MPIDI_SHM_POSIX_CTRL_MESSAGE_TYPES      MPIDI_SHM_LMT_CTRL_MESSAGE_TYPES
 
 typedef struct {
     MPIDIU_buf_pool_t *am_buf_pool;

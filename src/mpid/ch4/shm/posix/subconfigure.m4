@@ -107,6 +107,91 @@ MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
             src/mpid/ch4/shm/posix/eager/include/posix_eager_pre.h
     ])
 
+    AC_ARG_WITH(ch4-posix-lmt-modules,
+    [ --with-ch4-posix-lmt-modules=module-list
+    CH4 POSIX lmt arguments:
+            rndv - Use rendezvous module with shared memory pipelining
+            ],
+            [posix_lmt_modules=$withval],
+            [posix_lmt_modules=])
+
+    if test -z "${posix_lmt_modules}" ; then
+        ch4_posix_lmt_modules="rndv"
+    else
+        ch4_posix_lmt_modules=`echo ${posix_lmt_modules} | sed -e 's/,/ /g'`
+    fi
+
+    export ch4_posix_lmt_modules
+
+    ch4_posix_lmt_func_decl=""
+    ch4_posix_lmt_func_array=""
+    ch4_posix_lmt_strungs=""
+    ch4_posix_lmt_pre_include=""
+
+    posix_lmt_index=0
+
+    echo "Parsing POSIX lmt arguments"
+
+    for posix_lmt in $ch4_posix_lmt_modules; do
+
+        if test ! -d $srcdir/src/mpid/ch4/shm/posix/lmt/${posix_lmt} ; then
+            AC_MSG_ERROR([POSIX lmt module ${posix_lmt} is unknown "$srcdir/src/mpid/ch4/shm/posixlmt/${posix_lmt}"])
+        fi
+
+        posix_lmt_macro=`echo $posix_lmt | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+        posix_lmt_macro="MPIDI_POSIX_${posix_lmt_macro}"
+
+        if test -z "$ch4_posix_lmt_array" ; then
+            ch4_posix_lmt_array="$posix_lmt_macro"
+        else
+            ch4_posix_lmt_array="$ch4_posix_lmt_array, $posix_lmt_macro"
+        fi
+
+        if test -z "$ch4_posix_lmt_func_decl" ; then
+            ch4_posix_lmt_func_decl="MPIDI_POSIX_lmt_${posix_lmt}_funcs"
+        else
+            ch4_posix_lmt_func_decl="${ch4_posix_lmt_func_decl}, MPIDI_POSIX_lmt_${posix_lmt}_funcs"
+        fi
+
+        if test -z "$ch4_posix_lmt_func_array" ; then
+            ch4_posix_lmt_func_array="&MPIDI_POSIX_lmt_${posix_lmt}_funcs"
+        else
+            ch4_posix_lmt_func_array="${ch4_posix_lmt_func_array}, &MPIDI_POSIX_lmt_${posix_lmt}_funcs"
+        fi
+
+        if test -z "$ch4_posix_lmt_strings" ; then
+            ch4_posix_lmt_strings="\"$posix_lmt\""
+        else
+            ch4_posix_lmt_strings="$ch4_posix_lmt_strings, \"$posix_lmt\""
+        fi
+
+        if test -z "$ch4_posix_lmt_pre_include" ; then
+            ch4_posix_lmt_pre_include="#include \"../${posix_lmt}/${posix_lmt}_pre.h\""
+        else
+            ch4_posix_lmt_pre_include="${ch4_posix_lmt_pre_include}
+#include \"../${posix_lmt}/${posix_lmt}_pre.h\""
+        fi
+
+        posix_lmt_index=`expr $posix_lmt_index + 1`
+    done
+
+    ch4_posix_lmt_array_sz=$posix_lmt_index
+
+    echo "There are $ch4_posix_lmt_array_sz POSIX lmt modules (${ch4_posix_lmt_modules})"
+
+    AC_SUBST(ch4_posix_lmt_modules)
+    AC_SUBST(ch4_posix_lmt_array)
+    AC_SUBST(ch4_posix_lmt_array_sz)
+    AC_SUBST(ch4_posix_lmt_strings)
+    AC_SUBST(ch4_posix_lmt_func_decl)
+    AC_SUBST(ch4_posix_lmt_func_array)
+    AC_SUBST(ch4_posix_lmt_pre_include)
+    AC_SUBST(ch4_posix_lmt_recv_transaction_decl)
+
+    AC_CONFIG_FILES([
+            src/mpid/ch4/shm/posix/lmt/include/posix_lmt_pre.h
+    ])
+
     # the POSIX shmmod depends on the common shm code
     build_mpid_common_shm=yes
     ])

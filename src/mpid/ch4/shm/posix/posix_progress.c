@@ -208,6 +208,10 @@ int MPIDI_POSIX_progress(int blocking)
     mpi_errno = progress_send(blocking);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIDI_POSIX_lmt_progress();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS);
     return mpi_errno;

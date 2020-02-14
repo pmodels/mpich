@@ -11,6 +11,7 @@
 #ifndef SHM_INLINE_H_INCLUDED
 #define SHM_INLINE_H_INCLUDED
 
+#include "posix_lmt.h"
 #include "shm_am.h"
 #include "shm_coll.h"
 #include "shm_hooks.h"

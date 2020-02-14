@@ -154,43 +154,64 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 
     iov_left[0].iov_base = (void *) am_hdr;
     iov_left[0].iov_len = am_hdr_sz;
-    iov_left[1].iov_base = (void *) send_buf;
-    iov_left[1].iov_len = data_sz;
+    /* If the size of the data to be sent is greater than the threshold, set up an LMT message and
+     * send the header with the information about the shared memory buffer through eager to preserve
+     * matching order. For now, the LMT code also doesn't handle large message transfers. */
+    if (data_sz + am_hdr_sz < MPIR_CVAR_CH4_SHM_LMT_MSG_SIZE || handler_id != MPIDIG_SEND) {
+        iov_left[1].iov_base = (void *) send_buf;
+        iov_left[1].iov_len = data_sz;
 
-    iov_left_ptr = iov_left;
+        iov_left_ptr = iov_left;
 
-    iov_num_left = 2;
+        iov_num_left = 2;
 
-    /* If there's no data to send, the second iov can be empty and doesn't need to be transfered. */
-    if (data_sz == 0) {
-        iov_num_left = 1;
-    }
+        /* If there's no data to send, the second iov can be empty and doesn't need to be transfered. */
+        if (data_sz == 0) {
+            iov_num_left = 1;
+        }
 
-    /* If we already have messages in the postponed queue, this one will probably also end up being
-     * queued so save some cycles and do it now. */
-    if (unlikely(MPIDI_POSIX_global.postponed_queue)) {
-        mpi_errno = MPIDI_POSIX_am_enqueue_request(am_hdr, am_hdr_sz, handler_id, grank, msg_hdr,
-                                                   msg_hdr_p, iov_left_ptr, iov_num_left, data_sz,
-                                                   sreq);
-        MPIR_ERR_CHECK(mpi_errno);
+        /* If we already have messages in the postponed queue, this one will probably also end up being
+         * queued so save some cycles and do it now. */
+        if (unlikely(MPIDI_POSIX_global.postponed_queue)) {
+            mpi_errno =
+                MPIDI_POSIX_am_enqueue_request(am_hdr, am_hdr_sz, handler_id, grank, msg_hdr,
+                                               msg_hdr_p, iov_left_ptr, iov_num_left, data_sz,
+                                               sreq);
+            MPIR_ERR_CHECK(mpi_errno);
 
-        goto fn_exit;
-    }
+            goto fn_exit;
+        }
 
-    /* pgi compiler can't handle preprocessing within macro argument */
+        /* pgi compiler can't handle preprocessing within macro argument */
 #ifdef POSIX_AM_DEBUG
 #define _SEQ_NUM msg_hdr_p->seq_num,
 #else
 #define _SEQ_NUM -1
 #endif
 
-    POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
-                (uint64_t) msg_hdr_p->handler_id,
-                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM,
-                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
+        POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
+                    ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
+                    (uint64_t) msg_hdr_p->handler_id,
+                    (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM,
+                    ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
 
-    result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
+        result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
+    } else {
+        /* Set up the LMT transfer */
+        /* This message will not be matched by the normal CH4R matching code, but will instead be
+         * matched inside the control message handler on the receiving side. The messages are put
+         * into the CH4R message queue however, to preserve correct ordering. */
+        mpi_errno = MPIDI_POSIX_lmt_send_rts((void *) send_buf, grank,
+                                             ((MPIDIG_hdr_t *) am_hdr)->tag,
+                                             ((MPIDIG_hdr_t *) am_hdr)->error_bits,
+                                             comm, data_sz, handler_id, sreq);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* The request isn't done, but we don't enqueue it in the regular active message queue so
+         * skip to the end of the function. */
+        goto fn_exit;
+    }
 
     /* If the message was not completed, queue it to be sent later. */
     if (unlikely((MPIDI_POSIX_NOK == result) || iov_num_left)) {
