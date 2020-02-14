@@ -80,22 +80,38 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
+    int err;
 
-    MPII_thread_mutex_create();
+    /**********************************************************************/
+    /* Section 1: base components that other components rely on.
+     * These need to be intialized first.  They have strong
+     * dependencies between each other, which makes it a pain to
+     * maintain them.  Hopefully, the number of such components is
+     * small. */
+    /**********************************************************************/
 
     MPL_wtime_init();
-    MPII_pre_init_dbg_logging(argc, argv);
+
+    MPID_Thread_init(&err);
+    MPIR_Assert(err == 0);
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIR_Err_init();
+    MPII_pre_init_dbg_logging(argc, argv);
+    MPII_pre_init_memory_tracing();
+
+
+    /**********************************************************************/
+    /* Section 2: contains initialization of local components (no
+     * dependency on other processes) that do not need any information
+     * from the device.  These components are independent of each
+     * other and can be initialized in any order. */
+    /**********************************************************************/
+
+    MPII_thread_mutex_create();
     MPII_init_request();
-
-    /* Certain features may potentially change required thread-level */
-    mpi_errno = MPII_init_local_proc_attrs(&required);
-    MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
-
-    /* Init various components */
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
@@ -103,74 +119,96 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPII_init_binding_cxx();
     MPII_init_binding_f08();
 
-    /* Wait for debugger to attach if requested. */
+    mpi_errno = MPII_init_local_proc_attrs(&required);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPII_Coll_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Group_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Datatype_init_predefined();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (MPIR_CVAR_DEBUG_HOLD) {
         MPII_debugger_hold();
     }
 
-    /* Setting mpich_state from `PRE_INIT` allows MPI_Initialized and
-     * MPI_Finalized to call MPIR_Err_return_comm(0, ...) on error,
-     * which checks errhandler in comm_world structure, which should
-     * NULL by default before or during init, and treated as fatal.
-     */
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
-    MPII_pre_init_memory_tracing();
+    /**********************************************************************/
+    /* Section 3: preinitialization is complete.  signal to error
+     * handling routines that core services are available. */
+    /**********************************************************************/
 
-    /* Call any and all MPIR_Init type functions */
-    MPIR_Err_init();
-    mpi_errno = MPIR_Group_init();
-    MPIR_ERR_CHECK(mpi_errno);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
 
-    /* Initialize predefined datatype structures */
-    mpi_errno = MPIR_Datatype_init_predefined();
-    MPIR_ERR_CHECK(mpi_errno);
 
-    /* ---- MPID_Init -------------------------------------------------- */
+    /**********************************************************************/
+    /* Section 4: contains the device initialization and setup and
+     * teardown needed for the device initialization. */
+    /**********************************************************************/
+
     /* Setting isThreaded to 0 to trick any operations used within
      * MPID_Init to think that we are running in a single threaded
      * environment. */
     MPIR_ThreadInfo.isThreaded = 0;
 
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
+
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* ---- MPII_Post_init --------------------------------------------- */
-    /* Commit pairtypes after device hooks are activated */
+
+    /**********************************************************************/
+    /* Section 5: contains post device initialization code.  Anything
+     * that we could not do before the device was initialized can be
+     * done now.  Try to keep this as small as possible.  Only things
+     * that *REALLY* cannot be done before device initialization
+     * should come here. */
+    /**********************************************************************/
+
+    /* pairtypes might need device hooks to be activated so the device
+     * can keep track of their creation.  that's why we need to do
+     * this after the device initialization.  */
     mpi_errno = MPIR_Datatype_commit_pairtypes();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Initialize collectives infrastructure */
-    mpi_errno = MPII_Coll_init();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPII_post_init_global();
-    MPIR_ERR_CHECK(mpi_errno);
+    /* FIXME: this is for rlog, and should be removed when we delete rlog */
+    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
 
     MPII_post_init_memory_tracing();
     MPII_init_dbg_logging();
-    /* if --enable-debuginfo is configured, prepare for debug info data.
-     * if MPIEXEC_DEBUG is set in environment, wait for debugger until MPIR_debug_gate is set to 1.
-     */
     MPII_Wait_for_debugger();
 
-    /* dup comm_self and creates progress thread (if needed) */
-    mpi_errno = MPII_init_async();
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* ---- MPID_Post_init --------------------------------------------- */
-    /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
         mpi_errno = MPID_Init_spawn();
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    /* Let the device know that the rest of the init process is completed */
+
+    /**********************************************************************/
+    /* Section 6: simply lets the device know that we are done with
+     * the full initialization, in case it wants to do some final
+     * setup. */
+    /**********************************************************************/
+
     mpi_errno = MPID_InitCompleted();
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
 
+
+    /**********************************************************************/
+    /* Section 7: we are finally ready to start the asynchronous
+     * thread, if needed. */
+    /**********************************************************************/
+
     /* Reset isThreaded to the actual thread level */
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+
+    mpi_errno = MPII_init_async();
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
@@ -178,9 +216,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    /* signal to error handling routines that core services are unavailable */
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
-    MPII_thread_mutex_destroy();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

@@ -19,10 +19,6 @@ void MPII_thread_mutex_create(void)
 {
     int err;
 
-    /* initialize threading.  it's needed to create mutexes */
-    MPID_Thread_init(&err);
-    MPIR_Assert(err == 0);
-
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
