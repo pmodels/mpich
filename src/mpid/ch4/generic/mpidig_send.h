@@ -32,16 +32,16 @@ static inline int mpidig_eager_limit(int is_local)
 static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                        int rank, int tag, MPIR_Comm * comm, int context_offset,
                                        MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                       int type, MPIR_Errflag_t errflag);
+                                       MPIR_Errflag_t errflag);
 static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       MPI_Aint data_sz,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                      int type, MPIR_Errflag_t errflag);
+                                      MPIR_Errflag_t errflag);
 static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                   int rank, int tag, MPIR_Comm * comm, int context_offset,
                                   MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  int type, MPIR_Errflag_t errflag);
+                                  MPIR_Errflag_t errflag);
 
 static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                     int rank, int tag, MPIR_Comm * comm, int context_offset,
@@ -54,21 +54,21 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
 
     int is_local = MPIDI_av_is_local(addr);
     if (type == MPIDIG_SSEND_REQ) {
-        return MPIDIG_do_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                               request, type, errflag);
+        return MPIDIG_do_ssend(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, errflag);
     } else if (data_sz > mpidig_eager_limit(is_local)) {
         return MPIDIG_do_rndv_send(buf, count, datatype, data_sz, rank, tag, comm, context_offset,
-                                   addr, request, type, errflag);
+                                   addr, request, errflag);
     } else {
-        return MPIDIG_do_eager_send(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                    request, type, errflag);
+        return MPIDIG_do_eager_send(buf, count, datatype, rank, tag, comm, context_offset,
+                                    addr, request, errflag);
     }
 }
 
 static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                        int rank, int tag, MPIR_Comm * comm, int context_offset,
                                        MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                       int type, MPIR_Errflag_t errflag)
+                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
@@ -116,7 +116,7 @@ static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Data
 static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                   int rank, int tag, MPIR_Comm * comm, int context_offset,
                                   MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  int type, MPIR_Errflag_t errflag)
+                                  MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = *request;
@@ -170,7 +170,7 @@ static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datat
                                       MPI_Aint data_sz,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                      int type, MPIR_Errflag_t errflag)
+                                      MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
