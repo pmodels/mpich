@@ -369,7 +369,6 @@ typedef struct {
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDIU_buf_pool_t *am_buf_pool;
-    OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
     /* Sequence number trackers for active messages */
     void *am_send_seq_tracker;
