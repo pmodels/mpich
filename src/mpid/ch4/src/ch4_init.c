@@ -426,15 +426,29 @@ int MPID_Init(void)
     size = MPIR_Process.size;
     appnum = MPIR_Process.appnum;
 
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_SCHED_LIST_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    int err;
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
 #ifdef HAVE_LIBHCOLL
-    MPIR_Add_mutex(&MPIDIU_THREAD_HCOLL_MUTEX);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
 #endif
-    MPIR_Add_mutex(&MPIDI_global.vci_lock);
+
+    MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &err);
+    MPIR_Assert(err == 0);
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);
@@ -465,7 +479,8 @@ int MPID_Init(void)
         MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-        MPIR_Add_mutex(&MPIDI_VCI(i).lock);
+        MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
         /* TODO: lw_req, workq */
     }
 
@@ -581,6 +596,35 @@ int MPID_Finalize(void)
     finalize_av_table();
 
     MPIR_pmi_finalize();
+
+    int err;
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#ifdef HAVE_LIBHCOLL
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+#endif
+
+    MPID_Thread_mutex_destroy(&MPIDI_global.vci_lock, &err);
+    MPIR_Assert(err == 0);
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);

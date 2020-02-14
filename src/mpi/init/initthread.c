@@ -81,8 +81,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
 
-    MPII_init_thread_and_enter_cs();
-    /* ---- Entered CS ------------------------------------------------ */
+    MPII_thread_mutex_create();
 
     MPL_wtime_init();
     MPII_pre_init_dbg_logging(argc, argv);
@@ -167,9 +166,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     mpi_errno = MPII_init_async();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* create fine-grained mutexes */
-    MPIR_Thread_CS_Init();
-
     /* ---- MPID_Post_init --------------------------------------------- */
     /* connect to remote processes is has parent */
     if (MPIR_Process.has_parent) {
@@ -192,7 +188,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /* --BEGIN ERROR HANDLING-- */
     /* signal to error handling routines that core services are unavailable */
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
-    MPII_init_thread_failed_exit_cs();
+    MPII_thread_mutex_destroy();
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

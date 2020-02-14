@@ -40,10 +40,6 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 #define MPIR_THREAD_CHECK_END
 #endif /* MPICH_IS_THREADED */
 
-void MPIR_Add_mutex(MPID_Thread_mutex_t * p_mutex);
-void MPIR_Thread_CS_Init(void);
-void MPIR_Thread_CS_Finalize(void);
-
 /* ------------------------------------------------------------ */
 /* Global thread model, used for non-performance-critical paths */
 /* CONSIDER:
