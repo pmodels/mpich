@@ -617,7 +617,7 @@ PAC_ARG_THREAD_PACKAGE
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
-    yes|posix|pthreads|uti)
+    yes|posix|pthreads)
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
@@ -636,14 +636,11 @@ case $with_thread_package in
 
         # this check should come after the AC_CHECK_LIB for -lpthread
         AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
-
-	if test "${with_thread_package}" = "uti" ; then
-	    PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
-	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
-	else
-	    AC_MSG_NOTICE([POSIX will be used for thread package.])
-	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
-	fi
+	THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
+	;;
+    uti)
+	PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
+	THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)
