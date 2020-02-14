@@ -133,10 +133,11 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
     return mpi_errno;
 }
 
-static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
+static inline int MPIDI_OFI_repost_buffer(void *context)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
+    MPIDI_OFI_am_repost_request_t *am;
+    am = MPL_container_of(context, MPIDI_OFI_am_repost_request_t, context);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);

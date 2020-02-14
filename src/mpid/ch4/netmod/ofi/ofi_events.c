@@ -27,7 +27,6 @@ static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq
 static int am_isend_event(void *context);
 static int am_recv_event(void *context, void *buf);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
-static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 
 static int cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 {
@@ -677,18 +676,6 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     goto fn_exit;
 }
 
-static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_REPOST_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_REPOST_EVENT);
-
-    mpi_errno = MPIDI_OFI_repost_buffer(wc->op_context, rreq);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_REPOST_EVENT);
-    return mpi_errno;
-}
-
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -714,7 +701,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
             mpi_errno = am_recv_event(wc->op_context, wc->buf);
 
         if (unlikely(wc->flags & FI_MULTI_RECV))
-            mpi_errno = am_repost_event(wc, req);
+            mpi_errno = MPIDI_OFI_repost_buffer(wc->op_context);
 
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
