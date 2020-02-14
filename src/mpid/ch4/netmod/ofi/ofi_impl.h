@@ -17,6 +17,7 @@
 #include "mpidig.h"
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
+#include "ofi_am_lmt.h"
 
 #define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
 #define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
