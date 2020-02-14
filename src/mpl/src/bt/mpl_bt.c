@@ -20,7 +20,7 @@ void MPL_backtrace_show(FILE * output)
     for (_mpl_backtrace_size_t i = 0; i < frames; i++)
         fprintf(output, "%s\n", strs[i]);
 
-    MPL_free(strs);
+    MPL_external_free(strs);
 }
 #else
 void MPL_backtrace_show(FILE * output)
