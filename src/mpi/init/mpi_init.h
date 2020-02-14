@@ -44,11 +44,8 @@ cvars:
 int MPIR_Init_thread(int *, char ***, int, int *);
 
 void MPII_init_thread_and_enter_cs(void);
-void MPII_init_thread_and_exit_cs(void);
 void MPII_init_thread_failed_exit_cs(void);
-void MPII_finalize_thread_and_enter_cs(void);
 void MPII_finalize_thread_and_exit_cs(void);
-void MPII_finalize_thread_failed_exit_cs(void);
 
 int MPII_init_global(int *p_thread_required);
 int MPII_post_init_global(void);

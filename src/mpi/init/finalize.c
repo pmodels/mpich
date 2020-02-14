@@ -120,9 +120,6 @@ int MPI_Finalize(void)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
-     * be called at most once in any program) */
-    MPII_finalize_thread_and_enter_cs();
     MPIR_FUNC_TERSE_FINALIZE_ENTER(MPID_STATE_MPI_FINALIZE);
 
     /* ... body of routine ... */
@@ -140,6 +137,11 @@ int MPI_Finalize(void)
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
+
+    /* Setting isThreaded to 0 to trick any operations used within
+     * MPID_Finalize to think that we are running in a single threaded
+     * environment. */
+    MPIR_ThreadInfo.isThreaded = 0;
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
@@ -195,7 +197,6 @@ int MPI_Finalize(void)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-    MPII_finalize_thread_failed_exit_cs();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
