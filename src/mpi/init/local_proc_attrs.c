@@ -138,16 +138,6 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Init communicator hints */
     MPIR_Comm_hint_init();
 
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPII_post_init_global(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-
     /* Set tag_ub as function of tag_bits set by the device */
     MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
 
@@ -158,9 +148,10 @@ int MPII_post_init_global(void)
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
 
-    MPII_Timer_init(MPIR_Process.comm_world->rank, MPIR_Process.comm_world->local_size);
-
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPII_finalize_local_proc_attrs(void)

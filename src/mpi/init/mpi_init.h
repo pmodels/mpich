@@ -47,7 +47,6 @@ void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
 int MPII_init_local_proc_attrs(int *p_thread_required);
-int MPII_post_init_global(void);
 int MPII_finalize_local_proc_attrs(void);
 
 void MPII_init_windows(void);
