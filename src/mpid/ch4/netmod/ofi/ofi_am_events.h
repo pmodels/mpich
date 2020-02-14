@@ -159,14 +159,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buf)
         next_seqno = am_hdr->seqno + 1;
         switch (am_hdr->am_type) {
             case MPIDI_AMTYPE_SHORT_HDR:
-                mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr + 1 /* payload */);
+                /* data_sz = 0 */
+                mpi_errno = ofi_handle_am(am_hdr);
 
                 MPIR_ERR_CHECK(mpi_errno);
 
                 break;
 
             case MPIDI_AMTYPE_SHORT:
-                mpi_errno = MPIDI_OFI_handle_short_am(am_hdr);
+                mpi_errno = ofi_handle_am(am_hdr);
 
                 MPIR_ERR_CHECK(mpi_errno);
 
@@ -250,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(void *context)
 
 /* internal routines */
 
-static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
+static inline int ofi_handle_am(MPIDI_OFI_am_header_t * msg_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -280,32 +281,6 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
-    return mpi_errno;
-}
-
-static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
-
-    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, NULL, 0 /* is_local */ ,
-                                                       NULL, &rreq);
-
-    if (!rreq)
-        goto fn_exit;
-
-    /* TODO: am message without payload never needs a callback. It will be much cleaner if
-     *       we have separate msg handler interface for am_send_hdr.
-     */
-    MPIR_STATUS_SET_COUNT(rreq->status, 0);
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM_HDR);
     return mpi_errno;
 }
 
