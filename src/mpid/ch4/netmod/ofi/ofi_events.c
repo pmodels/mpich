@@ -149,20 +149,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-
-    if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-        int continue_matching = 1;
-
-        MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_NETMOD,
-                                &continue_matching);
-
-        /* It is always possible to cancel a request on shm side w/o an aux thread */
-
-        /* Decouple requests */
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-        MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-        MPIR_Request_free(rreq);
-    }
+    int is_cancelled;
+    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+    /* Cancel SHM partner is always successful */
+    MPIR_Assert(is_cancelled);
+    MPIDI_anysrc_free_partner(rreq);
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack))) {
