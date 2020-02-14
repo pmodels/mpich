@@ -22,6 +22,8 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
+#define MPID_Thread_init         MPIDU_Thread_init
+#define MPID_Thread_finalize     MPIDU_Thread_finalize
 #define MPID_Thread_create       MPIDU_Thread_create
 #define MPID_Thread_exit         MPIDU_Thread_exit
 #define MPID_Thread_self         MPIDU_Thread_self

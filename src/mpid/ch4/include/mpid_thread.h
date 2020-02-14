@@ -25,6 +25,8 @@ typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
+#define MPID_Thread_init           MPIDU_Thread_init
+#define MPID_Thread_finalize       MPIDU_Thread_finalize
 #define MPID_Thread_mutex_create   MPIDU_Thread_mutex_create
 #define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
 #define MPID_Thread_mutex_lock(mutex, err)     MPIDU_Thread_mutex_lock(mutex, err, MPL_THREAD_PRIO_HIGH)
