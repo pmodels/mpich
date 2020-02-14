@@ -19,13 +19,14 @@
 int MPIR_Ialltoall_intra_gentran_scattered(const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            int recvcount,
-                                           MPI_Datatype recvtype, MPIR_Comm * comm,
-                                           MPIR_Request ** req)
+                                           MPI_Datatype recvtype, MPIR_Comm * comm, int batch_size,
+                                           int bblock, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ialltoall_intra_scattered(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype, comm, req);
+                                                       recvbuf, recvcount, recvtype, comm,
+                                                       batch_size, bblock, req);
 
     return mpi_errno;
 }

@@ -24,10 +24,11 @@ int MPIR_TSP_Ialltoallv_sched_intra_scattered(const void *sendbuf, const int sen
                                               const int sdispls[], MPI_Datatype sendtype,
                                               void *recvbuf, const int recvcounts[],
                                               const int rdispls[], MPI_Datatype recvtype,
-                                              MPIR_Comm * comm, MPIR_TSP_sched_t * sched);
+                                              MPIR_Comm * comm, int batch_size, int bblock,
+                                              MPIR_TSP_sched_t * sched);
 
 int MPIR_TSP_Ialltoallv_intra_scattered(const void *sendbuf, const int sendcounts[],
                                         const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                         const int recvcounts[], const int rdispls[],
-                                        MPI_Datatype recvtype, MPIR_Comm * comm,
-                                        MPIR_Request ** req);
+                                        MPI_Datatype recvtype, MPIR_Comm * comm, int batch_size,
+                                        int bblock, MPIR_Request ** req);

@@ -25,8 +25,8 @@ int MPIR_Iallgatherv_intra_gentran_ring(const void *sendbuf, int sendcount,
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Iallgatherv_intra_ring(sendbuf, sendcount, sendtype,
-                                                    recvbuf, recvcounts, displs, recvtype,
-                                                    comm, req);
+                                                    recvbuf, recvcounts, displs, recvtype, comm,
+                                                    req);
 
     return mpi_errno;
 }

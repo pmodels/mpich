@@ -19,15 +19,13 @@
 
 int MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv(void *buffer, int count,
                                                           MPI_Datatype datatype, int root,
-                                                          MPIR_Comm * comm_ptr,
-                                                          MPIR_Request ** request)
+                                                          MPIR_Comm * comm_ptr, int scatterv_k,
+                                                          int allgatherv_k, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ibcast_intra_scatterv_allgatherv(buffer, count, datatype, root,
-                                                              comm_ptr,
-                                                              MPIR_CVAR_IBCAST_SCATTERV_KVAL,
-                                                              MPIR_CVAR_IBCAST_ALLGATHERV_RECEXCH_KVAL,
+                                                              comm_ptr, scatterv_k, allgatherv_k,
                                                               request);
 
     return mpi_errno;

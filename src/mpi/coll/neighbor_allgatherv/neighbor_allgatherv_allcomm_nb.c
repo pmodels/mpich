@@ -17,8 +17,8 @@ int MPIR_Neighbor_allgatherv_allcomm_nb(const void *sendbuf, int sendcount, MPI_
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                          recvbuf, recvcounts, displs, recvtype,
-                                          comm_ptr, &req_ptr);
+                                          recvbuf, recvcounts, displs, recvtype, comm_ptr,
+                                          &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (req_ptr)
         req = req_ptr->handle;

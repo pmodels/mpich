@@ -13,32 +13,32 @@ cvars:
     - name        : MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto              - Internal algorithm selection
-        brucks            - Force brucks algorithm
-        inplace           - Force inplace algorithm
-        pairwise          - Force pairwise algorithm
-        permuted_sendrecv - Force permuted sendrecv algorithm
-        gentran_ring      - Force generic transport based ring algorithm
-        gentran_brucks    - Force generic transport based brucks algorithm
-        gentran_scattered - Force generic transport based scattered algorithm
+        sched_auto              - Internal algorithm selection
+        sched_brucks            - Force brucks algorithm
+        sched_inplace           - Force inplace algorithm
+        sched_pairwise          - Force pairwise algorithm
+        sched_permuted_sendrecv - Force permuted sendrecv algorithm
+        gentran_ring            - Force generic transport based ring algorithm
+        gentran_brucks          - Force generic transport based brucks algorithm
+        gentran_scattered       - Force generic transport based scattered algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto              - Internal algorithm selection
-        pairwise_exchange - Force pairwise exchange algorithm
+        sched_auto              - Internal algorithm selection
+        sched_pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -122,7 +122,7 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 
    End Algorithm: MPI_Alltoall
 */
-int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -136,19 +136,19 @@ int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Data
 
     if (sendbuf == MPI_IN_PLACE) {
         mpi_errno =
-            MPIR_Ialltoall_sched_intra_inplace(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+            MPIR_Ialltoall_intra_sched_inplace(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                recvtype, comm_ptr, s);
     } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno =
-            MPIR_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+            MPIR_Ialltoall_intra_sched_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                               recvtype, comm_ptr, s);
     } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         mpi_errno =
-            MPIR_Ialltoall_sched_intra_permuted_sendrecv(sendbuf, sendcount, sendtype, recvbuf,
+            MPIR_Ialltoall_intra_sched_permuted_sendrecv(sendbuf, sendcount, sendtype, recvbuf,
                                                          recvcount, recvtype, comm_ptr, s);
     } else {
         mpi_errno =
-            MPIR_Ialltoall_sched_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+            MPIR_Ialltoall_intra_sched_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                                                 recvtype, comm_ptr, s);
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -160,90 +160,31 @@ int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Data
 }
 
 
-int MPIR_Ialltoall_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype
+int MPIR_Ialltoall_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype
                                     sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoall_sched_inter_pairwise_exchange(sendbuf, sendcount,
+    mpi_errno = MPIR_Ialltoall_inter_sched_pairwise_exchange(sendbuf, sendcount,
                                                              sendtype, recvbuf, recvcount, recvtype,
                                                              comm_ptr, s);
 
     return mpi_errno;
 }
 
-int MPIR_Ialltoall_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Ialltoall_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                               void *recvbuf, int recvcount, MPI_Datatype recvtype,
                               MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM) {
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_brucks:
-                mpi_errno = MPIR_Ialltoall_sched_intra_brucks(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcount, recvtype,
-                                                              comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_inplace:
-                mpi_errno = MPIR_Ialltoall_sched_intra_inplace(sendbuf, sendcount, sendtype,
-                                                               recvbuf, recvcount, recvtype,
-                                                               comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_pairwise:
-                mpi_errno = MPIR_Ialltoall_sched_intra_pairwise(sendbuf, sendcount, sendtype,
-                                                                recvbuf, recvcount, recvtype,
-                                                                comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_permuted_sendrecv:
-                mpi_errno =
-                    MPIR_Ialltoall_sched_intra_permuted_sendrecv(sendbuf, sendcount, sendtype,
-                                                                 recvbuf, recvcount, recvtype,
-                                                                 comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ialltoall_sched_intra_auto(sendbuf, sendcount, sendtype,
-                                                            recvbuf, recvcount, recvtype, comm_ptr,
-                                                            s);
-                break;
-        }
+        mpi_errno = MPIR_Ialltoall_intra_sched_auto(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_CVAR_IALLTOALL_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_pairwise_exchange:
-                mpi_errno =
-                    MPIR_Ialltoall_sched_inter_pairwise_exchange(sendbuf, sendcount, sendtype,
-                                                                 recvbuf, recvcount, recvtype,
-                                                                 comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ialltoall_sched_inter_auto(sendbuf, sendcount, sendtype,
-                                                            recvbuf, recvcount, recvtype, comm_ptr,
-                                                            s);
-                break;
-        }
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                         int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ialltoall_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                         comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ialltoall_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                              recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_inter_sched_auto(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -254,8 +195,9 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
+
+    *request = NULL;
+
     /* If the user picks one of the transport-enabled algorithms, branch there
      * before going down to the MPIR_Sched-based algorithms. */
     /* TODO - Eventually the intention is to replace all of the
@@ -268,46 +210,72 @@ int MPIR_Ialltoall_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_ring(sendbuf, sendcount, sendtype, recvbuf,
                                                       recvcount, recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
             case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
-                                                        recvcount, recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                        recvcount, recvtype, comm_ptr,
+                                                        MPIR_CVAR_IALLTOALL_BRUCKS_KVAL,
+                                                        MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR,
+                                                        request);
                 break;
+
             case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_gentran_scattered:
                 mpi_errno =
                     MPIR_Ialltoall_intra_gentran_scattered(sendbuf, sendcount,
                                                            sendtype, recvbuf,
-                                                           recvcount, recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                           recvcount, recvtype, comm_ptr,
+                                                           MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE,
+                                                           MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS,
+                                                           request);
                 break;
+
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_brucks:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_brucks, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_inplace:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_inplace, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_pairwise:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_pairwise, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_permuted_sendrecv:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_permuted_sendrecv, comm_ptr, request,
+                                   sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM_sched_auto:
+                MPL_FALLTHROUGH;
+
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_intra_sched_auto, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+        }
+    } else {
+        switch (MPIR_CVAR_IALLTOALL_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_sched_pairwise_exchange:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_inter_sched_pairwise_exchange, comm_ptr, request,
+                                   sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLTOALL_INTER_ALGORITHM_sched_auto:
+                MPL_FALLTHROUGH;
+
+            default:
+                MPII_SCHED_WRAPPER(MPIR_Ialltoall_inter_sched_auto, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
         }
     }
 
-    /* If the user doesn't pick a transport-enabled algorithm, go to the old
-     * sched function. */
-
-    *request = NULL;
-
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno =
-        MPIR_Ialltoall_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr,
-                             s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

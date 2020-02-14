@@ -16,11 +16,11 @@ mpi_sources +=                                  \
     src/mpi/coll/ialltoall/ialltoall.c
 
 mpi_core_sources +=                             \
-    src/mpi/coll/ialltoall/ialltoall_intra_inplace.c  \
-    src/mpi/coll/ialltoall/ialltoall_intra_brucks.c   \
-    src/mpi/coll/ialltoall/ialltoall_intra_permuted_sendrecv.c  \
-    src/mpi/coll/ialltoall/ialltoall_intra_pairwise.c \
-    src/mpi/coll/ialltoall/ialltoall_inter_pairwise_exchange.c \
+    src/mpi/coll/ialltoall/ialltoall_intra_sched_inplace.c  \
+    src/mpi/coll/ialltoall/ialltoall_intra_sched_brucks.c   \
+    src/mpi/coll/ialltoall/ialltoall_intra_sched_permuted_sendrecv.c  \
+    src/mpi/coll/ialltoall/ialltoall_intra_sched_pairwise.c \
+    src/mpi/coll/ialltoall/ialltoall_inter_sched_pairwise_exchange.c \
     src/mpi/coll/ialltoall/ialltoall_gentran_algos.c \
     src/mpi/coll/ialltoall/ialltoall_intra_gentran_brucks.c \
     src/mpi/coll/ialltoall/ialltoall_intra_gentran_ring.c  \

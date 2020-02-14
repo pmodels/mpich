@@ -9,6 +9,11 @@ const void *MPIDI_coll_get_next_container(const void *container)
     return NULL;
 }
 
+/* empty container */
+const MPIDI_coll_algo_container_t MPIDI_empty_cnt = {
+    .id = -1,
+};
+
 /* Barrier default composition containers initialization*/
 const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_alpha_cnt = {
     .id = MPIDI_Barrier_intra_composition_alpha_id,
@@ -22,10 +27,6 @@ const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_beta_cnt = {
     .id = MPIDI_Barrier_intra_composition_beta_id,
     .params.ch4_barrier_params.ch4_barrier_beta = {
                                                    .barrier = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_composition_alpha_cnt = {
-    .id = MPIDI_Barrier_inter_composition_alpha_id
 };
 
 /* Bcast default composition containers initialization*/
@@ -51,10 +52,6 @@ const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_gamma_cnt = {
                                                 }
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_composition_alpha_cnt = {
-    .id = MPIDI_Bcast_inter_composition_alpha_id
-};
-
 /* Reduce default composition containers initialization*/
 const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_alpha_cnt = {
     .id = MPIDI_Reduce_intra_composition_alpha_id,
@@ -74,10 +71,6 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_gamma_cnt = {
     .id = MPIDI_Reduce_intra_composition_gamma_id,
     .params.ch4_reduce_params.ch4_reduce_gamma = {
                                                   .reduce = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Reduce_inter_composition_alpha_cnt = {
-    .id = MPIDI_Reduce_inter_composition_alpha_id
 };
 
 /* Allreduce default composition containers initialization*/
@@ -101,19 +94,11 @@ const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_composition_gamma_cnt = 
                                                         .allreduce = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Allreduce_inter_composition_alpha_cnt = {
-    .id = MPIDI_Allreduce_inter_composition_alpha_id
-};
-
 /* Gather default composition containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Gather_intra_composition_alpha_cnt = {
     .id = MPIDI_Gather_intra_composition_alpha_id,
     .params.ch4_gather_params.ch4_gather_alpha = {
                                                   .gather = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Gather_inter_composition_alpha_cnt = {
-    .id = MPIDI_Gather_inter_composition_alpha_id
 };
 
 /* Gatherv default composition containers initialization */
@@ -123,19 +108,11 @@ const MPIDI_coll_algo_container_t MPIDI_Gatherv_intra_composition_alpha_cnt = {
                                                     .gatherv = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Gatherv_inter_composition_alpha_cnt = {
-    .id = MPIDI_Gatherv_inter_composition_alpha_id
-};
-
 /* Scatter default composition containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Scatter_intra_composition_alpha_cnt = {
     .id = MPIDI_Scatter_intra_composition_alpha_id,
     .params.ch4_scatter_params.ch4_scatter_alpha = {
                                                     .scatter = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Scatter_inter_composition_alpha_cnt = {
-    .id = MPIDI_Scatter_inter_composition_alpha_id
 };
 
 /* Scatterv default composition containers initialization */
@@ -145,19 +122,11 @@ const MPIDI_coll_algo_container_t MPIDI_Scatterv_intra_composition_alpha_cnt = {
                                                       .scatterv = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Scatterv_inter_composition_alpha_cnt = {
-    .id = MPIDI_Scatterv_inter_composition_alpha_id
-};
-
 /* Alltoall default containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Alltoall_intra_composition_alpha_cnt = {
     .id = MPIDI_Alltoall_intra_composition_alpha_id,
     .params.ch4_alltoall_params.ch4_alltoall_alpha = {
                                                       .alltoall = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Alltoall_inter_composition_alpha_cnt = {
-    .id = MPIDI_Alltoall_inter_composition_alpha_id
 };
 
 /* Alltoallv default containers initialization */
@@ -167,19 +136,11 @@ const MPIDI_coll_algo_container_t MPIDI_Alltoallv_intra_composition_alpha_cnt = 
                                                         .alltoallv = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Alltoallv_inter_composition_alpha_cnt = {
-    .id = MPIDI_Alltoallv_inter_composition_alpha_id
-};
-
 /* Alltoallw default containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Alltoallw_intra_composition_alpha_cnt = {
     .id = MPIDI_Alltoallw_intra_composition_alpha_id,
     .params.ch4_alltoallw_params.ch4_alltoallw_alpha = {
                                                         .alltoallw = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Alltoallw_inter_composition_alpha_cnt = {
-    .id = MPIDI_Alltoallw_inter_composition_alpha_id
 };
 
 /* Allgather default containers initialization */
@@ -189,19 +150,11 @@ const MPIDI_coll_algo_container_t MPIDI_Allgather_intra_composition_alpha_cnt = 
                                                         .allgather = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Allgather_inter_composition_alpha_cnt = {
-    .id = MPIDI_Allgather_inter_composition_alpha_id
-};
-
 /* Allgatherv default containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Allgatherv_intra_composition_alpha_cnt = {
     .id = MPIDI_Allgatherv_intra_composition_alpha_id,
     .params.ch4_allgatherv_params.ch4_allgatherv_alpha = {
                                                           .allgatherv = MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Allgatherv_inter_composition_alpha_cnt = {
-    .id = MPIDI_Allgatherv_inter_composition_alpha_id
 };
 
 /* Reduce_scatter default composition containers initialization */
@@ -212,10 +165,6 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_intra_composition_alpha_c
                                                                   MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_inter_composition_alpha_cnt = {
-    .id = MPIDI_Reduce_scatter_inter_composition_alpha_id
-};
-
 /* Reduce_scatter_block default composition containers initialization */
 const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_intra_composition_alpha_cnt = {
     .id = MPIDI_Reduce_scatter_block_intra_composition_alpha_id,
@@ -223,10 +172,6 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_intra_composition_a
                                                                               .reduce_scatter_block
                                                                               =
                                                                               MPIDI_COLL_AUTO_SELECT}
-};
-
-const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_inter_composition_alpha_cnt = {
-    .id = MPIDI_Reduce_scatter_block_inter_composition_alpha_id
 };
 
 /* Scan default containers initialization */
@@ -250,10 +195,3 @@ const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cnt = {
     .params.ch4_exscan_params.ch4_exscan_alpha = {
                                                   .exscan = MPIDI_COLL_AUTO_SELECT}
 };
-
-/* *INDENT-OFF* */
-@ch4_netmod_coll_globals_default@
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-#include "../shm/posix/posix_coll_globals_default.c"
-#endif
-/* *INDENT-ON* */

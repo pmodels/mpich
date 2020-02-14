@@ -34,16 +34,16 @@ cvars:
     - name        : MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto               - Internal algorithm selection
-        brucks             - Force brucks algorithm
-        recursive_doubling - Force recursive doubling algorithm
-        ring               - Force ring algorithm
+        sched_auto               - Internal algorithm selection
+        sched_brucks             - Force brucks algorithm
+        sched_recursive_doubling - Force recursive doubling algorithm
+        sched_ring               - Force ring algorithm
         gentran_recexch_doubling - Force generic transport recursive exchange with neighbours doubling in distance in each phase
         gentran_recexch_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
         gentran_ring             - Force generic transport ring algorithm
@@ -52,14 +52,14 @@ cvars:
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto                      - Internal algorithm selection
-        remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
+        sched_auto                      - Internal algorithm selection
+        sched_remote_gather_local_bcast - Force remote-gather-local-bcast algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -135,7 +135,7 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 
    End Algorithm: MPI_Allgatherv
 */
-int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_intra_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -157,7 +157,7 @@ int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Da
         /* Short or medium size message and power-of-two no. of processes. Use
          * recursive doubling algorithm */
         mpi_errno =
-            MPIR_Iallgatherv_sched_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
+            MPIR_Iallgatherv_intra_sched_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf,
                                                             recvcounts, displs, recvtype, comm_ptr,
                                                             s);
         MPIR_ERR_CHECK(mpi_errno);
@@ -165,14 +165,14 @@ int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Da
         /* Short message and non-power-of-two no. of processes. Use
          * Bruck algorithm (see description above). */
         mpi_errno =
-            MPIR_Iallgatherv_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+            MPIR_Iallgatherv_intra_sched_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                                 displs, recvtype, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* long message or medium-size message and non-power-of-two
          * no. of processes. Use ring algorithm. */
         mpi_errno =
-            MPIR_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+            MPIR_Iallgatherv_intra_sched_ring(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                               displs, recvtype, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -183,13 +183,13 @@ int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
-int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_inter_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int recvcounts[], const int displs[],
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(sendbuf, sendcount,
+    mpi_errno = MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast(sendbuf, sendcount,
                                                                        sendtype, recvbuf,
                                                                        recvcounts, displs, recvtype,
                                                                        comm_ptr, s);
@@ -197,74 +197,20 @@ int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Da
     return mpi_errno;
 }
 
-int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, const int recvcounts[], const int displs[],
                                 MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM) {
-            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_brucks:
-                mpi_errno = MPIR_Iallgatherv_sched_intra_brucks(sendbuf, sendcount, sendtype,
-                                                                recvbuf, recvcounts, displs,
-                                                                recvtype, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_recursive_doubling:
-                mpi_errno =
-                    MPIR_Iallgatherv_sched_intra_recursive_doubling(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs,
-                                                                    recvtype, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_ring:
-                mpi_errno = MPIR_Iallgatherv_sched_intra_ring(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcounts, displs, recvtype,
-                                                              comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Iallgatherv_sched_intra_auto(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcounts, displs, recvtype,
-                                                              comm_ptr, s);
-                break;
-        }
+        mpi_errno = MPIR_Iallgatherv_intra_sched_auto(sendbuf, sendcount, sendtype,
+                                                      recvbuf, recvcounts, displs, recvtype,
+                                                      comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM) {
-            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_remote_gather_local_bcast:
-                mpi_errno =
-                    MPIR_Iallgatherv_sched_inter_remote_gather_local_bcast(sendbuf, sendcount,
-                                                                           sendtype, recvbuf,
-                                                                           recvcounts, displs,
-                                                                           recvtype, comm_ptr, s);
-                break;
-            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Iallgatherv_sched_inter_auto(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcounts, displs, recvtype,
-                                                              comm_ptr, s);
-                break;
-        }
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                           void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                           displs, recvtype, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iallgatherv_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                displs, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Iallgatherv_inter_sched_auto(sendbuf, sendcount, sendtype,
+                                                      recvbuf, recvcounts, displs, recvtype,
+                                                      comm_ptr, s);
     }
 
     return mpi_errno;
@@ -275,8 +221,6 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     int comm_size = comm_ptr->local_size;
@@ -290,60 +234,97 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
         switch (MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_doubling:
                 /* This algo cannot handle unordered data */
-                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
-                    break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(MPII_Iallgatherv_is_displs_ordered
+                                               (comm_size, recvcounts, displs));
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
-                                                                    recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                                    recvtype, comm_ptr,
+                                                                    MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL,
+                                                                    request);
                 break;
+
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_recexch_halving:
                 /* This algo cannot handle unordered data */
-                if (!MPII_Iallgatherv_is_displs_ordered(comm_size, recvcounts, displs))
-                    break;
+                MPII_COLLECTIVE_FALLBACK_CHECK(MPII_Iallgatherv_is_displs_ordered
+                                               (comm_size, recvcounts, displs));
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
-                                                                   recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                                   recvtype, comm_ptr,
+                                                                   MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL,
+                                                                   request);
                 break;
+
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcounts, displs,
                                                         recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
                 break;
+
             case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_gentran_brucks:
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_brucks(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcounts, displs,
-                                                          recvtype, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                          recvtype, comm_ptr,
+                                                          MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL,
+                                                          request);
                 break;
+
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_sched_brucks:
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_intra_sched_brucks, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_sched_recursive_doubling:
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_intra_sched_recursive_doubling, comm_ptr,
+                                   request, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                   displs, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_sched_ring:
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_intra_sched_ring, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM_sched_auto:
+                MPL_FALLTHROUGH;
+
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_intra_sched_auto, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
+                break;
+        }
+    } else {
+        switch (MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM) {
+            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_sched_remote_gather_local_bcast:
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_inter_sched_remote_gather_local_bcast, comm_ptr,
+                                   request, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                   displs, recvtype);
+                break;
+
+            case MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM_sched_auto:
+                MPL_FALLTHROUGH;
+
+            default:
+                MPII_SCHED_WRAPPER(MPIR_Iallgatherv_inter_sched_auto, comm_ptr, request, sendbuf,
+                                   sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
                 break;
         }
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
 
-    mpi_errno =
-        MPIR_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
-                               comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    MPIR_ERR_CHECK(mpi_errno);
+  fallback:
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPII_SCHED_WRAPPER(MPIR_Iallgatherv_intra_sched_auto, comm_ptr, request, sendbuf,
+                           sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
+    } else {
+        MPII_SCHED_WRAPPER(MPIR_Iallgatherv_inter_sched_auto, comm_ptr, request, sendbuf,
+                           sendcount, sendtype, recvbuf, recvcounts, displs, recvtype);
+    }
 
   fn_exit:
     return mpi_errno;
