@@ -202,6 +202,8 @@ M*/
 #endif /* MPICH_IS_THREADED */
 
 /* ***************************************** */
+#define MPIDU_Thread_init         MPL_thread_init
+#define MPIDU_Thread_finalize     MPL_thread_finalize
 #define MPIDU_Thread_create       MPL_thread_create
 #define MPIDU_Thread_exit         MPL_thread_exit
 #define MPIDU_Thread_self         MPL_thread_self

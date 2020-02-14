@@ -18,7 +18,7 @@
 void MPII_init_thread_and_enter_cs(void)
 {
     int thread_err;
-    MPL_thread_init(&thread_err);
+    MPID_Thread_init(&thread_err);
     MPIR_Assert(thread_err == 0);
 
     /* creating the allfunc mutex that MPIR_Init_thread will use */
@@ -63,7 +63,7 @@ void MPII_finalize_thread_and_exit_cs(void)
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    MPL_thread_finalize(&err);
+    MPID_Thread_finalize(&err);
     MPIR_Assert(err == 0);
 }
 
