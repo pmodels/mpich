@@ -67,26 +67,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    if (handler_id == MPIDIG_SEND &&
-        am_hdr_sz + sizeof(MPIDI_UCX_am_header_t) + data_sz > MPIDI_UCX_MAX_AM_EAGER_SZ) {
-        MPIDIG_send_long_req_msg_t lreq_hdr;
-
-        MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
-        lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = sreq;
-        MPIDIG_REQUEST(sreq, req->lreq).src_buf = data;
-        MPIDIG_REQUEST(sreq, req->lreq).count = count;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDIG_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
-        MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
-        MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
-        MPIDIG_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr));
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    }
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
