@@ -70,28 +70,6 @@ int MPID_Pre_init(int *argc_p, char ***argv_p, int requested, int *provided)
         *provided = requested;
     }
 
-    /* Check for debugging options.  We use MPICHD_DBG and -mpichd-dbg 
-       to avoid confusion with the code in src/util/dbg/dbg_printf.c */
-    char *p = getenv( "MPICHD_DBG_PG" );
-    if (p && (strcmp(p, "YES") == 0 || strcmp(p, "yes") == 0)) {
-        MPIDI_PG_set_verbose(1);
-    }
-    if (argc_p && argv_p) {
-        /* applied patch from Juha Jeronen, req #3920 */
-        int argc = *argc_p;
-        char **argv = *argv_p;
-	for (int i=1; i<argc && argv[i]; i++) {
-	    if (strcmp( "-mpichd-dbg-pg", argv[i] ) == 0) {
-                MPIDI_PG_set_verbose(1);
-		for (int j=i; j<argc-1; j++) {
-		    argv[j] = argv[j+1];
-		}
-		argv[argc-1] = NULL;
-		*argc_p = argc - 1;
-		break;
-	    }
-	}
-    }
     return mpi_errno;
 }
 
