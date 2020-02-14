@@ -25,14 +25,6 @@ void MPII_init_thread_and_enter_cs(void)
     int err;
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
-
-    /* Setting isThreaded to 0 to ensure no mutexes are used during Init. */
-    MPIR_ThreadInfo.isThreaded = 0;
-}
-
-void MPII_init_thread_and_exit_cs(void)
-{
-    MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 }
 
 /* called only when encounter failure during during init */
@@ -41,13 +33,6 @@ void MPII_init_thread_failed_exit_cs(void)
     int err;
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
-}
-
-/* similar set of functions for finalize. */
-void MPII_finalize_thread_and_enter_cs(void)
-{
-    /* Setting isThreaded to 0 to ensure no mutexes are used during Finalize. */
-    MPIR_ThreadInfo.isThreaded = 0;
 }
 
 void MPII_finalize_thread_and_exit_cs(void)
@@ -61,17 +46,9 @@ void MPII_finalize_thread_and_exit_cs(void)
     MPIR_Assert(err == 0);
 }
 
-void MPII_finalize_thread_failed_exit_cs(void)
-{
-}
-
 #else
 /* not MPICH_IS_THREADED, empty stubs */
 void MPII_init_thread_and_enter_cs(void)
-{
-}
-
-void MPII_init_thread_and_exit_cs(void)
 {
 }
 
@@ -79,15 +56,7 @@ void MPII_init_thread_failed_exit_cs(void)
 {
 }
 
-void MPII_finalize_thread_and_enter_cs(void)
-{
-}
-
 void MPII_finalize_thread_and_exit_cs(void)
-{
-}
-
-void MPII_finalize_thread_failed_exit_cs(void)
 {
 }
 

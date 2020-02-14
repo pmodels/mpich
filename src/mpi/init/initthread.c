@@ -136,6 +136,11 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* ---- MPID_Init -------------------------------------------------- */
+    /* Setting isThreaded to 0 to trick any operations used within
+     * MPID_Init to think that we are running in a single threaded
+     * environment. */
+    MPIR_ThreadInfo.isThreaded = 0;
+
     mpi_errno = MPID_Init();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -174,10 +179,10 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /* Let the device know that the rest of the init process is completed */
     mpi_errno = MPID_InitCompleted();
 
-    /* ---- Exit CS --------------------------------------------------- */
-    MPII_init_thread_and_exit_cs();
-
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+
+    /* Reset isThreaded to the actual thread level */
+    MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
