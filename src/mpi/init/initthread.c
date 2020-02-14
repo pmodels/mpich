@@ -99,9 +99,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /* Device layer parse command line, decide thread level, and preset configurations. */
     mpi_errno = MPID_Pre_init(argc, argv, required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
-    if (MPIR_ThreadInfo.thread_provided > MPICH_THREAD_LEVEL) {
-        MPIR_ThreadInfo.thread_provided = MPICH_THREAD_LEVEL;
-    }
 
     MPL_set_threaded(MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 

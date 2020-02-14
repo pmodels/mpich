@@ -65,12 +65,12 @@ static int finalize_failed_procs_group(void *param)
 
 int MPID_Pre_init(int *argc_p, char ***argv_p, int requested, int *provided)
 {
-    int mpi_errno = MPI_SUCCESS;
-    if (provided != NULL) {
+    if (MPICH_THREAD_LEVEL >= requested)
         *provided = requested;
-    }
+    else
+        *provided = MPICH_THREAD_LEVEL;
 
-    return mpi_errno;
+    return MPI_SUCCESS;
 }
 
 int MPID_Init(void)
