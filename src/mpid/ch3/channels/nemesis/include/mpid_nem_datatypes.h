@@ -35,10 +35,6 @@
    not really a fair comparison for studying the impact of atomic instructions.
    [goodell@ 2009-01-16] */
 
-#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
- #include "mpid_thread.h" 
-#endif
-
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
 #define MPID_NEM_CACHE_LINE_LEN MPL_CACHELINE_SIZE
 #define MPID_NEM_NUM_CELLS      64
@@ -231,12 +227,6 @@ typedef struct MPID_nem_queue
     MPID_nem_cell_rel_ptr_t my_head;
 #if (MPID_NEM_CACHE_LINE_LEN > SIZEOF_MPL_ATOMIC_PTR_T)
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
-#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
-    /* see FIXME in mpid_nem_queue.h */
-#define MPID_nem_queue_mutex_t MPID_Thread_mutex_t
-    MPID_nem_queue_mutex_t lock;
-    char padding3[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_Thread_mutex_t)];
 #endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 

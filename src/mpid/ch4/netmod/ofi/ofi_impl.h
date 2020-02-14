@@ -136,9 +136,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
 {
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
-        return (req == NULL);   /* Depends on upper layer */
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
         return 1;       /* Always allocated by netmod */
     } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
         return (req == NULL);
@@ -152,13 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request 
 /* Initial value of the completion counter of request objects for lightweight (injection) operations */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
 {
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
-        /* Note on CC initialization: this might be overkill when trylock succeeds
-         * and the main thread directly issues injection.
-         * However, at this moment we assume trylock always goes through progress thread
-         * to simplify implementation. */
-        return 1;
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
         return 0;
     } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
         return 1;

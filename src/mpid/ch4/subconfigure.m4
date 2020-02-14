@@ -481,7 +481,6 @@ AC_ARG_ENABLE(ch4-mt,
        Select model for multi-threading
          direct    - Each thread directly accesses lower-level fabric (default)
          handoff   - Use the hand-off model (spawns progress thread)
-         trylock   - Use the trylock-enqueue model
          runtime   - Determine the model at runtime through a CVAR
     ],,enable_ch4_mt=direct)
 
@@ -494,10 +493,6 @@ case $enable_ch4_mt in
          AC_DEFINE([MPIDI_CH4_USE_MT_HANDOFF], [1],
             [Define to enable hand-off multi-threading model])
         ;;
-     trylock)
-         AC_DEFINE([MPIDI_CH4_USE_MT_TRYLOCK], [1],
-            [Define to enable trylock-enqueue multi-threading model])
-        ;;
      runtime)
          AC_DEFINE([MPIDI_CH4_USE_MT_RUNTIME], [1],
             [Define to enable runtime multi-threading model])
@@ -509,7 +504,7 @@ esac
 
 #
 # Dependency checks for CH4 MT modes
-# Currently, "handoff", "trylock", and "runtime" require the followings:
+# Currently, "handoff" and "runtime" require the followings:
 # - izem linked in (--with-zm-prefix)
 # - enable-thread-cs=per-vci
 #
