@@ -26,15 +26,12 @@ void MPII_init_thread_and_enter_cs(void)
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    MPIR_THREAD_CS_ENTER_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
     /* Setting isThreaded to 0 to ensure no mutexes are used during Init. */
     MPIR_ThreadInfo.isThreaded = 0;
 }
 
 void MPII_init_thread_and_exit_cs(void)
 {
-    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 }
 
@@ -51,14 +48,11 @@ void MPII_finalize_thread_and_enter_cs(void)
 {
     /* Setting isThreaded to 0 to ensure no mutexes are used during Finalize. */
     MPIR_ThreadInfo.isThreaded = 0;
-    MPIR_THREAD_CS_ENTER_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 void MPII_finalize_thread_and_exit_cs(void)
 {
     int err;
-
-    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIR_Assert(err == 0);
@@ -69,7 +63,6 @@ void MPII_finalize_thread_and_exit_cs(void)
 
 void MPII_finalize_thread_failed_exit_cs(void)
 {
-    MPIR_THREAD_CS_EXIT_DIRECT(MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 #else

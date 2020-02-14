@@ -54,38 +54,22 @@ void MPIR_Thread_CS_Finalize(void);
 #if defined(MPICH_IS_THREADED)
 MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 
-/* DIRECT macros are only to be used in MPI_Init/MPI_Finalize, and
- * MPIR_ThreadInfo.isThreaded should be set to 0 to disable other CS
- */
-#define MPIR_THREAD_CS_ENTER_DIRECT(mutex) \
-    do { \
+/* CS macros with runtime bypass */
+#define MPIR_THREAD_CS_ENTER(mutex) \
+    if (MPIR_ThreadInfo.isThreaded) { \
         int err_ = 0; \
         MPID_Thread_mutex_lock(&mutex, &err_); \
         MPIR_Assert(err_ == 0); \
-    } while (0)
-
-#define MPIR_THREAD_CS_EXIT_DIRECT(mutex) \
-    do { \
-        int err_ = 0; \
-        MPID_Thread_mutex_unlock(&mutex, &err_); \
-        MPIR_Assert(err_ == 0); \
-    } while (0)
-
-/* CS macros with runtime bypass
- */
-#define MPIR_THREAD_CS_ENTER(mutex) \
-    if (MPIR_ThreadInfo.isThreaded) { \
-        MPIR_THREAD_CS_ENTER_DIRECT(mutex); \
     }
 
 #define MPIR_THREAD_CS_EXIT(mutex) \
     if (MPIR_ThreadInfo.isThreaded) { \
-        MPIR_THREAD_CS_EXIT_DIRECT(mutex); \
+        int err_ = 0; \
+        MPID_Thread_mutex_unlock(&mutex, &err_); \
+        MPIR_Assert(err_ == 0); \
     }
 
 #else
-#define MPIR_THREAD_CS_ENTER_DIRECT(mutex)
-#define MPIR_THREAD_CS_EXIT_DIRECT(mutex)
 #define MPIR_THREAD_CS_ENTER(mutex)
 #define MPIR_THREAD_CS_EXIT(mutex)
 #endif
