@@ -307,8 +307,9 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     if (MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE) {
         char s[100];
 	int len;
-        mpi_errno = MPL_get_sockaddr_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, p_addr);
-        MPIR_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
+        int ret = MPL_get_sockaddr_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, p_addr);
+        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**iface_notfound",
+                             "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
 
         MPL_sockaddr_to_str(p_addr, s, 100);
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPL_DBG_FDEST,
@@ -354,12 +355,13 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
 	ifname_string = ifname;
 
-	/* If we didn't find a specific name, then try to get an IP address
-	   directly from the available interfaces, if that is supported on
-	   this platform.  Otherwise, we'll drop into the next step that uses 
-	   the ifname */
-	mpi_errno = MPL_get_sockaddr_iface( NULL, p_addr);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        /* If we didn't find a specific name, then try to get an IP address
+         * directly from the available interfaces, if that is supported on
+         * this platform.  Otherwise, we'll drop into the next step that uses
+         * the ifname */
+        int ret = MPL_get_sockaddr_iface(NULL, p_addr);
+        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**iface_notfound",
+                             "**iface_notfound %s", NULL);
         ifaddrFound = 1;
     }
     else {
@@ -369,8 +371,9 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     /* If we don't have an IP address, try to get it from the name */
     if (!ifaddrFound) {
-        mpi_errno = MPL_get_sockaddr(ifname_string, p_addr);
-        MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", ifname_string, h_errno);
+        int ret = MPL_get_sockaddr(ifname_string, p_addr);
+        MPIR_ERR_CHKANDJUMP2(ret != 0, mpi_errno, MPI_ERR_OTHER, "**gethostbyname",
+                             "**gethostbyname %s %d", ifname_string, h_errno);
     }
 
 fn_exit:

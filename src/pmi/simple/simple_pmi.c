@@ -881,7 +881,7 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
     int q_wait = 1;
 
     ret = MPL_get_sockaddr(hostname, &addr);
-    if (!ret) {
+    if (ret) {
         PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
         return PMI_FAIL;
     }
