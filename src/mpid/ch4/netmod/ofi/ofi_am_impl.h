@@ -403,36 +403,6 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
-                                                          const MPIDI_OFI_am_header_t * msg_hdrp,
-                                                          const void *am_hdr, size_t am_hdr_sz)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq;
-    char *ibuf;
-    size_t len;
-
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
-    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    len = am_hdr_sz + sizeof(*msg_hdrp);
-    ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
-    MPIR_Assert(ibuf);
-    memcpy(ibuf, msg_hdrp, sizeof(*msg_hdrp));
-    memcpy(ibuf + sizeof(*msg_hdrp), am_hdr, am_hdr_sz);
-
-    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
-    MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
-    OPA_incr_int(&MPIDI_OFI_global.am_inflight_inject_emus);
-
-    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_global.ctx[0].tx, ibuf, len,
-                                    NULL /* desc */ , addr, &(MPIDI_OFI_REQUEST(sreq, context))),
-                            send);
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
                                       int handler_id, const void *am_hdr, size_t am_hdr_sz)
@@ -462,10 +432,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
 
     addr = MPIDI_OFI_comm_to_phys(comm, rank);
 
-    if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_OFI_global.max_buffered_send)) {
-        mpi_errno = MPIDI_OFI_do_emulated_inject(addr, &msg_hdr, am_hdr, am_hdr_sz);
-        goto fn_exit;
-    }
+    MPIR_Assert(am_hdr_sz + sizeof(msg_hdr) <= MPIDI_OFI_global.max_buffered_send);
 
     buff_len = sizeof(msg_hdr) + am_hdr_sz;
     MPIR_CHKLMEM_MALLOC(buff, char *, buff_len, mpi_errno, "buff", MPL_MEM_BUFFER);
