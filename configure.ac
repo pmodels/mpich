@@ -1135,58 +1135,10 @@ fi
 
 # Izem
 
-AC_ARG_ENABLE([izem],
-[  --enable-izem@<:@=ARGS@:>@   Enable features from the Izem library.
-                          "ARGS" is a list of comma separated features.
-                          Accepted arguments are:
-			  sync     - use the Izem interface for sychronization objects
-                                     (locks and condition variables) instead of the MPL interface
-                          queue    - use the Izem interface for atomic queue objects
-                          atomic   - use the Izem interface for CPU atomics
-                          yes/all  - all of the above features are enabled
-                          no/none  - none of the above features are enabled],,
-[enable_izem=no])
-
-# strip off multiple options, separated by commas
-save_IFS="$IFS"
-IFS=","
-for option in $enable_izem ; do
-    case "$option" in
-        sync)
-            izem_sync=yes
-        ;;
-        queue)
-            izem_queue=yes
-        ;;
-        atomic)
-            izem_atomic=yes
-        ;;
-        yes|all)
-            izem_sync=yes
-            izem_queue=yes
-            izem_atomic=yes
-        ;;
-        no|none)
-        ;;
-        *)
-            AC_MSG_ERROR([Unknown value $option for enable-izem])
-        ;;
-    esac
-done
-IFS="$save_IFS"
-
-if test "$izem_sync" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_SYNC,1,[Define to enable using Izem locks and condition variables])
-fi
-
-if test "$izem_queue" = "yes" ; then
+AC_ARG_ENABLE([izem-queue],[  --enable-izem-queue],,[enable_izem_queue=no])
+if test "${enable_izem_queue}" = "yes" ; then
     AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
 fi
-
-if test "$izem_atomic" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_ATOMIC,1,[Define to enable using Izem CPU atomics])
-fi
-AM_CONDITIONAL([ENABLE_IZEM_ATOMIC], [test x$izem_atomic = xyes])
 
 AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
 ZMLIBNAME=${ZMLIBNAME:-"zm"}
@@ -1209,7 +1161,7 @@ AC_SUBST([zmlibdir])
 zmlib=""
 AC_SUBST([zmlib])
 
-if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
+if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
     if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
         if test -e "${use_top_srcdir}/src/izem" ; then
             zm_subdir_args="--enable-embedded"
