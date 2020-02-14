@@ -18,7 +18,7 @@
 
 int MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(const void *sendbuf, void *recvbuf,
                                                           int count, MPI_Datatype datatype,
-                                                          MPI_Op op, MPIR_Comm * comm,
+                                                          MPI_Op op, MPIR_Comm * comm, int k,
                                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -27,7 +27,7 @@ int MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(const void *sendbuf, v
                                                       datatype, op,
                                                       comm, req,
                                                       MPIR_IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER,
-                                                      MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL);
+                                                      k);
 
     return mpi_errno;
 }

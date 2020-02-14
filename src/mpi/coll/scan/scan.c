@@ -22,6 +22,7 @@ cvars:
         Variable to select allgather algorithm
         auto               - Internal algorithm selection
         nb                 - Force nonblocking algorithm
+        smp                - Force smp algorithm
         recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
@@ -105,6 +106,10 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
         case MPIR_CVAR_SCAN_INTRA_ALGORITHM_nb:
             mpi_errno =
                 MPIR_Scan_allcomm_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+        case MPIR_CVAR_SCAN_INTRA_ALGORITHM_smp:
+            mpi_errno =
+                MPIR_Scan_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_CVAR_SCAN_INTRA_ALGORITHM_auto:
             MPL_FALLTHROUGH;

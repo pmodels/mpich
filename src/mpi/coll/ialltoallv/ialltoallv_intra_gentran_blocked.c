@@ -19,14 +19,14 @@
 int MPIR_Ialltoallv_intra_gentran_blocked(const void *sendbuf, const int sendcounts[],
                                           const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                           const int recvcounts[], const int rdispls[],
-                                          MPI_Datatype recvtype, MPIR_Comm * comm,
+                                          MPI_Datatype recvtype, MPIR_Comm * comm, int bblock,
                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ialltoallv_intra_blocked(sendbuf, sendcounts, sdispls, sendtype,
                                                       recvbuf, recvcounts, rdispls, recvtype,
-                                                      comm, req);
+                                                      comm, bblock, req);
 
     return mpi_errno;
 }

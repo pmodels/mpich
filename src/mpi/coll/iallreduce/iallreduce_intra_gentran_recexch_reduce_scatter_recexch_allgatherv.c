@@ -21,7 +21,7 @@ int MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(cons
                                                                             int count,
                                                                             MPI_Datatype datatype,
                                                                             MPI_Op op,
-                                                                            MPIR_Comm * comm,
+                                                                            MPIR_Comm * comm, int k,
                                                                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -29,8 +29,7 @@ int MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(cons
     mpi_errno =
         MPII_Gentran_Iallreduce_intra_recexch_reduce_scatter_recexch_allgatherv(sendbuf, recvbuf,
                                                                                 count, datatype, op,
-                                                                                comm, req,
-                                                                                MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL);
+                                                                                comm, req, k);
 
     return mpi_errno;
 }

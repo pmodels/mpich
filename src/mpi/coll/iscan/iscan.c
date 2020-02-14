@@ -13,14 +13,15 @@ cvars:
     - name        : MPIR_CVAR_ISCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : sched_auto
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto               - Internal algorithm selection
-        recursive_doubling - Force recursive doubling algorithm
+        sched_auto                 - Internal algorithm selection
+        sched_smp                  - Force smp algorithm
+        sched_recursive_doubling   - Force recursive doubling algorithm
         gentran_recursive_doubling - Force generic transport recursive doubling algorithm
 
     - name        : MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
@@ -60,59 +61,18 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #undef MPI_Iscan
 #define MPI_Iscan PMPI_Iscan
 
-int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                 MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_intra_sched_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
         mpi_errno =
-            MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+            MPIR_Iscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
                                                       comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                          MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
-        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_recursive_doubling:
-            mpi_errno =
-                MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                          comm_ptr, s);
-            break;
-        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_auto:
-            MPL_FALLTHROUGH;
-        default:
-            mpi_errno =
-                MPIR_Iscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-            break;
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iscan_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -122,8 +82,6 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
@@ -132,31 +90,32 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
     /* TODO - Eventually the intention is to replace all of the
      * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
-            case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_gentran_recursive_doubling:
-                mpi_errno =
-                    MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
-                                                                datatype, op, comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
-                break;
-            default:
-                /* go down to the MPIR_Sched-based algorithms */
-                break;
-        }
+    switch (MPIR_CVAR_ISCAN_INTRA_ALGORITHM) {
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_gentran_recursive_doubling:
+            mpi_errno =
+                MPIR_Iscan_intra_gentran_recursive_doubling(sendbuf, recvbuf, count,
+                                                            datatype, op, comm_ptr, request);
+            break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_recursive_doubling:
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_smp:
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_smp, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_auto:
+            MPL_FALLTHROUGH;
+
+        default:
+            MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op);
+            break;
     }
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Iscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

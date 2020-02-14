@@ -29,6 +29,22 @@ cvars:
         option to call the MPIR-level algorithms manually.  If set to false,
         the device-level collective function will not be called.
 
+    - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This CVAR controls what the MPI library should do if the
+        user-specified collective algorithm does not work for the
+        arguments passed in by the user.  "0" means that the MPI
+        library will raise an error.  "1" means that the MPI library
+        will print an error message and fallback to another algorithm.
+        "2" means that the MPI library will silently fallback to
+        another algorithm.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

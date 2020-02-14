@@ -21,6 +21,21 @@
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
 
+#define MPII_COLLECTIVE_FALLBACK_CHECK(check)                           \
+    do {                                                                \
+        if ((check) == 0) {                                             \
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == 0) {                   \
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**collalgo"); \
+            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == 1) {            \
+                fprintf(stderr, "User set collective algorithm is not usable for the provided arguments\n"); \
+                fflush(stderr);                                         \
+                goto fallback;                                          \
+            } else {                                                    \
+                goto fallback;                                          \
+            }                                                           \
+        }                                                               \
+    } while (0)
+
 extern int MPIR_Nbc_progress_hook_id;
 
 extern MPIR_Tree_type_t MPIR_Iallreduce_tree_type;
@@ -39,5 +54,49 @@ int MPII_Coll_init(void);
 int MPIR_Coll_safe_to_block(void);
 
 int MPII_Coll_finalize(void);
+
+#define MPII_SCHED_WRAPPER_EMPTY(fn, comm_ptr, request)                 \
+    do {                                                                \
+        int tag = -1;                                                   \
+        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
+                                                                        \
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = MPIR_Sched_create(&s);                              \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = fn(comm_ptr, s);                                    \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+    } while (0)
+
+#define MPII_SCHED_WRAPPER(fn, comm_ptr, request, ...)                  \
+    do {                                                                \
+        int tag = -1;                                                   \
+        MPIR_Sched_t s = MPIR_SCHED_NULL;                               \
+                                                                        \
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);                \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = MPIR_Sched_create(&s);                              \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = fn(__VA_ARGS__, comm_ptr, s);                       \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+                                                                        \
+        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);       \
+        if (mpi_errno)                                                  \
+            MPIR_ERR_POP(mpi_errno);                                    \
+    } while (0)
 
 #endif /* COLL_IMPL_H_INCLUDED */
