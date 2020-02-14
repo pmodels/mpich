@@ -136,7 +136,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buf)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
 
-    MPIR_Request *rreq = MPIDI_OFI_context_to_request(context);
     MPIDI_OFI_am_header_t *am_hdr = buf;
 
     uint64_t expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
