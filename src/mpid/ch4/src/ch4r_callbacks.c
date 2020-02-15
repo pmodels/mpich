@@ -553,8 +553,12 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         }
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
-        /* Matching receive was posted, tell the netmod */
-        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
+        /* Matching receive was posted */
+        rreq->comm = root_comm;
+        /* NOTE: we are skipping MPIR_Comm_release for taking off posted_list since we are holding
+         * the reference to root_comm in the rreq. We need to hold on to this reference so the comm
+         * may remain valid by the time we send ack (using the comm).
+         */
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_LONG_RTS;
         MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
