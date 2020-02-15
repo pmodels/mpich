@@ -127,7 +127,7 @@ int MPI_Finalize(void)
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPII_finalize_global();
+    mpi_errno = MPII_finalize_local_proc_attrs();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPII_Timer_finalize();

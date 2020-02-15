@@ -92,7 +92,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPII_init_request();
 
     /* Certain features may potentially change required thread-level */
-    mpi_errno = MPII_init_global(&required);
+    mpi_errno = MPII_init_local_proc_attrs(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
     /* Init various components */
