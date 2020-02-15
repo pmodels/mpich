@@ -389,6 +389,7 @@ int MPID_Init(void)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -410,7 +411,7 @@ int MPID_Init(void)
     MPIDI_global.my_sigusr1_count = 0;
     MPIDI_global.prev_sighandler = signal(SIGUSR1, MPIDI_sigusr1_handler);
     MPIR_ERR_CHKANDJUMP1(MPIDI_global.prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER,
-                         "**signal", "**signal %s", MPIR_Strerror(errno));
+                         "**signal", "**signal %s", MPIR_Strerror(errno, strerrbuf));
     if (MPIDI_global.prev_sighandler == SIG_IGN || MPIDI_global.prev_sighandler == SIG_DFL)
         MPIDI_global.prev_sighandler = NULL;
 #endif

@@ -69,6 +69,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
     MPL_IOV *iov;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
@@ -104,7 +105,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
             } else {
                 int req_errno = MPI_SUCCESS;
                 MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s",
-                              MPIR_Strerror(errno));
+                              MPIR_Strerror(errno, strerrbuf));
                 MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d",
                               vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
@@ -214,6 +215,7 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const MPL_IOV * iov, int iov
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     *offset_ptr = MPL_large_writev(vc_tcp->sc->fd, iov, iov_n);
     if (*offset_ptr == 0) {
@@ -231,7 +233,7 @@ static inline int tcp_large_writev(MPIDI_VC_t * vc, const MPL_IOV * iov, int iov
         else {
             int req_errno = MPI_SUCCESS;
             MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s",
-                          MPIR_Strerror(errno));
+                          MPIR_Strerror(errno, strerrbuf));
             MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail",
                           "**comm_fail %d", vc->pg_rank);
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);

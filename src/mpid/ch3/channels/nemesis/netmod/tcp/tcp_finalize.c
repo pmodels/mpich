@@ -10,6 +10,7 @@ int MPID_nem_tcp_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_FINALIZE);
@@ -22,7 +23,7 @@ int MPID_nem_tcp_finalize(void)
     if (MPID_nem_tcp_g_lstn_sc.fd) {
         CHECK_EINTR(ret, close(MPID_nem_tcp_g_lstn_sc.fd));
         MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**closesocket",
-                             "**closesocket %s %d", errno, MPIR_Strerror(errno));
+                             "**closesocket %s %d", errno, MPIR_Strerror(errno, strerrbuf));
     }
 
   fn_exit:

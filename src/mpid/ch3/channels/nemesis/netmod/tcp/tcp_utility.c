@@ -59,6 +59,7 @@ int MPID_nem_tcp_set_sockopts(int fd)
     int option, flags;
     int ret;
     socklen_t len;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
 /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* I heard you have to read the options after setting them in some implementations */
@@ -67,24 +68,24 @@ int MPID_nem_tcp_set_sockopts(int fd)
     len = sizeof(int);
     ret = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &option, len);
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
     ret = getsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &option, &len);
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
 
     flags = fcntl(fd, F_GETFL, 0);
     MPIR_ERR_CHKANDJUMP2(flags == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
     ret = fcntl(fd, F_SETFL, flags | SO_REUSEADDR);
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
 
     flags = fcntl(fd, F_GETFL, 0);
     MPIR_ERR_CHKANDJUMP2(flags == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
     ret = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
 
   fn_exit:
 /*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
@@ -125,6 +126,9 @@ actually done now in this function.
 int MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 {
     int rc = MPID_NEM_TCP_SOCK_NOEVENT;
+#ifdef MPL_USE_DBG_LOGGING
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     if (plfd->revents & POLLERR) {
         rc = MPID_NEM_TCP_SOCK_ERROR_EOF;
@@ -140,7 +144,7 @@ int MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
             rc = MPID_NEM_TCP_SOCK_ERROR_EOF;   /*  (N1) */
             MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                             (MPL_DBG_FDEST, "getsockopt failure. error=%d:%s", error,
-                             MPIR_Strerror(error)));
+                             MPIR_Strerror(error, strerrbuf)));
             goto fn_exit;
         }
         rc = MPID_NEM_TCP_SOCK_CONNECTED;
@@ -158,12 +162,15 @@ int MPID_nem_tcp_is_sock_connected(int fd)
     int buf_len = sizeof(buf) / sizeof(buf[0]), error = 0;
     size_t ret_recv;
     socklen_t n = sizeof(error);
+#ifdef MPL_USE_DBG_LOGGING
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+#endif
 
     n = sizeof(error);
     if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) {
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                         (MPL_DBG_FDEST, "getsockopt failure. error=%d:%s", error,
-                         MPIR_Strerror(error)));
+                         MPIR_Strerror(error, strerrbuf)));
         rc = FALSE;     /*  error */
         goto fn_exit;
     }

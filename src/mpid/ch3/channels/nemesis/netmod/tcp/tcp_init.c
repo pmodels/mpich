@@ -119,6 +119,7 @@ int MPID_nem_tcp_listen(int sockfd);
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SET_UP_LISTENER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SET_UP_LISTENER);
@@ -126,7 +127,7 @@ static int set_up_listener(void)
     MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd =
         socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     MPIR_ERR_CHKANDJUMP2(MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create",
-                         "**sock_create %s %d", MPIR_Strerror(errno), errno);
+                         "**sock_create %s %d", MPIR_Strerror(errno, strerrbuf), errno);
 
     mpi_errno = MPID_nem_tcp_set_sockopts(MPID_nem_tcp_g_lstn_sc.fd);
     MPIR_ERR_CHECK(mpi_errno);
@@ -134,7 +135,7 @@ static int set_up_listener(void)
     MPID_nem_tcp_g_lstn_plfd.events = POLLIN;
     mpi_errno = MPID_nem_tcp_listen(MPID_nem_tcp_g_lstn_sc.fd);
     MPIR_ERR_CHKANDJUMP2(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**listen", "**listen %s %d",
-                         MPIR_Strerror(errno), errno);
+                         MPIR_Strerror(errno, strerrbuf), errno);
     MPID_nem_tcp_g_lstn_sc.state.lstate = LISTEN_STATE_LISTENING;
     MPID_nem_tcp_g_lstn_sc.handler = MPID_nem_tcp_state_listening_handler;
 
@@ -149,6 +150,7 @@ static int set_up_listener(void)
 int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_INIT);
@@ -188,12 +190,12 @@ int MPID_nem_tcp_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 
         ret = signal(SIGPIPE, SIG_IGN);
         MPIR_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s",
-                             MPIR_Strerror(errno));
+                             MPIR_Strerror(errno, strerrbuf));
         if (ret != SIG_DFL && ret != SIG_IGN) {
             /* The app has set its own signal handler.  Replace the previous handler. */
             ret = signal(SIGPIPE, ret);
             MPIR_ERR_CHKANDJUMP1(ret == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal",
-                                 "**signal %s", MPIR_Strerror(errno));
+                                 "**signal %s", MPIR_Strerror(errno, strerrbuf));
         }
     }
 #endif
@@ -383,6 +385,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     int ret;
     MPL_sockaddr_t sock_id;
     socklen_t len;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
@@ -402,7 +405,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     len = sizeof(sock_id);
     ret = getsockname(MPID_nem_tcp_g_lstn_sc.fd, (struct sockaddr *) &sock_id, &len);
     MPIR_ERR_CHKANDJUMP1(ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf));
 
     str_errno =
         MPL_str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY,
@@ -576,6 +579,7 @@ int MPID_nem_tcp_listen(int sockfd)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     unsigned short port;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_BIND);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_BIND);
@@ -596,12 +600,12 @@ int MPID_nem_tcp_listen(int sockfd)
     if (ret == -2) {
         /* check if an available port was found */
         MPIR_ERR_CHKANDJUMP3(1, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind",
-                             "**sock|poll|bind %d %d %s", port - 1, errno, MPIR_Strerror(errno));
+                             "**sock|poll|bind %d %d %s", port - 1, errno, MPIR_Strerror(errno, strerrbuf));
     } else if (ret) {
         /* check for real error */
         MPIR_ERR_CHKANDJUMP3(errno != EADDRINUSE &&
                              errno != EADDRNOTAVAIL, mpi_errno, MPI_ERR_OTHER, "**sock|poll|bind",
-                             "**sock|poll|bind %d %d %s", port, errno, MPIR_Strerror(errno));
+                             "**sock|poll|bind %d %d %s", port, errno, MPIR_Strerror(errno, strerrbuf));
     }
 
   fn_exit:
