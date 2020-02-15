@@ -76,9 +76,10 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
-int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
+int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
+    int required = user_required;
 
     MPII_init_thread_and_enter_cs();
     /* ---- Entered CS ------------------------------------------------ */
