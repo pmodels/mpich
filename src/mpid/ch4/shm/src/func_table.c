@@ -58,7 +58,8 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .am_isendv = MPIDI_SHM_am_isendv,
     .am_send_hdr_reply = MPIDI_SHM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_SHM_am_isend_reply,
-    .am_hdr_max_sz = MPIDI_SHM_am_hdr_max_sz
+    .am_hdr_max_sz = MPIDI_SHM_am_hdr_max_sz,
+    .am_eager_limit = MPIDI_SHM_am_eager_limit
 };
 
 MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs = {

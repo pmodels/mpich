@@ -306,6 +306,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     return MPL_MIN(max_shortsend, max_representable);
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
+{
+    return MPIDI_POSIX_DEFAULT_SHORT_SEND_SIZE - (sizeof(MPIDI_POSIX_am_header_t));
+}
+
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
