@@ -103,8 +103,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_send_event(void *context)
     MPIDI_OFI_am_request_t *req_hdr = ((MPIDI_OFI_am_request_t *) context)->req_hdr;
     MPIDI_OFI_am_header_t *msg_hdr = req_hdr->msg_hdr;
 
-    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
-
     switch (msg_hdr->am_type) {
         case MPIDI_AMTYPE_LMT_ACK:
         case MPIDI_AMTYPE_LMT_REQ:
@@ -240,7 +238,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(void *context)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-    MPID_Request_complete(rreq);
   fn_exit:
     MPIDIU_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
@@ -374,7 +371,6 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     if (!p_data || !data_sz) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-        MPID_Request_complete(rreq);
         goto fn_exit;
     }
 
@@ -492,7 +488,6 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
-    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
     mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
 
     MPIR_ERR_CHECK(mpi_errno);

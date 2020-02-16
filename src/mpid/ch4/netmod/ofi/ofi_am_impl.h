@@ -202,7 +202,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                           size_t am_hdr_sz,
                                           const void *data, size_t data_sz, MPIR_Request * sreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
@@ -237,8 +237,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
         lmt_info->rma_key = 0;
     }
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
-    MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
     MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
                 MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
@@ -284,7 +282,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                            size_t am_hdr_sz,
                                            const void *data, size_t data_sz, MPIR_Request * sreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec *iov;
 
@@ -316,7 +314,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     iov[2].iov_base = (void *) data;
     iov[2].iov_len = data_sz;
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_global.ctx[0].tx, iov, NULL, 3,
