@@ -49,7 +49,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.spawner_kvsname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
-    HYD_pmcd_pmip.local.ckpoint_prefix_list = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
     HYD_pmcd_pmip.exec_list = NULL;
@@ -88,12 +87,6 @@ static void cleanup_params(void)
     MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
     MPL_free(HYD_pmcd_pmip.local.hostname);
     MPL_free(HYD_pmcd_pmip.local.spawner_kvsname);
-
-    if (HYD_pmcd_pmip.local.ckpoint_prefix_list) {
-        for (i = 0; HYD_pmcd_pmip.local.ckpoint_prefix_list[i]; i++)
-            MPL_free(HYD_pmcd_pmip.local.ckpoint_prefix_list[i]);
-        MPL_free(HYD_pmcd_pmip.local.ckpoint_prefix_list);
-    }
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
