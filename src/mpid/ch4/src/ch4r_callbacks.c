@@ -381,7 +381,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
         /* MPIDI_CS_ENTER(); */
         while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                         &MPIDIG_COMM(root_comm, posted_list));
+                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
@@ -488,7 +488,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         /* MPIDI_CS_ENTER(); */
         while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                         &MPIDIG_COMM(root_comm, posted_list));
+                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
                 int is_cancelled;
