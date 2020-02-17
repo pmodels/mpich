@@ -63,8 +63,6 @@ typedef struct {
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
-    int lock_depth;
-
 #ifdef MPICH_THREAD_USE_MDTA
     MPIR_Thread_sync_t sync;
 #endif
