@@ -54,9 +54,11 @@ static const char *flock_type_to_string(int type)
 /* This assumes that lock will always remain in the common directory and
  * that the ntfs directory will always be called ad_ntfs. */
 #include "..\ad_ntfs\ad_ntfs.h"
-int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence, ADIO_Offset len)
+int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                      ADIO_Offset len)
 {
-    static char myname[] = "ADIOI_Set_lock";
+    static char myname[] = "ADIOI_GEN_SetLock";
+    FDTYPE fd_sys = fd->fd_sys;
     int ret_val, error_code = MPI_SUCCESS;
     OVERLAPPED Overlapped;
     DWORD dwFlags;
@@ -75,12 +77,12 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 
     if (cmd == ADIOI_LOCK_CMD) {
         /*printf("locking %d\n", (int)fd);fflush(stdout); */
-        ret_val = LockFileEx(fd, dwFlags, 0,
+        ret_val = LockFileEx(fd_sys, dwFlags, 0,
                              ((DWORD) (len & (__int64) 0xFFFFFFFF)),
                              ((DWORD) ((len >> 32) & (__int64) 0xFFFFFFFF)), &Overlapped);
     } else {
         /*printf("unlocking %d\n", (int)fd);fflush(stdout); */
-        ret_val = UnlockFileEx(fd, 0,
+        ret_val = UnlockFileEx(fd_sys, 0,
                                ((DWORD) (len & (__int64) 0xFFFFFFFF)),
                                ((DWORD) ((len >> 32) & (__int64) 0xFFFFFFFF)), &Overlapped);
     }
@@ -90,23 +92,23 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 
     if (cmd == ADIOI_LOCK_CMD) {
         /*printf("locking %d\n", (int)fd);fflush(stdout); */
-        ret_val = LockFileEx(fd, dwFlags, 0, len, 0, &Overlapped);
+        ret_val = LockFileEx(fd_sys, dwFlags, 0, len, 0, &Overlapped);
     } else {
         /*printf("unlocking %d\n", (int)fd);fflush(stdout); */
-        ret_val = UnlockFileEx(fd, 0, len, 0, &Overlapped);
+        ret_val = UnlockFileEx(fd_sys, 0, len, 0, &Overlapped);
     }
 #endif
 
     if (!ret_val) {
         char errMsg[ADIOI_NTFS_ERR_MSG_MAX];
         /*
-         * FPRINTF(stderr, "File locking failed in ADIOI_Set_lock.\n");
+         * FPRINTF(stderr, "File locking failed in ADIOI_GEN_SetLock.\n");
          * MPI_Abort(MPI_COMM_WORLD, 1);
          */
         ret_val = GetLastError();
         if (ret_val == ERROR_IO_PENDING) {
             DWORD dummy;
-            ret_val = GetOverlappedResult(fd, &Overlapped, &dummy, TRUE);
+            ret_val = GetOverlappedResult(fd_sys, &Overlapped, &dummy, TRUE);
             if (ret_val) {
                 CloseHandle(Overlapped.hEvent);
                 return MPI_SUCCESS;
@@ -122,8 +124,10 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     return error_code;
 }
 #else
-int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence, ADIO_Offset len)
+int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                      ADIO_Offset len)
 {
+    FDTYPE fd_sys = fd->fd_sys;
     int err, error_code, err_count = 0, sav_errno;
     struct flock lock;
 
@@ -155,18 +159,18 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     sav_errno = errno;  /* save previous errno in case we recover from retryable errors */
     errno = 0;
     do {
-        err = fcntl(fd, cmd, &lock);
+        err = fcntl(fd_sys, cmd, &lock);
 #ifdef MPL_USE_DBG_LOGGING
 /*      if (MPL_DBG_SELECTED(ROMIO,TERSE)) */
         {
             if (err && ((errno == EINTR) || (errno == EINPROGRESS))) {
                 if ((err_count < 5) || (err_count > 9995)) {
                     fprintf(stderr,
-                            "File locking failed in ADIOI_Set_lock(fd %#X,cmd %s/%#X,type %s/%#X,whence %#X) with return value %#X and errno %#X.  Retry (%d).\n",
-                            fd, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type,
+                            "File locking failed in ADIOI_GEN_SetLock(fd %#X,cmd %s/%#X,type %s/%#X,whence %#X) with return value %#X and errno %#X.  Retry (%d).\n",
+                            fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type,
                             whence, err, errno, err_count);
-                    perror("ADIOI_Set_lock:");
-                    fprintf(stderr, "ADIOI_Set_lock:offset %#llx, length %#llx\n",
+                    perror("ADIOI_GEN_SetLock:");
+                    fprintf(stderr, "ADIOI_GEN_SetLock:offset %#llx, length %#llx\n",
                             (unsigned long long) offset, (unsigned long long) len);
                 }
             }
@@ -178,13 +182,13 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
         /* FIXME: This should use the error message system,
          * especially for MPICH */
         FPRINTF(stderr,
-                "This requires fcntl(2) to be implemented. As of 8/25/2011 it is not. Generic MPICH Message: File locking failed in ADIOI_Set_lock(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
+                "This requires fcntl(2) to be implemented. As of 8/25/2011 it is not. Generic MPICH Message: File locking failed in ADIOI_GEN_SetLock(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
                 "- If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n"
                 "- If the file system is LUSTRE, ensure that the directory is mounted with the 'flock' option.\n",
-                fd, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence, err,
-                errno);
-        perror("ADIOI_Set_lock:");
-        FPRINTF(stderr, "ADIOI_Set_lock:offset %llu, length %llu\n", (unsigned long long) offset,
+                fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence,
+                err, errno);
+        perror("ADIOI_GEN_SetLock:");
+        FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
@@ -197,8 +201,10 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 }
 #endif
 
-int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence, ADIO_Offset len)
+int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                        ADIO_Offset len)
 {
+    FDTYPE fd_sys = fd->fd_sys;
     int err, error_code;
 #ifdef _LARGEFILE64_SOURCE
     struct flock64 lock;
@@ -215,17 +221,17 @@ int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whenc
     lock.l_len = len;
 
     do {
-        err = fcntl(fd, cmd, &lock);
+        err = fcntl(fd_sys, cmd, &lock);
     } while (err && (errno == EINTR));
 
     if (err && (errno != EBADF)) {
         FPRINTF(stderr,
-                "File locking failed in ADIOI_Set_lock64(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
+                "File locking failed in ADIOI_GEN_SetLock64(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
                 "If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n",
-                fd, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence, err,
-                errno);
-        perror("ADIOI_Set_lock64:");
-        FPRINTF(stderr, "ADIOI_Set_lock:offset %llu, length %llu\n", (unsigned long long) offset,
+                fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence,
+                err, errno);
+        perror("ADIOI_GEN_SetLock64:");
+        FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }

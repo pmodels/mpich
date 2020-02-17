@@ -39,5 +39,10 @@ struct ADIOI_Fns_struct ADIO_NFS_operations = {
     ADIOI_NFS_Feature,  /* Features */
     "NFS:",     /* fsname: just a string */
     ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
-    ADIOI_GEN_IwriteStridedColl /* IwriteStridedColl */
+    ADIOI_GEN_IwriteStridedColl,        /* IwriteStridedColl */
+#if defined(F_SETLKW64)
+    ADIOI_GEN_SetLock   /* SetLock */
+#else
+    ADIOI_GEN_SetLock64 /* SetLock */
+#endif
 };
