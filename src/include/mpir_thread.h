@@ -43,10 +43,6 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 typedef struct {
     /* error string storage for MPIR_Strerror */
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-
-#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
-    int lock_depth;
-#endif
 } MPIR_Per_thread_t;
 
 #if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
