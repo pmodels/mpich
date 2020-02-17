@@ -96,47 +96,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_send_event(void *context)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
+    MPIDI_OFI_am_request_header_t *req_hdr = ((MPIDI_OFI_am_request_t *) context)->req_hdr;
 
-    MPIR_Request *sreq = MPIDI_OFI_context_to_request(context);
-    MPIDI_OFI_am_request_t *req_hdr = ((MPIDI_OFI_am_request_t *) context)->req_hdr;
-    MPIDI_OFI_am_header_t *msg_hdr = req_hdr->msg_hdr;
-
-    switch (msg_hdr->am_type) {
-        case MPIDI_AMTYPE_LMT_ACK:
-        case MPIDI_AMTYPE_LMT_REQ:
-            goto fn_exit;
-
-        default:
-            break;
+    /* ref: MPIDI_OFI_do_am_isend */
+    if (req_hdr->pack_buffer) {
+        MPL_free(req_hdr->pack_buffer);
+        req_hdr->pack_buffer = NULL;
     }
 
-    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    MPIR_Request *sreq = MPIDI_OFI_context_to_request(context);
+    if (sreq) {
+        int handler_id = req_hdr->msg_hdr.handler_id;
 
-    mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
-
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_EVENT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
+
 /* MPIDI_OFI_EVENT_AM_RECV */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buf)
+static inline int ofi_handle_am(MPIDI_OFI_am_header_t * msg_hdr);
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buffer)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
 
-    MPIDI_OFI_am_header_t *am_hdr = buf;
+    MPIDI_OFI_am_header_t *am_hdr = buffer;
 
-    uint64_t expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
+    uint16_t expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
          * Put it in the queue to process it later. */
@@ -153,41 +146,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buf)
     /* Received an expected message */
     MPIDI_OFI_am_unordered_msg_t *uo_msg = NULL;
     while (true) {
-        fi_src_addr = am_hdr->fi_src_addr;
-        next_seqno = am_hdr->seqno + 1;
-        switch (am_hdr->am_type) {
-            case MPIDI_AMTYPE_SHORT_HDR:
-                /* data_sz = 0 */
-                mpi_errno = ofi_handle_am(am_hdr);
+        fi_addr_t fi_src_addr = am_hdr->fi_src_addr;
+        uint16_t next_seqno = am_hdr->seqno + 1;
 
-                MPIR_ERR_CHECK(mpi_errno);
-
-                break;
-
-            case MPIDI_AMTYPE_SHORT:
-                mpi_errno = ofi_handle_am(am_hdr);
-
-                MPIR_ERR_CHECK(mpi_errno);
-
-                break;
-
-            case MPIDI_AMTYPE_LMT_REQ:
-                mpi_errno = MPIDI_OFI_handle_long_am(am_hdr);
-
-                MPIR_ERR_CHECK(mpi_errno);
-
-                break;
-
-            case MPIDI_AMTYPE_LMT_ACK:
-                mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
-
-                MPIR_ERR_CHECK(mpi_errno);
-
-                break;
-
-            default:
-                MPIR_Assert(0);
-        }
+        mpi_errno = ofi_handle_am(am_hdr);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (uo_msg) {
             MPL_free(uo_msg);
@@ -206,7 +169,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buf)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -549,7 +549,7 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
 
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_READ)) {
-        mpi_errno = MPIDI_OFI_am_read_event(wc->op_context);
+        mpi_errno = MPIDI_OFI_am_lmt_read_event(wc->op_context);
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {

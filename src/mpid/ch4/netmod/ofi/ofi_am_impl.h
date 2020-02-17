@@ -366,9 +366,17 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
             MPIDI_OFI_am_isend_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                      am_hdr_sz, send_buf, data_sz, sreq);
     } else {
+        /* MPIDI_OFI_am_isend_short uses sreq space for msg_hdr and
+         * MPIDI_OFI_am_send_event expect to find handler_id there.
+         * TODO: refactor the code to separate msg_hdr from the need
+         * of data persistence between callbacks.
+         */
+        MPIDI_OFI_am_header_t *msg_hdr;
+        msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
+        msg_hdr->handler_id = handler_id;
         mpi_errno =
-            MPIDI_OFI_am_isend_long(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
-                                    am_hdr_sz, send_buf, data_sz, sreq);
+            MPIDI_OFI_am_lmt_send(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
+                                  am_hdr_sz, send_buf, data_sz, sreq);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
