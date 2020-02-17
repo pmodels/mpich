@@ -50,18 +50,6 @@ typedef struct {
     int conn_id;
 } MPIDI_OFI_comm_t;
 
-typedef struct {
-    /* context id and src rank so the target side can
-     * issue RDMA read operation */
-    MPIR_Context_id_t context_id;
-    int src_rank;
-
-    uint64_t src_offset;
-    MPIR_Request *sreq_ptr;
-    uint64_t am_hdr_src;
-    uint64_t rma_key;
-} MPIDI_OFI_lmt_msg_payload_t;
-
 typedef struct MPIDI_OFI_am_header_t {
     uint64_t handler_id:MPIDI_OFI_AM_HANDLER_ID_BITS;
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
@@ -82,10 +70,21 @@ typedef struct MPIDI_OFI_am_unordered_msg {
      * Additional memory region may follow. */
 } MPIDI_OFI_am_unordered_msg_t;
 
+/* TODO: make send-side and recv-side as members of a union */
 typedef struct {
-    MPIDI_OFI_lmt_msg_payload_t lmt_info;
-    uint64_t lmt_cntr;
+    /* lmt send side */
     struct fid_mr *lmt_mr;
+
+    /* lmt recv side */
+    MPIR_Context_id_t context_id;       /* for sending ack */
+    int src_rank;               /* for sending ack */
+    MPIR_Request *sreq_ptr;     /* for sending ack */
+
+    uint64_t lmt_cntr;          /* for tracking rdma read events */
+} MPIDI_OFI_lmt_info_t;
+
+typedef struct {
+    MPIDI_OFI_lmt_info_t lmt;
     void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;

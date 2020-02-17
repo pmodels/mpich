@@ -25,7 +25,8 @@ void MPIDI_OFI_am_lmt_init(void)
 
 /* declare static functions */
 static int ofi_do_rdma_read(void *dst, uint64_t src, size_t data_sz,
-                            MPIR_Context_id_t context_id, int src_rank, MPIR_Request * rreq);
+                            MPIR_Context_id_t context_id, int src_rank,
+                            uint64_t rma_key, MPIR_Request * rreq);
 
 static int ofi_do_lmt_ack(int rank, int context_id, MPIR_Request * sreq_ptr);
 
@@ -81,14 +82,14 @@ int MPIDI_OFI_am_lmt_send(int rank, MPIR_Comm * comm, int handler_id,
     MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
                              data, data_sz, FI_REMOTE_READ, 0ULL,
                              p_hdr->rma_key, 0ULL, &lmt_mr, NULL), mr_reg);
-    MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr) = lmt_mr;
+    MPIDI_OFI_AMREQUEST_HDR(sreq, lmt.lmt_mr) = lmt_mr;
 
     /* skip this. The protocol should prevent this to be needed.
      * OPA_incr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
      */
 
     if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        p_hdr->rma_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+        p_hdr->rma_key = fi_mr_key(lmt_mr);
     }
 
     mpi_errno = MPIDI_OFI_do_inject(rank, comm, MPIDI_OFI_AM_LMT_REQ, p_hdr, hdr_size);
@@ -135,9 +136,9 @@ static int ofi_handle_lmt_req(int handler_id, void *am_hdr, void **data, size_t 
 
     /* persist data for rdma completion callback */
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info.src_rank) = p_hdr->src_rank;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info.context_id) = p_hdr->context_id;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info.sreq_ptr) = p_hdr->sreq_ptr;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.src_rank) = p_hdr->src_rank;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.context_id) = p_hdr->context_id;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.sreq_ptr) = p_hdr->sreq_ptr;
 
     if (*is_contig) {
         if (in_data_sz > out_data_sz) {
@@ -145,10 +146,10 @@ static int ofi_handle_lmt_req(int handler_id, void *am_hdr, void **data, size_t 
         }
 
         out_data_sz = MPL_MIN(out_data_sz, in_data_sz);
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.lmt_cntr) =
             ((out_data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
         ofi_do_rdma_read(p_data, p_hdr->src_offset, out_data_sz,
-                         p_hdr->context_id, p_hdr->src_rank, rreq);
+                         p_hdr->context_id, p_hdr->src_rank, p_hdr->rma_key, rreq);
         MPIR_STATUS_SET_COUNT(rreq->status, out_data_sz);
     } else {
         int done = 0;
@@ -159,12 +160,12 @@ static int ofi_handle_lmt_req(int handler_id, void *am_hdr, void **data, size_t 
         /* FIXME: optimize iov processing part */
 
         /* set lmt counter */
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = 0;
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.lmt_cntr) = 0;
 
         for (int i = 0; i < iov_len && rem > 0; i++) {
             MPI_Aint curr_len = MPL_MIN(rem, iov[i].iov_len);
             int num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-            MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
+            MPIDI_OFI_AMREQUEST_HDR(rreq, lmt.lmt_cntr) += num_reads;
             rem -= curr_len;
         }
 
@@ -174,7 +175,7 @@ static int ofi_handle_lmt_req(int handler_id, void *am_hdr, void **data, size_t 
         for (int i = 0; i < iov_len && rem > 0; i++) {
             MPI_Aint curr_len = MPL_MIN(rem, iov[i].iov_len);
             ofi_do_rdma_read(iov[i].iov_base, p_hdr->src_offset + done,
-                             curr_len, p_hdr->context_id, p_hdr->src_rank, rreq);
+                             curr_len, p_hdr->context_id, p_hdr->src_rank, p_hdr->rma_key, rreq);
             rem -= curr_len;
             done += curr_len;
         }
@@ -197,8 +198,8 @@ static int ofi_lmt_target_cmpl_cb(MPIDI_OFI_am_request_header_t * req_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = ofi_do_lmt_ack(req_hdr->lmt_info.src_rank,
-                               req_hdr->lmt_info.context_id, req_hdr->lmt_info.sreq_ptr);
+    mpi_errno = ofi_do_lmt_ack(req_hdr->lmt.src_rank,
+                               req_hdr->lmt.context_id, req_hdr->lmt.sreq_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Request *rreq = (MPIR_Request *) req_hdr->rreq_ptr;
@@ -212,7 +213,8 @@ static int ofi_lmt_target_cmpl_cb(MPIDI_OFI_am_request_header_t * req_hdr)
 }
 
 static int ofi_do_rdma_read(void *dst, uint64_t src, size_t data_sz,
-                            MPIR_Context_id_t context_id, int src_rank, MPIR_Request * rreq)
+                            MPIR_Context_id_t context_id, int src_rank, uint64_t rma_key,
+                            MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t done = 0, curr_len, rem = 0;
@@ -241,7 +243,7 @@ static int ofi_do_rdma_read(void *dst, uint64_t src, size_t data_sz,
         struct fi_rma_iov rma_iov = {
             .addr = src + done,
             .len = curr_len,
-            .key = MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).rma_key
+            .key = rma_key
         };
         struct fi_msg_rma msg = {
             .msg_iov = &iov,
@@ -272,9 +274,9 @@ int MPIDI_OFI_am_lmt_read_event(void *context)
 
     MPIDI_OFI_am_request_t *am_req = context;
     MPIDI_OFI_am_request_header_t *req_hdr = am_req->req_hdr;
-    req_hdr->lmt_cntr--;
+    req_hdr->lmt.lmt_cntr--;
 
-    if (req_hdr->lmt_cntr == 0) {
+    if (req_hdr->lmt.lmt_cntr == 0) {
         mpi_errno = ofi_lmt_target_cmpl_cb(req_hdr);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -321,10 +323,10 @@ static int ofi_handle_lmt_ack(int handler_id, void *am_hdr, void **data, size_t 
 
     /* clean-up rdma-read */
     if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-        uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+        uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt.lmt_mr));
         MPIDI_OFI_mr_key_free(mr_key);
     }
-    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt.lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs);
 
     /* am send origin completion */
