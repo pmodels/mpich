@@ -135,9 +135,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(void *context, void *buffer
          * Put it in the queue to process it later. */
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
                         (MPL_DBG_FDEST,
-                         "Expected seqno=%d but got %d (am_type=%d addr=%" PRIx64 "). "
+                         "Expected seqno=%d but got %d (addr=%" PRIx64 "). "
                          "Enqueueing it to the queue.\n",
-                         expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
+                         expected_seqno, am_hdr->seqno, am_hdr->fi_src_addr));
         mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(am_hdr);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;

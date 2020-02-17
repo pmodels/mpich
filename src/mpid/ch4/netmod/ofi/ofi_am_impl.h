@@ -218,7 +218,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->data_sz = data_sz;
-    msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
@@ -357,7 +356,6 @@ static inline int MPIDI_OFI_do_inject(int rank,
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.data_sz = 0;
-    msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
     msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr.fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);

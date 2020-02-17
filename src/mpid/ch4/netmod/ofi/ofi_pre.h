@@ -49,12 +49,6 @@ typedef struct {
     /* support for connection */
     int conn_id;
 } MPIDI_OFI_comm_t;
-enum {
-    MPIDI_AMTYPE_SHORT_HDR = 0,
-    MPIDI_AMTYPE_SHORT,
-    MPIDI_AMTYPE_LMT_REQ,
-    MPIDI_AMTYPE_LMT_ACK
-};
 
 typedef struct {
     /* context id and src rank so the target side can
