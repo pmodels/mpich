@@ -62,10 +62,6 @@ typedef struct {
     uint64_t rma_key;
 } MPIDI_OFI_lmt_msg_payload_t;
 
-typedef struct {
-    MPIR_Request *sreq_ptr;
-} MPIDI_OFI_ack_msg_payload_t;
-
 typedef struct MPIDI_OFI_am_header_t {
     uint64_t handler_id:MPIDI_OFI_AM_HANDLER_ID_BITS;
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
@@ -85,16 +81,6 @@ typedef struct MPIDI_OFI_am_unordered_msg {
     /* This is used as a variable-length structure.
      * Additional memory region may follow. */
 } MPIDI_OFI_am_unordered_msg_t;
-
-typedef struct {
-    MPIDI_OFI_am_header_t hdr;
-    MPIDI_OFI_ack_msg_payload_t pyld;
-} MPIDI_OFI_ack_msg_t;
-
-typedef struct {
-    MPIDI_OFI_am_header_t hdr;
-    MPIDI_OFI_lmt_msg_payload_t pyld;
-} MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;

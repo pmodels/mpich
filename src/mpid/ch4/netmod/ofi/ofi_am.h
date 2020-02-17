@@ -115,8 +115,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
 static inline size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
-    size_t max_shortsend = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE -
-        (sizeof(MPIDI_OFI_am_header_t) + sizeof(MPIDI_OFI_lmt_msg_payload_t));
+    size_t max_shortsend = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t);
     /* Maximum payload size representable by MPIDI_OFI_am_header_t::am_hdr_sz field */
     size_t max_representable = (1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1;
 
