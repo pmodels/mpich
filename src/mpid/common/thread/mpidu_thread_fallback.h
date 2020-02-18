@@ -457,24 +457,24 @@ M*/
 
 #if defined(MPICH_IS_THREADED)
 
-#define MPIDU_TLS_KEY_CREATE                                     \
+#define MPIDU_TLS_KEY_CREATE(key, obj)                                  \
     do {                                                                \
         int err_ ATTRIBUTE((unused)) = 0;                               \
-        MPL_TLS_KEY_CREATE(MPIR_Thread_tls_key, MPIR_Thread_tls_obj, &err_, MPL_MEM_THREAD); \
+        MPL_TLS_KEY_CREATE((key), (obj), &err_, MPL_MEM_THREAD);        \
         MPIR_Assert(err_ == 0);                                         \
     } while (0)
 
 #define MPIDU_TLS_KEY_RETRIEVE  MPL_TLS_KEY_RETRIEVE
-#define MPIDU_TLS_KEY_DESTROY                            \
+#define MPIDU_TLS_KEY_DESTROY(key)                              \
     do {                                                        \
         int err_ ATTRIBUTE((unused)) = 0;                       \
-        MPL_TLS_KEY_DESTROY(MPIR_Thread_tls_key, &err_);  \
+        MPL_TLS_KEY_DESTROY((key), &err_);                      \
         MPIR_Assert(err_ == 0);                                 \
     } while (0)
 #else /* !defined(MPICH_IS_THREADED) */
 
-#define MPIDU_TLS_KEY_CREATE(key, var, err_ptr_)
+#define MPIDU_TLS_KEY_CREATE(key, var)
 #define MPIDU_TLS_KEY_RETRIEVE  MPL_TLS_KEY_RETRIEVE
-#define MPIDU_TLS_KEY_DESTROY(key, err_ptr_)
+#define MPIDU_TLS_KEY_DESTROY(key)
 #endif /* MPICH_IS_THREADED */
 #endif /* MPIDU_THREAD_FALLBACK_H_INCLUDED */

@@ -18,7 +18,7 @@ MPL_TLS MPIR_Thread_tls_obj_t MPIR_Thread_tls_obj;
 MPIR_Thread_tls_obj_t MPIR_Thread_tls_obj;
 #endif
 
-MPID_Thread_tls_key_t MPIR_Thread_tls_key;
+MPID_Thread_tls_key_t MPII_Thread_tls_key;
 
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to
@@ -38,7 +38,7 @@ void _dummy_touch_tls(void)
     MPIR_Thread_tls_obj_t *per_thread = NULL;
     int err;
 
-    MPID_TLS_KEY_RETRIEVE(MPIR_Thread_tls_key, MPIR_Thread_tls_obj, per_thread, &err);
+    MPID_TLS_KEY_RETRIEVE(MPII_Thread_tls_key, MPIR_Thread_tls_obj, per_thread, &err);
     MPIR_Assert(err == 0);
     memset(per_thread, 0, sizeof(MPIR_Thread_tls_obj_t));
 }
