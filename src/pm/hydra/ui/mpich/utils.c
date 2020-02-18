@@ -131,6 +131,7 @@ static void help_help_fn(void)
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
     printf("    -localhost                       local hostname for the launching node\n");
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
+    printf("    -pmi-port                        use the PMI_PORT model\n");
 
     printf("\n");
     printf("Please see the intructions provided at\n");
@@ -1376,6 +1377,35 @@ static HYD_status usize_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void pmi_port_help_fn(void)
+{
+    printf("\n");
+    printf("-pmi_port: Use the PMI_PORT environment instead of PMI_FD\n");
+    printf("   PMI_PORT uses TCP sockets for PMI connections, instead of UNIX sockets\n");
+    printf("   This model is safer when funneling through debuggers such as lldb\n");
+}
+
+static HYD_status pmi_port_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.usize) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.pmi_port != -1,
+                        HYD_INTERNAL_ERROR, "PMI port option already set\n");
+
+    HYD_server_info.user_global.pmi_port = 1;
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status set_default_values(void)
 {
     char *tmp;
@@ -1451,6 +1481,9 @@ static HYD_status set_default_values(void)
      * INFINITE */
     if (HYD_server_info.user_global.usize == HYD_USIZE_UNSET)
         HYD_server_info.user_global.usize = HYD_USIZE_INFINITE;
+
+    if (HYD_server_info.user_global.pmi_port == -1)
+        HYD_server_info.user_global.pmi_port = 0;
 
   fn_exit:
     return status;
@@ -1727,6 +1760,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"order-nodes", order_nodes_fn, order_nodes_help_fn},
     {"localhost", localhost_fn, localhost_help_fn},
     {"usize", usize_fn, usize_help_fn},
+    {"pmi-port", pmi_port_fn, pmi_port_help_fn},
 
     {"\0", NULL}
 };
