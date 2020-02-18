@@ -35,7 +35,7 @@
 typedef int MPL_thread_mutex_t;
 typedef int MPL_thread_cond_t;
 typedef int MPL_thread_id_t;
-typedef int MPL_thread_tls_t;
+typedef int MPL_thread_tls_key_t;
 typedef void (*MPL_thread_func_t) (void *data);
 #define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = 0;}
 #define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = 0;}

@@ -19,7 +19,7 @@
 typedef pthread_mutex_t MPL_thread_mutex_t;
 typedef pthread_cond_t MPL_thread_cond_t;
 typedef pthread_t MPL_thread_id_t;
-typedef pthread_key_t MPL_thread_tls_t;
+typedef pthread_key_t MPL_thread_tls_key_t;
 
 #if defined(MPL_NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL)
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
