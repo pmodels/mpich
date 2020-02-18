@@ -477,7 +477,6 @@ static int local_to_global_id(int local_id)
 static HYD_status launch_procs(void)
 {
     int i, j, process_id, dummy;
-    int using_pmi_port = 0;
     char *str, *envstr, *list, *pmi_port = NULL;
     struct HYD_string_stash stash;
     struct HYD_env *env, *force_env = NULL;
@@ -527,6 +526,15 @@ static HYD_status launch_procs(void)
                             HYD_pmcd_pmip.user_global.binding,
                             HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
+
+    if (HYD_pmcd_pmip.user_global.pmi_port) {
+        status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
+                                                     NULL, NULL, &pmi_port, pmi_listen_cb, NULL);
+        HYDU_ERR_POP(status, "unable to create PMI port\n");
+
+        status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
+        HYDU_ERR_POP(status, "unable to create env\n");
+    }
 
     /* Spawn the processes */
     process_id = 0;
@@ -625,7 +633,7 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
             MPL_free(str);
 
-            if (using_pmi_port) {
+            if (HYD_pmcd_pmip.user_global.pmi_port) {
                 /* If we are using the PMI_PORT format */
 
                 /* PMI_PORT */

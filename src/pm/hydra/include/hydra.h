@@ -402,6 +402,7 @@ struct HYD_user_global {
     int usize;
 
     int auto_cleanup;
+    int pmi_port;
 
     struct HYD_env_global global_env;
 };

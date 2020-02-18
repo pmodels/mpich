@@ -23,6 +23,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->usize = HYD_USIZE_UNSET;
 
     user_global->auto_cleanup = -1;
+    user_global->pmi_port = -1;
 
     HYDU_init_global_env(&user_global->global_env);
 }
