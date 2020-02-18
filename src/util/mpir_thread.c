@@ -63,7 +63,7 @@ void MPIR_Thread_CS_Init(void)
         MPIR_Assert(err == 0);
     }
 
-    MPID_TLS_KEY_CREATE;
+    MPID_TLS_KEY_CREATE(MPII_Thread_tls_key, MPIR_Thread_tls_obj);
 
     MPL_DBG_MSG(MPIR_DBG_INIT, TYPICAL, "Created global mutex and private storage");
 }
@@ -78,7 +78,7 @@ void MPIR_Thread_CS_Finalize(void)
         MPIR_Assert(err == 0);
     }
 
-    MPID_TLS_KEY_DESTROY;
+    MPID_TLS_KEY_DESTROY(MPII_Thread_tls_key);
 }
 
 #else
