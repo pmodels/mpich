@@ -7,7 +7,6 @@
 #include "pmip.h"
 #include "bsci.h"
 #include "topo.h"
-#include "ckpoint.h"
 #include "demux.h"
 #include "hydra.h"
 
@@ -89,6 +88,17 @@ static HYD_status usize_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     HYD_pmcd_pmip.user_global.usize = atoi(**argv);
+
+    (*argv)++;
+
+    return status;
+}
+
+static HYD_status pmi_port_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_pmcd_pmip.user_global.pmi_port = atoi(**argv);
 
     (*argv)++;
 
@@ -249,80 +259,6 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     (*argv)++;
 
     return status;
-}
-
-static HYD_status ckpointlib_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.ckpointlib, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status ckpoint_num_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.user_global.ckpoint_num, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status parse_ckpoint_prefix(char *pathlist)
-{
-    int i, prefixes;
-    char *dummy;
-    HYD_status status = HYD_SUCCESS;
-
-    /* Find the number of prefixes provided */
-    prefixes = 1;
-    for (i = 0; pathlist[i]; i++)
-        if (pathlist[i] == ':')
-            prefixes++;
-
-    /* Add one more to the prefix list for a NULL ending string */
-    prefixes++;
-
-    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
-                        status);
-
-    dummy = strtok(pathlist, ":");
-    i = 0;
-    while (dummy) {
-        HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = MPL_strdup(dummy);
-        dummy = strtok(NULL, ":");
-        i++;
-    }
-    HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = NULL;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.ckpoint_prefix, **argv);
-    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
-
-    status = parse_ckpoint_prefix(**argv);
-    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status global_env_fn(char *arg, char ***argv)
@@ -640,6 +576,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"usize", usize_fn, NULL},
+    {"pmi-port", pmi_port_fn, NULL},
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
@@ -656,9 +593,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
-    {"ckpointlib", ckpointlib_fn, NULL},
-    {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
-    {"ckpoint-num", ckpoint_num_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},

@@ -570,7 +570,6 @@ WARN_LOGFILE           =
 
 INPUT                  = @top_srcdir@/tools/bind/bind.h \
 		       @top_srcdir@/tools/bootstrap/include/bsci.h.in \
-		       @top_srcdir@/tools/ckpoint/ckpoint.h \
 		       @top_srcdir@/tools/rmk/include/rmki.h.in \
 		       @top_srcdir@/pm/include/pmci.h
 
