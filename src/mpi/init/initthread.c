@@ -99,8 +99,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     mpi_errno = MPID_Pre_init(argc, argv, required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_set_threaded(MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
-
     /* ---- MPII_Pre_init --------------------------------------------- */
 
     /* Init various components */
