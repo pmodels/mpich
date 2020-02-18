@@ -66,7 +66,7 @@ typedef struct {
 typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
 
 typedef MPL_thread_id_t MPIDU_Thread_id_t;
-typedef MPL_thread_tls_t MPIDU_Thread_tls_t;
+typedef MPL_thread_tls_key_t MPIDU_Thread_tls_key_t;
 typedef MPL_thread_func_t MPIDU_Thread_func_t;
 
 /*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
@@ -457,24 +457,24 @@ M*/
 
 #if defined(MPICH_IS_THREADED)
 
-#define MPIDU_THREADPRIV_KEY_CREATE                                     \
+#define MPIDU_TLS_KEY_CREATE                                     \
     do {                                                                \
         int err_ ATTRIBUTE((unused)) = 0;                               \
-        MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_, MPL_MEM_THREAD); \
+        MPL_TLS_KEY_CREATE(MPIR_Thread_tls_key, MPIR_Thread_tls_obj, &err_, MPL_MEM_THREAD); \
         MPIR_Assert(err_ == 0);                                         \
     } while (0)
 
-#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
-#define MPIDU_THREADPRIV_KEY_DESTROY                            \
+#define MPIDU_TLS_KEY_RETRIEVE  MPL_TLS_KEY_RETRIEVE
+#define MPIDU_TLS_KEY_DESTROY                            \
     do {                                                        \
         int err_ ATTRIBUTE((unused)) = 0;                       \
-        MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
+        MPL_TLS_KEY_DESTROY(MPIR_Thread_tls_key, &err_);  \
         MPIR_Assert(err_ == 0);                                 \
     } while (0)
 #else /* !defined(MPICH_IS_THREADED) */
 
-#define MPIDU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)
-#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
-#define MPIDU_THREADPRIV_KEY_DESTROY(key, err_ptr_)
+#define MPIDU_TLS_KEY_CREATE(key, var, err_ptr_)
+#define MPIDU_TLS_KEY_RETRIEVE  MPL_TLS_KEY_RETRIEVE
+#define MPIDU_TLS_KEY_DESTROY(key, err_ptr_)
 #endif /* MPICH_IS_THREADED */
 #endif /* MPIDU_THREAD_FALLBACK_H_INCLUDED */

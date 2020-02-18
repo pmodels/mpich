@@ -59,7 +59,7 @@ static int dbg_set_level(const char *, const char *(names[]));
 static int dbg_get_filename(char *filename, int len);
 
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
-static MPL_thread_tls_t dbg_tls_key;
+static MPL_thread_tls_key_t dbg_tls_key;
 #endif
 
 static FILE *dbg_static_fp = 0;
