@@ -63,17 +63,7 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
-int MPID_Pre_init(int *argc_p, char ***argv_p, int requested, int *provided)
-{
-    if (MPICH_THREAD_LEVEL >= requested)
-        *provided = requested;
-    else
-        *provided = MPICH_THREAD_LEVEL;
-
-    return MPI_SUCCESS;
-}
-
-int MPID_Init(void)
+int MPID_Init(int requested, int *provided)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -87,6 +77,11 @@ int MPID_Init(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    if (MPICH_THREAD_LEVEL >= requested)
+        *provided = requested;
+    else
+        *provided = MPICH_THREAD_LEVEL;
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();

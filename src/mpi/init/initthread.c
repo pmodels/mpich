@@ -95,12 +95,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     mpi_errno = MPII_init_global(&required);
     MPIR_ERR_CHECK(mpi_errno);  /* out-of-mem */
 
-    /* Device layer parse command line, decide thread level, and preset configurations. */
-    mpi_errno = MPID_Pre_init(argc, argv, required, &MPIR_ThreadInfo.thread_provided);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* ---- MPII_Pre_init --------------------------------------------- */
-
     /* Init various components */
     MPII_hwtopo_init();
     MPII_nettopo_init();
@@ -138,7 +132,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
      * environment. */
     MPIR_ThreadInfo.isThreaded = 0;
 
-    mpi_errno = MPID_Init();
+    mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* ---- MPII_Post_init --------------------------------------------- */

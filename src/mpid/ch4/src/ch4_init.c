@@ -370,8 +370,15 @@ static int init_av_table(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
-int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
+int MPID_Init(int requested, int *provided)
 {
+    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
+    MPIR_Comm *init_comm = NULL;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
     switch (requested) {
         case MPI_THREAD_SINGLE:
         case MPI_THREAD_SERIALIZED:
@@ -382,17 +389,6 @@ int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
             *provided = MAX_THREAD_MODE;
             break;
     }
-    return MPI_SUCCESS;
-}
-
-int MPID_Init(void)
-{
-    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
-    MPIR_Comm *init_comm = NULL;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
     mpi_errno = set_runtime_configurations();
     if (mpi_errno != MPI_SUCCESS)
