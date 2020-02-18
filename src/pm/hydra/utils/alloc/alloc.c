@@ -15,10 +15,6 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->binding = NULL;
     user_global->topolib = NULL;
 
-    user_global->ckpointlib = NULL;
-    user_global->ckpoint_prefix = NULL;
-    user_global->ckpoint_num = -1;
-
     user_global->demux = NULL;
     user_global->iface = NULL;
 
@@ -27,6 +23,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->usize = HYD_USIZE_UNSET;
 
     user_global->auto_cleanup = -1;
+    user_global->pmi_port = -1;
 
     HYDU_init_global_env(&user_global->global_env);
 }
@@ -38,8 +35,6 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global)
     MPL_free(user_global->launcher_exec);
     MPL_free(user_global->binding);
     MPL_free(user_global->topolib);
-    MPL_free(user_global->ckpointlib);
-    MPL_free(user_global->ckpoint_prefix);
     MPL_free(user_global->demux);
     MPL_free(user_global->iface);
 

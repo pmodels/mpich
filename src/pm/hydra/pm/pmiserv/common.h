@@ -36,7 +36,6 @@ struct HYD_pmcd_hdr {
 
         /* UI to proxy commands */
         PROC_INFO,
-        CKPOINT,
         PMI_RESPONSE,
         SIGNAL,
         STDIN,
