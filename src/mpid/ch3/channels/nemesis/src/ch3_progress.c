@@ -806,6 +806,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 int MPIDI_CH3I_Progress_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
@@ -848,7 +849,8 @@ int MPIDI_CH3I_Progress_init(void)
 #ifdef HAVE_SIGNAL
     /* install signal handler for process failure notifications from hydra */
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
-    MPIR_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL)
         prev_sighandler = NULL;
 #endif
