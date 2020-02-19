@@ -546,12 +546,6 @@ AC_ARG_ENABLE(vci-method,
 			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
                           Values may be zero (default), communicator, tag, implicit, explicit]),,enable_vci_method=zero)
 
-AC_ARG_ENABLE(mdta,
-    AC_HELP_STRING([--enable-mdta],
-            [Optimize global granularity using message-driven thread activation.
-                         Only available for ch4 device with --enable-thread-cs=global]),
-    AC_DEFINE(MPICH_THREAD_USE_MDTA,1,[Define to enable message-driven thread activation]))
-
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
@@ -1538,12 +1532,6 @@ fi
 
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" -a "$device_name" != "ch4" ; then
     AC_MSG_ERROR([per-vci critical section granularity is only supported for the ch4 device])
-fi
-
-if test "$enable_mdta" = "yes" ; then
-    if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
-        AC_MSG_ERROR([--enable-mdta is not supported for this setting])
-    fi
 fi
 
 if test "$enable_predefined_refcount" = "no" ; then
