@@ -535,8 +535,6 @@ typedef struct {
 
 int MPID_Init(int required, int *provided);
 
-int MPID_Init_spawn(void);
-
 int MPID_InitCompleted( void );
 
 int MPID_Finalize(void);

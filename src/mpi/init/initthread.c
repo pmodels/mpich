@@ -181,11 +181,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPII_init_dbg_logging();
     MPII_Wait_for_debugger();
 
-    if (MPIR_Process.has_parent) {
-        mpi_errno = MPID_Init_spawn();
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
 
     /**********************************************************************/
     /* Section 6: simply lets the device know that we are done with
