@@ -155,6 +155,7 @@ int MPIDI_nem_ckpt_init(void)
     cr_callback_id_t cb_id;
     cr_client_id_t client_id;
     int ret;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_INIT);
@@ -166,15 +167,18 @@ int MPIDI_nem_ckpt_init(void)
     MPIR_ERR_CHKANDJUMP(client_id < 0 && errno == ENOSYS, mpi_errno, MPI_ERR_OTHER, "**blcr_mod");
 
     cb_id = cr_register_callback(ckpt_cb, NULL, CR_THREAD_CONTEXT);
-    MPIR_ERR_CHKANDJUMP1(cb_id == -1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(cb_id == -1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     
     checkpointing = FALSE;
     current_wave = 0;
 
     ret = sem_init(&ckpt_sem, 0, 0);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     ret = sem_init(&cont_sem, 0, 0);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_INIT);
@@ -187,14 +191,17 @@ int MPIDI_nem_ckpt_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
 
     ret = sem_destroy(&ckpt_sem);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     ret = sem_destroy(&cont_sem);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
@@ -263,15 +270,15 @@ static int restore_env(pid_t parent_pid, int rank)
     char env_filename[MAX_STR_LEN];
     char var_val[MAX_STR_LEN];
     int ret;
-    
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPL_snprintf(env_filename, MAX_STR_LEN, "/tmp/hydra-env-file-%d:%d", parent_pid, rank); 
 
     f = fopen(env_filename, "r");
-    CHECK_ERR(!f, MPIR_Strerror (errno));
+    CHECK_ERR(!f, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     ret = unlink(env_filename);
-    CHECK_ERR(ret, MPIR_Strerror (errno));
+    CHECK_ERR(ret, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     while (fgets(var_val, MAX_STR_LEN, f)) {
         size_t len = strlen(var_val);
@@ -279,11 +286,11 @@ static int restore_env(pid_t parent_pid, int rank)
         if (var_val[len-1] == '\n')
             var_val[len-1] = '\0';
         ret = MPL_putenv(MPL_strdup(var_val));
-        CHECK_ERR(ret != 0, MPIR_Strerror (errno));
+        CHECK_ERR(ret != 0, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     }
 
     ret = fclose(f);
-    CHECK_ERR(ret, MPIR_Strerror (errno));
+    CHECK_ERR(ret, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     return 0;
 }
@@ -440,6 +447,7 @@ int MPIDI_nem_ckpt_finish(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINISH);
@@ -454,12 +462,14 @@ int MPIDI_nem_ckpt_finish(void)
     do {
         ret = sem_post(&ckpt_sem);
     } while (ret == -1 && errno == EINTR);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_post", "**sem_post %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_post", "**sem_post %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     do {
         ret = sem_wait(&cont_sem);
     } while (ret == -1 && errno == EINTR);
-    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);

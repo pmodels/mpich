@@ -30,9 +30,6 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
 /* ------------------------------------------------------------------------- */
 /* thread-local storage macros */
-/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
- * destruction time */
-#define MPIR_STRERROR_BUF_SIZE (1024)
 
 /* This structure contains all thread-local variables and will be zeroed at
  * allocation time.
@@ -41,8 +38,7 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
  * structure must be externally cleaned up.
  * */
 typedef struct {
-    /* error string storage for MPIR_Strerror */
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+    int dummy;
 } MPIR_Per_thread_t;
 
 #if defined(MPICH_IS_THREADED) && defined(MPL_TLS)

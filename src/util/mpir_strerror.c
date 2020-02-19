@@ -8,30 +8,19 @@
 
 #if defined(NEEDS_STRERROR_R_DECL)
 #if defined(STRERROR_R_CHAR_P)
-char *strerror_r(int errnum, char *strerrbuf, size_t buflen);
+char *strerror_r(int errnum, char *buf, size_t buflen);
 #else
-int strerror_r(int errnum, char *strerrbuf, size_t buflen);
+int strerror_r(int errnum, char *buf, size_t buflen);
 #endif
 #endif
 
-/* provides a thread-safe version of strerror */
-const char *MPIR_Strerror(int errnum)
+/* wrapper for strerror_r to return the buffer used */
+const char *MPIR_Strerror(int errnum, char *buf, size_t buflen)
 {
-    char *buf;
-    MPIR_Per_thread_t *per_thread = NULL;
-    int err = 0;
-
-    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_Per_thread_key, MPIR_Per_thread, per_thread, &err);
-    MPIR_Assert(err == 0);
-    buf = per_thread->strerrbuf;
 #if defined(STRERROR_R_CHAR_P)
-    /* strerror_r returns char ptr (old GNU-flavor).  Static strings for known
-     * errnums are in returned buf, unknown errnums put a message in buf and
-     * return buf */
-    buf = strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
+    return strerror_r(errnum, buf, buflen);
 #else
-    /* strerror_r returns an int */
-    strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
-#endif
+    strerror_r(errnum, buf, buflen);
     return buf;
+#endif
 }
