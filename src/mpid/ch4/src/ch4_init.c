@@ -523,33 +523,31 @@ int MPID_Init(int requested, int *provided)
     goto fn_exit;
 }
 
-int MPID_Init_spawn(void)
+int MPID_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char parent_port[MPI_MAX_PORT_NAME];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
 
-    mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
-    MPIR_Assert(MPIR_Process.comm_parent != NULL);
-    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_InitCompleted(void)
-{
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INITCOMPLETED);
+
+    if (MPIR_Process.has_parent) {
+        mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
+        MPIR_Assert(MPIR_Process.comm_parent != NULL);
+        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+    }
+
     MPIDI_global.is_initialized = 1;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INITCOMPLETED);
+
+  fn_exit:
     return MPI_SUCCESS;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void finalize_builtin_comms(void)
