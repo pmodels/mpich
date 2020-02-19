@@ -15,7 +15,6 @@
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 typedef MPIDU_Thread_cond_t  MPID_Thread_cond_t;
 typedef MPIDU_Thread_id_t    MPID_Thread_id_t;
-typedef MPIDU_Thread_tls_key_t   MPID_Thread_tls_key_t;
 typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
@@ -40,14 +39,5 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_Thread_cond_wait MPIDU_Thread_cond_wait
 #define MPID_Thread_cond_broadcast MPIDU_Thread_cond_broadcast
 #define MPID_Thread_cond_signal MPIDU_Thread_cond_signal
-
-#define MPID_Thread_tls_create MPIDU_Thread_tls_create
-#define MPID_Thread_tls_destroy MPIDU_Thread_tls_destroy
-#define MPID_Thread_tls_set MPIDU_Thread_tls_set
-#define MPID_Thread_tls_get MPIDU_Thread_tls_get
-
-#define MPID_TLS_KEY_CREATE  MPIDU_TLS_KEY_CREATE
-#define MPID_TLS_KEY_RETRIEVE    MPIDU_TLS_KEY_RETRIEVE
-#define MPID_TLS_KEY_DESTROY MPIDU_TLS_KEY_DESTROY
 
 #endif /* MPID_THREAD_H_INCLUDED */

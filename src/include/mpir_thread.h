@@ -28,27 +28,6 @@ typedef struct {
 } MPIR_Thread_info_t;
 extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
-/* ------------------------------------------------------------------------- */
-/* thread-local storage macros */
-
-/* This structure contains all thread-local variables and will be zeroed at
- * allocation time.
- *
- * Note that any pointers to dynamically allocated memory stored in this
- * structure must be externally cleaned up.
- * */
-typedef struct {
-    int dummy;
-} MPIR_Thread_tls_obj_t;
-
-#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
-extern MPL_TLS MPIR_Thread_tls_obj_t MPIR_Thread_tls_obj;
-#else
-extern MPIR_Thread_tls_obj_t MPIR_Thread_tls_obj;
-#endif
-
-extern MPID_Thread_tls_key_t MPII_Thread_tls_key;
-
 /* During Init time, `isThreaded` is not set until the very end of init -- preventing
  * usage of mutexes during init-time; `thread_provided` is set by MPID_Init_thread_level
  * early in the stage so it can be used instead.
