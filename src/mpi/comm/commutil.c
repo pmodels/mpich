@@ -697,6 +697,9 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     newcomm_ptr->comm_kind = comm_ptr->comm_kind;
     newcomm_ptr->local_comm = 0;
 
+    /* Save the pointer to the original communicator */
+    newcomm_ptr->orig_comm = comm_ptr;
+
     /* There are two cases here - size is the same as the old communicator,
      * or it is smaller.  If the size is the same, we can just add a reference.
      * Otherwise, we need to create a new network address mapping.  Note that this is the
@@ -799,6 +802,9 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     /* Save the kind of the communicator */
     newcomm_ptr->comm_kind = comm_ptr->comm_kind;
     newcomm_ptr->local_comm = 0;
+
+    /* Save the pointer to the original communicator */
+    newcomm_ptr->orig_comm = comm_ptr;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);

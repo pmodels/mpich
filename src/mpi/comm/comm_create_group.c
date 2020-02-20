@@ -76,6 +76,8 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
         (*newcomm_ptr)->recvcontext_id = new_context_id;
         (*newcomm_ptr)->rank = group_ptr->rank;
         (*newcomm_ptr)->comm_kind = comm_ptr->comm_kind;
+        /* Save the pointer to the original communicator */
+        (*newcomm_ptr)->orig_comm = comm_ptr;
         /* Since the group has been provided, let the new communicator know
          * about the group */
         (*newcomm_ptr)->local_comm = 0;
