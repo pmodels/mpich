@@ -188,30 +188,38 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
 
-        /* Assign a VCI for this communicator and store the mapping.
-         * Current policy: Try allocating an exclusive VCI for this communicator.
-         * If the allocation fails, we assign the shared VCI to this communicator.
-         * TODO: translate hints provided in the info object to the VCI properties
-         * and resources here.
-         */
-        vci_type = MPIDI_VCI_TYPE__EXCLUSIVE;
-        vci_resources = MPIDI_VCI_RESOURCE__GENERIC;
-        vci_properties = MPIDI_VCI_PROPERTY__GENERIC;
-        mpi_errno = MPIDI_vci_alloc(vci_type, vci_resources, vci_properties, &vci);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-        if (vci == MPIDI_VCI_INVALID) {
-            /* Fallback to allocating a shared VCI */
-            mpi_errno =
-                MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
-                                MPIDI_VCI_PROPERTY__GENERIC, &vci);
+        if (MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {
+            /* If this is a subcommunicator, then use the VCI of the parent*/
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI_POOL(lock));
+            MPIDI_COMM_VCI(comm) = MPIDI_COMM_VCI(comm->parent_comm);
+            MPIDI_VCI(MPIDI_COMM_VCI(comm)).ref_count++;
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI_POOL(lock));
+        } else {
+            /* Otherwise, assign a VCI for this communicator and store the mapping.
+             * Current policy: Try allocating an exclusive VCI for this communicator.
+             * If the allocation fails, we assign the shared VCI to this communicator.
+             * TODO: translate hints provided in the info object to the VCI properties
+             * and resources here.
+             */
+            vci_type = MPIDI_VCI_TYPE__EXCLUSIVE;
+            vci_resources = MPIDI_VCI_RESOURCE__GENERIC;
+            vci_properties = MPIDI_VCI_PROPERTY__GENERIC;
+            mpi_errno = MPIDI_vci_alloc(vci_type, vci_resources, vci_properties, &vci);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
             }
+            if (vci == MPIDI_VCI_INVALID) {
+                /* Fallback to allocating a shared VCI */
+                mpi_errno =
+                    MPIDI_vci_alloc(MPIDI_VCI_TYPE__SHARED, MPIDI_VCI_RESOURCE__GENERIC,
+                                    MPIDI_VCI_PROPERTY__GENERIC, &vci);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIR_ERR_POP(mpi_errno);
+                }
+            }
+            //if (comm->rank == 0) printf("This COMM got VCI %d\n", vci);
+            MPIDI_COMM_VCI(comm) = vci;
         }
-
-        MPIDI_COMM_VCI(comm) = vci;
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);

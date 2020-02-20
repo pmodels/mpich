@@ -211,6 +211,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
+    comm_p->parent_comm = NULL;
     comm_p->intranode_table = NULL;
     comm_p->internode_table = NULL;
 
@@ -522,6 +523,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
             comm->node_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
             comm->node_comm->local_comm = NULL;
+            comm->node_comm->parent_comm = comm;
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
@@ -558,6 +560,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
             comm->node_roots_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
             comm->node_roots_comm->local_comm = NULL;
+            comm->node_roots_comm->parent_comm = comm;
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_roots_comm=%p\n",
                           comm->node_roots_comm);
 
