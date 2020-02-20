@@ -16,10 +16,7 @@ static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)
 {
-
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    ucp_request->req = NULL;
-
+    memset(request, 0, sizeof(MPIDI_UCX_ucp_request_t));
 }
 
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
