@@ -14,14 +14,14 @@
 
 typedef HANDLE MPL_thread_mutex_t;
 typedef HANDLE MPL_thread_id_t;
-typedef DWORD MPL_thread_tls_t;
+typedef DWORD MPL_thread_tls_key_t;
 
 typedef struct MPLI_win_thread_cond_fifo_t {
     HANDLE event;
     struct MPLI_win_thread_cond_fifo_t *next;
 } MPLI_win_thread_cond_fifo_t;
 typedef struct MPL_thread_cond_t {
-    MPL_thread_tls_t tls;
+    MPL_thread_tls_key_t tls;
     MPL_thread_mutex_t fifo_mutex;
     MPLI_win_thread_cond_fifo_t *fifo_head, *fifo_tail;
 } MPL_thread_cond_t;
