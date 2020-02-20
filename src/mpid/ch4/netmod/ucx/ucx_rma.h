@@ -14,17 +14,17 @@
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_rma_cmpl_cb(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RMA_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RMA_CMPL_CB);
 
     MPIR_Assert(status == UCS_OK);
+
+    MPIR_Request *req = ucp_request->u.rma.req;
     if (req) {
         MPID_Request_complete(req);
-        ucp_request->req = NULL;
     }
-    ucp_request_free(ucp_request);
+    MPIDI_UCX_UCP_REQUEST_RELEASE(ucp_request);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RMA_CMPL_CB);
 }
 
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
-        ucp_request->req = req;
+        ucp_request->u.rma.req = req;
         *reqptr = req;
 
         MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL;
@@ -173,7 +173,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT(req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
-        ucp_request->req = req;
+        ucp_request->u.rma.req = req;
         *reqptr = req;
 
         MPIDI_UCX_WIN(win).target_sync[target_rank].need_sync = MPIDI_UCX_WIN_SYNC_FLUSH_LOCAL;
