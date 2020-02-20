@@ -114,9 +114,7 @@ typedef union {
  */
 
 typedef struct {
-    int handler_id;
-    char *pack_buffer;
-    ucp_dt_iov_t iov[2];
+    ucp_dt_iov_t iov[2];        /* used to avoid extra copy of payload */
 } MPIDI_UCX_am_request_t;
 
 /* ---- Other types -------- */

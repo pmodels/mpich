@@ -20,8 +20,8 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
     int is_contig;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
-    p_data = in_data =
-        (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
+    int am_hdr_size = info->length - msg_hdr->data_sz - sizeof(*msg_hdr);
+    p_data = in_data = (char *) msg_hdr->payload + am_hdr_size;
     data_sz = msg_hdr->data_sz;
 
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
@@ -65,7 +65,7 @@ int MPIDI_UCX_progress(int vci, int blocking)
         }
 
         /* free resources for handled message */
-        ucp_request_release(ucp_request);
+        MPIDI_UCX_UCP_REQUEST_RELEASE(ucp_request);
         MPL_free(am_buf);
     }
 
