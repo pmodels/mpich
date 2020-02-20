@@ -245,17 +245,6 @@ extern MPIDI_Process_t MPIDI_Process;
  *     cancelled state
  */
 
-/* FIXME XXX DJG for TLS hack */
-#define MPIR_REQUEST_TLS_MAX 128
-
-#  define MPIDI_Request_tls_alloc(req_) \
-    do { \
-	(req_) = MPIR_Handle_obj_alloc(&MPIR_Request_mem); \
-        MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
-	       "allocated request, handle=0x%08x", req_);\
-    } while (0)
-
-
 /* If the channel doesn't initialize anything in the request, 
    provide a dummy */
 #ifndef MPIDI_CH3_REQUEST_INIT

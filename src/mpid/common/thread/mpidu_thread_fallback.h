@@ -66,7 +66,6 @@ typedef struct {
 typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
 
 typedef MPL_thread_id_t MPIDU_Thread_id_t;
-typedef MPL_thread_tls_t MPIDU_Thread_tls_t;
 typedef MPL_thread_func_t MPIDU_Thread_func_t;
 
 /*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
@@ -382,99 +381,4 @@ M*/
                             ("cond_signal failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
 
-/*
- * Thread Local Storage
- */
-/*@
-  MPIDU_Thread_tls_create - create a thread local storage space
-
-  Input Parameter:
-. exit_func - function to be called when the thread exists; may be NULL if a
-  callback is not desired
-
-  Output Parameters:
-+ tls - new thread local storage space
-- err - location to store the error code; pointer may be NULL; error is zero
-        for success, non-zero if a failure occurred
-@*/
-#define MPIDU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)     \
-    do {                                                                \
-        MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_);      \
-        MPIR_Assert(*(int *) err_ptr_ == 0);                            \
-    } while (0)
-
-/*@
-  MPIDU_Thread_tls_destroy - destroy a thread local storage space
-
-  Input Parameter:
-. tls - thread local storage space to be destroyed
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero
-        for success, non-zero if a failure occurred
-
-  Notes:
-  The destroy function associated with the thread local storage will not
-  called after the space has been destroyed.
-@*/
-#define MPIDU_Thread_tls_destroy(tls_ptr_, err_ptr_)    \
-    do {                                                \
-        MPL_thread_tls_destroy(tls_ptr_, err_ptr_);     \
-        MPIR_Assert(*(int *) err_ptr_ == 0);            \
-    } while (0)
-
-/*@
-  MPIDU_Thread_tls_set - associate a value with the current thread in the
-  thread local storage space
-
-  Input Parameters:
-+ tls - thread local storage space
-- value - value to associate with current thread
-@*/
-#define MPIDU_Thread_tls_set(tls_ptr_, value_, err_ptr_)                \
-    do {                                                                \
-        MPL_thread_tls_set(tls_ptr_, value_, err_ptr_);                 \
-        MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
-                            ("tls_set failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
-    } while (0)
-
-/*@
-  MPIDU_Thread_tls_get - obtain the value associated with the current thread
-  from the thread local storage space
-
-  Input Parameter:
-. tls - thread local storage space
-
-  Output Parameter:
-. value - value associated with current thread
-@*/
-#define MPIDU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)            \
-    do {                                                                \
-        MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_);             \
-        MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
-                            ("tls_get failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
-    } while (0)
-
-#if defined(MPICH_IS_THREADED)
-
-#define MPIDU_THREADPRIV_KEY_CREATE                                     \
-    do {                                                                \
-        int err_ ATTRIBUTE((unused)) = 0;                               \
-        MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_, MPL_MEM_THREAD); \
-        MPIR_Assert(err_ == 0);                                         \
-    } while (0)
-
-#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
-#define MPIDU_THREADPRIV_KEY_DESTROY                            \
-    do {                                                        \
-        int err_ ATTRIBUTE((unused)) = 0;                       \
-        MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
-        MPIR_Assert(err_ == 0);                                 \
-    } while (0)
-#else /* !defined(MPICH_IS_THREADED) */
-
-#define MPIDU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)
-#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
-#define MPIDU_THREADPRIV_KEY_DESTROY(key, err_ptr_)
-#endif /* MPICH_IS_THREADED */
 #endif /* MPIDU_THREAD_FALLBACK_H_INCLUDED */

@@ -13,7 +13,7 @@
 typedef mutex_t MPL_thread_mutex_t;
 typedef cond_t MPL_thread_cond_t;
 typedef thread_t MPL_thread_id_t;
-typedef thread_key_t MPL_thread_tls_t;
+typedef thread_key_t MPL_thread_tls_key_t;
 
 typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);

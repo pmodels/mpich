@@ -20,14 +20,13 @@ void MPLI_cleanup_tls(void *a);
    definitions.
 
    The approach is to have TWO MPLI_per_thread_t pointers.  One is local
-   (The MPL_THREADPRIV_DECL is used in the routines local definitions),
    as in the threaded version of these macros.  This is set by using a routine
    to get thread-private storage.  The second is a preallocated, extern
    MPLI_per_thread_t struct, as in the single threaded case.  Based on
    whether MPL is initialized with thread safety, one or the other is used.
  */
 
-#define MPL_THREADPRIV_KEY_CREATE(key, var, err_ptr_, class_)           \
+#define MPL_TLS_KEY_CREATE(key, var, err_ptr_, class_)           \
     do {                                                                \
         assert(MPL_is_threaded != -1);                                  \
         if (MPL_is_threaded) {                                          \
@@ -45,7 +44,7 @@ void MPLI_cleanup_tls(void *a);
         }                                                               \
     } while (0)
 
-#define MPL_THREADPRIV_KEY_GET_ADDR(key, var, addr, err_ptr_)           \
+#define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \
     do {                                                                \
         if (MPL_is_threaded) {                                          \
             void *thread_ptr;                                           \
@@ -70,7 +69,7 @@ void MPLI_cleanup_tls(void *a);
         }                                                               \
     } while (0)
 
-#define MPL_THREADPRIV_KEY_DESTROY(key, err_ptr_)              \
+#define MPL_TLS_KEY_DESTROY(key, err_ptr_)              \
     do {                                                       \
         if (MPL_is_threaded) {                                 \
             void *thread_ptr;                                  \
@@ -91,13 +90,13 @@ void MPLI_cleanup_tls(void *a);
 
 #else /* defined(MPL_TLS) */
 
-#define MPL_THREADPRIV_KEY_CREATE(...)
-#define MPL_THREADPRIV_KEY_GET_ADDR(key, var, addr, err_ptr_)           \
+#define MPL_TLS_KEY_CREATE(...)
+#define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \
     do {                                                                \
         addr = &(var);                                                  \
         *((int *) err_ptr_) = MPL_THREAD_SUCCESS;                       \
     } while (0)
-#define MPL_THREADPRIV_KEY_DESTROY(...)
+#define MPL_TLS_KEY_DESTROY(...)
 
 #endif
 
