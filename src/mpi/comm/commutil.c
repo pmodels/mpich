@@ -160,6 +160,8 @@ void MPIR_Comm_hint_init(void)
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
     MPIR_Comm_register_hint(MPIR_COMM_HINT_ALLOW_OVERTAKING, "mpi_assert_allow_overtaking",
                             NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_NEW_VCI, "mpi_assert_new_vci",
+                            NULL, MPIR_COMM_HINT_TYPE_BOOL, 0);
 }
 
 /* FIXME :
@@ -751,11 +753,14 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
-#if 1
+    /* Following MPI-3.2's semantics */
+#if 0
     /* FIXME: only copy over hints for MPI 3.1 and earlier */
     memcpy((void *) (newcomm_ptr->hints), (void *) (comm_ptr->hints), sizeof(comm_ptr->hints));
 #endif
 
+    /* Since hints are never propogated starting MPI-3.2, set defaults for hints */
+    newcomm_ptr->hints[MPIR_COMM_HINT_NEW_VCI] = FALSE;
     if (info) {
         MPII_Comm_set_hints(newcomm_ptr, info);
     }
