@@ -43,16 +43,11 @@ cvars:
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
 
-void MPII_init_thread_and_enter_cs(void);
-void MPII_init_thread_and_exit_cs(void);
-void MPII_init_thread_failed_exit_cs(void);
-void MPII_finalize_thread_and_enter_cs(void);
-void MPII_finalize_thread_and_exit_cs(void);
-void MPII_finalize_thread_failed_exit_cs(void);
+void MPII_thread_mutex_create(void);
+void MPII_thread_mutex_destroy(void);
 
-int MPII_init_global(int *p_thread_required);
-int MPII_post_init_global(void);
-int MPII_finalize_global(void);
+int MPII_init_local_proc_attrs(int *p_thread_required);
+int MPII_finalize_local_proc_attrs(void);
 
 void MPII_init_windows(void);
 void MPII_init_binding_fortran(void);

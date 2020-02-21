@@ -13,6 +13,23 @@
 
 #define MAX_JOBID_LEN 1024
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH3_PG_VERBOSE
+      category    : CH3
+      type        : boolean
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP_EQ
+      description : >-
+        If set, print the PG state on finalize.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* FIXME: These routines need a description.  What is their purpose?  Who
    calls them and why?  What does each one do?
 */
@@ -21,18 +38,11 @@ static MPIDI_PG_t * MPIDI_PG_iterator_next = NULL;
 static MPIDI_PG_Compare_ids_fn_t MPIDI_PG_Compare_ids_fn;
 static MPIDI_PG_Destroy_fn_t MPIDI_PG_Destroy_fn;
 
-/* Set verbose to 1 to record changes to the process group structure. */
-static int verbose = 0;
-
 /* Key track of the process group corresponding to the MPI_COMM_WORLD 
    of this process */
 static MPIDI_PG_t *pg_world = NULL;
 
 #define MPIDI_MAX_KVS_KEY_LEN      256
-
-void MPIDI_PG_set_verbose(int level) {
-    verbose = level;
-}
 
 int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t compare_ids_fn, 
 		  MPIDI_PG_Destroy_fn_t destroy_fn)
@@ -58,7 +68,7 @@ int MPIDI_PG_Finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PG_FINALIZE);
 
     /* Print the state of the process groups */
-    if (verbose) {
+    if (MPIR_CVAR_CH3_PG_VERBOSE) {
 	MPIU_PG_Printall( stdout );
     }
 
@@ -144,7 +154,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     MPIR_CHKPMEM_MALLOC(pg->vct,MPIDI_VC_t *,sizeof(MPIDI_VC_t)*vct_sz,
 			mpi_errno,"pg->vct", MPL_MEM_GROUP);
 
-    if (verbose) {
+    if (MPIR_CVAR_CH3_PG_VERBOSE) {
 	fprintf( stdout, "Creating a process group of size %d\n", vct_sz );
 	fflush(stdout);
     }
