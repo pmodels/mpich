@@ -63,39 +63,7 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
-int MPID_Pre_init(int *argc_p, char ***argv_p, int requested, int *provided)
-{
-    int mpi_errno = MPI_SUCCESS;
-    if (provided != NULL) {
-        *provided = requested;
-    }
-
-    /* Check for debugging options.  We use MPICHD_DBG and -mpichd-dbg 
-       to avoid confusion with the code in src/util/dbg/dbg_printf.c */
-    char *p = getenv( "MPICHD_DBG_PG" );
-    if (p && (strcmp(p, "YES") == 0 || strcmp(p, "yes") == 0)) {
-        MPIDI_PG_set_verbose(1);
-    }
-    if (argc_p && argv_p) {
-        /* applied patch from Juha Jeronen, req #3920 */
-        int argc = *argc_p;
-        char **argv = *argv_p;
-	for (int i=1; i<argc && argv[i]; i++) {
-	    if (strcmp( "-mpichd-dbg-pg", argv[i] ) == 0) {
-                MPIDI_PG_set_verbose(1);
-		for (int j=i; j<argc-1; j++) {
-		    argv[j] = argv[j+1];
-		}
-		argv[argc-1] = NULL;
-		*argc_p = argc - 1;
-		break;
-	    }
-	}
-    }
-    return mpi_errno;
-}
-
-int MPID_Init(void)
+int MPID_Init(int requested, int *provided)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -109,6 +77,11 @@ int MPID_Init(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    if (MPICH_THREAD_LEVEL >= requested)
+        *provided = requested;
+    else
+        *provided = MPICH_THREAD_LEVEL;
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
@@ -281,13 +254,76 @@ int MPID_Init(void)
     /* --END ERROR HANDLING-- */
 }
 
+static int init_spawn(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char * parent_port;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+
+    /* FIXME: To allow just the "root" process to
+       request the port and then use MPIR_Bcast_intra_auto to
+       distribute it to the rest of the processes,
+       we need to perform the Bcast after MPI is
+       otherwise initialized.  We could do this
+       by adding another MPID call that the MPI_Init(_thread)
+       routine would make after the rest of MPI is
+       initialized, but before MPI_Init returns.
+       In fact, such a routine could be used to
+       perform various checks, including parameter
+       consistency value (e.g., all processes have the
+       same environment variable values). Alternately,
+       we could allow a few routines to operate with
+       predefined parameter choices (e.g., bcast, allreduce)
+       for the purposes of initialization. */
+    mpi_errno = MPIDI_CH3_GetParentPort(&parent_port);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
+                            "**ch3|get_parent_port");
+    }
+    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Parent port is %s", parent_port);
+
+    mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world,
+                                  &MPIR_Process.comm_parent);
+    MPIR_ERR_CHKANDJUMP1(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**ch3|conn_parent",
+                         "**ch3|conn_parent %s", parent_port);
+
+    MPIR_Assert(MPIR_Process.comm_parent != NULL);
+    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+
+    /* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
+       if not already freed.  */
+#endif
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* This allows each channel to perform final initialization after the
  rest of MPI_Init completes.  */
 int MPID_InitCompleted( void )
 {
     int mpi_errno;
+
+    if (MPIR_Process.has_parent) {
+        mpi_errno = init_spawn();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     mpi_errno = MPIDI_CH3_InitCompleted();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 /*

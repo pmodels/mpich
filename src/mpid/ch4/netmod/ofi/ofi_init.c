@@ -528,10 +528,18 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                             offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.context));
     MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
 
-    MPIR_Add_mutex(&MPIDI_OFI_THREAD_UTIL_MUTEX);
-    MPIR_Add_mutex(&MPIDI_OFI_THREAD_PROGRESS_MUTEX);
-    MPIR_Add_mutex(&MPIDI_OFI_THREAD_FI_MUTEX);
-    MPIR_Add_mutex(&MPIDI_OFI_THREAD_SPAWN_MUTEX);
+    int err;
+    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_FI_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
     mpi_errno = open_fabric();
     MPIR_ERR_CHECK(mpi_errno);
@@ -781,6 +789,19 @@ int MPIDI_OFI_mpi_finalize_hook(void)
                     MPIDI_OFI_global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
     }
+
+    int err;
+    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_FI_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_FINALIZE);

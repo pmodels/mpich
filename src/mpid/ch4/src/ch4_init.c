@@ -370,8 +370,15 @@ static int init_av_table(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
-int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
+int MPID_Init(int requested, int *provided)
 {
+    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
+    MPIR_Comm *init_comm = NULL;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
     switch (requested) {
         case MPI_THREAD_SINGLE:
         case MPI_THREAD_SERIALIZED:
@@ -382,17 +389,6 @@ int MPID_Pre_init(int *argc, char ***argv, int requested, int *provided)
             *provided = MAX_THREAD_MODE;
             break;
     }
-    return MPI_SUCCESS;
-}
-
-int MPID_Init(void)
-{
-    int mpi_errno = MPI_SUCCESS, rank, size, appnum;
-    MPIR_Comm *init_comm = NULL;
-    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
     mpi_errno = set_runtime_configurations();
     if (mpi_errno != MPI_SUCCESS)
@@ -426,15 +422,29 @@ int MPID_Init(void)
     size = MPIR_Process.size;
     appnum = MPIR_Process.appnum;
 
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_SCHED_LIST_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    int err;
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
 #ifdef HAVE_LIBHCOLL
-    MPIR_Add_mutex(&MPIDIU_THREAD_HCOLL_MUTEX);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
 #endif
-    MPIR_Add_mutex(&MPIDI_global.vci_lock);
+
+    MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &err);
+    MPIR_Assert(err == 0);
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     MPIDI_workq_init(&MPIDI_global.workqueue);
@@ -465,7 +475,8 @@ int MPID_Init(void)
         MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-        MPIR_Add_mutex(&MPIDI_VCI(i).lock);
+        MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
         /* TODO: lw_req, workq */
     }
 
@@ -512,33 +523,31 @@ int MPID_Init(void)
     goto fn_exit;
 }
 
-int MPID_Init_spawn(void)
+int MPID_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char parent_port[MPI_MAX_PORT_NAME];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
 
-    mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
-    MPIR_Assert(MPIR_Process.comm_parent != NULL);
-    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_InitCompleted(void)
-{
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INITCOMPLETED);
+
+    if (MPIR_Process.has_parent) {
+        mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
+        MPIR_Assert(MPIR_Process.comm_parent != NULL);
+        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+    }
+
     MPIDI_global.is_initialized = 1;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INITCOMPLETED);
+
+  fn_exit:
     return MPI_SUCCESS;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void finalize_builtin_comms(void)
@@ -581,6 +590,35 @@ int MPID_Finalize(void)
     finalize_av_table();
 
     MPIR_pmi_finalize();
+
+    int err;
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#ifdef HAVE_LIBHCOLL
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+#endif
+
+    MPID_Thread_mutex_destroy(&MPIDI_global.vci_lock, &err);
+    MPIR_Assert(err == 0);
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);

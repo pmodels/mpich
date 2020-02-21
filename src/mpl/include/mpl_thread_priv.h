@@ -7,9 +7,6 @@
 #ifndef MPL_THREAD_PRIV_H_INCLUDED
 #define MPL_THREAD_PRIV_H_INCLUDED
 
-extern int MPL_is_threaded;
-void MPL_set_threaded(int isThreaded);
-
 #if !defined(MPL_TLS)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
@@ -28,64 +25,53 @@ void MPLI_cleanup_tls(void *a);
 
 #define MPL_TLS_KEY_CREATE(key, var, err_ptr_, class_)           \
     do {                                                                \
-        assert(MPL_is_threaded != -1);                                  \
-        if (MPL_is_threaded) {                                          \
-            void *thread_ptr;                                           \
+        void *thread_ptr;                                               \
                                                                         \
-            MPL_thread_tls_create(MPLI_cleanup_tls, &(key) , err_ptr_); \
-            if (unlikely(*((int *) err_ptr_)))                          \
-                break;                                                  \
-            thread_ptr = MPL_calloc(1, sizeof(var), class_);            \
+        MPL_thread_tls_create(MPLI_cleanup_tls, &(key) , err_ptr_);     \
+        if (unlikely(*((int *) err_ptr_)))                              \
+            break;                                                      \
+        thread_ptr = MPL_calloc(1, sizeof(var), class_);                \
+        if (unlikely(!thread_ptr)) {                                    \
+            *((int *) err_ptr_) = MPL_THREAD_ERROR;                     \
+            break;                                                      \
+        }                                                               \
+        MPL_thread_tls_set(&(key), thread_ptr, err_ptr_);               \
+    } while (0)
+
+#define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \
+    do {                                                                \
+        void *thread_ptr;                                               \
+        MPL_thread_tls_get(&(key), &thread_ptr, err_ptr_);              \
+        if (unlikely(*((int *) err_ptr_)))                              \
+            break;                                                      \
+        if (!thread_ptr) {                                              \
+            thread_ptr = MPL_calloc(1, sizeof(var), MPL_MEM_OTHER);     \
             if (unlikely(!thread_ptr)) {                                \
                 *((int *) err_ptr_) = MPL_THREAD_ERROR;                 \
                 break;                                                  \
             }                                                           \
             MPL_thread_tls_set(&(key), thread_ptr, err_ptr_);           \
-        }                                                               \
-    } while (0)
-
-#define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \
-    do {                                                                \
-        if (MPL_is_threaded) {                                          \
-            void *thread_ptr;                                           \
-            MPL_thread_tls_get(&(key), &thread_ptr, err_ptr_);          \
             if (unlikely(*((int *) err_ptr_)))                          \
                 break;                                                  \
-            if (!thread_ptr) {                                          \
-                thread_ptr = MPL_calloc(1, sizeof(var), MPL_MEM_OTHER); \
-                if (unlikely(!thread_ptr)) {                            \
-                    *((int *) err_ptr_) = MPL_THREAD_ERROR;             \
-                    break;                                              \
-                }                                                       \
-                MPL_thread_tls_set(&(key), thread_ptr, err_ptr_);       \
-                if (unlikely(*((int *) err_ptr_)))                      \
-                    break;                                              \
-            }                                                           \
-            addr = thread_ptr;                                          \
         }                                                               \
-        else {                                                          \
-            addr = &(var);                                              \
-            *((int *) err_ptr_) = MPL_THREAD_SUCCESS;                   \
-        }                                                               \
+        addr = thread_ptr;                                              \
     } while (0)
 
 #define MPL_TLS_KEY_DESTROY(key, err_ptr_)              \
     do {                                                       \
-        if (MPL_is_threaded) {                                 \
-            void *thread_ptr;                                  \
+        void *thread_ptr;                                      \
                                                                \
-            MPL_thread_tls_get(&(key), &thread_ptr, err_ptr_); \
-            if (unlikely(*((int *) err_ptr_)))                 \
-                break;                                         \
+        MPL_thread_tls_get(&(key), &thread_ptr, err_ptr_);     \
+        if (unlikely(*((int *) err_ptr_)))                     \
+            break;                                             \
                                                                \
-            MPL_free(thread_ptr);                              \
+        MPL_free(thread_ptr);                                  \
                                                                \
-            MPL_thread_tls_set(&(key), NULL, err_ptr_);        \
-            if (unlikely(*((int *) err_ptr_)))                 \
-                break;                                         \
+        MPL_thread_tls_set(&(key), NULL, err_ptr_);            \
+        if (unlikely(*((int *) err_ptr_)))                     \
+            break;                                             \
                                                                \
-            MPL_thread_tls_destroy(&(key), err_ptr_);          \
-        }                                                      \
+        MPL_thread_tls_destroy(&(key), err_ptr_);              \
     } while (0)
 
 #else /* defined(MPL_TLS) */

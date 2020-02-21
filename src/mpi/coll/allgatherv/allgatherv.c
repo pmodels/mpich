@@ -87,15 +87,6 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 #undef MPI_Allgatherv
 #define MPI_Allgatherv PMPI_Allgatherv
 
-/* _fallback is a safe version to be used during Init/Finalize */
-int MPIR_Allgatherv_fallback(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                             void *recvbuf, const int *recvcounts, const int *displs,
-                             MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
-{
-    return MPIR_Allgatherv_intra_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                      recvtype, comm_ptr, errflag);
-}
-
 int MPIR_Allgatherv_intra_auto(const void *sendbuf,
                                int sendcount,
                                MPI_Datatype sendtype,
