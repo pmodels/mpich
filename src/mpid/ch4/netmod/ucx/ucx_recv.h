@@ -68,11 +68,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 
     /* complete the request if we have it, or allocate a status object */
-    if (ucp_request->req) {
+    int has_request = (ucp_request->req != NULL);
+    if (has_request) {
         MPIR_Request *rreq = ucp_request->req;
-        MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
         mrecv_status = &rreq->status;
     } else {
         mrecv_status = MPL_malloc(sizeof(MPI_Status), MPL_MEM_BUFFER);
@@ -89,6 +87,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     mrecv_status->MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
     mrecv_status->MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
 
+    /* complete the request */
+    if (has_request) {
+        MPIR_Request *rreq = ucp_request->req;
+        MPIDIU_request_complete(rreq);
+        ucp_request->req = NULL;
+        ucp_request_release(ucp_request);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
