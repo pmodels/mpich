@@ -21,7 +21,7 @@ cvars:
       category    : THREADS
       type        : string
       default     : "MPI_THREAD_SINGLE"
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
