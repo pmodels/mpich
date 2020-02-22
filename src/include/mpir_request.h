@@ -22,7 +22,7 @@ cvars:
       category    : REQUEST
       type        : int
       default     : 8
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -33,7 +33,7 @@ cvars:
       category    : REQUEST
       type        : int
       default     : 64
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-

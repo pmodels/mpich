@@ -26,7 +26,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -36,7 +36,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -47,7 +47,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -57,7 +57,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -70,7 +70,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -84,7 +84,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -96,7 +96,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -108,7 +108,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -118,7 +118,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -128,7 +128,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -139,7 +139,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -149,7 +149,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -161,7 +161,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -171,7 +171,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -181,7 +181,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -191,7 +191,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -203,7 +203,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -215,7 +215,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -227,7 +227,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -239,7 +239,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -251,7 +251,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -263,7 +263,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -276,7 +276,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -289,7 +289,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -299,7 +299,7 @@ cvars:
       category    : CH4_OFI
       type        : int
       default     : 100
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
