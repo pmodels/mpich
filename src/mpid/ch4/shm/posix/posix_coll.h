@@ -25,7 +25,6 @@ cvars:
     - name        : MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
       default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -39,7 +38,6 @@ cvars:
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
       default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
@@ -53,7 +51,6 @@ cvars:
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
       default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
