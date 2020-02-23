@@ -127,6 +127,11 @@ int MPI_Finalize(void)
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Setting isThreaded to 0 to trick any operations used within
+     * MPI_Finalize to think that we are running in a single threaded
+     * environment. */
+    MPIR_ThreadInfo.isThreaded = 0;
+
     mpi_errno = MPII_finalize_local_proc_attrs();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -137,11 +142,6 @@ int MPI_Finalize(void)
 
     /* Signal the debugger that we are about to exit. */
     MPIR_Debugger_set_aborting(NULL);
-
-    /* Setting isThreaded to 0 to trick any operations used within
-     * MPID_Finalize to think that we are running in a single threaded
-     * environment. */
-    MPIR_ThreadInfo.isThreaded = 0;
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);

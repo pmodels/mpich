@@ -46,17 +46,12 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     thread_info =
         (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
     if (thread_info != NULL) {
-        pthread_attr_t attr;
 
         thread_info->func = func;
         thread_info->data = data;
 
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-        err = pthread_create(idp, &attr, MPLI_thread_start, thread_info);
+        err = pthread_create(idp, NULL, MPLI_thread_start, thread_info);
         /* FIXME: convert error to an MPL_THREAD_ERR value */
-        pthread_attr_destroy(&attr);
     } else {
         err = 1000000000;
     }

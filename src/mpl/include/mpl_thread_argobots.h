@@ -51,6 +51,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
 
 #define MPL_thread_exit()
 #define MPL_thread_self(id_) ABT_thread_self_id(id_)
+#define MPL_thread_join(id_) ABT_thread_join(id_)
 #define MPL_thread_same(id1_, id2_, same_)  ABT_thread_equal(id1_, id2_, same_)
 
 /* ======================================================================

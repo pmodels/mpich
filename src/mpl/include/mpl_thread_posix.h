@@ -48,6 +48,11 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         *(id_) = pthread_self();                \
     } while (0)
 
+#define MPL_thread_join(id_)                    \
+    do {                                        \
+        pthread_join(id_, NULL);                \
+    } while (0)
+
 #define MPL_thread_same(id1_, id2_, same_)                              \
     do {                                                                \
         *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;      \
