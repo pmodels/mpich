@@ -47,55 +47,47 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     /* FIXME: faster allocation, or avoid it all together? */
     thread_info =
         (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
-    if (thread_info != NULL) {
-        pthread_attr_t attr;
 
-        thread_info->func = func;
-        thread_info->data = data;
-
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-        uti_attr_t uti_attr;
-        err = uti_attr_init(&uti_attr);
-        if (err) {
-            goto uti_exit;
-        }
-
-        /* Give a hint that it's beneficial to put the thread
-         * on the same NUMA-node as the creator */
-        err = UTI_ATTR_SAME_NUMA_DOMAIN(&uti_attr);
-        if (err) {
-            goto uti_destroy_and_exit;
-        }
-
-        /* Give a hint that the thread repeatedly monitors a device
-         * using CPU. */
-        err = UTI_ATTR_CPU_INTENSIVE(&uti_attr);
-        if (err) {
-            goto uti_destroy_and_exit;
-        }
-
-        err = uti_pthread_create(idp, &attr, MPLI_thread_start, thread_info, &uti_attr);
-        if (err) {
-            goto uti_destroy_and_exit;
-        }
-
-      uti_destroy_and_exit:
-        err = uti_attr_destroy(&uti_attr);
-        if (err) {
-            goto uti_exit;
-        }
-
-      uti_exit:
-        pthread_attr_destroy(&attr);
-    } else {
+    if (thread_info == NULL) {
         err = 1000000000;
+        goto uti_exit;
     }
 
+    thread_info->func = func;
+    thread_info->data = data;
+
+    uti_attr_t uti_attr;
+    err = uti_attr_init(&uti_attr);
+    if (err) {
+        goto uti_exit;
+    }
+
+    /* Give a hint that it's beneficial to put the thread
+     * on the same NUMA-node as the creator */
+    err = UTI_ATTR_SAME_NUMA_DOMAIN(&uti_attr);
+    if (err) {
+        goto uti_destroy_and_exit;
+    }
+
+    /* Give a hint that the thread repeatedly monitors a device
+     * using CPU. */
+    err = UTI_ATTR_CPU_INTENSIVE(&uti_attr);
+    if (err) {
+        goto uti_destroy_and_exit;
+    }
+
+    err = uti_pthread_create(idp, NULL, MPLI_thread_start, thread_info, &uti_attr);
+    if (err) {
+        goto uti_destroy_and_exit;
+    }
+
+  uti_exit:
     if (errp != NULL) {
         *errp = err;
     }
+  uti_destroy_and_exit:
+    err = uti_attr_destroy(&uti_attr);
+    goto uti_exit;
 }
 
 

@@ -41,6 +41,7 @@ typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
 void MPL_thread_exit(void);
 void MPL_thread_self(MPL_thread_id_t * id);
+void MPL_thread_join(MPL_thread_id_t * id);
 void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same);
 void MPL_thread_yield();
 

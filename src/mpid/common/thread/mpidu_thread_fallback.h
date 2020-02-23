@@ -206,6 +206,7 @@ M*/
 #define MPIDU_Thread_create       MPL_thread_create
 #define MPIDU_Thread_exit         MPL_thread_exit
 #define MPIDU_Thread_self         MPL_thread_self
+#define MPIDU_Thread_join       MPL_thread_join
 #define MPIDU_Thread_same       MPL_thread_same
 
 /*@
