@@ -60,8 +60,6 @@ static HYD_status init_params(void)
 
 static void cleanup_params(void)
 {
-    int i;
-
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
     /* System global */
