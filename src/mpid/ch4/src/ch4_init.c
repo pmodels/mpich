@@ -78,18 +78,6 @@ cvars:
         direct (default)
         handoff
 
-    - name        : MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE
-      category    : CH4
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If set to positive number, this cvar controls the message size at which CH4 switches from eager to rendezvous mode.
-        If the number is negative, underlying netmod or shmmod automatically uses an optimal number depending on
-        the underlying fabric or shared memory architecture.
-
     - name        : MPIR_CVAR_CH4_NUM_VCIS
       category    : CH4
       type        : int
