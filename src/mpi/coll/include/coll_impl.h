@@ -24,9 +24,9 @@
 #define MPII_COLLECTIVE_FALLBACK_CHECK(check)                           \
     do {                                                                \
         if ((check) == 0) {                                             \
-            if (MPIR_CVAR_COLLECTIVE_FALLBACK == 0) {                   \
+            if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) { \
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**collalgo"); \
-            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == 1) {            \
+            } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) { \
                 fprintf(stderr, "User set collective algorithm is not usable for the provided arguments\n"); \
                 fflush(stderr);                                         \
                 goto fallback;                                          \

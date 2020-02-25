@@ -11,7 +11,7 @@ echo "" > ${testlist_cvar}
 
 #silently fallback to other algorithms, if the selected algorithm is
 #not suitable
-global_env="${global_env} env=MPIR_CVAR_COLLECTIVE_FALLBACK=2"
+global_env="${global_env} env=MPIR_CVAR_COLLECTIVE_FALLBACK=silent"
 
 
 ########## Add tests for bcast algorithms ############
