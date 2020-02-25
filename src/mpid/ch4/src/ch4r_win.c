@@ -240,6 +240,11 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
             else
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "auto_vci_hashing")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDIG_WIN(win, info_args).auto_vci_hashing = true;
+            else
+                MPIDIG_WIN(win, info_args).auto_vci_hashing = false;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -271,7 +276,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, info, &win_comm_ptr);
     if (MPI_SUCCESS != mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -317,6 +322,9 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+
+    /* default to user-directed parallelism */
+    MPIDIG_WIN(win, info_args).auto_vci_hashing = false;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -770,6 +778,14 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
     if (MPI_SUCCESS != mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+    
+    if (MPIDIG_WIN(win, info_args).auto_vci_hashing)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "auto_vci_hashing", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "auto_vci_hashing", "false");
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_GET_INFO);
