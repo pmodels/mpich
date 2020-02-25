@@ -1407,13 +1407,7 @@ static int open_fabric(void)
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    if (MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE > 0 &&
-        MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
-        /* Truncate max_msg_size to a user-selected value */
-        MPIDI_OFI_global.max_msg_size = MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE;
-    } else {
-        MPIDI_OFI_global.max_msg_size = prov->ep_attr->max_msg_size;
-    }
+    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
     MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
     MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
