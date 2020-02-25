@@ -538,8 +538,9 @@ AC_ARG_ENABLE(thread-cs,
 	AC_HELP_STRING([--enable-thread-cs=type],
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
-                         threads are present.  Values may be global
-                         (default), per-object, per-vci, lock-free]),,enable_thread_cs=global)
+                         threads are present.  Values may be default, global,
+                         per-object, per-vci, lock-free. By default, CH3 uses global,
+                         while CH4 uses per-vci.]),,enable_thread_cs=default)
 
 AC_ARG_ENABLE(vci-method,
 	AC_HELP_STRING([--enable-vci-method=type],
@@ -1455,10 +1456,16 @@ fi
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPICH_THREAD_GRANULARITY__SINGLE
 thread_refcount=MPICH_REFCOUNT__NONE
-if test "$device_name" = "ch4" ; then
-    enable_thread_cs="per-vci"
-fi
 if test "$enable_threads" = "multiple" ; then
+    # default depends on ch3 or ch4
+    if test "$enable_thread_cs" = "default" ; then
+        if test "$device_name" = "ch4" ; then
+            enable_thread_cs="per-vci"
+        else
+            enable_thread_cs="global"
+        fi
+    fi
+
     case $enable_thread_cs in
     global)
     thread_granularity=MPICH_THREAD_GRANULARITY__GLOBAL
