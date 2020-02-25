@@ -98,6 +98,7 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
 
     switch (MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded);
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
@@ -106,6 +107,11 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
             break;
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -128,6 +134,8 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
 
     switch (MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+                                           MPIR_Op_is_commutative(op));
             mpi_errno =
                 MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                          comm, errflag);
@@ -137,6 +145,11 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
             break;
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -388,9 +401,11 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
 
     switch (MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+                                           MPIR_Op_is_commutative(op));
             mpi_errno =
-                MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype,
-                                                      op, root, comm, errflag);
+                MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op, root,
+                                                      comm, errflag);
             break;
         default:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
@@ -398,6 +413,11 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
             break;
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
