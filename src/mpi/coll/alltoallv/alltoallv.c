@@ -47,11 +47,12 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Alltoallv will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level alltoallv function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Alltoallv will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -195,9 +196,12 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
-                                   rdispls, recvtype, comm_ptr, errflag);
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE)) {
+        mpi_errno =
+            MPID_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
+                           recvtype, comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
                                         rdispls, recvtype, comm_ptr, errflag);
