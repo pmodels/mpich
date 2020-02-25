@@ -19,6 +19,9 @@ extern "C" {
 extern int snprintf(char *, size_t, const char *, ...) ATTRIBUTE((format(printf,3,4)));
 #endif
 
+#define MPL_snprintf_nowarn(...)                \
+    (MPL_snprintf(__VA_ARGS__) < 0 ? assert(0) : (void) 0)
+
 #if defined MPL_HAVE_SNPRINTF
 #define MPL_snprintf snprintf
 #else
