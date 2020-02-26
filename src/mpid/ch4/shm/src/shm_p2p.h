@@ -22,7 +22,7 @@ cvars:
       category    : CH4
       type        : int
       default     : 4096
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-

@@ -19,7 +19,7 @@ cvars:
       category    : DEVELOPER
       type        : string
       default     : NULL
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-

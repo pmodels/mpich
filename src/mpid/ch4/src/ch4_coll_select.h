@@ -86,13 +86,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (comm->node_comm != NULL && MPIR_Comm_size(comm) == MPIR_Comm_size(comm->node_comm)) {
         /* All the ranks in comm are on the same node */
-        if (!((count * type_size) > MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE &&
-              MPIR_CVAR_ENUM_IS(BCAST_POSIX_INTRA_ALGORITHM, release_gather) &&
-              MPIR_CVAR_ENUM_IS(REDUCE_POSIX_INTRA_ALGORITHM, release_gather))) {
-            /* gamma is selected if the msg size is less than threshold or release_gather based
-             * shm_bcast and shm_reduce is not chosen for msg sizes larger than threshold */
-            return &MPIDI_Allreduce_intra_composition_gamma_cnt;
-        }
+        return &MPIDI_Allreduce_intra_composition_gamma_cnt;
     }
 #endif
 

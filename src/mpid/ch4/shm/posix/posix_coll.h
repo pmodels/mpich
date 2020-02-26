@@ -25,58 +25,41 @@ cvars:
     - name        : MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
-      default     : auto
-      class       : device
+      default     : mpir
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node bcast
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
-      default     : auto
-      class       : device
+      default     : mpir
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node reduce
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      group       : MPIR_CVAR_GROUP_COLL_ALGO
-      default     : auto
-      class       : device
+      default     : mpir
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node allreduce
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
-
-    - name        : MPIR_CVAR_MAX_POSIX_RELEASE_GATHER_ALLREDUCE_MSG_SIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : 8192
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Maximum message size for which release, gather primivites based allreduce is used when all
-        the ranks in the communicator are on the same node. This CVAR is used only when
-        MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM is set to "release_gather". Default value of this
-        CVAR is same as cellsize of reduce buffers, because beyond that large messages are getting
-        chuncked and performance can be compromised.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -115,14 +98,22 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
 
     switch (MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded);
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -145,15 +136,24 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
 
     switch (MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+                                           MPIR_Op_is_commutative(op));
             mpi_errno =
                 MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                          comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -405,16 +405,25 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
 
     switch (MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_release_gather:
+            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+                                           MPIR_Op_is_commutative(op));
             mpi_errno =
-                MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype,
-                                                      op, root, comm, errflag);
+                MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op, root,
+                                                      comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
                                          root, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
+    MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

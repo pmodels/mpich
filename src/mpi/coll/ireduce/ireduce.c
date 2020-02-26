@@ -14,7 +14,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 2
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -24,7 +24,7 @@ cvars:
       category    : COLLECTIVE
       type        : string
       default     : kary
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -37,7 +37,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -48,7 +48,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -59,7 +59,7 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -74,7 +74,7 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : sched_auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
@@ -90,7 +90,7 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : sched_auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
@@ -102,15 +102,16 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Ireduce will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level ireduce function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Ireduce will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -255,12 +256,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
@@ -270,12 +271,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 
@@ -293,7 +294,9 @@ int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE)) {
         mpi_errno = MPID_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, request);
     } else {
         mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
