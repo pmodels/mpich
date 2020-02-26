@@ -25,39 +25,39 @@ cvars:
     - name        : MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : mpir
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node bcast
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : mpir
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node reduce
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : auto
+      default     : mpir
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select algorithm for intra-node allreduce
-        auto           - Internal algorithm selection from pt2pt based algorithms
+        mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
 
@@ -102,9 +102,11 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -140,9 +142,11 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                 MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                          comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -407,10 +411,12 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                 MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op, root,
                                                       comm, errflag);
             break;
-        default:
+        case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_mpir:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
                                          root, comm, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
