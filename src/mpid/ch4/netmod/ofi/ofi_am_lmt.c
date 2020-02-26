@@ -10,6 +10,8 @@
  */
 
 #include "mpidimpl.h"
+#include "ofi_am_impl.h"
+#include "ofi_am_events.h"
 #include "ofi_am_lmt.h"
 
 static int ofi_handle_lmt_req(int handler_id, void *am_hdr, void **data, size_t * data_sz,
