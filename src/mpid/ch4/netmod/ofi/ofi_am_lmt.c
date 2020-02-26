@@ -51,11 +51,6 @@ int MPIDI_OFI_am_lmt_send(int rank, MPIR_Comm * comm, int handler_id,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
-    MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
-
     int hdr_size = sizeof(struct am_lmt_hdr) + am_hdr_sz;
     struct am_lmt_hdr *p_hdr = MPL_malloc(hdr_size, MPL_MEM_OTHER);
 

@@ -96,8 +96,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
     return;
 }
 
-static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
-                                            size_t am_hdr_sz, MPIR_Request * sreq)
+static inline int MPIDI_OFI_am_init_request(const void *am_hdr, int am_hdr_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_request_header_t *req_hdr;
@@ -111,7 +110,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 
         req_hdr->am_hdr = (void *) &req_hdr->am_hdr_buf[0];
-        req_hdr->am_hdr_sz = MPIDI_OFI_MAX_AM_HDR_SIZE;
+        req_hdr->am_hdr_sz = MPIDI_OFI_MAX_AM_BUF_SIZE;
     } else {
         req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
     }
@@ -209,11 +208,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
 
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
-    MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
-
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = am_hdr_sz;
@@ -249,13 +243,13 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
                                         const void *am_hdr,
-                                        size_t am_hdr_sz,
+                                        int am_hdr_sz,
                                         const void *buf,
-                                        size_t count, MPI_Datatype datatype, MPIR_Request * sreq)
+                                        MPI_Aint count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
 
@@ -308,12 +302,12 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
                                                           const MPIDI_OFI_am_header_t * msg_hdrp,
-                                                          const void *am_hdr, size_t am_hdr_sz)
+                                                          const void *am_hdr, int am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
     char *ibuf;
-    size_t len;
+    MPI_Aint len;
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
     MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -338,20 +332,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
 
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
-                                      int handler_id, const void *am_hdr, size_t am_hdr_sz)
+                                      int handler_id, const void *am_hdr, int am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;
     fi_addr_t addr;
     char *buff;
-    size_t buff_len;
+    MPI_Aint buff_len;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_INJECT);
-
-    MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
 
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
@@ -359,8 +350,6 @@ static inline int MPIDI_OFI_do_inject(int rank,
     msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr.fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
-
-    MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     addr = MPIDI_OFI_comm_to_phys(comm, rank);
 

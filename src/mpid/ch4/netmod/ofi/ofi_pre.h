@@ -30,13 +30,7 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
-#define MPIDI_OFI_MAX_AM_HDR_SIZE    128
-#define MPIDI_OFI_AM_HANDLER_ID_BITS   8
-#define MPIDI_OFI_AM_TYPE_BITS         8
-#define MPIDI_OFI_AM_HDR_SZ_BITS       8
-#define MPIDI_OFI_AM_DATA_SZ_BITS     48
-#define MPIDI_OFI_AM_RANK_BITS        32
-#define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
+#define MPIDI_OFI_MAX_AM_BUF_SIZE    128
 
 /* Typedefs */
 
@@ -51,10 +45,9 @@ typedef struct {
 } MPIDI_OFI_comm_t;
 
 typedef struct MPIDI_OFI_am_header_t {
-    uint64_t handler_id:MPIDI_OFI_AM_HANDLER_ID_BITS;
-    uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
-    uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
-    uint64_t data_sz:MPIDI_OFI_AM_DATA_SZ_BITS;
+    int handler_id;
+    int am_hdr_sz;
+    MPI_Aint data_sz;
     uint16_t seqno;             /* Sequence number of this message.
                                  * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
     fi_addr_t fi_src_addr;      /* OFI address of the sender */
@@ -91,7 +84,7 @@ typedef struct {
     uint16_t am_hdr_sz;
     uint8_t pad[6];
     MPIDI_OFI_am_header_t msg_hdr;
-    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
+    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_BUF_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
 #if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
     struct iovec iov[3];
