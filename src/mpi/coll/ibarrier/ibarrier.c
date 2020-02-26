@@ -144,11 +144,11 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 break;
 
             case MPIR_CVAR_IBARRIER_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_intra_sched_auto, comm_ptr, request);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IBARRIER_INTER_ALGORITHM) {
@@ -157,11 +157,11 @@ int MPIR_Ibarrier_impl(MPIR_Comm * comm_ptr, MPIR_Request ** request)
                 break;
 
             case MPIR_CVAR_IBARRIER_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER_EMPTY(MPIR_Ibarrier_inter_sched_auto, comm_ptr, request);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 

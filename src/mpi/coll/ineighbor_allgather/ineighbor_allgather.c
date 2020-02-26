@@ -160,12 +160,12 @@ int MPIR_Ineighbor_allgather_impl(const void *sendbuf, int sendcount,
                 break;
 
             case MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_allgather_intra_sched_auto, comm_ptr, request,
                                    sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_INEIGHBOR_ALLGATHER_INTER_ALGORITHM) {
@@ -182,12 +182,12 @@ int MPIR_Ineighbor_allgather_impl(const void *sendbuf, int sendcount,
                 break;
 
             case MPIR_CVAR_INEIGHBOR_ALLGATHER_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_allgather_inter_sched_auto, comm_ptr, request,
                                    sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 

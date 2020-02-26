@@ -227,12 +227,12 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_intra_sched_auto, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM) {
@@ -242,12 +242,12 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
                 break;
 
             case MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_scatter_inter_sched_auto, comm_ptr, request,
                                    sendbuf, recvbuf, recvcounts, datatype, op);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 

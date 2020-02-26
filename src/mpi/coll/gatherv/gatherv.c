@@ -139,12 +139,12 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_GATHERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
                     MPIR_Gatherv_intra_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_GATHERV_INTER_ALGORITHM) {
@@ -159,12 +159,12 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_GATHERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
                     MPIR_Gatherv_inter_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

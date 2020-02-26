@@ -109,12 +109,12 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count,
             break;
 
         case MPIR_CVAR_ISCAN_INTRA_ALGORITHM_sched_auto:
-            MPL_FALLTHROUGH;
-
-        default:
             MPII_SCHED_WRAPPER(MPIR_Iscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
                                count, datatype, op);
             break;
+
+        default:
+            MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

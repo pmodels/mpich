@@ -113,11 +113,11 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Scan_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_CVAR_SCAN_INTRA_ALGORITHM_auto:
-            MPL_FALLTHROUGH;
-        default:
             mpi_errno =
                 MPIR_Scan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

@@ -126,12 +126,12 @@ int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                                                                 recvtype, comm_ptr);
                 break;
             case MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Neighbor_allgatherv_intra_auto(sendbuf, sendcount, sendtype,
                                                                 recvbuf, recvcounts, displs,
                                                                 recvtype, comm_ptr);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTER_ALGORITHM) {
@@ -141,12 +141,12 @@ int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                                                                 recvtype, comm_ptr);
                 break;
             case MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Neighbor_allgatherv_inter_auto(sendbuf, sendcount, sendtype,
                                                                 recvbuf, recvcounts, displs,
                                                                 recvtype, comm_ptr);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

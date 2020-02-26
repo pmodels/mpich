@@ -152,12 +152,12 @@ int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *s
                                                       rdispls, recvtype, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Alltoallv_intra_auto(sendbuf, sendcounts, sdispls,
                                                       sendtype, recvbuf, recvcounts,
                                                       rdispls, recvtype, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM) {
@@ -174,12 +174,12 @@ int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *s
                                                       rdispls, recvtype, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Alltoallv_inter_auto(sendbuf, sendcounts, sdispls,
                                                       sendtype, recvbuf, recvcounts,
                                                       rdispls, recvtype, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

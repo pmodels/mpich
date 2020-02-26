@@ -138,12 +138,12 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_SCATTERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
                     MPIR_Scatterv_intra_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_SCATTERV_INTER_ALGORITHM) {
@@ -158,12 +158,12 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_SCATTERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
                     MPIR_Scatterv_inter_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

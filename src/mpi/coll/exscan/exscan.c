@@ -98,11 +98,11 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Exscan_allcomm_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_CVAR_EXSCAN_INTRA_ALGORITHM_auto:
-            MPL_FALLTHROUGH;
-        default:
             mpi_errno =
                 MPIR_Exscan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
+        default:
+            MPIR_Assert(0);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

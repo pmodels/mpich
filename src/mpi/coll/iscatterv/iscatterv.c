@@ -166,13 +166,13 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
                 break;
 
             case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_intra_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_ISCATTERV_INTER_ALGORITHM) {
@@ -183,13 +183,13 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
                 break;
 
             case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_inter_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 
