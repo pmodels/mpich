@@ -163,12 +163,12 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                                    errflag);
                 break;
             case MPIR_CVAR_GATHER_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Gather_intra_auto(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root,
                                                    comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         /* intercommunicator */
@@ -189,12 +189,12 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                                    errflag);
                 break;
             case MPIR_CVAR_GATHER_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Gather_inter_auto(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype, root,
                                                    comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

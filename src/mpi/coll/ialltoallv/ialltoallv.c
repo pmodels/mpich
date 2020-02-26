@@ -215,13 +215,13 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM) {
@@ -232,13 +232,13 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ialltoallv_inter_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 

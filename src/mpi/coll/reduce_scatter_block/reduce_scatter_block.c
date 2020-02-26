@@ -216,12 +216,12 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                  errflag);
                 break;
             case MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Reduce_scatter_block_intra_auto(sendbuf, recvbuf,
                                                                  recvcount, datatype, op, comm_ptr,
                                                                  errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         /* intercommunicator */
@@ -239,11 +239,11 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                  errflag);
                 break;
             case MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Reduce_scatter_block_inter_auto(sendbuf, recvbuf, recvcount,
                                                                  datatype, op, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

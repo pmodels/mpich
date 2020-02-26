@@ -256,12 +256,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
@@ -271,12 +271,12 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 

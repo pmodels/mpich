@@ -149,12 +149,12 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLTOALLW_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Alltoallw_intra_auto(sendbuf, sendcounts,
                                                       sdispls, sendtypes, recvbuf, recvcounts,
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         /* intercommunicator */
@@ -171,12 +171,12 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno = MPIR_Alltoallw_inter_auto(sendbuf, sendcounts, sdispls,
                                                       sendtypes, recvbuf, recvcounts,
                                                       rdispls, recvtypes, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);

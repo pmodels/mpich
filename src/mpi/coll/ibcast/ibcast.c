@@ -280,12 +280,12 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 break;
 
             case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_auto, comm_ptr, request, buffer, count,
                                    datatype, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_IBCAST_INTER_ALGORITHM) {
@@ -295,12 +295,12 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 break;
 
             case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_auto:
-                MPL_FALLTHROUGH;
-
-            default:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_inter_sched_auto, comm_ptr, request, buffer, count,
                                    datatype, root);
                 break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 
