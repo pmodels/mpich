@@ -91,6 +91,17 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Defines the location of tuning file.
+
+    - name        : MPIR_CVAR_CH4_IOV_DENSITY_MIN
+      category    : CH4
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Defines the threshold of high-density datatype. The
+        density is calculated by (datatype_size / datatype_max_contig_blocks).
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
