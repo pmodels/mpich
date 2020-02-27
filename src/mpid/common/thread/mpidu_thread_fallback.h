@@ -93,9 +93,6 @@ M*/
 
 M*/
 
-/* NOTE: Stateful CS_{ENTER,EXIT} currently is only used by ch3:sock and only with
- * GRANULARITY_GLOBAL */
-
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
