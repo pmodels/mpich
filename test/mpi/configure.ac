@@ -1598,6 +1598,12 @@ else
     AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 fi
 
+# TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
+AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
+AM_CONDITIONAL([HAS_F90], [test $f90dir = f90])
+AM_CONDITIONAL([HAS_F08], [test $f08dir = f08])
+AM_CONDITIONAL([HAS_CXX], [test $cxxdir = cxx])
+
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
 AC_OUTPUT_COMMANDS([chmod a+x runtests checktests])
 AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
