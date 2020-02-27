@@ -93,15 +93,29 @@ M*/
 
 M*/
 
+/*M MPIDU_THREAD_CS_YIELD_BEGIN/END - Temporarily release a critical section
+    and run progress explicitly in between.
+
+  NOTE: this is currently only used in ofi_impl.h
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
 #define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
+#define MPIDU_THREAD_CS_YIELD_BEGIN(name, mutex) MPIDUI_THREAD_CS_YIELD_BEGIN_##name(mutex)
+#define MPIDU_THREAD_CS_YIELD_END(name, mutex) MPIDUI_THREAD_CS_YIELD_END_##name(mutex)
 
 #else
 #define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
 #define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
 #define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
+#define MPIDU_THREAD_CS_YIELD_BEGIN(name, mutex)        /* NOOP */
+#define MPIDU_THREAD_CS_YIELD_END(name, mutex)  /* NOOP */
 
 #endif
 
@@ -160,6 +174,38 @@ M*/
         }                                                               \
     } while (0)
 
+/* MPIDUI_THREAD_CS_YIELD in two parts, to allow code in between unlocked */
+/* FIXME: incorrect. While other thread can take the lock, it won't leave the lock when count > 0
+ *        To do it properly, we need manage save the counter, reset to 0, and restor counter.
+ */
+#define MPIDUI_THREAD_CS_YIELD_BEGIN(mutex) \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            /* always exit */                                           \
+            mutex.count--;                                              \
+            MPIR_Assert(mutex.count >= 0);                              \
+            mutex.owner = 0;                                            \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
+
+#define MPIDUI_THREAD_CS_YIELD_END(mutex) \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            /* always enter */                                          \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIR_Assert(err_ == 0);                                     \
+            MPL_thread_self(&mutex.owner);                              \
+            mutex.count++;                                              \
+        }                                                               \
+    } while (0)
+
 /* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
 
 /* GLOBAL is only enabled with MPICH_THREAD_GRANULARITY__GLOBAL */
@@ -167,10 +213,14 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)  MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)   MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD(mutex)
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD_BEGIN(mutex)
+#define MPIDUI_THREAD_CS_YIELD_END_GLOBAL(mutex)  MPIDUI_THREAD_CS_YIELD_END(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)    /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)     /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)    /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_GLOBAL(mutex)      /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_END_GLOBAL(mutex)        /* NOOP */
 #endif
 
 /* POBJ is only enabled with GRANULARITY__POBJ */
@@ -178,10 +228,14 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)   MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD(mutex)
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD_BEGIN(mutex)
+#define MPIDUI_THREAD_CS_YIELD_END_POBJ(mutex)  MPIDUI_THREAD_CS_YIELD_END(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)      /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)      /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_POBJ(mutex)        /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_END_POBJ(mutex)  /* NOOP */
 #endif
 
 /* VCI is only enabled with MPICH_THREAD_GRANULARITY__VCI */
@@ -189,10 +243,14 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD(mutex)
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_VCI(mutex)  MPIDUI_THREAD_CS_YIELD_BEGIN(mutex)
+#define MPIDUI_THREAD_CS_YIELD_END_VCI(mutex)  MPIDUI_THREAD_CS_YIELD_END(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex)       /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_BEGIN_VCI(mutex) /* NOOP */
+#define MPIDUI_THREAD_CS_YIELD_END_VCI(mutex)   /* NOOP */
 #endif
 
 #endif /* MPICH_IS_THREADED */
