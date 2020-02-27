@@ -25,14 +25,6 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
     return mpi_errno;
 }
 
-int MPIDI_OFI_retry_progress()
-{
-    /* We do not call progress on hooks form netmod level
-     * because it is not reentrant safe.
-     */
-    return MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM);
-}
-
 typedef struct MPIDI_OFI_mr_key_allocator_t {
     uint64_t chunk_size;
     uint64_t num_ints;

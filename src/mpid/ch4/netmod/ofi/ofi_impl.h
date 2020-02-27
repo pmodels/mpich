@@ -95,12 +95,9 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        /* FIXME: by fixing the recursive locking interface to account
-         * for recursive locking in more than one lock (currently limited
-         * to one due to scalar TLS counter), this lock yielding
-         * operation can be avoided since we are inside a finite loop. */\
         MPID_THREAD_CS_YIELD_BEGIN(VCI, MPIDI_global.vci_lock);         \
-        mpi_errno = MPIDI_OFI_retry_progress();                      \
+        /* run global progress to break the potential log jam */        \
+        mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM); \
         MPID_THREAD_CS_YIELD_END(VCI, MPIDI_global.vci_lock);        \
         MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
@@ -189,7 +186,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 
 /* Externs:  see util.c for definition */
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
-int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int is_local, int *is_contig,
                               MPIR_Request ** req);
