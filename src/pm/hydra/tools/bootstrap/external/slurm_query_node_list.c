@@ -62,7 +62,7 @@ static HYD_status list_to_nodes(char *str)
     regmatch_t rmatch[MAX_RMATCH];
     regmatch_t ematch[MAX_EMATCH];
     char hostname[MAX_HOSTNAME_LEN];
-    char basename[MAX_HOSTNAME_LEN];
+    char base_str[MAX_HOSTNAME_LEN];
     char rbegin[MAX_NNODES_STRLEN];
     char rend[MAX_NNODES_STRLEN];
     char *gpattern[2];
@@ -144,7 +144,7 @@ static HYD_status list_to_nodes(char *str)
 
             if (regexec(&rmatch_old, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (h)(00)-(h)(12) */
-                MPL_snprintf_nowarn(basename, MAX_HOSTNAME_LEN, "%.*s",
+                MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN, "%.*s",
                                     (int) (rmatch[1].rm_eo - rmatch[1].rm_so),
                                     rpattern + rmatch[1].rm_so);
                 MPL_snprintf_nowarn(rbegin, MAX_NNODES_STRLEN, "%.*s",
@@ -159,7 +159,7 @@ static HYD_status list_to_nodes(char *str)
                 /* expand range and add nodes to global node list */
                 for (j = begin; j <= end; j++) {
                     MPL_snprintf_nowarn(hostname, MAX_HOSTNAME_LEN, "%s%.*d",
-                                        basename, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j);
+                                        base_str, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j);
                     status =
                         HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                     HYDU_ERR_POP(status, "unable to add to node list\n");
@@ -189,8 +189,8 @@ static HYD_status list_to_nodes(char *str)
         tmp[0] = *(gpattern[0] + gmatch[0][0].rm_eo);
         *(gpattern[0] + gmatch[0][0].rm_eo) = 0;
 
-        /* extranct basename from atom 2 in group-0 */
-        MPL_snprintf_nowarn(basename, MAX_HOSTNAME_LEN, "%.*s",
+        /* extranct base_str from atom 2 in group-0 */
+        MPL_snprintf_nowarn(base_str, MAX_HOSTNAME_LEN, "%.*s",
                             (int) (gmatch[0][2].rm_eo - gmatch[0][2].rm_so),
                             gpattern[0] + gmatch[0][2].rm_so);
 
@@ -204,14 +204,14 @@ static HYD_status list_to_nodes(char *str)
             /* hostname must end with a letter or a digit */
             if ((trail >= 'a' && trail <= 'z') ||
                 (trail >= 'A' && trail <= 'Z') || (trail >= '0' && trail <= '9')) {
-                status = HYDU_add_to_node_list(basename, tasks_per_node[k++], &global_node_list);
+                status = HYDU_add_to_node_list(base_str, tasks_per_node[k++], &global_node_list);
                 *(gpattern[0] + gmatch[0][0].rm_eo) = tmp[0];
                 gpattern[0] += gmatch[0][0].rm_eo;
                 continue;
             } else {
                 fprintf(stderr, "Error: hostname format not recognized, %s not added to nodelist.\n"
                         "Use slurm_nodelist_parse test in src/pm/hydra/maint to validate the nodelist\n"
-                        "format and report bugs\n", basename);
+                        "format and report bugs\n", base_str);
                 break;
             }
         }
@@ -243,7 +243,7 @@ static HYD_status list_to_nodes(char *str)
                 /* expand range and add nodes to global node list */
                 for (j = begin; j <= end; j++) {
                     MPL_snprintf_nowarn(hostname, MAX_HOSTNAME_LEN, "%s%.*d",
-                                        basename, (int) (rmatch[1].rm_eo - rmatch[1].rm_so), j);
+                                        base_str, (int) (rmatch[1].rm_eo - rmatch[1].rm_so), j);
                     status =
                         HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                     HYDU_ERR_POP(status, "unable to add to node list\n");
@@ -253,7 +253,7 @@ static HYD_status list_to_nodes(char *str)
                 MPL_snprintf_nowarn(rbegin, MAX_NNODES_STRLEN, "%.*s",
                                     (int) (ematch[1].rm_eo - ematch[1].rm_so),
                                     epattern + ematch[1].rm_so);
-                MPL_snprintf_nowarn(hostname, MAX_HOSTNAME_LEN, "%s%s", basename, rbegin);
+                MPL_snprintf_nowarn(hostname, MAX_HOSTNAME_LEN, "%s%s", base_str, rbegin);
                 status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                 HYDU_ERR_POP(status, "unable to add to node list\n");
             }
