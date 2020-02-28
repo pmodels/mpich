@@ -42,7 +42,6 @@ static int MPIR_async_thread_initialized = 0;
 
 static MPIR_Comm *progress_comm_ptr;
 static MPID_Thread_id_t progress_thread_id;
-static volatile int progress_thread_done = 0;
 
 /* We can use whatever tag we want; we use a different communicator
  * for communicating with the progress thread. */
