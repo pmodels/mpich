@@ -139,6 +139,9 @@ M*/
                 MPIR_Assert(mutex.count == 0);                          \
                 MPL_thread_self(&mutex.owner);                          \
             }                                                           \
+            else { \
+                MPIR_Assert(0); \
+            } \
             mutex.count++;                                              \
         }                                                               \
     } while (0)
@@ -175,36 +178,8 @@ M*/
     } while (0)
 
 /* MPIDUI_THREAD_CS_YIELD in two parts, to allow code in between unlocked */
-/* FIXME: incorrect. While other thread can take the lock, it won't leave the lock when count > 0
- *        To do it properly, we need manage save the counter, reset to 0, and restor counter.
- */
-#define MPIDUI_THREAD_CS_YIELD_BEGIN(mutex) \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            /* always exit */                                           \
-            mutex.count--;                                              \
-            MPIR_Assert(mutex.count >= 0);                              \
-            mutex.owner = 0;                                            \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
-            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
-
-#define MPIDUI_THREAD_CS_YIELD_END(mutex) \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            /* always enter */                                          \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIR_Assert(err_ == 0);                                     \
-            MPL_thread_self(&mutex.owner);                              \
-            mutex.count++;                                              \
-        }                                                               \
-    } while (0)
+#define MPIDUI_THREAD_CS_YIELD_BEGIN   MPIDUI_THREAD_CS_EXIT
+#define MPIDUI_THREAD_CS_YIELD_END     MPIDUI_THREAD_CS_ENTER
 
 /* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
 
