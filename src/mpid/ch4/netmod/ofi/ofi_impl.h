@@ -147,20 +147,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request 
     }
 }
 
-/* Initial value of the completion counter of request objects for lightweight (injection) operations */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
-{
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
-        return 0;
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
-        return 1;
-    } else {
-        /* Invalid MT model */
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
 #define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
       do {                                                              \
           if (MPIDI_OFI_need_request_creation(req)) {                   \
@@ -174,36 +160,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           MPIR_Assert((req) != NULL);                                   \
           MPIR_Request_add_ref((req));                                  \
       } while (0)
-
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
-    do {                                                                \
-        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
-            (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
-        } else {                                                        \
-            if (MPIDI_OFI_need_request_creation(req)) {                 \
-                MPIR_Assert((req) == NULL);                             \
-                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);   \
-                MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
-                                    "**nomemreq");                      \
-            }                                                           \
-            /* At this line we should always have a valid request */    \
-            MPIR_Assert((req) != NULL);                                 \
-            /* Completing lightweight (injection) requests:             \
-               If a progess thread is issuing injection, we need to     \
-               keep CC>0 until the actual injection completes. */       \
-            MPIR_cc_set(&(req)->cc, MPIDI_OFI_lw_request_cc_val());     \
-        }                                                               \
-    } while (0)
-
-/* If we set CC>0 in case of injection, we need to decrement the CC
-   to tell the main thread we completed the injection. */
-#define MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(req) \
-    do {                                                    \
-        if (MPIDI_OFI_lw_request_cc_val()) {                \
-            int incomplete_;                                \
-            MPIR_cc_decr(&(req)->cc, &incomplete_);         \
-        }                                                   \
-    } while (0)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
