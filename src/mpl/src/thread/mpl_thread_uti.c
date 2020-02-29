@@ -85,6 +85,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     if (errp != NULL) {
         *errp = err;
     }
+    return;
   uti_destroy_and_exit:
     err = uti_attr_destroy(&uti_attr);
     goto uti_exit;
