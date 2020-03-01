@@ -165,7 +165,7 @@ typedef union {
  */
 
 #define MPID_Comm_commit_pre_hook(comm_) MPIDI_CH3I_Comm_commit_pre_hook(comm_)
-#define MPID_Coll_comm_init_hook(comm_) MPIDI_CH3I_Coll_comm_init_hook(comm_)
+#define MPID_Comm_commit_post_hook(comm_) MPIDI_CH3I_Comm_commit_post_hook(comm_)
 #define MPID_Comm_free_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 
 #ifndef HAVE_MPIDI_VCRT

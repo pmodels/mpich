@@ -25,6 +25,19 @@ int MPIDI_SHMI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     return ret;
 }
 
+int MPIDI_SHMI_mpi_comm_commit_post_hook(MPIR_Comm * comm)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHMI_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_MPI_COMM_COMMIT_POST_HOOK);
+
+    ret = MPIDI_POSIX_mpi_comm_commit_post_hook(comm);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_MPI_COMM_COMMIT_POST_HOOK);
+    return ret;
+}
+
 int MPIDI_SHMI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int ret;

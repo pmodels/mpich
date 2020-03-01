@@ -33,6 +33,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .upids_to_lupids = MPIDI_SHMI_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_SHM_create_intercomm_from_lpids,
     .mpi_comm_commit_pre_hook = MPIDI_SHMI_mpi_comm_commit_pre_hook,
+    .mpi_comm_commit_post_hook = MPIDI_SHMI_mpi_comm_commit_post_hook,
     .mpi_comm_free_hook = MPIDI_SHMI_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_SHMI_mpi_win_create_hook,
