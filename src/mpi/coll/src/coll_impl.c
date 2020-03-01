@@ -155,9 +155,6 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     mpi_errno = MPII_Gentran_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPID_Coll_comm_init_hook(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
