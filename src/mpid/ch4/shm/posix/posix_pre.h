@@ -38,6 +38,10 @@ typedef enum {
 
 struct MPIR_Request;
 
+typedef struct {
+    int dummy;
+} MPIDI_POSIX_Global_t;
+
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {

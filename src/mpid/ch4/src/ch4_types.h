@@ -333,6 +333,11 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_workq_t workqueue;
 #endif
     MPIDI_CH4_configurations_t settings;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_Global_t shm;
+#endif
+    MPIDI_NM_Global_t nm;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_global;
 #ifdef MPL_USE_DBG_LOGGING
