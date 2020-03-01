@@ -174,5 +174,4 @@ typedef struct {
                              "**windows_mutex %s", "MPL_proc_mutex_unlock");        \
 } while (0)
 
-#include "posix_coll_params.h"
 #endif /* POSIX_PRE_H_INCLUDED */

@@ -14,6 +14,7 @@
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
+#include "ch4_coll_containers.h"
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "../shm/include/shm.h"

@@ -1,6 +1,8 @@
 #ifndef CH4_COLL_CONTAINERS_H_INCLUDED
 #define CH4_COLL_CONTAINERS_H_INCLUDED
 
+#include "ch4_coll_params.h"
+
 /* Empty container */
 extern const MPIDI_coll_algo_container_t MPIDI_empty_cnt;
 
