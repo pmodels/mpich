@@ -44,6 +44,10 @@ struct MPIR_Comm;
 struct MPIR_Request;
 
 typedef struct {
+    int dummy;
+} MPIDI_OFI_Global_t;
+
+typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;
     /* support for connection */

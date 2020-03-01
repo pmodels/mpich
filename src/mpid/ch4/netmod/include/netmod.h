@@ -16,6 +16,15 @@
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
+typedef union {
+#ifdef HAVE_CH4_NETMOD_OFI
+    MPIDI_OFI_Global_t ofi;
+#endif
+#ifdef HAVE_CH4_NETMOD_UCX
+    MPIDI_UCX_Global_t ucx;
+#endif
+} MPIDI_NM_Global_t;
+
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_bits,
                                     MPIR_Comm * init_comm);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
