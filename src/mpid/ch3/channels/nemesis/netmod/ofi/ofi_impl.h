@@ -12,7 +12,6 @@
 
 #include "mpid_nem_impl.h"
 #include "mpir_objects.h"
-#include "pmi.h"
 #include <rdma/fabric.h>
 #include <rdma/fi_errno.h>
 #include <rdma/fi_endpoint.h>
@@ -167,22 +166,6 @@ typedef struct {
                                 MPIR_ERR_CHECK(mpi_errno);	        \
 		} while (_ret == -FI_EAGAIN);				\
 	} while (0)
-
-
-#define PMI_RC(FUNC,STR)                                        \
-  do                                                            \
-    {                                                           \
-      pmi_errno  = FUNC;                                        \
-      MPIR_ERR_##CHKANDJUMP4(pmi_errno!=PMI_SUCCESS,            \
-                           mpi_errno,                           \
-                           MPI_ERR_OTHER,                       \
-                           "**ofi_"#STR,                        \
-                           "**ofi_"#STR" %s %d %s %s",          \
-                           __SHORT_FILE__,                      \
-                           __LINE__,                            \
-                           __func__,                            \
-                           #STR);                               \
-    } while (0)
 
 #define MPIDI_CH3I_NM_OFI_RC(FUNC)                          \
   do                                                        \
