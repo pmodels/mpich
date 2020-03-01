@@ -19,5 +19,4 @@
 #include "../xpmem/xpmem_pre.h"
 #endif
 
-#include "shm_coll_params.h"
 #endif /* SHM_PRE_H_INCLUDED */
