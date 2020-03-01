@@ -212,7 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * request_pt
 }
 
 /* communicator hooks */
-int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
+int MPIDI_CH3I_Comm_commit_pre_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Coll_comm_init_hook(struct MPIR_Comm *);
 

@@ -12,7 +12,7 @@
 #include "mpidimpl.h"
 #include "stubnm_impl.h"
 
-int MPIDI_STUBNM_mpi_comm_create_hook(MPIR_Comm * comm)
+int MPIDI_STUBNM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(0);

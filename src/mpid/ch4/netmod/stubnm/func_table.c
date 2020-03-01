@@ -30,7 +30,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .get_vci_attr = MPIDI_STUBNM_get_vci_attr,
     .upids_to_lupids = MPIDI_STUBNM_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_STUBNM_create_intercomm_from_lpids,
-    .mpi_comm_create_hook = MPIDI_STUBNM_mpi_comm_create_hook,
+    .mpi_comm_commit_pre_hook = MPIDI_STUBNM_mpi_comm_commit_pre_hook,
     .mpi_comm_free_hook = MPIDI_STUBNM_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_STUBNM_mpi_win_create_hook,

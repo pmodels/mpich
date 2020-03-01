@@ -16,7 +16,7 @@ int MPIDI_POSIX_get_vci_attr(int vci);
 int MPIDI_POSIX_coll_init(int rank, int size);
 int MPIDI_POSIX_coll_finalize(void);
 
-int MPIDI_POSIX_mpi_comm_create_hook(MPIR_Comm * comm);
+int MPIDI_POSIX_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
 int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm);
 int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type);
 int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type);

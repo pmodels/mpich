@@ -553,7 +553,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
-    mpi_errno = MPID_Comm_create_hook(tmp_comm);
+    mpi_errno = MPID_Comm_commit_pre_hook(tmp_comm);
     MPIR_ERR_CHECK(mpi_errno);
     
     *comm_pptr = tmp_comm;

@@ -174,7 +174,7 @@ static inline int map_size(MPIR_Comm_map_t map)
         return map.src_comm->remote_size;
 }
 
-int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
+int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
@@ -182,9 +182,8 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     MPIR_Comm *src_comm;
     int vcrt_size, vcrt_offset;
     
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_COMMIT_PRE_HOOK);
 
     /* initialize the is_disconnected variable to FALSE.  this will be
      * set to TRUE if the communicator is freed by an
@@ -298,7 +297,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     }
 
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_COMMIT_PRE_HOOK);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
