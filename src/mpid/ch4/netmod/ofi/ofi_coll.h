@@ -12,8 +12,7 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
-#include "ch4_coll_select.h"
-#include "ch4_coll_params.h"
+#include "ch4_csel_container.h"
 
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {

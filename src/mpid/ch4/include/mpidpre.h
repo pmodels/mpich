@@ -26,7 +26,7 @@
 #include "shmpre.h"
 #endif
 #include "uthash.h"
-#include "ch4_coll_params.h"
+#include "ch4_csel_container.h"
 #include "ch4i_workq_types.h"
 
 #ifdef MPIDI_CH4_USE_MT_DIRECT
@@ -527,6 +527,7 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        void *csel_comm;        /* collective selection handle */
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field

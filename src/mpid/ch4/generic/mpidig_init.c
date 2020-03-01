@@ -116,6 +116,8 @@ int MPIDIG_init(void)
     mpi_errno = MPIDIG_RMA_Init_targetcb_pvars();
     MPIR_ERR_CHECK(mpi_errno);
 
+    MPIDI_global.csel_root = NULL;
+
     MPIDI_global.is_ch4u_initialized = 1;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT);
 
