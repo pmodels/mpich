@@ -13,7 +13,6 @@
 
 #include "posix_impl.h"
 #include "ch4_impl.h"
-#include "ch4_coll_select.h"
 #include "posix_coll_release_gather.h"
 
 

@@ -31,3 +31,4 @@ EOF
 
 # create specific json buffers
 create_json_buf maint/tuning/coll/mpir/generic.json MPII_coll_generic_json
+create_json_buf maint/tuning/coll/ch4/generic.json MPIDI_coll_generic_json
