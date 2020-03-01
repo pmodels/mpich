@@ -19,7 +19,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallw algorithm
-        auto - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
@@ -31,7 +31,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_alltoallw algorithm
-        auto - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
@@ -75,38 +75,42 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 
 /* any non-MPI functions go here, especially non-static ones */
 
-int MPIR_Neighbor_alltoallw_intra_auto(const void *sendbuf, const int sendcounts[],
-                                       const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                       void *recvbuf, const int recvcounts[],
-                                       const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                       MPIR_Comm * comm_ptr)
+
+int MPIR_Neighbor_alltoallw_allcomm_auto(const void *sendbuf, const int sendcounts[],
+                                         const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                         void *recvbuf, const int recvcounts[],
+                                         const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                         MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno =
-        MPIR_Neighbor_alltoallw_allcomm_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
-                                           recvcounts, rdispls, recvtypes, comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__NEIGHBOR_ALLTOALLW,
+        .comm_ptr = comm_ptr,
 
-  fn_exit:
-    return mpi_errno;
+        .u.neighbor_alltoallw.sendbuf = sendbuf,
+        .u.neighbor_alltoallw.sendcounts = sendcounts,
+        .u.neighbor_alltoallw.sdispls = sdispls,
+        .u.neighbor_alltoallw.sendtypes = sendtypes,
+        .u.neighbor_alltoallw.recvbuf = recvbuf,
+        .u.neighbor_alltoallw.recvcounts = recvcounts,
+        .u.neighbor_alltoallw.rdispls = rdispls,
+        .u.neighbor_alltoallw.recvtypes = recvtypes,
+    };
 
-  fn_fail:
-    goto fn_exit;
-}
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
 
-int MPIR_Neighbor_alltoallw_inter_auto(const void *sendbuf, const int sendcounts[],
-                                       const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                       void *recvbuf, const int recvcounts[],
-                                       const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                       MPIR_Comm * comm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Neighbor_alltoallw_allcomm_nb:
+            mpi_errno =
+                MPIR_Neighbor_alltoallw_allcomm_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
+                                                   recvcounts, rdispls, recvtypes, comm_ptr);
+            break;
 
-    mpi_errno =
-        MPIR_Neighbor_alltoallw_allcomm_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
-                                           recvcounts, rdispls, recvtypes, comm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
+        default:
+            MPIR_Assert(0);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -134,9 +138,9 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                 break;
             case MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTRA_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Neighbor_alltoallw_intra_auto(sendbuf, sendcounts, sdispls, sendtypes,
-                                                       recvbuf, recvcounts, rdispls, recvtypes,
-                                                       comm_ptr);
+                    MPIR_Neighbor_alltoallw_allcomm_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                                                         recvbuf, recvcounts, rdispls, recvtypes,
+                                                         comm_ptr);
                 break;
             default:
                 MPIR_Assert(0);
@@ -151,9 +155,9 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                 break;
             case MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM_auto:
                 mpi_errno =
-                    MPIR_Neighbor_alltoallw_inter_auto(sendbuf, sendcounts, sdispls, sendtypes,
-                                                       recvbuf, recvcounts, rdispls, recvtypes,
-                                                       comm_ptr);
+                    MPIR_Neighbor_alltoallw_allcomm_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                                                         recvbuf, recvcounts, rdispls, recvtypes,
+                                                         comm_ptr);
                 break;
             default:
                 MPIR_Assert(0);

@@ -45,6 +45,16 @@ cvars:
         print   - print an error message and fallback to the internally selected algorithm
         silent  - silently fallback to the internally selected algorithm
 
+    - name        : MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -53,6 +63,8 @@ int MPIR_Nbc_progress_hook_id = 0;
 MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
+
+void *MPIR_Csel_root = NULL;
 
 int MPII_Coll_init(void)
 {
@@ -104,6 +116,16 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* initialize selection tree */
+    if (!strcmp(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPII_coll_generic_json,
+                                              MPII_Create_container, &MPIR_Csel_root);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE,
+                                               MPII_Create_container, &MPIR_Csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -120,6 +142,9 @@ int MPII_Coll_finalize(void)
     mpi_errno = MPII_Gentran_finalize();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Stubtran_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -155,6 +180,9 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     mpi_errno = MPII_Gentran_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -165,6 +193,9 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Csel_free(comm->csel_comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup all collective communicators */
     mpi_errno = MPII_Stubalgo_comm_cleanup(comm);

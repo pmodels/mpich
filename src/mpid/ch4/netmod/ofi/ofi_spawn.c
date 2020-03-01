@@ -598,7 +598,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         mpi_errno = dynproc_handshake(root, DYNPROC_RECEIVER, timeout, port_id, &conn, comm_ptr);
         if (mpi_errno == MPI_ERR_PORT || mpi_errno == MPI_SUCCESS) {
             root_errno = mpi_errno;
-            mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+            mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (root_errno != MPI_SUCCESS) {
                 mpi_errno = root_errno;
@@ -622,7 +622,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     }
 
     if (rank != root) {
-        mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
         if (root_errno != MPI_SUCCESS) {
             mpi_errno = root_errno;
@@ -652,7 +652,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                            MPIDI_OFI_DYNPROC_CONNECTED_CHILD);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     if (rank == root) {
@@ -814,7 +814,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                            MPIDI_OFI_DYNPROC_CONNECTED_PARENT);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     if (rank == root) {
