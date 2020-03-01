@@ -432,7 +432,7 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT_INTERNAL);
 
     /* Notify device of communicator creation */
-    mpi_errno = MPID_Comm_create_hook(comm);
+    mpi_errno = MPID_Comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->seq > 0) {

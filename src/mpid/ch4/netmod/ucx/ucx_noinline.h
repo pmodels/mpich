@@ -10,11 +10,11 @@
 #include "ucx_impl.h"
 
 /* ucx_comm.h */
-int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm);
+int MPIDI_UCX_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm);
 
 #ifdef NETMOD_INLINE
-#define MPIDI_NM_mpi_comm_create_hook MPIDI_UCX_mpi_comm_create_hook
+#define MPIDI_NM_mpi_comm_commit_pre_hook MPIDI_UCX_mpi_comm_commit_pre_hook
 #define MPIDI_NM_mpi_comm_free_hook MPIDI_UCX_mpi_comm_free_hook
 #endif
 

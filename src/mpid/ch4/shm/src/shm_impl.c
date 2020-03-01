@@ -49,16 +49,16 @@ int MPIDI_SHM_get_vci_attr(int vci)
     return ret;
 }
 
-int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
+int MPIDI_SHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
 
-    ret = MPIDI_SHM_src_funcs.mpi_comm_create_hook(comm);
+    ret = MPIDI_SHM_src_funcs.mpi_comm_commit_pre_hook(comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
     return ret;
 }
 

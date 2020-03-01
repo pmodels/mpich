@@ -10,11 +10,11 @@
 #include "stubnm_impl.h"
 
 /* stubnm_comm.h */
-int MPIDI_STUBNM_mpi_comm_create_hook(MPIR_Comm * comm);
+int MPIDI_STUBNM_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
 int MPIDI_STUBNM_mpi_comm_free_hook(MPIR_Comm * comm);
 
 #ifdef NETMOD_INLINE
-#define MPIDI_NM_mpi_comm_create_hook MPIDI_STUBNM_mpi_comm_create_hook
+#define MPIDI_NM_mpi_comm_commit_pre_hook MPIDI_STUBNM_mpi_comm_commit_pre_hook
 #define MPIDI_NM_mpi_comm_free_hook MPIDI_STUBNM_mpi_comm_free_hook
 #endif
 
