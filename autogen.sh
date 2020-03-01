@@ -103,6 +103,7 @@ do_subcfg_m4=yes
 do_izem=yes
 do_ofi=yes
 do_ucx=yes
+do_json=yes
 
 export do_build_configure
 
@@ -225,6 +226,10 @@ for arg in "$@" ; do
 
     -without-ucx|--without-ucx)
         do_ucx=no
+        ;;
+
+    -without-json|--without-json)
+        do_json=no
         ;;
 
 	-help|--help|-usage|--usage)
@@ -596,7 +601,7 @@ echo
 check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem
@@ -611,6 +616,10 @@ fi
 if [ "yes" = "$do_ofi" ] ; then
     check_submodule_presence src/mpid/ch4/netmod/ofi/libfabric
     externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
+if [ "yes" = "$do_json" ] ; then
+    check_submodule_presence "modules/json-c"
 fi
 
 ########################################################################
