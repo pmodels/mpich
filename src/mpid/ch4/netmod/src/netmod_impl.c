@@ -26,6 +26,19 @@ int MPIDI_NM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     return ret;
 }
 
+int MPIDI_NM_mpi_comm_commit_post_hook(MPIR_Comm * comm)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_HOOK_POS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_POST_HOOK);
+
+    ret = MPIDI_NM_func->mpi_comm_commit_post_hook(comm);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_POST_HOOK);
+    return ret;
+}
+
 int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int ret;

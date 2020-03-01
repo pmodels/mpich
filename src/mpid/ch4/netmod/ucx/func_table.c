@@ -31,6 +31,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .upids_to_lupids = MPIDI_UCX_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_UCX_create_intercomm_from_lpids,
     .mpi_comm_commit_pre_hook = MPIDI_UCX_mpi_comm_commit_pre_hook,
+    .mpi_comm_commit_post_hook = MPIDI_UCX_mpi_comm_commit_post_hook,
     .mpi_comm_free_hook = MPIDI_UCX_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_UCX_mpi_win_create_hook,

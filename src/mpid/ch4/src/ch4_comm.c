@@ -208,11 +208,18 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
-int MPID_Coll_comm_init_hook(MPIR_Comm * comm)
+int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+
+    mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_comm_commit_post_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);

@@ -31,6 +31,20 @@ int MPIDI_UCX_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+int MPIDI_UCX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_COMM_COMMIT_POST_HOOK);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_COMM_COMMIT_POST_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

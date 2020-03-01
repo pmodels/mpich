@@ -616,16 +616,16 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     }
 
     /* call post commit hooks */
-    mpi_errno = MPID_Coll_comm_init_hook(comm);
+    mpi_errno = MPID_Comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->node_comm) {
-        mpi_errno = MPID_Coll_comm_init_hook(comm->node_comm);
+        mpi_errno = MPID_Comm_commit_post_hook(comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (comm->node_roots_comm) {
-        mpi_errno = MPID_Coll_comm_init_hook(comm->node_roots_comm);
+        mpi_errno = MPID_Comm_commit_post_hook(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

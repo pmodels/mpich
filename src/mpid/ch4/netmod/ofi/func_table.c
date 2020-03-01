@@ -33,6 +33,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
     .upids_to_lupids = MPIDI_OFI_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_OFI_create_intercomm_from_lpids,
     .mpi_comm_commit_pre_hook = MPIDI_OFI_mpi_comm_commit_pre_hook,
+    .mpi_comm_commit_post_hook = MPIDI_OFI_mpi_comm_commit_post_hook,
     .mpi_comm_free_hook = MPIDI_OFI_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_OFI_mpi_win_create_hook,

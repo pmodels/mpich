@@ -14,6 +14,7 @@ int MPIDI_STUBSHM_mpi_finalize_hook(void);
 int MPIDI_STUBSHM_get_vci_attr(int vci);
 
 int MPIDI_STUBSHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
+int MPIDI_STUBSHM_mpi_comm_commit_post_hook(MPIR_Comm * comm);
 int MPIDI_STUBSHM_mpi_comm_free_hook(MPIR_Comm * comm);
 int MPIDI_STUBSHM_mpi_type_commit_hook(MPIR_Datatype * type);
 int MPIDI_STUBSHM_mpi_type_free_hook(MPIR_Datatype * type);

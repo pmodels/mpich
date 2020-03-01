@@ -303,7 +303,7 @@ int MPIDI_CH3I_Comm_commit_pre_hook(MPIR_Comm *comm)
     goto fn_exit;
 }
 
-int MPIDI_CH3I_Coll_comm_init_hook(MPIR_Comm *comm)
+int MPIDI_CH3I_Comm_commit_post_hook(MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COLL_COMM_INIT_HOOK);
