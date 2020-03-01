@@ -14,6 +14,7 @@
 #include "posix_impl.h"
 #include "ch4_impl.h"
 #include "posix_coll_release_gather.h"
+#include "posix_csel_container.h"
 
 
 /*
@@ -23,7 +24,7 @@ cvars:
     - name        : MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : mpir
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -32,11 +33,12 @@ cvars:
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : mpir
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -45,11 +47,12 @@ cvars:
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : mpir
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -58,6 +61,7 @@ cvars:
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
                          (izem submodule should be build and enabled for this)
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -86,19 +90,46 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__BCAST,
+        .comm_ptr = comm,
+        .u.bcast.buffer = buffer,
+        .u.bcast.count = count,
+        .u.bcast.datatype = datatype,
+        .u.bcast.root = root,
+    };
+    MPIDI_POSIX_csel_container_s *cnt;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
 
     switch (MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_release_gather:
-            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded);
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded);
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
+
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_mpir:
-            mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
+            goto fallback;
+
+        case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_auto:
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            if (cnt == NULL)
+                goto fallback;
+
+            switch (cnt->id) {
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather:
+                    mpi_errno =
+                        MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm,
+                                                             errflag);
+                    break;
+
+                default:
+                    MPIR_Assert(0);
+            }
             break;
+
         default:
             MPIR_Assert(0);
     }
@@ -122,21 +153,49 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                                             MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
+        .comm_ptr = comm,
+        .u.allreduce.sendbuf = sendbuf,
+        .u.allreduce.recvbuf = recvbuf,
+        .u.allreduce.count = count,
+        .u.allreduce.datatype = datatype,
+        .u.allreduce.op = op,
+    };
+    MPIDI_POSIX_csel_container_s *cnt;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
 
     switch (MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_release_gather:
-            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded &&
                                            MPIR_Op_is_commutative(op));
             mpi_errno =
                 MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                          comm, errflag);
             break;
+
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_mpir:
-            mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+            goto fallback;
+
+        case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_auto:
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            if (cnt == NULL)
+                goto fallback;
+
+            switch (cnt->id) {
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather:
+                    mpi_errno =
+                        MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype,
+                                                                 op, comm, errflag);
+                    break;
+
+                default:
+                    MPIR_Assert(0);
+            }
             break;
+
         default:
             MPIR_Assert(0);
     }
@@ -371,22 +430,50 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE,
+        .comm_ptr = comm,
+        .u.reduce.sendbuf = sendbuf,
+        .u.reduce.recvbuf = recvbuf,
+        .u.reduce.count = count,
+        .u.reduce.datatype = datatype,
+        .u.reduce.op = op,
+        .u.reduce.root = root,
+    };
+    MPIDI_POSIX_csel_container_s *cnt;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
 
     switch (MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_release_gather:
-            MPII_COLLECTIVE_FALLBACK_CHECK(!MPIR_ThreadInfo.isThreaded &&
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded &&
                                            MPIR_Op_is_commutative(op));
             mpi_errno =
                 MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op, root,
                                                       comm, errflag);
             break;
+
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_mpir:
-            mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
-                                         root, comm, errflag);
+            goto fallback;
+
+        case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_auto:
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            if (cnt == NULL)
+                goto fallback;
+
+            switch (cnt->id) {
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather:
+                    mpi_errno =
+                        MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op,
+                                                              root, comm, errflag);
+                    break;
+
+                default:
+                    MPIR_Assert(0);
+            }
             break;
+
         default:
             MPIR_Assert(0);
     }
