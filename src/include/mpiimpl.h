@@ -236,6 +236,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_progress_hook.h"
 #include "mpir_win.h"
 #include "mpir_coll.h"
+#include "mpir_csel.h"
 #include "mpir_func.h"
 #include "mpir_err.h"
 #include "mpir_nbc.h"

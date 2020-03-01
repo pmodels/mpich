@@ -14,4 +14,7 @@
 # mpi_sources
 
 mpi_core_sources += \
-    src/mpi/coll/src/coll_impl.c
+    src/mpi/coll/src/coll_impl.c \
+    src/mpi/coll/src/csel.c \
+    src/mpi/coll/src/csel_container.c \
+    src/mpi/coll/src/csel_json_autogen.c

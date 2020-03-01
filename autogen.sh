@@ -1061,3 +1061,15 @@ if [ "$do_build_configure" = "yes" ] ; then
 	fi
     done
 fi
+
+
+echo
+echo
+echo "###########################################################"
+echo "## Creating JSON char arrays"
+echo "###########################################################"
+echo
+
+echo_n "generating json char arrays... "
+./maint/tuning/coll/json_gen.sh
+echo "done"
