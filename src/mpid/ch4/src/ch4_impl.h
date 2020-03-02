@@ -411,8 +411,10 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
 #define MPIDIU_PROGRESS_WHILE(cond)         \
     do {                                        \
+        MPID_THREAD_CS_YIELD_BEGIN(VCI, MPIDI_global.vci_lock); \
         while (cond)                            \
             MPIDIU_PROGRESS();              \
+        MPID_THREAD_CS_YIELD_END(VCI, MPIDI_global.vci_lock); \
     } while (0)
 
 #ifdef HAVE_ERROR_CHECKING
