@@ -22,11 +22,6 @@ char *MPIDI_DBG_parent_str = "?";
 
 /* FIXME: the PMI init function should ONLY do the PMI operations, not the 
    process group or bc operations.  These should be in a separate routine */
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 
 #include "datatype.h"
 
@@ -142,7 +137,7 @@ int MPID_Init(int requested, int *provided)
 
     /*
      * Let the channel perform any necessary initialization
-     * The channel init should assume that PMI_Init has been called and that
+     * The channel init should assume that PMI init has been called and that
      * the basic information about the job has been extracted from PMI (e.g.,
      * the size and rank of this process, and the process group id)
      */

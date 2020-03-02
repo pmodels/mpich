@@ -5,13 +5,6 @@
  */
 
 #include "mpidimpl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
-
-#define MAX_JOBID_LEN 1024
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -72,7 +65,7 @@ int MPIDI_PG_Finalize(void)
 	MPIU_PG_Printall( stdout );
     }
 
-    /* FIXME - straighten out the use of PMI_Finalize - no use after 
+    /* FIXME - straighten out the use of PMI finalize - no use after 
        PG_Finalize */
     if (pg_world->connData) {
         MPIR_pmi_finalize();
@@ -551,7 +544,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
    ...
 
    The "conninfo for rank 0" etc. for the original (MPI_COMM_WORLD)
-   process group are stored in the PMI_KVS space with the keys 
+   process group are stored in the PMI kvs space with the keys 
    p<rank>-businesscard .  
 
    Fixme: Add a routine to publish the connection info to this file so that

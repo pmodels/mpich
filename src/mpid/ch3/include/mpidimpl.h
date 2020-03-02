@@ -33,10 +33,6 @@
 int gethostname(char *name, size_t len);
 # endif
 
-/* Default PMI version to use */
-#define MPIDI_CH3I_DEFAULT_PMI_VERSION 1
-#define MPIDI_CH3I_DEFAULT_PMI_SUBVERSION 1
-
 /* group of processes detected to have failed.  This is a subset of
    comm_world group. */
 extern MPIR_Group *MPIDI_Failed_procs_group;

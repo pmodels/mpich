@@ -5,7 +5,6 @@
  */
 
 #include "mpidi_ch3_impl.h"
-#include "pmi.h"
 #include "mpidu_sock.h"
 #include "utlist.h"
 
@@ -167,7 +166,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             MPIDI_CH3_Progress_signal_completion();
             break;      /* break from the do loop */
         }
-
 #ifdef MPICH_IS_THREADED
 
         /* The logic for this case is just complicated enough that
