@@ -39,6 +39,8 @@ int MPIR_pmi_init(void);
 void MPIR_pmi_finalize(void);
 void MPIR_pmi_abort(int exit_code, const char *error_msg);
 
+void MPIR_pmi_singleton_init(void);
+
 /* PMI getters for private fields */
 int MPIR_pmi_max_key_size(void);
 int MPIR_pmi_max_val_size(void);

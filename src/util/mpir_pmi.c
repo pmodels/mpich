@@ -158,6 +158,19 @@ void MPIR_pmi_abort(int exit_code, const char *error_msg)
 #endif
 }
 
+void MPIR_pmi_singleton_init(void)
+{
+#ifdef USE_PMI1_API
+    /* Force an enroll */
+    char buf[256];
+    PMI_KVS_Get("foobar", "foobar", buf, sizeof(buf));
+#else
+    /* TODO: figure what to do for other PMI */
+    MPIR_Assert(0);
+#endif
+    MPIR_pmi_init();
+}
+
 /* getters for internal constants */
 int MPIR_pmi_max_key_size(void)
 {
