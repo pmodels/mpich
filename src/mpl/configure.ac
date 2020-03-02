@@ -782,9 +782,10 @@ fi
 
 PAC_ARG_ATOMIC_PRIMITIVES
 
-AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
-        #include "$1"
-    ]],[[
+AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_SOURCE([[
+    #include "$1"
+    int main()
+    {
         struct MPL_atomic_int_t a, b;
         int c;
 
@@ -807,6 +808,7 @@ AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
         MPL_atomic_read_write_barrier();
 
         return c;
+    }
     ]])]
 )
 
