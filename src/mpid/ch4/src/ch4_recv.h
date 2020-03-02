@@ -360,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             int rank,
                                             int tag,

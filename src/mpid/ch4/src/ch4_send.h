@@ -15,7 +15,7 @@
 #include "ch4r_proc.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -237,7 +237,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -277,7 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
-                                                  int count,
+                                                  MPI_Aint count,
                                                   MPI_Datatype datatype,
                                                   int rank,
                                                   int tag,
@@ -313,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,
@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
-                                                   int count,
+                                                   MPI_Aint count,
                                                    MPI_Datatype datatype,
                                                    int rank,
                                                    int tag,
@@ -384,7 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,
@@ -419,7 +419,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -669,7 +669,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
 /* Common internal rountine for send_init family */
 MPL_STATIC_INLINE_PREFIX int MPIDI_psend_init(MPIDI_ptype ptype,
                                               const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,
@@ -709,7 +709,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_psend_init(MPIDI_ptype ptype,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             int rank,
                                             int tag,
@@ -733,7 +733,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -756,7 +756,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -779,7 +779,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
