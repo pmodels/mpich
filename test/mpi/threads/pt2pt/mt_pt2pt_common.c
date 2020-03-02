@@ -50,6 +50,7 @@ int main(int argc, char **argv)
     MTestArgList *head = MTestArgListCreate(argc, argv);
     count = MTestArgListGetInt(head, "count");
     iter = MTestArgListGetInt(head, "iter");
+    MTestArgListDestroy(head);
 
     if (count <= 0) {
         fprintf(stderr, "-count must be positive.\n");
