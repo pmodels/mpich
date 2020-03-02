@@ -793,6 +793,7 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
 
+    MPIR_Assert(count > 0);
 #ifdef USE_PMI1_API
     int *info_keyval_sizes = NULL;
     PMI_keyval_t **info_keyval_vectors = NULL;
@@ -827,8 +828,35 @@ int MPIR_pmi_spawn_multiple(int count, char *commands[], char **argvs[],
     MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                          "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
 #elif defined(USE_PMI2_API)
-    /* not supported yet */
-    MPIR_Assert(0);
+    int *info_keyval_sizes = NULL;
+
+    struct MPIR_Info preput;
+    preput.key = preput_keyvals[0].key;
+    preput.value = preput_keyvals[0].val;
+    preput.next = NULL;
+
+    const struct MPIR_Info *preput_p[1] = { &preput };
+
+    /* compute argcs array */
+    int *argcs = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
+    MPIR_Assert(argcs);
+
+    for (i = 0; i < count; ++i) {
+        argcs[i] = 0;
+        if (argvs != NULL && argvs[i] != NULL) {
+            while (argvs[i][argcs[i]]) {
+                ++argcs[i];
+            }
+        }
+    }
+    pmi_errno = PMI2_Job_Spawn(count, (const char **) commands, argcs, (const char ***) argvs,
+                               maxprocs,
+                               info_keyval_sizes, (const MPIR_Info **) info_ptrs, 1, preput_p,
+                               NULL, 0, /*jobId, jobIdSize, */ pmi_errcodes);
+    MPL_free(argcs);
+    MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI2_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
+
 #elif defined(USE_PMIX_API)
     /* not supported yet */
     MPIR_Assert(0);
