@@ -516,66 +516,28 @@ void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 */
 int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 {
-#ifdef USE_PMI2_API
     int mpi_errno = MPI_SUCCESS;
-    int len;
-    char key[PMI2_MAX_KEYLEN];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PG_SetConnInfo);
 
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PG_SetConnInfo);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PG_SetConnInfo);
 
+    int len;
+    char key[100];
     len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
     MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
+    MPIR_Assert(len < MPIR_pmi_max_key_size());
 
-    mpi_errno = PMI2_KVS_Put(key, connString);
+    mpi_errno = MPIR_pmi_kvs_put(key, connString);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = PMI2_KVS_Fence();
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
-    
+
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PG_SetConnInfo);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
-#else
-    int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
-    int len;
-    char key[128];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PG_SetConnInfo);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PG_SetConnInfo);
-
-    MPIR_Assert(pg_world->connData);
-    
-    len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
-    if (len < 0 || len > sizeof(key)) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**snprintf",
-			     "**snprintf %d", len);
-    }
-    pmi_errno = PMI_KVS_Put(pg_world->connData, key, connString );
-    if (pmi_errno != PMI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_put",
-			     "**pmi_kvs_put %d", pmi_errno);
-    }
-    pmi_errno = PMI_KVS_Commit(pg_world->connData);
-    if (pmi_errno != PMI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_commit",
-			     "**pmi_kvs_commit %d", pmi_errno);
-    }
-    
-    pmi_errno = PMI_Barrier();
-    if (pmi_errno != PMI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_barrier",
-			     "**pmi_barrier %d", pmi_errno);
-    }
- fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PG_SetConnInfo);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-#endif
 }
 
 /* For all of these routines, the format of the process group description
@@ -598,55 +560,25 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 
 
 /* The "KVS" versions are for the process group to which the calling 
-   process belongs.  These use the PMI_KVS routines to access the
+   process belongs.  These use the PMI kvs routines to access the
    process information */
 static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 {
-#ifdef USE_PMI2_API
-    char key[MPIDI_MAX_KVS_KEY_LEN];
-    int  mpi_errno = MPI_SUCCESS, rc;
-    int vallen;
+    int mpi_errno = MPI_SUCCESS;
 
-    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
-    if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-    }
+    int len;
+    char key[100];
+    len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
+    MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
+    MPIR_Assert(len < MPIR_pmi_max_key_size());
 
-    mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
-    if (mpi_errno) {
-	MPIDI_PG_CheckForSingleton();
-	mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-#else
-    char key[MPIDI_MAX_KVS_KEY_LEN];
-    int  mpi_errno = MPI_SUCCESS, rc, pmi_errno;
-
-    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
-    if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
-    }
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-    pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
-    if (pmi_errno) {
-	MPIDI_PG_CheckForSingleton();
-	pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
-    }
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-    if (pmi_errno) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**pmi_kvs_get");
-    }
+    mpi_errno = MPIR_pmi_kvs_get(-1, key, buf, bufsize);
+    MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:
     return mpi_errno;
  fn_fail:
     goto fn_exit;
-#endif
 }
 
 /* *slen is the length of the string, including the null terminator.  So if the
@@ -738,62 +670,26 @@ static int connFromStringKVS( const char *buf ATTRIBUTE((unused)),
 }
 static int connFreeKVS( MPIDI_PG_t *pg )
 {
-    MPL_free( pg->connData );
+    MPL_free(pg->connData);
     return MPI_SUCCESS;
 }
 
 
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 {
-#ifdef USE_PMI2_API
-    int mpi_errno = MPI_SUCCESS;
-    
-    pg->connData = (char *)MPL_malloc(MAX_JOBID_LEN, MPL_MEM_STRINGS);
-    if (pg->connData == NULL) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
-    }
-    
-    mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
-    MPIR_ERR_CHECK(mpi_errno);
-#else
-    int pmi_errno, kvs_name_sz;
-    int mpi_errno = MPI_SUCCESS;
-
-    pmi_errno = PMI_KVS_Get_name_length_max( &kvs_name_sz );
-    if (pmi_errno != PMI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
-			     "**pmi_kvs_get_name_length_max", 
-			     "**pmi_kvs_get_name_length_max %d", pmi_errno);
-    }
-    
-    pg->connData = (char *)MPL_malloc(kvs_name_sz + 1, MPL_MEM_STRINGS);
-    if (pg->connData == NULL) {
-	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
-    }
-    
-    pmi_errno = PMI_KVS_Get_my_name(pg->connData, kvs_name_sz);
-    if (pmi_errno != PMI_SUCCESS) {
-	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
-			     "**pmi_kvs_get_my_name", 
-			     "**pmi_kvs_get_my_name %d", pmi_errno);
-    }
-#endif
     pg->getConnInfo        = getConnInfoKVS;
     pg->connInfoToString   = connToStringKVS;
     pg->connInfoFromString = connFromStringKVS;
     pg->freeConnInfo       = connFreeKVS;
 
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    MPL_free(pg->connData);
-    goto fn_exit;
+    pg->connData = MPL_strdup(MPIR_pmi_job_id());
+    return MPI_SUCCESS;
 }
 
 /* Return the kvsname associated with the MPI_COMM_WORLD of this process. */
 int MPIDI_PG_GetConnKVSname( char ** kvsname )
 {
-    *kvsname = pg_world->connData;
+    *kvsname = (char *) pg_world->connData;
     return MPI_SUCCESS;
 }
 

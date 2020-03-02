@@ -431,19 +431,10 @@ static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
  */
 int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
 {
-    int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-#ifdef USE_PMI2_API
-    *val_max_sz_p = PMI2_MAX_VALLEN;
-#else
-    pmi_errno = PMI_KVS_Get_value_length_max(val_max_sz_p);
-    if (pmi_errno != PMI_SUCCESS)
-    {
-        MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,
-                             "**pmi_kvs_get_value_length_max",
-                             "**pmi_kvs_get_value_length_max %d", pmi_errno);
-    }
-#endif
+
+    *val_max_sz_p = MPIR_pmi_max_val_size();
+
     /* This memroy is returned by this routine */
     *bc_val_p = MPL_malloc(*val_max_sz_p, MPL_MEM_ADDRESS);
     if (*bc_val_p == NULL) {
