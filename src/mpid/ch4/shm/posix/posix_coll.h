@@ -51,7 +51,7 @@ cvars:
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : mpir
+      default     : release_gather
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
