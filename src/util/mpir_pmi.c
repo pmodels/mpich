@@ -919,7 +919,7 @@ static int get_option_num_cliques(void)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
         return 2;
 #else
-        return MPIR_CVAR_ODD_EVEN_CLIQUES ? 2 : 1;
+        return MPIR_CVAR_ODD_EVEN_CLIQUES ? 1 : 1;
 #endif
     }
 }
