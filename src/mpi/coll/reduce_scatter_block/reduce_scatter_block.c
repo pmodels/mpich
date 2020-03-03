@@ -25,7 +25,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto               - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         noncommutative     - Force noncommutative algorithm
         recursive_doubling - Force recursive doubling algorithm
         pairwise           - Force pairwise algorithm
@@ -41,7 +41,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto                        - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb                          - Force nonblocking algorithm
         remote_reduce_local_scatter - Force remote-reduce-local-scatter algorithm
 
@@ -93,90 +93,73 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
    End Algorithm: MPI_Reduce_scatter
 */
 
-int MPIR_Reduce_scatter_block_intra_auto(const void *sendbuf,
-                                         void *recvbuf,
-                                         int recvcount,
-                                         MPI_Datatype datatype,
-                                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+
+int MPIR_Reduce_scatter_block_allcomm_auto(const void *sendbuf, void *recvbuf, int recvcount,
+                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                           MPIR_Errflag_t * errflag)
 {
-    int comm_size;
-    MPI_Aint true_extent, true_lb;
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int type_size, total_count, nbytes;
-    int is_commutative;
 
-    comm_size = comm_ptr->local_size;
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__REDUCE_SCATTER_BLOCK,
+        .comm_ptr = comm_ptr,
 
-    if (recvcount == 0) {
-        goto fn_exit;
-    }
+        .u.reduce_scatter_block.sendbuf = sendbuf,
+        .u.reduce_scatter_block.recvbuf = recvbuf,
+        .u.reduce_scatter_block.recvcount = recvcount,
+        .u.reduce_scatter_block.datatype = datatype,
+        .u.reduce_scatter_block.op = op,
+    };
 
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
 
-    is_commutative = MPIR_Op_is_commutative(op);
-
-    total_count = comm_size * recvcount;
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = total_count * type_size;
-
-    if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
-        /* commutative and short. use recursive halving algorithm */
-        mpi_errno =
-            MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype,
-                                                              op, comm_ptr, errflag);
-    } else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
-        /* commutative and long message, or noncommutative and long message.
-         * use (p-1) pairwise exchanges */
-        mpi_errno =
-            MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op,
-                                                     comm_ptr, errflag);
-    } else if (!(comm_size & (comm_size - 1))) {        /* power of two check */
-        /* noncommutative, pof2 size */
-        mpi_errno =
-            MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype,
-                                                           op, comm_ptr, errflag);
-    } else {
-        /* noncommutative and non-pof2, use recursive doubling. */
-        mpi_errno =
-            MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount,
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_intra_noncommutative:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount,
                                                                datatype, op, comm_ptr, errflag);
-    }
+            break;
 
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_intra_pairwise:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op,
+                                                         comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_intra_recursive_doubling:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount,
+                                                                   datatype, op, comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_intra_recursive_halving:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount,
+                                                                  datatype, op, comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(sendbuf, recvbuf,
+                                                                            recvcount, datatype, op,
+                                                                            comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_scatter_block_allcomm_nb:
+            mpi_errno =
+                MPIR_Reduce_scatter_block_allcomm_nb(sendbuf, recvbuf, recvcount, datatype, op,
+                                                     comm_ptr, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
     }
 
   fn_exit:
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    /* --END ERROR HANDLING-- */
     return mpi_errno;
-}
-
-int MPIR_Reduce_scatter_block_inter_auto(const void *sendbuf,
-                                         void *recvbuf,
-                                         int recvcount,
-                                         MPI_Datatype datatype,
-                                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(sendbuf, recvbuf,
-                                                                            recvcount, datatype, op,
-                                                                            comm_ptr, errflag);
-
-    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
@@ -216,9 +199,9 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                  errflag);
                 break;
             case MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_auto:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_auto(sendbuf, recvbuf,
-                                                                 recvcount, datatype, op, comm_ptr,
-                                                                 errflag);
+                mpi_errno = MPIR_Reduce_scatter_block_allcomm_auto(sendbuf, recvbuf,
+                                                                   recvcount, datatype, op,
+                                                                   comm_ptr, errflag);
                 break;
             default:
                 MPIR_Assert(0);
@@ -239,8 +222,8 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                  errflag);
                 break;
             case MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM_auto:
-                mpi_errno = MPIR_Reduce_scatter_block_inter_auto(sendbuf, recvbuf, recvcount,
-                                                                 datatype, op, comm_ptr, errflag);
+                mpi_errno = MPIR_Reduce_scatter_block_allcomm_auto(sendbuf, recvbuf, recvcount,
+                                                                   datatype, op, comm_ptr, errflag);
                 break;
             default:
                 MPIR_Assert(0);

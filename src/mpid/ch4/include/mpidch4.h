@@ -166,9 +166,9 @@ int MPID_Op_commit_hook(MPIR_Op *);
 int MPID_Op_free_hook(MPIR_Op *);
 int MPID_Intercomm_exchange_map(MPIR_Comm *, int, MPIR_Comm *, int, int *, int **, int *);
 int MPID_Create_intercomm_from_lpids(MPIR_Comm *, int, const int[]);
-int MPID_Comm_create_hook(MPIR_Comm *);
+int MPID_Comm_commit_pre_hook(MPIR_Comm *);
 int MPID_Comm_free_hook(MPIR_Comm *);
-int MPID_Coll_comm_init_hook(MPIR_Comm *);
+int MPID_Comm_commit_post_hook(MPIR_Comm *);
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm *, MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *, int, MPI_Datatype, int, MPIR_Comm *,
                                         MPIR_Errflag_t *) MPL_STATIC_INLINE_SUFFIX;

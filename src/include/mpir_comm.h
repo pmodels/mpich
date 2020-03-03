@@ -178,6 +178,7 @@ struct MPIR_Comm {
     int *internode_table;       /* internode_table[i] gives the rank in
                                  * node_roots_comm of rank i in this comm.
                                  * It is of size 'local_size'. */
+    int node_count;             /* number of nodes this comm is spread over */
 
     int is_low_group;           /* For intercomms only, this boolean is
                                  * set for all members of one of the
@@ -213,6 +214,7 @@ struct MPIR_Comm {
                                  * To be used during collective communication */
     } coll;
 
+    void *csel_comm;            /* collective selector handle */
 #if defined HAVE_LIBHCOLL
     hcoll_comm_priv_t hcoll_priv;
 #endif                          /* HAVE_LIBHCOLL */

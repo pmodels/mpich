@@ -88,8 +88,96 @@ cvars:
       description : >-
         Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
 
+    - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+static void *create_container(struct json_object *obj)
+{
+    MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
+
+    json_object_object_foreach(obj, key, val) {
+        char *ckey = MPL_strdup_no_spaces(key);
+
+        if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_beta"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_gamma"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoallv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoallw_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Gather_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Gatherv_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scatter_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scatterv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_block_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Exscan_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha;
+        else {
+            fprintf(stderr, "unrecognized key %s\n", ckey);
+            MPIR_Assert(0);
+        }
+
+        MPL_free(ckey);
+    }
+
+    return (void *) cnt;
+}
 
 static int choose_netmod(void);
 static const char *get_mt_model_name(int mt);
@@ -487,6 +575,16 @@ int MPID_Init(int requested, int *provided)
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
+    /* Initialize collective selection */
+    if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
+                                              create_container, &MPIDI_global.csel_root);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
+                                               create_container, &MPIDI_global.csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Override split_type */
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
@@ -571,6 +669,11 @@ int MPID_Finalize(void)
     mpi_errno = MPIDI_SHM_mpi_finalize_hook();
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    if (MPIDI_global.csel_root) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     finalize_builtin_comms();
     MPIDIG_finalize();

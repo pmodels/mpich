@@ -59,13 +59,14 @@ cvars:
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        sched_auto                                 - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_binomial                             - Force Binomial algorithm
         sched_smp                                  - Force smp algorithm
         sched_scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
@@ -97,13 +98,14 @@ cvars:
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        sched_auto - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_flat - Force flat algorithm
 
     - name        : MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE
@@ -148,6 +150,96 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 /* Provides a "flat" broadcast that doesn't know anything about
  * hierarchy.  It will choose between several different algorithms
  * based on the given parameters. */
+
+int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int root,
+                             MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IBCAST,
+        .comm_ptr = comm_ptr,
+
+        .u.ibcast.buffer = buffer,
+        .u.ibcast.count = count,
+        .u.ibcast.datatype = datatype,
+        .u.ibcast.root = root,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_tree:
+            mpi_errno =
+                MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
+                                               cnt->u.ibcast.intra_gentran_tree.tree_type,
+                                               cnt->u.ibcast.intra_gentran_tree.k,
+                                               cnt->u.ibcast.intra_gentran_tree.maxbytes, request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv:
+            mpi_errno =
+                MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv(buffer, count, datatype, root,
+                                                                      comm_ptr,
+                                                                      cnt->u.
+                                                                      ibcast.intra_gentran_scatterv_recexch_allgatherv.scatterv_k,
+                                                                      cnt->u.
+                                                                      ibcast.intra_gentran_scatterv_recexch_allgatherv.allgatherv_k,
+                                                                      request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_ring:
+            mpi_errno =
+                MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
+                                               cnt->u.ibcast.intra_gentran_ring.maxbytes, request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_auto, comm_ptr, request, buffer, count,
+                               datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_binomial:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_binomial, comm_ptr, request, buffer, count,
+                               datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_scatter_recursive_doubling_allgather,
+                               comm_ptr, request, buffer, count, datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_scatter_ring_allgather:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_scatter_ring_allgather, comm_ptr, request,
+                               buffer, count, datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_smp:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_intra_sched_smp, comm_ptr, request, buffer, count,
+                               datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_inter_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_inter_sched_auto, comm_ptr, request, buffer, count,
+                               datatype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_inter_sched_flat:
+            MPII_SCHED_WRAPPER(MPIR_Ibcast_inter_sched_flat, comm_ptr, request, buffer, count,
+                               datatype, root);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Ibcast_intra_sched_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
@@ -284,6 +376,11 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                                    datatype, root);
                 break;
 
+            case MPIR_CVAR_IBCAST_INTRA_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ibcast_allcomm_auto(buffer, count, datatype, root, comm_ptr, request);
+                break;
+
             default:
                 MPIR_Assert(0);
         }
@@ -297,6 +394,11 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
             case MPIR_CVAR_IBCAST_INTER_ALGORITHM_sched_auto:
                 MPII_SCHED_WRAPPER(MPIR_Ibcast_inter_sched_auto, comm_ptr, request, buffer, count,
                                    datatype, root);
+                break;
+
+            case MPIR_CVAR_IBCAST_INTER_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ibcast_allcomm_auto(buffer, count, datatype, root, comm_ptr, request);
                 break;
 
             default:

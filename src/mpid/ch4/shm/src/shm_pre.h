@@ -19,5 +19,11 @@
 #include "../xpmem/xpmem_pre.h"
 #endif
 
-#include "shm_coll_params.h"
+typedef struct {
+    MPIDI_POSIX_Global_t posix;
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    MPIDI_XPMEM_Global_t xpmem;
+#endif
+} MPIDI_SHM_Global_t;
+
 #endif /* SHM_PRE_H_INCLUDED */

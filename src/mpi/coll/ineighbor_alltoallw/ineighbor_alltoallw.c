@@ -13,26 +13,28 @@ cvars:
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallw algorithm
-        sched_auto            - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         gentran_linear        - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoallw algorithm
-        sched_auto            - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_linear          - Force linear algorithm
         gentran_linear        - Force generic transport based linear algorithm
 
@@ -75,6 +77,69 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Ineighbor_alltoallw
 #define MPI_Ineighbor_alltoallw PMPI_Ineighbor_alltoallw
+
+
+int MPIR_Ineighbor_alltoallw_allcomm_auto(const void *sendbuf, const int sendcounts[],
+                                          const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                          void *recvbuf, const int recvcounts[],
+                                          const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                          MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__INEIGHBOR_ALLTOALLW,
+        .comm_ptr = comm_ptr,
+
+        .u.ineighbor_alltoallw.sendbuf = sendbuf,
+        .u.ineighbor_alltoallw.sendcounts = sendcounts,
+        .u.ineighbor_alltoallw.sdispls = sdispls,
+        .u.ineighbor_alltoallw.sendtypes = sendtypes,
+        .u.ineighbor_alltoallw.recvbuf = recvbuf,
+        .u.ineighbor_alltoallw.recvcounts = recvcounts,
+        .u.ineighbor_alltoallw.rdispls = rdispls,
+        .u.ineighbor_alltoallw.recvtypes = recvtypes,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ineighbor_alltoallw_allcomm_gentran_linear:
+            mpi_errno =
+                MPIR_Ineighbor_alltoallw_allcomm_gentran_linear(sendbuf, sendcounts, sdispls,
+                                                                sendtypes, recvbuf, recvcounts,
+                                                                rdispls, recvtypes, comm_ptr,
+                                                                request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ineighbor_alltoallw_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallw_intra_sched_auto, comm_ptr, request,
+                               sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
+                               rdispls, recvtypes);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ineighbor_alltoallw_inter_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallw_inter_sched_auto, comm_ptr, request,
+                               sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
+                               rdispls, recvtypes);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ineighbor_alltoallw_allcomm_sched_linear:
+            MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallw_allcomm_sched_linear, comm_ptr, request,
+                               sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
+                               rdispls, recvtypes);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Ineighbor_alltoallw_intra_sched_auto(const void *sendbuf, const int sendcounts[],
                                               const MPI_Aint sdispls[],
@@ -181,6 +246,13 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                                    rdispls, recvtypes);
                 break;
 
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ineighbor_alltoallw_allcomm_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                                                          recvbuf, recvcounts, rdispls, recvtypes,
+                                                          comm_ptr, request);
+                break;
+
             default:
                 MPIR_Assert(0);
         }
@@ -204,6 +276,13 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
                 MPII_SCHED_WRAPPER(MPIR_Ineighbor_alltoallw_inter_sched_auto, comm_ptr, request,
                                    sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
                                    rdispls, recvtypes);
+                break;
+
+            case MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTER_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ineighbor_alltoallw_allcomm_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                                                          recvbuf, recvcounts, rdispls, recvtypes,
+                                                          comm_ptr, request);
                 break;
 
             default:

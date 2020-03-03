@@ -164,108 +164,6 @@ MPIDI_${net_upper}_dt_t ${net};"
         ch4_netmod_op_decl="${ch4_netmod_op_decl} \\
 MPIDI_${net_upper}_op_t ${net};"
     fi
-    if test -z "$ch4_netmod_barrier_params_decl" ; then
-        ch4_netmod_barrier_params_decl="MPIDI_${net_upper}_BARRIER_PARAMS_DECL"
-    else
-        ch4_netmod_barrier_params_decl="${ch4_netmod_barrier_params_decl} \\
-MPIDI_${net_upper}_BARRIER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_bcast_params_decl" ; then
-        ch4_netmod_bcast_params_decl="MPIDI_${net_upper}_BCAST_PARAMS_DECL"
-    else
-        ch4_netmod_bcast_params_decl="${ch4_netmod_bcast_params_decl} \\
-MPIDI_${net_upper}_BCAST_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_params_decl" ; then
-        ch4_netmod_reduce_params_decl="MPIDI_${net_upper}_REDUCE_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_params_decl="${ch4_netmod_reduce_params_decl} \\
-MPIDI_${net_upper}_REDUCE_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allreduce_params_decl" ; then
-        ch4_netmod_allreduce_params_decl="MPIDI_${net_upper}_ALLREDUCE_PARAMS_DECL"
-    else
-        ch4_netmod_allreduce_params_decl="${ch4_netmod_allreduce_params_decl} \\
-MPIDI_${net_upper}_ALLREDUCE_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoall_params_decl" ; then
-        ch4_netmod_alltoall_params_decl="MPIDI_${net_upper}_ALLTOALL_PARAMS_DECL"
-    else
-        ch4_netmod_alltoall_params_decl="${ch4_netmod_alltoall_params_decl} \\
-MPIDI_${net_upper}_ALLTOALL_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoallv_params_decl" ; then
-        ch4_netmod_alltoallv_params_decl="MPIDI_${net_upper}_ALLTOALLV_PARAMS_DECL"
-    else
-        ch4_netmod_alltoallv_params_decl="${ch4_netmod_alltoallv_params_decl} \\
-MPIDI_${net_upper}_ALLTOALLV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoallw_params_decl" ; then
-        ch4_netmod_alltoallw_params_decl="MPIDI_${net_upper}_ALLTOALLW_PARAMS_DECL"
-    else
-        ch4_netmod_alltoallw_params_decl="${ch4_netmod_alltoallw_params_decl} \\
-MPIDI_${net_upper}_ALLTOALLW_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allgather_params_decl" ; then
-        ch4_netmod_allgather_params_decl="MPIDI_${net_upper}_ALLGATHER_PARAMS_DECL"
-    else
-        ch4_netmod_allgather_params_decl="${ch4_netmod_allgather_params_decl} \\
-MPIDI_${net_upper}_ALLGATHER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allgatherv_params_decl" ; then
-        ch4_netmod_allgatherv_params_decl="MPIDI_${net_upper}_ALLGATHERV_PARAMS_DECL"
-    else
-        ch4_netmod_allgatherv_params_decl="${ch4_netmod_allgatherv_params_decl} \\
-MPIDI_${net_upper}_ALLGATHERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_gather_params_decl" ; then
-        ch4_netmod_gather_params_decl="MPIDI_${net_upper}_GATHER_PARAMS_DECL"
-    else
-        ch4_netmod_gather_params_decl="${ch4_netmod_gather_params_decl} \\
-MPIDI_${net_upper}_GATHER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_gatherv_params_decl" ; then
-        ch4_netmod_gatherv_params_decl="MPIDI_${net_upper}_GATHERV_PARAMS_DECL"
-    else
-        ch4_netmod_gatherv_params_decl="${ch4_netmod_gatherv_params_decl} \\
-MPIDI_${net_upper}_GATHERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scatter_params_decl" ; then
-        ch4_netmod_scatter_params_decl="MPIDI_${net_upper}_SCATTER_PARAMS_DECL"
-    else
-        ch4_netmod_scatter_params_decl="${ch4_netmod_scatter_params_decl} \\
-MPIDI_${net_upper}_SCATTER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scatterv_params_decl" ; then
-        ch4_netmod_scatterv_params_decl="MPIDI_${net_upper}_SCATTERV_PARAMS_DECL"
-    else
-        ch4_netmod_scatterv_params_decl="${ch4_netmod_scatterv_params_decl} \\
-MPIDI_${net_upper}_SCATTERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_scatter_params_decl" ; then
-        ch4_netmod_reduce_scatter_params_decl="MPIDI_${net_upper}_REDUCE_SCATTER_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_scatter_params_decl="${ch4_netmod_reduce_scatter_params_decl} \\
-MPIDI_${net_upper}_REDUCE_SCATTER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_scatter_block_params_decl" ; then
-        ch4_netmod_reduce_scatter_block_params_decl="MPIDI_${net_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_scatter_block_params_decl="${ch4_netmod_reduce_scatter_block_params_decl} \\
-MPIDI_${net_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scan_params_decl" ; then
-        ch4_netmod_scan_params_decl="MPIDI_${net_upper}_SCAN_PARAMS_DECL"
-    else
-        ch4_netmod_scan_params_decl="${ch4_netmod_scan_params_decl} \\
-MPIDI_${net_upper}_SCAN_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_exscan_params_decl" ; then
-        ch4_netmod_exscan_params_decl="MPIDI_${net_upper}_EXSCAN_PARAMS_DECL"
-    else
-        ch4_netmod_exscan_params_decl="${ch4_netmod_exscan_params_decl} \\
-MPIDI_${net_upper}_EXSCAN_PARAMS_DECL"
-    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -305,23 +203,6 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
-AC_SUBST(ch4_netmod_barrier_params_decl)
-AC_SUBST(ch4_netmod_bcast_params_decl)
-AC_SUBST(ch4_netmod_reduce_params_decl)
-AC_SUBST(ch4_netmod_allreduce_params_decl)
-AC_SUBST(ch4_netmod_alltoall_params_decl)
-AC_SUBST(ch4_netmod_alltoallv_params_decl)
-AC_SUBST(ch4_netmod_alltoallw_params_decl)
-AC_SUBST(ch4_netmod_allgather_params_decl)
-AC_SUBST(ch4_netmod_allgatherv_params_decl)
-AC_SUBST(ch4_netmod_gather_params_decl)
-AC_SUBST(ch4_netmod_gatherv_params_decl)
-AC_SUBST(ch4_netmod_scatter_params_decl)
-AC_SUBST(ch4_netmod_scatterv_params_decl)
-AC_SUBST(ch4_netmod_reduce_scatter_params_decl)
-AC_SUBST(ch4_netmod_reduce_scatter_block_params_decl)
-AC_SUBST(ch4_netmod_scan_params_decl)
-AC_SUBST(ch4_netmod_exscan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
@@ -332,23 +213,6 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_barrier_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_bcast_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allreduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoall_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoallv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoallw_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allgather_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allgatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_gather_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_gatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scatterv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-inline,
     [--enable-ch4-netmod-inline
@@ -532,8 +396,6 @@ AC_CHECK_FUNCS(signal)
 AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
-src/mpid/ch4/include/coll_algo_params.h
-src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 

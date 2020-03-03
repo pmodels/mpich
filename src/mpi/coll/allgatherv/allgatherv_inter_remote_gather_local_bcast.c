@@ -102,7 +102,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast(const void *sendbuf, int sen
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Bcast_intra_auto(recvbuf, 1, newtype, 0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recvbuf, 1, newtype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag =

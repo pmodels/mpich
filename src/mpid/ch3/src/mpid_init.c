@@ -263,7 +263,7 @@ static int init_spawn(void)
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 
     /* FIXME: To allow just the "root" process to
-       request the port and then use MPIR_Bcast_intra_auto to
+       request the port and then use MPIR_Bcast_allcomm_auto to
        distribute it to the rest of the processes,
        we need to perform the Bcast after MPI is
        otherwise initialized.  We could do this

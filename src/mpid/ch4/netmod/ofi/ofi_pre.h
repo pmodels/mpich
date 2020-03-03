@@ -44,6 +44,10 @@ struct MPIR_Comm;
 struct MPIR_Request;
 
 typedef struct {
+    int dummy;
+} MPIDI_OFI_Global_t;
+
+typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;
     /* support for connection */
@@ -211,6 +215,4 @@ typedef struct {
 #endif
 } MPIDI_OFI_addr_t;
 
-#include "ofi_coll_params.h"
-#include "ofi_coll_containers.h"
 #endif /* OFI_PRE_H_INCLUDED */
