@@ -19,8 +19,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto            - Internal algorithm selection
-        linear          - Force linear algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
+        sched_linear    - Force linear algorithm
         gentran_linear  - Force generic transport based linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_INTER_ALGORITHM
@@ -32,8 +33,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto   - Internal algorithm selection
-        linear - Force linear algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
+        sched_linear - Force linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -75,6 +77,64 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 #define MPI_Iscatterv PMPI_Iscatterv
 
 /* any non-MPI functions go here, especially non-static ones */
+
+
+int MPIR_Iscatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const int *displs,
+                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__ISCATTERV,
+        .comm_ptr = comm_ptr,
+
+        .u.iscatterv.sendbuf = sendbuf,
+        .u.iscatterv.sendcounts = sendcounts,
+        .u.iscatterv.displs = displs,
+        .u.iscatterv.sendtype = sendtype,
+        .u.iscatterv.recvcount = recvcount,
+        .u.iscatterv.recvbuf = recvbuf,
+        .u.iscatterv.recvtype = recvtype,
+        .u.iscatterv.root = root,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatterv_allcomm_gentran_linear:
+            mpi_errno =
+                MPIR_Iscatterv_allcomm_gentran_linear(sendbuf, sendcounts, displs, sendtype,
+                                                      recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                      request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatterv_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iscatterv_intra_sched_auto, comm_ptr, request, sendbuf,
+                               sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatterv_inter_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iscatterv_inter_sched_auto, comm_ptr, request, sendbuf,
+                               sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iscatterv_allcomm_sched_linear:
+            MPII_SCHED_WRAPPER(MPIR_Iscatterv_allcomm_sched_linear, comm_ptr, request, sendbuf,
+                               sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Iscatterv_intra_sched_auto(const void *sendbuf, const int sendcounts[], const int displs[],
                                     MPI_Datatype sendtype, void *recvbuf, int recvcount,
@@ -159,16 +219,22 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
                                                           comm_ptr, request);
                 break;
 
-            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_linear:
+            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_allcomm_sched_linear, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
                 break;
 
-            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_auto:
+            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_sched_auto:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_intra_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
+                break;
+
+            case MPIR_CVAR_ISCATTERV_INTRA_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Iscatterv_allcomm_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                                recvcount, recvtype, root, comm_ptr, request);
                 break;
 
             default:
@@ -176,16 +242,22 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
         }
     } else {
         switch (MPIR_CVAR_ISCATTERV_INTER_ALGORITHM) {
-            case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_linear:
+            case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_sched_linear:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_allcomm_sched_linear, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
                 break;
 
-            case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_auto:
+            case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_sched_auto:
                 MPII_SCHED_WRAPPER(MPIR_Iscatterv_inter_sched_auto, comm_ptr, request, sendbuf,
                                    sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
                                    root);
+                break;
+
+            case MPIR_CVAR_ISCATTERV_INTER_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Iscatterv_allcomm_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                                recvcount, recvtype, root, comm_ptr, request);
                 break;
 
             default:

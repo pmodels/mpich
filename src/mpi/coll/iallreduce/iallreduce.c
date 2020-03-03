@@ -72,13 +72,14 @@ cvars:
     - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        sched_auto                       - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_naive                      - Force naive algorithm
         sched_smp                        - Force smp algorithm
         sched_recursive_doubling         - Force recursive doubling algorithm
@@ -92,13 +93,14 @@ cvars:
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
-      default     : sched_auto
+      default     : auto
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        sched_auto                      - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
         sched_remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
@@ -138,6 +140,120 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Iallreduce
 #define MPI_Iallreduce PMPI_Iallreduce
+
+
+int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count,
+                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IALLREDUCE,
+        .comm_ptr = comm_ptr,
+
+        .u.iallreduce.sendbuf = sendbuf,
+        .u.iallreduce.recvbuf = recvbuf,
+        .u.iallreduce.count = count,
+        .u.iallreduce.datatype = datatype,
+        .u.iallreduce.op = op,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_auto, comm_ptr, request, sendbuf,
+                               recvbuf, count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_naive:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_naive, comm_ptr, request, sendbuf,
+                               recvbuf, count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_recursive_doubling:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_reduce_scatter_allgather:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_reduce_scatter_allgather, comm_ptr,
+                               request, sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_single_buffer:
+            mpi_errno =
+                MPIR_Iallreduce_intra_gentran_recexch_single_buffer(sendbuf, recvbuf, count,
+                                                                    datatype, op, comm_ptr,
+                                                                    cnt->u.
+                                                                    iallreduce.intra_gentran_recexch_single_buffer.k,
+                                                                    request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer:
+            mpi_errno =
+                MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(sendbuf, recvbuf, count,
+                                                                      datatype, op, comm_ptr,
+                                                                      cnt->u.
+                                                                      iallreduce.intra_gentran_recexch_multiple_buffer.k,
+                                                                      request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_tree:
+            mpi_errno =
+                MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                   cnt->u.iallreduce.intra_gentran_tree.tree_type,
+                                                   cnt->u.iallreduce.intra_gentran_tree.k,
+                                                   cnt->u.iallreduce.intra_gentran_tree.maxbytes,
+                                                   cnt->u.iallreduce.
+                                                   intra_gentran_tree.buffer_per_child, request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_ring:
+            mpi_errno =
+                MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                   request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv:
+            mpi_errno =
+                MPIR_Iallreduce_intra_gentran_recexch_reduce_scatter_recexch_allgatherv(sendbuf,
+                                                                                        recvbuf,
+                                                                                        count,
+                                                                                        datatype,
+                                                                                        op,
+                                                                                        comm_ptr,
+                                                                                        cnt->
+                                                                                        u.iallreduce.intra_gentran_recexch_reduce_scatter_recexch_allgatherv.k,
+                                                                                        request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_intra_sched_smp:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_intra_sched_smp, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_inter_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_auto, comm_ptr, request, sendbuf,
+                               recvbuf, count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast:
+            MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_remote_reduce_local_bcast, comm_ptr,
+                               request, sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 int MPIR_Iallreduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
@@ -265,14 +381,14 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
-                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative);
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                        op, comm_ptr, request);
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
-                MPII_COLLECTIVE_FALLBACK_CHECK(is_commutative &&
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative &&
                                                count >= nranks);
                 /* This algorithm will work for commutative
                  * operations and if the count is bigger than total
@@ -310,6 +426,12 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                                    recvbuf, count, datatype, op);
                 break;
 
+            case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Iallreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                 request);
+                break;
+
             default:
                 MPIR_Assert(0);
         }
@@ -323,6 +445,12 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
             case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_sched_auto:
                 MPII_SCHED_WRAPPER(MPIR_Iallreduce_inter_sched_auto, comm_ptr, request, sendbuf,
                                    recvbuf, count, datatype, op);
+                break;
+
+            case MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Iallreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                 request);
                 break;
 
             default:

@@ -21,14 +21,18 @@
 #include "../algorithms/treealgo/treealgo.h"
 #include "../algorithms/recexchalgo/recexchalgo.h"
 
-#define MPII_COLLECTIVE_FALLBACK_CHECK(check)                           \
+#include "csel_container.h"
+
+#define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check)                     \
     do {                                                                \
         if ((check) == 0) {                                             \
             if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) { \
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**collalgo"); \
             } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) { \
-                fprintf(stderr, "User set collective algorithm is not usable for the provided arguments\n"); \
-                fflush(stderr);                                         \
+                if ((rank) == 0) {                                      \
+                    fprintf(stderr, "User set collective algorithm is not usable for the provided arguments\n"); \
+                    fflush(stderr);                                     \
+                }                                                       \
                 goto fallback;                                          \
             } else {                                                    \
                 goto fallback;                                          \
@@ -41,6 +45,8 @@ extern int MPIR_Nbc_progress_hook_id;
 extern MPIR_Tree_type_t MPIR_Iallreduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ireduce_tree_type;
 extern MPIR_Tree_type_t MPIR_Ibcast_tree_type;
+extern void *MPIR_Csel_root;
+extern char MPII_coll_generic_json[];
 
 /* Function to initialze communicators for collectives */
 int MPIR_Coll_comm_init(MPIR_Comm * comm);

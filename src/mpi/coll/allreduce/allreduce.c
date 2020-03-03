@@ -41,7 +41,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto                     - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb                       - Force nonblocking algorithm
         smp                      - Force smp algorithm
         recursive_doubling       - Force recursive doubling algorithm
@@ -56,7 +56,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto                  - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         nb                    - Force nonblocking algorithm
         reduce_exchange_bcast - Force reduce-exchange-bcast algorithm
 
@@ -120,92 +120,64 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype
 };
 
-int MPIR_Allreduce_intra_auto(const void *sendbuf,
-                              void *recvbuf,
-                              int count,
-                              MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+
+int MPIR_Allreduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count,
+                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int pof2;
-    int is_commutative;
-    int nbytes = 0;
-    MPI_Aint type_size;
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
-    is_commutative = MPIR_Op_is_commutative(op);
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__ALLREDUCE,
+        .comm_ptr = comm_ptr,
 
-    if (count == 0)
-        goto fn_exit;
+        .u.allreduce.sendbuf = sendbuf,
+        .u.allreduce.recvbuf = recvbuf,
+        .u.allreduce.count = count,
+        .u.allreduce.datatype = datatype,
+        .u.allreduce.op = op,
+    };
 
-    /* is the op commutative? We do SMP optimizations only if it is. */
-    if (MPIR_Comm_is_parent_comm(comm_ptr) &&
-        is_commutative && nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
-        mpi_errno =
-            MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
 
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_recursive_doubling:
+            mpi_errno =
+                MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr, errflag);
+            break;
 
-        goto fn_exit;
-    }
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_reduce_scatter_allgather:
+            mpi_errno =
+                MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op,
+                                                              comm_ptr, errflag);
+            break;
 
-    pof2 = comm_ptr->coll.pof2;
-    if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (!HANDLE_IS_BUILTIN(op)) || (count < pof2)) {
-        mpi_errno =
-            MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                    comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    } else {
-        mpi_errno =
-            MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op,
-                                                          comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_intra_smp:
+            mpi_errno =
+                MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_inter_reduce_exchange_bcast:
+            mpi_errno =
+                MPIR_Allreduce_inter_reduce_exchange_bcast(sendbuf, recvbuf, count, datatype, op,
+                                                           comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_allcomm_nb:
+            mpi_errno =
+                MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
     }
 
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    return (mpi_errno);
-}
-
-
-int MPIR_Allreduce_inter_auto(const void *sendbuf,
-                              void *recvbuf,
-                              int count,
-                              MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIR_Allreduce_inter_reduce_exchange_bcast(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                   errflag);
-
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
@@ -236,8 +208,8 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                                              errflag);
                 break;
             case MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_auto:
-                mpi_errno = MPIR_Allreduce_intra_auto(sendbuf, recvbuf, count, datatype, op,
-                                                      comm_ptr, errflag);
+                mpi_errno = MPIR_Allreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr, errflag);
                 break;
             default:
                 MPIR_Assert(0);
@@ -255,8 +227,8 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                                                       datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM_auto:
-                mpi_errno = MPIR_Allreduce_inter_auto(sendbuf, recvbuf, count, datatype, op,
-                                                      comm_ptr, errflag);
+                mpi_errno = MPIR_Allreduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op,
+                                                        comm_ptr, errflag);
                 break;
             default:
                 MPIR_Assert(0);
