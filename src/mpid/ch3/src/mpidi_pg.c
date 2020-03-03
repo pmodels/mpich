@@ -1067,17 +1067,11 @@ int MPIU_PG_Printall( FILE *fp )
 
 int MPIDI_PG_CheckForSingleton( void )
 {
-
-#ifdef USE_PMI2_API
-    /* PMI2 FIXME for now we just always assume we aren't doing singleton init */
-#else
+    /* TODO: fix the hackiness */
     if (strstr((char*)pg_world->id,"singinit_kvs") == (char *)pg_world->id) {
-	char buf[256];
-	/* Force an enroll */
-	PMI_KVS_Get( "foobar", "foobar", buf, sizeof(buf) );
-	PMI_KVS_Get_my_name( pg_world->id, 256 );
-	PMI_KVS_Get_my_name( pg_world->connData, 256 );
+        MPIR_pmi_singleton_init();
+        MPL_strncpy(pg_world->id, MPIR_pmi_job_id(), 256);
+        MPL_strncpy(pg_world->connData, MPIR_pmi_job_id(), 256);
     }
-#endif
     return MPI_SUCCESS;
 }
