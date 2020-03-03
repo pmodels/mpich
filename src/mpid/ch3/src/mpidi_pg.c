@@ -740,18 +740,9 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 #endif
 
     pg_id = pg->id;
-    /* FIXME: This is a hack, and it doesn't even work */
-    /*    MPIDI_PrintConnStrToFile( stdout, __FILE__, __LINE__, 
-	  "connToString: pg id is", (char *)pg_id );*/
-    /* This is intended to cause a process to transition from a singleton
-       to a non-singleton. */
-    /* XXX DJG TODO figure out what this little bit is all about. */
     if (strstr( pg_id, "singinit_kvs" ) == pg_id) {
-#ifdef USE_PMI2_API
-        MPIR_Assertp(0); /* don't know what to do here for pmi2 yet.  DARIUS */
-#else
-	PMI_KVS_Get_my_name( pg->id, 256 );
-#endif
+        /* don't know what to do here */
+        MPIR_Assertp(0);
     }
     
     while (*pg_id) str[len++] = *pg_id++;
