@@ -5,11 +5,6 @@
  */
 
 #include "mpidimpl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
-#include "pmi.h"
-#endif
 #undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
 #include "utarray.h"
@@ -484,9 +479,6 @@ fn_fail:
 int MPIDI_CH3U_Check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno;
-    int len;
-    char *kvsname;
     MPIR_Group *prev_failed_group, *new_failed_group;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
@@ -496,26 +488,18 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
        comm_world.  We need to fix hydra to include the pgid along
        with the rank, then we need to create the failed group from
        something bigger than comm_world. */
-    mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
-    MPIR_ERR_CHECK(mpi_errno);
-#ifdef USE_PMI2_API
-    {
-        int vallen = 0;
-        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", MPIDI_failed_procs_string, PMI2_MAX_VALLEN, &vallen);
-        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-    }
-#else
-    pmi_errno = PMI_KVS_Get_value_length_max(&len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", MPIDI_failed_procs_string, len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-#endif
+    char *failed_procs_string = MPIR_pmi_get_failed_procs();
 
-    if (*MPIDI_failed_procs_string == '\0') {
+    if (failed_procs_string == NULL) {
         /* there are no failed processes */
         MPIDI_Failed_procs_group = MPIR_Group_empty;
         goto fn_exit;
     }
+
+    /* TODO: remove the usage of MPIDI_failed_procs_string */
+    int max_len = MPIR_pmi_max_val_size();
+    MPL_strncpy(MPIDI_failed_procs_string, failed_procs_string, max_len);
+    MPL_free(failed_procs_string);
 
     MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER, TYPICAL, "Received proc fail notification: %s", MPIDI_failed_procs_string);
 

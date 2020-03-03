@@ -65,7 +65,6 @@ static int finalize_failed_procs_group(void *param)
 
 int MPID_Init(int requested, int *provided)
 {
-    int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
     int has_parent;
     MPIDI_PG_t * pg=NULL;
@@ -73,7 +72,6 @@ int MPID_Init(int requested, int *provided)
     int pg_size;
     MPIR_Comm * comm;
     int p;
-    int val;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -91,21 +89,6 @@ int MPID_Init(int requested, int *provided)
     MPIDI_Failed_procs_group = MPIR_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
 
-    /* Create the string that will cache the last group of failed processes
-     * we received from PMI */
-#ifdef USE_PMI2_API
-    MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * PMI2_MAX_VALLEN, MPL_MEM_STRINGS);
-#else
-    pmi_errno = PMI_KVS_Get_value_length_max(&val);
-    if (pmi_errno != PMI_SUCCESS)
-    {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                             "**pmi_kvs_get_value_length_max",
-                             "**pmi_kvs_get_value_length_max %d", pmi_errno);
-    }
-    MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * (val+1), MPL_MEM_STRINGS);
-#endif
-
     /*
      * Set global process attributes.  These can be overridden by the channel 
      * if necessary.
@@ -119,6 +102,9 @@ int MPID_Init(int requested, int *provided)
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
+    /* Create the string that will cache the last group of failed processes
+     * we received from PMI */
+    MPIDI_failed_procs_string = MPL_malloc(MPIR_pmi_max_val_size(), MPL_MEM_STRINGS);
     
     /* FIXME: Why are pg_size and pg_rank handled differently? */
     pg_size = MPIDI_PG_Get_size(pg);
