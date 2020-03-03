@@ -322,7 +322,7 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
                                     void *(*create_container) (struct json_object *))
 {
     enum json_type type;
-    csel_node_s *prevnode, *tmp, *node = NULL;
+    csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
         type = json_object_get_type(val);
