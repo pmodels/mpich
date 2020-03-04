@@ -372,6 +372,20 @@ cvars:
         cvar. If the number is negative, OFI will init the MPIDI_OFI_globa.max_msg_size using
         whatever provider gives (which might be unlimited for socket provider).
 
+    - name        : MPIR_CVAR_CH4_OFI_MAX_NICS
+      category    : CH4
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If set to positive number, this cvar determines the maximum number of physical nics
+        to use (if more than one is available). If the number is -1, underlying netmod or
+        shmmod automatically uses an optimal number depending on what is detected on the
+        system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
+
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -1201,7 +1215,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0][0] = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
@@ -1888,7 +1902,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
 
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
@@ -1902,7 +1916,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
                 char *addrname = (char *) table + recv_bc_len * rank_map[i];
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
                                             addrname, 1, &addr, 0ULL, NULL), avmap);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0] = addr;
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0][0] = addr;
             }
         }
         MPIDU_bc_table_destroy();
@@ -1915,7 +1929,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
 
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0][0] = mapped_table[i];
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();
@@ -1976,7 +1990,7 @@ static int addr_exchange_all_vnis(void)
                 }
                 int idx = r * num_vnis + vni_remote;
                 MPIR_Assert(mapped_table[idx] != FI_ADDR_NOTAVAIL);
-                av->dest[vni_local][vni_remote] = mapped_table[idx];
+                av->dest[0][vni_local][vni_remote] = mapped_table[idx];
             }
         }
     }
