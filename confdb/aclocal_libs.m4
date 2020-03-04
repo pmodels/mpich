@@ -64,11 +64,18 @@ dnl The xxx is specified in the "with_option" parameter.
 dnl
 dnl NOTE: This macro expects a corresponding PAC_SET_HEADER_LIB_PATH
 dnl macro (or equivalent logic) to be used before this macro is used.
+dnl
+dnl NOTE: since setting LIBS may break runtime checks (e.g. AC_CHECK_SIZEOF), we
+dnl prepend the library to WRAPPER_LIBS instead.
+
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
+    PAC_PUSH_FLAG(LIBS)
     AC_CHECK_LIB($2,$3,,failure=yes)
+    PAC_POP_FLAG(LIBS)
     if test "$failure" = "no" ; then
+       PAC_PREPEND_FLAG([-l$2], [WRAPPER_LIBS])
        $4
     else
        $5
