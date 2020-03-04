@@ -142,7 +142,7 @@ cvars:
 #include "topotree_util.h"
 
 #define RELEASE_GATHER_FIELD(comm, field)                   \
-    MPIDI_POSIX_COMM(comm, release_gather)->field
+    MPIDI_POSIX_COMM(comm, release_gather).field
 
 
 MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type, MPIDI_POSIX_Reduce_tree_type;
@@ -152,8 +152,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
-
-    MPIDI_POSIX_COMM(comm_ptr, release_gather) = NULL;
 
     if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "kary"))
         MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
@@ -172,6 +170,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
         MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KNOMIAL_2;
     else
         MPIDI_POSIX_Reduce_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
+
+    RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 0;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
     return MPI_SUCCESS;
@@ -206,8 +206,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
      * bcast buffer (divided into multiple cells), followed by
      * reduce buffer (divided into multiple cells) per rank. */
 
-    if (MPIDI_POSIX_COMM(comm_ptr, release_gather) == NULL) {
+    if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
         /* release_gather based collectives have not been used before on this comm */
+        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
         initialize_flags = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
             initialize_bcast_buf = true;
@@ -299,10 +300,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
     if (initialize_flags) {
         /* Initialize the release_gather struct and allocate shm for flags */
-        MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
-        release_gather_info_ptr =
-            MPL_malloc(sizeof(struct MPIDI_POSIX_release_gather_comm_t), MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(!release_gather_info_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr =
+            &MPIDI_POSIX_COMM(comm_ptr, release_gather);
 
         release_gather_info_ptr->flags_shm_size = flags_shm_size;
 
@@ -412,7 +411,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIR_ERR_SET(mpi_errno, errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-        MPIDI_POSIX_COMM(comm_ptr, release_gather) = release_gather_info_ptr;
     }
 
     if (initialize_bcast_buf) {
@@ -481,7 +479,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Clean up is not required for NULL struct */
-    if (MPIDI_POSIX_COMM(comm_ptr, release_gather) == NULL) {
+    if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
         goto fn_exit;
     }
 
@@ -526,7 +524,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, bcast_tree)));
     MPIR_Treealgo_tree_free(&(RELEASE_GATHER_FIELD(comm_ptr, reduce_tree)));
-    MPL_free(MPIDI_POSIX_COMM(comm_ptr, release_gather));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_FREE);

@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
          MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ? MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS - 1 : 0;
 
     rank = MPIR_Comm_rank(comm_ptr);
-    release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr, release_gather);
+    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
@@ -299,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     uint64_t min_gather, child_gather_flag;
     UT_array *children;
 
-    release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr, release_gather);
+    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     children = release_gather_info_ptr->bcast_tree.children;
     num_children = release_gather_info_ptr->bcast_tree.num_children;
     rank = MPIR_Comm_rank(comm_ptr);
