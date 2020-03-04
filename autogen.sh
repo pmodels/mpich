@@ -598,10 +598,10 @@ echo "###########################################################"
 echo
 
 # hwloc is always required
-check_submodule_presence src/hwloc
+check_submodule_presence modules/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa modules/hwloc test/mpi modules/json-c"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem
@@ -660,8 +660,8 @@ for destdir in $confdb_dirs ; do
 done
 
 # Copying hwloc to hydra
-sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
-sync_external src/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
 # remove .git directories to avoid confusing git clean
 rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
 rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
