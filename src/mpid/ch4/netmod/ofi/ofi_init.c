@@ -845,6 +845,7 @@ static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
                          struct fid_cq *cq, struct fid_cntr *cntr);
 static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq);
 static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av);
+static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av);
 
 static int create_vni_context(int vni)
 {
@@ -1074,22 +1075,9 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
      */
     if (try_open_shared_av(domain, p_av)) {
         MPIDI_OFI_global.got_named_av = 1;
-    }
-
-    if (!MPIDI_OFI_global.got_named_av) {
-        struct fi_av_attr av_attr;
-        memset(&av_attr, 0, sizeof(av_attr));
-        if (MPIDI_OFI_ENABLE_AV_TABLE) {
-            av_attr.type = FI_AV_TABLE;
-        } else {
-            av_attr.type = FI_AV_MAP;
-        }
-        av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-        av_attr.count = MPIR_Process.size;
-
-        av_attr.name = NULL;
-        av_attr.flags = 0;
-        MPIDI_OFI_CALL(fi_av_open(domain, &av_attr, p_av, NULL), avopen);
+    } else {
+        mpi_errno = open_local_av(domain, p_av);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* ---- other shareable objects ---- */
@@ -1223,6 +1211,30 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         return 0;
     }
 #endif
+}
+
+static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av)
+{
+    struct fi_av_attr av_attr;
+    int mpi_errno = MPI_SUCCESS;
+
+    memset(&av_attr, 0, sizeof(av_attr));
+    if (MPIDI_OFI_ENABLE_AV_TABLE) {
+        av_attr.type = FI_AV_TABLE;
+    } else {
+        av_attr.type = FI_AV_MAP;
+    }
+    av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
+    av_attr.count = MPIR_Process.size;
+
+    av_attr.name = NULL;
+    av_attr.flags = 0;
+    MPIDI_OFI_CALL(fi_av_open(p_domain, &av_attr, p_av, NULL), avopen);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int open_fabric(void)
