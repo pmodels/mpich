@@ -9,8 +9,7 @@ dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     AC_ARG_WITH([$1],
                 [AC_HELP_STRING([--with-$1=[[PATH]]],
-                                [specify path where $1 include directory and lib directory can be found])],,
-                [with_$1=$2])
+                                [specify path where $1 include directory and lib directory can be found. Use "system" if the library can be found in the system path.])])
     AC_ARG_WITH([$1-include],
                 [AC_HELP_STRING([--with-$1-include=PATH],
                                 [specify path where $1 include directory can be found])],
@@ -28,25 +27,33 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
                           with_$1_lib=""])],
                 [])
 
+    # "system" means we don't need do anything, otherwise --
     # The args have been sanitized into empty/non-empty values above.
     # Now append -I/-L args to CPPFLAGS/LDFLAGS, with more specific options
     # taking priority
 
-    AS_IF([test -n "${with_$1_include}"],
-          [PAC_APPEND_FLAG([-I${with_$1_include}],[CPPFLAGS])],
-          [AS_IF([test -n "${with_$1}"],
-                 [PAC_APPEND_FLAG([-I${with_$1}/include],[CPPFLAGS])])])
+    case "${with_$1}" in
+        embedded|system|no)
+            # skip
+            ;;
+        *)
+        AS_IF([test -n "${with_$1_include}"],
+            [PAC_APPEND_FLAG([-I${with_$1_include}],[CPPFLAGS])],
+            [AS_IF([test -n "${with_$1}"],
+                    [PAC_APPEND_FLAG([-I${with_$1}/include],[CPPFLAGS])])])
 
-    AS_IF([test -n "${with_$1_lib}"],
-          [PAC_APPEND_FLAG([-L${with_$1_lib}],[LDFLAGS])],
-          [AS_IF([test -n "${with_$1}"],
-                 dnl is adding lib64 by default really the right thing to do?  What if
-                 dnl we are on a 32-bit host that happens to have both lib dirs available?
-                 [PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
-                  AS_IF([test -d "${with_$1}/lib64"],
-		        [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
-                 ])
-          ])
+        AS_IF([test -n "${with_$1_lib}"],
+            [PAC_APPEND_FLAG([-L${with_$1_lib}],[LDFLAGS])],
+            [AS_IF([test -n "${with_$1}"],
+                    dnl is adding lib64 by default really the right thing to do?  What if
+                    dnl we are on a 32-bit host that happens to have both lib dirs available?
+                    [PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
+                    AS_IF([test -d "${with_$1}/lib64"],
+                            [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
+                    ])
+            ])
+            ;;
+    esac
 ])
 
 
