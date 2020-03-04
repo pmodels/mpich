@@ -1250,110 +1250,40 @@ PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
-# HWLOC
+# HWLOC / NETLOC
 # ----------------------------------------------------------------------------
-# Allow the user to override the hwloc location (from embedded to user
-# path)
-# HWLOC
-AC_ARG_WITH([hwloc-prefix],
-            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
-                            [use the HWLOC library installed in DIR,
-                             rather than the one included in src/hwloc.  Pass
-                             "embedded" to force usage of the HWLOC source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_hwloc_prefix=embedded]) dnl action-if-not-given
+
 hwlocsrcdir=""
 AC_SUBST([hwlocsrcdir])
-hwloclibdir=""
-AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-if test "$with_hwloc_prefix" = "no" ; then
-   have_hwloc=no
-elif test "$with_hwloc_prefix" = "embedded" ; then
-   # Disable visibility when setting up hwloc
-   PAC_PUSH_FLAG([enable_visibility])
-   enable_visibility=no;
-   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-   # Only build hwloc in embedded mode
-   if test "$have_hwloc" = "yes" ; then
-      use_embedded_hwloc=yes
-      hwlocsrcdir="src/hwloc"
-      hwloclib="$HWLOC_EMBEDDED_LDADD"
-      PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
-      PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
-      # if possible, do not expose hwloc symbols in libmpi.so
-      PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
-   fi
-   PAC_POP_FLAG([enable_visibility])
+if test -n "$with_hwloc" -a "$with_hwloc" != "embedded" ; then
+    PAC_SET_HEADER_LIB_PATH([hwloc])
+    PAC_CHECK_HEADER_LIB([hwloc.h],[hwloc],[hwloc_topology_set_pid],[have_hwloc=yes],[have_hwloc=no]) 
+
+    PAC_SET_HEADER_LIB_PATH([netloc])
+    dnl FIXME: use a netloc function to use PAC_CHECK_HEADER_LIB
+    AC_CHECK_HEADER([netloc.h],[have_netloc=yes],[have_netloc=no]) 
 else
-   AC_CHECK_HEADERS([hwloc.h])
-   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
-   # minimum required version
-   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
-   AC_MSG_CHECKING([if non-embedded hwloc works])
-   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
-      have_hwloc=yes
-   else
-      have_hwloc=no
-   fi
-   AC_MSG_RESULT([$have_hwloc])
-
-   if test "$have_hwloc" = "yes" ; then
-      hwloclib="-lhwloc"
-      if test -d ${with_hwloc_prefix}/lib64 ; then
-         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-         hwloclibdir="-L${with_hwloc_prefix}/lib64"
-      else
-	 hwloclibdir="-L${with_hwloc_prefix}/lib"
-      fi
-   fi
+    PAC_PUSH_FLAG([CFLAGS])
+    CFLAGS="$VISIBILITY_CFLAGS"
+    PAC_CONFIG_SUBDIR_ARGS([modules/hwloc], [--enable-embedded-mode --disable-visibility],[], [AC_MSG_ERROR(embedded hwloc configure failed)])
+    PAC_POP_FLAG([CFLAGS])
+    hwlocsrcdir="${master_top_builddir}/modules/hwloc"
+    hwloclib="${master_top_builddir}/modules/hwloc/hwloc/libhwloc_embedded.la"
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/hwloc/include],[CPPFLAGS])
+    PAC_APPEND_FLAG([-I${master_top_builddir}/modules/hwloc/include],[CPPFLAGS])
+    have_hwloc=yes
+    dnl TODO: add option to configure netloc
+    have_netloc=no
 fi
 
 if test "$have_hwloc" = "yes" ; then
-   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+    AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
 fi
-
-HWLOC_DO_AM_CONDITIONALS
-
-# ----------------------------------------------------------------------------
-# NETLOC
-# ----------------------------------------------------------------------------
-AC_ARG_WITH([netloc-prefix],
-            [AS_HELP_STRING([[--with-netloc-prefix[=DIR]]],
-                            [use the NETLOC library installed in DIR]) or system to use the system library], [],
-                            [with_netloc_prefix=no])
-
-netloclibdir=""
-AC_SUBST([netloclibdir])
-
-if test "$have_hwloc" = "yes" ; then
-    if test "${with_netloc_prefix}" != "no" ; then
-        if test "${with_netloc_prefix}" != "system"; then
-            # The user specified an already-installed Netloc; just sanity check,
-            # don't subconfigure it
-            AS_IF([test -s "${with_netloc_prefix}/include/netloc.h"],
-              [:],[AC_MSG_ERROR([the Netloc installation in "${with_netloc_prefix}" appears broken])])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${with_netloc_prefix}/include],[CFLAGS])
-            PAC_PREPEND_FLAG([-lnetloc],[WRAPPER_LIBS])
-            if test -d ${with_netloc_prefix}/lib64 ; then
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib64"
-            else
-                PAC_APPEND_FLAG([-L${with_netloc_prefix}/lib],[WRAPPER_LDFLAGS])
-                netloclibdir="-L${with_netloc_prefix}/lib"
-            fi
-       else
-           AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "netloc.h"
-                                   ],
-                                   [])],
-                          [AC_MSG_ERROR([the Netloc installation seems to be added from system path])], [])
-       fi
-       AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available in either user specified path or in system path])
-    fi
+if test "$have_netloc" = "yes" ; then
+    AC_DEFINE(HAVE_NETLOC,1,[Define if netloc is available])
 fi
 
 # ----------------------------------------------------------------------------
