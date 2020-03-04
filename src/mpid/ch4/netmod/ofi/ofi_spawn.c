@@ -867,7 +867,7 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0][0] = addr;
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
@@ -898,7 +898,7 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, av->dest[0][0],
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, av->dest[0][0][0],
                                         &temp_buf[i * MPIDI_OFI_global.addrnamelen],
                                         &(*local_upid_size)[i]), 0, avlookup);
         total_size += (*local_upid_size)[i];
