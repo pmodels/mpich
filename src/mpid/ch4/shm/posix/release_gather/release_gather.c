@@ -267,7 +267,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 /* cannot create more shm, fallback to MPIR level algorithms, and broadcast the decision to other ranks */
                 fallback = 1;
                 MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
-                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
             } else {
                 /* More shm can be created, update the shared counter */
                 MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
@@ -293,7 +293,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
             if (fallback) {
-                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_NO_MEM, "**nomem");
+                MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
             }
         }
     }
