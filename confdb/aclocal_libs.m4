@@ -1,16 +1,25 @@
+dnl PAC_WITH_LIB_HELP_STRING(with_option)
+dnl internal macro for PAC_SET_HEADER_LIB_PATH
+AC_DEFUN([PAC_WITH_LIB_HELP_STRING], [
+    [specify path where $1 include directory and lib directory can be found.
+     Having this option explicitly requires the library. When PATH is not given,
+     it checks the library from system paths.]
+    m4_ifdef([$1_embedded_dir], [Pass "embedded" to force use of embedded version.])
+])
 
-dnl PAC_SET_HEADER_LIB_PATH(with_option,[default_path])
+dnl PAC_SET_HEADER_LIB_PATH(with_option)
 dnl This macro looks for the --with-xxx=, --with-xxx-include and --with-xxx-lib=
 dnl options and sets the library and include paths.
+dnl
+dnl If the library has an embedded version, m4_define xxx_embedded_dir to allow
+dnl embedded options.
 dnl
 dnl TODO as written, this macro cannot handle a "with_option" arg that has "-"
 dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
 dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
-    AC_ARG_WITH([$1],
-                [AC_HELP_STRING([--with-$1=[[PATH]]],
-                                [specify path where $1 include directory and lib directory can be found])],,
-                [with_$1=$2])
+    AC_ARG_WITH([$1], [AC_HELP_STRING([--with-$1=[[PATH]]],PAC_WITH_LIB_HELP_STRING($1))])
+
     AC_ARG_WITH([$1-include],
                 [AC_HELP_STRING([--with-$1-include=PATH],
                                 [specify path where $1 include directory can be found])],
@@ -32,6 +41,14 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     # Now append -I/-L args to CPPFLAGS/LDFLAGS, with more specific options
     # taking priority
 
+    case "${with_$1}" in
+        embedded)
+            m4_ifndef([$1_embedded_dir],[AC_MSG_ERROR([embedded $1 is requested but we do not have the embedded version])])
+            ;;
+        yes|no)
+            # skip
+            ;;
+        *)
     AS_IF([test -n "${with_$1_include}"],
           [PAC_APPEND_FLAG([-I${with_$1_include}],[CPPFLAGS])],
           [AS_IF([test -n "${with_$1}"],
@@ -44,9 +61,11 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
                  dnl we are on a 32-bit host that happens to have both lib dirs available?
                  [PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
                   AS_IF([test -d "${with_$1}/lib64"],
-		        [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
+                       [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
                  ])
           ])
+            ;;
+    esac
 ])
 
 
