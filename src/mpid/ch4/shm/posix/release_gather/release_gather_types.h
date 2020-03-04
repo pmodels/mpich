@@ -28,6 +28,7 @@ typedef enum MPIDI_POSIX_release_gather_tree_type_t {
 
 typedef struct MPIDI_POSIX_release_gather_comm_t {
     int is_initialized;
+    int num_collective_calls;
 
     MPIR_Treealgo_tree_t bcast_tree, reduce_tree;
     int flags_shm_size;
