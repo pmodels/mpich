@@ -114,7 +114,7 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
             goto fallback;
 
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_auto:
-            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
             if (cnt == NULL)
                 goto fallback;
 
@@ -180,7 +180,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
             goto fallback;
 
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_auto:
-            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
             if (cnt == NULL)
                 goto fallback;
 
@@ -458,7 +458,7 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
             goto fallback;
 
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_auto:
-            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm)->csel_comm, coll_sig);
+            cnt = MPIR_Csel_search(MPIDI_POSIX_COMM(comm, csel_comm), coll_sig);
             if (cnt == NULL)
                 goto fallback;
 
