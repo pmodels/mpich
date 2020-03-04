@@ -1013,6 +1013,9 @@ CFLAGS=""
 AX_GCC_FUNC_ATTRIBUTE(fallthrough)
 PAC_POP_ALL_FLAGS
 
+dnl PAC_CHECK_HEADER_LIB sets WRAPPER_LIBS, transfer it to LIBS
+LIBS="$WRAPPER_LIBS $LIBS"
+
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
 AC_OUTPUT

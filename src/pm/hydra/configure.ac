@@ -290,7 +290,6 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		PAC_POP_FLAG(LIBS)
                 if test "$have_pbs_launcher" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
-		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
 		available_rmks="$available_rmks pbs"
 		;;
