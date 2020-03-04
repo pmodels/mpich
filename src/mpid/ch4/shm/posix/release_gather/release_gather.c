@@ -153,6 +153,8 @@ int MPIDI_POSIX_mpi_release_gather_comm_init_null(MPIR_Comm * comm_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_COMM_INIT_NULL);
 
+    RELEASE_GATHER_FIELD(comm_ptr, num_collective_calls) = 0;
+
     if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "kary"))
         MPIDI_POSIX_Bcast_tree_type = MPIDI_POSIX_RELEASE_GATHER_TREE_TYPE_KARY;
     else if (0 == strcmp(MPIR_CVAR_BCAST_INTRANODE_TREE_TYPE, "knomial_1"))
@@ -208,7 +210,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
         /* release_gather based collectives have not been used before on this comm */
-        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
         initialize_flags = true;
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
             initialize_bcast_buf = true;
@@ -299,6 +300,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     }
 
     if (initialize_flags) {
+        RELEASE_GATHER_FIELD(comm_ptr, is_initialized) = 1;
         /* Initialize the release_gather struct and allocate shm for flags */
         MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr =
             &MPIDI_POSIX_COMM(comm_ptr, release_gather);

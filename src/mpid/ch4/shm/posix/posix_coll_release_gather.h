@@ -5,6 +5,24 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD
+      category    : COLLECTIVE
+      type        : int
+      default     : 5
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use posix optimized collectives (release_gather) only when the total number of Bcast,
+        Reduce, and Allreduce calls on the node level communicator is more than this threshold
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef POSIX_COLL_RELEASE_GATHER_H_INCLUDED
 #define POSIX_COLL_RELEASE_GATHER_H_INCLUDED
 
@@ -39,6 +57,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     /* If there is only one process or no data, return */
     if (count == 0 || (MPIR_Comm_size(comm_ptr) == 1)) {
         goto fn_exit;
+    }
+
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
     }
 
     /* Lazy initialization of release_gather specific struct */
@@ -208,6 +234,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
         goto fn_exit;
     }
 
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
+    }
+
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
@@ -323,6 +357,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
         goto fn_exit;
+    }
+
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
     }
 
     /* Lazy initialization of release_gather specific struct */
