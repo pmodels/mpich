@@ -40,7 +40,7 @@ int MPIDI_POSIX_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 
     /* prune selection tree */
     mpi_errno = MPIR_Csel_prune(MPIDI_global.shm.posix.csel_root, comm,
-                                &MPIDI_POSIX_COMM(comm)->csel_comm);
+                                &MPIDI_POSIX_COMM(comm, csel_comm));
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -56,8 +56,8 @@ int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
 
-    if (MPIDI_POSIX_COMM(comm)->csel_comm) {
-        mpi_errno = MPIR_Csel_free(MPIDI_POSIX_COMM(comm)->csel_comm);
+    if (MPIDI_POSIX_COMM(comm, csel_comm)) {
+        mpi_errno = MPIR_Csel_free(MPIDI_POSIX_COMM(comm, csel_comm));
         MPIR_ERR_CHECK(mpi_errno);
     }
 
