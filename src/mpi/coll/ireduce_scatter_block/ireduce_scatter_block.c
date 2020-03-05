@@ -270,7 +270,7 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM_gentran_recexch:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative, mpi_errno);
                 mpi_errno =
                     MPIR_Ireduce_scatter_block_intra_gentran_recexch(sendbuf, recvbuf,
                                                                      recvcount, datatype, op,
