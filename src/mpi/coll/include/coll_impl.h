@@ -23,7 +23,7 @@
 
 #include "csel_container.h"
 
-#define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check)                     \
+#define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check, mpi_errno)          \
     do {                                                                \
         if ((check) == 0) {                                             \
             if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) { \
