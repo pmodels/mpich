@@ -1301,10 +1301,6 @@ else
    fi
    AC_MSG_RESULT([$have_hwloc])
 
-   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
-   # atleast as of 1.0.2, does not install correctly on Cygwin
-   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
-
    if test "$have_hwloc" = "yes" ; then
       hwloclib="-lhwloc"
       if test -d ${with_hwloc_prefix}/lib64 ; then
