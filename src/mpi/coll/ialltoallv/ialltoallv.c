@@ -269,7 +269,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
         /* intracommunicator */
         switch (MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_scattered:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE, mpi_errno);
                 mpi_errno =
                     MPIR_Ialltoallv_intra_gentran_scattered(sendbuf, sendcounts, sdispls,
                                                             sendtype, recvbuf, recvcounts,
@@ -280,7 +280,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_blocked:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE, mpi_errno);
                 mpi_errno =
                     MPIR_Ialltoallv_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
                                                           sendtype, recvbuf, recvcounts,
@@ -289,7 +289,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_gentran_inplace:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf == MPI_IN_PLACE);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf == MPI_IN_PLACE, mpi_errno);
                 mpi_errno =
                     MPIR_Ialltoallv_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
                                                           sendtype, recvbuf, recvcounts,

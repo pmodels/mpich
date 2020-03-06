@@ -47,7 +47,7 @@ extern char MPIDI_POSIX_coll_generic_json[];
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    MPIDI_POSIX_release_gather_comm_t *release_gather;
+    MPIDI_POSIX_release_gather_comm_t release_gather;
     void *csel_comm;
 } MPIDI_POSIX_comm_t;
 

@@ -5,6 +5,24 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD
+      category    : COLLECTIVE
+      type        : int
+      default     : 5
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use posix optimized collectives (release_gather) only when the total number of Bcast,
+        Reduce, and Allreduce calls on the node level communicator is more than this threshold
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef POSIX_COLL_RELEASE_GATHER_H_INCLUDED
 #define POSIX_COLL_RELEASE_GATHER_H_INCLUDED
 
@@ -41,19 +59,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
         goto fn_exit;
     }
 
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
+    }
+
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr, MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST);
-    if (mpi_errno) {
-        /* Fall back to other algo as release_gather based bcast cannot be used */
-        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
-        if (mpi_errno) {
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-        goto fn_exit;
-    }
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+                                   "release_gather bcast cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     my_rank = MPIR_Comm_rank(comm_ptr);
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
@@ -166,6 +184,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_bcast_release_gather(void *buffer,
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
+  fallback:
+    /* Fall back to other algo as release_gather based bcast cannot be used */
+    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+    if (mpi_errno) {
+        *errflag = MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+    goto fn_exit;
 }
 
 /* Intra-node reduce is implemented as a release step followed by gather step in release_gather
@@ -207,16 +234,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
         goto fn_exit;
     }
 
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
+    }
+
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE);
-    if (mpi_errno) {
-        /* Fall back to other algo as release_gather algo cannot be used */
-        mpi_errno =
-            MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-        goto fn_exit;
-    }
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+                                   "release_gather reduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
@@ -284,6 +315,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_reduce_release_gather(const void *s
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
+  fallback:
+    /* Fall back to other algo as release_gather algo cannot be used */
+    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    if (mpi_errno) {
+        *errflag = MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+    goto fn_exit;
 }
 
 /* Intra-node allreduce is implemented as a gather step followed by a release step in release_gather
@@ -319,15 +359,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
         goto fn_exit;
     }
 
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
+    }
+
     /* Lazy initialization of release_gather specific struct */
     mpi_errno =
         MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
                                                  MPIDI_POSIX_RELEASE_GATHER_OPCODE_ALLREDUCE);
-    if (mpi_errno) {
-        /* Fall back to other algo as release_gather algo cannot be used */
-        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        goto fn_exit;
-    }
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+                                   "release_gather allreduce cannot create more shared memory. Falling back to pt2pt algorithms.\n");
 
     MPIR_Type_get_extent_impl(datatype, &lb, &extent);
     MPIR_Type_get_true_extent_impl(datatype, &lb, &true_extent);
@@ -394,6 +439,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_ALLREDUCE_RELEASE_GATHER);
     return mpi_errno_ret;
+
+  fn_fail:
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    if (mpi_errno) {
+        *errflag = MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+    goto fn_exit;
 }
 
 #endif /* POSIX_COLL_RELEASE_GATHER_H_INCLUDED */
