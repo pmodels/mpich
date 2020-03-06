@@ -322,7 +322,7 @@ static csel_node_s *parse_json_tree(struct json_object *obj,
                                     void *(*create_container) (struct json_object *))
 {
     enum json_type type;
-    csel_node_s *prevnode, *tmp, *node = NULL;
+    csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
         type = json_object_get_type(val);
@@ -829,7 +829,7 @@ static inline bool is_op_built_in(MPIR_Csel_coll_sig_s coll_info)
 
 static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
 {
-    bool is_block_regular = true;
+    bool is_regular = true;
     int i = 0;
     const int *recvcounts = NULL;
 
@@ -846,11 +846,11 @@ static inline bool is_block_regular(MPIR_Csel_coll_sig_s coll_info)
     }
     for (i = 0; i < (coll_info.comm_ptr->local_size - 1); ++i) {
         if (recvcounts[i] != recvcounts[i + 1]) {
-            is_block_regular = false;
+            is_regular = false;
             break;
         }
     }
-    return is_block_regular;
+    return is_regular;
 }
 
 static inline MPI_Aint get_avg_msgsize(MPIR_Csel_coll_sig_s coll_info)
