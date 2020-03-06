@@ -23,7 +23,7 @@
 
 #include "csel_container.h"
 
-#define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check)                     \
+#define MPII_COLLECTIVE_FALLBACK_CHECK(rank, check, mpi_errno, ...)     \
     do {                                                                \
         if ((check) == 0) {                                             \
             if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_error) { \
@@ -31,6 +31,7 @@
             } else if (MPIR_CVAR_COLLECTIVE_FALLBACK == MPIR_CVAR_COLLECTIVE_FALLBACK_print) { \
                 if ((rank) == 0) {                                      \
                     fprintf(stderr, "User set collective algorithm is not usable for the provided arguments\n"); \
+                    fprintf(stderr, ""  __VA_ARGS__);                   \
                     fflush(stderr);                                     \
                 }                                                       \
                 goto fallback;                                          \
