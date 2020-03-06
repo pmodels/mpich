@@ -3248,7 +3248,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                          * do */
                         MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
                                     "Exit global critical section (sock_wait)");
-                        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                        /* MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
                         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
                         MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
@@ -3261,7 +3261,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                         MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
                                     "Enter global critical section (sock_wait)");
                         MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                        /* MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
 
                         /*
                          * Update pollfds array if changes were posted while we
