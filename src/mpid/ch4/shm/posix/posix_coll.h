@@ -32,7 +32,6 @@ cvars:
         Variable to select algorithm for intra-node bcast
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM
@@ -46,7 +45,6 @@ cvars:
         Variable to select algorithm for intra-node reduce
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM
@@ -60,7 +58,6 @@ cvars:
         Variable to select algorithm for intra-node allreduce
         mpir           - Fallback to MPIR collectives
         release_gather - Force shm optimized algo using release, gather primitives
-                         (izem submodule should be build and enabled for this)
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
