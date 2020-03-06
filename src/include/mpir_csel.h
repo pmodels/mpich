@@ -127,6 +127,7 @@ typedef struct {
             const MPI_Datatype *recvtypes;
         } neighbor_alltoallw, ineighbor_alltoallw;
         struct {
+            int dummy;          /* some compiler (suncc) doesn't like empty struct */
         } barrier, ibarrier;
         struct {
             void *buffer;
