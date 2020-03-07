@@ -115,11 +115,6 @@ int MPIDU_Init_shm_init(void)
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int local_leader;
     int rank;
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-    int ret;
-    int ipc_lock_offset;
-    OPA_emulation_ipl_t *ipc_lock;
-#endif
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
@@ -139,20 +134,6 @@ int MPIDU_Init_shm_init(void)
     mpl_err = MPL_shm_hnd_init(&(memory.hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* We have a similar bootstrapping problem when using OpenPA in
-     * lock-based emulation mode.  We use OPA_* functions during the
-     * check_alloc function but we were previously initializing OpenPA
-     * after return from this function.  So we put the emulation lock
-     * right after the barrier var space. */
-
-    /* offset from memory->base_addr to the start of ipc_lock */
-    ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
-
-    MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
-#endif
-
     memory.segment_len = segment_len;
 
     if (local_size == 1) {
@@ -167,12 +148,6 @@ int MPIDU_Init_shm_init(void)
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory.symmetrical = 0;
 
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
         mpi_errno = Init_shm_barrier_init(TRUE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -189,12 +164,6 @@ int MPIDU_Init_shm_init(void)
             serialized_hnd_size = strlen(serialized_hnd);
             MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
             mpi_errno = Init_shm_barrier_init(TRUE);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
@@ -218,20 +187,6 @@ int MPIDU_Init_shm_init(void)
             mpl_err = MPL_shm_seg_attach(memory.hnd, memory.segment_len,
                                          (void **) &memory.base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, my_local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
 
             mpi_errno = Init_shm_barrier_init(FALSE);
             MPIR_ERR_CHECK(mpi_errno);
