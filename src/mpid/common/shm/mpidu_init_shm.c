@@ -72,7 +72,6 @@ static int Init_shm_barrier_init(int init_values)
     if (init_values) {
         MPL_atomic_store_int(&barrier->val, 0);
         MPL_atomic_store_int(&barrier->wait, 0);
-        MPL_atomic_write_barrier();
     }
     sense = 0;
     barrier_init = 1;
@@ -98,7 +97,6 @@ static int Init_shm_barrier()
     if (MPL_atomic_fetch_add_int(&barrier->val, 1) == local_size - 1) {
         MPL_atomic_store_int(&barrier->val, 0);
         MPL_atomic_store_int(&barrier->wait, 1 - sense);
-        MPL_atomic_write_barrier();
     } else {
         /* wait */
         while (MPL_atomic_load_int(&barrier->wait) == sense)
