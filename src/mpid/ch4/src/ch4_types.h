@@ -323,7 +323,7 @@ typedef struct MPIDI_CH4_Global_t {
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    OPA_int_t progress_count;
+    MPL_atomic_int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
     int n_vcis;
