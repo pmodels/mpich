@@ -150,7 +150,7 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIR_Assert(cell != NULL);
     cell->next = NULL;
     cell->prev = 0;
-    OPA_compiler_barrier();
+    MPL_atomic_compiler_barrier();
     cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IQUEUE_RECV_COMMIT);

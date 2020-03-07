@@ -134,7 +134,7 @@ MPIDI_POSIX_eager_send(int grank,
     do {
         prev = MPL_atomic_load_ptr(&terminal->head);
         cell->prev = (uintptr_t) prev;
-        OPA_compiler_barrier();
+        MPL_atomic_compiler_barrier();
     } while (MPL_atomic_cas_ptr(&terminal->head, prev, handle) != prev);
 
     /* Update the user counter for number of iovecs left */
