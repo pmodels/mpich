@@ -115,12 +115,12 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         goto fn_exit;
     }
 
-    state->progress_count = OPA_load_int(&MPIDI_global.progress_count);
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     do {
         ret = MPID_Progress_test();
         if (unlikely(ret))
             MPIR_ERR_POP(ret);
-        if (state->progress_count != OPA_load_int(&MPIDI_global.progress_count))
+        if (state->progress_count != MPL_atomic_load_int(&MPIDI_global.progress_count))
             break;
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
