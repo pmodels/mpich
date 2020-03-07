@@ -858,8 +858,7 @@ if test "$with_mpl_atomic_primitives" = "auto" \
 fi
 PAC_POP_FLAG([CFLAGS])
 
-if test "$with_mpl_atomic_primitives" = "auto" \
-        -o "$with_mpl_atomic_primitives" = "lock" ; then
+if test "$with_mpl_atomic_primitives" = "lock" ; then
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
              [Define to 1 if mutex-based synchronization is used])
     mpl_atomic_primitives_set=true
@@ -871,8 +870,9 @@ elif test "$with_mpl_atomic_primitives" = "no" \
 fi
 
 if test "$mpl_atomic_primitives_set" = "false"; then
-    AC_MSG_ERROR([cannot support atomic primitives (argument: \
-`--with-mpl-atomic-primitives=$with_mpl_atomic_primitives`)])
+    AC_MSG_ERROR([No native support for atomic primitives. Use
+        --with-mpl-atomic-primitives=lock (correct but slow) or
+        --with-mpl-atomic-primitives=no (incorrect for MPI_THREAD_MULTIPLE, okay otherwise)])
 fi
 
 #######################################################################
