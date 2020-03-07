@@ -11,8 +11,8 @@
 #include "mpidu_shm_seg.h"
 
 typedef struct Init_shm_barrier {
-    OPA_int_t val;
-    OPA_int_t wait;
+    MPL_atomic_int_t val;
+    MPL_atomic_int_t wait;
 } Init_shm_barrier_t;
 
 static int local_size;
@@ -32,9 +32,9 @@ static int Init_shm_barrier_init(int init_values)
 
     barrier = (Init_shm_barrier_t *) memory.base_addr;
     if (init_values) {
-        OPA_store_int(&barrier->val, 0);
-        OPA_store_int(&barrier->wait, 0);
-        OPA_write_barrier();
+        MPL_atomic_store_int(&barrier->val, 0);
+        MPL_atomic_store_int(&barrier->wait, 0);
+        MPL_atomic_write_barrier();
     }
     sense = 0;
     barrier_init = 1;
@@ -57,13 +57,13 @@ static int Init_shm_barrier()
 
     MPIR_ERR_CHKINTERNAL(!barrier_init, mpi_errno, "barrier not initialized");
 
-    if (OPA_fetch_and_incr_int(&barrier->val) == local_size - 1) {
-        OPA_store_int(&barrier->val, 0);
-        OPA_store_int(&barrier->wait, 1 - sense);
-        OPA_write_barrier();
+    if (MPL_atomic_fetch_add_int(&barrier->val, 1) == local_size - 1) {
+        MPL_atomic_store_int(&barrier->val, 0);
+        MPL_atomic_store_int(&barrier->wait, 1 - sense);
+        MPL_atomic_write_barrier();
     } else {
         /* wait */
-        while (OPA_load_int(&barrier->wait) == sense)
+        while (MPL_atomic_load_int(&barrier->wait) == sense)
             MPL_sched_yield();  /* skip */
     }
     sense = 1 - sense;
