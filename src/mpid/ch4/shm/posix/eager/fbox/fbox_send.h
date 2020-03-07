@@ -108,7 +108,7 @@ MPIDI_POSIX_eager_send(int grank,
     }
 #endif /* POSIX_FBOX_DEBUG */
 
-    OPA_compiler_barrier();
+    MPL_atomic_compiler_barrier();
 
     /* Update the data ready flag to indicate that there is data in the box for the receiver. */
     fbox_out->data_ready = 1;
