@@ -192,7 +192,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     /* sender and receiver datatypes are both continuous, perform cooperative copy. */
     mpi_errno =
         MPIDI_XPMEM_do_lmt_coop_copy(src_buf, slmt_cts_hdr->data_sz, dest_buf,
-                                     &counter_ptr->obj.counter, slmt_cts_hdr->rreq_ptr, sreq,
+                                     &counter_ptr->obj.offset, slmt_cts_hdr->rreq_ptr, sreq,
                                      &fin_type, &copy_type);
     MPIR_ERR_CHECK(mpi_errno);
 
