@@ -18,7 +18,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Use posix optimized collectives (release_gather) only when the total number of Bcast,
-        Reduce, and Allreduce calls on the node level communicator is more than this threshold
+        Reduce, Barrier, and Allreduce calls on the node level communicator is more than this
+        threshold.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -445,6 +446,74 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_allreduce_release_gather(const void
 
   fallback:
     mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    if (mpi_errno) {
+        *errflag = MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+    goto fn_exit;
+}
+
+/* Intra-node barrier is implemented as a gather step followed by a release step in release_gather
+ * framework.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_barrier_release_gather(MPIR_Comm * comm_ptr,
+                                                                    MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_BARRIER_RELEASE_GATHER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_BARRIER_RELEASE_GATHER);
+
+    MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls++;
+    if (MPIDI_POSIX_COMM(comm_ptr, release_gather).num_collective_calls <
+        MPIR_CVAR_POSIX_NUM_COLLS_THRESHOLD) {
+        /* Fallback to pt2pt algorithms if the total number of release_gather collective calls is
+         * less than the specified threshold */
+        goto fallback;
+    }
+
+    /* Lazy initialization of release_gather specific struct */
+    mpi_errno =
+        MPIDI_POSIX_mpi_release_gather_comm_init(comm_ptr,
+                                                 MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
+    MPII_COLLECTIVE_FALLBACK_CHECK(MPIR_Comm_rank(comm_ptr), !mpi_errno, mpi_errno_ret,
+                                   "release_gather barrier cannot create more shared memory. Falling back to pt2pt algorithms.\n");
+
+    mpi_errno =
+        MPIDI_POSIX_mpi_release_gather_gather(NULL, NULL, 0, MPI_DATATYPE_NULL, MPI_OP_NULL, 0,
+                                              comm_ptr, errflag,
+                                              MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+    mpi_errno =
+        MPIDI_POSIX_mpi_release_gather_release(NULL, 0, MPI_DATATYPE_NULL, 0, comm_ptr, errflag,
+                                               MPIDI_POSIX_RELEASE_GATHER_OPCODE_BARRIER);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_BARRIER_RELEASE_GATHER);
+    return mpi_errno_ret;
+
+  fn_fail:
+    goto fn_exit;
+
+  fallback:
+    mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
     if (mpi_errno) {
         *errflag = MPIR_ERR_OTHER;
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
