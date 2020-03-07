@@ -104,6 +104,20 @@
             }
         }
     },
+    "collective=barrier":
+    {
+        "comm_type=intra":
+        {
+            "comm_hierarchy=parent":
+            {
+                "composition=MPIDI_Barrier_intra_composition_alpha":{}
+            },
+            "comm_hierarchy=any":
+            {
+                "composition=MPIDI_Barrier_intra_composition_beta":{}
+            }
+        }
+    },
     "collective=gather":
     {
         "comm_type=intra":
