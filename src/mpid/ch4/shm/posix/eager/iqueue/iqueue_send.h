@@ -50,7 +50,6 @@ MPIDI_POSIX_eager_send(int grank,
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
     MPIDI_POSIX_eager_iqueue_terminal_t *terminal;
     size_t i, iov_done, capacity, available;
-    uintptr_t prev, handle;
     char *payload;
     int ret = MPIDI_POSIX_OK;
 
@@ -81,7 +80,8 @@ MPIDI_POSIX_eager_send(int grank,
     terminal = &transport->terminals[MPIDI_POSIX_global.local_ranks[grank]];
 
     /* Get the offset of the cell in the queue */
-    handle = MPIDI_POSIX_EAGER_IQUEUE_GET_HANDLE(transport, cell);
+    void *handle;
+    handle = (void *) MPIDI_POSIX_EAGER_IQUEUE_GET_HANDLE(transport, cell);
 
     /* Get the memory allocated to be used for the message transportation. */
     payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
@@ -128,15 +128,14 @@ MPIDI_POSIX_eager_send(int grank,
     cell->payload_size = capacity - available;
 
     /* Move the flag to indicate the head. */
+    /* The condition swaps the head of the terminal with the current handle if the previous head
+     * has now been consumed. Continues until we swap out the prev pointer. */
+    void *prev;
     do {
-        prev = terminal->head;
-        cell->prev = prev;
+        prev = MPL_atomic_load_ptr(&terminal->head);
+        cell->prev = (uintptr_t) prev;
         OPA_compiler_barrier();
-    } while (((uintptr_t) (unsigned int *)
-              /* Swaps the head of the terminal with the current handle if the previous head has
-               * now been consumed. Continues until we swap out the prev pointer. */
-              OPA_cas_ptr((OPA_ptr_t *) & terminal->head, (void *) prev, (void *) handle)
-              != prev));
+    } while (MPL_atomic_cas_ptr(&terminal->head, prev, handle) != prev);
 
     /* Update the user counter for number of iovecs left */
     *iov_num -= iov_done;
