@@ -287,13 +287,16 @@ typedef struct {
 
 #define MAX_CH4_MUTEXES 6
 
-/* per-VCI structure */
-typedef struct MPIDI_vci {
-    int attr;
-    MPID_Thread_mutex_t lock;
-} MPIDI_vci_t MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+/* per-VCI structure -- using union to force minimum size */
+typedef union MPIDI_vci {
+    struct {
+        int attr;
+        MPID_Thread_mutex_t lock;
+    } vci;
+    char pad[MPL_CACHELINE_SIZE];
+} MPIDI_vci_t;
 
-#define MPIDI_VCI(i) MPIDI_global.vci[i]
+#define MPIDI_VCI(i) MPIDI_global.vci[i].vci
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
