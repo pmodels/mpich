@@ -100,7 +100,6 @@ do_genstates=no
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
-do_izem=yes
 do_ofi=yes
 do_ucx=yes
 do_json=yes
@@ -215,10 +214,6 @@ for arg in "$@" ; do
 	-with-autotools=*|--with-autotools=*)
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
-
-    -without-izem|--without-izem)
-        do_izem=no
-        ;;
 
     -without-ofi|--without-ofi|-without-libfabric|--without-libfabric)
         do_ofi=no
@@ -602,11 +597,6 @@ check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
 externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c"
-
-if [ "yes" = "$do_izem" ] ; then
-    check_submodule_presence src/izem
-    externals="${externals} src/izem"
-fi
 
 if [ "yes" = "$do_ucx" ] ; then
     check_submodule_presence src/mpid/ch4/netmod/ucx/ucx
