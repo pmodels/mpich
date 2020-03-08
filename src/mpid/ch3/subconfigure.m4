@@ -104,9 +104,6 @@ fi
 
 AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)
 
-# ensure that atomic primitives are available
-AC_MSG_CHECKING([for OpenPA atomic primitive availability])
-
 AC_C_BIGENDIAN
 
 ])dnl end AM_COND_IF(BUILD_CH3,...)
