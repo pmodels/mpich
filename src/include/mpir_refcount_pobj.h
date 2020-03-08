@@ -8,7 +8,6 @@
 #define MPIR_REFCOUNT_POBJ_H_INCLUDED
 
 /* define a type for the completion counter */
-#include "opa_primitives.h"
 
 typedef MPL_atomic_int_t MPIR_cc_t;
 
