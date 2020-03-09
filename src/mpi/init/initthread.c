@@ -152,7 +152,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /* Setting isThreaded to 0 to trick any operations used within
      * MPID_Init to think that we are running in a single threaded
      * environment. */
+#ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
+#endif
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
@@ -200,7 +202,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /**********************************************************************/
 
     /* Reset isThreaded to the actual thread level */
+#ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
+#endif
 
     mpi_errno = MPII_init_async();
     MPIR_ERR_CHECK(mpi_errno);
