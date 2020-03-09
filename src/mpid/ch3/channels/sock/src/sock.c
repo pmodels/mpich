@@ -3200,83 +3200,67 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
         }
 
         for (;;) {
-#	    ifndef MPICH_IS_THREADED
-            {
+            if (!MPIR_IS_THREADED) {
                 MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
                 n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems, millisecond_timeout);
                 MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
-            }
-#	    else /* MPICH_IS_THREADED */
-            {
-                /* If we've enabled runtime checking of the thread level,
-                 * then test for that and if we are *not* multithreaded,
-                 * just use the same code as above.  Otherwise, use
-                 * multithreaded code (and we don't then need the
-                 * MPIR_THREAD_CHECK_BEGIN/END macros) */
-                if (!MPIR_ThreadInfo.isThreaded) {
-                    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
-                    n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems,
-                                 millisecond_timeout);
-                    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
-                } else {
-                    /*
-                     * First try a non-blocking poll to see if any immediate
-                     * progress can be made.  This avoids the lock manipulation
-                     * overhead.
+            } else {
+                /*
+                 * First try a non-blocking poll to see if any immediate
+                 * progress can be made.  This avoids the lock manipulation
+                 * overhead.
+                 */
+                MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
+                n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems, 0);
+                MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
+
+                if (n_fds == 0 && millisecond_timeout != 0) {
+                    int pollfds_active_elems = sock_set->poll_array_elems;
+
+                    /* The abstraction here is a shared (blocking) resource that
+                     * the threads must coordinate.  That means not holding
+                     * a lock across the blocking operation but also
+                     * ensuring that only one thread at a time attempts
+                     * to use this resource.
+                     *
+                     * What isn't yet clear in this where the test is made
+                     * to ensure that two threads don't call the poll operation,
+                     * even in a nonblocking sense.
                      */
+                    sock_set->pollfds_active = sock_set->pollfds;
+
+                    /* Release the lock so that other threads may make
+                     * progress while this thread waits for something to
+                     * do */
+                    MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
+                                "Exit global critical section (sock_wait)");
+                    /* MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
+                    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
                     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
-                    n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems, 0);
+                    n_fds = poll(sock_set->pollfds_active,
+                                 pollfds_active_elems, millisecond_timeout);
                     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
 
-                    if (n_fds == 0 && millisecond_timeout != 0) {
-                        int pollfds_active_elems = sock_set->poll_array_elems;
+                    /* Reaquire the lock before processing any of the
+                     * information returned from poll */
+                    MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
+                                "Enter global critical section (sock_wait)");
+                    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                    /* MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
 
-                        /* The abstraction here is a shared (blocking) resource that
-                         * the threads must coordinate.  That means not holding
-                         * a lock across the blocking operation but also
-                         * ensuring that only one thread at a time attempts
-                         * to use this resource.
-                         *
-                         * What isn't yet clear in this where the test is made
-                         * to ensure that two threads don't call the poll operation,
-                         * even in a nonblocking sense.
-                         */
-                        sock_set->pollfds_active = sock_set->pollfds;
-
-                        /* Release the lock so that other threads may make
-                         * progress while this thread waits for something to
-                         * do */
-                        MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
-                                    "Exit global critical section (sock_wait)");
-                        /* MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
-                        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-                        MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POLL);
-                        n_fds = poll(sock_set->pollfds_active,
-                                     pollfds_active_elems, millisecond_timeout);
-                        MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
-
-                        /* Reaquire the lock before processing any of the
-                         * information returned from poll */
-                        MPL_DBG_MSG(MPIR_DBG_OTHER, TYPICAL,
-                                    "Enter global critical section (sock_wait)");
-                        MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                        /* MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
-
-                        /*
-                         * Update pollfds array if changes were posted while we
-                         * were blocked in poll
-                         */
-                        if (sock_set->pollfds_updated) {
-                            mpi_errno = MPIDI_Sock_update_sock_set(sock_set, pollfds_active_elems);
-                        }
-
-                        sock_set->pollfds_active = NULL;
-                        sock_set->wakeup_posted = FALSE;
+                    /*
+                     * Update pollfds array if changes were posted while we
+                     * were blocked in poll
+                     */
+                    if (sock_set->pollfds_updated) {
+                        mpi_errno = MPIDI_Sock_update_sock_set(sock_set, pollfds_active_elems);
                     }
-                }       /* else !MPIR_ThreadInfo.isThreaded */
+
+                    sock_set->pollfds_active = NULL;
+                    sock_set->wakeup_posted = FALSE;
+                }
             }
-#	    endif /* MPICH_IS_THREADED */
 
             if (n_fds > 0) {
                 break;
