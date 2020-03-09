@@ -40,6 +40,13 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 #define MPIR_THREAD_CHECK_END
 #endif /* MPICH_IS_THREADED */
 
+/* During run time, `isThreaded` should be used, but it still need to be guarded */
+#if defined(MPICH_IS_THREADED)
+#define MPIR_IS_THREADED    MPIR_ThreadInfo.isThreaded
+#else
+#define MPIR_IS_THREADED    0
+#endif
+
 /* ------------------------------------------------------------ */
 /* Global thread model, used for non-performance-critical paths */
 /* CONSIDER:
