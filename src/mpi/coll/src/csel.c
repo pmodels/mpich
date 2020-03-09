@@ -588,7 +588,7 @@ static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
     for (csel_node_s * node = root; node;) {
         switch (node->type) {
             case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
-                if (MPIR_ThreadInfo.isThreaded == node->u.is_multi_threaded.val)
+                if (MPIR_IS_THREADED == node->u.is_multi_threaded.val)
                     node = node->success;
                 else
                     node = node->failure;
@@ -1180,7 +1180,7 @@ void *MPIR_Csel_search(void *csel_, MPIR_Csel_coll_sig_s coll_info)
     for (node = root; node;) {
         switch (node->type) {
             case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
-                if (MPIR_ThreadInfo.isThreaded == node->u.is_multi_threaded.val)
+                if (MPIR_IS_THREADED == node->u.is_multi_threaded.val)
                     node = node->success;
                 else
                     node = node->failure;
