@@ -14,17 +14,17 @@
 #include <mpidimpl.h>
 #include "mpidu_init_shm.h"
 
-#define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))
-#define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
+#define MPIDI_POSIX_FBOX_SIZE       (16 * 1024)
 
 typedef struct {
     MPL_atomic_int_t data_ready;
     int is_header;
     size_t payload_sz;
-
-    uint8_t payload[MPIDI_POSIX_FBOX_DATA_LEN];
-
+    uint8_t payload[];
 } MPIDI_POSIX_fastbox_t;
+
+#define MPIDI_POSIX_FBOX_DATA_LEN  (MPIDI_POSIX_FBOX_SIZE - sizeof(MPIDI_POSIX_fastbox_t))
+#define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
 
 typedef struct MPIDI_POSIX_fbox_arrays {
     MPIDI_POSIX_fastbox_t **in;
