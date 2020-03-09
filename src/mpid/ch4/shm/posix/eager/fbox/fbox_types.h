@@ -18,9 +18,7 @@
 #define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
 
 typedef struct {
-
-    volatile uint64_t data_ready;
-
+    MPL_atomic_int_t data_ready;
     int is_header;
     size_t payload_sz;
 
