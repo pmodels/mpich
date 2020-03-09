@@ -28,8 +28,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver)  ((MPIDI_POSIX_global.num_local) * (sender) + (receiver))
-#define MPIDI_POSIX_MAILBOX_OFFSET(sender, receiver) (MPIDI_POSIX_FBOX_SIZE * MPIDI_POSIX_MAILBOX_INDEX(sender, receiver))
+#define FBOX_INDEX(sender, receiver)  ((MPIDI_POSIX_global.num_local) * (sender) + (receiver))
+#define FBOX_OFFSET(sender, receiver) (MPIDI_POSIX_FBOX_SIZE * FBOX_INDEX(sender, receiver))
 
 int MPIDI_POSIX_fbox_init(int rank, int size)
 {
@@ -81,10 +81,10 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
     /* Fill in fbox tables */
     char *fastboxes_p = (char *) MPIDI_POSIX_eager_fbox_control_global.shm_ptr;
     for (i = 0; i < MPIDI_POSIX_global.num_local; i++) {
-        /* *INDENT-OFF* */
-        MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i] = (void *) (fastboxes_p + MPIDI_POSIX_MAILBOX_OFFSET(i, MPIDI_POSIX_global.my_local_rank));
-        MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[i] = (void *) (fastboxes_p + MPIDI_POSIX_MAILBOX_OFFSET(MPIDI_POSIX_global.my_local_rank, i));
-        /* *INDENT-ON* */
+        MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i] =
+            (void *) (fastboxes_p + FBOX_OFFSET(i, MPIDI_POSIX_global.my_local_rank));
+        MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[i] =
+            (void *) (fastboxes_p + FBOX_OFFSET(MPIDI_POSIX_global.my_local_rank, i));
 
         memset(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i], 0, MPIDI_POSIX_FBOX_SIZE);
     }
