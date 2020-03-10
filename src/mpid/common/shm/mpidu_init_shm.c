@@ -32,7 +32,7 @@ static void *baseaddr;
 static int sense;
 static int barrier_init = 0;
 
-static int Init_shm_barrier_init(int init_values)
+static int Init_shm_barrier_init(int is_root)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
@@ -40,7 +40,7 @@ static int Init_shm_barrier_init(int init_values)
 
     Init_shm_header_t *header = memory.base_addr;
     barrier = &header->barrier;
-    if (init_values) {
+    if (is_root) {
         MPL_atomic_store_int(&barrier->val, 0);
         MPL_atomic_store_int(&barrier->wait, 0);
     }
@@ -52,7 +52,6 @@ static int Init_shm_barrier_init(int init_values)
     return MPI_SUCCESS;
 }
 
-/* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
 static int Init_shm_barrier()
 {
     int mpi_errno = MPI_SUCCESS;
