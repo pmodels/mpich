@@ -107,6 +107,10 @@ static void MPL_atomic_compiler_barrier(void);
 #elif defined(MPL_HAVE_NT_INTRINSICS)
 #include "mpl_atomic_nt_intrinsics.h"
 #elif defined(MPL_USE_LOCK_BASED_PRIMITIVES)
+#include <pthread.h>
+typedef pthread_mutex_t MPL_emulation_ipl_t;
+int MPL_atomic_interprocess_lock_init(MPL_emulation_ipl_t * shm_lock, int isLeader);
+int MPL_atomic_interprocess_lock_free(void);
 #include "mpl_atomic_by_lock.h"
 #else
 #error no primitives implementation specified

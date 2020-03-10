@@ -13,15 +13,22 @@
 
 /* defined in mpl_atomic.c */
 extern pthread_mutex_t MPL_emulation_lock;
+extern MPL_emulation_ipl_t *MPL_emulation_interprocess_lock;
 
-#define MPL_ATOMIC_IPC_SINGLE_CS_ENTER()         \
-    do {                                         \
-        pthread_mutex_lock(&MPL_emulation_lock); \
+#define MPL_ATOMIC_IPC_SINGLE_CS_ENTER()                                       \
+    do {                                                                       \
+        pthread_mutex_lock(&MPL_emulation_lock);                               \
+        if (MPL_emulation_interprocess_lock) {                                 \
+            pthread_mutex_lock(MPL_emulation_interprocess_lock);               \
+        }                                                                      \
     } while (0)
 
-#define MPL_ATOMIC_IPC_SINGLE_CS_EXIT()              \
-    do {                                             \
-        pthread_mutex_unlock(&MPL_emulation_lock);   \
+#define MPL_ATOMIC_IPC_SINGLE_CS_EXIT()                                        \
+    do {                                                                       \
+        if (MPL_emulation_interprocess_lock) {                                 \
+            pthread_mutex_unlock(MPL_emulation_interprocess_lock);             \
+        }                                                                      \
+        pthread_mutex_unlock(&MPL_emulation_lock);                             \
     } while (0)
 
 
