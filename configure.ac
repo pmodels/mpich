@@ -1047,6 +1047,26 @@ else
     mpllibdir="-L${with_mpl_prefix}/lib"
 fi
 
+# OpenPA
+# we are keeping OpenPA only as a fallback to MPL atomics, only with embedded option
+opasrcdir=""
+AC_SUBST([opasrcdir])
+opalibdir=""
+AC_SUBST([opalibdir])
+opalib=""
+AC_SUBST([opalib])
+if test "$with_mpl_atomic_primitives" = "openpa" ; then
+    if test -e "${use_top_srcdir}/src/openpa" ; then
+        opasrcdir="src/openpa"
+        opalib="src/openpa/src/libopa.la"
+        # no need for libtool versioning when embedding OPA
+        opa_subdir_args="--disable-versioning --enable-embedded"
+        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
+    else
+        AC_MSG_ERROR([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.])
+    fi
+fi
+
 # Izem
 
 AC_ARG_ENABLE([izem-queue],[  --enable-izem-queue],,[enable_izem_queue=no])
