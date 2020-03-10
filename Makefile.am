@@ -49,11 +49,11 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = @mplsrcdir@ @zmsrcdir@ @hwlocsrcdir@ @jsonsrcdir@
-external_ldflags = @mpllibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
+external_subdirs = @mplsrcdir@ @opasrcdir@ @zmsrcdir@ @hwlocsrcdir@ @jsonsrcdir@
+external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
 external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
-pmpi_convenience_libs = @mpllib@ @zmlib@ @hwloclib@ @jsonlib@
+pmpi_convenience_libs = @opalib@ @mpllib@ @zmlib@ @hwloclib@ @jsonlib@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
