@@ -106,6 +106,8 @@ static void MPL_atomic_compiler_barrier(void);
 #include "mpl_atomic_gcc_sync.h"
 #elif defined(MPL_HAVE_NT_INTRINSICS)
 #include "mpl_atomic_nt_intrinsics.h"
+#elif defined(MPL_HAVE_OPENPA_ATOMICS)
+#include "mpl_atomic_opa.h"
 #elif defined(MPL_USE_LOCK_BASED_PRIMITIVES)
 #include "mpl_atomic_by_lock.h"
 #else

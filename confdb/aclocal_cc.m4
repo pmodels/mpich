@@ -1685,5 +1685,6 @@ AC_DEFUN([PAC_ARG_ATOMIC_PRIMITIVES], [
         gcc_sync - GCC sync builtins
         win - Windows builtins
         lock - Mutex-based synchronization
+        openpa - OpenPA
         no|none - atomic operations are performed without synchronization
      ],,with_mpl_atomic_primitives=auto)])

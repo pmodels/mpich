@@ -858,6 +858,11 @@ if test "$with_mpl_atomic_primitives" = "auto" \
 fi
 PAC_POP_FLAG([CFLAGS])
 
+if test "$with_mpl_atomic_primitives" = "openpa"; then
+    AC_DEFINE(HAVE_OPENPA_ATOMICS, 1,
+              [Define to 1 if OpenPA is used])
+    mpl_atomic_primitives_set=true
+fi
 if test "$with_mpl_atomic_primitives" = "auto" \
         -o "$with_mpl_atomic_primitives" = "lock" ; then
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
