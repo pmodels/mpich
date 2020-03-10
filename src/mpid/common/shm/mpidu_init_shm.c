@@ -15,6 +15,14 @@ typedef struct Init_shm_barrier {
     MPL_atomic_int_t wait;
 } Init_shm_barrier_t;
 
+/* The first cacheline of the shm block is reserved for synchronization purpose */
+typedef struct Init_shm_header {
+    Init_shm_barrier_t barrier;
+#ifdef MPL_USE_LOCK_BASED_PRIMITIEVS
+    MPL_emulation_ipl_t atomic_lock;
+#endif
+} Init_shm_header_t;
+
 static int local_size;
 static int my_local_rank;
 static MPIDU_shm_seg_t memory;
@@ -30,7 +38,8 @@ static int Init_shm_barrier_init(int init_values)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
-    barrier = (Init_shm_barrier_t *) memory.base_addr;
+    Init_shm_header_t *header = memory.base_addr;
+    barrier = &header->barrier;
     if (init_values) {
         MPL_atomic_store_int(&barrier->val, 0);
         MPL_atomic_store_int(&barrier->wait, 0);
@@ -82,10 +91,6 @@ int MPIDU_Init_shm_init(void)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_INIT);
-
-#if defined(MPL_USE_LOCK_BASED_PRIMITIVES)
-#error Inter-process lock based atomics is not implemented.
-#endif
 
     rank = MPIR_Process.rank;
     local_size = MPIR_Process.local_size;
@@ -143,6 +148,7 @@ int MPIDU_Init_shm_init(void)
      * inside depend on PMI versions, and all processes need participate.
      */
     MPIR_pmi_bcast(serialized_hnd, serialized_hnd_size, MPIR_PMI_DOMAIN_LOCAL);
+
     if (local_size != 1) {
         MPIR_Assert(local_size > 1);
         if (my_local_rank > 0) {
@@ -170,6 +176,10 @@ int MPIDU_Init_shm_init(void)
         baseaddr = memory.base_addr + MPIDU_SHM_CACHE_LINE_LEN;
         memory.symmetrical = 0;
     }
+#if defined(MPL_USE_LOCK_BASED_PRIMITIVES)
+    Init_shm_header_t *header = memory.base_addr;
+    MPL_atomic_interprocess_lock_init(&header->atomic_lock, my_local_rank == 0);
+#endif
 
     mpi_errno = Init_shm_barrier();
     MPIR_CHKPMEM_COMMIT();
@@ -190,6 +200,9 @@ int MPIDU_Init_shm_finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_FINALIZE);
 
+#ifdef MPL_USE_LOCK_BASED_PRIMITIEVS
+    MPL_atomic_interprocess_lock_free();
+#endif
     mpi_errno = Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
