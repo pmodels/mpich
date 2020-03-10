@@ -74,7 +74,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     if (root_comm) {
         while (TRUE) {
             rreq = MPIDIG_dequeue_posted(slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
-                                         slmt_rts_hdr->context_id,
+                                         slmt_rts_hdr->context_id, 1,
                                          &MPIDIG_COMM(root_comm, posted_list));
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             if (rreq) {
