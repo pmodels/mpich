@@ -625,9 +625,6 @@ int MPID_Init(int requested, int *provided)
 
     MPIDI_global.is_initialized = 0;
 
-    mpi_errno = MPIDU_Init_shm_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
     return mpi_errno;
@@ -713,6 +710,9 @@ int MPID_Finalize(void)
     generic_finalize();
 
     finalize_av_table();
+
+    mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_pmi_finalize();
 
