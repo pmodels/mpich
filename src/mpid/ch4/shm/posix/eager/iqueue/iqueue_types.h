@@ -38,7 +38,7 @@ struct MPIDI_POSIX_eager_iqueue_cell {
 /* The terminal describes each of the iqueues, mostly by tracking where the head of the queue is at
  * any given time. */
 typedef union {
-    MPL_atomic_ptr_t head;      /* head of inverted queue of cells */
+    MPL_inter_atomic_ptr_t head;        /* head of inverted queue of cells */
     uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];      /* Padding to make sure the terminals are cache
                                                  * aligned */
 } MPIDI_POSIX_eager_iqueue_terminal_t;

@@ -132,10 +132,10 @@ MPIDI_POSIX_eager_send(int grank,
      * has now been consumed. Continues until we swap out the prev pointer. */
     void *prev;
     do {
-        prev = MPL_atomic_load_ptr(&terminal->head);
+        prev = MPL_inter_atomic_load_ptr(&terminal->head);
         cell->prev = (uintptr_t) prev;
         MPL_atomic_compiler_barrier();
-    } while (MPL_atomic_cas_ptr(&terminal->head, prev, handle) != prev);
+    } while (MPL_inter_atomic_cas_ptr(&terminal->head, prev, handle) != prev);
 
     /* Update the user counter for number of iovecs left */
     *iov_num -= iov_done;
