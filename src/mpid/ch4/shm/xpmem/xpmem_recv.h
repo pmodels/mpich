@@ -45,56 +45,51 @@ cvars:
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
                                                           size_t data_sz, void *dest_buf,
-                                                          MPL_atomic_int_t * counter_ptr,
+                                                          MPL_atomic_int64_t * offset_ptr,
                                                           uint64_t req_ptr,
                                                           MPIR_Request * local_req, int *fin_type,
                                                           int *copy_type)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t copy_sz;
-    int cur_chunk = 0, total_chunk = 0, num_local_copy = 0;
-    uint64_t cur_offset;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
 
-    total_chunk =
-        data_sz / MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE +
-        (data_sz % MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE == 0 ? 0 : 1);
+    MPI_Aint cur_offset;
+    MPI_Aint copy_total = 0;
+    while (true) {
+        cur_offset = MPL_atomic_fetch_add_int64(offset_ptr,
+                                                MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE);
+        if (cur_offset >= data_sz) {
+            break;
+        }
 
-    MPIR_Assert(total_chunk > 1);
+        MPI_Aint copy_sz;
+        if (cur_offset + MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE >= data_sz) {
+            copy_sz = data_sz - cur_offset;
+        } else {
+            copy_sz = MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE;
+        }
 
-    /* TODO: implement OPA_fetch_and_incr_int uint64_t to directly change cur_offset
-     * instead of computing it in each copy */
-    while ((cur_chunk = MPL_atomic_fetch_add_int(counter_ptr, 1)) < total_chunk) {
-        cur_offset = ((uint64_t) cur_chunk) * MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE;
-        copy_sz =
-            cur_offset + MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE <=
-            data_sz ? MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE : data_sz - cur_offset;
-        mpi_errno =
-            MPIR_Localcopy(((char *) src_buf + cur_offset), copy_sz, MPI_BYTE,
-                           ((char *) dest_buf + cur_offset), copy_sz, MPI_BYTE);
-        MPIR_ERR_CHECK(mpi_errno);
-        num_local_copy++;
+        MPIR_Memcpy((char *) dest_buf + cur_offset, (char *) src_buf + cur_offset, copy_sz);
+
+        copy_total += copy_sz;
     }
 
-    if (cur_chunk == total_chunk)
+    if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE)
         *fin_type = MPIDI_XPMEM_LOCAL_FIN;      /* copy is only locally complete */
     else
         *fin_type = MPIDI_XPMEM_BOTH_FIN;       /* copy is done by both sides */
 
-    if (num_local_copy == total_chunk)
+    if (copy_total == data_sz)
         *copy_type = MPIDI_XPMEM_COPY_ALL;      /* the process copies all chunks */
-    else if (num_local_copy == 0)
+    else if (copy_total == 0)
         *copy_type = MPIDI_XPMEM_COPY_ZERO;     /* the process copies zero chunk */
     else
         *copy_type = MPIDI_XPMEM_COPY_MIX;      /* both processes copy a part of chunks */
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offset,
@@ -135,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     /* allocate shm counter */
     MPIDI_XPMEM_REQUEST(rreq, counter_ptr) =
         (MPIDI_XPMEM_cnt_t *) MPIR_Handle_obj_alloc(&MPIDI_XPMEM_cnt_mem);
-    MPL_atomic_store_int(&MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.counter, 0);
+    MPL_atomic_store_int64(&MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset, 0);
     if (HANDLE_GET_KIND(MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.handle) == HANDLE_KIND_DIRECT) {
         slmt_cts_hdr->coop_counter_direct_flag = 1;
         slmt_cts_hdr->coop_counter_offset =
@@ -178,7 +173,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     mpi_errno =
         MPIDI_XPMEM_do_lmt_coop_copy(src_buf, recv_data_sz,
                                      (char *) dest_buf + dt_true_lb,
-                                     &MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.counter, sreq_ptr,
+                                     &MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset, sreq_ptr,
                                      rreq, &fin_type, &copy_type);
     MPIR_ERR_CHECK(mpi_errno);
 
