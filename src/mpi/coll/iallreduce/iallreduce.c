@@ -381,7 +381,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
                 break;
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_ring:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative, mpi_errno);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative, mpi_errno,
+                                               "Iallreduce gentran_ring cannot be applied.\n");
                 mpi_errno =
                     MPIR_Iallreduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype,
                                                        op, comm_ptr, request);
@@ -389,7 +390,8 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
 
             case MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM_gentran_recexch_reduce_scatter_recexch_allgatherv:
                 MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, is_commutative &&
-                                               count >= nranks, mpi_errno);
+                                               count >= nranks, mpi_errno,
+                                               "Iallreduce gentran_recexch_reduce_scatter_recexch_allgatherv cannot be applied.\n");
                 /* This algorithm will work for commutative
                  * operations and if the count is bigger than total
                  * number of ranks. If it not commutative or if the
