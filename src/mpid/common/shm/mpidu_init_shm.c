@@ -202,7 +202,7 @@ int MPIDU_Init_shm_finalize(void)
 #ifdef MPL_USE_LOCK_BASED_PRIMITIEVS
     MPL_atomic_interprocess_lock_free();
 #endif
-    mpi_errno = Init_shm_barrier();
+    mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     if (local_size == 1)
