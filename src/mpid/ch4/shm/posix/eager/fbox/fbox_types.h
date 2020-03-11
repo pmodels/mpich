@@ -17,7 +17,7 @@
 #define MPIDI_POSIX_FBOX_SIZE       (16 * 1024)
 
 typedef struct {
-    MPL_atomic_int_t data_ready;
+    MPL_inter_atomic_int_t data_ready;
     int is_header;
     size_t payload_sz;
     uint8_t payload[];

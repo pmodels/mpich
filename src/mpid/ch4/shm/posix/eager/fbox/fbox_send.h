@@ -44,7 +44,7 @@ MPIDI_POSIX_eager_send(int grank,
 
     /* Check if the fastbox is already full and if so, return to the caller, which will cause this
      * message to be queued. */
-    if (MPL_atomic_load_int(&fbox_out->data_ready)) {
+    if (MPL_inter_atomic_load_int(&fbox_out->data_ready)) {
         ret = MPIDI_POSIX_NOK;
         goto fn_exit;
     }
@@ -109,7 +109,7 @@ MPIDI_POSIX_eager_send(int grank,
 #endif /* POSIX_FBOX_DEBUG */
 
     /* Update the data ready flag to indicate that there is data in the box for the receiver. */
-    MPL_atomic_store_int(&fbox_out->data_ready, 1);
+    MPL_inter_atomic_store_int(&fbox_out->data_ready, 1);
 
     /* Update the number of iovecs left and the pointer to the next one. */
     *iov_num -= iov_done;
