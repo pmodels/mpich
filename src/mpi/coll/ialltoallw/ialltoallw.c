@@ -232,7 +232,8 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM) {
             case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_blocked:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE, mpi_errno);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE, mpi_errno,
+                                               "Ialltoallw gentran_blocked cannot be applied.\n");
                 mpi_errno =
                     MPIR_Ialltoallw_intra_gentran_blocked(sendbuf, sendcounts, sdispls,
                                                           sendtypes, recvbuf, recvcounts,
@@ -241,7 +242,8 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLW_INTRA_ALGORITHM_gentran_inplace:
-                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf == MPI_IN_PLACE, mpi_errno);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf == MPI_IN_PLACE, mpi_errno,
+                                               "Ialltoallw gentran_inplace cannot be applied.\n");
                 mpi_errno =
                     MPIR_Ialltoallw_intra_gentran_inplace(sendbuf, sendcounts, sdispls,
                                                           sendtypes, recvbuf, recvcounts,

@@ -340,7 +340,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 /* This algo cannot handle unordered data */
                 MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank,
                                                MPII_Iallgatherv_is_displs_ordered
-                                               (comm_size, recvcounts, displs), mpi_errno);
+                                               (comm_size, recvcounts, displs), mpi_errno,
+                                               "Iallgatherv gentran_recexch_doubling cannot be applied.\n");
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_doubling(sendbuf, sendcount, sendtype,
                                                                     recvbuf, recvcounts, displs,
@@ -353,7 +354,8 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 /* This algo cannot handle unordered data */
                 MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank,
                                                MPII_Iallgatherv_is_displs_ordered
-                                               (comm_size, recvcounts, displs), mpi_errno);
+                                               (comm_size, recvcounts, displs), mpi_errno,
+                                               "Iallgatherv gentran_recexch_halving cannot be applied.\n");
                 mpi_errno =
                     MPIR_Iallgatherv_intra_gentran_recexch_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcounts, displs,
