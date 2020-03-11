@@ -92,7 +92,8 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
 
     switch (MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_BARRIER_POSIX_INTRA_ALGORITHM_release_gather:
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded, mpi_errno);
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded, mpi_errno,
+                                           "Barrier release_gather cannot be applied.\n");
             mpi_errno = MPIDI_POSIX_mpi_barrier_release_gather(comm, errflag);
             break;
 
@@ -152,7 +153,8 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
 
     switch (MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_BCAST_POSIX_INTRA_ALGORITHM_release_gather:
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded, mpi_errno);
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded, mpi_errno,
+                                           "Bcast release_gather cannot be applied.\n");
             mpi_errno =
                 MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm, errflag);
             break;
@@ -217,7 +219,8 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
     switch (MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_ALLREDUCE_POSIX_INTRA_ALGORITHM_release_gather:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded &&
-                                           MPIR_Op_is_commutative(op), mpi_errno);
+                                           MPIR_Op_is_commutative(op), mpi_errno,
+                                           "Allreduce release_gather cannot be applied.\n");
             mpi_errno =
                 MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                          comm, errflag);
@@ -495,7 +498,8 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
     switch (MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM) {
         case MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM_release_gather:
             MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, !MPIR_ThreadInfo.isThreaded &&
-                                           MPIR_Op_is_commutative(op), mpi_errno);
+                                           MPIR_Op_is_commutative(op), mpi_errno,
+                                           "Reduce release_gather cannot be applied.\n");
             mpi_errno =
                 MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op, root,
                                                       comm, errflag);
