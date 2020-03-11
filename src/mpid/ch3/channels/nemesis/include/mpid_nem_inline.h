@@ -127,7 +127,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
         
         MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, buf, size);
 
-        MPL_atomic_release_store_int(&pbox->flag.value, 1);
+        MPL_inter_atomic_release_store_int(&pbox->flag.value, 1);
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
@@ -352,7 +352,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
         MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, (*iov)[0].MPL_IOV_BUF, (*iov)[0].MPL_IOV_LEN);
         MPIR_Memcpy ((char *)pbox->cell.pkt.p.payload + (*iov)[0].MPL_IOV_LEN, (*iov)[1].MPL_IOV_BUF, (*iov)[1].MPL_IOV_LEN);
         
-        MPL_atomic_release_store_int(&pbox->flag.value, 1);
+        MPL_inter_atomic_release_store_int(&pbox->flag.value, 1);
         *n_iov = 0;
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
@@ -516,7 +516,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
                            msgsize - *msg_offset, &actual_pack_bytes);
             MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
 
-            MPL_atomic_release_store_int(&pbox->flag.value, 1);
+            MPL_inter_atomic_release_store_int(&pbox->flag.value, 1);
 
             *msg_offset += actual_pack_bytes;;
 

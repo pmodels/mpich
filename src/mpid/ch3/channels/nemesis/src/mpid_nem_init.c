@@ -372,8 +372,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	{
 	    MPID_nem_mem_region.mailboxes.in [i] = &fastboxes_p[MAILBOX_INDEX(i, local_rank)];
 	    MPID_nem_mem_region.mailboxes.out[i] = &fastboxes_p[MAILBOX_INDEX(local_rank, i)];
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
+            MPL_inter_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
+            MPL_inter_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
 	}
     }
 #undef MAILBOX_INDEX

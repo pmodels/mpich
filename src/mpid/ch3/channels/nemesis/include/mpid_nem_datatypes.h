@@ -171,7 +171,7 @@ typedef struct MPID_nem_pkt
 /* This should always be exactly the size of a pointer */
 typedef struct MPID_nem_cell_rel_ptr
 {
-    MPL_atomic_ptr_t p;
+    MPL_inter_atomic_ptr_t p;
 }
 MPID_nem_cell_rel_ptr_t;
 
@@ -233,7 +233,7 @@ typedef struct MPID_nem_queue
 /* Fast Boxes*/ 
 typedef union
 {
-    MPL_atomic_int_t value;
+    MPL_inter_atomic_int_t value;
 #if MPID_NEM_CACHE_LINE_LEN != 0
     char padding[MPID_NEM_CACHE_LINE_LEN];
 #endif

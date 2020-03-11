@@ -63,7 +63,8 @@ static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t val)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    MPL_atomic_relaxed_store_ptr(&ret.p, MPL_atomic_swap_ptr(&(ptr->p), MPL_atomic_relaxed_load_ptr(&val.p)));
+    MPL_inter_atomic_relaxed_store_ptr(&ret.p, MPL_inter_atomic_swap_ptr(&(ptr->p),
+                                       MPL_inter_atomic_relaxed_load_ptr(&val.p)));
     return ret;
 }
 
@@ -71,7 +72,9 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_SWAP_REL (MPID_nem_cell_rel_ptr_t
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_CAS_REL_NULL (MPID_nem_cell_rel_ptr_t *ptr, MPID_nem_cell_rel_ptr_t oldv)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    MPL_atomic_relaxed_store_ptr(&ret.p, MPL_atomic_cas_ptr(&(ptr->p), MPL_atomic_relaxed_load_ptr(&oldv.p), MPID_NEM_REL_NULL));
+    MPL_inter_atomic_relaxed_store_ptr(&ret.p, MPL_inter_atomic_cas_ptr(&(ptr->p),
+                                       MPL_inter_atomic_relaxed_load_ptr(&oldv.p),
+                                       MPID_NEM_REL_NULL));
     return ret;
 }
 
