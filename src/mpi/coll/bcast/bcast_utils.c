@@ -23,14 +23,14 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                            MPI_Datatype datatype ATTRIBUTE((unused)),
                            int root,
                            MPIR_Comm * comm_ptr,
-                           int nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t * errflag)
+                           MPI_Aint nbytes, void *tmp_buf, int is_contig, MPIR_Errflag_t * errflag)
 {
     MPI_Status status;
     int rank, comm_size, src, dst;
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int scatter_size, recv_size = 0;
+    MPI_Aint scatter_size, recv_size = 0;
     MPI_Aint curr_size, send_size;
 
     comm_size = comm_ptr->local_size;
