@@ -48,7 +48,7 @@ typedef union MPIDI_XPMEM_cnt {
     MPIR_Handle_common common;  /* ensure sufficient bytes required for MPIR_Handle_common */
     struct {
         MPIR_OBJECT_HEADER;
-        OPA_int_t counter;
+        MPL_atomic_int_t counter;
     } obj;
 } MPIDI_XPMEM_cnt_t;
 

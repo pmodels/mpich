@@ -45,7 +45,7 @@ cvars:
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
                                                           size_t data_sz, void *dest_buf,
-                                                          OPA_int_t * counter_ptr,
+                                                          MPL_atomic_int_t * counter_ptr,
                                                           uint64_t req_ptr,
                                                           MPIR_Request * local_req, int *fin_type,
                                                           int *copy_type)
@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
 
     /* TODO: implement OPA_fetch_and_incr_int uint64_t to directly change cur_offset
      * instead of computing it in each copy */
-    while ((cur_chunk = OPA_fetch_and_incr_int(counter_ptr)) < total_chunk) {
+    while ((cur_chunk = MPL_atomic_fetch_add_int(counter_ptr, 1)) < total_chunk) {
         cur_offset = ((uint64_t) cur_chunk) * MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE;
         copy_sz =
             cur_offset + MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE <=
@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     /* allocate shm counter */
     MPIDI_XPMEM_REQUEST(rreq, counter_ptr) =
         (MPIDI_XPMEM_cnt_t *) MPIR_Handle_obj_alloc(&MPIDI_XPMEM_cnt_mem);
-    OPA_store_int(&MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.counter, 0);
+    MPL_atomic_store_int(&MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.counter, 0);
     if (HANDLE_GET_KIND(MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.handle) == HANDLE_KIND_DIRECT) {
         slmt_cts_hdr->coop_counter_direct_flag = 1;
         slmt_cts_hdr->coop_counter_offset =
