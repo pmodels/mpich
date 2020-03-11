@@ -37,7 +37,7 @@ typedef struct MPIDI_POSIX_release_gather_comm_t {
 
     void *flags_addr, *bcast_buf_addr, *reduce_buf_addr;
     void **child_reduce_buf_addr;
-    MPL_atomic_uint64_t *release_flag_addr, *gather_flag_addr;
+    MPL_inter_atomic_uint64_t *release_flag_addr, *gather_flag_addr;
 } MPIDI_POSIX_release_gather_comm_t;
 
 #endif /* RELEASE_GATHER_TYPES_H_INCLUDED */

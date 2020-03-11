@@ -43,7 +43,7 @@ cvars:
 #include "posix_eager.h"
 #include "posix_noinline.h"
 #include "posix_csel_container.h"
-extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
+extern MPL_inter_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
 static int choose_posix_eager(void);
 
@@ -228,13 +228,13 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_POSIX_shm_limit_counter = (MPL_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
+    MPIDI_POSIX_shm_limit_counter = (MPL_inter_atomic_uint64_t *) MPIDI_POSIX_global.shm_ptr;
 
     mpi_errno = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Set the counter to 0 */
-    MPL_atomic_relaxed_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
+    MPL_inter_atomic_store_uint64(MPIDI_POSIX_shm_limit_counter, 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_INIT);

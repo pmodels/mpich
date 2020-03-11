@@ -17,4 +17,4 @@ MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
 MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
 
 MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
-MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter = NULL;
+MPL_inter_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter = NULL;

@@ -11,7 +11,7 @@
 #ifndef RELEASE_GATHER_H_INCLUDED
 #define RELEASE_GATHER_H_INCLUDED
 
-extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
+extern MPL_inter_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 extern MPL_shm_hnd_t shm_limit_handle;
 extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
     MPIDI_POSIX_Reduce_tree_type;
@@ -21,7 +21,7 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
 #define MPIDI_POSIX_RELEASE_GATHER_WAIT_WHILE_LESS_THAN(ptr, value)                           \
     do {                                                           \
         int spin_count = 0;                                        \
-        while (MPL_atomic_acquire_load_uint64(ptr) < (value))    { \
+        while (MPL_inter_atomic_acquire_load_uint64(ptr) < (value))    { \
             if (++spin_count >= 10000) {                           \
                 /* Call progress only after waiting for a while */ \
                 MPID_Progress_test();                              \
@@ -30,16 +30,16 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
         }                                                          \
     }                                                              \
     while (0)
-#define MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE (sizeof(MPL_atomic_uint64_t))
+#define MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE (sizeof(MPL_inter_atomic_uint64_t))
 /* 1 cache_line each for gather and release flag */
 #define MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK (MPIDU_SHM_CACHE_LINE_LEN * 2)
 #define MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_OFFSET (0)
 #define MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_OFFSET (MPIDU_SHM_CACHE_LINE_LEN)
 #define MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_ADDR(rank)                                    \
-    (((MPL_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
+    (((MPL_inter_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
     ((rank * MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK + MPIDI_POSIX_RELEASE_GATHER_GATHER_FLAG_OFFSET)/(MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE)))
 #define MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_ADDR(rank)                                   \
-    (((MPL_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
+    (((MPL_inter_atomic_uint64_t *)release_gather_info_ptr->flags_addr) +  \
     ((rank * MPIDI_POSIX_RELEASE_GATHER_FLAG_SPACE_PER_RANK + MPIDI_POSIX_RELEASE_GATHER_RELEASE_FLAG_OFFSET)/(MPIDI_POSIX_RELEASE_GATHER_FLAG_SIZE)))
 #define MPIDI_POSIX_RELEASE_GATHER_BCAST_DATA_ADDR(buf)                           \
     (char *) release_gather_info_ptr->bcast_buf_addr + \
@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank;
     void *bcast_data_addr = NULL;
-    MPL_atomic_uint64_t *parent_flag_addr;
+    MPL_inter_atomic_uint64_t *parent_flag_addr;
     /* Set the relaxation to 0 because in Bcast, gather step is "relaxed" to make sure multiple
      * buffers can be used to pipeline the copying in and out of shared memory, and data is not
      * overwritten */
@@ -196,8 +196,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         /* Rank 0 updates its flag when it arrives and data is ready in shm buffer (if bcast) */
         /* "release" makes sure that the write of data does not get reordered after this
          * store */
-        MPL_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
-                                        release_gather_info_ptr->release_state);
+        MPL_inter_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
+                                              release_gather_info_ptr->release_state);
     } else {
         if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
             parent_flag_addr =
@@ -216,8 +216,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
         /* Update its own flag */
         /* "release" makes sure that the read of parent's flag does not get reordered after
          * this store */
-        MPL_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
-                                        release_gather_info_ptr->release_state);
+        MPL_inter_atomic_release_store_uint64(release_gather_info_ptr->release_flag_addr,
+                                              release_gather_info_ptr->release_state);
     }
 
     if (((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) && (rank != root)) ||
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
     void *child_data_addr;
-    MPL_atomic_uint64_t *child_flag_addr;
+    MPL_inter_atomic_uint64_t *child_flag_addr;
     void *reduce_data_addr = NULL;
     int i, mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     bool skip_checking = false;
@@ -336,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     /* Avoid checking for availabilty of next buffer if it is guaranteed to be available */
     /* "acquire" makes sure no writes/reads are reordered before this load */
     if ((operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) &&
-        (MPL_atomic_acquire_load_uint64(release_gather_info_ptr->gather_flag_addr)) >=
+        (MPL_inter_atomic_acquire_load_uint64(release_gather_info_ptr->gather_flag_addr)) >=
         (release_gather_info_ptr->gather_state - relaxation)) {
         skip_checking = true;
     }
@@ -374,12 +374,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
             }
             /* Read child_flag_addr which 'may' be larger than the strongest waiting condition
              * so, it is safe */
-            child_gather_flag = MPL_atomic_acquire_load_uint64(child_flag_addr);
+            child_gather_flag = MPL_inter_atomic_acquire_load_uint64(child_flag_addr);
             min_gather = MPL_MIN(child_gather_flag, min_gather);
         }
         /* "release" makes sure that the write of data (reduce_local) does not get
          * reordered after this store */
-        MPL_atomic_release_store_uint64((release_gather_info_ptr->gather_flag_addr), min_gather);
+        MPL_inter_atomic_release_store_uint64((release_gather_info_ptr->gather_flag_addr),
+                                              min_gather);
     }
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) {
