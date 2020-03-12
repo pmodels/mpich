@@ -24,8 +24,8 @@
 #include "ch4r_rma.h"
 #include "ch4r_win.h"
 #include "ch4r_buf.h"
-#include "mpidig_msg.h"
-#include "mpidig_recv.h"
-#include "mpidig_send.h"
+#include "mpidig_am_msg.h"
+#include "mpidig_am_recv.h"
+#include "mpidig_am_send.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */
