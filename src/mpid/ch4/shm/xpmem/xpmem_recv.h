@@ -47,8 +47,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
                                                           size_t data_sz, void *dest_buf,
                                                           MPL_atomic_int64_t * offset_ptr,
                                                           uint64_t req_ptr,
-                                                          MPIR_Request * local_req, int *fin_type,
-                                                          int *copy_type)
+                                                          MPIR_Request * local_req, int is_sender,
+                                                          int *fin_type)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -76,17 +76,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
         copy_total += copy_sz;
     }
 
-    if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE)
-        *fin_type = MPIDI_XPMEM_LOCAL_FIN;      /* copy is only locally complete */
-    else
-        *fin_type = MPIDI_XPMEM_BOTH_FIN;       /* copy is done by both sides */
-
-    if (copy_total == data_sz)
-        *copy_type = MPIDI_XPMEM_COPY_ALL;      /* the process copies all chunks */
-    else if (copy_total == 0)
-        *copy_type = MPIDI_XPMEM_COPY_ZERO;     /* the process copies zero chunk */
-    else
-        *copy_type = MPIDI_XPMEM_COPY_MIX;      /* both processes copy a part of chunks */
+    if (is_sender) {
+        /* sender */
+        if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE) {
+            /* finish first */
+            if (copy_total == data_sz) {
+                *fin_type = MPIDI_XPMEM_SENDER_FIN;
+            } else {
+                *fin_type = MPIDI_XPMEM_LOCAL_FIN;
+            }
+        } else {
+            /* finish second */
+            if (copy_total == 0) {
+                *fin_type = MPIDI_XPMEM_RECVER_FIN;
+            } else {
+                *fin_type = MPIDI_XPMEM_BOTH_FIN;
+            }
+        }
+    } else {
+        /* receiver */
+        if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE) {
+            /* finish first */
+            if (copy_total == data_sz) {
+                *fin_type = MPIDI_XPMEM_RECVER_FIN;
+            } else {
+                *fin_type = MPIDI_XPMEM_LOCAL_FIN;
+            }
+        } else {
+            /* finish second */
+            if (copy_total == 0) {
+                *fin_type = MPIDI_XPMEM_SENDER_FIN;
+            } else {
+                *fin_type = MPIDI_XPMEM_BOTH_FIN;
+            }
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
     return mpi_errno;
@@ -174,40 +198,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
         MPIDI_XPMEM_do_lmt_coop_copy(src_buf, recv_data_sz,
                                      (char *) dest_buf + dt_true_lb,
                                      &MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset, sreq_ptr,
-                                     rreq, &fin_type, &copy_type);
+                                     rreq, FALSE, &fin_type);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* - For receiver:
-     *     case copy_type == LOCAL_FIN:
-     *        case fin_type == COPY_ALL: complete rreq and free counter obj when receiving FREE_CNT;
-     *        case fin_type == COPY_ZERO: waits SEND_FIN from sender to complete rreq and free counter obj;
-     *                                    receiver needs to be notified the completion of sender
-     *        case fin_type == MIXED_COPIED: waits SEND_FIN from sender to complete rreq and free counter obj;
-     *                                       receiver needs to be notified the completion of sender
-     *     case copy_type == BOTH_FIN:
-     *        case fin_type == COPY_ALL: complete rreq and free counter obj; send RECV_FIN to sender
-     *        case fin_type == COPY_ZERO: complete rreq and free counter obj
-     *        case fin_type == MIXED_COPIED: complete rreq and free counter obj; send RECV_FIN to sender */
-    if ((fin_type == MPIDI_XPMEM_LOCAL_FIN && copy_type == MPIDI_XPMEM_COPY_ALL) ||
-        fin_type == MPIDI_XPMEM_BOTH_FIN) {
-        if (fin_type == MPIDI_XPMEM_BOTH_FIN) {
-            if (copy_type != MPIDI_XPMEM_COPY_ZERO) {
-                MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-                MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t *slmt_fin_hdr =
-                    &ack_ctrl_hdr.xpmem_slmt_recv_fin;
-                slmt_fin_hdr->req_ptr = sreq_ptr;
-                mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
-                                                   MPIDIG_context_id_to_comm(MPIDIG_REQUEST
-                                                                             (rreq, context_id)),
-                                                   MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN,
-                                                   &ack_ctrl_hdr);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-            MPIR_Handle_obj_free(&MPIDI_XPMEM_cnt_mem, MPIDI_XPMEM_REQUEST(rreq, counter_ptr));
-        } else {
-            int c;
-            MPIR_cc_incr(&MPIDI_XPMEM_global.num_pending_cnt, &c);
-        }
+    if (fin_type == MPIDI_XPMEM_BOTH_FIN) {
+        /* tell sender we finished too */
+        MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
+        MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+        MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t *slmt_fin_hdr = &ack_ctrl_hdr.xpmem_slmt_recv_fin;
+        slmt_fin_hdr->req_ptr = sreq_ptr;
+        mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm,
+                                           MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (fin_type == MPIDI_XPMEM_BOTH_FIN || fin_type == MPIDI_XPMEM_SENDER_FIN) {
+        /* sender is done, free the counter_ptr */
+        MPIR_Handle_obj_free(&MPIDI_XPMEM_cnt_mem, MPIDI_XPMEM_REQUEST(rreq, counter_ptr));
+    } else if (fin_type == MPIDI_XPMEM_RECVER_FIN) {
+        /* need wait for sender to tell me when to free the counter_ptr */
+        int c;
+        MPIR_cc_incr(&MPIDI_XPMEM_global.num_pending_cnt, &c);
+    }
+
+    if (fin_type != MPIDI_XPMEM_LOCAL_FIN) {
+        /* request is complete */
         MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
         MPID_Request_complete(rreq);
     }

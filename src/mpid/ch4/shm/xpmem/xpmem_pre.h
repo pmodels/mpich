@@ -17,17 +17,16 @@ typedef struct {
     int dummy;
 } MPIDI_XPMEM_Global_t;
 
-/* Variables used to indicate coop copy completion cases.
- *  See more explanation in xpmem_recv.h and xpmem_control.c */
+/* Variables used to indicate coop copy completion types.
+ *    If one process finsih first, it will return LOCAL_FIN, and the other process will return BOTH_FIN.
+ *    Generally the former will wait for the latter to send ack. There are two special cases that we can
+ *    optimize and by-pass the ack, in which both processes will return SENDER_FIN or RECVER_FIN.
+ */
 typedef enum {
-    MPIDI_XPMEM_COPY_ALL,       /* local process copied all chunks */
-    MPIDI_XPMEM_COPY_ZERO,      /* local process copied zero chunk */
-    MPIDI_XPMEM_COPY_MIX        /* both sides copied a part of chunks */
-} MPIDI_XPMEM_copy_type_t;
-
-typedef enum {
-    MPIDI_XPMEM_LOCAL_FIN,      /* local copy is done but the other side may be still copying */
-    MPIDI_XPMEM_BOTH_FIN        /* both sides finished copy */
+    MPIDI_XPMEM_LOCAL_FIN,      /* this process finish first, need wait for the other process */
+    MPIDI_XPMEM_BOTH_FIN,       /* this process finish second, need notify the other process */
+    MPIDI_XPMEM_SENDER_FIN,     /* sender side copies all and finish first */
+    MPIDI_XPMEM_RECVER_FIN      /* recver side copies all and finish first */
 } MPIDI_XPMEM_fin_type_t;
 
 typedef struct MPIDI_XPMEM_seg {
