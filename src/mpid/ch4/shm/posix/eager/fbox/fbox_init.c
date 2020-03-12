@@ -28,13 +28,13 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver) ((MPIDI_POSIX_global.num_local) * (sender) + (receiver))
+#define FBOX_INDEX(sender, receiver)  ((MPIDI_POSIX_global.num_local) * (sender) + (receiver))
+#define FBOX_OFFSET(sender, receiver) (MPIDI_POSIX_FBOX_SIZE * FBOX_INDEX(sender, receiver))
 
 int MPIDI_POSIX_fbox_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
@@ -62,13 +62,11 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
 
     /* Create region with one fastbox for every pair of local processes. */
     size_t len =
-        MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local * sizeof(MPIDI_POSIX_fastbox_t);
+        MPIDI_POSIX_global.num_local * MPIDI_POSIX_global.num_local * MPIDI_POSIX_FBOX_SIZE;
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_Init_shm_alloc(len, &MPIDI_POSIX_eager_fbox_control_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    fastboxes_p = (MPIDI_POSIX_fastbox_t *) MPIDI_POSIX_eager_fbox_control_global.shm_ptr;
 
     /* Allocate table of pointers to fastboxes */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in,
@@ -81,14 +79,14 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
                         "fastboxes", MPL_MEM_SHM);
 
     /* Fill in fbox tables */
+    char *fastboxes_p = (char *) MPIDI_POSIX_eager_fbox_control_global.shm_ptr;
     for (i = 0; i < MPIDI_POSIX_global.num_local; i++) {
         MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i] =
-            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(i, MPIDI_POSIX_global.my_local_rank)];
+            (void *) (fastboxes_p + FBOX_OFFSET(i, MPIDI_POSIX_global.my_local_rank));
         MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[i] =
-            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(MPIDI_POSIX_global.my_local_rank, i)];
+            (void *) (fastboxes_p + FBOX_OFFSET(MPIDI_POSIX_global.my_local_rank, i));
 
-        memset(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i], 0,
-               sizeof(MPIDI_POSIX_fastbox_t));
+        memset(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i], 0, MPIDI_POSIX_FBOX_SIZE);
     }
 
     mpi_errno = MPIDU_Init_shm_barrier();

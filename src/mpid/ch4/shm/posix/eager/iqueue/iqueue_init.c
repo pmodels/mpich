@@ -80,7 +80,8 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
         (size_t) MPIDI_POSIX_global.my_local_rank * (size_t) transport->num_cells *
         (size_t) transport->size_of_cell;
 
-    transport->terminals[MPIDI_POSIX_global.my_local_rank].head = 0;
+    MPL_atomic_relaxed_store_ptr(&transport->terminals[MPIDI_POSIX_global.my_local_rank].head,
+                                 NULL);
 
     /* Do the pointer arithmetic and initialize each of the cell data structures. */
     for (i = 0; i < transport->num_cells; i++) {

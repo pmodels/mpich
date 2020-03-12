@@ -72,7 +72,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
         fbox_in = MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[local_rank];
 
         /* If the data ready flag is set, there is a message waiting. */
-        if (fbox_in->data_ready) {
+        if (MPL_atomic_load_int(&fbox_in->data_ready)) {
             /* Initialize public transaction part */
             grank = MPIDI_POSIX_global.local_procs[local_rank];
 
@@ -140,7 +140,7 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
 
     fbox_in = (MPIDI_POSIX_fastbox_t *) transaction->transport.fbox.fbox_ptr;
 
-    fbox_in->data_ready = 0;
+    MPL_atomic_store_int(&fbox_in->data_ready, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMMIT);
 }
