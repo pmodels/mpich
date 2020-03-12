@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef MPIDIG_RECV_H_INCLUDED
-#define MPIDIG_RECV_H_INCLUDED
+#ifndef MPIDIG_AM_RECV_H_INCLUDED
+#define MPIDIG_AM_RECV_H_INCLUDED
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
@@ -325,4 +325,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     return mpi_errno;
 }
 
-#endif /* MPIDIG_RECV_H_INCLUDED */
+#endif /* MPIDIG_AM_RECV_H_INCLUDED */

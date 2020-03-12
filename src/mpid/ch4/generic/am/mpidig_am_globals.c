@@ -10,7 +10,6 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidig.h"
 #include "ch4_impl.h"
 #include "mpidch4r.h"
 
