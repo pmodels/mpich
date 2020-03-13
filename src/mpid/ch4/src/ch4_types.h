@@ -95,6 +95,14 @@ enum {
     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+    MPIDI_SHM_XPMEM_SEND_LMT_RTS,       /* issued by sender to initialize XPMEM protocol with sbuf info */
+    MPIDI_SHM_XPMEM_SEND_LMT_CTS,       /* issued by receiver with rbuf info after receiving RTS if it performs coop copy. */
+    MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN,  /* issued by sender to notify completion of coop copy */
+    MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN,  /* issued by receiver to notify completion of coop copy or single copy */
+    MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE,  /* issued by sender to notify free counter obj in coop copy */
+#endif
+
     MPIDIG_HANDLER_STATIC_MAX
 };
 

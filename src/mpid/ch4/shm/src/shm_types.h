@@ -12,17 +12,6 @@
 #ifndef SHM_TYPES_H_INCLUDED
 #define SHM_TYPES_H_INCLUDED
 
-typedef enum {
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    MPIDI_SHM_XPMEM_SEND_LMT_RTS,       /* issued by sender to initialize XPMEM protocol with sbuf info */
-    MPIDI_SHM_XPMEM_SEND_LMT_CTS,       /* issued by receiver with rbuf info after receiving RTS if it performs coop copy. */
-    MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN,  /* issued by sender to notify completion of coop copy */
-    MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN,  /* issued by receiver to notify completion of coop copy or single copy */
-    MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE,  /* issued by sender to notify free counter obj in coop copy */
-#endif
-    MPIDI_SHM_CTRL_IDS_MAX
-} MPIDI_SHM_ctrl_id_t;
-
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 typedef struct MPIDI_SHM_ctrl_xpmem_send_lmt_rts {
     uint64_t src_offset;        /* send data starting address (buffer + true_lb) */
