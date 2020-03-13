@@ -1,15 +1,15 @@
 /* ---------------------------------------------------------------- */
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
-/**
- * \file ad_gpfs_hints.c
- * \brief GPFS hint processing - for now, only used for BlueGene and PE platforms
- */
-
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
+ */
+
+/**
+ * \file ad_gpfs_hints.c
+ * \brief GPFS hint processing - for now, only used for BlueGene and PE platforms
  */
 
 #include "adio.h"

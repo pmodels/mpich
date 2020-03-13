@@ -1,9 +1,11 @@
-! This file created from test/mpi/errors/f77/io/uerrhandf.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !  (C) 2013 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
+! This file created from test/mpi/errors/f77/io/uerrhandf.f with f77tof90
+
       program main
       use mpi_f08
       integer (kind=MPI_ADDRESS_KIND) asize

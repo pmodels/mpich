@@ -1,8 +1,11 @@
-! This file created from test/mpi/f77/rma/winattr2f.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !  (C) 2003 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
+!
+
+! This file created from test/mpi/f77/rma/winattr2f.f with f77tof90
+!
 !  This is a modified version of winattrf.f that uses two of the
 !  default functions
 !

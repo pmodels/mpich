@@ -3,13 +3,16 @@
  *  (C) 2004 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
+ */
+/* style: c++ header */
+
+/*
  * This is a *very* simple tool for basic coverage analysis.
  * This is intended as a stop-gap until gcov works with the C++ files
  * used in the MPICH binding of C++ (as of 2/23/2004, gcov aborts when
  * processing the coverage files produced by g++ for the MPICH C++
  * binding).
  */
-/* style: c++ header */
 
 #ifndef MPICOVSIMPLE_H_INCLUDED
 #define MPICOVSIMPLE_H_INCLUDED

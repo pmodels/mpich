@@ -1,15 +1,15 @@
 /* ---------------------------------------------------------------- */
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
-/**
- * \file ad_bg_pset.c
- * \brief Definition of functions associated to structs ADIOI_BG_ProcInfo_t and ADIOI_BG_ConfInfo_t
- */
-
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
+ */
+
+/**
+ * \file ad_bg_pset.c
+ * \brief Definition of functions associated to structs ADIOI_BG_ProcInfo_t and ADIOI_BG_ConfInfo_t
  */
 
 /* #define TRACE_ON */

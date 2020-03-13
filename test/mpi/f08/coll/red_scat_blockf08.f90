@@ -1,8 +1,10 @@
-! This file created from test/mpi/f77/coll/red_scat_blockf.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 ! (C) 2012 by Argonne National Laboratory.
 !     See COPYRIGHT in top-level directory.
+!
+
+! This file created from test/mpi/f77/coll/red_scat_blockf.f with f77tof90
 !
 ! A simple test for Fortran support of Reduce_scatter_block
 ! with or withoutMPI_IN_PLACE.

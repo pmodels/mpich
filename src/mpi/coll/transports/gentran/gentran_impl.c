@@ -1,5 +1,4 @@
 /*
-    src/mpi/coll/transports/gentran/tsp_gentran_types.h \
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *

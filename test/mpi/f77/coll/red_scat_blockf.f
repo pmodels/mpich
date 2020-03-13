@@ -3,6 +3,7 @@ C
 C (C) 2012 by Argonne National Laboratory.
 C     See COPYRIGHT in top-level directory.
 C
+
 C A simple test for Fortran support of Reduce_scatter_block
 C with or withoutMPI_IN_PLACE.
 C

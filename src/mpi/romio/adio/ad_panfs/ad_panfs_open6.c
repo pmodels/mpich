@@ -1,7 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   ad_panfs_open.c
- *
  *   Copyright (C) 2001 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */

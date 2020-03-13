@@ -3,6 +3,7 @@
 !  (C) 2011 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
 ! This program tests that all of the integer kinds defined in MPI 2.2 are
 ! available.
 !

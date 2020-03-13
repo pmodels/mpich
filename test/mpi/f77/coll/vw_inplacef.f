@@ -3,6 +3,7 @@ C
 C (C) 2012 by Argonne National Laboratory.
 C     See COPYRIGHT in top-level directory.
 C
+
 C A simple test for Fortran support of the MPI_IN_PLACE value in Alltoall[vw].
 C
        program main

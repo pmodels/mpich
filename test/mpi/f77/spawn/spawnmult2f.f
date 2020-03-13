@@ -3,6 +3,7 @@ C
 C  (C) 2003 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
+
 C This tests spawn_mult by using the same executable and no command-line
 C options.  The attribute MPI_APPNUM is used to determine which
 C executable is running.

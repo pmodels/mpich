@@ -1,5 +1,5 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
- *
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
  *
  *   Copyright (C) 1997 University of Chicago.
  *   Copyright (C) 2017 DataDirect Networks.

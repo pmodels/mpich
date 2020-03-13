@@ -3,6 +3,7 @@
 !  (C) 2012 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
 ! This is a special test that requires an getarg/iargc routine
 !
         program main
