@@ -1,9 +1,11 @@
-! This file created from f77/util/mtestf.f with f77tof90
 ! -*- Mode: Fortran; -*- 
 !
 !  (C) 2003 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
+! This file created from f77/util/mtestf.f with f77tof90
+
         subroutine MTest_Init( ierr )
 !       Place the include first so that we can automatically create a
 !       Fortran 90 version that uses the mpi module instead.  If

@@ -3,6 +3,7 @@
 !  (C) 2003 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
 ! This tests spawn_mult by using the same executable and no command-line
 ! options.  The attribute MPI_APPNUM is used to determine which
 ! executable is running.

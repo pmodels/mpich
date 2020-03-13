@@ -3,6 +3,7 @@ C
 C  (C) 2004 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
+
 C Test various combinations of periodic and non-periodic Cartesian 
 C communicators
 C

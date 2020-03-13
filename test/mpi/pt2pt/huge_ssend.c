@@ -6,9 +6,11 @@
  *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
- *
- *  This program checks if MPICH can correctly handle huge synchronous sends
- *
+ */
+
+/*
+ * This program checks if MPICH can correctly handle huge synchronous
+ * sends
  */
 
 #include <mpi.h>

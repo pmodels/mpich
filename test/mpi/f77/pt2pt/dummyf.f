@@ -3,7 +3,7 @@ C
 C  (C) 2011 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
-C
+
 C This file is used to disable certain compiler optimizations that
 C can cause incorrect results with the test in greqf.f.  It provides a 
 C point where extrastate may be modified, limiting the compilers ability

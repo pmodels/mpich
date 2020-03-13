@@ -3,6 +3,7 @@ C
 C (C) 2005 by Argonne National Laboratory.
 C     See COPYRIGHT in top-level directory.
 C
+
 C This is a simple test that Fortran support the MPI_IN_PLACE value
 C
        program main

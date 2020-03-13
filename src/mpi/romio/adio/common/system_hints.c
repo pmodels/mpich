@@ -1,6 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
- * vim: ts=8 sts=4 sw=4 noexpandtab
- *
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
+/*
  *   Copyright (C) 2007 UChicago/Argonne LLC.
  *   See COPYRIGHT notice in top-level directory.
  */

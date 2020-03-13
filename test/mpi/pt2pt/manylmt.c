@@ -6,11 +6,11 @@
  *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
- *
- *
- *  This program checks if MPICH can correctly handle
- *  many outstanding large message transfers
- *
+ */
+
+/*
+ * This program checks if MPICH can correctly handle many outstanding
+ * large message transfers
  */
 
 #include <stdio.h>

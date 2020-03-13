@@ -3,6 +3,7 @@
 !  (C) 2014 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
 ! Test various combinations of periodic and non-periodic Cartesian
 ! communicators
 !

@@ -1,10 +1,12 @@
-! This file created from test/mpi/f77/attr/baseattr2f.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !
 ! (C) 2001 by Argonne National Laboratory.
 !     See COPYRIGHT in top-level directory.
 !
+
+! This file created from test/mpi/f77/attr/baseattr2f.f with f77tof90
+
         program main
         use mpi_f08
         integer ierr, errs

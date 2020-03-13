@@ -4,8 +4,9 @@
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  *
- * Note: This code originally appeared in ROMIO.
  */
+
+/* Note: This code originally appeared in ROMIO. */
 
 #include "mpiimpl.h"
 #include "dataloop_internal.h"

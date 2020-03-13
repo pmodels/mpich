@@ -1,8 +1,10 @@
-! This file created from test/mpi/f77/coll/inplacef.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 ! (C) 2005 by Argonne National Laboratory.
 !     See COPYRIGHT in top-level directory.
+!
+
+! This file created from test/mpi/f77/coll/inplacef.f with f77tof90
 !
 ! This is a simple test that Fortran support the MPI_IN_PLACE value
 !

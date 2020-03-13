@@ -2,6 +2,8 @@ C -*- Mode: Fortran; -*-
 C
 C  (C) 2003 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
+C
+
 C  This is a modified version of typeattrf.f that uses two of the
 C  default functions
 C

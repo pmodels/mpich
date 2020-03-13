@@ -3,6 +3,7 @@
 # (C) 2018 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
+
 # Generate datatype testing build instructions for every line in
 # configuration file dtp-test-config.txt
 

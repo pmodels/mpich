@@ -1,9 +1,10 @@
-C**********************************************************************
-C   pi.f - compute pi by integrating f(x) = 4/(1 + x**2)
 C
 C  (C) 2001 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
+
+C****************************************************************************
+C   pi.f - compute pi by integrating f(x) = 4/(1 + x**2)
 C   Each node:
 C    1) receives the number of rectangles used in the approximation.
 C    2) calculates the areas of it's rectangles.

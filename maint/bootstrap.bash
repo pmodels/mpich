@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#
+
 # Fetches MPICH dependencies, builds them from source, and installs them
 # in the path stored in the environment variable MPICH_DEPS_PATH.
 

@@ -3,6 +3,7 @@ C
 C  (C) 2003 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
+
 C Test just the MPI-IO FILE object
       program main
       implicit none

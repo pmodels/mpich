@@ -3,6 +3,7 @@ C
 C  (C) 2012 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
+
 C This program is based on the allpair.f test from the MPICH-1 test
 C (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 C fsset@corelli.lerc.nasa.gov (Scott Townsend)

@@ -3,6 +3,7 @@
 !  (C) 2007 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
+
 ! This program tests that the MPI_SIZEOF routine is implemented for the 
 ! predefined scalar Fortran types.  It confirms that the size of these
 ! types matches the size of the corresponding MPI datatypes.
