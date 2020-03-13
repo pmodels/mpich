@@ -16,7 +16,7 @@
  * side are named with suffix "_origin_cb", and all handlers on the
  * packet receiving side are named with "_target_msg_cb". */
 
-#include "mpidig.h"
+#include "mpidig_am.h"
 
 int MPIDIG_do_long_ack(MPIR_Request * rreq);
 int MPIDIG_check_cmpl_order(MPIR_Request * req);
