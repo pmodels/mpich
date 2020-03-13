@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "xpmem_impl.h"
+#include "mpidimpl.h"
 #include "xpmem_seg.h"
 #include "xpmem_noinline.h"
 #include "../posix/posix_noinline.h"

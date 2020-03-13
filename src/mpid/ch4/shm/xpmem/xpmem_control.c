@@ -157,7 +157,6 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     size_t data_sz ATTRIBUTE((unused));
     MPI_Aint dt_true_lb;
     MPIDI_XPMEM_cnt_t *counter_ptr = NULL;
-    int fin_type, copy_type;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CTS_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CTS_CB);
@@ -190,37 +189,12 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
     /* sender and receiver datatypes are both continuous, perform cooperative copy. */
-    mpi_errno =
-        MPIDI_XPMEM_do_lmt_coop_copy(src_buf, slmt_cts_hdr->data_sz, dest_buf,
-                                     &counter_ptr->obj.offset, slmt_cts_hdr->rreq_ptr, sreq,
-                                     TRUE, &fin_type);
+    mpi_errno = MPIDI_XPMEM_do_send(src_buf, slmt_cts_hdr->data_sz, dest_buf,
+                                    &counter_ptr->obj.offset,
+                                    sreq, slmt_cts_hdr->rreq_ptr,
+                                    slmt_cts_hdr->coop_counter_direct_flag,
+                                    slmt_cts_hdr->coop_counter_offset);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (fin_type == MPIDI_XPMEM_BOTH_FIN) {
-        /* tell recver we finished too */
-        MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-        MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(sreq, context_id));
-        ack_ctrl_hdr.xpmem_slmt_send_fin.req_ptr = slmt_cts_hdr->rreq_ptr;
-        mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(sreq, rank), comm,
-                                           MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, &ack_ctrl_hdr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else if (fin_type == MPIDI_XPMEM_RECVER_FIN) {
-        /* tell recver we finished so it can free the counter_ptr */
-        MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-        MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(sreq, context_id));
-        ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_direct_flag =
-            slmt_cts_hdr->coop_counter_direct_flag;
-        ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_offset = slmt_cts_hdr->coop_counter_offset;
-        mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(sreq, rank), comm,
-                                           MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, &ack_ctrl_hdr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (fin_type != MPIDI_XPMEM_LOCAL_FIN) {
-        /* request is complete */
-        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
-        MPID_Request_complete(sreq);
-    }
 
     mpi_errno = MPIDI_XPMEM_seg_deregist(seg_ptr);
     MPIR_ERR_CHECK(mpi_errno);

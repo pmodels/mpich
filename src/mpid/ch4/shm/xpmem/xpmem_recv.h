@@ -43,79 +43,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_do_lmt_coop_copy(const void *src_buf,
-                                                          size_t data_sz, void *dest_buf,
-                                                          MPL_atomic_int64_t * offset_ptr,
-                                                          uint64_t req_ptr,
-                                                          MPIR_Request * local_req, int is_sender,
-                                                          int *fin_type)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
-
-    MPI_Aint cur_offset;
-    MPI_Aint copy_total = 0;
-    while (true) {
-        cur_offset = MPL_atomic_fetch_add_int64(offset_ptr,
-                                                MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE);
-        if (cur_offset >= data_sz) {
-            break;
-        }
-
-        MPI_Aint copy_sz;
-        if (cur_offset + MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE >= data_sz) {
-            copy_sz = data_sz - cur_offset;
-        } else {
-            copy_sz = MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE;
-        }
-
-        MPIR_Memcpy((char *) dest_buf + cur_offset, (char *) src_buf + cur_offset, copy_sz);
-
-        copy_total += copy_sz;
-    }
-
-    if (is_sender) {
-        /* sender */
-        if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE) {
-            /* finish first */
-            if (copy_total == data_sz) {
-                *fin_type = MPIDI_XPMEM_SENDER_FIN;
-            } else {
-                *fin_type = MPIDI_XPMEM_LOCAL_FIN;
-            }
-        } else {
-            /* finish second */
-            if (copy_total == 0) {
-                *fin_type = MPIDI_XPMEM_RECVER_FIN;
-            } else {
-                *fin_type = MPIDI_XPMEM_BOTH_FIN;
-            }
-        }
-    } else {
-        /* receiver */
-        if (cur_offset - data_sz < MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE) {
-            /* finish first */
-            if (copy_total == data_sz) {
-                *fin_type = MPIDI_XPMEM_RECVER_FIN;
-            } else {
-                *fin_type = MPIDI_XPMEM_LOCAL_FIN;
-            }
-        } else {
-            /* finish second */
-            if (copy_total == 0) {
-                *fin_type = MPIDI_XPMEM_SENDER_FIN;
-            } else {
-                *fin_type = MPIDI_XPMEM_BOTH_FIN;
-            }
-        }
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_XPMEM_DO_LMT_COOP_COPY);
-    return mpi_errno;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offset,
                                                               size_t src_data_sz,
                                                               uint64_t sreq_ptr, int src_lrank,
@@ -127,7 +54,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     void *src_buf = NULL;
     void *dest_buf = NULL;
     size_t data_sz, recv_data_sz;
-    int fin_type, copy_type;
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_cts;
 
@@ -193,39 +119,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
                 " copy dst %p, src %lx, bytes %ld\n", rreq, MPIDIG_REQUEST(rreq, rank),
                 MPIDIG_REQUEST(rreq, tag), MPIDIG_REQUEST(rreq, context_id),
                 (char *) MPIDIG_REQUEST(rreq, buffer), src_offset, recv_data_sz);
+
     /* sender and receiver datatypes are both continuous, perform cooperative copy. */
-    mpi_errno =
-        MPIDI_XPMEM_do_lmt_coop_copy(src_buf, recv_data_sz,
-                                     (char *) dest_buf + dt_true_lb,
-                                     &MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset, sreq_ptr,
-                                     rreq, FALSE, &fin_type);
+    mpi_errno = MPIDI_XPMEM_do_recv(src_buf, recv_data_sz, (char *) dest_buf + dt_true_lb,
+                                    &MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset,
+                                    sreq_ptr, rreq);
     MPIR_ERR_CHECK(mpi_errno);
-
-    if (fin_type == MPIDI_XPMEM_BOTH_FIN) {
-        /* tell sender we finished too */
-        MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-        MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
-        MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t *slmt_fin_hdr = &ack_ctrl_hdr.xpmem_slmt_recv_fin;
-        slmt_fin_hdr->req_ptr = sreq_ptr;
-        mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm,
-                                           MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (fin_type == MPIDI_XPMEM_BOTH_FIN || fin_type == MPIDI_XPMEM_SENDER_FIN) {
-        /* sender is done, free the counter_ptr */
-        MPIR_Handle_obj_free(&MPIDI_XPMEM_cnt_mem, MPIDI_XPMEM_REQUEST(rreq, counter_ptr));
-    } else if (fin_type == MPIDI_XPMEM_RECVER_FIN) {
-        /* need wait for sender to tell me when to free the counter_ptr */
-        int c;
-        MPIR_cc_incr(&MPIDI_XPMEM_global.num_pending_cnt, &c);
-    }
-
-    if (fin_type != MPIDI_XPMEM_LOCAL_FIN) {
-        /* request is complete */
-        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-        MPID_Request_complete(rreq);
-    }
 
     mpi_errno = MPIDI_XPMEM_seg_deregist(seg_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -246,7 +145,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
     MPIDI_XPMEM_seg_t *seg_ptr = NULL;
     void *src_buf = NULL;
     size_t data_sz, recv_data_sz;
-    MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_HANDLE_LMT_SINGLE_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_HANDLE_LMT_SINGLE_RECV);
@@ -281,11 +179,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
                                MPIDIG_REQUEST(rreq, datatype));
     MPIR_ERR_CHECK(mpi_errno);
 
-    ack_ctrl_hdr.xpmem_slmt_send_fin.req_ptr = sreq_ptr;
-    mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
-                                       MPIDIG_context_id_to_comm(MPIDIG_REQUEST
-                                                                 (rreq, context_id)),
-                                       MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr);
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+    mpi_errno = MPIDI_XPMEM_send_recv_fin(rank, comm, sreq_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
