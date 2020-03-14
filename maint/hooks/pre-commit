@@ -70,7 +70,7 @@ do
     if [[ ($file == *.c || $file == *.h || $file == *.c.in || $file == *.h.in) &&
           !($file == *mpi.h.in || $file == *mpio.h.in || $file == *mpitestcxx.h || $file == src/mpid/ch3/* || $file == doc/*) ]]; then
         cp ${file} ${TMP_FILENAME}
-        maint/code-cleanup.sh ${file}
+        maint/code-cleanup.bash ${file}
         git --no-pager diff ${file} ${TMP_FILENAME}
         if [ $? != 0 ] ; then
             ret=1
