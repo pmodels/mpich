@@ -33,7 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_rts(int rank, MPIR_Comm * comm, in
     slmt_req_hdr->tag = tag;
     slmt_req_hdr->context_id = comm->context_id + context_offset;
 
-    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RTS, &ctrl_hdr);
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RTS, &ctrl_hdr,
+                                 sizeof(ctrl_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cts(int rank, MPIR_Comm * comm,
@@ -56,7 +57,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cts(int rank, MPIR_Comm * comm,
     slmt_req_hdr->coop_counter_direct_flag = coop_counter_direct_flag;
     slmt_req_hdr->coop_counter_offset = coop_counter_offset;
 
-    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS, &ack_ctrl_hdr);
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS, &ctrl_hdr,
+                                 sizeof(ctrl_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_recv_fin(int rank, MPIR_Comm * comm,
@@ -64,7 +66,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_recv_fin(int rank, MPIR_Comm * com
 {
     MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
     ack_ctrl_hdr.xpmem_slmt_recv_fin.req_ptr = sreq_ptr;
-    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr);
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr,
+                                 sizeof(ack_ctrl_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_send_fin(int rank, MPIR_Comm * comm,
@@ -72,7 +75,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_send_fin(int rank, MPIR_Comm * com
 {
     MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
     ack_ctrl_hdr.xpmem_slmt_send_fin.req_ptr = rreq_ptr;
-    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, &ack_ctrl_hdr);
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, &ack_ctrl_hdr,
+                                 sizeof(ack_ctrl_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cnt_free(int rank, MPIR_Comm * comm,
@@ -81,7 +85,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cnt_free(int rank, MPIR_Comm * com
     MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
     ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_direct_flag = flag;
     ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_offset = coop_counter_offset;
-    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, &ack_ctrl_hdr);
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, &ack_ctrl_hdr,
+                                 sizeof(ack_ctrl_hdr));
 }
 
 /* lmt cooperative copy */
