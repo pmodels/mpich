@@ -60,7 +60,7 @@ C
        integer smsg(count)
        common /myinfo/ calls, amount, rcalls, ramount
        integer calls, amount, rcalls, ramount
-c
+C
        calls = calls + 1
        amount = amount + count
        call pmpi_send( smsg, count, dtype, dest, tag, comm, ierr )

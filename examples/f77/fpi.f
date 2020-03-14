@@ -1,25 +1,25 @@
-c**********************************************************************
-c   pi.f - compute pi by integrating f(x) = 4/(1 + x**2)     
-c
-c  (C) 2001 by Argonne National Laboratory.
-c      See COPYRIGHT in top-level directory.
-c     
-c   Each node: 
-c    1) receives the number of rectangles used in the approximation.
-c    2) calculates the areas of it's rectangles.
-c    3) Synchronizes for a global summation.
-c   Node 0 prints the result.
-c
-c  Variables:
-c
-c    pi  the calculated result
-c    n   number of points of integration.  
-c    x           midpoint of each rectangle's interval
-c    f           function to integrate
-c    sum,pi      area of rectangles
-c    tmp         temporary scratch space for global summation
-c    i           do loop index
-c****************************************************************************
+C**********************************************************************
+C   pi.f - compute pi by integrating f(x) = 4/(1 + x**2)
+C
+C  (C) 2001 by Argonne National Laboratory.
+C      See COPYRIGHT in top-level directory.
+C
+C   Each node:
+C    1) receives the number of rectangles used in the approximation.
+C    2) calculates the areas of it's rectangles.
+C    3) Synchronizes for a global summation.
+C   Node 0 prints the result.
+C
+C  Variables:
+C
+C    pi  the calculated result
+C    n   number of points of integration.
+C    x           midpoint of each rectangle's interval
+C    f           function to integrate
+C    sum,pi      area of rectangles
+C    tmp         temporary scratch space for global summation
+C    i           do loop index
+C****************************************************************************
       program main
 
       include 'mpif.h'
@@ -29,7 +29,7 @@ c****************************************************************************
 
       double precision  mypi, pi, h, sum, x, f, a
       integer n, myid, numprocs, i, rc
-c                                 function to integrate
+C                                 function to integrate
       f(a) = 4.d0 / (1.d0 + a*a)
 
       call MPI_INIT( ierr )
@@ -49,10 +49,10 @@ c                                 function to integrate
       
       call MPI_BCAST(n,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
 
-c                                 check for quit signal
+C                                 check for quit signal
       if ( n .le. 0 ) goto 30
 
-c                                 calculate the interval size
+C                                 calculate the interval size
       h = 1.0d0/n
 
       sum  = 0.0d0
@@ -62,11 +62,11 @@ c                                 calculate the interval size
  20   continue
       mypi = h * sum
 
-c                                 collect all the partial sums
+C                                 collect all the partial sums
       call MPI_REDUCE(mypi,pi,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,
      $     MPI_COMM_WORLD,ierr)
 
-c                                 node 0 prints the answer.
+C                                 node 0 prints the answer.
       if (myid .eq. 0) then
          write(6, 97) pi, abs(pi - PI25DT)
  97      format('  pi is approximately: ', F18.16,

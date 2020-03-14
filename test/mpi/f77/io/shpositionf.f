@@ -66,6 +66,6 @@ C write
               call MTestPrintError( ierr )
            endif
         endif
-c
+C
         call MTest_Finalize( errs )
         end
