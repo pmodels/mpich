@@ -4,8 +4,6 @@
 !      See COPYRIGHT in top-level directory.
 !
 
-! This test contributed by Kim McMahon, Cray
-!
       program main
       use mpi
       implicit none

@@ -1,7 +1,6 @@
 ## -*- Mode: Makefile; -*-
 ## vim: set ft=automake :
 ##
-## (C) 2017 by DataDirect Networks
 ##     See COPYRIGHT in top-level directory.
 ##
 

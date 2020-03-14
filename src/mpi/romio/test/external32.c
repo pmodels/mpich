@@ -1,11 +1,3 @@
-/*
- *  This code was written by Intel Corporation. Copyright (C) 2011-2012 Intel Corporation.
- *  Intel provides this material to Argonne National Laboratory subject to
- *  Software Grant and Corporate Contributor License Agreement dated February 8, 2012.
- *
- *  See COPYRIGHT in top-level directory.
- */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"

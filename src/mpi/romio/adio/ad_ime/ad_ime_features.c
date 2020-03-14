@@ -2,7 +2,6 @@
 /*
  *
  *   Copyright (C) 1997 University of Chicago.
- *   Copyright (C) 2017 DataDirect Networks.
  *   See COPYRIGHT notice in top-level directory.
  */
 #include "adio.h"

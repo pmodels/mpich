@@ -3,17 +3,6 @@
 !      See COPYRIGHT in top-level directory.
 !
 
-! Thanks to 
-! William R. Magro
-! for this test
-!
-! It has been modifiedly slightly to work with the automated MPI
-! tests.
-!  WDG.
-!
-! It was further modified to use MPI_Get_address instead of MPI_Address
-! for MPICH, and to fit in the MPICH test harness - WDG
-!
       program bustit
       use mpi
       implicit none

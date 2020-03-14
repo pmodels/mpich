@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2008 by University of Illinois
  *      See COPYRIGHT in top-level directory.
  */
 

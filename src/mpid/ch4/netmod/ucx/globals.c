@@ -3,8 +3,6 @@
  *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
 #include <mpidimpl.h>
 #include "ucx_impl.h"

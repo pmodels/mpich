@@ -1,6 +1,3 @@
-/* ---------------------------------------------------------------- */
-/* (C)Copyright IBM Corp.  2007, 2008                               */
-/* ---------------------------------------------------------------- */
 /**
  * \file ad_tuning.h
  * \brief Defines common performance tuning env var options
