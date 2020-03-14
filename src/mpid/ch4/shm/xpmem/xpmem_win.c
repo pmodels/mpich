@@ -6,7 +6,6 @@
 
 #include "mpidimpl.h"
 #include "xpmem_seg.h"
-#include "xpmem_noinline.h"
 #include "../posix/posix_noinline.h"
 
 /* Return global node rank of each process in the shared communicator.
@@ -49,7 +48,7 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
+int MPIDI_XPMEM_on_win_create(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEM_win_t *xpmem_win = NULL;
@@ -144,7 +143,7 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
+int MPIDI_XPMEM_on_win_free(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

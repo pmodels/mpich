@@ -8,9 +8,6 @@
 #include "mpidimpl.h"
 #include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-#include "../xpmem/xpmem_noinline.h"
-#endif
 
 int MPIDI_SHMI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
@@ -115,7 +112,7 @@ int MPIDI_SHMI_mpi_win_create_hook(MPIR_Win * win)
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
-        ret = MPIDI_XPMEM_mpi_win_create_hook(win);
+        ret = MPIDI_XPMEM_on_win_create(win);
         MPIR_ERR_CHECK(ret);
     }
 #endif
@@ -201,7 +198,7 @@ int MPIDI_SHMI_mpi_win_free_hook(MPIR_Win * win)
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
-        ret = MPIDI_XPMEM_mpi_win_free_hook(win);
+        ret = MPIDI_XPMEM_on_win_free(win);
         MPIR_ERR_CHECK(ret);
     }
 #endif

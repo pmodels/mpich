@@ -96,4 +96,10 @@ extern MPL_dbg_class MPIDI_CH4_SHM_XPMEM_GENERAL;
 
 #define MPIDI_XPMEM_REQUEST(req, field)      ((req)->dev.ch4.am.shm_am.xpmem.field)
 
+/* declare function prototypes */
+int MPIDI_XPMEM_init(void);
+int MPIDI_XPMEM_finalize(void);
+int MPIDI_XPMEM_on_win_create(MPIR_Win * win);
+int MPIDI_XPMEM_on_win_free(MPIR_Win * win);
+
 #endif /* XPMEM_PRE_H_INCLUDED */

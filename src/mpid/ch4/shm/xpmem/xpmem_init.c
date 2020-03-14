@@ -5,7 +5,6 @@
  */
 
 #include "mpidimpl.h"
-#include "xpmem_noinline.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 #include "xpmem_control.h"
@@ -19,7 +18,7 @@ static void xpmem_am_init(void)
     MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, NULL, &MPIDI_XPMEM_cnt_free_cb);
 }
 
-int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
+int MPIDI_XPMEM_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -129,7 +128,7 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_mpi_finalize_hook(void)
+int MPIDI_XPMEM_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, ret = 0;
