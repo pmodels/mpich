@@ -7,8 +7,6 @@
 #ifndef XPMEM_CONTROL_H_INCLUDED
 #define XPMEM_CONTROL_H_INCLUDED
 
-#include "shm_types.h"
-
 int MPIDI_XPMEM_rts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,
                        int *is_contig, MPIR_Request ** req);
 int MPIDI_XPMEM_cts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,

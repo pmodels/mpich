@@ -14,6 +14,7 @@ noinst_HEADERS += src/mpid/ch4/shm/xpmem/shm_inline.h      \
                   src/mpid/ch4/shm/xpmem/xpmem_send.h      \
                   src/mpid/ch4/shm/xpmem/xpmem_recv.h      \
                   src/mpid/ch4/shm/xpmem/xpmem_control.h   \
+                  src/mpid/ch4/shm/xpmem/xpmem_types.h     \
                   src/mpid/ch4/shm/xpmem/xpmem_pre.h
 
 mpi_core_sources += src/mpid/ch4/shm/xpmem/globals.c       \

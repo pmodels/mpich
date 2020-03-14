@@ -6,6 +6,7 @@
 
 #include "mpidimpl.h"
 #include "xpmem_pre.h"
+#include "xpmem_types.h"
 #include "xpmem_impl.h"
 #include "xpmem_recv.h"
 #include "xpmem_control.h"

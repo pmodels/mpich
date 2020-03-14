@@ -7,7 +7,6 @@
 #ifndef SHM_CONTROL_H_INCLUDED
 #define SHM_CONTROL_H_INCLUDED
 
-#include "shm_types.h"
 #include "../posix/posix_am.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_do_ctrl_send(int rank, MPIR_Comm * comm,

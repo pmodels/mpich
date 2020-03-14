@@ -9,6 +9,7 @@
 
 #include "mpidimpl.h"
 #include "xpmem_pre.h"
+#include "xpmem_types.h"
 
 /* routines for sending control packets */
 /* TODO: ideally we want to group an am send with its corresponding callback

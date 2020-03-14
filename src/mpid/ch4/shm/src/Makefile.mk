@@ -10,7 +10,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/src
 noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h  \
         src/mpid/ch4/shm/src/shm_am.h      \
         src/mpid/ch4/shm/src/shm_control.h \
-        src/mpid/ch4/shm/src/shm_types.h   \
         src/mpid/ch4/shm/src/shm_coll.h    \
         src/mpid/ch4/shm/src/shm_hooks.h   \
         src/mpid/ch4/shm/src/shm_init.h    \

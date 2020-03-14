@@ -13,7 +13,6 @@
 #include "posix_types.h"
 #include "posix_am_impl.h"
 #include <posix_eager.h>
-#include "shm_types.h"
 #include "shm_control.h"
 
 /* unused prototypes to supress -Wmissing-prototypes */
