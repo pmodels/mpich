@@ -11,13 +11,11 @@
 #include "xpmem_recv.h"
 #include "xpmem_control.h"
 
-static int recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int recv_fin_cb(MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t * hdr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_SHM_ctrl_hdr_t *ctrl_hdr = am_hdr;
-
-    MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_recv_fin.req_ptr;
+    MPIR_Request *sreq = (MPIR_Request *) hdr->req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
@@ -33,10 +31,10 @@ static int recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-static int send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int send_fin_cb(MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t * hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_send_fin.req_ptr;
+    MPIR_Request *rreq = (MPIR_Request *) hdr->req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
@@ -56,10 +54,9 @@ static int send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-static int rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int rts_cb(MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t * slmt_rts_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->xpmem_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RTS_CB);
@@ -149,11 +146,10 @@ static int rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-static int cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int cts_cb(MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t * slmt_cts_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr->xpmem_slmt_cts;
     MPIDI_XPMEM_seg_t *seg_ptr = NULL;
     MPIDI_XPMEM_seg_t *counter_seg_ptr = NULL;
     void *dest_buf = NULL;
@@ -215,11 +211,10 @@ static int cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-static int cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int cnt_free_cb(MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t * xpmem_slmt_cnt_free)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_XPMEM_cnt_t *counter_ptr;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t *xpmem_slmt_cnt_free = &ctrl_hdr->xpmem_slmt_cnt_free;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CNT_FREE_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_CNT_FREE_CB);

@@ -20,22 +20,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_rts(int rank, MPIR_Comm * comm, in
                                                   void *buf, MPI_Aint data_sz,
                                                   int tag, MPIR_Request * sreq)
 {
-    MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.xpmem_slmt_rts;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t am_hdr;
 
     /* XPMEM internal info */
-    slmt_req_hdr->src_offset = (uint64_t) buf;
-    slmt_req_hdr->data_sz = data_sz;
-    slmt_req_hdr->sreq_ptr = (uint64_t) sreq;
-    slmt_req_hdr->src_lrank = MPIDI_XPMEM_global.local_rank;
+    am_hdr.src_offset = (uint64_t) buf;
+    am_hdr.data_sz = data_sz;
+    am_hdr.sreq_ptr = (uint64_t) sreq;
+    am_hdr.src_lrank = MPIDI_XPMEM_global.local_rank;
 
     /* message matching info */
-    slmt_req_hdr->src_rank = comm->rank;
-    slmt_req_hdr->tag = tag;
-    slmt_req_hdr->context_id = comm->context_id + context_offset;
+    am_hdr.src_rank = comm->rank;
+    am_hdr.tag = tag;
+    am_hdr.context_id = comm->context_id + context_offset;
 
-    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RTS, &ctrl_hdr,
-                                 sizeof(ctrl_hdr));
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RTS, &am_hdr, sizeof(am_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cts(int rank, MPIR_Comm * comm,
@@ -44,50 +42,48 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cts(int rank, MPIR_Comm * comm,
                                                   int coop_counter_direct_flag,
                                                   uint64_t coop_counter_offset)
 {
-    MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_cts;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t am_hdr;
 
     /* XPMEM internal info */
-    slmt_cts_hdr->dest_offset = (uint64_t) buf;
-    slmt_cts_hdr->data_sz = data_sz;
-    slmt_cts_hdr->dest_lrank = MPIDI_XPMEM_global.local_rank;
+    am_hdr.dest_offset = (uint64_t) buf;
+    am_hdr.data_sz = data_sz;
+    am_hdr.dest_lrank = MPIDI_XPMEM_global.local_rank;
 
     /* Receiver replies CTS packet */
-    slmt_cts_hdr->sreq_ptr = sreq_ptr;
-    slmt_cts_hdr->rreq_ptr = (uint64_t) rreq;
-    slmt_req_hdr->coop_counter_direct_flag = coop_counter_direct_flag;
-    slmt_req_hdr->coop_counter_offset = coop_counter_offset;
+    am_hdr.sreq_ptr = sreq_ptr;
+    am_hdr.rreq_ptr = (uint64_t) rreq;
+    am_hdr.coop_counter_direct_flag = coop_counter_direct_flag;
+    am_hdr.coop_counter_offset = coop_counter_offset;
 
-    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS, &ctrl_hdr,
-                                 sizeof(ctrl_hdr));
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS, &am_hdr, sizeof(am_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_recv_fin(int rank, MPIR_Comm * comm,
                                                        intptr_t sreq_ptr)
 {
-    MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-    ack_ctrl_hdr.xpmem_slmt_recv_fin.req_ptr = sreq_ptr;
-    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr,
-                                 sizeof(ack_ctrl_hdr));
+    MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t am_hdr;
+    am_hdr.req_ptr = sreq_ptr;
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, &am_hdr,
+                                 sizeof(am_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_send_fin(int rank, MPIR_Comm * comm,
                                                        intptr_t rreq_ptr)
 {
-    MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-    ack_ctrl_hdr.xpmem_slmt_send_fin.req_ptr = rreq_ptr;
-    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, &ack_ctrl_hdr,
-                                 sizeof(ack_ctrl_hdr));
+    MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t am_hdr;
+    am_hdr.req_ptr = rreq_ptr;
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, &am_hdr,
+                                 sizeof(am_hdr));
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cnt_free(int rank, MPIR_Comm * comm,
                                                        int flag, uint64_t coop_counter_offset)
 {
-    MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-    ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_direct_flag = flag;
-    ack_ctrl_hdr.xpmem_slmt_cnt_free.coop_counter_offset = coop_counter_offset;
-    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, &ack_ctrl_hdr,
-                                 sizeof(ack_ctrl_hdr));
+    MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t am_hdr;
+    am_hdr.coop_counter_direct_flag = flag;
+    am_hdr.coop_counter_offset = coop_counter_offset;
+    return MPIDI_SHM_am_send_hdr(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, &am_hdr,
+                                 sizeof(am_hdr));
 }
 
 /* lmt cooperative copy */
