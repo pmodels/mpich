@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 /*
 Copyright (c) 2003-2017, Troy D. Hanson     http://troydhanson.github.com/uthash/
 All rights reserved.
