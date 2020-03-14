@@ -4,11 +4,11 @@ C  (C) 2012 by Argonne National Laboratory.
 C      See COPYRIGHT in top-level directory.
 C
 
-c------------------------------------------------------------------------------
-c
-c  Check for correct source, tag, count, and data in test message.
-c
-c------------------------------------------------------------------------------
+C------------------------------------------------------------------------------
+C
+C  Check for correct source, tag, count, and data in test message.
+C
+C------------------------------------------------------------------------------
       subroutine msg_check( recv_buf, source, tag, count, status, n,
      *                      name, errs )
       implicit none
@@ -50,29 +50,29 @@ c------------------------------------------------------------------------------
       call verify_test_data(recv_buf, count, n, name, errs )
 
       end
-c------------------------------------------------------------------------------
-c
-c  Check that requests have been set to null
-c
-c------------------------------------------------------------------------------
+C------------------------------------------------------------------------------
+C
+C  Check that requests have been set to null
+C
+C------------------------------------------------------------------------------
       subroutine rq_check( requests, n, msg )
       include 'mpif.h'
       integer n, requests(n)
       character*(*) msg
       integer i
-c
+C
       do 10 i=1, n
          if (requests(i) .ne. MPI_REQUEST_NULL) then
             print *, 'Nonnull request in ', msg
          endif
  10   continue
-c
+C
       end
-c------------------------------------------------------------------------------
-c
-c  Initialize test data buffer with integral sequence.
-c
-c------------------------------------------------------------------------------
+C------------------------------------------------------------------------------
+C
+C  Initialize test data buffer with integral sequence.
+C
+C------------------------------------------------------------------------------
       subroutine init_test_data(buf,n)
       integer n
       real buf(n)
@@ -83,11 +83,11 @@ c------------------------------------------------------------------------------
  10    continue
       end
 
-c------------------------------------------------------------------------------
-c
-c  Clear test data buffer
-c
-c------------------------------------------------------------------------------
+C------------------------------------------------------------------------------
+C
+C  Clear test data buffer
+C
+C------------------------------------------------------------------------------
       subroutine clear_test_data(buf, n)
       integer n
       real buf(n)
@@ -99,11 +99,11 @@ c------------------------------------------------------------------------------
 
       end
 
-c------------------------------------------------------------------------------
-c
-c  Verify test data buffer
-c
-c------------------------------------------------------------------------------
+C------------------------------------------------------------------------------
+C
+C  Verify test data buffer
+C
+C------------------------------------------------------------------------------
       subroutine verify_test_data( buf, count, n, name, errs )
       implicit none
       include 'mpif.h'
