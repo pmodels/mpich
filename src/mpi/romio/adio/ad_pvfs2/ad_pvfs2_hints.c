@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 1997 University of Chicago.
@@ -117,7 +118,3 @@ void ADIOI_PVFS2_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     *error_code = MPI_SUCCESS;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

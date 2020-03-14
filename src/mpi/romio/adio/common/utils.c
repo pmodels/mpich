@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 2014 UChicgo/Argonne, LLC.
@@ -156,7 +157,3 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
     return write_ret;
 }
 #endif
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

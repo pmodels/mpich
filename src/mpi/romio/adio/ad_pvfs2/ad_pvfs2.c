@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 2003 University of Chicago.
@@ -48,7 +49,3 @@ struct ADIOI_Fns_struct ADIO_PVFS2_operations = {
     ADIOI_GEN_SetLock64 /* SetLock */
 #endif
 };
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

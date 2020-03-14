@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *  (C) 2009 UChicago/Argonne LLC
  *      See COPYRIGHT in top-level directory.
@@ -51,7 +52,3 @@ void MPIR_MPIOInit(int *error_code)
     }
     *error_code = MPI_SUCCESS;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

@@ -2,6 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
@@ -147,7 +148,3 @@ void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
     } else
         *error_code = MPI_SUCCESS;
 }
-
-/*
- *vim: ts=8 sts=4 sw=4 noexpandtab
- */

@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 2004 University of Chicago.
@@ -345,7 +346,3 @@ int ADIOI_GEN_aio_query_fn(void *extra_state, MPI_Status * status)
     /* this generalized request never fails */
     return MPI_SUCCESS;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

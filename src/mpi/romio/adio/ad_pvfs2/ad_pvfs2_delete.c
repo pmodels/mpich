@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 2003 University of Chicago.
@@ -61,7 +62,3 @@ void ADIOI_PVFS2_Delete(const char *filename, int *error_code)
     *error_code = MPI_SUCCESS;
     return;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

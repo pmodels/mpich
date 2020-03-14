@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 1997 University of Chicago.
@@ -48,7 +49,3 @@ void ADIOI_PVFS2_Flush(ADIO_File fd, int *error_code)
     }
     /* --END ERROR HANDLING-- */
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */
