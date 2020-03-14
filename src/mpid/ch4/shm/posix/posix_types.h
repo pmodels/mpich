@@ -45,9 +45,5 @@ typedef struct {
 } MPIDI_POSIX_global_t;
 
 extern MPIDI_POSIX_global_t MPIDI_POSIX_global;
-extern MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
-
-#define POSIX_TRACE(...) \
-    MPL_DBG_MSG_FMT(MPIDI_CH4_SHM_POSIX_GENERAL,VERBOSE,(MPL_DBG_FDEST, __VA_ARGS__))
 
 #endif /* POSIX_TYPES_H_INCLUDED */
