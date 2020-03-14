@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *  (C) 2020 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -41,7 +42,3 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     *error_code = MPI_SUCCESS;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

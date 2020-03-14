@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *
  *   Copyright (C) 1997 University of Chicago.
@@ -318,7 +319,3 @@ static int build_cb_config_list(ADIO_File fd,
     }
     return 0;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

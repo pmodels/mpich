@@ -207,8 +207,3 @@ int ADIOI_PVFS2_aio_wait_fn(int count, void **array_of_states, double timeout, M
     }
     return MPI_SUCCESS; /* TODO: no idea how to deal with errors */
 }
-
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

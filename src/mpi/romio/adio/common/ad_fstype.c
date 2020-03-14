@@ -1,4 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* vim: ts=8 sts=4 sw=4 noexpandtab */
 /*
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
@@ -751,7 +752,3 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     *fstype = file_system;
     return;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */
