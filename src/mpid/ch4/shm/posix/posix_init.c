@@ -112,10 +112,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
 
-#ifdef MPL_USE_DBG_LOGGING
-    MPIDI_CH4_SHM_POSIX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX", "shm_posix");
-#endif /* MPL_USE_DBG_LOGGING */
-
     MPIDI_POSIX_global.am_buf_pool =
         MPIDIU_create_buf_pool(MPIDI_POSIX_BUF_POOL_NUM, MPIDI_POSIX_BUF_POOL_SIZE);
 
