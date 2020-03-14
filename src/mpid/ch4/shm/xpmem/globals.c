@@ -15,12 +15,10 @@ MPL_dbg_class MPIDI_CH4_SHM_XPMEM_GENERAL;
 #endif
 
 /* Preallocated segment objects */
-MPIDI_XPMEM_seg_t MPIDI_XPMEM_seg_mem_direct[MPIDI_XPMEM_SEG_PREALLOC] = { {0}
-};
+MPIDI_XPMEM_seg_t MPIDI_XPMEM_seg_mem_direct[MPIDI_XPMEM_SEG_PREALLOC];
 
 /* Preallocated counter objects */
-MPIDI_XPMEM_cnt_t MPIDI_XPMEM_cnt_mem_direct[MPIDI_XPMEM_CNT_PREALLOC] = { {0}
-};
+MPIDI_XPMEM_cnt_t MPIDI_XPMEM_cnt_mem_direct[MPIDI_XPMEM_CNT_PREALLOC];
 
 MPIR_Object_alloc_t MPIDI_XPMEM_seg_mem = { 0, 0, 0, 0, MPIR_INTERNAL,
     sizeof(MPIDI_XPMEM_seg_t), MPIDI_XPMEM_seg_mem_direct,
