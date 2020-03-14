@@ -8,6 +8,16 @@
 #include "xpmem_noinline.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
+#include "xpmem_control.h"
+
+static void xpmem_am_init(void)
+{
+    MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_RTS, NULL, &MPIDI_XPMEM_rts_cb);
+    MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_CTS, NULL, &MPIDI_XPMEM_cts_cb);
+    MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_SEND_FIN, NULL, &MPIDI_XPMEM_send_fin_cb);
+    MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN, NULL, &MPIDI_XPMEM_recv_fin_cb);
+    MPIDIG_am_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE, NULL, &MPIDI_XPMEM_cnt_free_cb);
+}
 
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
 {
@@ -17,6 +27,9 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_INIT_HOOK);
+
+    xpmem_am_init();
+
     MPIR_CHKPMEM_DECL(3);
 
 #ifdef MPL_USE_DBG_LOGGING

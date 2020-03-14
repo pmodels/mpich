@@ -9,10 +9,15 @@
 
 #include "shm_types.h"
 
-int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
-int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
-int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
-int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
-int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_XPMEM_rts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,
+                       int *is_contig, MPIR_Request ** req);
+int MPIDI_XPMEM_cts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,
+                       int *is_contig, MPIR_Request ** req);
+int MPIDI_XPMEM_send_fin_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req);
+int MPIDI_XPMEM_recv_fin_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req);
+int MPIDI_XPMEM_cnt_free_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req);
 
 #endif /* XPMEM_CONTROL_H_INCLUDED */

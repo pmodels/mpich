@@ -10,9 +10,12 @@
 #include "xpmem_recv.h"
 #include "xpmem_control.h"
 
-int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_SHM_ctrl_hdr_t *ctrl_hdr = am_hdr;
+
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_recv_fin.req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
@@ -29,7 +32,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_send_fin.req_ptr;
@@ -52,7 +55,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->xpmem_slmt_rts;
@@ -145,7 +148,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -211,7 +214,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+static int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_XPMEM_cnt_t *counter_ptr;
@@ -233,4 +236,41 @@ int MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* ch4 am handler callback functions */
+
+int MPIDI_XPMEM_rts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,
+                       int *is_contig, MPIR_Request ** req)
+{
+    *req = NULL;
+    return MPIDI_XPMEM_ctrl_send_lmt_rts_cb(am_hdr);
+}
+
+int MPIDI_XPMEM_cts_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz, int is_local,
+                       int *is_contig, MPIR_Request ** req)
+{
+    *req = NULL;
+    return MPIDI_XPMEM_ctrl_send_lmt_cts_cb(am_hdr);
+}
+
+int MPIDI_XPMEM_send_fin_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req)
+{
+    *req = NULL;
+    return MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(am_hdr);
+}
+
+int MPIDI_XPMEM_recv_fin_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req)
+{
+    *req = NULL;
+    return MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(am_hdr);
+}
+
+int MPIDI_XPMEM_cnt_free_cb(int handler_id, void *am_hdr, void **data, size_t * data_sz,
+                            int is_local, int *is_contig, MPIR_Request ** req)
+{
+    *req = NULL;
+    return MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb(am_hdr);
 }
