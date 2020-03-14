@@ -84,25 +84,6 @@ MPIDI_POSIX_eager_send(int grank,
 
     fbox_out->payload_sz = fbox_payload_size - fbox_payload_size_left;
 
-#ifdef POSIX_FBOX_DEBUG
-    {
-        int i;
-
-        POSIX_FBOX_TRACE("FBOX_OUT (%s) [", fbox_out->is_header ? "H" : "F");
-
-        for (i = 0; i < fbox_out->payload_sz; i++) {
-            POSIX_FBOX_TRACE("%02X", ((uint8_t *) (fbox_out->payload))[i]);
-
-            if (i == 255) {
-                POSIX_FBOX_TRACE("...");
-                break;
-            }
-        }
-
-        POSIX_FBOX_TRACE("]@%d to %d\n", fbox_out->payload_sz, grank);
-    }
-#endif /* POSIX_FBOX_DEBUG */
-
     /* Update the data ready flag to indicate that there is data in the box for the receiver. */
     MPL_atomic_store_int(&fbox_out->data_ready, 1);
 
