@@ -1,6 +1,3 @@
-/*
- *  Copyright 2016 Cray Inc. All Rights Reserved.
- */
 #include "adio.h"
 
 #include "ad_lustre.h"

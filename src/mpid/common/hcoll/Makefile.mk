@@ -1,7 +1,6 @@
 ## -*- Mode: Makefile; -*-
 ## vim: set ft=automake :
 ##
-## (C) 2014 Mellanox Technologies, Inc.
 ##     See COPYRIGHT in top-level directory.
 ##
 

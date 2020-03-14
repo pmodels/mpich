@@ -2,10 +2,6 @@
 <!--
     (C) 2010 by Argonne National Laboratory.
         See COPYRIGHT in top-level directory.
-    (C)Copyright IBM Corp.  2010
-
-     Thanks to Joe Ratterman @ IBM for providing many improvements to
-     this style sheet.
   -->
 <!-- <xsl:stylesheet  xmlns:xsl="http://www.w3.org/TR/WD-xsl"> -->
 <xsl:stylesheet  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
