@@ -1,14 +1,16 @@
-//-*- Mode: C++; c-basic-offset:4 ; -*- */
-//
-//  Copyright (C) 2004 by Argonne National Laboratory.
-//      See COPYRIGHT in top-level directory.
-//
-// This is a *very* simple tool for basic coverage analysis.  
-// This is intended as a stop-gap until gcov works with the C++ files
-// used in the MPICH binding of C++ (as of 2/23/2004, gcov aborts when
-// processing the coverage files produced by g++ for the MPICH C++
-// binding).
-//
+/* -*- Mode: C++; c-basic-offset:4 ; -*- */
+/*
+ *  Copyright (C) 2004 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/*
+ * This is a *very* simple tool for basic coverage analysis.
+ * This is intended as a stop-gap until gcov works with the C++ files
+ * used in the MPICH binding of C++ (as of 2/23/2004, gcov aborts when
+ * processing the coverage files produced by g++ for the MPICH C++
+ * binding).
+ */
 
 #include <iostream.h>
 #include <fstream.h>
