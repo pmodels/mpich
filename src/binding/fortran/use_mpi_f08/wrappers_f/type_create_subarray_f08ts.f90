@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Type_create_subarray_f08(ndims, array_of_sizes, array_of_subsizes, &
     array_of_starts, order, oldtype, newtype, ierror)
     use, intrinsic :: iso_c_binding, only : c_int

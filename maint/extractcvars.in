@@ -1,8 +1,8 @@
-#!/usr/bin/env perl
-#
-# (C) 2011by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # Parse C or header files to search for MPI_T control variable
 # and category info, then output the info in source code form.
@@ -137,10 +137,9 @@ open(OUTPUT_README, '>', $readme_file);
 # Step 5.1: Dump the header file.
 my $hdr_guard = Header2InclGuard($header_file);
 print OUTPUT_H <<EOT;
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Automatically generated
@@ -227,10 +226,9 @@ close(OUTPUT_H);
 #===============================================================
 # Step 5.2: Dump the C file.
 print OUTPUT_C <<EOT;
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 /* automatically generated
  *   by:   $0
@@ -481,8 +479,8 @@ close(OUTPUT_C);
 #===============================================================
 #Step 5.3 Dump the readme file
 print OUTPUT_README <<EOT;
-(C) 2010 by Argonne National Laboratory.
-    See COPYRIGHT in top-level directory.
+Copyright (C) by Argonne National Laboratory
+    See COPYRIGHT in top-level directory
 
 Automatically generated
   by:   $0

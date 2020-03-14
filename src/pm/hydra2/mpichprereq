@@ -1,4 +1,9 @@
 #! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Check that we are using the simple PMI implementation
 # (Selecting multiple PM's may require incompatible PMI implementations
 # (e.g., gforker and SMPD).

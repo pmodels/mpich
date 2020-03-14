@@ -1,7 +1,6 @@
-! -*- Mode: F90; -*- 
 !
-!  (C) 2004 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
        MODULE MPI_SIZEOFS
 !      This module contains the definitions for MPI_SIZEOF for the

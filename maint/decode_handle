@@ -1,8 +1,8 @@
-#!/usr/bin/env perl
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # A simple perl script that takes handle values as arguments and decodes them.
 # It can help minimize distraction in your brain during a marathon debugging

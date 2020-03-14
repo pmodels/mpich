@@ -1,9 +1,7 @@
-# -*- Mode: Makefile; -*-
-# vim: set ft=automake :
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 AM_CPPFLAGS = -I$(top_builddir)/src/include -I${top_srcdir}/src/include
 LDADD       = ../lib/lib@MPILIBNAME@.la -lm

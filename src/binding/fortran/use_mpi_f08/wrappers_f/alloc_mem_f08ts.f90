@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Alloc_mem_f08(size, info, baseptr, ierror)
     use, intrinsic :: iso_c_binding, only : c_ptr
     use, intrinsic :: iso_c_binding, only : c_ptr, c_int

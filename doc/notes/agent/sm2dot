@@ -1,7 +1,9 @@
-#!/usr/bin/env perl
-#
-# sm2dot
-#
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Converts a state machine description file to a file readable by dot.  dot is
 # a program which creates printable directed graphs from a directed graph
 # description.

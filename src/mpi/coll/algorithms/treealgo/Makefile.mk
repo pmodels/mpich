@@ -1,6 +1,6 @@
-## -*- Mode: Makefile; -*-
-##  (C) 2006 by Argonne National Laboratory.
-##      See COPYRIGHT in top-level directory.
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/treealgo

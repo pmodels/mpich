@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Register_datarep_f08(datarep, read_conversion_fn, write_conversion_fn, &
     dtype_file_extent_fn, extra_state, ierror)
     use, intrinsic :: iso_c_binding, only : c_int, c_char

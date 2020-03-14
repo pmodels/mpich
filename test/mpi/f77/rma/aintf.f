@@ -1,8 +1,6 @@
-C -*- Mode: Fortran; -*-
 C
-C
-C  (C) 2014 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
 
 C This program tests MPI_Aint_add/diff in MPI-3.1.

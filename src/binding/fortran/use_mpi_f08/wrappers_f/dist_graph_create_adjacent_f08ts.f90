@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Dist_graph_create_adjacent_f08(comm_old, indegree, sources, sourceweights, &
     outdegree, destinations, destweights, info, reorder, comm_dist_graph, ierror)
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr, c_loc, c_associated

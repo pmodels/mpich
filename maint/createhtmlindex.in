@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Create an index of web pages for MPICH
 #
 # Default values

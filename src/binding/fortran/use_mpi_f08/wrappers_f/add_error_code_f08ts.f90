@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Add_error_code_f08(errorclass, errorcode, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_Datatype, c_Comm, c_Request

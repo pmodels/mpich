@@ -1,9 +1,7 @@
-# -*- Mode: Makefile; -*-
-# vim: set ft=automake :
-#
-# (C) 2014 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 include $(top_srcdir)/Makefile_f08.mtest
 
@@ -21,9 +19,6 @@ noinst_PROGRAMS =                   \
 ## attraints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
 
 # ensure that "{comm,type}attr*f.o" will be rebuilt when attraints.h is updated
-
-
-## vim: set ft=automake :
 
 noinst_PROGRAMS += fandcattrf08 baseattr3f08 attrlangf08
 fandcattrf08_SOURCES = fandcattrf08.f90 fandcattrc.c

@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #ifndef POSIX_CSEL_CONTAINER_H_INCLUDED
 #define POSIX_CSEL_CONTAINER_H_INCLUDED
 

@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 /*    modified 01/23/2011 by Jim Hoekstra - ISU
  *      changed test to follow mtest_init/mtest_finalize convention
  *      The following changes are based on suggestions from Chris Sadlo:
