@@ -54,8 +54,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     void *src_buf = NULL;
     void *dest_buf = NULL;
     size_t data_sz, recv_data_sz;
-    MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
-    MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_cts;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_HANDLE_LMT_COOP_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_HANDLE_LMT_COOP_RECV);
@@ -68,40 +66,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
     if (src_data_sz > data_sz)
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
 
-    /* XPMEM internal info */
-    slmt_cts_hdr->dest_offset = (uint64_t) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
-    slmt_cts_hdr->data_sz = recv_data_sz;
-    slmt_cts_hdr->dest_lrank = MPIDI_XPMEM_global.local_rank;
-
-    /* Receiver replies CTS packet */
-    slmt_cts_hdr->sreq_ptr = sreq_ptr;
-    slmt_cts_hdr->rreq_ptr = (uint64_t) rreq;
-
     /* allocate shm counter */
-    MPIDI_XPMEM_REQUEST(rreq, counter_ptr) =
-        (MPIDI_XPMEM_cnt_t *) MPIR_Handle_obj_alloc(&MPIDI_XPMEM_cnt_mem);
-    MPL_atomic_store_int64(&MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.offset, 0);
-    if (HANDLE_GET_KIND(MPIDI_XPMEM_REQUEST(rreq, counter_ptr)->obj.handle) == HANDLE_KIND_DIRECT) {
-        slmt_cts_hdr->coop_counter_direct_flag = 1;
-        slmt_cts_hdr->coop_counter_offset =
-            (uint64_t) MPIDI_XPMEM_REQUEST(rreq, counter_ptr) -
-            (uint64_t) (&MPIDI_XPMEM_cnt_mem_direct);
+    MPIDI_XPMEM_cnt_t *counter_ptr;
+    counter_ptr = (MPIDI_XPMEM_cnt_t *) MPIR_Handle_obj_alloc(&MPIDI_XPMEM_cnt_mem);
+    MPIDI_XPMEM_REQUEST(rreq, counter_ptr) = counter_ptr;
+
+    MPL_atomic_store_int64(&counter_ptr->obj.offset, 0);
+
+    int coop_counter_direct_flag;
+    uint64_t coop_counter_offset;
+    if (HANDLE_GET_KIND(counter_ptr->obj.handle) == HANDLE_KIND_DIRECT) {
+        coop_counter_direct_flag = 1;
+        coop_counter_offset = (uint64_t) counter_ptr - (uint64_t) (&MPIDI_XPMEM_cnt_mem_direct);
     } else {
-        slmt_cts_hdr->coop_counter_direct_flag = 0;
-        slmt_cts_hdr->coop_counter_offset = (uint64_t) MPIDI_XPMEM_REQUEST(rreq, counter_ptr);
+        coop_counter_direct_flag = 0;
+        coop_counter_offset = (uint64_t) counter_ptr;
     }
 
-    XPMEM_TRACE("handle_lmt_coop_recv: shm ctrl_id %d, buf_offset 0x%lx, data_sz 0x%lx, "
-                "sreq_ptr 0x%lx, rreq_ptr 0x%lx, coop_counter_offset 0x%lx, "
-                " local_rank %d, dest %d\n",
-                MPIDI_SHM_XPMEM_SEND_LMT_CTS, slmt_cts_hdr->dest_offset, slmt_cts_hdr->data_sz,
-                slmt_cts_hdr->sreq_ptr, slmt_cts_hdr->rreq_ptr, slmt_cts_hdr->coop_counter_offset,
-                slmt_cts_hdr->dest_lrank, MPIDIG_REQUEST(rreq, rank));
-
     /* Receiver sends CTS packet to sender */
-    mpi_errno =
-        MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS,
-                               &ctrl_hdr);
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    void *buf = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
+    mpi_errno = MPIDI_XPMEM_send_cts(rank, comm, buf, recv_data_sz, sreq_ptr, rreq,
+                                     coop_counter_direct_flag, coop_counter_offset);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Set receive status */

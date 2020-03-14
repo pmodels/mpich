@@ -15,6 +15,50 @@
  *       then each pair can define its own header struct rather than using a
  *       union across different packet types.
  */
+MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_rts(int rank, MPIR_Comm * comm, int context_offset,
+                                                  void *buf, MPI_Aint data_sz,
+                                                  int tag, MPIR_Request * sreq)
+{
+    MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.xpmem_slmt_rts;
+
+    /* XPMEM internal info */
+    slmt_req_hdr->src_offset = (uint64_t) buf;
+    slmt_req_hdr->data_sz = data_sz;
+    slmt_req_hdr->sreq_ptr = (uint64_t) sreq;
+    slmt_req_hdr->src_lrank = MPIDI_XPMEM_global.local_rank;
+
+    /* message matching info */
+    slmt_req_hdr->src_rank = comm->rank;
+    slmt_req_hdr->tag = tag;
+    slmt_req_hdr->context_id = comm->context_id + context_offset;
+
+    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_RTS, &ctrl_hdr);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_cts(int rank, MPIR_Comm * comm,
+                                                  void *buf, MPI_Aint data_sz,
+                                                  uint64_t sreq_ptr, MPIR_Request * rreq,
+                                                  int coop_counter_direct_flag,
+                                                  uint64_t coop_counter_offset)
+{
+    MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_cts;
+
+    /* XPMEM internal info */
+    slmt_cts_hdr->dest_offset = (uint64_t) buf;
+    slmt_cts_hdr->data_sz = data_sz;
+    slmt_cts_hdr->dest_lrank = MPIDI_XPMEM_global.local_rank;
+
+    /* Receiver replies CTS packet */
+    slmt_cts_hdr->sreq_ptr = sreq_ptr;
+    slmt_cts_hdr->rreq_ptr = (uint64_t) rreq;
+    slmt_req_hdr->coop_counter_direct_flag = coop_counter_direct_flag;
+    slmt_req_hdr->coop_counter_offset = coop_counter_offset;
+
+    return MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS, &ack_ctrl_hdr);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_send_recv_fin(int rank, MPIR_Comm * comm,
                                                        intptr_t sreq_ptr)
 {
