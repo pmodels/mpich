@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #ifndef SQUELCH_H_INCLUDED
 #define SQUELCH_H_INCLUDED
 

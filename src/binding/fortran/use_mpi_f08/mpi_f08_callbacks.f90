@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 module mpi_f08_callbacks
 
 ! MPI3.0, A.1.3,  p. 678

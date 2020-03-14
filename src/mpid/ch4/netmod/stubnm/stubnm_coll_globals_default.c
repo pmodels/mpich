@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 /* Barrier default STUBNM containers initialization*/
 const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Barrier_intra_dissemination_cnt = {
     .id = MPIDI_STUBNM_Barrier_intra_dissemination_id

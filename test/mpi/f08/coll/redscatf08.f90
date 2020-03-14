@@ -1,7 +1,6 @@
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2011 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
 
 ! This file created from test/mpi/f77/coll/redscatf.f with f77tof90

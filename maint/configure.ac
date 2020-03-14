@@ -1,4 +1,8 @@
-# -*- Mode: shell-script; -*-
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.59)
 AC_INIT
 #

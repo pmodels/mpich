@@ -1,7 +1,6 @@
-## -*- Mode: Makefile; -*-
 ##
-## (C) 2009 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 bin_PROGRAMS += hydra_persist

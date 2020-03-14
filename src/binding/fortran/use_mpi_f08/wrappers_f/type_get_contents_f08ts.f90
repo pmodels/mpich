@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Type_get_contents_f08(datatype, max_integers, max_addresses, max_datatypes, &
     array_of_integers, array_of_addresses, array_of_datatypes, ierror)
     use, intrinsic :: iso_c_binding, only : c_int

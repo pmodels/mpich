@@ -1,4 +1,7 @@
-## vim: set ft=automake :
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 noinst_PROGRAMS += spawnargvf03 spawnmultf03
 spawnargvf03_SOURCES = spawnargvf03.f90

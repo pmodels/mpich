@@ -1,4 +1,8 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # Fetches MPICH dependencies, builds them from source, and installs them
 # in the path stored in the environment variable MPICH_DEPS_PATH.

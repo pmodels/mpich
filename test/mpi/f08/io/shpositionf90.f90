@@ -1,8 +1,8 @@
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2013 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
         program main
         use mpi_f08
         type(MPI_Comm) comm

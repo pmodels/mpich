@@ -1,7 +1,8 @@
-!  
-!  (C) 2004 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
 !
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
         program main
 ! This is a simple test to check that both the MPI and PMPI versions of the
 ! timers are available, and that they return double precision values.

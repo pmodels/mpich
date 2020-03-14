@@ -1,8 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_AM_H_INCLUDED
 #define POSIX_AM_H_INCLUDED
 

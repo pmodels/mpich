@@ -1,8 +1,8 @@
-#!/usr/bin/env perl
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 use strict;
 use warnings;

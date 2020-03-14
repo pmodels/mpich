@@ -1,7 +1,6 @@
-C -*- Mode: Fortran; -*- 
 C
-C  (C) 2004 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
 
 C  This tests the null copy function (returns flag false; thus the

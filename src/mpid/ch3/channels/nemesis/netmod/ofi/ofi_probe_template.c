@@ -1,8 +1,8 @@
 /*
- *  (C) 2015 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #if (API_SET != API_SET_1) && (API_SET != API_SET_2)
 #error Undefined API SET
 #endif

@@ -1,4 +1,8 @@
 #! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 if [ -n "$MPICH_AUTOTOOLS_DIR" ] ; then
     autoreconf=${MPICH_AUTOTOOLS_DIR}/autoreconf

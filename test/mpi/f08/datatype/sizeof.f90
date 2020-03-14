@@ -1,7 +1,6 @@
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2007 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
 
 ! This program tests that the MPI_SIZEOF routine is implemented for the

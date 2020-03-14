@@ -1,8 +1,8 @@
-C -*- Mode: Fortran; -*- 
 C
-C  (C) 2015 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
+
       program main
 C
       include 'mpif.h'

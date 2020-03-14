@@ -1,8 +1,9 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.63)
-#
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
 
 AC_INIT([MPL], [0.1])
 

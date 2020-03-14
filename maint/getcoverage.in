@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This script extracts information from files produced by gcov showing what
 # parts of each file have *not* been executed by the test programs.
 # 

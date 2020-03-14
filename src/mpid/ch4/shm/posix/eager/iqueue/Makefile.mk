@@ -1,9 +1,6 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2017 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
-##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 if BUILD_CH4_SHM_POSIX_EAGER_IQUEUE

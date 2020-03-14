@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Type_create_darray_f08(size, rank, ndims, array_of_gsizes, &
     array_of_distribs, array_of_dargs, array_of_psizes, order, &
     oldtype, newtype, ierror)

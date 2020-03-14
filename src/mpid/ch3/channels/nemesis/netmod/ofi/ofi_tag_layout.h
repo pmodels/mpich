@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #ifndef OFI_TAG_LAYOUT_H_INCLUDED
 #define OFI_TAG_LAYOUT_H_INCLUDED
 

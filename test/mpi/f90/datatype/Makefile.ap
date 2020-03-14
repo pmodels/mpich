@@ -1,4 +1,7 @@
-## vim: set ft=automake :
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 noinst_PROGRAMS += structf indtype createf90 sizeof kinds trf90 get_elem_d get_elem_u
 

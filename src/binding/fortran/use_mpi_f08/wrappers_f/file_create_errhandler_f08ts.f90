@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_File_create_errhandler_f08(file_errhandler_fn, errhandler, ierror)
     use, intrinsic :: iso_c_binding, only : c_funloc
     use, intrinsic :: iso_c_binding, only : c_int, c_funptr

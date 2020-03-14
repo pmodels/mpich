@@ -1,7 +1,6 @@
-C -*- Mode: Fortran; -*-
 C
-C  (C) 2012 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
 
 C This program is based on the allpair.f test from the MPICH-1 test

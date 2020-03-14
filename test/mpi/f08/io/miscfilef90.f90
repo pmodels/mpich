@@ -1,8 +1,8 @@
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2008 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
       program main
       use mpi_f08
 ! iooffset.h provides a variable "offset" that is of type MPI_Offset

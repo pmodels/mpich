@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # f77tof90 indir outdir [ Makefile-template [Make-Append] ]
 # For each file in indir/*.[fF], create a corresponding file in outdir
 # with .f90/.F90, and with any include "mpif.h" replaced with use mpi

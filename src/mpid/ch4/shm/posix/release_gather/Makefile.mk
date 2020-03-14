@@ -1,5 +1,6 @@
-##  (C) 2018 by Argonne National Laboratory.
-##      See COPYRIGHT in top-level directory.
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/posix/release_gather
