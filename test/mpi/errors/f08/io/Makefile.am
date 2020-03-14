@@ -1,5 +1,3 @@
-# This Makefile.am generated automatically by f77tof90
-# from test/mpi/errors/f77/io/Makefile.am.  DO NOT EDIT
 # -*- Mode: Makefile; -*-
 # vim: set ft=automake :
 #
