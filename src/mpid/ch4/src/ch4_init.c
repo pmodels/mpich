@@ -432,6 +432,19 @@ static int init_av_table(void)
     return avtid;
 }
 
+/* This local function is temporary until we decide where the
+ * following init code belongs */
+static int generic_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_global.is_ch4u_initialized = 0;
+    MPIDIG_am_init();
+    MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
+    MPIDI_global.csel_root = NULL;
+    MPIDI_global.is_ch4u_initialized = 1;
+    return mpi_errno;
+}
+
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
@@ -531,7 +544,7 @@ int MPID_Init(int requested, int *provided)
 
     init_av_table();
 
-    mpi_errno = MPIDIG_init();
+    mpi_errno = generic_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* setup receive queue statistics */
@@ -657,6 +670,14 @@ static void finalize_av_table(void)
     MPIDIU_avt_destroy();
 }
 
+/* This local function is temporary until we decide where the
+ * following finalize code belongs */
+static void generic_finalize(void)
+{
+    MPIDIG_am_finalize();
+    MPIDI_global.is_ch4u_initialized = 0;
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -676,7 +697,7 @@ int MPID_Finalize(void)
     }
 
     finalize_builtin_comms();
-    MPIDIG_finalize();
+    generic_finalize();
 
     finalize_av_table();
 
