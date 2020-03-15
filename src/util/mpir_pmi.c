@@ -548,7 +548,11 @@ int MPIR_pmi_bcast(void *buf, int bufsize, MPIR_PMI_DOMAIN domain)
     int root;
     static int bcast_seq = 0;
 
-    if (in_domain) {
+    if (!in_domain) {
+        /* PMI_Barrier may require all process to participate */
+        mpi_errno = optional_bcast_barrier(domain);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
         MPIR_Assert(buf);
         MPIR_Assert(bufsize > 0);
 
@@ -561,20 +565,15 @@ int MPIR_pmi_bcast(void *buf, int bufsize, MPIR_PMI_DOMAIN domain)
         /* add root to the key since potentially we may have multiple root(s)
          * on a single node due to odd-even-cliques */
         sprintf(key, "-bcast-%d-%d", bcast_seq, root);
-    }
 
-    if (in_domain) {
         if (is_root) {
             mpi_errno = put_ex(key, buf, bufsize, is_local);
             MPIR_ERR_CHECK(mpi_errno);
         }
-    }
 
-    /* PMI_Barrier may require all process to participate */
-    mpi_errno = optional_bcast_barrier(domain);
-    MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = optional_bcast_barrier(domain);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    if (in_domain) {
         if (!is_root) {
             int got_size = bufsize;
             mpi_errno = get_ex(root, key, buf, &got_size, is_local);
