@@ -31,7 +31,7 @@ typedef struct MPIDI_POSIX_fbox_arrays {
     MPIDI_POSIX_fastbox_t **out;
 } MPIDI_POSIX_fbox_arrays_t;
 
-typedef struct MPIDI_POSIX_eager_fbox_control {
+typedef struct MPIDI_POSIX_eager_fbox_transport {
 
     void *shm_ptr;
 
@@ -49,9 +49,14 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
     int16_t *first_poll_local_ranks;
     int next_poll_local_rank;
 
-} MPIDI_POSIX_eager_fbox_control_t;
+} MPIDI_POSIX_eager_fbox_transport_t;
 
-extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
+extern MPIDI_POSIX_eager_fbox_transport_t MPIDI_POSIX_eager_fbox_transport_global;
+
+static inline MPIDI_POSIX_eager_fbox_transport_t *MPIDI_POSIX_eager_fbox_get_transport()
+{
+    return &MPIDI_POSIX_eager_fbox_transport_global;
+}
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;

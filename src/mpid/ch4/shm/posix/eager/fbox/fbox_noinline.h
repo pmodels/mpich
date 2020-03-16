@@ -15,7 +15,7 @@
 #include "fbox_types.h"
 #include "fbox_impl.h"
 
-extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
+extern MPIDI_POSIX_eager_fbox_transport_t MPIDI_POSIX_eager_fbox_transport_global;
 
 int MPIDI_POSIX_fbox_init(int rank, int size);
 int MPIDI_POSIX_fbox_finalize(void);
