@@ -130,7 +130,9 @@ int MPI_Finalize(void)
     /* Setting isThreaded to 0 to trick any operations used within
      * MPI_Finalize to think that we are running in a single threaded
      * environment. */
+#ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
+#endif
 
     mpi_errno = MPII_finalize_local_proc_attrs();
     MPIR_ERR_CHECK(mpi_errno);

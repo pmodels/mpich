@@ -91,11 +91,7 @@ int hcoll_initialize(void)
     init_opts->base_tag = MPIR_FIRST_HCOLL_TAG;
     init_opts->max_tag = MPIR_LAST_HCOLL_TAG;
 
-#if defined MPICH_IS_THREADED
-    init_opts->enable_thread_support = MPIR_ThreadInfo.isThreaded;
-#else
-    init_opts->enable_thread_support = 0;
-#endif
+    init_opts->enable_thread_support = MPIR_IS_THREADED;
 
     mpi_errno = hcoll_init_with_opts(&init_opts);
     MPIR_ERR_CHECK(mpi_errno);

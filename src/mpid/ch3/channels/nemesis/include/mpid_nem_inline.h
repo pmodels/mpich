@@ -935,10 +935,8 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_BLOCKING_RECV);
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
-#ifdef MPICH_IS_THREADED
     /* We should never enter this function in a multithreaded app */
-    MPIR_Assert(!MPIR_ThreadInfo.isThreaded);
-#endif
+    MPIR_Assert(!MPIR_IS_THREADED);
 
 #ifdef USE_FASTBOX
     if (poll_active_fboxes(cell)) goto fbox_l;
