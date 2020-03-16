@@ -14,7 +14,6 @@
 #include "ch4r_callbacks.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
-static int do_send_target(MPI_Aint in_data_sz, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
 
 int MPIDIG_do_long_ack(MPIR_Request * rreq)
@@ -213,21 +212,6 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-
-static int do_send_target(MPI_Aint in_data_sz, MPIR_Request * rreq)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-
-    MPIDIG_recv_type_init(in_data_sz, rreq);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-    return MPI_SUCCESS;
-}
-
 /* This function is called when a receive has completed on the receiver side. The input is the
  * request that has been completed. */
 static int recv_target_cmpl_cb(MPIR_Request * rreq)
@@ -411,7 +395,10 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     rreq->status.MPI_ERROR = hdr->error_bits;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
-    mpi_errno = do_send_target(in_data_sz, rreq);
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+
+    MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
         *req = rreq;
@@ -545,7 +532,7 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIDIG_send_long_lmt_msg_t *lmt_hdr = (MPIDIG_send_long_lmt_msg_t *) am_hdr;
 
@@ -554,7 +541,11 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
     rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
     MPIR_Assert(rreq);
-    mpi_errno = do_send_target(in_data_sz, rreq);
+
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+
+    MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
         *req = rreq;
