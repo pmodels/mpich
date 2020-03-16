@@ -168,11 +168,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             break;      /* break from the do loop */
         }
 
-#ifdef MPICH_IS_THREADED
-
-        /* The logic for this case is just complicated enough that
-         * we write separate code for each possibility */
-        if (MPIR_ThreadInfo.isThreaded) {
+        if (MPIR_IS_THREADED) {
             MPIDI_CH3I_progress_blocked = TRUE;
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
@@ -182,11 +178,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
         }
-
-#else
-        mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
-                                         MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
-#	endif
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {

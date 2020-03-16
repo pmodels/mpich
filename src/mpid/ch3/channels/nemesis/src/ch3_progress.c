@@ -357,11 +357,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         {
             /* make progress receiving */
             /* check queue */
-            if (MPID_nem_safe_to_block_recv() && is_blocking
-#ifdef MPICH_IS_THREADED
-                && !MPIR_ThreadInfo.isThreaded
-#endif
-                )
+            if (MPID_nem_safe_to_block_recv() && is_blocking && !MPIR_IS_THREADED)
             {
                 mpi_errno = MPID_nem_mpich_blocking_recv(&cell, &in_fbox, progress_state->ch.completion_count);
             }
