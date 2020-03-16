@@ -25,8 +25,7 @@ typedef int (*MPIDI_POSIX_eager_recv_begin_t) (MPIDI_POSIX_eager_recv_transactio
 
 typedef void (*MPIDI_POSIX_eager_recv_memcpy_t) (void *dst, const void *src, size_t size);
 
-typedef void (*MPIDI_POSIX_eager_recv_commit_t) (MPIDI_POSIX_eager_recv_transaction_t *
-                                                 transaction);
+typedef void (*MPIDI_POSIX_eager_recv_commit_t) (void);
 
 typedef void (*MPIDI_POSIX_eager_recv_posted_hook_t) (int grank);
 typedef void (*MPIDI_POSIX_eager_recv_completed_hook_t) (int grank);
@@ -64,8 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const void *src,
                                                             size_t size) MPL_STATIC_INLINE_SUFFIX;
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t *
-                                                            transaction) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
     MPL_STATIC_INLINE_SUFFIX;

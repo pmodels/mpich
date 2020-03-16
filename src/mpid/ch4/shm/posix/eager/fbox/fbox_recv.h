@@ -93,7 +93,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
             transaction->src_grank = grank;
 
             /* Initialize private transaction part */
-            transaction->transport.fbox.fbox_ptr = fbox_in;
+            transport->curr_fbox = fbox_in;
 
 #ifdef POSIX_FBOX_DEBUG
             {
@@ -130,15 +130,15 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const voi
     MPIR_Memcpy(dst, src, size);
 }
 
-MPL_STATIC_INLINE_PREFIX void
-MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMMIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_COMMIT);
 
     MPIDI_POSIX_fastbox_t *fbox_in = NULL;
+    MPIDI_POSIX_eager_fbox_transport_t *transport = MPIDI_POSIX_eager_fbox_get_transport();
 
-    fbox_in = (MPIDI_POSIX_fastbox_t *) transaction->transport.fbox.fbox_ptr;
+    fbox_in = (MPIDI_POSIX_fastbox_t *) transport->curr_fbox;
 
     MPL_atomic_store_int(&fbox_in->data_ready, 0);
 

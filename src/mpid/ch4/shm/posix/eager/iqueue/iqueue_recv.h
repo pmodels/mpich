@@ -122,7 +122,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
             transaction->msg_hdr = NULL;
         }
 
-        transaction->transport.iqueue.pointer_to_cell = cell;
+        transport->curr_cell = cell;
 
         ret = MPIDI_POSIX_OK;
     }
@@ -136,15 +136,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const voi
     MPIR_Memcpy(dst, src, size);
 }
 
-MPL_STATIC_INLINE_PREFIX void
-MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void)
 {
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
+    MPIDI_POSIX_eager_iqueue_transport_t *transport;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IQUEUE_RECV_COMMIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IQUEUE_RECV_COMMIT);
 
-    cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
+    transport = MPIDI_POSIX_eager_iqueue_get_transport();
+    cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transport->curr_cell;
     MPIR_Assert(cell != NULL);
     cell->next = NULL;
     cell->prev = 0;

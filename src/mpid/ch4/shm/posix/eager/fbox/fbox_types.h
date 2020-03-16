@@ -48,6 +48,8 @@ typedef struct MPIDI_POSIX_eager_fbox_transport {
      * oversubscribed ranks as threads). */
     int16_t *first_poll_local_ranks;
     int next_poll_local_rank;
+    /* Cache current fastbox for recv operation */
+    void *curr_fbox;
 
 } MPIDI_POSIX_eager_fbox_transport_t;
 

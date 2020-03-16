@@ -78,7 +78,7 @@ static int progress_recv(int blocking)
 
             /* TODO: discard payload for now as we only handle header in
              * current internal control protocols. */
-            MPIDI_POSIX_eager_recv_commit(&transaction);
+            MPIDI_POSIX_eager_recv_commit();
             goto fn_exit;
         }
 
@@ -90,12 +90,12 @@ static int progress_recv(int blocking)
                                                            NULL, in_total_data_sz, 1, 1, &rreq);
 
         if (!rreq) {
-            MPIDI_POSIX_eager_recv_commit(&transaction);
+            MPIDI_POSIX_eager_recv_commit();
             goto fn_exit;
         } else if (in_total_data_sz == payload_left) {
             MPIDIG_recv_copy(p_data, rreq);
             MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-            MPIDI_POSIX_eager_recv_commit(&transaction);
+            MPIDI_POSIX_eager_recv_commit();
             MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
             goto fn_exit;
         } else {
@@ -113,7 +113,7 @@ static int progress_recv(int blocking)
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
-    MPIDI_POSIX_eager_recv_commit(&transaction);
+    MPIDI_POSIX_eager_recv_commit();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
