@@ -22,8 +22,8 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[0][0][0]
+#define MPIDI_OFI_TO_PHYS(avtid, lpid, _nic) \
+    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[_nic][0][0]
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -227,14 +227,23 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni)
+/* Calculate the OFI context index.
+ * The total number of OFI contexts will be the number of nics * number of vcis
+ * Each nic will contain num_vcis vnis. Each corresponding to their respective vci index. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ctx_index(int vni, int nic)
+{
+    return nic * MPIDI_OFI_global.num_vnis + vni;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni, int nic)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
-    MPIDI_OFI_global.ctx[vni].rma_issued_cntr++;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
 #else
     /* NOTE: shared with ctx[0] */
-    MPIDI_OFI_global.ctx[0].rma_issued_cntr++;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(0, nic);
 #endif
+    MPIDI_OFI_global.ctx[ctx_idx].rma_issued_cntr++;
 }
 
 /* Externs:  see util.c for definition */
@@ -393,31 +402,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
     return vni;
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av, int nic,
                                                         int vni_local, int vni_remote)
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][vni_local][vni_remote], 0,
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][vni_local][vni_remote], 0,
                           MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
-        return MPIDI_OFI_AV(av).dest[0][vni_local][vni_remote];
+        return MPIDI_OFI_AV(av).dest[nic][vni_local][vni_remote];
     }
 #else /* MPIDI_OFI_VNI_USE_SEPCTX */
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][0][0], vni_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[nic][0][0], vni_remote,
+                          MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         MPIR_Assert(vni_remote == 0);
-        return MPIDI_OFI_AV(av).dest[0][0][0];
+        return MPIDI_OFI_AV(av).dest[nic][0][0];
     }
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int nic,
                                                           int vni_local, int vni_remote)
 {
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av, vni_local, vni_remote);
+    return MPIDI_OFI_av_to_phys(av, nic, vni_local, vni_remote);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)

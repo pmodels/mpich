@@ -34,6 +34,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPI_Aint num_contig, size;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -77,10 +79,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
     msg.addr =
-        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, vni_local,
+        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, nic, vni_local,
                                                                          vni_remote);
 
-    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_local,
+    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vni_local,
                          trecv, FALSE);
 
   fn_exit:
@@ -119,6 +121,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     bool force_gpu_pack = false;
     int vni_remote = vni_src;
     int vni_local = vni_dst;
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni_dst, nic);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -212,12 +216,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni_dst].rx,
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[ctx_idx].rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
                                       (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
-                                      MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
+                                      MPIDI_OFI_av_to_phys(addr, nic, vni_local, vni_remote),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_local,
                              trecv, FALSE);
@@ -234,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_local,
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[ctx_idx].rx, &msg, flags), vni_local,
                              trecv, FALSE);
     }
 
@@ -331,13 +335,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
 
     int vni = MPIDI_Request_get_vci(rreq);
+    int nic = 0;
+    int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_cancel_recv(rreq);
         goto fn_exit;
     }
 
     /* Not using the OFI_CALL macro because there are error cases here that we want to catch */
-    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[vni].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
+    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[ctx_idx].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
     if (ret == -FI_ENOENT) {
         /* The context was not found inside libfabric which means it was matched previously and has
          * already been handled. Note that it is impossible to tell the difference in this case

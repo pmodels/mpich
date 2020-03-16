@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS);
@@ -121,18 +121,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
         ret = MPIDI_OFI_get_buffered(wc, 1);
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
     } else if (likely(1)) {
-        ret = fi_cq_read(MPIDI_OFI_global.ctx[vni].cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
+        for (int nic = 0; nic < MPIDI_OFI_global.num_nics; nic++) {
+            int ctx_idx = MPIDI_OFI_get_ctx_index(vni, nic);
+            ret = fi_cq_read(MPIDI_OFI_global.ctx[ctx_idx].cq, (void *) wc,
+                             MPIDI_OFI_NUM_CQ_ENTRIES);
 
-        if (likely(ret > 0))
-            mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret);
-        else if (ret == -FI_EAGAIN)
-            mpi_errno = MPI_SUCCESS;
-        else
-            mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
-    }
+            if (likely(ret > 0))
+                mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret);
+            else if (ret == -FI_EAGAIN)
+                mpi_errno = MPI_SUCCESS;
+            else
+                mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
+        }
 
-    if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.deferred_am_isend_q)) {
-        mpi_errno = MPIDI_OFI_handle_deferred_ops();
+        if (unlikely(mpi_errno == MPI_SUCCESS && MPIDI_OFI_global.deferred_am_isend_q)) {
+            mpi_errno = MPIDI_OFI_handle_deferred_ops();
+        }
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
