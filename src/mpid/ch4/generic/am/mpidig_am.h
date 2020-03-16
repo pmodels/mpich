@@ -16,12 +16,17 @@
 typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 
-/* Callback function setup by handler register function */
-/* for short cases, output arguments are NULL */
-typedef int (*MPIDIG_am_target_msg_cb)
- (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
-  size_t * data_sz, int is_local,       /* SHM or NM directly specifies locality */
-  int *is_contig, MPIR_Request ** req); /* if allocated, need pointer to completion function */
+/* Target message callback, or handler function
+ *
+ * If req on input is NULL, the callback may allocate a request object. If a request
+ * object is returned, the caller is expected to transfer the payload to the request,
+ * and call target_cmpl_cb upon complete.
+ *
+ * If is_async is false/0, a request object will never be returned.
+ */
+typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
+                                        void *data, MPI_Aint data_sz,
+                                        int is_local, int is_async, MPIR_Request ** req);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];
