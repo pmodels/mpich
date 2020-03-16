@@ -279,7 +279,7 @@ typedef struct {
 typedef struct {
     /* OFI objects */
     int avtid;
-    struct fi_info *prov_use;
+    struct fi_info *prov_use[MPIDI_OFI_MAX_NICS];
     struct fid_fabric *fabric;
 
     int got_named_av;
@@ -304,8 +304,9 @@ typedef struct {
 
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS];
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
     int num_vnis;
+    int num_nics;
 
     /* Window/RMA Globals */
     void *win_map;
@@ -339,8 +340,8 @@ typedef struct {
     /* Process management and PMI globals */
     int pname_set;
     int pname_len;
-    char addrname[FI_NAME_MAX];
-    size_t addrnamelen;
+    char addrname[MPIDI_OFI_MAX_NICS][FI_NAME_MAX];
+    size_t addrnamelen;         /* OFI uses the same name length within a provider. */
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
