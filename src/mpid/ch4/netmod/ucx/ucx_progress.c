@@ -13,27 +13,19 @@
 static void *am_buf;            /* message buffer has global scope because ucx executes am_handler */
 static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
 {
-    MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
     size_t data_sz;
-    int is_contig;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
     p_data = in_data =
         (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
     data_sz = msg_hdr->data_sz;
 
+    /* note: setting is_local, is_async to 0, 0 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                       &p_data, &data_sz, 0 /* is_local */ ,
-                                                       &is_contig, &rreq);
+                                                       p_data, data_sz, 0, 0, NULL);
 
-    if (!rreq)
-        return;
-
-    MPIDIG_recv_copy(in_data, rreq);
-
-    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
 }
 
 int MPIDI_UCX_progress(int vci, int blocking)
