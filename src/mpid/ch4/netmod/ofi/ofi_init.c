@@ -7,6 +7,7 @@
 #include "ofi_impl.h"
 #include "mpidu_bc.h"
 #include "ofi_noinline.h"
+#include "ofi_nic.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -1297,6 +1298,8 @@ static int open_fabric(void)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_info *prov_list = NULL;
+    struct fid_nic *nic;
+    int nic_count = 0;
 
     /* First, find the provider and prepare the hints */
     struct fi_info *hints = fi_allocinfo();
@@ -1327,9 +1330,34 @@ static int open_fabric(void)
         update_global_settings(prov, hints);
     }
 
-    /* WB TODO - This will need to change to account for multiple providers obviously. */
-    MPIDI_OFI_global.prov_use[0] = fi_dupinfo(prov);
-    MPIR_Assert(MPIDI_OFI_global.prov_use[0]);
+    if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
+        /* Invalid values for the CVAR will force using first
+         * fi_info structure returned by fi_getinfo */
+        MPIDI_OFI_setup_single_nic(prov);
+    } else {
+        struct fi_info *prov_iter = prov;
+        /* Count the number of NICs */
+        prov_iter = prov;
+        while (prov_iter && nic_count < MPIDI_OFI_MAX_NICS) {
+            nic = prov_iter->nic;
+            if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
+                !MPIDI_OFI_nic_already_used(prov_iter, MPIDI_OFI_global.prov_use, nic_count)) {
+                MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(prov_iter);
+                MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
+                nic_count++;
+            }
+            prov_iter = prov_iter->next;
+        }
+        if (nic_count == 0) {
+            /* If no NICs are detected, then force using first
+             * fi_info structure returned by fi_getinfo */
+            MPIDI_OFI_setup_single_nic(prov);
+        } else {
+            MPIDI_OFI_global.num_nics = nic_count;
+            MPIDI_OFI_setup_multi_nic();
+        }
+    }
+    MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
