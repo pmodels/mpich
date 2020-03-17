@@ -59,8 +59,8 @@
    and the cell length to be a multiple of cacheline size.  This will
    avoid false sharing.  We also want payload to start at an 8-byte
    boundary to to optimize memcpys and datatype operations on the
-   payload.  To ensure payload is 8-byte aligned, we add padding after
-   the next pointer so the packet starts at the 8-byte boundary.
+   payload.  To ensure payload is 8-byte aligned, we add aligned attribute
+   to the pkt field.
 
    Forgive the misnomers of the macros.
 
@@ -111,15 +111,7 @@
    
 */
 
-/* define MPID_NEM_CELL_HEAD_LEN to keep elements 64-bit aligned */
-#if (SIZEOF_MPL_ATOMIC_PTR_T == 0 || SIZEOF_MPL_ATOMIC_PTR_T > 16)
-#error "Unexpected size for MPL_atomic_ptr_t."
-#elif (SIZEOF_MPL_ATOMIC_PTR_T > 8)
-#  define MPID_NEM_CELL_HEAD_LEN  16
-#else /* (SIZEOF_MPL_ATOMIC_PTR_T <= 8) */
-#  define MPID_NEM_CELL_HEAD_LEN  8
-#endif
-
+#define MPID_NEM_CELL_HEAD_LEN    offsetof(MPID_nem_cell_t, pkt)
 #define MPID_NEM_CELL_PAYLOAD_LEN (MPID_NEM_CELL_LEN - MPID_NEM_CELL_HEAD_LEN)
 
 #define MPID_NEM_CALC_CELL_LEN(cellp) (MPID_NEM_CELL_HEAD_LEN + MPID_NEM_MPICH_HEAD_LEN + MPID_NEM_CELL_DLEN (cell))
@@ -182,10 +174,7 @@ MPID_nem_cell_rel_ptr_t;
 typedef struct MPID_nem_cell
 {
     MPID_nem_cell_rel_ptr_t next;
-#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_MPL_ATOMIC_PTR_T)
-    char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
-    volatile MPID_nem_pkt_t pkt;
+    volatile MPID_nem_pkt_t pkt MPL_ATTR_ALIGNED(8);
 } MPID_nem_cell_t;
 typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
 
@@ -209,13 +198,9 @@ typedef struct MPID_nem_queue
 {
     MPID_nem_cell_rel_ptr_t head;
     MPID_nem_cell_rel_ptr_t tail;
-#if (MPID_NEM_CACHE_LINE_LEN > (2 * SIZEOF_MPL_ATOMIC_PTR_T))
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2 * sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
     MPID_nem_cell_rel_ptr_t my_head;
-#if (MPID_NEM_CACHE_LINE_LEN > SIZEOF_MPL_ATOMIC_PTR_T)
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 
 /* Fast Boxes*/ 
