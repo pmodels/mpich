@@ -103,8 +103,8 @@ int MPIDIG_am_init(void)
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_COMM_ABORT,
-                     &MPIDIG_comm_abort_origin_cb, &MPIDIG_comm_abort_target_msg_cb);
+
+    MPIDIG_am_comm_abort_init();
 
     mpi_errno = MPIDIG_RMA_Init_sync_pvars();
     MPIR_ERR_CHECK(mpi_errno);

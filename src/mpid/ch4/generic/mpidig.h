@@ -17,6 +17,4 @@
 int MPIDIG_init(void);
 void MPIDIG_finalize(void);
 
-int MPIDIG_comm_abort(MPIR_Comm * comm, int exit_code);
-
 #endif /* MPIDIG_H_INCLUDED */
