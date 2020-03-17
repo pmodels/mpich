@@ -193,7 +193,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     int c, mpi_errno = MPI_SUCCESS, is_contig = 0;
     MPIR_Request *rreq = NULL;
     void *p_data;
-    size_t data_sz, in_data_sz;
+    MPI_Aint data_sz, in_data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
