@@ -144,13 +144,13 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
     MPIR_Request *anysrc_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
     if (unlikely(anysrc_partner)) {
         if (!MPIDI_REQUEST(rreq, is_local)) {
+            /* copy status to SHM partner */
+            anysrc_partner->status = rreq->status;
             /* NM, complete and free SHM partner */
             MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
             /* FIXME: bug, only complete after setting status */
             MPID_Request_complete(anysrc_partner);
-            /* copy status to SHM partner */
-            anysrc_partner->status = rreq->status;
             /* free NM request on behalf of mpi-layer
              * final free for NM request happen at call-site MPID_Request_complete
              * final free for SHM partner happen at mpi-layer
