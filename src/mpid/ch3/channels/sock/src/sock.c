@@ -3203,6 +3203,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                 n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems, millisecond_timeout);
                 MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POLL);
             } else {
+#ifdef MPICH_IS_THREADED
                 /*
                  * First try a non-blocking poll to see if any immediate
                  * progress can be made.  This avoids the lock manipulation
@@ -3258,6 +3259,7 @@ int MPIDI_CH3I_Sock_wait(struct MPIDI_CH3I_Sock_set *sock_set, int millisecond_t
                     sock_set->pollfds_active = NULL;
                     sock_set->wakeup_posted = FALSE;
                 }
+#endif
             }
 
             if (n_fds > 0) {
