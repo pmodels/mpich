@@ -140,7 +140,6 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     /* Make sure the cell structure looks like it should */
     MPIR_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
-    MPIR_Assert(sizeof(MPID_nem_cell_t) == sizeof(MPID_nem_abs_cell_t));
     /* Make sure payload is aligned on a double */
     MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.p.payload[0], sizeof(double)));
 

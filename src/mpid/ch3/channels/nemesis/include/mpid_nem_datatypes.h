@@ -174,11 +174,10 @@ typedef struct MPID_nem_cell_rel_ptr
 }
 MPID_nem_cell_rel_ptr_t;
 
-/* MPID_nem_cell and MPID_nem_abs_cell must be kept in sync so that we
- * can cast between them.  MPID_nem_abs_cell should only be used when
- * a cell is enqueued on a queue local to a single process (e.g., a
- * queue in a network module) where relative pointers are not
- * needed. */
+/* NOTE: for a queue local to a single process (e.g. a queue in a network module),
+ * relative pointers are not needed, and we could use a direct pointer. This
+ * optimization is left as todo when needed.
+ */
 
 typedef struct MPID_nem_cell
 {
@@ -189,16 +188,6 @@ typedef struct MPID_nem_cell
     volatile MPID_nem_pkt_t pkt;
 } MPID_nem_cell_t;
 typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
-
-typedef struct MPID_nem_abs_cell
-{
-    struct MPID_nem_abs_cell *next;
-#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_VOID_P)
-    char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(struct MPID_nem_abs_cell*)];
-#endif
-    volatile MPID_nem_pkt_t pkt;
-} MPID_nem_abs_cell_t;
-typedef MPID_nem_abs_cell_t *MPID_nem_abs_cell_ptr_t;
 
 #define MPID_NEM_CELL_TO_PACKET(cellp) (&(cellp)->pkt)
 #define MPID_NEM_PACKET_TO_CELL(packetp) \
