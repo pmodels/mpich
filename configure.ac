@@ -5039,14 +5039,6 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
-# SIZEOF_MPL_ATOMIC_PTR_T is needed by ch3:nemesis. Only works after the MPL
-# configuration is done.
-AC_CHECK_SIZEOF(MPL_atomic_ptr_t,0,[
-#include <pthread.h>
-#include "${master_top_srcdir}/src/mpl/include/mpl_atomic.h"
-pthread_mutex_t *MPL_atomic_emulation_lock;
-])
-
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
     for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
