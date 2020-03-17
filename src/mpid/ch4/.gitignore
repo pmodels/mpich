@@ -3,5 +3,4 @@ src/mpid_ch4_net_array.c
 include/netmodpre.h
 
 # shm/posix
-shm/posix/eager/include/posix_eager_pre.h
 shm/posix/posix_eager_array.c

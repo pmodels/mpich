@@ -27,8 +27,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     ch4_posix_eager_func_decl=""
     ch4_posix_eager_func_array=""
     ch4_posix_eager_strings=""
-    ch4_posix_eager_pre_include=""
-    ch4_posix_eager_recv_transaction_decl=""
 
     posix_eager_index=0
 
@@ -67,20 +65,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
             ch4_posix_eager_strings="$ch4_posix_eager_strings, \"$posix_eager\""
         fi
 
-        if test -z "$ch4_posix_eager_pre_include" ; then
-            ch4_posix_eager_pre_include="#include \"../${posix_eager}/${posix_eager}_pre.h\""
-        else
-            ch4_posix_eager_pre_include="${ch4_posix_eager_pre_include}
-#include \"../${posix_eager}/${posix_eager}_pre.h\""
-        fi
-
-        if test -z "$ch4_posix_eager_recv_transaction_decl" ; then
-            ch4_posix_eager_recv_transaction_decl="MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
-        else
-            ch4_posix_eager_recv_transaction_decl="${ch4_posix_eager_recv_transaction_decl} \\
-MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
-        fi
-
         posix_eager_index=`expr $posix_eager_index + 1`
 
     done
@@ -95,8 +79,6 @@ MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
     AC_SUBST(ch4_posix_eager_strings)
     AC_SUBST(ch4_posix_eager_func_decl)
     AC_SUBST(ch4_posix_eager_func_array)
-    AC_SUBST(ch4_posix_eager_pre_include)
-    AC_SUBST(ch4_posix_eager_recv_transaction_decl)
 
     if test "$ch4_posix_eager_array_sz" = "1" && (test "$enable_ch4_shm_inline" = "yes" || test "$enable_ch4_shm_direct" = "yes") ;  then
         PAC_APPEND_FLAG([-DPOSIX_EAGER_INLINE=__posix_eager_inline_${ch4_posix_eager_modules}__], [CPPFLAGS])
@@ -104,7 +86,6 @@ MPIDI_POSIX_eager_${posix_eager}_recv_transaction_t ${posix_eager};"
 
     AC_CONFIG_FILES([
             src/mpid/ch4/shm/posix/posix_eager_array.c
-            src/mpid/ch4/shm/posix/eager/include/posix_eager_pre.h
     ])
 
     # the POSIX shmmod depends on the common shm code

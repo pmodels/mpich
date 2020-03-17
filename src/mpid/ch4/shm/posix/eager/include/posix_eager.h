@@ -10,8 +10,6 @@
 #ifndef POSIX_EAGER_H_INCLUDED
 #define POSIX_EAGER_H_INCLUDED
 
-#include <posix_eager_transaction.h>
-
 #define MPIDI_MAX_POSIX_EAGER_STRING_LEN 64
 
 typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
