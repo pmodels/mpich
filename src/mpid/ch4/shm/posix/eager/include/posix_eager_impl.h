@@ -26,11 +26,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv
     return MPIDI_POSIX_eager_func->recv_begin(transaction);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t *
-                                                            transaction, void *dst, const void *src,
-                                                            size_t size)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const void *src, size_t size)
 {
-    return MPIDI_POSIX_eager_func->recv_memcpy(transaction, dst, src, size);
+    return MPIDI_POSIX_eager_func->recv_memcpy(dst, src, size);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t *

@@ -20,9 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t *
-                                                            transaction, void *dst, const void *src,
-                                                            size_t size)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const void *src, size_t size)
 {
     MPIR_Assert(0);
     return;
