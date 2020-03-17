@@ -137,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const voi
     MPIR_Memcpy(dst, src, size);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_end(void)
 {
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
     MPIDI_POSIX_eager_iqueue_transport_t *transport;

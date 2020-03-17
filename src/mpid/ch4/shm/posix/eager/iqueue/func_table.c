@@ -22,7 +22,7 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_iqueue_funcs = {
 
     MPIDI_POSIX_eager_recv_begin,
     MPIDI_POSIX_eager_recv_memcpy,
-    MPIDI_POSIX_eager_recv_commit,
+    MPIDI_POSIX_eager_recv_end,
 
     MPIDI_POSIX_eager_recv_posted_hook,
     MPIDI_POSIX_eager_recv_completed_hook

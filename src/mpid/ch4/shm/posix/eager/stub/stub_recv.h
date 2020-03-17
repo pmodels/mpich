@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const voi
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_end(void)
 {
     MPIR_Assert(0);
     return;

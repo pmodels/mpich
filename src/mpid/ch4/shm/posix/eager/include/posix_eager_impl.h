@@ -32,9 +32,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const voi
     return MPIDI_POSIX_eager_func->recv_memcpy(dst, src, size);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(void)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_end(void)
 {
-    return MPIDI_POSIX_eager_func->recv_commit();
+    return MPIDI_POSIX_eager_func->recv_end();
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
