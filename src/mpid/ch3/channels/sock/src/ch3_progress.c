@@ -149,6 +149,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
         }
 
         if (MPIR_IS_THREADED) {
+#if MPICH_IS_THREADED
             if (MPIDI_CH3I_progress_blocked == TRUE) {
                 /*
                  * Another thread is already blocking in the progress engine.
@@ -170,6 +171,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
             MPIDI_CH3I_progress_blocked = FALSE;
             MPIDI_CH3I_progress_wakeup_signalled = FALSE;
+#endif
         } else {
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
