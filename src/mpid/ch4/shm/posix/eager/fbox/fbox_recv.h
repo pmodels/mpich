@@ -31,7 +31,8 @@ cvars:
 */
 
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
+MPIDI_POSIX_eager_recv_begin(int *src_grank, MPIDI_POSIX_am_header_t ** msg_hdr, void **payload,
+                             size_t * payload_sz)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_BEGIN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_EAGER_RECV_BEGIN);
@@ -80,17 +81,17 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 
             if (likely(fbox_in->is_header)) {
                 /* Only received the header for the message */
-                transaction->msg_hdr = fbox_in->payload;
-                transaction->payload = fbox_in->payload + sizeof(MPIDI_POSIX_am_header_t);
-                transaction->payload_sz = fbox_in->payload_sz - sizeof(MPIDI_POSIX_am_header_t);
+                *msg_hdr = fbox_in->payload;
+                *payload = fbox_in->payload + sizeof(MPIDI_POSIX_am_header_t);
+                *payload_sz = fbox_in->payload_sz - sizeof(MPIDI_POSIX_am_header_t);
             } else {
                 /* Received a fragment of the message payload */
-                transaction->msg_hdr = NULL;
-                transaction->payload = fbox_in->payload;
-                transaction->payload_sz = fbox_in->payload_sz;
+                *msg_hdr = NULL;
+                *payload = fbox_in->payload;
+                *payload_sz = fbox_in->payload_sz;
             }
 
-            transaction->src_grank = grank;
+            *src_grank = grank;
 
             /* Initialize private transaction part */
             transport->curr_fbox = fbox_in;

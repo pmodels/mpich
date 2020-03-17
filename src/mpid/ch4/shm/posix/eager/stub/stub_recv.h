@@ -13,8 +13,9 @@
 
 #include "stub_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
-                                                          transaction)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int *src_grank,
+                                                          MPIDI_POSIX_am_header_t ** msg_hdr,
+                                                          void **payload, size_t * payload_sz)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

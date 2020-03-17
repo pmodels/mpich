@@ -21,7 +21,8 @@ typedef int (*MPIDI_POSIX_eager_send_t) (int grank,
                                          MPIDI_POSIX_am_header_t ** msg_hdr,
                                          struct iovec ** iov, size_t * iov_num);
 
-typedef int (*MPIDI_POSIX_eager_recv_begin_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction);
+typedef int (*MPIDI_POSIX_eager_recv_begin_t) (int *src_grank, MPIDI_POSIX_am_header_t ** msg_hdr,
+                                               void **payload, size_t * payload_sz);
 
 typedef void (*MPIDI_POSIX_eager_recv_memcpy_t) (void *dst, const void *src, size_t size);
 
@@ -57,8 +58,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     struct iovec **iov,
                                                     size_t * iov_num) MPL_STATIC_INLINE_SUFFIX;
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
-                                                          transaction) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int *src_grank,
+                                                          MPIDI_POSIX_am_header_t ** msg_hdr,
+                                                          void **payload,
+                                                          size_t *
+                                                          payload_sz) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const void *src,
                                                             size_t size) MPL_STATIC_INLINE_SUFFIX;

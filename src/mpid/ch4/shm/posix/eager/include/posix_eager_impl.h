@@ -20,10 +20,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
     return MPIDI_POSIX_eager_func->send(grank, msg_hdr, iov, iov_num);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
-                                                          transaction)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(int *src_grank,
+                                                          MPIDI_POSIX_am_header_t ** msg_hdr,
+                                                          void **payload, size_t * payload_sz)
 {
-    return MPIDI_POSIX_eager_func->recv_begin(transaction);
+    return MPIDI_POSIX_eager_func->recv_begin(src_grank, msg_hdr, payload, payload_sz);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(void *dst, const void *src, size_t size)

@@ -33,9 +33,9 @@ static int progress_send(int blocking);
 static int progress_recv(int blocking)
 {
 
-    MPIDI_POSIX_eager_recv_transaction_t transaction;
     int mpi_errno = MPI_SUCCESS;
     int result = MPIDI_POSIX_OK;
+    int src_grank;
     MPIR_Request *rreq = NULL;
     void *p_data = NULL;
     size_t in_total_data_sz = 0;
@@ -48,21 +48,15 @@ static int progress_recv(int blocking)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
-    result = MPIDI_POSIX_eager_recv_begin(&transaction);
+    result = MPIDI_POSIX_eager_recv_begin(&src_grank, &msg_hdr, (void **) &payload, &payload_left);
 
     if (MPIDI_POSIX_OK != result) {
         goto fn_exit;
     }
 
-    /* Process the eager message */
-    msg_hdr = transaction.msg_hdr;
-
-    payload = transaction.payload;
-    payload_left = transaction.payload_sz;
-
     if (!msg_hdr) {
         /* Fragment handling. Set currently active recv request */
-        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
+        rreq = MPIDI_POSIX_global.active_rreq[src_grank];
     } else {
         /* First segment */
         am_hdr = payload;
@@ -102,14 +96,14 @@ static int progress_recv(int blocking)
             /* prepare for asynchronous transfer */
             MPIDIG_recv_setup(rreq);
 
-            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
-            MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
+            MPIR_Assert(MPIDI_POSIX_global.active_rreq[src_grank] == NULL);
+            MPIDI_POSIX_global.active_rreq[src_grank] = rreq;
         }
     }
 
     int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
     if (is_done) {
-        MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
+        MPIDI_POSIX_global.active_rreq[src_grank] = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 

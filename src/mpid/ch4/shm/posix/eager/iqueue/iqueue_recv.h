@@ -96,7 +96,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
 
 
 MPL_STATIC_INLINE_PREFIX int
-MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
+MPIDI_POSIX_eager_recv_begin(int *src_grank, MPIDI_POSIX_am_header_t ** msg_hdr, void **payload,
+                             size_t * payload_sz)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
@@ -111,15 +112,15 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     cell = MPIDI_POSIX_eager_iqueue_receive_cell(transport);
 
     if (cell) {
-        transaction->src_grank = MPIDI_POSIX_global.local_procs[cell->from];
-        transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
-        transaction->payload_sz = cell->payload_size;
+        *src_grank = MPIDI_POSIX_global.local_procs[cell->from];
+        *payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
+        *payload_sz = cell->payload_size;
 
         if (likely(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR)) {
-            transaction->msg_hdr = &cell->am_header;
+            *msg_hdr = &cell->am_header;
         } else {
             MPIR_Assert(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA);
-            transaction->msg_hdr = NULL;
+            *msg_hdr = NULL;
         }
 
         transport->curr_cell = cell;
