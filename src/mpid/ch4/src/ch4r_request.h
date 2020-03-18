@@ -147,6 +147,7 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
             /* NM, complete and free SHM partner */
             MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
+            /* FIXME: bug, only complete after setting status */
             MPID_Request_complete(anysrc_partner);
             /* copy status to SHM partner */
             anysrc_partner->status = rreq->status;
