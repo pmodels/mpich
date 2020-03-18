@@ -84,31 +84,6 @@
    MPID_NEM_CALC_CELL_LEN is the amount of data plus headers in the
        cell.  I.e., how much of a cell would need to be sent over a
        network.
-
-   FIXME: Simplify this maddness!  Maybe something like this:
-
-       typedef struct mpich_pkt {
-           header_field1;
-           header_field2;
-           payload[1];
-       } mpich_pkt_t;
-   
-       typedef struct cell {
-           *next;
-           padding;
-           pkt;
-       } cell_t;
-
-       typedef union cell_container {
-           cell_t cell;
-           char padding[MPID_NEM_CELL_LEN];
-       } cell_container_t;
-
-       #define MPID_NEM_MPICH_DATA_LEN (sizeof(cell_container_t) - sizeof(cell_t) + 1)
-
-   The packet payload can overflow the array in the packet struct up
-   to MPID_NEM_MPICH_DATA_LEN bytes.
-   
 */
 
 #define MPID_NEM_CELL_HEAD_LEN    offsetof(MPID_nem_cell_t, pkt)
