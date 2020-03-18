@@ -145,10 +145,7 @@ typedef struct MPID_nem_pkt_header
 typedef struct MPID_nem_pkt
 {
     MPID_nem_pkt_header_t header;
-    union {
-        char payload[MPID_NEM_MPICH_DATA_LEN];
-        double dummy; /* align paylod to double */
-    } p;
+    char payload[] MPL_ATTR_ALIGNED(8);   /* C99 flexible array member with 8-byte alignment */
 } MPID_nem_pkt_t;
 
 /* Nemesis cells which are to be used in shared memory need to use
@@ -182,7 +179,7 @@ typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
 #define MPID_NEM_PACKET_TO_CELL(packetp) \
     ((MPID_nem_cell_ptr_t) ((char*)(packetp) - (char *)MPID_NEM_CELL_TO_PACKET((MPID_nem_cell_ptr_t)0)))
 #define MPID_NEM_MIN_PACKET_LEN (sizeof (MPID_nem_pkt_header_t))
-#define MPID_NEM_MAX_PACKET_LEN (sizeof (MPID_nem_pkt_t))
+#define MPID_NEM_MAX_PACKET_LEN (MPID_NEM_CELL_PAYLOAD_LEN)
 #define MPID_NEM_PACKET_LEN(pkt) ((pkt)->header.datalen + MPID_NEM_MPICH_HEAD_LEN)
 
 #define MPID_NEM_OPT_LOAD     16 
@@ -191,8 +188,6 @@ typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
 
 #define MPID_NEM_PACKET_OPT_LEN(pkt) \
     (((pkt)->header.datalen < MPID_NEM_OPT_SIZE) ? (MPID_NEM_OPT_HEAD_LEN) : (MPID_NEM_PACKET_LEN(pkt)))
-
-#define MPID_NEM_PACKET_PAYLOAD(pkt) ((pkt)->header.payload)
 
 typedef struct MPID_nem_queue
 {
@@ -224,6 +219,7 @@ typedef struct MPID_nem_fbox_mpich
     MPID_nem_cell_t cell;
 } MPID_nem_fbox_mpich_t;
 
+#define MPID_NEM_FBOX_LEN     (MPID_NEM_CELL_LEN + offsetof(MPID_nem_fbox_mpich_t, cell))
 #define MPID_NEM_FBOX_DATALEN MPID_NEM_MPICH_DATA_LEN
 
 typedef union 
