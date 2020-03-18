@@ -14,7 +14,7 @@
 #include <mpidimpl.h>
 #include "ofi_types.h"
 #include "mpidch4r.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
