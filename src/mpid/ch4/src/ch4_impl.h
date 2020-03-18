@@ -12,7 +12,7 @@
 #define CH4_IMPL_H_INCLUDED
 
 #include "ch4_types.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "mpidu_shm.h"
 
 int MPIDI_Progress_test(int flags);
