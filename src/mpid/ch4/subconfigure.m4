@@ -399,7 +399,7 @@ esac
 # - enable-thread-cs=per-vci
 #
 if test "$enable_ch4_mt" != "direct"; then
-    if test "${with_zm_prefix}" == "no" -o "${with_zm_prefix}" == "none" -o "${izem_queue}" != "yes" ; then
+    if test "${with_zm_prefix}" == "no" -o "${with_zm_prefix}" == "none" -o "${enable_izem_queue}" != "yes" ; then
         AC_MSG_ERROR([Multi-threading model `${enable_ch4_mt}` requires izem queue. Set `--enable-izem={queue|all} --with-zm-prefix` and retry.])
     elif test "${enable_thread_cs}" != "per-vci" -a "${enable_thread_cs}" != "per_vci"; then
         AC_MSG_ERROR([Multi-threading model `${enable_ch4_mt}` requires `--enable-thread-cs=per-vci`.])
