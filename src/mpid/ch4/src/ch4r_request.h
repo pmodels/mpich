@@ -147,9 +147,9 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
             /* NM, complete and free SHM partner */
             MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
-            MPID_Request_complete(anysrc_partner);
             /* copy status to SHM partner */
             anysrc_partner->status = rreq->status;
+            MPID_Request_complete(anysrc_partner);
             /* free NM request on behalf of mpi-layer
              * final free for NM request happen at call-site MPID_Request_complete
              * final free for SHM partner happen at mpi-layer
