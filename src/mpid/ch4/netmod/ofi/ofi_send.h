@@ -353,8 +353,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
              * lightweight_send. */
             MPL_gpu_free_host(send_buf);
         }
-        if (!noreq) {
+        if (noreq) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+        } else {
+            mpi_errno = MPID_Request_complete(*request);
         }
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
