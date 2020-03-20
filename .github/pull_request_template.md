@@ -18,4 +18,5 @@ particularly focused on _why_ the work is necessary, not _what_ you did.
 * [ ] Passes warning tests
 * [ ] Passes all tests
 * [ ] Add comments such that someone without knowledge of the code could understand
-* [ ] Add Devel Docs in the `doc/` directory for any new code design
+* [ ] You or your company has a signed contributor's agreement on file with Argonne
+* [ ] For non-Argonne authors, request an explicit comment from your companies PR approval manager
