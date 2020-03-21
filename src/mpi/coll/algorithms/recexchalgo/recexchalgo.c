@@ -291,6 +291,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
         pofk *= k;
         log_pofk++;
     }
+    MPIR_Assert(log_pofk > 0);
     pofk /= k;
     log_pofk--;
 
