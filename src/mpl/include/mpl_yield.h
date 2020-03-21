@@ -32,6 +32,16 @@
 #include <sched.h>
 #endif
 #define MPL_sched_yield() sched_yield()
+
+#elif defined(MPL_USE_MULTI_SCHED_YIELD_FOR_YIELD)
+#ifdef MPL_HAVE_SCHED_H
+#include <sched.h>
+#endif
+#define MPL_sched_yield() \
+    do { \
+        for (int _i = 0; _i < 8; _i++) {sched_yield(); } \
+    } while (0)
+
 #elif defined(MPL_USE_YIELD_FOR_YIELD)
 #ifdef MPL_HAVE_SCHED_H
 #include <sched.h>
