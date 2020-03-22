@@ -7,8 +7,7 @@
 
 int MPIDI_Progress_test(int flags)
 {
-    int mpi_errno, made_progress;
-    mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -22,8 +21,12 @@ int MPIDI_Progress_test(int flags)
 #endif
 
     if (flags & MPIDI_PROGRESS_HOOKS) {
+        int made_progress = 0;
         mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
         MPIR_ERR_CHECK(mpi_errno);
+        if (made_progress) {
+            goto fn_exit;
+        }
     }
     /* todo: progress unexp_list */
 
