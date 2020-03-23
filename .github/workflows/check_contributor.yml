@@ -1,0 +1,26 @@
+name: Check Contributor
+
+on:
+    - pull_request
+
+jobs:
+    check_whitelist:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/github-script@0.9.0
+              with:
+                  github-token: ${{secrets.GITHUB_TOKEN}}
+                  script: |
+                      const creator = context.payload.sender.login
+                      const opts = github.teams.getMembershipInOrg({
+                          org: "pmodels",
+                          team_slug: "mpich-collab",
+                          username: context.payload.sender.login
+                      })
+                      const teams = await github.paginate(opts)
+
+                      for (const team of teams) {
+                          return
+                      }
+
+                      throw new Error('User not found in mpich-collab')
