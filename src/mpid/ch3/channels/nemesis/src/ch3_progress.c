@@ -37,6 +37,15 @@ static MPIDI_CH3_PktHandler_Fcn *pktArray[PKTARRAY_SIZE];
 #define MPIDI_POSTED_RECV_DEQUEUE_HOOK(x) 0
 #endif
 
+#ifdef MPICH_IS_THREADED
+/* Because we use MPIDI_CH3I_progress_blocked to make other threads that need progress
+ * to sleep on a condition variable, and wake them up as soon as progress are made,
+ * we want to reduce the overhead of empty yield to minimum.
+ */
+#undef MPL_thread_yield
+#define MPL_thread_yield() /* NOOP */
+#endif
+
 #ifdef BY_PASS_PROGRESS
 extern MPIR_Request ** const MPID_Recvq_posted_head_ptr;
 extern MPIR_Request ** const MPID_Recvq_unexpected_head_ptr;
