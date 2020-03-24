@@ -30,8 +30,10 @@ int MPIDI_Progress_test(int flags)
     }
     /* todo: progress unexp_list */
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPIDI_workq_vci_progress();
     MPIR_ERR_CHECK(mpi_errno);
+#endif
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
@@ -103,15 +105,14 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
-    if (MPIDI_CH4_MT_MODEL != MPIDI_CH4_MT_DIRECT) {
-        ret = MPID_Progress_test();
-        if (unlikely(ret))
-            MPIR_ERR_POP(ret);
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-        goto fn_exit;
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    ret = MPID_Progress_test();
+    if (unlikely(ret))
+        MPIR_ERR_POP(ret);
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
+#else
     state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     do {
         ret = MPID_Progress_test();
@@ -123,6 +124,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     } while (1);
 
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
   fn_exit:
