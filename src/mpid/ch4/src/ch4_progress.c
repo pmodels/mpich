@@ -98,6 +98,19 @@ void MPID_Progress_end(MPID_Progress_state * state)
     return;
 }
 
+/* when MPID_Progress_test hold the lock too long -- e.g. more that a thousand cycles
+ * such as in the case of an empty netmod progress -- it can put the other waiting
+ * threads to a sleep, resulting in lock monopoly due to the short window of YIELD
+ * being missed. It maybe necessary to add sleep or sched_yield to ensure fairness.
+ */
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define CH4_PROGRESS_YIELD \
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+#define CH4_PROGRESS_YIELD \
+    MPL_thread_yield()
+#endif
+
 int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -105,14 +118,18 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
+    /* we need ensure no other progress has made between testing of request completion
+     * (in MPIR_Wait) and loading of progress count. Otherwise, we may be unaware of
+     * progress being made and stuck in a empty test loop.
+     * FIXME: this is an issue need solve once we remove VCI_GLOBAL mutex.
+     */
+    int old_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPID_Progress_test();
     MPIR_ERR_CHECK(mpi_errno);
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
-
+    CH4_PROGRESS_YIELD;
 #else
-    int old_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     while (1) {
         mpi_errno = MPID_Progress_test();
         MPIR_ERR_CHECK(mpi_errno);
@@ -120,11 +137,11 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         if (old_count != new_count) {
             break;
         }
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+        CH4_PROGRESS_YIELD;
     }
 
 #endif
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
   fn_exit:
