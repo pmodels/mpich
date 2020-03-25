@@ -47,6 +47,9 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 #define MPIR_IS_THREADED    0
 #endif
 
+/* We keep an internal 0-based thread_id to facilitate thread tracking */
+int MPIR_thread_id(void);
+
 /* ------------------------------------------------------------ */
 /* Global thread model, used for non-performance-critical paths */
 /* CONSIDER:
