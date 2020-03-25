@@ -25,6 +25,45 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static MPL_atomic_int_t next_thread_id = MPL_ATOMIC_INT_T_INITIALIZER(0);
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS)
+static MPL_TLS int thread_id;
+#else
+static int thread_id;
+#endif
+static MPL_thread_tls_key_t thread_id_key ATTRIBUTE((unused));
+
+static void init_thread_id(void)
+{
+    int err = 0;
+    MPL_TLS_KEY_CREATE(thread_id_key, thread_id, &err, MPL_MEM_THREAD);
+    MPIR_Assert(err == 0);
+
+    /* NOTE: per-thread variables are initialized to NULL in all active threads */
+}
+
+static void finalize_thread_id(void)
+{
+    int err = 0;
+    MPL_TLS_KEY_DESTROY(thread_id_key, &err);
+    MPIR_Assert(err == 0);
+}
+
+int MPIR_thread_id(void)
+{
+    int *p_thread_id = NULL;
+    int err = 0;
+    MPL_TLS_KEY_RETRIEVE(thread_id_key, thread_id, p_thread_id, &err);
+    MPIR_Assert(err == 0);
+
+    /* internally thread_id is 1-based so we can tell whether it is valid */
+    if (*p_thread_id == 0) {
+        *p_thread_id = MPL_atomic_fetch_add_int(&next_thread_id, 1) + 1;
+    }
+    /* externally thread_id is 0-based, so it could be used as an index */
+    return (*p_thread_id - 1);
+}
+
 int MPII_init_local_proc_attrs(int *p_thread_required)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -38,6 +77,10 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* We need this inorder to implement IS_THREAD_MAIN */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
+
+    init_thread_id();
+    int master_id = MPIR_thread_id();
+    MPIR_Assert(master_id == 0);
 #endif
 #endif /* MPICH_IS_THREADED */
 
@@ -156,6 +199,8 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 int MPII_finalize_local_proc_attrs(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    finalize_thread_id();
 
     /* Remove the attributes, executing the attribute delete routine.
      * Do this only if the attribute functions are defined. */
