@@ -123,8 +123,11 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_FINALIZE_HOOK);
 
     /* Ensure all counter objs are freed at MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb */
-    while (MPIR_cc_get(MPIDI_XPMEM_global.num_pending_cnt))
-        MPIDI_Progress_test(MPIDI_PROGRESS_SHM);
+    while (MPIR_cc_get(MPIDI_XPMEM_global.num_pending_cnt)) {
+        /* Since it is non-critical in finalize, we call global progress
+         * instead of shm/posix progress for simplicity */
+        MPID_Progress_test();
+    }
 
     /* Free pre-attached direct coop counter */
     for (i = 0; i < MPIDI_XPMEM_global.num_local; ++i) {
