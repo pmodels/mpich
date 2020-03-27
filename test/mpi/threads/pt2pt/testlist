@@ -1,4 +1,4 @@
-threads 2 timeLimit=600
+threads 2
 threaded_sr 2
 alltoall 4
 sendselfth 1
