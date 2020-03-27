@@ -76,6 +76,8 @@ void MPID_Progress_start(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
 
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
     return;
 }
@@ -95,11 +97,23 @@ void MPID_Progress_end(MPID_Progress_state * state)
  * being missed. It maybe necessary to add sleep or sched_yield to ensure fairness.
  */
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
-#define CH4_PROGRESS_YIELD \
+#define CH4_PROGRESS_YIELD() \
     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-#define CH4_PROGRESS_YIELD \
+#define CH4_PROGRESS_YIELD() \
     MPL_thread_yield()
+#else
+#error MPICH_THREAD_GRANULARITY is neither GLOBAL nor VCI
+#endif
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+/* TODO: make it atomic once we remove global lock */
+static int in_progress_count;
+#define CH4_PROGRESS_ENTER()  in_progress_count++
+#define CH4_PROGRESS_EXIT()   in_progress_count--
+#else
+#define CH4_PROGRESS_ENTER()    /* NOOP */
+#define CH4_PROGRESS_EXIT()     /* NOOP */
 #endif
 
 int MPID_Progress_wait(MPID_Progress_state * state)
@@ -109,30 +123,31 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
-    /* we need ensure no other progress has made between testing of request completion
-     * (in MPIR_Wait) and loading of progress count. Otherwise, we may be unaware of
-     * progress being made and stuck in a empty test loop.
-     * FIXME: this is an issue need solve once we remove VCI_GLOBAL mutex.
-     */
-    int old_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    int old_count = state->progress_count;
+    CH4_PROGRESS_ENTER();
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPID_Progress_test();
     MPIR_ERR_CHECK(mpi_errno);
     CH4_PROGRESS_YIELD;
 #else
+    int new_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     while (1) {
         mpi_errno = MPID_Progress_test();
         MPIR_ERR_CHECK(mpi_errno);
-        int new_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
-        if (old_count != new_count) {
+        state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+        if (state->progress_count != old_count) {
             break;
         }
-        CH4_PROGRESS_YIELD;
+        if (in_progress_count > 1) {
+            CH4_PROGRESS_YIELD();
+        }
     }
 
 #endif
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    CH4_PROGRESS_EXIT();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
   fn_exit:
