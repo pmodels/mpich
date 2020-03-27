@@ -49,7 +49,9 @@ typedef struct {
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 
 typedef struct {
-    int progress_count;
+    int progress_count;         /* updated at MPID_Progress_start and each time we check */
+    int old_count;              /* starting count at the start of MPID_Progress_wait */
+    int test_count;             /* track how many times MPIDI_Progress_test() has run */
 } MPID_Progress_state;
 
 typedef enum {
