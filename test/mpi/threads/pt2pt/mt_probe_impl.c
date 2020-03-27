@@ -295,7 +295,14 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 #else
     MTestPrintfMsg(2, "Testing probe_normal\n");
     p->result = test_probe_normal(p->id, p->iter, p->count, p->buff, p->comm, p->tag, p->verify);
-    MPI_Barrier(p->comm);
+
+    /* Barrier across threads. */
+    MTest_thread_barrier(NTHREADS);
+    if (p->id == 0) {
+        MPI_Barrier(p->comm);
+    }
+    MTest_thread_barrier(NTHREADS);
+
     MTestPrintfMsg(2, "Testing probe_nullproc\n");
     p->result += test_probe_nullproc(p->id, p->iter, p->count, p->buff, p->comm, p->tag, p->verify);
 #endif
