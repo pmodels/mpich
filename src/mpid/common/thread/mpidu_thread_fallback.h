@@ -61,6 +61,7 @@ typedef struct {
     MPL_thread_mutex_t mutex;
     MPL_thread_id_t owner;
     int count;
+    MPL_atomic_int_t wait_count;
 } MPIDU_Thread_mutex_t;
 typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
 
@@ -118,7 +119,9 @@ M*/
             if (!equal_) {                                              \
                 int err_ = 0;                                           \
                 MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+                MPL_atomic_fetch_add_int(&mutex.wait_count, 1); \
                 MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
+                MPL_atomic_fetch_sub_int(&mutex.wait_count, 1); \
                 MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
                 MPIR_Assert(err_ == 0);                                 \
                 MPIR_Assert(mutex.count == 0);                          \
@@ -244,6 +247,7 @@ M*/
     do {                                                                \
         (mutex_ptr_)->owner = 0;                                        \
         (mutex_ptr_)->count = 0;                                        \
+        MPL_atomic_store_int(&(mutex_ptr_)->wait_count, 0); \
         MPL_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);     \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPL_thread_mutex %p", (mutex_ptr_)); \
     } while (0)
