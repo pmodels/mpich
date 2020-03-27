@@ -737,8 +737,12 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             int minfree;
             context_mask_stats(&nfree, &ntotal);
             minfree = nfree;
+            /* We are in MPID_Progress_wait unlocked, and we are about to call MPID_Progress_wait
+             * again. Lock it to prevent recursive mutex usage */
+            MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             mpi_errno =
                 MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
+            MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             MPIR_ERR_CHECK(mpi_errno);
             if (minfree > 0) {
                 MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,

@@ -126,6 +126,12 @@ void MPID_Progress_end(MPID_Progress_state * state)
 
 #endif
 
+/* NOTE: currently MPID_Progress_wait is recursive, due to MPI_Comm_idup. It will
+ * call MPIR_Progress_hook_exec_all -> sched_cb_gcn_allocate_cid -> (on error) ->
+ * call MPIR_Allreduce -> MPIC_Wait -> MPID_Progress_wait.
+ * It should be fine once we remove MPIR_THREAD_VCI_GLOBAL_MUTEX. Now, we patch it
+ * in sched_cb_gcn_allocate_cid.
+ */
 int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
