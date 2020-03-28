@@ -211,7 +211,6 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -271,7 +270,6 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:
