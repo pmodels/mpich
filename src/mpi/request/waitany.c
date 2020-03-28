@@ -90,7 +90,6 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
         MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     }
 
   fn_exit:
