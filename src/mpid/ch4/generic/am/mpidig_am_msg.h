@@ -141,9 +141,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    p->offset = 0;
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
-        p->offset = 0;
-        /* rreq status to be set */
+        /* it's ready, rreq status to be set */
     } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
         p->iov_ptr = &(p->iov_one);
         p->iov_num = 1;
@@ -212,6 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
     } else {
         /* MPIDIG_RECV_CONTIG and MPIDIG_RECV_IOV */
         p->in_data_sz -= payload_sz;
+        p->offset += payload_sz;
         int iov_done = 0;
         for (int i = 0; i < p->iov_num; i++) {
             if (payload_sz < p->iov_ptr[i].iov_len) {

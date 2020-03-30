@@ -101,9 +101,24 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
+    MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
+    void *unpack_buffer;
+    MPI_Aint pack_size;
+} MPIDI_OFI_lmt_unpack_t;
+
+typedef enum {
+    MPIDI_OFI_AM_LMT_IOV,
+    MPIDI_OFI_AM_LMT_UNPACK
+} MPIDI_OFI_lmt_type_t;
+
+typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;
-    uint64_t lmt_cntr;
     struct fid_mr *lmt_mr;
+    MPIDI_OFI_lmt_type_t lmt_type;
+    union {
+        uint64_t lmt_cntr;
+        MPIDI_OFI_lmt_unpack_t unpack;
+    } lmt_u;
     void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
