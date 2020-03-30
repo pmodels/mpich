@@ -647,12 +647,20 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_READ_EVENT);
 
     ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
-    ofi_req->req_hdr->lmt_cntr--;
-
-    if (ofi_req->req_hdr->lmt_cntr)
-        goto fn_exit;
-
     rreq = (MPIR_Request *) ofi_req->req_hdr->rreq_ptr;
+
+    if (ofi_req->req_hdr->lmt_type == MPIDI_OFI_AM_LMT_IOV) {
+        ofi_req->req_hdr->lmt_u.lmt_cntr--;
+        if (ofi_req->req_hdr->lmt_u.lmt_cntr) {
+            goto fn_exit;
+        }
+    } else if (ofi_req->req_hdr->lmt_type == MPIDI_OFI_AM_LMT_UNPACK) {
+        int done = MPIDI_OFI_am_lmt_unpack_event(rreq);
+        if (!done) {
+            goto fn_exit;
+        }
+    }
+
     mpi_errno = MPIDI_OFI_dispatch_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr,

@@ -8,6 +8,25 @@
 
 #include "ofi_am_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_AM_IOV_MIN_SEG_SIZE
+      category    : CH4_OFI
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        For non-contiguous large message in active message path, sets the minimum
+        average iov segment size to use direct RDMA read. When the average segement
+        size is too small, extra unpack buffer is used.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t addr)
 {
     uint64_t id = addr;
@@ -319,54 +338,115 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
 }
 
 /* internal routines */
+static inline void do_long_am_recv_contig(void *p_data, MPI_Aint data_sz,
+                                          MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                          MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+{
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
+    if (in_data_sz > data_sz) {
+        rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
+    }
+    data_sz = MPL_MIN(data_sz, in_data_sz);
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.lmt_cntr) =
+        ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
+    MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz, lmt_msg->context_id,
+                           lmt_msg->src_rank, rreq);
+    MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+}
+
+static inline void do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov_len,
+                                       MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                       MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+{
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
+    MPI_Aint rem, curr_len;
+    int num_reads;
+
+    /* set lmt counter */
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.lmt_cntr) = 0;
+
+    rem = in_data_sz;
+    for (int i = 0; i < iov_len && rem > 0; i++) {
+        curr_len = MPL_MIN(rem, iov[i].iov_len);
+        num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
+        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.lmt_cntr) += num_reads;
+        rem -= curr_len;
+    }
+
+    int done = 0;
+    rem = in_data_sz;
+    for (int i = 0; i < iov_len && rem > 0; i++) {
+        curr_len = MPL_MIN(rem, iov[i].iov_len);
+        MPIDI_OFI_do_rdma_read(iov[i].iov_base, lmt_msg->src_offset + done,
+                               curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
+        rem -= curr_len;
+        done += curr_len;
+    }
+
+    if (rem) {
+        rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(done, in_data_sz);
+    }
+
+    MPIR_STATUS_SET_COUNT(rreq->status, done);
+}
+
+static inline void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                          MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+{
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_UNPACK;
+    MPIDIG_recv_setup(rreq);
+
+    MPI_Aint pack_size = 100 * 1024;
+    if (pack_size > MPIDI_OFI_global.max_msg_size) {
+        pack_size = MPIDI_OFI_global.max_msg_size;
+    }
+    MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.unpack);
+    p->lmt_msg = lmt_msg;
+    p->unpack_buffer = MPL_malloc(pack_size, MPL_MEM_BUFFER);
+
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
+    p->pack_size = pack_size;
+    if (p->pack_size > remain) {
+        p->pack_size = remain;
+    }
+
+    MPIDI_OFI_do_rdma_read(p->unpack_buffer, lmt_msg->src_offset, p->pack_size, lmt_msg->context_id,
+                           lmt_msg->src_rank, rreq);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
+{
+    MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.unpack);
+    int ret = MPIDIG_recv_copy_seg(p->unpack_buffer, p->pack_size, rreq);
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
+    MPI_Aint offset = MPIDIG_REQUEST(rreq, req->async).offset;
+
+    if (!ret && remain) {
+        /* more to go */
+        if (p->pack_size > remain) {
+            p->pack_size = remain;
+        }
+        MPIDI_OFI_lmt_msg_payload_t *lmt_msg = p->lmt_msg;
+        MPIDI_OFI_do_rdma_read(p->unpack_buffer, lmt_msg->src_offset + offset, p->pack_size,
+                               lmt_msg->context_id, lmt_msg->src_rank, rreq);
+        return FALSE;
+    } else {
+        /* all done. */
+        MPL_free(p->unpack_buffer);
+        return TRUE;
+    }
+}
+
 static inline void do_long_am_recv(int is_contig, void *p_data, MPI_Aint data_sz,
                                    MPI_Aint in_data_sz, MPIR_Request * rreq,
                                    MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     if (is_contig) {
-        if (in_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(data_sz, in_data_sz);
-        }
-        data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
-            ((data_sz - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-        MPIDI_OFI_do_rdma_read(p_data, lmt_msg->src_offset, data_sz, lmt_msg->context_id,
-                               lmt_msg->src_rank, rreq);
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+        do_long_am_recv_contig(p_data, data_sz, in_data_sz, rreq, lmt_msg);
+    } else if (in_data_sz / data_sz < MPIR_CVAR_CH4_OFI_AM_IOV_MIN_SEG_SIZE) {
+        do_long_am_recv_unpack(in_data_sz, rreq, lmt_msg);
     } else {
-        struct iovec *iov = (struct iovec *) p_data;
-        int iov_len = (int) data_sz;
-
-        MPI_Aint rem, curr_len;
-        int num_reads;
-        /* FIXME: optimize iov processing part */
-
-        /* set lmt counter */
-        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) = 0;
-
-        rem = in_data_sz;
-        for (int i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            num_reads = ((curr_len - 1) / MPIDI_OFI_global.max_msg_size) + 1;
-            MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) += num_reads;
-            rem -= curr_len;
-        }
-
-        int done = 0;
-        rem = in_data_sz;
-        for (int i = 0; i < iov_len && rem > 0; i++) {
-            curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIDI_OFI_do_rdma_read(iov[i].iov_base, lmt_msg->src_offset + done,
-                                   curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
-            rem -= curr_len;
-            done += curr_len;
-        }
-
-        if (rem) {
-            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(done, in_data_sz);
-        }
-
-        MPIR_STATUS_SET_COUNT(rreq->status, done);
+        do_long_am_recv_iov(p_data, data_sz, in_data_sz, rreq, lmt_msg);
     }
 }
 

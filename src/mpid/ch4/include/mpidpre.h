@@ -165,10 +165,10 @@ typedef enum {
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
     MPI_Aint in_data_sz;
+    MPI_Aint offset;
     struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
     int iov_num;                /* used with MPIDIG_RECV_IOV */
     struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
-    MPI_Aint offset;            /* used with MPIDIG_RECV_DATATYPE */
 } MPIDIG_rreq_async_t;
 
 typedef struct MPIDIG_req_ext_t {
