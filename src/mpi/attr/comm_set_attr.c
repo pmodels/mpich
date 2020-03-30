@@ -107,7 +107,6 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -156,7 +155,6 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:
