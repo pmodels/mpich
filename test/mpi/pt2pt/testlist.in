@@ -1,6 +1,6 @@
 sendrecv2 2
 sendrecv3 2
-sendflood 8 timeLimit=600
+sendflood 8
 sendall 4
 anyall 2
 eagerdt 2
