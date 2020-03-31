@@ -67,6 +67,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data
     }
 }
 
+/* Sometime the transport just need info to make algorithm choice */
+MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
+{
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    if (p->recv_type == MPIDIG_RECV_DATATYPE) {
+        MPI_Aint num_iov;
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
+                             p->in_data_sz, &num_iov);
+        return num_iov;
+    } else if (p->recv_type == MPIDIG_RECV_CONTIG) {
+        return 1;
+    } else {
+        return p->iov_num;
+    }
+}
+
 /* synchronous single-payload data transfer. This is the common case */
 /* TODO: if transport flag callback, synchronous copy can/should be done inside the callback */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rreq)
