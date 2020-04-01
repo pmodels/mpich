@@ -49,11 +49,17 @@ static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
-    int made_progress;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
+    int made_progress = 0;
+    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (made_progress) {
+        goto fn_exit;
+    }
 #ifdef MPICH_IS_THREADED
     {
         /* We don't bother testing whether threads are enabled in the
@@ -79,9 +85,6 @@ static int MPIDI_CH3i_Progress_test(void)
         }
     }
 #endif
-
-    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
