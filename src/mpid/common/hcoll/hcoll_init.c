@@ -197,9 +197,7 @@ int hcoll_do_progress(int *made_progress)
 
     /* hcoll_progress_fn() has been deprecated since v4.0. */
 #if HCOLL_API < HCOLL_VERSION(4,0)
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     hcoll_progress_fn();
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
 #endif
     return MPI_SUCCESS;
 }

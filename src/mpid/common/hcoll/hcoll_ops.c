@@ -14,10 +14,8 @@ int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
     if (!comm_ptr->hcoll_priv.is_hcoll_init)
         return rc;
 
-    MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOL BARRIER.");
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+    MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL BARRIER.");
     rc = hcoll_collectives.coll_barrier(comm_ptr->hcoll_priv.hcoll_context);
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     return rc;
 }
 
@@ -40,10 +38,8 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback bcast.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_bcast(buffer, count, dtype, root,
                                           comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
@@ -71,10 +67,8 @@ int hcoll_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback bcast.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_reduce((void *) sendbuf, recvbuf, count, dtype, Op, root,
                                            comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
@@ -101,10 +95,8 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
                     "unsupported data layout, calling fallback allreduce.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_allreduce((void *) sendbuf, recvbuf, count, Dtype, Op,
                                               comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
@@ -135,10 +127,8 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
                     "unsupported data layout; calling fallback allgather.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_allgather((void *) sbuf, scount, stype, rbuf, rcount, rtype,
                                               comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
@@ -169,10 +159,8 @@ int hcoll_Alltoall(const void *sbuf, int scount, MPI_Datatype sdtype,
                     "unsupported data layout; calling fallback allgather.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_alltoall((void *) sbuf, scount, stype, rbuf, rcount, rtype,
                                              comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
@@ -203,11 +191,9 @@ int hcoll_Alltoallv(const void *sbuf, const int *scounts, const int *sdispls, MP
                     "unsupported data layout; calling fallback allgather.");
         rc = -1;
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
         rc = hcoll_collectives.coll_alltoallv((void *) sbuf, (int *) scounts, (int *) sdispls,
                                               stype, rbuf, (int *) rcounts, (int *) rdispls, rtype,
                                               comm_ptr->hcoll_priv.hcoll_context);
-        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
     }
     return rc;
 }
