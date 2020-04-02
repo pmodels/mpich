@@ -224,7 +224,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
         mpi_errno = MPII_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* This process is not in the group */
@@ -382,7 +382,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
                                          mapping, remote_mapping, mapping_comm, *newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (remote_size <= 0) {
@@ -399,6 +399,8 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
         }
     } else {
         /* This process is not in the group */
+        mpi_errno = MPIR_Comm_commit(NULL, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
         MPIR_Free_contextid(new_context_id);
         *newcomm_ptr = NULL;
     }

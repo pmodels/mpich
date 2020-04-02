@@ -145,7 +145,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
      * operations within the context id algorithm, since we already
      * have a valid (almost - see comm_create_hook) communicator.
      */
-    mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
+    mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr, NULL));
     MPIR_ERR_CHECK(mpi_errno);
 
     /* printf("About to get context id \n"); fflush(stdout); */
@@ -174,7 +174,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
     mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
+    mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr, NULL));
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

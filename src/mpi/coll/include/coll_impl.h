@@ -50,7 +50,8 @@ extern void *MPIR_Csel_root;
 extern char MPII_coll_generic_json[];
 
 /* Function to initialze communicators for collectives */
-int MPIR_Coll_comm_init(MPIR_Comm * comm);
+int MPIR_Coll_comm_init_internal(MPIR_Comm * comm);
+int MPIR_Coll_comm_init(MPIR_Comm * parent_comm, MPIR_Comm * comm);
 
 /* Function to cleanup any communicators for collectives */
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm);

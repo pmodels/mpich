@@ -161,7 +161,7 @@ int MPIR_Coll_safe_to_block(void)
 }
 
 /* Function to initialze communicators for collectives */
-int MPIR_Coll_comm_init(MPIR_Comm * comm)
+int MPIR_Coll_comm_init_internal(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -182,6 +182,42 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 
     mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Coll_comm_init(MPIR_Comm * parent_comm, MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Coll_comm_init_internal(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm->node_comm) {
+        comm->node_comm->seq = comm->seq;
+        mpi_errno = MPIR_Coll_comm_init_internal(comm->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (comm->node_roots_comm) {
+        comm->node_roots_comm->seq = comm->seq;
+        mpi_errno = MPIR_Coll_comm_init_internal(comm->node_roots_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (parent_comm != NULL) {
+        mpi_errno = MPID_Coll_comm_init_hook(parent_comm, comm);
+        MPIR_ERR_CHECK(mpi_errno);
+        if (comm != NULL) {
+            mpi_errno = MPID_Coll_comm_init_hook(comm, comm->node_comm);
+            MPIR_ERR_CHECK(mpi_errno);
+            mpi_errno = MPID_Coll_comm_init_hook(comm, comm->node_roots_comm);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
 
   fn_exit:
     return mpi_errno;

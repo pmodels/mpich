@@ -378,9 +378,9 @@ static int init_builtin_comms(void)
     MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
     MPIDIU_avt_add_ref(0);
 
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self, NULL);
     MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

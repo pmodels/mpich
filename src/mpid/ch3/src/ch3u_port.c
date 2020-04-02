@@ -1386,7 +1386,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 			 remote_translation[i].pg_rank, &intercomm->dev.vcrt->vcr_table[i]);
     }
 
-    mpi_errno = MPIR_Comm_commit(intercomm);
+    mpi_errno = MPIR_Comm_commit(intercomm, NULL);
     MPIR_ERR_CHECK(mpi_errno);
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");

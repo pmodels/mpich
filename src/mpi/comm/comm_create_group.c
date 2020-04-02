@@ -89,11 +89,13 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
         mpi_errno = MPII_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* This process is not in the group */
         new_context_id = 0;
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

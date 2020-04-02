@@ -371,7 +371,10 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
-        mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
+        mpi_errno = MPIR_Comm_commit(*newcomm_ptr, comm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Comm_commit(NULL, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -220,7 +220,7 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
             MPIDIU_LUPID_GET_LPID(remote_lupids[i]);
     }
 
-    MPIR_Comm_commit(tmp_comm_ptr);
+    MPIR_Comm_commit(tmp_comm_ptr, NULL);
 
     mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, NULL, newcomm);
     MPIR_ERR_CHECK(mpi_errno);

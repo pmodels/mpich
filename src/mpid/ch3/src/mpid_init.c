@@ -195,7 +195,7 @@ int MPID_Init(int requested, int *provided)
 	MPIDI_VCR_Dup(&pg->vct[p], &comm->dev.vcrt->vcr_table[p]);
     }
 
-    mpi_errno = MPIR_Comm_commit(comm);
+    mpi_errno = MPIR_Comm_commit(comm, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     /*
@@ -215,7 +215,7 @@ int MPID_Init(int requested, int *provided)
     
     MPIDI_VCR_Dup(&pg->vct[pg_rank], &comm->dev.vcrt->vcr_table[0]);
 
-    mpi_errno = MPIR_Comm_commit(comm);
+    mpi_errno = MPIR_Comm_commit(comm, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Currently, mpidpre.h always defines MPID_NEEDS_ICOMM_WORLD. */
@@ -232,7 +232,7 @@ int MPID_Init(int requested, int *provided)
     MPIDI_VCRT_Add_ref( MPIR_Process.comm_world->dev.vcrt );
     comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
     
-    mpi_errno = MPIR_Comm_commit(comm);
+    mpi_errno = MPIR_Comm_commit(comm, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 

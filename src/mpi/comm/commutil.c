@@ -320,7 +320,7 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     intercomm_ptr->local_comm = localcomm_ptr;
 
     /* sets up the SMP-aware sub-communicators and tables */
-    mpi_errno = MPIR_Comm_commit(localcomm_ptr);
+    mpi_errno = MPIR_Comm_commit(localcomm_ptr, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
@@ -627,61 +627,53 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
    For example, we create sub-communicators for SMP-aware collectives at this
    step. */
-int MPIR_Comm_commit(MPIR_Comm * comm)
+int MPIR_Comm_commit(MPIR_Comm * comm, MPIR_Comm * parent_comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
 
-    /* It's OK to relax these assertions, but we should do so very
-     * intentionally.  For now this function is the only place that we create
-     * our hierarchy of communicators */
-    MPIR_Assert(comm->node_comm == NULL);
-    MPIR_Assert(comm->node_roots_comm == NULL);
+    if (comm != NULL) {
+        /* It's OK to relax these assertions, but we should do so very
+         * intentionally.  For now this function is the only place that we create
+         * our hierarchy of communicators */
+        MPIR_Assert(comm->node_comm == NULL);
+        MPIR_Assert(comm->node_roots_comm == NULL);
 
-    /* Notify device of communicator creation */
-    mpi_errno = MPIR_Comm_commit_internal(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
-        mpi_errno = MPIR_Comm_create_subcomms(comm);
+        /* Notify device of communicator creation */
+        mpi_errno = MPIR_Comm_commit_internal(comm);
         MPIR_ERR_CHECK(mpi_errno);
 
-        /* Every user-level communicator gets a unique vci sequence. */
-        static int vci_seq = 0;
-        comm->seq = vci_seq;
-        vci_seq++;
+        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {      /*make sure this is not a subcomm */
+            mpi_errno = MPIR_Comm_create_subcomms(comm);
+            MPIR_ERR_CHECK(mpi_errno);
+
+            /* Every user-level communicator gets a unique vci sequence. */
+            static int vci_seq = 0;
+            comm->seq = vci_seq;
+            vci_seq++;
+        }
     }
 
     /* Create collectives-specific infrastructure */
-    mpi_errno = MPIR_Coll_comm_init(comm);
+    mpi_errno = MPIR_Coll_comm_init(parent_comm, comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (comm->node_comm) {
-        comm->node_comm->seq = comm->seq;
-        mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
+    if (comm != NULL) {
+        /* call post commit hooks */
+        mpi_errno = MPID_Comm_commit_post_hook(comm);
         MPIR_ERR_CHECK(mpi_errno);
-    }
 
-    if (comm->node_roots_comm) {
-        comm->node_roots_comm->seq = comm->seq;
-        mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+        if (comm->node_comm) {
+            mpi_errno = MPID_Comm_commit_post_hook(comm->node_comm);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
 
-    /* call post commit hooks */
-    mpi_errno = MPID_Comm_commit_post_hook(comm);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    if (comm->node_comm) {
-        mpi_errno = MPID_Comm_commit_post_hook(comm->node_comm);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    if (comm->node_roots_comm) {
-        mpi_errno = MPID_Comm_commit_post_hook(comm->node_roots_comm);
-        MPIR_ERR_CHECK(mpi_errno);
+        if (comm->node_roots_comm) {
+            mpi_errno = MPID_Comm_commit_post_hook(comm->node_roots_comm);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
     }
 
   fn_exit:
@@ -839,7 +831,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
         MPII_Comm_set_hints(newcomm_ptr, info);
     }
 
-    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    mpi_errno = MPIR_Comm_commit(newcomm_ptr, comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Start with no attributes on this communicator */

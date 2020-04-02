@@ -641,7 +641,7 @@ static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
 
-    mpi_errno = MPIR_Comm_commit(st->new_comm);
+    mpi_errno = MPIR_Comm_commit(st->new_comm, st->comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
