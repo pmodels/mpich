@@ -409,20 +409,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
                              fi_strerror(-ret));
     }
 
-    if (ret == 0) {
-        while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
-            /* The cancel is local and must complete, so only poll this device (not global progress) */
-            if ((mpi_errno = MPIDI_OFI_progress(0, 0)) != MPI_SUCCESS)
-                goto fn_exit;
-        }
-
-        if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
-            MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
-            MPIR_STATUS_SET_COUNT(rreq->status, 0);
-            MPIDIU_request_complete(rreq);
-        }
-    }
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
     return mpi_errno;
