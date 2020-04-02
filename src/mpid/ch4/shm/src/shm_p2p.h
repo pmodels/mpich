@@ -24,8 +24,8 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If a send message size is larger than MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE (in bytes),
-        then enable XPMEM-based single copy protocol for intranode communication. The
+        If a send message size is greater than or equal to MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE (in
+        bytes), then enable XPMEM-based single copy protocol for intranode communication. The
         environment variable is valid only when then XPMEM shmmod is enabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
 
     MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
     if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE > -1 &&
-        dt_contig && data_sz > MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE && rank != comm->rank) {
+        dt_contig && data_sz >= MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE && rank != comm->rank) {
         /* SHM only issues contig large message through XPMEM.
          * TODO: support noncontig send message */
         mpi_errno = MPIDI_XPMEM_lmt_isend(buf, count, datatype, rank, tag, comm,
