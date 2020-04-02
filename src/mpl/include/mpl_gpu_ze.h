@@ -11,5 +11,7 @@
 /* FIXME: Add all required ze headers here */
 #include "level_zero/ze_api.h"
 
+typedef ze_ipc_mem_handle_t MPL_gpu_ipc_mem_handle_t;
+typedef ze_device_handle_t MPL_gpu_device_handle_t;
 
 #endif /* ifndef MPL_GPU_ZE_H_INCLUDED */
