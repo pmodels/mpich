@@ -137,27 +137,31 @@ MPLI_ATOMIC_DECL_FUNC_PTR(void *, ptr)
 #undef MPLI_ATOMIC_DECL_FUNC_FAA
 #undef MPLI_ATOMIC_DECL_FUNC_VAL
 #undef MPLI_ATOMIC_DECL_FUNC_PTR
-#undef MPLI_ATOMIC_CS_ENTER
-#undef MPLI_ATOMIC_CS_EXIT
 /* lock/unlock provides barrier */
 static inline void MPL_atomic_write_barrier(void)
 {
-    ;
+    MPLI_ATOMIC_CS_ENTER();
+    MPLI_ATOMIC_CS_EXIT();
 }
 
 static inline void MPL_atomic_read_barrier(void)
 {
-    ;
+    MPLI_ATOMIC_CS_ENTER();
+    MPLI_ATOMIC_CS_EXIT();
 }
 
 static inline void MPL_atomic_read_write_barrier(void)
 {
-    ;
+    MPLI_ATOMIC_CS_ENTER();
+    MPLI_ATOMIC_CS_EXIT();
 }
 
 static inline void MPL_atomic_compiler_barrier(void)
 {
-    ;
+    __asm__ __volatile__("":::"memory");
 }
+
+#undef MPLI_ATOMIC_CS_ENTER
+#undef MPLI_ATOMIC_CS_EXIT
 
 #endif /* MPL_ATOMIC_BY_LOCK_H_INCLUDED */
