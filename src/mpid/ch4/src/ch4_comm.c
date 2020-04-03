@@ -8,6 +8,8 @@
 #include "ch4_comm.h"
 #include "ch4i_comm.h"
 
+static void register_comm_hints(MPIR_Comm * comm);
+
 int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_REENABLE_ANYSOURCE);
@@ -175,6 +177,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
                 MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
     }
+
+    register_comm_hints(comm);
 
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -525,4 +529,9 @@ int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm, int local_leader, MPIR_C
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
+}
+
+/* Register CH4-specific hints */
+static void register_comm_hints(MPIR_Comm * comm)
+{
 }
