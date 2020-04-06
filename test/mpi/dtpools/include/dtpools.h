@@ -13,7 +13,8 @@
 #define DTP_ERR_ARG                (-1)
 #define DTP_ERR_OUT_OF_RESOURCES   (-2)
 #define DTP_ERR_MPI                (-3)
-#define DTP_ERR_OTHER              (-4)
+#define DTP_ERR_MAXED_ATTEMPTS     (-4)
+#define DTP_ERR_OTHER              (-5)
 
 typedef struct {
     MPI_Datatype DTP_datatype;
