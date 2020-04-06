@@ -12,11 +12,13 @@
 /* ofi_comm.h */
 int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
 int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm);
+int MPIDI_OFI_mpi_comm_parent_commit_hook(MPIR_Comm * parent_comm, MPIR_Comm * comm);
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm);
 
 #ifdef NETMOD_INLINE
 #define MPIDI_NM_mpi_comm_commit_pre_hook MPIDI_OFI_mpi_comm_commit_pre_hook
 #define MPIDI_NM_mpi_comm_commit_post_hook MPIDI_OFI_mpi_comm_commit_post_hook
+#define MPIDI_NM_mpi_comm_parent_commit_hook MPIDI_OFI_mpi_comm_parent_commit_hook
 #define MPIDI_NM_mpi_comm_free_hook MPIDI_OFI_mpi_comm_free_hook
 #endif
 
