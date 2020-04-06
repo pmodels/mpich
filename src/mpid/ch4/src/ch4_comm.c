@@ -232,6 +232,19 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+int MPID_Comm_parent_commit_hook(MPIR_Comm * parent_comm, MPIR_Comm * child_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPID_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
