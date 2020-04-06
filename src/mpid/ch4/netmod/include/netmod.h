@@ -64,6 +64,7 @@ typedef int (*MPIDI_NM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, 
                                                        const int lpids[]);
 typedef int (*MPIDI_NM_mpi_comm_commit_pre_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_NM_mpi_comm_commit_post_hook_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_NM_mpi_comm_parent_commit_hook_t) (MPIR_Comm * parent_comm, MPIR_Comm * comm);
 typedef int (*MPIDI_NM_mpi_comm_free_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_NM_mpi_win_create_hook_t) (MPIR_Win * win);
 typedef int (*MPIDI_NM_mpi_win_allocate_hook_t) (MPIR_Win * win);
@@ -383,6 +384,7 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
     MPIDI_NM_mpi_comm_commit_pre_hook_t mpi_comm_commit_pre_hook;
     MPIDI_NM_mpi_comm_commit_post_hook_t mpi_comm_commit_post_hook;
+    MPIDI_NM_mpi_comm_parent_commit_hook_t mpi_comm_parent_commit_hook;
     MPIDI_NM_mpi_comm_free_hook_t mpi_comm_free_hook;
     /* Window initialization/cleanup routines */
     MPIDI_NM_mpi_win_create_hook_t mpi_win_create_hook;
@@ -566,6 +568,7 @@ int MPIDI_NM_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_u
 int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[]);
 int MPIDI_NM_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
 int MPIDI_NM_mpi_comm_commit_post_hook(MPIR_Comm * comm);
+int MPIDI_NM_mpi_comm_parent_commit_hook(MPIR_Comm * parent_comm, MPIR_Comm * comm);
 int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm);
 int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win);
 int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win);
