@@ -146,9 +146,12 @@ int main(int argc, char **argv)
             targetcount = target_obj.DTP_type_count;
             targettype = target_obj.DTP_datatype;
 
+            char *orig_desc, *target_desc;
+            DTP_obj_get_description(orig_obj, &orig_desc);
+            DTP_obj_get_description(target_obj, &target_desc);
             MTestPrintfMsg(1,
                            "Putting count = %d of origtype %s targettype %s\n",
-                           count, orig_obj.DTP_description, target_obj.DTP_description);
+                           count, orig_desc, target_desc);
 
             /* At this point, we have all of the elements that we
              * need to begin the multiple fence and put tests */
@@ -180,8 +183,7 @@ int main(int argc, char **argv)
                 err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
                 if (err) {
                     if (errs++ < MAX_PERR) {
-                        PrintRecvedError("fence2", orig_obj.DTP_description,
-                                         target_obj.DTP_description);
+                        PrintRecvedError("fence2", orig_desc, target_desc);
                     }
                 }
 
@@ -205,8 +207,7 @@ int main(int argc, char **argv)
                 err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
-                        PrintRecvedError("fence3", orig_obj.DTP_description,
-                                         target_obj.DTP_description);
+                        PrintRecvedError("fence3", orig_desc, target_desc);
                     }
                 }
 
@@ -239,8 +240,7 @@ int main(int argc, char **argv)
                 err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
-                        PrintRecvedError("src fence4", orig_obj.DTP_description,
-                                         target_obj.DTP_description);
+                        PrintRecvedError("src fence4", orig_desc, target_desc);
                     }
                 }
             }
@@ -248,8 +248,7 @@ int main(int argc, char **argv)
                 err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
-                        PrintRecvedError("target fence4", orig_obj.DTP_description,
-                                         target_obj.DTP_description);
+                        PrintRecvedError("target fence4", orig_desc, target_desc);
                     }
                 }
             }
