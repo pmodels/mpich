@@ -82,3 +82,6 @@ an object.
 
 2. DTP_MAX_TREE_DEPTH: Sets the maximum datatype tree depth that an
 object can have.
+
+3. DTP_MAX_OBJ_CREATE_ATTEMPTS: Sets the maximum number of attempts allowed
+when creating an object before giving up.
