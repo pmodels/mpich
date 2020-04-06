@@ -562,8 +562,8 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
 
     /* if the node_roots_comm and comm would be the same size, then creating
      * the second communicator is useless and wasteful. */
-    if (num_external == comm->remote_size) {
-        MPIR_Assert(num_local == 1);
+    if (num_external == comm->remote_size || num_local == comm->remote_size) {
+        MPIR_Assert(num_local == 1 || num_external == 0);
         goto fn_exit;
     }
 
