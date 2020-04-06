@@ -90,6 +90,7 @@ int DTP_pool_free(DTP_pool_s dtp)
  *
  * dtp:         datatype pool handle
  * obj:         created object handle
+ * maxbufsize:  maximum buffer size allowed
  */
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
 {
