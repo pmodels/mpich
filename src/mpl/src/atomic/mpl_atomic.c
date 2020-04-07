@@ -14,6 +14,6 @@
 #ifdef MPL_HAVE_PTHREAD_H
 #include <pthread.h>
 
-pthread_mutex_t MPL_emulation_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t MPLI_emulation_lock = PTHREAD_MUTEX_INITIALIZER;
 
 #endif /* MPL_HAVE_PTHREAD_H */

@@ -10,7 +10,7 @@
  */
 
 #include "mpidimpl.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "mpidch4r.h"
 
 static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
@@ -38,13 +38,11 @@ void MPIDIG_am_reg_cb(int handler_id,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REG_CB);
 }
 
-int MPIDIG_init(void)
+int MPIDIG_am_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_INIT);
-
-    MPIDI_global.is_ch4u_initialized = 0;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_INIT);
 
     MPIDI_global.comm_req_lists = (MPIDIG_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
@@ -105,10 +103,8 @@ int MPIDIG_init(void)
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,
                      &MPIDIG_get_acc_data_origin_cb, &MPIDIG_get_acc_data_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_COMM_ABORT,
-                     &MPIDIG_comm_abort_origin_cb, &MPIDIG_comm_abort_target_msg_cb);
 
-    MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
+    MPIDIG_am_comm_abort_init();
 
     mpi_errno = MPIDIG_RMA_Init_sync_pvars();
     MPIR_ERR_CHECK(mpi_errno);
@@ -116,10 +112,7 @@ int MPIDIG_init(void)
     mpi_errno = MPIDIG_RMA_Init_targetcb_pvars();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_global.csel_root = NULL;
-
-    MPIDI_global.is_ch4u_initialized = 1;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_INIT);
 
   fn_exit:
     return mpi_errno;
@@ -127,15 +120,14 @@ int MPIDIG_init(void)
     goto fn_exit;
 }
 
-void MPIDIG_finalize(void)
+void MPIDIG_am_finalize(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_FINALIZE);
 
-    MPIDI_global.is_ch4u_initialized = 0;
     MPIDIU_map_destroy(MPIDI_global.win_map);
     MPIDIU_destroy_buf_pool(MPIDI_global.buf_pool);
     MPL_free(MPIDI_global.comm_req_lists);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_FINALIZE);
 }

@@ -44,59 +44,6 @@ enum {
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
 
 enum {
-    MPIDIG_SEND = 0,            /* Eager send */
-
-    MPIDIG_SEND_LONG_REQ,       /* Rendezvous send RTS (request to send) */
-    MPIDIG_SEND_LONG_ACK,       /* Rendezvous send CTS (clear to send) */
-    MPIDIG_SEND_LONG_LMT,       /* Rendezvous send LMT */
-
-    MPIDIG_SSEND_REQ,
-    MPIDIG_SSEND_ACK,
-
-    MPIDIG_PUT_REQ,
-    MPIDIG_PUT_ACK,
-    MPIDIG_PUT_IOV_REQ,
-    MPIDIG_PUT_DAT_REQ,
-    MPIDIG_PUT_IOV_ACK,
-
-    MPIDIG_GET_REQ,
-    MPIDIG_GET_ACK,
-
-    MPIDIG_ACC_REQ,
-    MPIDIG_ACC_ACK,
-    MPIDIG_ACC_IOV_REQ,
-    MPIDIG_ACC_DAT_REQ,
-    MPIDIG_ACC_IOV_ACK,
-
-    MPIDIG_GET_ACC_REQ,
-    MPIDIG_GET_ACC_ACK,
-    MPIDIG_GET_ACC_IOV_REQ,
-    MPIDIG_GET_ACC_DAT_REQ,
-    MPIDIG_GET_ACC_IOV_ACK,
-
-    MPIDIG_CSWAP_REQ,
-    MPIDIG_CSWAP_ACK,
-    MPIDIG_FETCH_OP,
-
-    MPIDIG_WIN_COMPLETE,
-    MPIDIG_WIN_POST,
-    MPIDIG_WIN_LOCK,
-    MPIDIG_WIN_LOCK_ACK,
-    MPIDIG_WIN_UNLOCK,
-    MPIDIG_WIN_UNLOCK_ACK,
-    MPIDIG_WIN_LOCKALL,
-    MPIDIG_WIN_LOCKALL_ACK,
-    MPIDIG_WIN_UNLOCKALL,
-    MPIDIG_WIN_UNLOCKALL_ACK,
-
-    MPIDIG_COMM_ABORT,
-
-    MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-
-    MPIDIG_HANDLER_STATIC_MAX
-};
-
-enum {
     MPIDIG_EPOTYPE_NONE = 0,          /**< No epoch in affect */
     MPIDIG_EPOTYPE_LOCK = 1,          /**< MPI_Win_lock access epoch */
     MPIDIG_EPOTYPE_START = 2,         /**< MPI_Win_start access epoch */
@@ -287,13 +234,16 @@ typedef struct {
 
 #define MAX_CH4_MUTEXES 6
 
-/* per-VCI structure */
-typedef struct MPIDI_vci {
-    int attr;
-    MPID_Thread_mutex_t lock;
-} MPIDI_vci_t MPL_ATTR_ALIGNED(MPL_CACHELINE_SIZE);
+/* per-VCI structure -- using union to force minimum size */
+typedef union MPIDI_vci {
+    struct {
+        int attr;
+        MPID_Thread_mutex_t lock;
+    } vci;
+    char pad[MPL_CACHELINE_SIZE];
+} MPIDI_vci_t;
 
-#define MPIDI_VCI(i) MPIDI_global.vci[i]
+#define MPIDI_VCI(i) MPIDI_global.vci[i].vci
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
@@ -323,7 +273,7 @@ typedef struct MPIDI_CH4_Global_t {
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    OPA_int_t progress_count;
+    MPL_atomic_int_t progress_count;
 
     MPID_Thread_mutex_t vci_lock;
     int n_vcis;

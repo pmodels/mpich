@@ -14,7 +14,7 @@
 #include <mpidimpl.h>
 #include "ofi_types.h"
 #include "mpidch4r.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
@@ -190,9 +190,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 /* Externs:  see util.c for definition */
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
-                              void **data, size_t * data_sz, int is_local, int *is_contig,
-                              MPIR_Request ** req);
+int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
+                              int is_local, int is_async, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
 int MPIDI_OFI_mr_key_allocator_init(void);

@@ -28,6 +28,9 @@
 #if !defined(THREAD_PACKAGE_NAME)
 #error "thread package (THREAD_PACKAGE_NAME) not defined"
 
+#elif THREAD_PACKAGE_NAME == THREAD_PACKAGE_NONE
+/* Empty. No threaded tests should run. */
+
 #elif THREAD_PACKAGE_NAME == THREAD_PACKAGE_WIN
 #include <windows.h>
 #define MTEST_THREAD_RETURN_TYPE DWORD
@@ -55,6 +58,7 @@
 
 #endif
 
+#if THREAD_PACKAGE_NAME != THREAD_PACKAGE_NONE
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg);
 int MTest_Join_threads(void);
 int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE *);
@@ -67,4 +71,7 @@ int MTest_thread_barrier_free(void);
 
 void MTest_init_thread_pkg(int argc, char **argv);
 void MTest_finalize_thread_pkg(void);
+
+#endif
+
 #endif /* MPITHREADTEST_H_INCLUDED */

@@ -22,20 +22,20 @@
 
 #if __STDC_VERSION__ >= 201710L
 // C17 obsoletes ATOMIC_VAR_INIT.
-#define MPL_ATOMIC_INITIALIZER(val_) { (val_) }
+#define MPLI_ATOMIC_INITIALIZER(val_) { (val_) }
 #else
-#define MPL_ATOMIC_INITIALIZER(val_) { ATOMIC_VAR_INIT(val_) }
+#define MPLI_ATOMIC_INITIALIZER(val_) { ATOMIC_VAR_INIT(val_) }
 #endif
 
-#define MPL_ATOMIC_INT_T_INITIALIZER(val_)    MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_INT32_T_INITIALIZER(val_)  MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_UINT32_T_INITIALIZER(val_) MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_INT64_T_INITIALIZER(val_)  MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_UINT64_T_INITIALIZER(val_) MPL_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT_T_INITIALIZER(val_)    MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT32_T_INITIALIZER(val_)  MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_UINT32_T_INITIALIZER(val_) MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT64_T_INITIALIZER(val_)  MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_UINT64_T_INITIALIZER(val_) MPLI_ATOMIC_INITIALIZER(val_)
 #define MPL_ATOMIC_PTR_T_INITIALIZER(val_) \
-        MPL_ATOMIC_INITIALIZER((intptr_t)(val_))
+        MPLI_ATOMIC_INITIALIZER((intptr_t)(val_))
 
-#define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)        \
+#define MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)       \
 struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE v;                                                             \
 };                                                                             \
@@ -76,7 +76,7 @@ static inline TYPE MPL_atomic_swap_ ## NAME                                    \
                                           memory_order_acq_rel);               \
 }
 
-#define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)           \
+#define MPLI_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)          \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
                             (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
 {                                                                              \
@@ -90,20 +90,23 @@ static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
                                            memory_order_acq_rel);              \
 }
 
-#define MPL_ATOMIC_DECL_FUNC_VAL(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
-        MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
-        MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)
+#define MPLI_ATOMIC_DECL_FUNC_VAL(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
+        MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
+        MPLI_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)
 
-#define MPL_ATOMIC_DECL_FUNC_PTR(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
-        MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)
+#define MPLI_ATOMIC_DECL_FUNC_PTR(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE) \
+        MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_TYPE)
 
-MPL_ATOMIC_DECL_FUNC_VAL(int, int, atomic_int, int)
-MPL_ATOMIC_DECL_FUNC_VAL(int32_t, int32, atomic_int_fast32_t, int_fast32_t)
-MPL_ATOMIC_DECL_FUNC_VAL(uint32_t, uint32, atomic_uint_fast32_t, uint_fast32_t)
-MPL_ATOMIC_DECL_FUNC_VAL(int64_t, int64, atomic_int_fast64_t, int_fast64_t)
-MPL_ATOMIC_DECL_FUNC_VAL(uint64_t, uint64, atomic_uint_fast64_t, uint_fast64_t)
-MPL_ATOMIC_DECL_FUNC_PTR(void *, ptr, atomic_intptr_t, intptr_t)
-
+MPLI_ATOMIC_DECL_FUNC_VAL(int, int, atomic_int, int)
+MPLI_ATOMIC_DECL_FUNC_VAL(int32_t, int32, atomic_int_fast32_t, int_fast32_t)
+MPLI_ATOMIC_DECL_FUNC_VAL(uint32_t, uint32, atomic_uint_fast32_t, uint_fast32_t)
+MPLI_ATOMIC_DECL_FUNC_VAL(int64_t, int64, atomic_int_fast64_t, int_fast64_t)
+MPLI_ATOMIC_DECL_FUNC_VAL(uint64_t, uint64, atomic_uint_fast64_t, uint_fast64_t)
+MPLI_ATOMIC_DECL_FUNC_PTR(void *, ptr, atomic_intptr_t, intptr_t)
+#undef MPLI_ATOMIC_DECL_FUNC_COMMON
+#undef MPLI_ATOMIC_DECL_FUNC_FAA
+#undef MPLI_ATOMIC_DECL_FUNC_VAL
+#undef MPLI_ATOMIC_DECL_FUNC_PTR
 static inline void MPL_atomic_write_barrier(void)
 {
     atomic_thread_fence(memory_order_release);

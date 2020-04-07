@@ -38,9 +38,7 @@ static int progress_recv(int blocking)
     int result = MPIDI_POSIX_OK;
     MPIR_Request *rreq = NULL;
     void *p_data = NULL;
-    size_t p_data_sz = 0;
     size_t in_total_data_sz = 0;
-    int is_contig;
     void *am_hdr = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr;
     uint8_t *payload;
@@ -71,7 +69,6 @@ static int progress_recv(int blocking)
         p_data = payload + msg_hdr->am_hdr_sz;
 
         in_total_data_sz = msg_hdr->data_sz;
-        p_data_sz = msg_hdr->data_sz;
 
         /* This is a SHM internal control header */
         /* TODO: internal control can use the generic am interface,
@@ -85,36 +82,23 @@ static int progress_recv(int blocking)
             goto fn_exit;
         }
 
-        /* Call the MPIDIG function to handle the initial receipt of the message. This will attempt
-         * to match the message (if appropriate) and return a request if the message was matched. */
-        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id,
-                                                           am_hdr,
-                                                           &p_data,
-                                                           &p_data_sz,
-                                                           1 /* is_local */ , &is_contig,
-                                                           &rreq);
-        POSIX_TRACE("POSIX AM target callback: handler_id = %d, am_hdr = %p, p_data = %p "
-                    "p_data_sz = %lu, is_contig = %d, rreq = %p\n",
-                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, rreq);
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
+        /* note: setting is_local, is_async to 1, 1 */
+        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+                                                           NULL, in_total_data_sz, 1, 1, &rreq);
+
         if (!rreq) {
-            /* no rreq, no payload */
             MPIDI_POSIX_eager_recv_commit(&transaction);
             goto fn_exit;
+        } else if (in_total_data_sz == payload_left) {
+            MPIDIG_recv_copy(p_data, rreq);
+            MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+            MPIDI_POSIX_eager_recv_commit(&transaction);
+            MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
+            goto fn_exit;
         } else {
-            if (is_contig && (in_total_data_sz == payload_left)) {
-                /* got single complete payload */
-                MPIDIG_recv_copy(payload, rreq);
-
-                MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-
-                MPIDI_POSIX_eager_recv_commit(&transaction);
-                MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
-                goto fn_exit;
-            }
-
             /* prepare for asynchronous transfer */
             MPIDIG_recv_setup(rreq);
 

@@ -72,9 +72,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
         /* If first_cell wasn't set, grab the next cell from the appropriate terminal */
         terminal = &transport->terminals[MPIDI_POSIX_global.my_local_rank];
 
-        if (terminal->head) {
-            uintptr_t head =
-                (uintptr_t) (unsigned int *) OPA_swap_ptr((OPA_ptr_t *) & terminal->head, NULL);
+        if (MPL_atomic_load_ptr(&terminal->head)) {
+            void *head = MPL_atomic_swap_ptr(&terminal->head, NULL);
 
             cell = MPIDI_POSIX_EAGER_IQUEUE_GET_CELL(transport, head);
 
@@ -151,7 +150,7 @@ MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction
     MPIR_Assert(cell != NULL);
     cell->next = NULL;
     cell->prev = 0;
-    OPA_compiler_barrier();
+    MPL_atomic_compiler_barrier();
     cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IQUEUE_RECV_COMMIT);
