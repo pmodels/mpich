@@ -281,6 +281,10 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                  * the current request internals */
                 MPIR_Bsend_take_buffer(p, p->msg.count);
                 p->kind = kind;
+                if (kind != BSEND) {
+                    /* IBSEND and BSEND_INIT +1 ref_count for MPI_Wait */
+                    MPIR_Request_add_ref(p->request);
+                }
                 *request = p->request;
             }
             break;
@@ -437,50 +441,37 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
  * track of the type of MPI routine (ibsend, bsend, or bsend_init/start)
  * that created the bsend entry.
  */
+
+/* TODO: make it as a progress_hook. The critical section need be made more granular.
+ * Or, does it matter? */
+static int MPIR_Bsend_progress(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPII_Bsend_data_t *active = BsendBuffer.active;
+    while (active) {
+        MPII_Bsend_data_t *next_active = active->next;
+        MPIR_Request *req = active->request;
+        if (MPIR_Request_is_complete(req)) {
+            MPIR_Bsend_free_segment(active);
+            if (!MPIR_Request_is_persistent(req)) {
+                MPIR_Request_free(req);
+            }
+        }
+        active = next_active;
+    }
+
+    return mpi_errno;
+}
+
 static int MPIR_Bsend_check_active(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPII_Bsend_data_t *active = BsendBuffer.active, *next_active;
 
-    MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
-    while (active) {
-        MPI_Request r = active->request->handle;
-        int flag;
-
-        next_active = active->next;
-
-        if (active->kind == IBSEND) {
-            /* We handle ibsend specially to allow for the user
-             * to attempt and cancel the request. Also, to allow
-             * for a cancel attempt (which must be attempted before
-             * a successful test or wait), we only start
-             * testing when the user has successfully released
-             * the request (it is a grequest, the free call will do it) */
-            flag = 0;
-            /* XXX DJG FIXME-MT should we be checking this? */
-            if (MPIR_Object_get_ref(active->request) == 1) {
-                mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
-                MPIR_ERR_CHECK(mpi_errno);
-            } else {
-                /* We need to invoke the progress engine in case we
-                 * need to advance other, incomplete communication.  */
-                MPID_Progress_state progress_state;
-                MPID_Progress_start(&progress_state);
-                mpi_errno = MPID_Progress_test();
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_CHECK(mpi_errno);
-            }
-        } else {
-            mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-        if (flag) {
-            /* We're done.  Remove this segment */
-            MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Removing segment %p", active);
-            MPIR_Bsend_free_segment(active);
-        }
-        active = next_active;
-        MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Next active is %p", active);
+    if (BsendBuffer.active) {
+        mpi_errno = MPID_Progress_test();
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Bsend_progress();
     }
 
   fn_exit:
