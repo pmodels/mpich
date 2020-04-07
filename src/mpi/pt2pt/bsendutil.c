@@ -203,8 +203,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
  * Initiate an ibsend.  We'll used this for Bsend as well.
  */
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
-                     int dest, int tag, MPIR_Comm * comm_ptr,
-                     MPII_Bsend_kind_t kind, MPIR_Request ** request)
+                     int dest, int tag, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Bsend_data_t *p;
@@ -280,12 +279,11 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                  * to do this was commented out and probably did not match
                  * the current request internals */
                 MPIR_Bsend_take_buffer(p, p->msg.count);
-                p->kind = kind;
-                if (kind != BSEND) {
-                    /* IBSEND and BSEND_INIT +1 ref_count for MPI_Wait */
+                if (request) {
+                    /* Add 1 ref_count for MPI_Wait/Test */
                     MPIR_Request_add_ref(p->request);
+                    *request = p->request;
                 }
-                *request = p->request;
             }
             break;
         }

@@ -56,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
                 mpi_errno =
                     MPIR_Bsend_isend(MPIDI_PREQUEST(preq, buffer), MPIDI_PREQUEST(preq, count),
                                      MPIDI_PREQUEST(preq, datatype), MPIDI_PREQUEST(preq, rank),
-                                     MPIDI_PREQUEST(preq, tag), preq->comm, IBSEND,
+                                     MPIDI_PREQUEST(preq, tag), preq->comm,
                                      &preq->u.persist.real_request);
                 if (mpi_errno == MPI_SUCCESS) {
                     preq->status.MPI_ERROR = MPI_SUCCESS;

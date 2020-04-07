@@ -36,13 +36,6 @@
  *
  */
 
-/* Used to communication the type of bsend */
-typedef enum {
-    BSEND = 0,
-    IBSEND = 1,
-    BSEND_INIT = 2
-} MPII_Bsend_kind_t;
-
 struct MPIR_Request;
 struct MPIR_Comm;
 
@@ -63,7 +56,6 @@ typedef struct MPII_Bsend_data {
     size_t total_size;          /* total size of this segment,
                                  * including all headers */
     struct MPII_Bsend_data *next, *prev;
-    MPII_Bsend_kind_t kind;
     struct MPIR_Request *request;
     MPII_Bsend_msg_t msg;
     double alignpad;            /* make sure that the struct
@@ -73,8 +65,7 @@ typedef struct MPII_Bsend_data {
 /* Function Prototypes for the bsend utility functions */
 int MPIR_Bsend_attach(void *, int);
 int MPIR_Bsend_detach(void *, int *);
-int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *,
-                     MPII_Bsend_kind_t, MPIR_Request **);
+int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *, MPIR_Request **);
 int MPIR_Bsend_free_req_seg(MPIR_Request *);
 
 #endif /* MPII_BSEND_H_INCLUDED */
