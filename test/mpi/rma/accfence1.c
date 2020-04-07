@@ -142,8 +142,10 @@ int main(int argc, char *argv[])
                 if (err) {
                     errs++;
                     if (errs < 10) {
-                        error("Accumulate types: send %s, recv %s\n",
-                              orig_obj.DTP_description, target_obj.DTP_description);
+                        char *orig_desc, *target_desc;
+                        DTP_obj_get_description(orig_obj, &orig_desc);
+                        DTP_obj_get_description(target_obj, &target_desc);
+                        error("Accumulate types: send %s, recv %s\n", orig_desc, target_desc);
                         MTestPrintError(err);
                     }
                 }
@@ -162,9 +164,12 @@ int main(int argc, char *argv[])
                  * transfering data, as a send/recv pair */
                 err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
                 if (err != DTP_SUCCESS) {
+                    char *orig_desc, *target_desc;
+                    DTP_obj_get_description(orig_obj, &orig_desc);
+                    DTP_obj_get_description(target_obj, &target_desc);
                     if (errs < 10) {
                         error("Data received with type %s does not match data sent with type %s\n",
-                              target_obj.DTP_description, orig_obj.DTP_description);
+                              target_desc, orig_desc);
                     }
                     errs++;
                 }
