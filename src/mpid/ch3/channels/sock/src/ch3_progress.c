@@ -49,11 +49,17 @@ static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
-    int made_progress;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
+    int made_progress = 0;
+    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (made_progress) {
+        goto fn_exit;
+    }
 #ifdef MPICH_IS_THREADED
     {
         /* We don't bother testing whether threads are enabled in the
@@ -79,9 +85,6 @@ static int MPIDI_CH3i_Progress_test(void)
         }
     }
 #endif
-
-    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
@@ -134,29 +137,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     }
 #endif
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
-        if (MPIDI_CH3I_progress_blocked == TRUE) {
-            /*
-             * Another thread is already blocking in the progress engine.
-             *
-             * MT: Another thread is already blocking in poll.  Right now,
-             * calls to MPIDI_CH3_Progress_wait() are effectively
-             * serialized by the device.  The only way another thread may
-             * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
-             * this changes, a flag other than MPIDI_CH3I_Progress_blocked
-             * may be required to determine if another thread is in
-             * the progress engine.
-             */
-            MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
-
-            goto fn_exit;
-        }
-    }
-    MPIR_THREAD_CHECK_END;
-#endif
-
     do {
         int made_progress = FALSE;
 
@@ -169,6 +149,22 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
         }
 
         if (MPIR_IS_THREADED) {
+            if (MPIDI_CH3I_progress_blocked == TRUE) {
+                /*
+                 * Another thread is already blocking in the progress engine.
+                 *
+                 * MT: Another thread is already blocking in poll.  Right now,
+                 * calls to MPIDI_CH3_Progress_wait() are effectively
+                 * serialized by the device.  The only way another thread may
+                 * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
+                 * this changes, a flag other than MPIDI_CH3I_Progress_blocked
+                 * may be required to determine if another thread is in
+                 * the progress engine.
+                 */
+                MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
+
+                goto fn_exit;
+            }
             MPIDI_CH3I_progress_blocked = TRUE;
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
