@@ -102,7 +102,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
                 rc = MPIR_Bsend_isend(preq->dev.user_buf, preq->dev.user_count,
                                       preq->dev.datatype, preq->dev.match.parts.rank,
                                       preq->dev.match.parts.tag, preq->comm,
-                                      IBSEND, &preq->u.persist.real_request);
+                                      &preq->u.persist.real_request);
                 if (rc == MPI_SUCCESS) {
                     preq->status.MPI_ERROR = MPI_SUCCESS;
                     preq->cc_ptr = &preq->cc;

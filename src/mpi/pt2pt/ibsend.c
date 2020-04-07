@@ -37,7 +37,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
                          "Ibsend request");
 
     mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr,
-                                 IBSEND, &req->u.proxy.real_request);
+                                 &req->u.proxy.real_request);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Object_set_ref(req, 1);
