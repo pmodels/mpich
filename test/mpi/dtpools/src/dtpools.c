@@ -82,36 +82,41 @@ int DTP_pool_free(DTP_pool_s dtp)
     goto fn_exit;
 }
 
-#define DTPI_DEFAULT_MAX_TREE_DEPTH (3)
-#define DTPI_DEFAULT_MAX_BUFSIZE    (1024 * 1024 * 1024)
+#define DTPI_DEFAULT_MAX_TREE_DEPTH          (3)
+#define DTPI_DEFAULT_MAX_OBJ_CREATE_ATTEMPTS (100)
+#define DTPI_DEFAULT_MAX_BUFSIZE             (1024 * 1024 * 1024)
 
 /*
  * DTP_obj_create - create dtp object inside the pool
  *
  * dtp:         datatype pool handle
  * obj:         created object handle
+ * maxbufsize:  maximum buffer size allowed
  */
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
 {
     int rc = DTP_SUCCESS;
     DTPI_pool_s *dtpi = dtp.priv;
     int max_tree_depth;
+    int max_obj_create_attempts;        /* set the max number of object create
+                                         * and fail if exceed */
     DTPI_obj_s *obj_priv = NULL;
 
     DTPI_FUNC_ENTER();
 
     DTPI_ERR_ARG_CHECK(!dtpi, rc);
 
-    /* The code will enter deadloop if maxbufsize is too small or overflown to negative.
-     * Use 100000 as an arbitary sanity guard.
-     */
-    DTPI_ERR_ARG_CHECK(maxbufsize < 100000, rc);
-
     /* find number of nestings */
     if (getenv("DTP_MAX_TREE_DEPTH"))
         max_tree_depth = atoi(getenv("DTP_MAX_TREE_DEPTH"));
     else
         max_tree_depth = DTPI_DEFAULT_MAX_TREE_DEPTH;
+
+    /* find the max number of attempts when creating an object */
+    if (getenv("DTP_MAX_OBJ_CREATE_ATTEMPTS"))
+        max_obj_create_attempts = atoi(getenv("DTP_MAX_OBJ_CREATE_ATTEMPTS"));
+    else
+        max_obj_create_attempts = DTPI_DEFAULT_MAX_OBJ_CREATE_ATTEMPTS;
 
     int attr_tree_depth = DTPI_rand(dtpi) % (max_tree_depth + 1);
 
@@ -159,6 +164,10 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
         } else {
             rc = DTP_obj_free(*obj);
             DTPI_ERR_CHK_RC(rc);
+            if (--max_obj_create_attempts < 0) {
+                rc = DTP_ERR_MAXED_ATTEMPTS;
+                goto fn_fail;
+            }
         }
     }
 
