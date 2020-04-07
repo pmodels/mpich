@@ -8,9 +8,6 @@
 #ifndef MPII_BSEND_H_INCLUDED
 #define MPII_BSEND_H_INCLUDED
 
-/* This file is separated out as it is used by the configure script to
- * find the Bsend overhead value. */
-
 /*
  * Description of the Bsend data structures.
  *
@@ -72,5 +69,12 @@ typedef struct MPII_Bsend_data {
     double alignpad;            /* make sure that the struct
                                  * shares double alignment */
 } MPII_Bsend_data_t;
+
+/* Function Prototypes for the bsend utility functions */
+int MPIR_Bsend_attach(void *, int);
+int MPIR_Bsend_detach(void *, int *);
+int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPIR_Comm *,
+                     MPII_Bsend_kind_t, MPIR_Request **);
+int MPIR_Bsend_free_req_seg(MPIR_Request *);
 
 #endif /* MPII_BSEND_H_INCLUDED */
