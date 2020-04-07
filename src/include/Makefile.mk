@@ -38,7 +38,7 @@ noinst_HEADERS +=                   \
     src/include/mpii_cxxinterface.h \
     src/include/mpii_fortlogical.h   \
     src/include/mpiallstates.h      \
-    src/include/mpii_bsend.h          \
+    src/include/mpir_bsend.h          \
     src/include/mpir_cvars.h        \
     src/include/mpichconfconst.h    \
     src/include/mpir_err.h          \

@@ -12,7 +12,6 @@
 #define OFI_SEND_H_INCLUDED
 
 #include "ofi_impl.h"
-#include <../mpi/pt2pt/bsendutil.h>
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,

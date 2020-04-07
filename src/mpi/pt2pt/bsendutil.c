@@ -5,8 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "mpii_bsend.h"
-#include "bsendutil.h"
 
 /*
  * Miscellaneous comments

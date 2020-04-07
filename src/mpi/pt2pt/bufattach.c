@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "bsendutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Buffer_attach */
 #if defined(HAVE_PRAGMA_WEAK)
