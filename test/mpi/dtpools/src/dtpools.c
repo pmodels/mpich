@@ -130,9 +130,6 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
             DTPI_ERR_CHK_MPI_RC(rc);
         }
 
-        rc = DTPI_populate_dtp_desc(obj_priv, dtpi, &obj->DTP_description);
-        DTPI_ERR_CHK_RC(rc);
-
         /* find the buffer size that we need */
         MPI_Aint true_lb, true_extent;
         MPI_Aint lb, extent;
@@ -173,6 +170,21 @@ int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize)
     goto fn_exit;
 }
 
+int DTP_obj_get_description(DTP_obj_s obj, char **desc)
+{
+    DTPI_obj_s *obj_priv = obj.priv;
+    int rc = DTP_SUCCESS;
+
+    rc = DTPI_populate_dtp_desc(obj_priv, obj_priv->dtp.priv, desc);
+    DTPI_ERR_CHK_RC(rc);
+
+  fn_exit:
+    return rc;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /*
  * DTP_obj_free - free previously created datatype idx
  */
@@ -190,7 +202,6 @@ int DTP_obj_free(DTP_obj_s obj)
 
     DTPI_obj_free(obj_priv);
     DTPI_FREE(obj.priv);
-    DTPI_FREE(obj.DTP_description);
 
     DTPI_FUNC_EXIT();
 

@@ -141,9 +141,12 @@ int main(int argc, char *argv[])
                 err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
                 if (err != DTP_SUCCESS) {
                     if (errs < 10) {
+                        char *recv_desc, *send_desc;
+                        DTP_obj_get_description(recv_obj, &recv_desc);
+                        DTP_obj_get_description(send_obj, &send_desc);
                         fprintf(stderr,
                                 "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
-                                recv_obj.DTP_description, send_obj.DTP_description, count[0]);
+                                recv_desc, send_desc, count[0]);
                     }
                     errs++;
                 }
