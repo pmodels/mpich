@@ -10,7 +10,7 @@
 /* This file provides initialization/finalization functions for single-threaded
  * tests. */
 
-void MTest_init_thread_pkg(int argc, char **argv)
+void MTest_init_thread_pkg(void)
 {
 }
 

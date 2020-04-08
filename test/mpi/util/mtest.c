@@ -82,7 +82,7 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
     int flag;
     char *envval = 0;
 
-    MTest_init_thread_pkg(*argc, *argv);
+    MTest_init_thread_pkg();
 
     MPI_Initialized(&flag);
     if (!flag) {

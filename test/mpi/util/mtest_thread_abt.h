@@ -169,12 +169,12 @@ static ABT_xstream xstreams[MTEST_NUM_XSTREAMS];
 static ABT_sched scheds[MTEST_NUM_XSTREAMS];
 ABT_pool pools[MTEST_NUM_XSTREAMS];
 
-void MTest_init_thread_pkg(int argc, char **argv)
+void MTest_init_thread_pkg(void)
 {
     int i, k, ret;
     int num_xstreams;
 
-    ABT_init(argc, argv);
+    ABT_init(0, NULL);
 
     /* Create pools */
     for (i = 0; i < MTEST_NUM_XSTREAMS; i++) {
@@ -206,7 +206,7 @@ void MTest_init_thread_pkg(int argc, char **argv)
     }
 }
 
-void MTest_finalize_thread_pkg()
+void MTest_finalize_thread_pkg(void)
 {
     int i, ret;
     int num_xstreams = MTEST_NUM_XSTREAMS;
