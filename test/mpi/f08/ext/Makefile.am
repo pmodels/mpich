@@ -26,7 +26,7 @@ c2f90mult_SOURCES = c2f90mult.c
 
 # ensure that dependent tests will be rebuilt when add1size.h is updated
 
-# we don't get this from Makefile_f90.mtest and we don't include Makefile.mtest
+# we don't get this from Makefile_f90.mtest and we don't include Makefile_single.mtest
 $(top_builddir)/util/mtest.o:
 	(cd $(top_builddir)/util && $(MAKE) mtest.o)
 
