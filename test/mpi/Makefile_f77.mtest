@@ -7,9 +7,9 @@
 
 ## This is an automake makefile fragment that should be included by:
 ##
-##   include $(top_srcdir)/Makefile_cxx.mtest
+##   include $(top_srcdir)/Makefile_f77.mtest
 ##
-## see Makefile.mtest for a description why this file exists, but for C++
+## see Makefile_common.mtest for a description why this file exists, but for f77
 
 # these CPPFLAGS are only used when building C/C++ source files, not for actual
 # F77 code itself

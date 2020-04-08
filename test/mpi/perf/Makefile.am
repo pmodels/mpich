@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/Makefile.mtest
+include $(top_srcdir)/Makefile_single.mtest
 
 EXTRA_DIST = testlist
 
@@ -22,5 +22,3 @@ dtpack_CFLAGS    = -O
 nestvec_CFLAGS   = -O
 nestvec2_CFLAGS  = -O
 indexperf_CFLAGS = -O
-
-twovec_LDADD = -lm $(top_builddir)/util/mtest.o

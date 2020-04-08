@@ -82,9 +82,7 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
     int flag;
     char *envval = 0;
 
-#ifdef MTEST_USE_THREAD
-    MTest_init_thread_pkg(*argc, *argv);
-#endif
+    MTest_init_thread_pkg();
 
     MPI_Initialized(&flag);
     if (!flag) {
@@ -215,9 +213,7 @@ void MTest_Finalize(int errs)
 
     MPI_Finalize();
 
-#ifdef MTEST_USE_THREAD
     MTest_finalize_thread_pkg();
-#endif
 }
 
 /* ------------------------------------------------------------------------ */
