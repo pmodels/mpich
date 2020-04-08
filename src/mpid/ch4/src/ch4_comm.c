@@ -238,6 +238,9 @@ int MPID_Comm_parent_commit_hook(MPIR_Comm * parent_comm, MPIR_Comm * child_comm
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
 
+    mpi_errno = MPIDI_NM_mpi_comm_parent_commit_hook(parent_comm, child_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_PARENT_COMMIT_HOOK);
     return mpi_errno;
