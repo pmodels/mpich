@@ -69,7 +69,7 @@ int MTest_thread_barrier_init(void);
 int MTest_thread_barrier(int);
 int MTest_thread_barrier_free(void);
 
-void MTest_init_thread_pkg(int argc, char **argv);
+void MTest_init_thread_pkg(void);
 void MTest_finalize_thread_pkg(void);
 
 #endif

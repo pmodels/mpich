@@ -5,9 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-## This is an automake makefile fragment that should be included by:
-##
-##   include $(top_srcdir)/Makefile.mtest
+## This is an automake makefile fragment that is included by Makefile_single.mtest
+## (for single-threaded tests) and Makefile_threads.mtests (for multithreaded tests).
 ##
 ## It provides a "testing" rule that uses runtests, cleanup for summary.xml, and
 ## adds appropriate includes and linker flags for using the MTest framework.

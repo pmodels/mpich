@@ -9,7 +9,7 @@
 ##
 ##   include $(top_srcdir)/Makefile_cxx.mtest
 ##
-## see Makefile.mtest for a description why this file exists, but for C++
+## see Makefile_common.mtest for a description why this file exists, but for C++
 
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 LDADD = $(top_builddir)/util/mtest_cxx.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT)

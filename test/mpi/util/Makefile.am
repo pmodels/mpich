@@ -47,6 +47,13 @@ libmtest_f08_a_SOURCES = mtest_f08.f90
 
 endif
 
+#---- single ---------------------------------------------------------------------
+all_objs += mtest_single.$(OBJEXT)
+
+## another dummy library
+EXTRA_LIBRARIES += libmtest_single.a
+libmtest_single_a_SOURCES = mtest_single.c
+
 #---- thread ---------------------------------------------------------------------
 all_objs += mtest_thread.$(OBJEXT)
 
