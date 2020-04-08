@@ -128,11 +128,11 @@ int MTest_thread_barrier(int nt)
 #endif /* Default barrier routine */
 
 #if !defined(HAVE_MTEST_INIT_THREAD_PKG)
-void MTest_init_thread_pkg(int argc, char **argv)
+void MTest_init_thread_pkg(void)
 {
 }
 
-void MTest_finalize_thread_pkg()
+void MTest_finalize_thread_pkg(void)
 {
 }
 #endif /* Default MTest_init_thread_pkg */
