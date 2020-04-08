@@ -27,6 +27,6 @@ c2fmult_SOURCES = c2fmult.c
 # ensure that dependent tests will be rebuilt when add1size.h is updated
 allocmemf.$(OBJEXT): add1size.h
 
-# we don't get this from Makefile_f77.mtest and we don't include Makefile.mtest
+# we don't get this from Makefile_f77.mtest and we don't include Makefile_single.mtest
 $(top_builddir)/util/mtest.o:
 	(cd $(top_builddir)/util && $(MAKE) mtest.o)
