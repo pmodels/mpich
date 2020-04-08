@@ -58,7 +58,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
  *    Scheduling
  * ======================================================================*/
 
-#define MPL_thread_yield ABT_thread_yield
+#define MPL_thread_yield_light() ABT_thread_yield()
+#define MPL_thread_yield_heavy() ABT_thread_yield()
+#define MPL_thread_yield() MPL_thread_yield_light()
 
 /* ======================================================================
  *    Mutexes

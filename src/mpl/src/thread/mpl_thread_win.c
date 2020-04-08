@@ -99,11 +99,6 @@ void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same)
     *same = (*id1 == *id2) ? TRUE : FALSE;
 }
 
-void MPL_thread_yield(void)
-{
-    Sleep(0);
-}
-
 /*
  *    Mutexes
  */

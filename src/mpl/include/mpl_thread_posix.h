@@ -58,8 +58,9 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;      \
     } while (0)
 
-#define MPL_thread_yield MPL_sched_yield
-
+#define MPL_thread_yield_light()        /* NOOP */
+#define MPL_thread_yield_heavy() MPL_sched_yield()
+#define MPL_thread_yield() MPL_thread_yield_light()
 
 /*
  *    Mutexes

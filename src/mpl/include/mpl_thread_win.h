@@ -43,7 +43,10 @@ void MPL_thread_exit(void);
 void MPL_thread_self(MPL_thread_id_t * id);
 void MPL_thread_join(MPL_thread_id_t * id);
 void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same);
-void MPL_thread_yield();
+
+#define MPL_thread_yield_light()        /* NOOP */
+#define MPL_thread_yield_heavy() Sleep(0)
+#define MPL_thread_yield() MPL_thread_yield_light()
 
 void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err);
 void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err);
