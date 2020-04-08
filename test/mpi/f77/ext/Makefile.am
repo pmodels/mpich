@@ -19,7 +19,7 @@ c2f2cf_SOURCES = c2f2c.c c2f2cf.f
 ctypesinf_SOURCES = ctypesinf.f ctypesfromc.c
 
 # C programs get a different mtest utility object
-c2fmult_LDADD = $(top_builddir)/util/mtest.o
+c2fmult_LDADD = $(top_builddir)/util/mtest.o $(top_builddir)/util/mtest_single.o
 c2fmult_SOURCES = c2fmult.c
 
 ## add1size.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
