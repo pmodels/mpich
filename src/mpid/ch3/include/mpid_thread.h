@@ -17,6 +17,14 @@ typedef MPIDU_Thread_cond_t  MPID_Thread_cond_t;
 typedef MPIDU_Thread_id_t    MPID_Thread_id_t;
 typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 
+/* In sock channel, we use poll() outside critical sections;
+ * and in nemesis, the progress_test is very quick so the immediate
+ * lock exit/enter results in reasonable mutex performance.
+ * Therefore, we use MPL_thread_yield_light (NOOP for kernel
+ * threads) for MPID_THREAD_YIELD.
+ */
+#define MPID_THREAD_YIELD()  MPL_thread_yield_light()
+
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD

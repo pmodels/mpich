@@ -20,6 +20,13 @@ typedef MPIDU_Thread_cond_t MPID_Thread_cond_t;
 typedef MPIDU_Thread_id_t MPID_Thread_id_t;
 typedef MPIDU_Thread_func_t MPID_Thread_func_t;
 typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
+
+/* In ch4, progress_test() is heavy, often putting waiting threads
+ * into sleep. To ensure fairness in mutex yielding, heavy version of
+ * MPID_THREAD_YIELD is necessary.
+ */
+#define MPID_THREAD_YIELD()  MPL_thread_yield_heavy()
+
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD

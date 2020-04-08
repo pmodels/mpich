@@ -209,6 +209,15 @@ M*/
 #define MPIDU_Thread_join       MPL_thread_join
 #define MPIDU_Thread_same       MPL_thread_same
 
+/* NOTE: MPID_THREAD_YIELD maybe defined as MPL_thread_yield_light (which is a NOOP
+ * under kernel threads) or MPL_thread_yield_heavy (which may cost milliseconds).
+ * The design in ch3:nemesis result in reasonale fairness with MPL_thread_yield_light;
+ * In ch4, due to relative heaviness in progress_test, the latter is necessary to increase
+ * mutex fairness.
+ *
+ * Therefore, MPID_THREAD_YIELD maybe defined differently in mpid_thread.h.
+ */
+
 /*@
   MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
@@ -221,7 +230,7 @@ M*/
         (mutex_ptr_)->owner = 0;                                        \
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_thread_yield();                                             \
+        MPID_THREAD_YIELD();                                            \
         MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, MPL_THREAD_PRIO_LOW);\
         MPIR_Assert((mutex_ptr_)->count == 0);                          \
         (mutex_ptr_)->count = saved_count_;                             \
