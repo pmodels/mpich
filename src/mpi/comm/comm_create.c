@@ -226,9 +226,14 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
+
+        mpi_errno = MPIR_Comm_parent_commit(comm_ptr, *newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* This process is not in the group */
         new_context_id = 0;
+        mpi_errno = MPIR_Comm_parent_commit(comm_ptr, NULL);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
   fn_exit:

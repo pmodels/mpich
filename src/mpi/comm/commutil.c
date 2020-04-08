@@ -691,6 +691,33 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* Perform comm creation op that involves parent communicator. Invokes
+ * corresponding device hook */
+int MPIR_Comm_parent_commit(MPIR_Comm * parent_comm, MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_PARENT_COMMIT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_PARENT_COMMIT);
+
+    mpi_errno = MPID_Comm_parent_commit_hook(parent_comm, comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm) {
+        /* always call for subcomm even when subcomms, the device hook handles
+         * NULL case */
+        mpi_errno = MPID_Comm_parent_commit_hook(comm, comm->node_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno = MPID_Comm_parent_commit_hook(comm, comm->node_roots_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_PARENT_COMMIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
@@ -840,6 +867,9 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
 
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Comm_parent_commit(comm_ptr, newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Start with no attributes on this communicator */

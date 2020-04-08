@@ -281,6 +281,7 @@ int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
+int MPIR_Comm_parent_commit(MPIR_Comm *, MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
