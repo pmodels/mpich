@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
                 DTP_obj_get_description(send_obj, &desc);
                 MTestPrintfMsg(1, "Sending count = %d of sendtype %s of total size %d bytes\n",
                                count[0], desc, nbytes * count[0]);
+                free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     err =
@@ -167,6 +168,8 @@ int main(int argc, char *argv[])
                                     "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld, message iteration %d of %d\n",
                                     recv_desc, send_desc, count[0], nmsg, maxmsg);
                             fflush(stderr);
+                            free(recv_desc);
+                            free(send_desc);
                         }
                         errs++;
                     }

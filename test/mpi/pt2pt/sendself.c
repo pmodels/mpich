@@ -126,6 +126,8 @@ int main(int argc, char *argv[])
                         "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
                         recv_desc, send_desc, count[0]);
                 fflush(stderr);
+                free(recv_desc);
+                free(send_desc);
             }
             errs++;
         }
@@ -164,6 +166,8 @@ int main(int argc, char *argv[])
                         "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
                         recv_desc, send_desc, count[0]);
                 fflush(stderr);
+                free(recv_desc);
+                free(send_desc);
             }
             errs++;
         }
@@ -202,6 +206,8 @@ int main(int argc, char *argv[])
                         "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
                         recv_desc, send_desc, count[0]);
                 fflush(stderr);
+                free(recv_desc);
+                free(send_desc);
             }
             errs++;
         }
