@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
                         fprintf(stderr,
                                 "Data received with type %s does not match data sent\n", desc);
                         fflush(stderr);
+                        free(desc);
                     }
                 }
 

@@ -173,6 +173,8 @@ int main(int argc, char *argv[])
                                 "Data received with type %s does not match data sent with type %s\n",
                                 target_desc, orig_desc);
                         fflush(stderr);
+                        free(target_desc);
+                        free(orig_desc);
                     }
                 }
             } else {
