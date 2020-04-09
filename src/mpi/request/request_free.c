@@ -145,13 +145,6 @@ int MPI_Request_free(MPI_Request * request)
                 break;
             }
 
-        case MPIR_REQUEST_KIND__PROXY:
-            {
-                /* FIXME: MPII_SENDQ_FORGET? */
-                MPIR_Request_free(request_ptr->u.proxy.real_request);
-                break;
-            }
-
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno = MPIR_Grequest_free(request_ptr);

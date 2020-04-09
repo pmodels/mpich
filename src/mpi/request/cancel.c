@@ -45,12 +45,6 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
                 break;
             }
 
-        case MPIR_REQUEST_KIND__PROXY:
-            {
-                mpi_errno = MPID_Cancel_send(request_ptr->u.proxy.real_request);
-                MPIR_ERR_CHECK(mpi_errno);
-                break;
-            }
         case MPIR_REQUEST_KIND__PREQUEST_SEND:
             {
                 if (request_ptr->u.persist.real_request != NULL) {
