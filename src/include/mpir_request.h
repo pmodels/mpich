@@ -65,6 +65,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__PREQUEST_RECV,
     MPIR_REQUEST_KIND__GREQUEST,
     MPIR_REQUEST_KIND__COLL,
+    MPIR_REQUEST_KIND__PROXY,   /* for Ibsend */
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
     MPIR_REQUEST_KIND__RMA,
     MPIR_REQUEST_KIND__LAST
@@ -175,6 +176,9 @@ struct MPIR_Request {
         struct {
             struct MPIR_Grequest_fns *greq_fns;
         } ureq;                 /* kind : MPIR_REQUEST_KIND__GREQUEST */
+        struct {
+            MPIR_Request *real_request;
+        } proxy;
         struct {
             MPIR_Errflag_t errflag;
             MPII_Coll_req_t coll;
