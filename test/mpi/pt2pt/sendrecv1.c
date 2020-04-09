@@ -147,6 +147,8 @@ int main(int argc, char *argv[])
                         fprintf(stderr,
                                 "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld\n",
                                 recv_desc, send_desc, count[0]);
+                        free(recv_desc);
+                        free(send_desc);
                     }
                     errs++;
                 }
