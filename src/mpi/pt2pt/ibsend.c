@@ -32,20 +32,12 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PROXY, 0);
-    MPIR_ERR_CHKANDJUMP1(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "Ibsend request");
-
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr,
-                                 &req->u.proxy.real_request);
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Object_set_ref(req, 1);
-    req->cc_ptr = &req->cc;
     /* Ibsend is local-complete */
-    MPIR_cc_set(req->cc_ptr, 0);
-    req->comm = NULL;
-    MPIR_OBJ_PUBLISH_HANDLE(*request, req->handle);
+    MPIR_Request *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    *request = req->handle;
 
   fn_exit:
     return mpi_errno;
