@@ -111,15 +111,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 break;
             }
 
-        case MPIR_REQUEST_KIND__PROXY:
-            {
-                MPIR_Request *real_req = request_ptr->u.persist.real_request;
-                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(real_req->status));
-                mpi_errno = MPI_SUCCESS;
-                /* FIXME: MPII_SENDQ_FORGET? */
-                MPIR_Request_free(real_req);
-                break;
-            }
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno = MPIR_Grequest_query(request_ptr);
