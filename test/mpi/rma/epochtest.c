@@ -253,6 +253,8 @@ int main(int argc, char **argv)
                 }
             }
 
+            free(orig_desc);
+            free(target_desc);
             free(origbuf);
             DTP_obj_free(orig_obj);
             DTP_obj_free(target_obj);
