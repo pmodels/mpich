@@ -55,7 +55,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                                                    MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
                         mpi_errno = prequest_ptr->status.MPI_ERROR;
                     } else {
-                        /* This is needed for persistent Bsend requests */
                         mpi_errno = MPIR_Grequest_query(prequest_ptr);
                         MPIR_Status_set_cancel_bit(status,
                                                    MPIR_STATUS_GET_CANCEL_BIT

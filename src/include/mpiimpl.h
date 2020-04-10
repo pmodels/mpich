@@ -240,6 +240,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_func.h"
 #include "mpir_err.h"
 #include "mpir_nbc.h"
+#include "mpir_bsend.h"
 #include "mpir_process.h"
 #include "mpir_typerep.h"
 #include "mpir_datatype.h"

@@ -4875,13 +4875,21 @@ fi
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
 #define MPI_Datatype int
 typedef $MPI_AINT MPI_Aint;
+
+struct MPIR_Request;
+typedef struct MPIR_Request MPIR_Request;
+
+struct MPIR_Comm;
+typedef struct MPIR_Comm MPIR_Comm;
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
-#include "${master_top_srcdir}/src/include/mpii_bsend.h"]
+
+#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
