@@ -5,10 +5,6 @@
  */
 
 #include "mpidimpl.h"
-/* FIXME: This bsend header shouldn't be needed (the function prototype
-   should be in mpiimpl.h), to allow a devices MPID_Startall to use the
-   MPIR_Bsend_isend function */
-#include "../../../mpi/pt2pt/bsendutil.h"
 
 /* FIXME: Consider using function pointers for invoking persistent requests;
    if we made those part of the public request structure, the top-level routine
@@ -103,15 +99,16 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 
 	    case MPIDI_REQUEST_TYPE_BSEND:
 	    {
-		MPI_Request sreq_handle;
-
-                rc = MPIR_Ibsend_impl(preq->dev.user_buf, preq->dev.user_count,
+                rc = MPIR_Bsend_isend(preq->dev.user_buf, preq->dev.user_count,
                                       preq->dev.datatype, preq->dev.match.parts.rank,
                                       preq->dev.match.parts.tag, preq->comm,
-                                      &sreq_handle);
-                if (rc == MPI_SUCCESS)
-                {
-                    MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
+                                      &preq->u.persist.real_request);
+                if (rc == MPI_SUCCESS) {
+                    preq->status.MPI_ERROR = MPI_SUCCESS;
+                    preq->cc_ptr = &preq->cc;
+                    /* bsend is local-complete */
+                    MPIR_cc_set(preq->cc_ptr, 0);
+                    goto fn_exit;
                 }
 		break;
 	    }
@@ -146,6 +143,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	/* --END ERROR HANDLING-- */
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
 }
