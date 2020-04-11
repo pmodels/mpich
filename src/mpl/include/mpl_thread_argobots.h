@@ -25,6 +25,9 @@ typedef ABT_key MPL_thread_tls_key_t;
  *    Creation and misc
  * ======================================================================*/
 
+/* MPL_thread_init()/MPL_thread_finalize() can be called in a nested manner
+ * (e.g., MPI_T_init_thread() and MPI_Init_thread()), but Argobots internally
+ * maintains a counter so it is okay. */
 #define MPL_thread_init(err_ptr_)                                             \
     do {                                                                      \
         int err__;                                                            \

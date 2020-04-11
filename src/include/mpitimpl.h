@@ -1192,6 +1192,8 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
     do { \
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
+        MPID_Thread_init(&err_); \
+        MPIR_Assert(err_ == 0); \
         MPID_Thread_mutex_create(&mpi_t_mutex, &err_); \
         MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
@@ -1202,6 +1204,8 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
         MPID_Thread_mutex_destroy(&mpi_t_mutex, &err_); \
+        MPIR_Assert(err_ == 0); \
+        MPID_Thread_finalize(&err_); \
         MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
     } while (0)
