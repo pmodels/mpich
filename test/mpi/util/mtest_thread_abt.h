@@ -111,6 +111,14 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     return 0;
 }
 
+int MTest_thread_yield(void)
+{
+    int ret;
+    ret = ABT_thread_yield();
+    MTEST_ABT_ERROR(ret, "ABT_thread_yield");
+    return 0;
+}
+
 /* -------------------------------------------- */
 #define HAVE_MTEST_THREAD_BARRIER 1
 
