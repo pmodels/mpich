@@ -80,6 +80,11 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     return err;
 }
 
+int MTest_thread_yield(void)
+{
+    return 0;
+}
+
 /*----------------------------------------------------------------*/
 #if defined(HAVE_PTHREAD_BARRIER_INIT)
 

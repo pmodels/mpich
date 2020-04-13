@@ -41,6 +41,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
             wait = 0;
             for (i = 0; i < NUM_THREADS; i++)
                 wait += start_idup[i];
+            MTest_thread_yield();
         } while (wait > NUM_THREADS / 2);
     }
 
