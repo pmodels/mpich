@@ -90,3 +90,8 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     }
     return MTestReturnValue(errs);
 }
+
+int MTest_thread_yield(void)
+{
+    return 0;
+}

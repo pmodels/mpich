@@ -101,6 +101,10 @@ int main(int argc, char *argv[])
 #endif /* USE_THREADS */
 
 #ifdef USE_THREADS
+        /* Initialize the thread package. It should not be initialized via
+         * MTest_Init_thread since MTest_Finalize cannot be called. */
+        MTest_init_thread_pkg();
+
         /* We need different communicators per thread */
         for (i = 0; i < DEFAULT_TASK_WINDOW; i++)
             CHECK_SUCCESS(MPI_Comm_dup(MPI_COMM_WORLD, &th_comms[i]));
@@ -117,6 +121,9 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < DEFAULT_TASK_WINDOW; i++)
             CHECK_SUCCESS(MPI_Comm_free(&th_comms[i]));
+
+        /* Release the thread package. */
+        MTest_finalize_thread_pkg();
 #else
         /* Directly spawn a child process to perform each task */
         for (i = 0; i < tasks;) {
@@ -141,6 +148,8 @@ int main(int argc, char *argv[])
     }
 
   fn_exit:
+    /* Do not call MTest_Finalize (and thus MTest_Init) to avoid printing extra
+     * "No Errors" as many as spawned MPI processes. */
     MPI_Finalize();
 
     return 0;
