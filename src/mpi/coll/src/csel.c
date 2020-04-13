@@ -553,13 +553,19 @@ int MPIR_Csel_create_from_buf(const char *json,
                               void *(*create_container) (struct json_object *), void **csel_)
 {
     csel_s *csel = NULL;
+    struct json_object *tree;
 
     csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
     csel->type = CSEL_TYPE__ROOT;
-    csel->u.root.tree = parse_json_tree(json_tokener_parse(json), create_container);
+    tree = json_tokener_parse(json);
+    if (tree == NULL)
+        goto fn_exit;
+    csel->u.root.tree = parse_json_tree(tree, create_container);
 
     if (csel->u.root.tree)
         validate_tree(csel->u.root.tree);
+
+    json_object_put(tree);
 
   fn_exit:
     *csel_ = csel;
