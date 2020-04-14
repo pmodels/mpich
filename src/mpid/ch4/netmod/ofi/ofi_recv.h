@@ -170,9 +170,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         }
     }
 
-    if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz < MPIDI_OFI_global.max_msg_size &&
-            !force_gpu_pack) {
+    if (!dt_contig) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && !force_gpu_pack &&
+            ((data_sz < MPIDI_OFI_global.max_msg_size && !MPIDI_OFI_COMM(comm).enable_striping) ||
+             (data_sz < MPIDI_OFI_global.stripe_threshold &&
+              MPIDI_OFI_COMM(comm).enable_striping))) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
                                    context_id, addr, vni_src, vni_dst, rreq, dt_ptr, flags);
@@ -212,10 +214,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     /* Read ordering unnecessary for context_id, so use relaxed load */
     MPL_atomic_relaxed_store_int(&MPIDI_OFI_REQUEST(rreq, util_id), context_id);
 
-
-    if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size)) {
+    if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size) && !MPIDI_OFI_COMM(comm).enable_striping) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         data_sz = MPIDI_OFI_global.max_msg_size;
+    } else if (MPIDI_OFI_COMM(comm).enable_striping &&
+               (data_sz >= MPIDI_OFI_global.stripe_threshold)) {
+        MPIDI_OFI_huge_recv_t *huge_recv = (MPIDI_OFI_huge_recv_t *) rreq;
+        huge_recv->chunks_outstanding = 0;
+        MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
+        /* Receive has to be posted with size MPIDI_OFI_global.stripe_threshold to handle underflow */
+        data_sz = MPIDI_OFI_global.stripe_threshold;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
