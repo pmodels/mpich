@@ -231,7 +231,11 @@ static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
-    recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+    if (MPIDI_OFI_COMM(comm_ptr).enable_striping) {
+        recv_elem->cur_offset = MPIDI_OFI_STRIPE_CHUNK_SIZE;
+    } else {
+        recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+    }
     recv_elem->remote_info = *info;
     recv_elem->comm_ptr = comm_ptr;
     recv_elem->next = NULL;
