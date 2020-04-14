@@ -105,6 +105,7 @@ do_izem=yes
 do_ofi=yes
 do_ucx=yes
 do_json=yes
+do_yaksa=yes
 
 export do_build_configure
 
@@ -602,7 +603,7 @@ echo
 check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c modules/yaksa"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem
@@ -621,6 +622,10 @@ fi
 
 if [ "yes" = "$do_json" ] ; then
     check_submodule_presence "modules/json-c"
+fi
+
+if [ "yes" = "$do_yaksa" ] ; then
+    check_submodule_presence "modules/yaksa"
 fi
 
 ########################################################################
