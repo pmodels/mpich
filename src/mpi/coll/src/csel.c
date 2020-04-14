@@ -590,15 +590,10 @@ int MPIR_Csel_create_from_file(const char *json_file,
 
 static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
 {
+    /* Do not prune tree based on CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED, as during init
+     * MPIR_IS_THREADED is set to 0 temporarily, which results in having incorrect pruned tree */
     for (csel_node_s * node = root; node;) {
         switch (node->type) {
-            case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
-                if (MPIR_IS_THREADED == node->u.is_multi_threaded.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
             case CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTRA:
                 if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                     node = node->success;
