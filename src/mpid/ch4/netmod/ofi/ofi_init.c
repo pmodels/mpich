@@ -374,6 +374,26 @@ cvars:
         system up to the limit determined by MPIDI_MAX_NICS (in ofi_types.h).
 
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_STRIPING
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, this cvar enables striping of large messages across multiple NICs.
+
+    - name        : MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD
+      category    : CH4
+      type        : int
+      default     : 1048576
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Striping will happen for message sizes beyond this threshold.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -1299,6 +1319,7 @@ static int update_global_limits(struct fi_info *prov)
     } else {
         MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
     }
+    MPIDI_OFI_global.stripe_threshold = MPIR_CVAR_CH4_OFI_STRIPING_THRESHOLD;
     MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
     MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
     MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
