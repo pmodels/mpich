@@ -103,13 +103,16 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
             rfirst += actual_unpack_bytes;
 
+            /* everything that was packed from the source type must be
+             * unpacked; otherwise we will lose the remaining data in
+             * buf in the next iteration. */
+            MPIR_ERR_CHKANDJUMP(actual_pack_bytes != actual_unpack_bytes, mpi_errno,
+                                MPI_ERR_TYPE, "**dtypemismatch");
+
             if (rfirst == copy_sz) {
                 /* successful completion */
                 break;
             }
-
-            /* if the send side finished, but the recv side couldn't unpack it, there's a datatype mismatch */
-            MPIR_ERR_CHKANDJUMP(sfirst == copy_sz, mpi_errno, MPI_ERR_TYPE, "**dtypemismatch");
         }
     }
 
