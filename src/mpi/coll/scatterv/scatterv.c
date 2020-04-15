@@ -116,10 +116,7 @@ int MPIR_Scatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
