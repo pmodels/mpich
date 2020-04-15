@@ -273,6 +273,7 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
         p_settings->enable_atomics = 0;
     }
     UPDATE_SETTING_BY_CAP(fetch_atomic_iovecs, MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS);
+    UPDATE_SETTING_BY_CAP(enable_ofi_collective, MPIR_CVAR_CH4_OFI_ENABLE_OFI_COLLECTIVE);
     UPDATE_SETTING_BY_CAP(enable_data_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS);
     UPDATE_SETTING_BY_CAP(enable_control_auto_progress,
                           MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
@@ -344,6 +345,8 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
     CHECK_CAP(enable_atomics,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
 
+    CHECK_CAP(enable_ofi_collective, !(prov->caps & FI_COLLECTIVE));
+
     CHECK_CAP(enable_control_auto_progress,
               !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO));
 
@@ -410,5 +413,6 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
     if (MPIDI_OFI_global.settings.enable_triggered)
         MPIDI_OFI_global.settings.enable_data_auto_progress = 1;
 
-
+    MPIDI_OFI_global.settings.enable_ofi_collective =
+        MPIDI_OFI_global.settings.enable_ofi_collective && (prov->caps & FI_COLLECTIVE);
 }

@@ -133,6 +133,7 @@ enum {
     MPIDI_OFI_EVENT_ABORT,
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
+    MPIDI_OFI_EVENT_COLL,
     MPIDI_OFI_EVENT_AM_SEND,
     MPIDI_OFI_EVENT_AM_SEND_RDMA,
     MPIDI_OFI_EVENT_AM_SEND_PIPELINE,
@@ -276,6 +277,7 @@ typedef struct {
     struct fid_ep *tx;
     struct fid_ep *rx;
     struct fid_cq *cq;
+    struct fid_eq *eq;          /* for OFI collectives */
 } MPIDI_OFI_context_t;
 
 typedef union {
@@ -298,6 +300,7 @@ typedef struct {
     unsigned enable_triggered:1;
     unsigned enable_hmem:1;
     unsigned enable_mr_hmem:1;
+    unsigned enable_ofi_collective:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
     unsigned require_rdm:1;
@@ -404,6 +407,9 @@ typedef struct {
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_capabilities_t settings;
 #endif
+
+    /* switch-based collective */
+    int support_barrier;
 } MPIDI_OFI_global_t;
 
 typedef struct {
