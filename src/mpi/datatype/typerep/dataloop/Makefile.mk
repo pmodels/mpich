@@ -24,4 +24,5 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/datatype/typerep/dataloop
 
 noinst_HEADERS +=                                        \
     src/mpi/datatype/typerep/dataloop/typesize_support.h         \
-    src/mpi/datatype/typerep/dataloop/dataloop_internal.h
+    src/mpi/datatype/typerep/dataloop/dataloop_internal.h \
+    src/mpi/datatype/typerep/dataloop/veccpy.h
