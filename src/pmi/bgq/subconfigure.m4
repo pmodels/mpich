@@ -16,4 +16,7 @@ PAC_PREPEND_FLAG([-I${use_top_srcdir}/src/pmi/include], [CPPFLAGS])
 
 ])dnl end BODY macro
 
+m4_define([PAC_SRC_PMI_BGQ_SUBCFG_MODULE_LIST],
+[src_pmi_bgq])
+
 [#] end of __file__

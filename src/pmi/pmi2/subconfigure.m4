@@ -86,4 +86,10 @@ PAC_C_GNU_ATTRIBUTE
 
 ])dnl end BODY macro
 
+m4_include([src/pmi/pmi2/simple/subconfigure.m4])
+
+m4_define([PAC_SRC_PMI_PMI2_SUBCFG_MODULE_LIST],
+[src_pmi_pmi2,
+ PAC_SRC_PMI_PMI2_SIMPLE_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

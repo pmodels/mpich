@@ -22,4 +22,7 @@ PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
 
 ])dnl end BODY macro
 
+m4_define([PAC_SRC_PMI_CRAY_SUBCFG_MODULE_LIST],
+[src_pmi_cray])
+
 [#] end of __file__

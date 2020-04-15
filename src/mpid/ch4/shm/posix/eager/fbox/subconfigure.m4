@@ -16,4 +16,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH4_SHM_POSIX_EAGER_FBOX_SUBCFG_MODULE_LIST],
+[src_mpid_ch4_shm_posix_eager_fbox])
+
 [#] end of __file__

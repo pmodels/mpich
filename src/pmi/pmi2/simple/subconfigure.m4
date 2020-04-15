@@ -83,4 +83,7 @@ PAC_C_GNU_ATTRIBUTE
 
 ])dnl end BODY macro
 
+m4_define([PAC_SRC_PMI_PMI2_SIMPLE_SUBCFG_MODULE_LIST],
+[src_pmi_pmi2_simple])
+
 [#] end of __file__

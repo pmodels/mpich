@@ -63,4 +63,7 @@ AC_CONFIG_FILES([src/binding/fortran/use_mpi/mpif90model.h])
 ])dnl end AM_COND_IF(BUILD_FC_BINDING,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_BINDING_FORTRAN_USE_MPI_SUBCFG_MODULE_LIST],
+[src_binding_fortran_use_mpi])
+
 [#] end of __file__

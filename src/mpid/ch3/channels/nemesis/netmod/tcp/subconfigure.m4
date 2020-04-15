@@ -17,4 +17,7 @@ dnl AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:tcp])
 dnl ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_TCP,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH3_CHANNELS_NEMESIS_NETMOD_TCP_SUBCFG_MODULE_LIST],
+[src_mpid_ch3_channels_nemesis_netmod_tcp])
+
 [#] end of __file__

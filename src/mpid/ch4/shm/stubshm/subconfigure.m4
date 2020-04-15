@@ -16,4 +16,7 @@ AM_COND_IF([BUILD_SHM_STUBSHM],[
 ])dnl end AM_COND_IF(BUILD_SHM_STUBSHM,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH4_SHM_STUBSHM_SUBCFG_MODULE_LIST],
+[src_mpid_ch4_shm_stubshm])
+
 [#] end of __file__

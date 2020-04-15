@@ -112,4 +112,12 @@ AC_C_BIGENDIAN
 ])dnl end AM_COND_IF(BUILD_CH3,...)
 ])dnl end _BODY
 
+m4_include([src/mpid/ch3/util/subconfigure.m4])
+m4_include([src/mpid/ch3/channels/subconfigure.m4])
+
+m4_define([PAC_SRC_MPID_CH3_SUBCFG_MODULE_LIST],
+[src_mpid_ch3,
+ PAC_SRC_MPID_CH3_CHANNELS_SUBCFG_MODULE_LIST,
+ PAC_SRC_MPID_CH3_UTIL_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

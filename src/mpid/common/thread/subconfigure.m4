@@ -11,4 +11,8 @@ AM_COND_IF([BUILD_MPID_COMMON_THREAD],[
     :
 ])dnl end AM_COND_IF(BUILD_MPID_COMMON_THREAD,...)
 ])dnl end _BODY
+
+m4_define([PAC_SRC_MPID_COMMON_THREAD_SUBCFG_MODULE_LIST],
+[src_mpid_common_thread])
+
 [#] end of __file__

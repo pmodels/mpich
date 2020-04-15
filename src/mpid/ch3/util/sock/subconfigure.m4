@@ -89,4 +89,7 @@ pac_cv_have_struct_ifconf_without_posix=no)])
     ])dnl end AM_COND_IF(BUILD_CH3U_SOCK,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH3_UTIL_SOCK_SUBCFG_MODULE_LIST],
+[src_mpid_ch3_util_sock])
+
 [#] end of __file__

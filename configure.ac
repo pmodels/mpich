@@ -314,9 +314,10 @@ dnl include all subsystem m4 fragments now that the core autoconf functionality
 dnl has been setup.  No fragment should do anything except define
 dnl PAC_SUBCFG_{PREREQ,BODY} macros which will be expanded later as
 dnl appropriate
-# begin subsys includes
-m4_include([subsys_include.m4])
-# end subsys includes
+m4_include([src/subconfigure.m4])
+
+m4_define([PAC_SUBCFG_MODULE_LIST],
+m4_dquote(PAC_SRC_SUBCFG_MODULE_LIST))
 
 dnl ----------------------------------------------------------------------------
 dnl setup top-level argument handling

@@ -20,7 +20,6 @@ dist_noinst_SCRIPTS +=                \
     maint/findunusederrtxt            \
     maint/gcovmerge.in                \
     maint/getcoverage.in              \
-    maint/gen_subcfg_m4               \
     maint/extractcvars                   \
     maint/genstates.in                \
     maint/getcoverage.in              \

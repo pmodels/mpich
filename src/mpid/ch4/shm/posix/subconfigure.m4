@@ -119,4 +119,10 @@ AM_COND_IF([BUILD_SHM_POSIX],[
 ])dnl end AM_COND_IF(BUILD_SHM_POSIX,...)
 ])dnl end _BODY
 
+m4_include([src/mpid/ch4/shm/posix/eager/subconfigure.m4])
+
+m4_define([PAC_SRC_MPID_CH4_SHM_POSIX_SUBCFG_MODULE_LIST],
+[src_mpid_ch4_shm_posix,
+ PAC_SRC_MPID_CH4_SHM_POSIX_EAGER_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

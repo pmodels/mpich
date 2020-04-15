@@ -405,4 +405,12 @@ AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_co
 
 ])dnl end _BODY
 
+m4_include([src/mpid/ch4/netmod/subconfigure.m4])
+m4_include([src/mpid/ch4/shm/subconfigure.m4])
+
+m4_define([PAC_SRC_MPID_CH4_SUBCFG_MODULE_LIST],
+[src_mpid_ch4,
+ PAC_SRC_MPID_CH4_NETMOD_SUBCFG_MODULE_LIST,
+ PAC_SRC_MPID_CH4_SHM_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

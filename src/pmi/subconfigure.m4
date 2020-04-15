@@ -11,4 +11,19 @@ AC_ARG_ENABLE(pmiport,
                    for PMI services],,enable_pmiport=default)
 
 ])dnl end BODY macro
+
+m4_include([src/pmi/bgq/subconfigure.m4])
+m4_include([src/pmi/pmi2/subconfigure.m4])
+m4_include([src/pmi/slurm/subconfigure.m4])
+m4_include([src/pmi/cray/subconfigure.m4])
+m4_include([src/pmi/simple/subconfigure.m4])
+
+m4_define([PAC_SRC_PMI_SUBCFG_MODULE_LIST],
+[PAC_SRC_PMI_BGQ_SUBCFG_MODULE_LIST,
+ PAC_SRC_PMI_PMI2_SUBCFG_MODULE_LIST,
+ PAC_SRC_PMI_SLURM_SUBCFG_MODULE_LIST,
+ PAC_SRC_PMI_CRAY_SUBCFG_MODULE_LIST,
+ PAC_SRC_PMI_PMI2_SUBCFG_MODULE_LIST,
+ PAC_SRC_PMI_SIMPLE_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

@@ -283,4 +283,11 @@ src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c
 
 ])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
 ])dnl end _BODY
+
+m4_include([src/mpid/ch3/channels/nemesis/netmod/subconfigure.m4])
+
+m4_define([PAC_SRC_MPID_CH3_CHANNELS_NEMESIS_SUBCFG_MODULE_LIST],
+[src_mpid_ch3_channels_nemesis,
+ PAC_SRC_MPID_CH3_CHANNELS_NEMESIS_NETMOD_SUBCFG_MODULE_LIST])
+
 [#] end of __file__

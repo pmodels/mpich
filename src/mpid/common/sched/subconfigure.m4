@@ -18,4 +18,8 @@ dnl
 dnl ])dnl end AM_COND_IF(BUILD_MPID_COMMON_SCHED,...)
 ])dnl end _BODY
 dnl
+
+m4_define([PAC_SRC_MPID_COMMON_SCHED_SUBCFG_MODULE_LIST],
+[src_mpid_common_sched])
+
 [#] end of __file__

@@ -186,3 +186,6 @@ AC_DEFINE_UNQUOTED(USE_LOGGING,$use_logging_variable,[define to choose logging l
 # ----------------------------------------------------------------------------
 
 ])
+
+m4_define([PAC_SRC_UTIL_LOGGING_SUBCFG_MODULE_LIST],
+[src_util_logging])

@@ -32,4 +32,7 @@ AM_COND_IF([BUILD_SHM_XPMEM],[
 ])dnl end AM_COND_IF(BUILD_SHM_XPMEM,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH4_SHM_XPMEM_SUBCFG_MODULE_LIST],
+[src_mpid_ch4_shm_xpmem])
+
 [#] end of __file__

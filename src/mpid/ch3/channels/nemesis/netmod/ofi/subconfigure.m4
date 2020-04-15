@@ -23,4 +23,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_OFI],[
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_OFI,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH3_CHANNELS_NEMESIS_NETMOD_OFI_SUBCFG_MODULE_LIST],
+[src_mpid_ch3_channels_nemesis_netmod_ofi])
+
 [#] end of __file__

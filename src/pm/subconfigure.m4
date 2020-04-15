@@ -23,4 +23,14 @@ dnl AC_MSG_NOTICE([RUNNING CONFIGURE FOR PROCESS MANAGERS])
 
 ])dnl end _BODY
 
+m4_include([src/pm/remshell/subconfigure.m4])
+m4_include([src/pm/gforker/subconfigure.m4])
+m4_include([src/pm/util/subconfigure.m4])
+
+m4_define([PAC_SRC_PM_SUBCFG_MODULE_LIST],
+[src_pm,
+ src_pm_remshell,
+ src_pm_gforker,
+ src_pm_util])
+
 [#] end of __file__

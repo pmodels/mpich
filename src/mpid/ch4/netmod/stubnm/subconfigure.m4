@@ -18,4 +18,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_STUBNM],[
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_STUBNM,...)
 ])dnl end _BODY
 
+m4_define([PAC_SRC_MPID_CH4_NETMOD_STUBNM_SUBCFG_MODULE_LIST],
+[src_mpid_ch4_netmod_stubnm])
+
 [#] end of __file__

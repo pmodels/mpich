@@ -21,4 +21,7 @@ AC_CHECK_LIB([pmi], [PMI_Init],
 
 ])dnl end BODY macro
 
+m4_define([PAC_SRC_PMI_SLURM_SUBCFG_MODULE_LIST],
+[src_pmi_slurm])
+
 [#] end of __file__
