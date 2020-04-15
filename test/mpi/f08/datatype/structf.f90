@@ -1,18 +1,8 @@
 !
-!  (C) 2004 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
-! Thanks to
-! William R. Magro
-! for this test
-!
-! It has been modifiedly slightly to work with the automated MPI
-! tests.
-!  WDG.
-!
-! It was further modified to use MPI_Get_address instead of MPI_Address
-! for MPICH, and to fit in the MPICH test harness - WDG
-!
+
       program bustit
       use mpi_f08
       implicit none

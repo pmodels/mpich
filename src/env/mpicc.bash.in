@@ -1,9 +1,9 @@
 #! @BASH_SHELL@
-# 
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
-# mpicc
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Simple script to compile and/or link MPI programs.
 # This script knows the default flags and libraries, and can handle
 # alternative C compilers and the associated flags and libraries.

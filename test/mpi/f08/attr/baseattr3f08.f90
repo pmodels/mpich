@@ -1,9 +1,8 @@
-! -*- Mode: Fortran; -*-
 !
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
-! (C) 2012 by Argonne National Laboratory.
-!     See COPYRIGHT in top-level directory.
-!
+
 ! This is a MPI-2 version of baseattr2f90.f90 which uses COMM_GET_ATTR
 ! instead of ATTR_GET, using an address-sized integer instead of
 ! an INTEGER.

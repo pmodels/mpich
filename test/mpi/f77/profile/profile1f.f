@@ -1,8 +1,8 @@
-C -*- Mode: Fortran; -*-
 C
-C  (C) 2013 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
+
        program main
        include "mpif.h"
        integer ierr
@@ -60,7 +60,7 @@ C
        integer smsg(count)
        common /myinfo/ calls, amount, rcalls, ramount
        integer calls, amount, rcalls, ramount
-c
+C
        calls = calls + 1
        amount = amount + count
        call pmpi_send( smsg, count, dtype, dest, tag, comm, ierr )

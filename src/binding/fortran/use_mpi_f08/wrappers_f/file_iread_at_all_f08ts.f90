@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_File_iread_at_all_f08ts(fh, offset, buf, count, datatype, request, ierror)
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr

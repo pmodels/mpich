@@ -1,4 +1,8 @@
 #! @PERL@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 $debug   = 1;
 $verbose = 1;

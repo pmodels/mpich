@@ -1,8 +1,9 @@
-! This file created from test/mpi/f77/pt2pt/irsendf.f with f77tof90
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2012 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
+! This file created from test/mpi/f77/pt2pt/irsendf.f with f77tof90
 !
 ! This program is based on the allpair.f test from the MPICH-1 test
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from

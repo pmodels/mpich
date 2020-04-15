@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Type_create_hindexed_block_f08(count, blocklength, &
     array_of_displacements, oldtype, newtype, ierror)
     use, intrinsic :: iso_c_binding, only : c_int

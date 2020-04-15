@@ -1,15 +1,11 @@
-/* ---------------------------------------------------------------- */
-/* (C)Copyright IBM Corp.  2007, 2008                               */
-/* ---------------------------------------------------------------- */
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 /**
  * \file ad_bg_aggrs.c
  * \brief The externally used function from this file is is declared in ad_bg_aggrs.h
- */
-
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *   Copyright (C) 1997-2001 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
  */
 
 /*#define TRACE_ON */

@@ -1,13 +1,9 @@
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
- *
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
+/*
  *  This is a test case to make sure synchronization in unlock works correctly.
  *
  *  Essentially this program does the following:
@@ -20,7 +16,6 @@
  *
  *  This program is valid but if unlock_all does not implement the synchronization
  *  semantics correctly reusing the buffer would race with outstanding rgets.
- *
  */
 
 #include <stdio.h>

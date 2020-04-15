@@ -1,11 +1,9 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
- *
- * Note: This code originally appeared in ROMIO.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
+/* Note: This code originally appeared in ROMIO. */
 
 #include "mpiimpl.h"
 #include "dataloop_internal.h"

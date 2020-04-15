@@ -1,5 +1,4 @@
 #! @PERL@ -w
-# -*- Mode: perl; -*-
 #
 # Test the commands provided as part of MPICH
 #

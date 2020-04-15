@@ -1,4 +1,8 @@
-#!/bin/sh
+#! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 reldir="`dirname $0`"
 pgmdir=`(cd $reldir && pwd)`

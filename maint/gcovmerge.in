@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This script merges output from two files that should be applied to the
 # same source file.  This is needed for MPICH on systems that support
 # gcov but do not support weak symbols.  This script is invoked by 

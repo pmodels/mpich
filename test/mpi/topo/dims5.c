@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2015 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
@@ -22,9 +22,7 @@ typedef struct {
 
 /* MPI 3.1, page 293, line 31, output values of Dims_create are in
    non-increasing order */
-DimsTestVal_t tests[] = {
 #include "baddims.h"
-};
 
 /* Forward refs */
 void zeroDims(int, int[]);

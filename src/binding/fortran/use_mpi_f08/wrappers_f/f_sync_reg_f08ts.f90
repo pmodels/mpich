@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_F_sync_reg_f08ts(buf)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : MPIR_F_sync_reg_cdesc

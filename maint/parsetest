@@ -1,5 +1,9 @@
 #! /usr/bin/env perl
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 require "./maint/parse.sub";
 
 $debug = 1;

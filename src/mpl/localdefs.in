@@ -1,4 +1,4 @@
-#!/bin/sh
+#! /bin/sh
 # When configured within MPICH via PAC_CONFIG_SUBDIR, this file will be sourced
 # by the top-level configure.  This lets us propagate shell variable changes
 # back upstream.

@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Comm_get_info_f08(comm, info_used, ierror)
     use :: mpi_f08, only : MPI_Comm, MPI_Info
     use, intrinsic :: iso_c_binding, only : c_int

@@ -1,8 +1,7 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 ## TODO: need to write an automakefile that handles two primary cases:
 ## 1) that ROMIO is being embedded within the MPI library, as in MPICH or Open

@@ -1,9 +1,8 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2014 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
+
 if BUILD_NEMESIS_NETMOD_OFI
 
 mpi_core_sources +=                                 		\

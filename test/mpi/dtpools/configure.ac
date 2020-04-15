@@ -1,19 +1,16 @@
-#
-# (C) 2018 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 AC_PREREQ([2.63])
 AC_INIT([dtpools], [0.0], [discuss@mpich.org])
 AC_CONFIG_SRCDIR([include/dtpools.h])
 
 AC_CONFIG_HEADER(dtpoolsconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef DTPOOLSCONF_H_INCLUDED
 #define DTPOOLSCONF_H_INCLUDED

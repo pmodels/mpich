@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Get_accumulate_f08ts(origin_addr, origin_count, origin_datatype, result_addr, &
     result_count, result_datatype, target_rank, target_disp, &
     target_count, target_datatype, op, win, ierror)

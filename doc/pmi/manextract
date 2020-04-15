@@ -1,5 +1,9 @@
 #! /usr/bin/env perl
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This script extracts the text blocks from a source file and creates a
 # simple text block out of them.  
 # 
