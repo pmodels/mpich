@@ -120,6 +120,100 @@ static int update_nic_preferences(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_init(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int err;
+    struct fi_av_set_attr av_set_attr;
+    struct fid_av_set *av_set = NULL;
+    fi_addr_t comm_addr;
+    struct fid_mc *coll_mc;
+    int done;
+
+    MPIR_Assert(comm != NULL);
+
+    MPIDI_OFI_COMM(comm).offload_coll.coll_mc = NULL;
+    MPIDI_OFI_COMM(comm).offload_coll.av_set = NULL;
+
+    if (comm->local_size == 1 || comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE ||
+        comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        goto fn_exit;
+
+    if (comm == MPIR_Process.comm_world) {
+        av_set_attr.count = comm->local_size;
+        av_set_attr.start_addr = 0;
+        av_set_attr.end_addr = comm->local_size * MPIDI_OFI_global.num_nics - 1;
+        av_set_attr.stride = MPIDI_OFI_global.num_nics;
+        MPIDI_OFI_CALL(fi_av_set(MPIDI_OFI_global.ctx[0].av, &av_set_attr, &av_set, NULL),
+                       fi_av_set);
+    } else {
+        /* create an empty av_set first */
+        av_set_attr.count = 0;
+        av_set_attr.start_addr = FI_ADDR_NOTAVAIL;
+        av_set_attr.end_addr = FI_ADDR_NOTAVAIL;
+        av_set_attr.stride = 1;
+        MPIDI_OFI_CALL(fi_av_set(MPIDI_OFI_global.ctx[0].av, &av_set_attr, &av_set, NULL),
+                       fi_av_set);
+        /* add group members */
+        for (int i = 0; i < comm->local_size; i++) {
+            fi_addr_t addr = MPIDI_OFI_comm_to_phys(comm, i, 0, 0, 0);
+            fi_av_set_insert(av_set, addr);
+        }
+    }
+
+    /* return avset address for communication in the next step */
+    MPIDI_OFI_CALL(fi_av_set_addr(av_set, &comm_addr), fi_av_set_addr);
+
+    /* setup multicast group, calling allreduce internally */
+    MPIDI_OFI_CALL(fi_join_collective(MPIDI_OFI_global.ctx[0].ep, comm_addr,
+                                      av_set, 0, &coll_mc, &done), fi_join_collective);
+
+    /* wait for join to complete */
+    do {
+        uint32_t ev;
+        err = fi_eq_read(MPIDI_OFI_global.ctx[0].eq, &ev, NULL, 0, 0);
+        if (err >= 0) {
+            if (ev == FI_JOIN_COMPLETE) {
+                break;
+            }
+        } else if (err != -EAGAIN) {
+            MPIR_Assert(1);
+        }
+        MPID_Progress_test(NULL);
+    } while (err == -FI_EAGAIN);
+
+    MPIDI_OFI_COMM(comm).offload_coll.coll_mc = coll_mc;
+    MPIDI_OFI_COMM(comm).offload_coll.av_set = av_set;
+    MPIDI_OFI_COMM(comm).offload_coll.coll_addr = fi_mc_addr(coll_mc);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_free(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm->local_size == 1)
+        goto fn_exit;
+
+    if (MPIDI_OFI_COMM(comm).offload_coll.coll_mc) {
+        MPIDI_OFI_CALL(fi_close(&(MPIDI_OFI_COMM(comm).offload_coll.coll_mc->fid)), fi_close);
+        MPIDI_OFI_COMM(comm).offload_coll.coll_mc = NULL;
+    }
+    if (MPIDI_OFI_COMM(comm).offload_coll.av_set) {
+        MPIDI_OFI_CALL(fi_close(&(MPIDI_OFI_COMM(comm).offload_coll.av_set->fid)), fi_close);
+        MPIDI_OFI_COMM(comm).offload_coll.av_set = NULL;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -156,6 +250,12 @@ int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 
     mpi_errno = update_multi_nic_hints(comm);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE) {
+        mpi_errno = MPIDI_OFI_switch_coll_init(comm);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_EXIT;
@@ -262,6 +362,9 @@ int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
         (MPIDI_OFI_COMM(comm).enable_striping != 0 ? 1 : 0);
     MPIDI_OFI_global.num_comms_enabled_hashing -=
         (MPIDI_OFI_COMM(comm).enable_hashing != 0 ? 1 : 0);
+
+    if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+        MPIDI_OFI_switch_coll_free(comm);
 
     MPL_free(MPIDI_OFI_COMM(comm).pref_nic);
 
