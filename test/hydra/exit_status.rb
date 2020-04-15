@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#! /usr/bin/env ruby
 
 # This script tests that hydra gives the correct output and error codes when
 # child programs exit in various ways.  If hydra's output format ever changes

@@ -9,7 +9,7 @@
 ! Copyright (c) 2009-2012 Los Alamos National Security, LLC.
 !                         All rights reserved.
 !  (C) 2014 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+!      See COPYRIGHT in top-level directory
 !
 ! $COPYRIGHT$
 !

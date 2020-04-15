@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* This file is quickly becoming the single one, outside the ADIO
@@ -751,7 +750,3 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     *fstype = file_system;
     return;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

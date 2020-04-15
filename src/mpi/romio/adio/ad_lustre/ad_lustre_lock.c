@@ -1,6 +1,8 @@
 /*
- *  Copyright 2016 Cray Inc. All Rights Reserved.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "adio.h"
 
 #include "ad_lustre.h"

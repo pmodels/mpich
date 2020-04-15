@@ -1,3 +1,8 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 ALL: default
 
 # This is a special Makefile.in source for use by the test suite (see the

@@ -1,4 +1,8 @@
-# -*- Mode: shell-script -*-
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # build with
 # autoconf --localdir=../confdb configure.ac
 # (or wherever the confdb is)
@@ -49,8 +53,8 @@ fi
 
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 AH_TOP([/*
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef ROMIOCONF_H_INCLUDED
 #define ROMIOCONF_H_INCLUDED

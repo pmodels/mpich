@@ -1,5 +1,9 @@
-#!/usr/bin/env bash
-#
+#! /usr/bin/env bash
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Fetches MPICH dependencies, builds them from source, and installs them
 # in the path stored in the environment variable MPICH_DEPS_PATH.
 
@@ -9,7 +13,7 @@ AUTOCONF=autoconf-2.69
 AUTOMAKE=automake-1.15
 
 # Check that the environment variable is set:
-MPICH_DEPS_PREFIX=${MPICH_DEPS_PREFIX:?"bootstrap.sh installs MPICH dependencies \
+MPICH_DEPS_PREFIX=${MPICH_DEPS_PREFIX:?"bootstrap.bash installs MPICH dependencies \
 in the path stored in the environment variable MPICH_DEPS_PREFIX but this \
 variable is not set. Please set it to the path in which you want to install \
 MPICH dependencies and try again."}

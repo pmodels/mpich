@@ -1,6 +1,9 @@
 #! @PERL@
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # In Progress script to make the default log files more readable.
 # This indents the routine enter/exit lines, and applies that indent to
 # other lines.  It also simplifies the lines, removing all but the message

@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 module mpi_f08_link_constants
 use, intrinsic :: iso_c_binding, only: c_ptr, c_int, c_char, c_loc
 use :: mpi_f08_types, only : MPI_Status

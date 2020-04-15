@@ -1,8 +1,8 @@
 #! /bin/sh
-#
-# (C) 2013 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 ticks=`find test/mpi -name testlist | xargs grep xfail | \
     sed -e 's/.*xfail=ticket//g' -e 's/ .*//g' | sort -n | uniq`

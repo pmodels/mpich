@@ -1,4 +1,8 @@
-#!/bin/sh
+#! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # if you have bibtext2html installed (http://www.lri.fr/~filliatr/bibtex2html/
 # but I know there are other packages by that name), then you can re-generate

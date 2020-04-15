@@ -1,13 +1,11 @@
-! -*- Mode: Fortran; -*-
-!
-!
-!  (C) 2014 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
-!
+C
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
+C
 
-! This program tests MPI_Aint_add/diff in MPI-3.1.
-! The two functions are often used in RMA code.
-! See https://svn.mpi-forum.org/trac/mpi-forum-web/ticket/349
+C This program tests MPI_Aint_add/diff in MPI-3.1.
+C The two functions are often used in RMA code.
+C See https://svn.mpi-forum.org/trac/mpi-forum-web/ticket/349
 
       program main
       implicit none
@@ -34,7 +32,7 @@
         call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
       endif
 
-! Get the base address in the middle of the array
+C Get the base address in the middle of the array
       if (rank == 0) then
         target_rank = 1
         array(0) = 1234
@@ -45,7 +43,7 @@
         call MPI_Get_address(array(512), bases(1), ierr)
       endif
 
-! Exchange bases
+C Exchange bases
       call MPI_Type_size(MPI_INTEGER, intsize, ierr);
 
       call MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, bases,
@@ -57,7 +55,7 @@
       winsize = intsize*1024
       call MPI_Win_attach(win, array, winsize, ierr)
 
-! Do MPI_Aint addressing arithmetic
+C Do MPI_Aint addressing arithmetic
       if (rank == 0) then
         disp = intsize*511
         offset = MPI_Aint_add(bases(1), disp)
@@ -66,7 +64,7 @@
         offset = MPI_Aint_diff(bases(0), disp)
       endif
 
-! Get value and verify it
+C Get value and verify it
       call MPI_Win_fence(MPI_MODE_NOPRECEDE, win, ierr)
       call MPI_Get(val, 1, MPI_INTEGER, target_rank,
      &             offset, 1, MPI_INTEGER, win, ierr)

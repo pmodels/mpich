@@ -1,3 +1,8 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.67)
 dnl
@@ -19,10 +24,9 @@ AC_INIT([mpich-testsuite],
         [http://www.mpich.org/])
 
 AC_CONFIG_HEADER(include/mpitestconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef MPITESTCONF_H_INCLUDED
 #define MPITESTCONF_H_INCLUDED

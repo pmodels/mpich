@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Test_cancelled_f08(status, flag, ierror)
     use, intrinsic :: iso_c_binding, only : c_loc
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr

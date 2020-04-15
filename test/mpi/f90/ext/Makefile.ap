@@ -1,4 +1,7 @@
-## vim: set ft=automake :
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 BUILT_SOURCES = c2f902c.c ctypesfromc.c
 

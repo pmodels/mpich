@@ -1,8 +1,8 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2018 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AM_CPPFLAGS = $(MPI_H_INCLUDE)
 AM_CPPFLAGS += -DDTP_MPI_DATATYPE=@DTP_DATATYPES@   # Coma separated list of MPI datatypes
 

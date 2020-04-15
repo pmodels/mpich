@@ -1,7 +1,7 @@
 [#] start of __file__
-# 
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
+#
+# Copyright (C) by Argonne National Laboratory
+#     See COPYRIGHT in top-level directory
 #
 # This file contains versioning information for MPICH's configure process.
 # This was previously (as "maint/Version") a bit of shell code that was sourced

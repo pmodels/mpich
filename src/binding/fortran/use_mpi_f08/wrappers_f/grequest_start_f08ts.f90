@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Grequest_start_f08(query_fn, free_fn, cancel_fn, extra_state, request, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use, intrinsic :: iso_c_binding, only : c_funloc, c_funptr

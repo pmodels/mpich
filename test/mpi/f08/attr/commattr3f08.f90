@@ -1,8 +1,9 @@
-! This file created from test/mpi/f77/attr/commattr3f.f with f77tof90
-! -*- Mode: Fortran; -*-
 !
-!  (C) 2004 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
+! This file created from test/mpi/f77/attr/commattr3f.f with f77tof90
 !
 !  This tests the null copy function (returns flag false; thus the
 !  attribute should not be propagated to a dup'ed communicator

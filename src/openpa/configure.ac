@@ -1,8 +1,7 @@
-# -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
-#  
-#  (C) 2008 by Argonne National Laboratory.
-#      See COPYRIGHT in top-level directory.
-# 
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 AC_PREREQ(2.62)
 
@@ -46,10 +45,9 @@ AC_SUBST([CONFIG_STATUS_DEPENDENCIES],['$(top_srcdir)/VERSION'])
 # so we probably need to change its name to something that won't collide in the
 # global namespace. [goodell@ 2009-02-19]
 AC_CONFIG_HEADER([src/config.h])
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/*
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 ])
 AH_BOTTOM([])

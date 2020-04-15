@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 /* This is a dummy header file that is used to create the Fortran
    interfaces for the Type_create_f90_xxx files */
 /* Begin Prototypes */

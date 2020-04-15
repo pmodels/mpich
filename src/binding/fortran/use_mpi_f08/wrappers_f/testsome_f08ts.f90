@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Testsome_f08(incount, array_of_requests, outcount, &
     array_of_indices, array_of_statuses, ierror)
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
