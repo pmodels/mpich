@@ -503,15 +503,28 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_wait_fn(MPIR_Request * request_ptr
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return (request_ptr->u.ureq.greq_fns->wait_fn) (1,
-                                                    &request_ptr->u.ureq.greq_fns->
-                                                    grequest_extra_state, 0, status);
+    int mpi_errno;
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    mpi_errno = (request_ptr->u.ureq.greq_fns->wait_fn) (1,
+                                                         &request_ptr->u.ureq.greq_fns->
+                                                         grequest_extra_state, 0, status);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
-                                                    greq_fns->grequest_extra_state, status);
+    int mpi_errno;
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    mpi_errno =
+        (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.greq_fns->grequest_extra_state,
+                                                 status);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
+    return mpi_errno;
 }
 
 int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);
