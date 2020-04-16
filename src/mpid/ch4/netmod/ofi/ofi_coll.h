@@ -12,10 +12,16 @@
 #include "coll/ofi_bcast_tree_rma.h"
 #include "coll/ofi_bcast_tree_pipelined.h"
 #include "coll/ofi_bcast_tree_small_msg.h"
+#include "coll/ofi_bcast_switch_offload.h"
+#include "coll/ofi_ibcast_switch_offload.h"
+#include "coll/ofi_barrier_switch_offload.h"
+#include "coll/ofi_ibarrier_switch_offload.h"
 #include "coll/ofi_allreduce_tree_tagged.h"
 #include "coll/ofi_allreduce_tree_rma.h"
 #include "coll/ofi_allreduce_tree_pipelined.h"
 #include "coll/ofi_allreduce_tree_small_msg.h"
+#include "coll/ofi_allreduce_switch_offload.h"
+#include "coll/ofi_iallreduce_switch_offload.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -35,6 +41,7 @@ cvars:
         trigger_tree_rma            - Force triggered ops based RMA Tree
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
         trigger_tree_small_blocking - Force triggered ops based blocking small message algorithm
+        switch_offload              - Force switch-based bcast
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM
@@ -47,6 +54,7 @@ cvars:
       description : |-
         Variable to select algorithm for intra-node ibcast
         mpir                        - Fallback to MPIR collectives
+        switch_offload              - Force switch-based ibcast
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM
@@ -63,6 +71,7 @@ cvars:
         trigger_tree_rma            - Force triggered ops based RMA Tree
         trigger_tree_pipelined      - Force triggered ops based Pipelined Tree
         trigger_tree_small_message  - Force triggered ops based blocking small message algorithm
+        switch_offload              - Force switch-based allreduce
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM
@@ -75,6 +84,7 @@ cvars:
       description : |-
         Variable to select iallreduce algorithm
         mpir                        - Fallback to MPIR collectives
+        switch_offload              - Force switch-based iallreduce
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM
@@ -88,6 +98,7 @@ cvars:
       description : |-
         Variable to select algorithm for intra-node allreduce
         mpir                        - Fallback to MPIR collectives
+        switch_offload              - Force switch-based ibarrier
         auto - Internal algorithm selection (can be overridden with MPIR_CVAR_CH4_OFI_COLL_SELECTION_TUNING_JSON_FILE)
 
     - name        : MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM
@@ -179,6 +190,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
                                                            MPIR_CVAR_BARRIER_TREE_KVAL, errflag);
             MPL_free(recvbuf);
             break;
+
+        case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_switch_offload:
+            if (comm->local_size == 1)
+                break;
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_global.support_barrier,
+                                           mpi_errno,
+                                           "Barrier switch_offload cannot be applied.\n");
+            if (MPIDI_OFI_COMM(comm).offload_coll.av_set)
+                mpi_errno = MPIDI_OFI_Barrier_intra_switch_offloading(comm);
+            else
+                goto fallback;
+            break;
+
         case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
 
@@ -332,6 +356,42 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
                 MPIDI_OFI_Bcast_intra_triggered_small_msg(buffer, count, datatype, root, comm,
                                                           MPIR_CVAR_BCAST_TREE_KVAL);
             break;
+        case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_switch_offload:
+            {
+                int ret;
+                int do_offload = 1;
+                struct fi_collective_attr attr;
+
+                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+                    do_offload = 0;
+                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
+                    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
+                    break;
+                }
+                if (do_offload) {
+                    ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL, NULL);
+                    if (ret == -1)
+                        do_offload = 0;
+                }
+                if (do_offload) {
+                    attr.op = FI_NOOP;
+                    attr.datatype = fi_dt;
+                    attr.mode = 0;
+                    ret =
+                        fi_query_collective(MPIDI_OFI_global.ctx[0].domain, FI_BROADCAST, &attr, 0);
+                    if (ret != 0)
+                        do_offload = 0;
+                }
+                /* check message size constraint */
+                if (do_offload && count * type_size > 32)
+                    do_offload = 0;
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, do_offload,
+                                               mpi_errno,
+                                               "Bcast switch_offload cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_OFI_Bcast_intra_switch_offload(buffer, count, datatype, root, comm);
+                break;
+            }
         case MPIR_CVAR_BCAST_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
             break;
@@ -505,6 +565,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
                                                               comm, MPIR_CVAR_ALLREDUCE_TREE_KVAL,
                                                               errflag);
             break;
+        case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_switch_offload:
+            {
+                int do_offload = 1;
+
+                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+                    do_offload = 0;
+                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
+                    mpi_errno =
+                        MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+                    break;
+                }
+                if (do_offload) {
+                    int ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op);
+                    if (ret == -1)
+                        do_offload = 0;
+                }
+                if (do_offload) {
+                    int ret;
+                    struct fi_collective_attr attr;
+                    attr.op = fi_op;
+                    attr.datatype = fi_dt;
+                    attr.mode = 0;
+                    ret =
+                        fi_query_collective(MPIDI_OFI_global.ctx[0].domain, FI_ALLREDUCE, &attr, 0);
+                    if (ret != 0)
+                        do_offload = 0;
+                }
+                /* check message size constraint */
+                if (do_offload && count * type_size > 32)
+                    do_offload = 0;
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, do_offload,
+                                               mpi_errno,
+                                               "Allreduce switch_offload cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_OFI_Allreduce_intra_switch_offload(sendbuf, recvbuf, count, datatype,
+                                                             op, comm, errflag);
+                break;
+            }
         case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
         case MPIR_CVAR_ALLREDUCE_OFI_INTRA_ALGORITHM_auto:
@@ -1323,6 +1421,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_
     MPIR_FUNC_ENTER;
 
     switch (MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM_switch_offload:
+            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_global.support_barrier &&
+                                           MPIDI_OFI_COMM(comm).offload_coll.av_set,
+                                           mpi_errno,
+                                           "Ibarrier switch_offload cannot be applied.\n");
+            mpi_errno = MPIDI_OFI_Ibarrier_sched_intra_switch_offload(comm, sched);
+            break;
         case MPIR_CVAR_IBARRIER_OFI_INTRA_ALGORITHM_auto:
             mpi_errno = MPIDI_OFI_ibarrier_sched_json(comm, sched);
             break;
@@ -1396,6 +1501,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint co
     MPIR_FUNC_ENTER;
 
     switch (MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM_switch_offload:
+            {
+                int ret;
+                int do_offload = 1;
+                struct fi_collective_attr attr;
+
+                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+                    do_offload = 0;
+                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
+                    mpi_errno =
+                        MPIDI_OFI_ibcast_sched_json(buffer, count, datatype, root, comm, sched);
+                    break;
+                }
+                if (do_offload) {
+                    ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL, NULL);
+                    if (ret == -1)
+                        do_offload = 0;
+                }
+                if (do_offload) {
+                    attr.op = FI_NOOP;
+                    attr.datatype = fi_dt;
+                    attr.mode = 0;
+                    ret =
+                        fi_query_collective(MPIDI_OFI_global.ctx[0].domain, FI_BROADCAST, &attr, 0);
+                    if (ret != 0)
+                        do_offload = 0;
+                }
+                /* check message size constraint */
+                if (do_offload && count * type_size > 32)
+                    do_offload = 0;
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, do_offload,
+                                               mpi_errno,
+                                               "Ibcast switch_offload cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_OFI_Ibcast_sched_intra_switch_offload(buffer, count, datatype, root,
+                                                                comm, sched);
+                break;
+            }
         case MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM_auto:
             mpi_errno = MPIDI_OFI_ibcast_sched_json(buffer, count, datatype, root, comm, sched);
             break;
@@ -1486,10 +1629,50 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, 
                                                            MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum fi_datatype fi_dt;
+    enum fi_op fi_op;
 
     MPIR_FUNC_ENTER;
 
     switch (MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM_switch_offload:
+            {
+                int do_offload = 1;
+
+                if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
+                    do_offload = 0;
+                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
+                    mpi_errno = MPIDI_OFI_iallreduce_sched_json(sendbuf, recvbuf, count,
+                                                                datatype, op, comm, sched);
+                    break;
+                }
+                if (do_offload) {
+                    int ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op);
+                    if (ret == -1)
+                        do_offload = 0;
+                }
+                if (do_offload) {
+                    int ret;
+                    struct fi_collective_attr attr;
+                    attr.op = fi_op;
+                    attr.datatype = fi_dt;
+                    attr.mode = 0;
+                    ret =
+                        fi_query_collective(MPIDI_OFI_global.ctx[0].domain, FI_ALLREDUCE, &attr, 0);
+                    if (ret != 0)
+                        do_offload = 0;
+                }
+                /* check message size constraint */
+                if (do_offload && count * type_size > 32)
+                    do_offload = 0;
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, do_offload,
+                                               mpi_errno,
+                                               "Iallreduce switch_offload cannot be applied.\n");
+                mpi_errno =
+                    MPIDI_OFI_Iallreduce_sched_intra_switch_offload(sendbuf, recvbuf, count,
+                                                                    datatype, op, comm, sched);
+                break;
+            }
         case MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM_auto:
             mpi_errno =
                 MPIDI_OFI_iallreduce_sched_json(sendbuf, recvbuf, count, datatype, op, comm, sched);
