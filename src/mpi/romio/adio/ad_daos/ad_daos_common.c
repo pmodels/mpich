@@ -8,17 +8,16 @@
 
 int ADIOI_DAOS_Initialized = MPI_KEYVAL_INVALID;
 
-int ADIOI_DAOS_End(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
+static int ad_daos_end(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)
 {
     int error_code = MPI_SUCCESS;
-    static char myname[] = "ADIOI_DAOS_END";
     int rc;
 
     adio_daos_hash_finalize();
     rc = daos_fini();
 
     if (rc != 0) {
-        error_code = ADIOI_DAOS_err(myname, "DAOS Finalize Error", __LINE__, rc);
+        error_code = ADIOI_DAOS_err("ad_daos_end", "DAOS Finalize Error", __LINE__, rc);
         return error_code;
     }
 
@@ -52,36 +51,8 @@ void ADIOI_DAOS_Init(int *error_code)
     }
 
     /** attach to comm_self destroy to finalize DAOS */
-    MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_DAOS_End, &ADIOI_DAOS_Initialized, (void *) 0);
+    MPI_Keyval_create(MPI_NULL_COPY_FN, ad_daos_end, &ADIOI_DAOS_Initialized, (void *) 0);
     MPI_Attr_put(MPI_COMM_SELF, ADIOI_DAOS_Initialized, (void *) 0);
-}
-
-int ADIOI_DAOS_error_convert(int error)
-{
-    switch (error) {
-        case -DER_NO_PERM:
-            return MPI_ERR_ACCESS;
-        case -DER_ENOENT:
-        case -DER_NONEXIST:
-            return MPI_ERR_NO_SUCH_FILE;
-        case -DER_IO:
-            return MPI_ERR_IO;
-        case -DER_EXIST:
-            return MPI_ERR_FILE_EXISTS;
-        case -DER_NOTDIR:
-            return MPI_ERR_BAD_FILE;
-        case -DER_INVAL:
-        case -DER_STALE:
-            return MPI_ERR_FILE;
-        case -DER_NOSPACE:
-            return MPI_ERR_NO_SPACE;
-        case -DER_NOSYS:
-            return MPI_ERR_UNSUPPORTED_OPERATION;
-        case -DER_NOMEM:
-            return MPI_ERR_INTERN;
-        default:
-            return MPI_UNDEFINED;
-    }
 }
 
 int ADIOI_DAOS_err(const char *myname, const char *filename, int line, int rc)
