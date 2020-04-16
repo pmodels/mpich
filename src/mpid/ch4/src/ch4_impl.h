@@ -396,18 +396,50 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
  * ALLFUNC_MUTEX lock forever is to insert YIELD in each loop. We choose to
  * insert it here for simplicity, but this might not be the best place. One
  * needs to investigate the appropriate place to yield the lock. */
+/* NOTE: Taking off VCI lock is necessary to avoid recursive locking and allow
+ * more granular per-vci locks */
+/* TODO: MPIDI_global.vci_lock probably will be changed into granular generic lock
+ */
 
 #define MPIDIU_PROGRESS()                                   \
     do {                                                        \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
         mpi_errno = MPID_Progress_test();                       \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
         MPIR_ERR_CHECK(mpi_errno);  \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
+/* Optimized versions to avoid exessive locking/unlocking */
+/* FIXME: use inline function rather macros for cleaner semantics */
+
 #define MPIDIU_PROGRESS_WHILE(cond)         \
     do {                                        \
-        while (cond)                            \
-            MPIDIU_PROGRESS();              \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
+        while (cond) {                          \
+            mpi_errno = MPID_Progress_test();   \
+            if (mpi_errno) break;               \
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+        } \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
+        MPIR_ERR_CHECK(mpi_errno);              \
+    } while (0)
+
+/* This macro is refactored for original code that progress in a do-while loop
+ * NOTE: it's already inside the progress lock and it is calling progress again.
+ *       To avoid recursive locking, we yield the lock here.
+ * TODO: Can we consolidate with previous macro? Double check the reasoning.
+ */
+#define MPIDIU_PROGRESS_DO_WHILE(cond) \
+    do {                                        \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
+        do {                          \
+            mpi_errno = MPID_Progress_test();   \
+            if (mpi_errno) break;               \
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+        } while (cond); \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
+        MPIR_ERR_CHECK(mpi_errno);              \
     } while (0)
 
 #ifdef HAVE_ERROR_CHECKING
