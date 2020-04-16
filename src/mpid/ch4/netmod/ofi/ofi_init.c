@@ -725,6 +725,15 @@ static void *create_container(struct json_object *obj)
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_triggered_small_blocking;
             container->u.bcast.triggered_small_blocking.k = 2;
+        } else if (!strcmp(ckey, "algorithm=BCAST_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Bcast_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IBCAST_INTRA_tsp_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibcast_intra_switch_offload;
+        } else if (!strcmp(ckey, "algorithm=IALLREDUCE_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Iallreduce_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=ALLREDUCE_INTRA_triggered_tagged")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tagged;
@@ -744,20 +753,32 @@ static void *create_container(struct json_object *obj)
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_triggered_tree_small_message;
             container->u.allreduce.triggered_tree_small_message.k = 2;
+        } else if (!strcmp(ckey, "algorithm=ALLREDUCE_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Allreduce_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=BARRIER_INTRA_triggered_tagged")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_triggered_tagged;
             container->u.barrier.triggered_tagged.k = 2;
             container->u.barrier.triggered_tagged.tree_type = 0;
+        } else if (!strcmp(ckey, "algorithm=BARRIER_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Barrier_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=IBARRIER_INTRA_tsp_auto")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_sched_intra_tsp_auto;
+        } else if (!strcmp(ckey, "algorithm=IBARRIER_INTRA_switch_offload")) {
+            container->id =
+                MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibarrier_intra_switch_offload;
         } else if (!strcmp(ckey, "algorithm=IBCAST_INTRA_tsp_auto")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_sched_intra_tsp_auto;
         } else if (!strcmp(ckey, "algorithm=IALLREDUCE_INTRA_tsp_auto")) {
             container->id =
                 MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_sched_intra_tsp_auto;
+        } else {
+            fprintf(stderr, "unrecognized key %s\n", key);
+            MPIR_Assert(0);
         }
 
         MPL_free(ckey);

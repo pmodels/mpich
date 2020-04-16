@@ -1396,6 +1396,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ibarrier_sched_json(MPIR_Comm * comm, MPI
         goto fallback;
 
     switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibarrier_intra_switch_offload:
+            mpi_errno = MPIDI_OFI_Ibarrier_sched_intra_switch_offload(comm, sched);
+            break;
         case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibarrier_sched_intra_tsp_auto:
             goto fallback;
         default:
@@ -1473,6 +1476,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ibcast_sched_json(void *buffer, int count
 
     /* TODO: Container validation check and synchronization would come here. Synchronization is required for Triggered ops only */
     switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Ibcast_intra_switch_offload:
+            mpi_errno =
+                MPIDI_OFI_Ibcast_sched_intra_switch_offload(buffer, count, datatype, root,
+                                                            comm, sched);
+            break;
         case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_sched_intra_tsp_auto:
             goto fallback;
         default:
@@ -1601,6 +1609,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_iallreduce_sched_json(const void *sendbuf
         goto fallback;
 
     switch (cnt->id) {
+        case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_OFI_Iallreduce_intra_switch_offload:
+            mpi_errno =
+                MPIDI_OFI_Iallreduce_sched_intra_switch_offload(sendbuf, recvbuf, count,
+                                                                datatype, op, comm, sched);
+            break;
         case MPIDI_OFI_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iallreduce_sched_intra_tsp_auto:
             goto fallback;
         default:
