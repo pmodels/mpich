@@ -3,6 +3,7 @@ dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sock
 dnl MPICH_SUBCFG_BEFORE=src/mpid/ch3/util/sock
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
+[#] expansion is PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_CONDITIONAL([BUILD_CH3_SOCK],[test "X$device_name" = "Xch3" -a "X$channel_name" = "Xsock"])
     AM_COND_IF([BUILD_CH3_SOCK],[

@@ -1,6 +1,7 @@
 [#] start of __file__
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
+[#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_CONDITIONAL([BUILD_MPID_COMMON_SHM],[test "X$build_mpid_common_shm" = "Xyes"])
 ])

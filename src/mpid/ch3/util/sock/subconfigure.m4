@@ -1,6 +1,7 @@
 [#] start of __file__
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
+[#] expansion is PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     # channels (like ch3:sock) that want to use this package should set build_ch3u_sock=yes
     AM_CONDITIONAL([BUILD_CH3_UTIL_SOCK],[test "x$build_ch3u_sock" = "xyes"])

@@ -1,6 +1,7 @@
 [#] start of __file__
 dnl MPICH_SUBCFG_BEFORE=src/pm/util
 
+[#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
