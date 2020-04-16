@@ -25,7 +25,7 @@ int MPIR_Progress_hook_exec_all(int *made_progress)
         int is_active = MPL_atomic_acquire_load_int(&progress_hooks[i].active);
         if (is_active == TRUE) {
             MPIR_Assert(progress_hooks[i].func_ptr != NULL);
-            int tmp_progress;
+            int tmp_progress = 0;
             mpi_errno = progress_hooks[i].func_ptr(&tmp_progress);
             MPIR_ERR_CHECK(mpi_errno);
 
