@@ -151,9 +151,9 @@ M*/
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
             if (equal_ && mutex.count > 0) {                            \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield %p", &mutex); \
                 MPIDU_Thread_yield(&mutex, &err_);                          \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield %p", &mutex); \
                 MPIR_Assert(err_ == 0);                                 \
             }                                                           \
         }                                                               \
