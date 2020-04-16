@@ -233,8 +233,8 @@ MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq)
     } else {
         struct iovec *iov;
         MPI_Aint num_iov;
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                             MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
+        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
+                             0, data_sz, &num_iov);
         MPIR_Assert(num_iov > 0);
 
         iov = MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_OTHER);
