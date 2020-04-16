@@ -268,10 +268,8 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)            \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         MPL_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_, prio_);\
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
     } while (0)
 
 /*@
