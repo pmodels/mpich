@@ -8,7 +8,7 @@
 #include <dataloop.h>
 #include <stdlib.h>
 
-void MPIR_Typerep_create(MPI_Datatype type, void **typerep_p)
+void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
 {
     MPIR_Dataloop_create(type, typerep_p);
 }

@@ -8,7 +8,10 @@
 
 #include <mpi.h>
 
-void MPIR_Typerep_create(MPI_Datatype type, void **typerep_p);
+void MPIR_Typerep_init(void);
+void MPIR_Typerep_finalize(void);
+
+void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p);
 void MPIR_Typerep_free(void **typerep_p);
 void MPIR_Typerep_dup(void *old_typerep, void **new_typerep_p);
 
