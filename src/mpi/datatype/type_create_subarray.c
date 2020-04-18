@@ -296,6 +296,9 @@ int MPI_Type_create_subarray(int ndims,
                                            ints, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Typerep_create_subarray(ndims, array_of_sizes, array_of_subsizes,
+                                             array_of_starts, order, oldtype, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */

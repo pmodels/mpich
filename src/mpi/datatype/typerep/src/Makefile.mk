@@ -4,6 +4,7 @@
 ##
 
 mpi_core_sources += \
+    src/mpi/datatype/typerep/src/typerep_dataloop_create.c \
     src/mpi/datatype/typerep/src/typerep_dataloop_init.c \
     src/mpi/datatype/typerep/src/typerep_dataloop_flatten.c \
     src/mpi/datatype/typerep/src/typerep_dataloop_pack.c \

@@ -341,8 +341,3 @@ void MPIR_Typerep_free(void **typerep_p)
 {
     MPIR_Dataloop_free(typerep_p);
 }
-
-void MPIR_Typerep_dup(void *old_typerep, void **new_typerep_p)
-{
-    MPIR_Dataloop_dup(old_typerep, new_typerep_p);
-}

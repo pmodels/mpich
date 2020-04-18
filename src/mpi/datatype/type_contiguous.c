@@ -114,11 +114,17 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
             new_dtp->max_contig_blocks = count * old_dtp->max_contig_blocks;
     }
 
+    mpi_errno = MPIR_Typerep_create_contig(count, oldtype, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *newtype = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "contig type %x created.", new_dtp->handle);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)

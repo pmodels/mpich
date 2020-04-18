@@ -136,11 +136,24 @@ int MPIR_Type_vector(int count,
         new_dtp->is_contig = 0;
     }
 
+    if (strideinbytes) {
+        mpi_errno =
+            MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     *newtype = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "vector type %x created.", new_dtp->handle);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype,

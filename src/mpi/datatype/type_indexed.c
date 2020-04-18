@@ -203,8 +203,24 @@ int MPIR_Type_indexed(int count,
         MPL_free(blklens);
     }
 
+    if (dispinbytes) {
+        mpi_errno =
+            MPIR_Typerep_create_hindexed(count, blocklength_array, displacement_array, oldtype,
+                                         &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIR_Typerep_create_indexed(count, blocklength_array, displacement_array, oldtype,
+                                        &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     *newtype = new_dtp->handle;
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
