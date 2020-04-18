@@ -104,7 +104,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
+    MPIR_Typerep_iov_len(target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -271,7 +271,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
         goto fn_exit;
     }
 
-    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
+    MPIR_Typerep_iov_len(target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -421,7 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
+    MPIR_Typerep_iov_len(target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -617,7 +617,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    MPIR_Typerep_iov_len(NULL, target_count, target_datatype, 0, data_sz, &num_iov);
+    MPIR_Typerep_iov_len(target_count, target_datatype, 0, data_sz, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;

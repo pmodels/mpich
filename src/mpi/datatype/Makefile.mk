@@ -57,8 +57,7 @@ mpi_sources +=                                   \
 ## what's the scoop here with win_sources?
 ##    src/mpi/datatype/register_datarep.c
 
-noinst_HEADERS += src/mpi/datatype/datatype.h    \
-                  src/mpi/datatype/veccpy.h
+noinst_HEADERS += src/mpi/datatype/datatype.h
 
 mpi_core_sources +=                              \
     src/mpi/datatype/typeutil.c                  \
