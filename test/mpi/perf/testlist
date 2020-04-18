@@ -10,3 +10,6 @@ timer 1
 # The commcreatep test looks at how communicator creation scales with group
 # size.
 commcreatep 16
+# this may be too many processes for some systems, but the test needs a
+# large-ish number of processes to yield an effective performance check
+gtranksperf 20
