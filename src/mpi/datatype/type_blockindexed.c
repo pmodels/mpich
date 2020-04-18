@@ -157,6 +157,20 @@ int MPIR_Type_blockindexed(int count,
         }
     }
 
+    if (dispinbytes) {
+        mpi_errno = MPIR_Typerep_create_hindexed_block(count, blocklength, displacement_array,
+                                                       oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Typerep_create_indexed_block(count, blocklength, displacement_array,
+                                                      oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     *newtype = new_dtp->handle;
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

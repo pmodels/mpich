@@ -680,6 +680,11 @@ int MPI_Type_create_darray(int size,
         goto fn_fail;
     /* --END ERROR HANDLING-- */
 
+    mpi_errno = MPIR_Typerep_create_darray(size, rank, ndims, array_of_gsizes, array_of_distribs,
+                                           array_of_dargs, array_of_psizes, order, oldtype,
+                                           &datatype_ptr->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 

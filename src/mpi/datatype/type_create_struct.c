@@ -58,6 +58,10 @@ int MPIR_Type_create_struct_impl(int count,
                                            ints, array_of_displacements, array_of_types);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Typerep_create_struct(count, array_of_blocklengths, array_of_displacements,
+                                           array_of_types, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
   fn_exit:
