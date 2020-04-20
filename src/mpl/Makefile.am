@@ -21,6 +21,7 @@ strsep_LDADD = lib@MPLLIBNAME@.la
 mpl_headers =               \
     include/mpl.h           \
     include/mpl_atomic.h    \
+    include/mpl_ticket_lock.h \
     include/mpl_base.h      \
     include/mpl_math.h      \
     include/mplconfig.h     \

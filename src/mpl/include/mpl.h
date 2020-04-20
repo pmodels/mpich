@@ -13,6 +13,7 @@
 #include "mpl_argstr.h"
 #include "mpl_arg_serial.h"
 #include "mpl_atomic.h"
+#include "mpl_ticket_lock.h"
 #include "mpl_str.h"
 #include "mpl_trmem.h"
 #include "mpl_env.h"
