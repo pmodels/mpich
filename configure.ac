@@ -1032,6 +1032,11 @@ AC_SUBST([mpllib])
 if test "$with_mpl_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding MPL
     mpl_subdir_args="--disable-versioning --enable-embedded"
+    case $with_device in
+      ch4*)
+        mpl_subdir_args="$mpl_subdir_args --enable-ticketlock"
+        ;;
+    esac
     PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
