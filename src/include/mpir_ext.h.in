@@ -72,6 +72,9 @@ extern int MPIR_Ext_dbg_romio_verbose_enabled;
  * glue code that cannot be initialized statically */
 int MPIR_Ext_init(void);
 
+void MPIR_Ext_mutex_init(void);
+void MPIR_Ext_mutex_finalize(void);
+
 void MPIR_Ext_cs_enter(void);
 void MPIR_Ext_cs_exit(void);
 void MPIR_Ext_cs_yield(void);
