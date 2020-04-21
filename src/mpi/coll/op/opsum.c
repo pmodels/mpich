@@ -12,11 +12,14 @@
  */
 #define MPIR_LSUM(a,b) ((a)+(b))
 
+void real16_sum_(void *invec, void *inoutvec, int *Len);
+
 void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
 
     switch (*type) {
+/* *INDENT-OFF* */
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LSUM)
             /* no semicolons by necessity */
@@ -49,6 +52,10 @@ void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 #undef MPIR_OP_TYPE_MACRO
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
 #define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
+/* *INDENT-ON* */
+        case MPI_REAL16:
+            real16_sum_(invec, inoutvec, Len);
+            break;
         default:
             MPIR_Assert(0);
             break;
@@ -59,6 +66,7 @@ void MPIR_SUM(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 int MPIR_SUM_check_dtype(MPI_Datatype type)
 {
     switch (type) {
+/* *INDENT-OFF* */
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
             MPIR_OP_TYPE_GROUP(C_INTEGER)
@@ -71,8 +79,10 @@ int MPIR_SUM_check_dtype(MPI_Datatype type)
 
                 MPIR_OP_TYPE_GROUP(COMPLEX)
                 MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+                case (MPI_REAL16):
 #undef MPIR_OP_TYPE_MACRO
                 return MPI_SUCCESS;
+/* *INDENT-ON* */
             /* --BEGIN ERROR HANDLING-- */
         default:
             return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
