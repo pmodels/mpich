@@ -25,7 +25,8 @@ enum {
      * initialized.  Once it is initialized, it must always return
      * SUCCESS, so the upper layers do not need to check for the return
      * code.  */
-    MPL_ERR_TIMER_NOT_INITIALIZED
+    MPL_ERR_TIMER_NOT_INITIALIZED,
+    MPL_ERR_GPU_INTERNAL
 };
 
 #endif /* MPL_ERR_H_INCLUDED */
