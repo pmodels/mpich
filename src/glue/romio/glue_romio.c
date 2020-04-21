@@ -22,7 +22,7 @@ int MPIR_Ext_dbg_romio_verbose_enabled = 0;
 static MPL_thread_mutex_t romio_mutex;
 static MPL_atomic_int_t romio_mutex_initialized = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
-static void MPIR_Ext_romio_mutex_init(void)
+void MPIR_Ext_mutex_init(void)
 {
 #if defined(MPICH_IS_THREADED)
     if (!MPL_atomic_load_int(&romio_mutex_initialized)) {
@@ -35,7 +35,7 @@ static void MPIR_Ext_romio_mutex_init(void)
 #endif
 }
 
-static void MPIR_Ext_romio_mutex_finalize(void)
+void MPIR_Ext_mutex_finalize(void)
 {
 #if defined(MPICH_IS_THREADED)
     if (MPL_atomic_load_int(&romio_mutex_initialized)) {
@@ -85,7 +85,7 @@ void MPIR_Ext_cs_enter(void)
 #if defined(MPICH_IS_THREADED)
     if (MPIR_ThreadInfo.isThreaded) {
         /* lazily initialize the mutex */
-        MPIR_Ext_romio_mutex_init();
+        MPIR_Ext_mutex_init();
 
         int err;
         MPL_thread_mutex_lock(&romio_mutex, &err, MPL_THREAD_PRIO_HIGH);
