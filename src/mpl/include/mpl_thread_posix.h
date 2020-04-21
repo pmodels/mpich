@@ -9,13 +9,22 @@
 #ifndef MPL_THREAD_POSIX_H_INCLUDED
 #define MPL_THREAD_POSIX_H_INCLUDED
 
+#include "mpl_ticket_lock.h"
 #include "mpl.h"        /* for MPL_sched_yield */
 
 #include <errno.h>
 #include <pthread.h>
 
+#if defined(MPL_USE_TICKET_LOCK)
+typedef MPL_ticket_lock MPL_thread_mutex_t;
+typedef int MPL_thread_cond_t;
+#else
 typedef pthread_mutex_t MPL_thread_mutex_t;
 typedef pthread_cond_t MPL_thread_cond_t;
+#define MPLI_HAS_COND_T
+
+#endif /* mutex types */
+
 typedef pthread_t MPL_thread_id_t;
 typedef pthread_key_t MPL_thread_tls_key_t;
 
@@ -63,6 +72,37 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
  *    Mutexes
  */
 
+#if defined(MPL_USE_TICKET_LOCK)
+#define MPL_thread_mutex_create(mutex_ptr_, err_ptr_) \
+    do { \
+        MPL_ticket_lock_init(mutex_ptr_); \
+        *(int *)(err_ptr_) = 0; \
+    } while (0)
+
+#define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) \
+    do { \
+        *(int *)(err_ptr_) = 0; \
+    } while (0)
+
+#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_, prio_) \
+    do { \
+        MPL_ticket_lock_lock(mutex_ptr_); \
+        *(int *)(err_ptr_) = 0; \
+    } while (0)
+
+#define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_) \
+    do { \
+        MPL_ticket_lock_unlock(mutex_ptr_); \
+        *(int *)(err_ptr_) = 0; \
+    } while (0)
+
+#define MPL_thread_cond_create(cond_ptr_, err_ptr_)  assert(0)
+#define MPL_thread_cond_destroy(cond_ptr_, err_ptr_)  assert(0)
+#define MPL_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)  assert(0)
+#define MPL_thread_cond_broadcast(cond_ptr_, err_ptr_)  assert(0)
+#define MPL_thread_cond_signal(cond_ptr_, err_ptr_)  assert(0)
+
+#else
 /* FIXME: mutex creation and destruction should be implemented as routines
    because there is no reason to use macros (these are not on the performance
    critical path).  Making these macros requires that any code that might use
@@ -207,6 +247,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
+#endif /* mutex types */
 
 /*
  * Thread Local Storage

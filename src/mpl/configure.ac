@@ -679,6 +679,13 @@ AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name
 # check for compiler-support for thread-local storage (MPL_TLS)
 PAC_CC_CHECK_TLS
 
+AC_ARG_ENABLE([ticketlock],
+    [AS_HELP_STRING([--enable-ticketlock], [use ticket lock in stead of pthread_mutex_t])],
+    [if test $enableval = 'yes' ; then 
+        AC_DEFINE([USE_TICKET_LOCK], [1], [Define if ticket_lock will be used])
+     fi
+    ])
+
 #######################################################################
 ## END OF THREADS CODE
 #######################################################################
