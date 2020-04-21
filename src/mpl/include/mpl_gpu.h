@@ -8,7 +8,11 @@
 
 #include "mplconfig.h"
 
+#ifdef MPL_HAVE_CUDA
+#include "mpl_gpu_cuda.h"
+#else
 #include "mpl_gpu_fallback.h"
+#endif
 
 typedef enum {
     MPL_GPU_POINTER_UNREGISTERED_HOST = 0,
