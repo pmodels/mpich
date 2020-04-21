@@ -3,5 +3,8 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-lib@MPLLIBNAME@_la_SOURCES +=        \
-    src/gpu/mpl_gpu_fallback.c
+if MPL_HAVE_CUDA
+lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_cuda.c
+else
+lib@MPLLIBNAME@_la_SOURCES += src/gpu/mpl_gpu_fallback.c
+endif
