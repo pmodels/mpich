@@ -235,7 +235,18 @@ int MPII_Genutil_progress_hook(int *made_progress)
     int mpi_errno = MPI_SUCCESS;
     MPII_Coll_req_t *coll_req, *coll_req_tmp;
 
+    /* gentran progress may issue operations (e.g. MPIC_Isend) that will call into progress
+     * again (ref: MPIDI_OFI_retry_progress). Similar to MPIDU_Sched_progress, we should skip
+     * to avoid recursive entering.
+     */
+    static int in_genutil_progress = 0;
+
+    if (in_genutil_progress) {
+        return MPI_SUCCESS;
+    }
+
     MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    in_genutil_progress = 1;
 
     if (made_progress)
         *made_progress = FALSE;
@@ -266,6 +277,7 @@ int MPII_Genutil_progress_hook(int *made_progress)
     if (MPII_coll_queue.head == NULL)
         MPIR_Progress_hook_deactivate(MPII_Genutil_progress_hook_id);
 
+    in_genutil_progress = 0;
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 
     return mpi_errno;

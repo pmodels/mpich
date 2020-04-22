@@ -148,9 +148,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
                                                &all_local_completed);
     } while (all_local_completed != 1);
@@ -293,7 +291,7 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
         MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
     } else {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
+        mpi_errno = MPID_Progress_test();
         MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         *flag = 0;
     }
@@ -389,12 +387,8 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 #endif
 
     /* Ensure completion of AM operations */
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
-             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0);
+    MPIDIU_PROGRESS_DO_WHILE(MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+                             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0);
 
     if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
         target_ptr->sync.lock.locked = 0;
@@ -459,12 +453,8 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 #endif
 
     /* Ensure completion of AM operations */
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0 ||
-             MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0);
+    MPIDIU_PROGRESS_DO_WHILE(MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) != 0 ||
+                             MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0);
     MPIDIG_EPOCH_FENCE_EVENT(win, massert);
 
     /*
@@ -567,13 +557,8 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (target_ptr &&
-             (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
-              MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
+    MPIDIU_PROGRESS_DO_WHILE(target_ptr && (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+                                            MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
@@ -605,9 +590,7 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
     } while (all_local_completed != 1);
 
@@ -645,9 +628,7 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
     } while (all_remote_completed != 1);
 
@@ -718,11 +699,7 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
-        MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
-    } while (target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
+    MPIDIU_PROGRESS_DO_WHILE(target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
@@ -767,9 +744,7 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 
     /* Ensure completion of AM operations */
     do {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDIU_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
 
         /* FIXME: now we simply set per-target counters for lockall in case
          * user flushes per target, but this should be optimized. */
