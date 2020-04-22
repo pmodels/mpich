@@ -79,7 +79,7 @@ void MPLI_cleanup_tls(void *a);
 #define MPL_TLS_KEY_RETRIEVE(key, var, addr, err_ptr_)           \
     do {                                                                \
         addr = &(var);                                                  \
-        *((int *) err_ptr_) = MPL_THREAD_SUCCESS;                       \
+        *((int *) err_ptr_) = MPL_SUCCESS;                       \
     } while (0)
 #define MPL_TLS_KEY_DESTROY(...)
 

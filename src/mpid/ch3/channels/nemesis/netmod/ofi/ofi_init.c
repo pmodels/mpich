@@ -240,7 +240,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
         ret = MPL_str_get_binary_arg(bc, "OFI",
                                      (char *) &addrs[i * gl_data.bound_addrlen],
                                      gl_data.bound_addrlen, &len);
-        MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
+        MPIR_ERR_CHKANDJUMP((ret != MPL_SUCCESS && ret != MPL_ERR_STR_NOMEM) ||
                             (size_t) len != gl_data.bound_addrlen,
                             mpi_errno, MPI_ERR_OTHER, "**business_card");
     }

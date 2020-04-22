@@ -97,7 +97,7 @@ static int get_port_name_tag(int *port_name_tag)
 static int get_tag_from_port(const char *port_name, int *port_name_tag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPL_STR_SUCCESS;
+    int str_errno = MPL_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_TAG_FROM_PORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_TAG_FROM_PORT);
@@ -680,7 +680,7 @@ int MPIDI_OFI_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 int MPIDI_OFI_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPL_STR_SUCCESS;
+    int str_errno = MPL_SUCCESS;
     int port_name_tag = 0;
     int len = MPI_MAX_PORT_NAME;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_OPEN_PORT);

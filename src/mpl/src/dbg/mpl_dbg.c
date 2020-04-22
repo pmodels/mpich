@@ -126,7 +126,7 @@ static void set_fp(FILE * fp)
 
 int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char *fmat, ...)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     va_list list;
     char *str, stmp[MPL_DBG_MAXLINE];
     int i;
@@ -366,7 +366,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
             }
         }
     }
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /* could two different environment variables control the same thing?  sure they
@@ -430,7 +430,7 @@ static int dbg_process_env(void)
             which_rank = -1;
         }
     }
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 MPL_dbg_class MPL_DBG_ROUTINE_ENTER;
@@ -450,10 +450,10 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
     /* if the DBG_MSG system was already initialized, say by the
      * device, then return immediately */
     if (dbg_initialized != DBG_UNINIT)
-        return MPL_DBG_SUCCESS;
+        return MPL_SUCCESS;
 
     if (dbg_init_tls())
-        return MPL_DBG_ERR_OTHER;
+        return MPL_ERR_DBG_OTHER;
 
     /* Check to see if any debugging was selected.  The order of these
      * tests is important, as they allow general defaults to be set,
@@ -480,7 +480,7 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
 
     dbg_initialized = DBG_PREINIT;
 
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_dbg_init(int wnum, int wrank)
@@ -493,11 +493,11 @@ int MPL_dbg_init(int wnum, int wrank)
      * responsible for handling the file mode (e.g., reopen when the
      * rank become available) */
     if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR)
-        return MPL_DBG_SUCCESS;
+        return MPL_SUCCESS;
 
     if (dbg_initialized != DBG_PREINIT) {
         if (dbg_init_tls())
-            return MPL_DBG_ERR_OTHER;
+            return MPL_ERR_DBG_OTHER;
     }
 
     dbg_fp = get_fp();
@@ -538,7 +538,7 @@ int MPL_dbg_init(int wnum, int wrank)
     dbg_initialized = DBG_INITIALIZED;
 
   fn_exit:
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
   fn_fail:
     dbg_initialized = DBG_ERROR;
     goto fn_exit;
@@ -577,7 +577,7 @@ Environment variables\n\
  * for the log file */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
     char *basename;
@@ -608,7 +608,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -618,7 +618,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
  * for the log file */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
     char *basename;
@@ -650,7 +650,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -665,7 +665,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
 */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     char *cret;
 
     cret = tmpnam(temp_filename);
@@ -681,7 +681,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -806,7 +806,7 @@ static int dbg_get_filename(char *filename, int len)
  * calls. */
 static int dbg_openfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     if (!file_pattern || *file_pattern == 0 || strcmp(file_pattern, "-stdout-") == 0) {
         *dbg_fp = stdout;
     } else if (strcmp(file_pattern, "-stderr-") == 0) {
@@ -836,7 +836,7 @@ static int dbg_openfile(FILE ** dbg_fp)
     return mpl_errno;
   fn_fail:
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 

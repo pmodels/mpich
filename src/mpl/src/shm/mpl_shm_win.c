@@ -19,7 +19,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
                                                   void **shm_addr_ptr, int offset, int flag)
 {
     HANDLE lhnd = INVALID_HANDLE_VALUE;
-    int rc = MPL_SHM_SUCCESS;
+    int rc = MPL_SUCCESS;
     ULARGE_INTEGER seg_sz_large;
     seg_sz_large.QuadPart = seg_sz;
 
@@ -35,7 +35,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
                                  PAGE_READWRITE, seg_sz_large.HighPart, seg_sz_large.LowPart,
                                  MPLI_shm_ghnd_get_by_ref(hnd));
         if (lhnd == NULL) {
-            rc = MPL_SHM_EINTERN;
+            rc = MPL_ERR_SHM_INTERN;
             goto fn_exit;
         }
         MPLI_shm_lhnd_set(hnd, lhnd);
@@ -44,7 +44,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
             /* Strangely OpenFileMapping() returns NULL on error! */
             lhnd = OpenFileMapping(FILE_MAP_WRITE, FALSE, MPLI_shm_ghnd_get_by_ref(hnd));
             if (lhnd == NULL) {
-                rc = MPL_SHM_EINTERN;
+                rc = MPL_ERR_SHM_INTERN;
                 goto fn_exit;
             }
 
@@ -66,7 +66,7 @@ static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t se
             *shm_addr_ptr = MapViewOfFile(MPLI_shm_lhnd_get(hnd), FILE_MAP_WRITE, 0, offset, 0);
         }
         if (*shm_addr_ptr == NULL) {
-            rc = MPL_SHM_EINVAL;
+            rc = MPL_ERR_SHM_INVAL;
         }
     }
 
@@ -158,7 +158,7 @@ static inline int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, void **shm_addr_ptr, int
 
     /* If the function succeeds, the return value is nonzero,
      * otherwise the return value is zero. */
-    return (rc != 0) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN;
+    return (rc != 0) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN;
 }
 
 

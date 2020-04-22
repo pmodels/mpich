@@ -252,7 +252,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
     do {                                                        \
         *(value_ptr_) = pthread_getspecific(*(tls_ptr_));       \
                                                                 \
-        *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
+        *(int *)(err_ptr_) = MPL_SUCCESS;                \
     } while (0)
 
 #endif /* MPL_THREAD_POSIX_H_INCLUDED */

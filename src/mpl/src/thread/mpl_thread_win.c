@@ -38,7 +38,7 @@ DWORD WINAPI MPLI_thread_start(LPVOID arg);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp)
 {
     struct MPLI_thread_info *thread_info;
-    int err = MPL_THREAD_SUCCESS;
+    int err = MPL_SUCCESS;
 
     thread_info =
         (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
@@ -114,7 +114,7 @@ void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err)
         if (*mutex == NULL) {
             *err = GetLastError();
         } else {
-            *err = MPL_THREAD_SUCCESS;
+            *err = MPL_SUCCESS;
         }
     }
 }
@@ -126,7 +126,7 @@ void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err)
     result = CloseHandle(*mutex);
     if (err != NULL) {
         if (result) {
-            *err = MPL_THREAD_SUCCESS;
+            *err = MPL_SUCCESS;
         } else {
             *err = GetLastError();
         }
@@ -140,7 +140,7 @@ void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err, int prio __attr
     result = WaitForSingleObject(*mutex, INFINITE);
     if (err != NULL) {
         if (result == WAIT_OBJECT_0) {
-            *err = MPL_THREAD_SUCCESS;
+            *err = MPL_SUCCESS;
         } else {
             if (result == WAIT_FAILED) {
                 *err = GetLastError();
@@ -158,7 +158,7 @@ void MPL_thread_mutex_unlock(MPL_thread_mutex_t * mutex, int *err)
     result = ReleaseMutex(*mutex);
     if (err != NULL) {
         if (result) {
-            *err = MPL_THREAD_SUCCESS;
+            *err = MPL_SUCCESS;
         } else {
             *err = GetLastError();
         }
@@ -174,19 +174,19 @@ void MPL_thread_cond_create(MPL_thread_cond_t * cond, int *err)
 {
     /* Create a tls slot to store the events used to wakeup each thread in cond_bcast or cond_signal */
     MPL_thread_tls_create(NULL, &cond->tls, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     /* Create a mutex to protect the fifo queue.  This is required because the mutex passed in to the
      * cond functions need not be the same in each thread. */
     MPL_thread_mutex_create(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     cond->fifo_head = NULL;
     cond->fifo_tail = NULL;
     if (err != NULL) {
-        *err = MPL_THREAD_SUCCESS;
+        *err = MPL_SUCCESS;
     }
 }
 
@@ -200,14 +200,14 @@ void MPL_thread_cond_destroy(MPL_thread_cond_t * cond, int *err)
         MPL_free(iter);
     }
     MPL_thread_mutex_destroy(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     MPL_thread_tls_destroy(&cond->tls, err);
     /*
      * if (err != NULL)
      * {
-     * *err = MPL_THREAD_SUCCESS;
+     * *err = MPL_SUCCESS;
      * }
      */
 }
@@ -217,7 +217,7 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
     HANDLE event;
     DWORD result;
     MPL_thread_tls_get(&cond->tls, &event, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     if (event == NULL) {
@@ -229,12 +229,12 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
             return;
         }
         MPL_thread_tls_set(&cond->tls, event, err);
-        if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+        if (err != NULL && *err != MPL_SUCCESS) {
             return;
         }
     }
     MPL_thread_mutex_lock(&cond->fifo_mutex, err, MPL_THREAD_PRIO_HIGH);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     if (cond->fifo_tail == NULL) {
@@ -257,11 +257,11 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
     cond->fifo_tail->event = event;
     cond->fifo_tail->next = NULL;
     MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     MPL_thread_mutex_unlock(mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     result = WaitForSingleObject(event, INFINITE);
@@ -284,7 +284,7 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
     /*
      * if (err != NULL)
      * {
-     * *err = MPL_THREAD_SUCCESS;
+     * *err = MPL_SUCCESS;
      * }
      */
 }
@@ -293,14 +293,14 @@ void MPL_thread_cond_broadcast(MPL_thread_cond_t * cond, int *err)
 {
     MPLI_win_thread_cond_fifo_t *fifo, *temp;
     MPL_thread_mutex_lock(&cond->fifo_mutex, err, MPL_THREAD_PRIO_HIGH);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     /* remove the fifo queue from the cond variable */
     fifo = cond->fifo_head;
     cond->fifo_head = cond->fifo_tail = NULL;
     MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     /* signal each event in the fifo queue */
@@ -315,7 +315,7 @@ void MPL_thread_cond_broadcast(MPL_thread_cond_t * cond, int *err)
         MPL_free(temp);
     }
     if (err != NULL) {
-        *err = MPL_THREAD_SUCCESS;
+        *err = MPL_SUCCESS;
     }
 }
 
@@ -323,7 +323,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
 {
     MPLI_win_thread_cond_fifo_t *fifo;
     MPL_thread_mutex_lock(&cond->fifo_mutex, err, MPL_THREAD_PRIO_HIGH);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     fifo = cond->fifo_head;
@@ -333,7 +333,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
             cond->fifo_tail = NULL;
     }
     MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
+    if (err != NULL && *err != MPL_SUCCESS) {
         return;
     }
     if (fifo) {
@@ -345,7 +345,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
         MPL_free(fifo);
     }
     if (err != NULL) {
-        *err = MPL_THREAD_SUCCESS;
+        *err = MPL_SUCCESS;
     }
 }
 
