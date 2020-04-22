@@ -19,7 +19,7 @@ static inline void MPL_wtime(MPL_time_t * timeval)
 
     *timeval = t_val;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED */

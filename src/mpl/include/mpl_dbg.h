@@ -106,10 +106,6 @@
 #define MPL_DBG_OUT_FMT(_class,_fmtargs)
 #endif
 
-#define MPL_DBG_SUCCESS       0
-#define MPL_DBG_ERR_INTERN    1
-#define MPL_DBG_ERR_OTHER     2
-
 typedef unsigned int MPL_dbg_class;
 
 /* Special constants */

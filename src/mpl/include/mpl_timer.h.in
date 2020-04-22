@@ -38,13 +38,6 @@ int usleep(useconds_t usec);
 typedef @MPL_TIMER_TYPE@ MPL_time_t;
 /* *INDENT-ON* */
 
-/* The timer code is allowed to return "NOT_INITIALIZED" before it is
- * initialized.  Once it is initialized, it must always return
- * SUCCESS, so the upper layers do not need to check for the return
- * code.  */
-#define MPL_TIMER_SUCCESS                0
-#define MPL_TIMER_ERR_NOT_INITIALIZED    1
-
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__GETHRTIME
 #include "mpl_timer_gethrtime.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME

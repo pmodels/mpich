@@ -111,7 +111,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
   do                                                            \
     {                                                           \
       str_errno = FUNC;                                         \
-      MPIDI_OFI_ERR(str_errno!=MPL_STR_SUCCESS,        \
+      MPIDI_OFI_ERR(str_errno!=MPL_SUCCESS,        \
                             mpi_errno,                          \
                             MPI_ERR_OTHER,                      \
                             "**"#STR,                           \

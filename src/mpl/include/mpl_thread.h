@@ -58,11 +58,6 @@ typedef void (*MPL_thread_func_t) (void *data);
 
 #endif
 
-/* Error values */
-#define MPL_THREAD_SUCCESS 0
-#define MPL_THREAD_ERROR   1
-/* FIXME: Define other error codes.  For now, any non-zero value is an error. */
-
 #include "mpl_thread_priv.h"
 
 #endif /* MPL_THREAD_H_INCLUDED */

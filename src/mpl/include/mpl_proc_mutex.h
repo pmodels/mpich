@@ -20,11 +20,6 @@
 #define MPL_PROC_MUTEX_PACKAGE_NONE    1
 #define MPL_PROC_MUTEX_PACKAGE_POSIX   2
 
-/* Return values */
-#define MPL_PROC_MUTEX_SUCCESS 0
-#define MPL_PROC_MUTEX_EINTR   -1
-#define MPL_PROC_MUTEX_EINVAL  -2
-
 #if defined(MPL_PROC_MUTEX_PACKAGE_NAME) && (MPL_PROC_MUTEX_PACKAGE_NAME == MPL_PROC_MUTEX_PACKAGE_POSIX)
 #include "mpl_proc_mutex_posix.h"
 #elif defined(MPL_PROC_MUTEX_PACKAGE_NAME) && (MPL_PROC_MUTEX_PACKAGE_NAME == MPL_PROC_MUTEX_PACKAGE_NONE)
@@ -34,10 +29,10 @@ static inline int MPL_proc_mutex_enabled(void)
     return 0;   /* always disabled */
 }
 
-#define MPL_proc_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_lock(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_unlock(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_lock(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_unlock(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
 #else
 #error "proc package (MPL_PROC_MUTEX_PACKAGE_NAME) not defined or unknown"
 #endif

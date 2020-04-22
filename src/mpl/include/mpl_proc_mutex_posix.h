@@ -36,7 +36,7 @@ static inline int MPL_proc_mutex_enabled(void)
 #define PROC_MUTEX_EINTR_PRINT_BREAK(func_name, err__, err_ptr_) {           \
         MPL_internal_sys_error_printf(func_name, err__,                      \
                                       "    %s:%d\n", __FILE__, __LINE__);    \
-        *(int *)(err_ptr_) = MPL_PROC_MUTEX_EINTR;                           \
+        *(int *)(err_ptr_) = MPL_ERR_PROC_MUTEX_EINTR;                           \
         break; /* do not wrap by do-while (0) to break from caller's loop.*/  \
     }
 
@@ -53,7 +53,7 @@ static inline int MPL_proc_mutex_enabled(void)
     do {                                                                                    \
         int err__;                                                                          \
         pthread_mutexattr_t attr__;                                                         \
-        *(int *)(err_ptr_) = MPL_PROC_MUTEX_SUCCESS;                                        \
+        *(int *)(err_ptr_) = MPL_SUCCESS;                                        \
                                                                                             \
         err__ = pthread_mutexattr_init(&attr__);                                            \
         if (unlikely(err__))                                                                \
@@ -75,7 +75,7 @@ static inline int MPL_proc_mutex_enabled(void)
 #define MPL_proc_mutex_destroy(mutex_ptr_, err_ptr_)                                \
     do {                                                                            \
         int err__;                                                                  \
-        *(int *)(err_ptr_) = MPL_PROC_MUTEX_SUCCESS;                                \
+        *(int *)(err_ptr_) = MPL_SUCCESS;                                \
         err__ = pthread_mutex_destroy(mutex_ptr_);                                  \
         if (unlikely(err__))                                                        \
             PROC_MUTEX_EINTR_PRINT_BREAK("pthread_mutex_destroy", err__, err_ptr_); \
@@ -85,7 +85,7 @@ static inline int MPL_proc_mutex_enabled(void)
 #define MPL_proc_mutex_lock(mutex_ptr_, err_ptr_)                                 \
     do {                                                                          \
         int err__;                                                                \
-        *(int *)(err_ptr_) = MPL_PROC_MUTEX_SUCCESS;                              \
+        *(int *)(err_ptr_) = MPL_SUCCESS;                              \
         err__ = pthread_mutex_lock(mutex_ptr_);                                   \
         if (unlikely(err__))                                                      \
             PROC_MUTEX_EINTR_PRINT_BREAK("pthread_mutex_lock", err__, err_ptr_);  \
@@ -95,7 +95,7 @@ static inline int MPL_proc_mutex_enabled(void)
 #define MPL_proc_mutex_unlock(mutex_ptr_, err_ptr_)                                 \
     do {                                                                            \
         int err__;                                                                  \
-        *(int *)(err_ptr_) = MPL_PROC_MUTEX_SUCCESS;                                \
+        *(int *)(err_ptr_) = MPL_SUCCESS;                                \
         err__ = pthread_mutex_unlock(mutex_ptr_);                                   \
         if (unlikely(err__))                                                        \
             PROC_MUTEX_EINTR_PRINT_BREAK("pthread_mutex_unlock", err__, err_ptr_);  \
@@ -107,10 +107,10 @@ static inline int MPL_proc_mutex_enabled(void)
     return 0;   /* always disabled */
 }
 
-#define MPL_proc_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_lock(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
-#define MPL_proc_mutex_unlock(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_lock(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
+#define MPL_proc_mutex_unlock(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = MPL_ERR_PROC_MUTEX_EINVAL;}
 #endif /* MPL_HAVE_PTHREAD_MUTEXATTR_SETPSHARED */
 
 #endif /* MPL_PROC_MUTEX_POSIX_H_INCLUDED */
