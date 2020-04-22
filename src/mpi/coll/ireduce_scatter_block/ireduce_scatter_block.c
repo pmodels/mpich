@@ -487,6 +487,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IREDUCE_SCATTER_BLOCK);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

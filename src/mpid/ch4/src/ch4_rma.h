@@ -409,8 +409,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_safe(const void *origin_addr,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     mpi_errno = MPIDI_put_unsafe(origin_addr, origin_count, origin_datatype,
                                  target_rank, target_disp, target_count, target_datatype, win);
-    MPIR_ERR_CHECK(mpi_errno);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
@@ -444,8 +444,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_safe(void *origin_addr,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
     mpi_errno = MPIDI_get_unsafe(origin_addr, origin_count, origin_datatype,
                                  target_rank, target_disp, target_count, target_datatype, win);
-    MPIR_ERR_CHECK(mpi_errno);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPIR_ERR_CHECK(mpi_errno);
 #endif
 
   fn_exit:
