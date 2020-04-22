@@ -437,10 +437,10 @@ static int get_node_count(MPIR_Comm * comm, int *node_count)
         *node_count = comm->local_size;
         goto fn_exit;
     } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        *node_count = comm->local_size;
+        *node_count = 1;
         goto fn_exit;
     } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
-        *node_count = 1;
+        *node_count = comm->local_size;
         goto fn_exit;
     }
 
