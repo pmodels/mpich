@@ -163,6 +163,7 @@ int MPI_Finalize(void)
 
     MPII_hwtopo_finalize();
     MPII_nettopo_finalize();
+    yaksa_finalize();
 
     /* Users did not call MPI_T_init_thread(), so we free memories allocated to
      * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */

@@ -108,6 +108,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPII_init_binding_fortran();
     MPII_init_binding_cxx();
     MPII_init_binding_f08();
+    yaksa_init();
 
     mpi_errno = MPII_init_local_proc_attrs(&required);
     MPIR_ERR_CHECK(mpi_errno);
