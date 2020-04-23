@@ -1486,7 +1486,9 @@ static int ADIOI_GEN_iwc_wait_fn(int count, void **array_of_states,
 
             /* If the progress engine is blocked, we have to yield for another
              * thread to be able to unblock the progress engine. */
-            MPIR_Ext_cs_yield();
+            /* NOTE: we're outside a critical section (safety ensured by standard),
+             * we only need yield in case of user threads */
+            MPL_thread_yield();
         }
     }
 
