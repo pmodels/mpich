@@ -45,10 +45,9 @@ Output Parameters:
   or corrected in this code at this time.
 
 @*/
-int MPII_Dataloop_create_struct(MPI_Aint count,
+int MPIR_Dataloop_create_struct(MPI_Aint count,
                                 const int *blklens,
-                                const MPI_Aint * disps,
-                                const MPI_Datatype * oldtypes, MPII_Dataloop ** dlp_p)
+                                const MPI_Aint * disps, const MPI_Datatype * oldtypes, void **dlp_p)
 {
     int err, i, nr_basics = 0, nr_derived = 0, type_pos = 0;
 
@@ -56,7 +55,7 @@ int MPII_Dataloop_create_struct(MPI_Aint count,
 
     /* if count is zero, handle with contig code, call it a int */
     if (count == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
     }
 
@@ -105,7 +104,7 @@ int MPII_Dataloop_create_struct(MPI_Aint count,
      * treat it as a zero-element contiguous (just as count == 0).
      */
     if (nr_basics == 0 && nr_derived == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
     }
 
@@ -121,9 +120,9 @@ int MPII_Dataloop_create_struct(MPI_Aint count,
      */
     if (nr_basics + nr_derived == 1) {
         /* type_pos is index to only real type in array */
-        err = MPII_Dataloop_create_blockindexed(1,      /* count */
+        err = MPIR_Dataloop_create_blockindexed(1,      /* count */
                                                 blklens[type_pos], &disps[type_pos], 1, /* displacement in bytes */
-                                                oldtypes[type_pos], dlp_p);
+                                                oldtypes[type_pos], (void **) dlp_p);
 
         return err;
     }
@@ -141,7 +140,8 @@ int MPII_Dataloop_create_struct(MPI_Aint count,
      */
     if (((nr_derived == 0) && (first_basic != MPI_DATATYPE_NULL)) ||
         ((nr_basics == 0) && (first_derived != MPI_DATATYPE_NULL))) {
-        return create_unique_type_struct(count, blklens, disps, oldtypes, type_pos, dlp_p);
+        return create_unique_type_struct(count, blklens, disps, oldtypes, type_pos,
+                                         (MPII_Dataloop **) dlp_p);
     }
 
     /* optimization:
@@ -150,14 +150,15 @@ int MPII_Dataloop_create_struct(MPI_Aint count,
      * everything to bytes and use an indexed type.
      */
     if (nr_derived == 0) {
-        return create_basic_all_bytes_struct(count, blklens, disps, oldtypes, dlp_p);
+        return create_basic_all_bytes_struct(count, blklens, disps, oldtypes,
+                                             (MPII_Dataloop **) dlp_p);
     }
 
     /* optimization:
      * flatten the type and store it as an indexed type so that
      * there are no branches in the dataloop tree.
      */
-    return create_flattened_struct(count, blklens, disps, oldtypes, dlp_p);
+    return create_flattened_struct(count, blklens, disps, oldtypes, (MPII_Dataloop **) dlp_p);
 }
 
 /* --BEGIN ERROR HANDLING-- */
@@ -208,8 +209,8 @@ static int create_unique_type_struct(MPI_Aint count,
         }
     }
 
-    err = MPII_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
-                                       oldtypes[type_pos], dlp_p);
+    err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+                                       oldtypes[type_pos], (void **) dlp_p);
 
     MPL_free(tmp_blklens);
     MPL_free(tmp_disps);
@@ -255,8 +256,8 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
             cur_pos++;
         }
     }
-    err = MPII_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
-                                       MPI_BYTE, dlp_p);
+    err = MPIR_Dataloop_create_indexed(cur_pos, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+                                       MPI_BYTE, (void **) dlp_p);
 
     MPL_free(tmp_blklens);
     MPL_free(tmp_disps);
@@ -321,7 +322,7 @@ static int create_flattened_struct(MPI_Aint count,
      * do: store a simple contig of zero ints and call it done.
      */
     if (nr_blks == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
 
     }
@@ -391,8 +392,8 @@ static int create_flattened_struct(MPI_Aint count,
     }
 #endif
 
-    err = MPII_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
-                                       MPI_BYTE, dlp_p);
+    err = MPIR_Dataloop_create_indexed(nr_blks, tmp_blklens, tmp_disps, 1,      /* disp in bytes */
+                                       MPI_BYTE, (void **) dlp_p);
 
     MPL_free(tmp_blklens);
     MPL_free(tmp_disps);

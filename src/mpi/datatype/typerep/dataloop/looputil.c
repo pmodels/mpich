@@ -250,7 +250,7 @@ static inline void segment_init(const void *buf,
         depth = 1;
     } else if (count == 1) {
         /* don't use the builtin */
-        MPII_DATALOOP_GET_LOOPPTR(handle, dlp);
+        MPIR_DATALOOP_GET_LOOPPTR(handle, dlp);
     } else {
         /* default: need to use builtin to handle contig; must check
          * loop depth first
@@ -259,7 +259,7 @@ static inline void segment_init(const void *buf,
         MPI_Aint type_size, type_extent;
         MPI_Datatype el_type;
 
-        MPII_DATALOOP_GET_LOOPPTR(handle, oldloop);
+        MPIR_DATALOOP_GET_LOOPPTR(handle, oldloop);
         MPIR_Assert(oldloop != NULL);
         MPIR_Datatype_get_size_macro(handle, type_size);
         MPIR_Datatype_get_extent_macro(handle, type_extent);
