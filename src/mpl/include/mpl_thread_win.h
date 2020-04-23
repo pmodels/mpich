@@ -66,7 +66,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
                 *(int *)(err_ptr_) = GetLastError();                    \
             }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
+                *(int *)(err_ptr_) = MPL_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)
@@ -77,7 +77,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
         result__ = TlsFree(*(tls_ptr_));                        \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
+                *(int *)(err_ptr_) = MPL_SUCCESS;        \
             }                                                   \
             else {                                              \
                 *(int *)(err_ptr_) = GetLastError();            \
@@ -91,7 +91,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
         result__ = TlsSetValue(*(tls_ptr_), (value_));          \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
+                *(int *)(err_ptr_) = MPL_SUCCESS;        \
             }                                                   \
             else {                                              \
                 *(int *)(err_ptr_) = GetLastError();            \
@@ -107,7 +107,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
                 *(int *)(err_ptr_) = GetLastError();                    \
             }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
+                *(int *)(err_ptr_) = MPL_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)

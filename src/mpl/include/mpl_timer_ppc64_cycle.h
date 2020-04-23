@@ -32,7 +32,7 @@ static inline uint64_t tb()
 static inline int MPL_wtime(MPL_time_t * timeval)
 {
     *timeval = tb();
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_TIMER_PPC64_CYCLE_H_INCLUDED */

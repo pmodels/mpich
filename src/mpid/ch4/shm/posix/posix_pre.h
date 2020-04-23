@@ -144,33 +144,33 @@ typedef struct {
  * Called by both POSIX RMA and fallback AM handlers through CS hooks.
  */
 #define MPIDI_POSIX_RMA_MUTEX_INIT(mutex_ptr) do {                                  \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_create(mutex_ptr, &pt_err);                                      \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_create");            \
 } while (0);
 
 #define MPIDI_POSIX_RMA_MUTEX_DESTROY(mutex_ptr)  do {                              \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_destroy(mutex_ptr, &pt_err);                                     \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_destroy");           \
 } while (0);
 
 #define MPIDI_POSIX_RMA_MUTEX_LOCK(mutex_ptr) do {                                  \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_lock(mutex_ptr, &pt_err);                                        \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_lock");              \
 } while (0)
 
 #define MPIDI_POSIX_RMA_MUTEX_UNLOCK(mutex_ptr) do {                                \
-        int pt_err = MPL_PROC_MUTEX_SUCCESS;                                        \
+        int pt_err = MPL_SUCCESS;                                        \
         MPL_proc_mutex_unlock(mutex_ptr, &pt_err);                                  \
-        MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,           \
+        MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,           \
                              MPI_ERR_OTHER, "**windows_mutex",                      \
                              "**windows_mutex %s", "MPL_proc_mutex_unlock");        \
 } while (0)
