@@ -118,7 +118,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
     MPIDI_VC_Init(vc, NULL, 0);
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPL_SUCCESS && ret != MPL_ERR_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
 
@@ -413,7 +413,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 
     MPIDI_CH3I_NM_OFI_RC(vc->pg->getConnInfo(vc->pg_rank, bc, MPIDI_OFI_KVSAPPSTRLEN, vc->pg));
     ret = MPL_str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPL_SUCCESS && ret != MPL_ERR_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(vc)->direct_addr), 0ULL, NULL), avmap);
@@ -539,7 +539,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     }
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag));
     ret = MPL_str_get_binary_arg(business_card, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPL_SUCCESS && ret != MPL_ERR_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**business_card");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(new_vc)->direct_addr), 0ULL, NULL), avmap);
@@ -591,14 +591,14 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
                                    char **bc_val_p, int *val_max_sz_p)
 {
-    int mpi_errno = MPI_SUCCESS, str_errno = MPL_STR_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, str_errno = MPL_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_GET_BUSINESS_CARD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_GET_BUSINESS_CARD);
     str_errno = MPL_str_add_binary_arg(bc_val_p,
                                        val_max_sz_p,
                                        "OFI", (char *) &gl_data.bound_addr, gl_data.bound_addrlen);
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
   fn_exit:

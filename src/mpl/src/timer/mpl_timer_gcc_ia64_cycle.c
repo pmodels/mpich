@@ -18,7 +18,7 @@ int MPL_wtick(double *wtick)
 {
     *wtick = seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_init(void)
@@ -44,7 +44,7 @@ int MPL_wtime_init(void)
     is_initialized = 1;
 
   fn_exit:
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /* Time stamps created by a macro */
@@ -52,7 +52,7 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = (double) (*t2 - *t1) * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
@@ -62,7 +62,7 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
      * counters into test programs */
     *val = (unsigned int) *t;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
@@ -72,14 +72,14 @@ int MPL_wtime_todouble(MPL_time_t * t, double *val)
      * counters into test programs */
     *val = (double) *t * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += (*t2 - *t1);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif

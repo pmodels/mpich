@@ -942,6 +942,20 @@ AC_SUBST(libmpl_so_versionflags)
 
 #######################################################################
 
+#######################################################################
+## START OF GPU CODE
+#######################################################################
+
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([MPL_HAVE_CUDA],[1],[Define if CUDA is available])
+fi
+AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+
+#######################################################################
+## END OF GPU CODE
+#######################################################################
 
 # Check for strdup
 AC_CHECK_FUNCS(strdup)
