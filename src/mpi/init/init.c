@@ -135,6 +135,9 @@ int MPI_Init(int *argc, char ***argv)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    mpi_errno = MPL_gpu_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* ... end of body of routine ... */
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);
     return mpi_errno;
