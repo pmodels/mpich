@@ -55,11 +55,8 @@ nodist_writeshf90_SOURCES      = writeshf90.f90
 nodist_iwriteatallf90_SOURCES  = iwriteatallf90.f90
 
 c2f90multio_SOURCES     = c2f90multio.c
-# this is a C only program, so we must either:
-# A) prevent the makefile-wide "LDADD=mtestf90.o" from affecting this program, or
-# B) link with the fortran compiler, otherwise we'll get link failures from
-# compilers with runtime support libs, such as PGI
-c2f90multio_LDADD = $(top_builddir)/util/mtest.o
+# this is a C only program, so we include mtest_c_objects
+c2f90multio_LDADD = $(mtest_c_objects)
 
 c2f2ciof90_SOURCES = c2f2ciof90.f90 c2f902cio.c
 
