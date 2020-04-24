@@ -40,4 +40,7 @@ int MPL_gpu_unregister_host(const void *ptr);
 int MPL_gpu_malloc(void **ptr, size_t size, int devid);
 int MPL_gpu_free(void *ptr);
 
+int MPL_gpu_init();
+int MPL_gpu_finalize();
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */
