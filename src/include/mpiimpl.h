@@ -140,7 +140,6 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #define MPL_VG_ENABLED 1
 #endif
 
-#include "yaksa.h"
 #include "mpl.h"
 #include "opa_primitives.h"
 #include "mpi.h"
