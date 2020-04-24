@@ -29,3 +29,15 @@ int MPL_gpu_ipc_close_mem_handle(void *ptr)
     abort();
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_malloc(void **ptr, size_t size)
+{
+    abort();
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free(void *ptr)
+{
+    abort();
+    return MPL_ERR_GPU_INTERNAL;
+}

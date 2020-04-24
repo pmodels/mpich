@@ -74,3 +74,27 @@ int MPL_gpu_ipc_close_mem_handle(void *ptr)
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_malloc(void **ptr, size_t size)
+{
+    cudaError_t ret;
+    ret = cudaMalloc(ptr, size);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free(void *ptr)
+{
+    cudaError_t ret;
+    ret = cudaFree(ptr);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
