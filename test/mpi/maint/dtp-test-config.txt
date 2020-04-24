@@ -24,6 +24,7 @@ coll/bcast_comm_world_only::262144:timeLimit=360 mem=1.9:10:16:
 cxx/attr/fkeyvaltypex::1::1:1024:
 cxx/datatype/packsizex::1::1:1024:
 pt2pt/pingping::1 512 262144 17 1018 65530::2:8:32
+pt2pt/pingping_barrier::1::2:8:32
 pt2pt/sendrecv1::1 512 262144 17 1018 65530::2:32:1024
 pt2pt/sendself::1 512 262144 17 1018 65530::1:32:1024
 rma/accfence1::1 512 17 1018::4:16:1024
