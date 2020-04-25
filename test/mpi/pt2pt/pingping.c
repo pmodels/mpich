@@ -178,7 +178,6 @@ int main(int argc, char *argv[])
             }
             DTP_obj_free(recv_obj);
             DTP_obj_free(send_obj);
-            MPI_Barrier(comm);
         }
         MTestFreeComm(&comm);
     }
