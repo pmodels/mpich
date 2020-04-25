@@ -50,7 +50,9 @@ MPL_atomic_int_t MPIDI_CH3I_progress_completion_count = MPL_ATOMIC_INT_T_INITIAL
 #ifdef MPICH_IS_THREADED
 volatile int MPIDI_CH3I_progress_blocked = FALSE;
 volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
+#endif
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count);
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 #endif /* MPICH_IS_THREADED */
