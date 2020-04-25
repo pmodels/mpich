@@ -128,19 +128,17 @@ typedef struct {
 
 
 typedef struct {
-    void *buf;
-    size_t count;
-    MPI_Datatype datatype;
-    char pack_buffer[];
-} MPIDI_OFI_pack_t;
-
-typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
     MPI_Datatype datatype;
     union {
-        MPIDI_OFI_pack_t *pack;
+        struct {
+            void *buf;
+            size_t count;
+            MPI_Datatype datatype;
+            char *pack_buffer;
+        } pack;
         struct iovec *nopack;
     } noncontig;
     union {
