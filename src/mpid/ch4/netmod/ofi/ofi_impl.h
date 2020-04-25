@@ -229,7 +229,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
-    MPL_free(winreq->noncontig);
+    MPL_free(winreq->noncontig.iov_store);
     MPL_free(winreq);
 }
 

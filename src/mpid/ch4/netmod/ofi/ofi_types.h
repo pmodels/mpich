@@ -453,41 +453,39 @@ typedef struct MPIDI_OFI_win_acc_hint {
                                                          * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
-typedef struct {
-    char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
-    union {
-        struct {
-            struct iovec *originv;
-            struct fi_rma_iov *targetv;
-        } put_get;
-        struct {
-            struct fi_ioc *originv;
-            struct fi_rma_ioc *targetv;
-            struct fi_ioc *resultv;
-            struct fi_ioc *comparev;
-        } cas;
-        struct {
-            struct fi_ioc *originv;
-            struct fi_rma_ioc *targetv;
-        } accumulate;
-        struct {
-            struct fi_ioc *originv;
-            struct fi_rma_ioc *targetv;
-            struct fi_ioc *resultv;
-        } get_accumulate;
-    } iov;
-    char iov_store[];           /* Flexible array, do not move */
-} MPIDI_OFI_win_noncontig_t;
-
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int target_rank;
-    MPIDI_OFI_win_noncontig_t *noncontig;
+    struct {
+        char pad[MPIDI_REQUEST_HDR_SIZE];
+        struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];   /* fixed field, do not move */
+        int event_id;           /* fixed field, do not move */
+        union {
+            struct {
+                struct iovec *originv;
+                struct fi_rma_iov *targetv;
+            } put_get;
+            struct {
+                struct fi_ioc *originv;
+                struct fi_rma_ioc *targetv;
+                struct fi_ioc *resultv;
+                struct fi_ioc *comparev;
+            } cas;
+            struct {
+                struct fi_ioc *originv;
+                struct fi_rma_ioc *targetv;
+            } accumulate;
+            struct {
+                struct fi_ioc *originv;
+                struct fi_rma_ioc *targetv;
+                struct fi_ioc *resultv;
+            } get_accumulate;
+        } iov;
+        char *iov_store;
+    } noncontig;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
