@@ -699,7 +699,6 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state, *tmp;
     MPIR_Context_id_t newctxid;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     if (st->own_eager_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -737,9 +736,19 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             int minfree;
             context_mask_stats(&nfree, &ntotal);
             minfree = nfree;
-            mpi_errno =
-                MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
-            MPIR_ERR_CHECK(mpi_errno);
+            /* hzhou: we are inside a MPID_Progress_wait/test and running MPIR_Allreduce here
+             * rellay complicates things up. I am commenting off the code below as it seems all it
+             * does is to have more detail in the error message, which I don't think it worth the
+             * complication.
+             * If we are to do this, we need explain exactly how things will work out. Otherwise,
+             * we are just placing a mine field here.
+             */
+            /* FIXME: study and resolve */
+            /*
+             * MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+             * mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN, st->comm_ptr, &errflag);
+             * MPIR_ERR_CHECK(mpi_errno);
+             */
             if (minfree > 0) {
                 MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                      "**toomanycommfrag", "**toomanycommfrag %d %d %d",
