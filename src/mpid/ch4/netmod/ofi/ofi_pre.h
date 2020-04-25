@@ -112,12 +112,7 @@ typedef struct {
     MPIDI_OFI_am_header_t msg_hdr;
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
     struct iovec iov[3];
-#else
-    /* need bigger alignment */
-    struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-#endif
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
@@ -142,13 +137,7 @@ typedef struct {
         struct iovec *nopack;
     } noncontig;
     union {
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
         struct iovec iov;
-#else
-        /* Enforce larger alignment. */
-        /*   icc complains alignment attribute without packed struct */
-        char iov_store[sizeof(struct iovec) + MPIDI_OFI_IOVEC_ALIGN - 1];
-#endif
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;

@@ -372,35 +372,4 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     return total_iov;
 }
 
-/* Find the nearest length of iov that meets alignment requirement */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
-{
-    size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
-    size_t mask = ~pad;
-
-    return (len + pad) & mask;
-}
-
-/* Find the minimum address that is >= ptr && meets alignment requirement */
-MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
-{
-    size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
-    return (void *) (uintptr_t) aligned_iov;
-}
-
-MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
-{
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
-    return &MPIDI_OFI_REQUEST(req, util.iov);
-#else
-    return (struct iovec *) MPIDI_OFI_aligned_next_iov(&MPIDI_OFI_REQUEST(req, util.iov_store));
-#endif
-}
-
-/* Make sure `p` is properly aligned */
-#define MPIDI_OFI_ASSERT_IOVEC_ALIGN(p)                                 \
-    do {                                                                \
-        MPIR_Assert((((uintptr_t)(void *) p) & (MPIDI_OFI_IOVEC_ALIGN - 1)) == 0); \
-    } while (0)
-
 #endif /* OFI_IMPL_H_INCLUDED */

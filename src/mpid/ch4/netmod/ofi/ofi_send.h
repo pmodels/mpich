@@ -58,7 +58,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     struct fi_msg_tagged msg;
     uint64_t flags;
     MPI_Aint num_contig, size;
-    size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -76,7 +75,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
 
-    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
+    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
     int actual_iov_len;
@@ -88,7 +87,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
 
     originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[0]));
 
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
     msg.msg_iov = originv;
     msg.desc = NULL;
     msg.iov_count = num_contig;
