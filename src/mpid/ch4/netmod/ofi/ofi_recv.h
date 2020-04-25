@@ -31,7 +31,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
     MPI_Aint num_contig, size;
-    size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -49,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
 
-    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
+    MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
     int actual_iov_len;
@@ -68,7 +67,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
     msg.msg_iov = originv;
     msg.desc = NULL;
     msg.iov_count = num_contig;
@@ -189,11 +187,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv, FALSE);
     else {
-        MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
-        MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
+        MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
+        MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
 
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(MPIDI_OFI_request_util_iov(rreq));
-        msg.msg_iov = MPIDI_OFI_request_util_iov(rreq);
+        msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
         msg.desc = NULL;
         msg.iov_count = 1;
         msg.tag = match_bits;
