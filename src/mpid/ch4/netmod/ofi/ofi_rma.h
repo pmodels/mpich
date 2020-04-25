@@ -393,9 +393,11 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
+    /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
 
+    /* self messages */
     if (target_rank == win->comm_ptr->rank) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy(origin_addr,
@@ -405,6 +407,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
+    /* small contiguous messages */
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_win_cntr_incr(win);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
@@ -417,7 +420,10 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                                       target_rank)),
                              rdma_inject_write, FALSE);
         goto null_op_exit;
-    } else if (origin_contig && target_contig) {
+    }
+
+    /* large contiguous messages */
+    if (origin_contig && target_contig) {
         MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         msg.desc = NULL;
@@ -440,6 +446,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
+    /* noncontiguous messages */
     mpi_errno =
         MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
                                                origin_datatype, target_datatype, origin_bytes,
@@ -579,9 +586,11 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
+    /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
 
+    /* self messages */
     if (target_rank == win->comm_ptr->rank) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
@@ -590,6 +599,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto null_op_exit;
     }
 
+    /* contiguous messages */
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         if (sigreq) {
@@ -617,6 +627,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto fn_exit;
     }
 
+    /* noncontiguous messages */
     mpi_errno =
         MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
                                                origin_datatype, target_datatype, origin_bytes,
@@ -903,8 +914,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
-     * TODO: we assume all processes should use the same max_size and dt_size, true ? */
+    /* It's impossible to chunk data if buffer size is smaller than
+     * basic datatype size */
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
@@ -1052,8 +1063,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
-     * TODO: we assume all processes should use the same max_size and dt_size, true ?*/
+    /* It's impossible to chunk data if buffer size is smaller than
+     * basic datatype size */
     if (max_size < dt_size)
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {
