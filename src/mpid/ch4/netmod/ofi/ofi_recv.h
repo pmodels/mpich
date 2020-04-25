@@ -28,37 +28,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
                                                 MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t max_pipe = SIZE_MAX;
-    size_t omax = MPIDI_OFI_global.rx_iov_limit;
-    size_t countp =
-        MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(rreq, datatype), data_sz, max_pipe);
-    size_t o_size = sizeof(struct iovec);
-    unsigned map_size;
-    int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
-    size_t l = 0;
-    size_t countp_huge = 0;
-    size_t oout = 0;
-    size_t cur_o = 0;
+    struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
+    MPI_Aint num_contig, size;
     size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
 
-    /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
-     *  fallback to the pack path */
-    if (countp > omax) {
+    /* if we cannot fit the entire data into a single IOV array,
+     * fallback to pack */
+    MPIR_Typerep_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), 0, dt_ptr->size * count,
+                         &num_contig);
+    if (num_contig > MPIDI_OFI_global.rx_iov_limit)
         goto unpack;
-    }
 
     if (!flags) {
         flags = FI_COMPLETION | FI_REMOTE_CQ_DATA;
     }
 
-    map_size = dt_ptr->max_contig_blocks * count + 1;
-    num_contig = map_size;      /* map_size is the maximum number of iovecs that can be generated */
-
-    size = o_size * num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
+    size = num_contig * sizeof(struct iovec) + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
 
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
@@ -68,85 +57,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), 0,
                         MPIDI_OFI_REQUEST(rreq, noncontig.nopack), num_contig, dt_ptr->size * count,
                         &actual_iov_len, &actual_iov_bytes);
-    num_contig = actual_iov_len;
+    assert(num_contig == actual_iov_len);
 
-    originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
-    oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
-
-    if (oout > omax) {
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
-        goto unpack;
-    }
-
-    /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
-     * and calculate the total number of iovecs */
-    for (j = 0; j < num_contig; j++) {
-        if (originv[j].iov_len > MPIDI_OFI_global.max_msg_size) {
-            huge = 1;
-            countp_huge += originv[j].iov_len / MPIDI_OFI_global.max_msg_size;
-            if (originv[j].iov_len % MPIDI_OFI_global.max_msg_size) {
-                countp_huge++;
-            }
-        } else {
-            countp_huge++;
-        }
-    }
-
-    if (countp_huge > omax && huge) {
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
-        goto unpack;
-    }
-
-    if (countp_huge >= 1 && huge) {
-        originv_huge =
-            MPL_aligned_alloc(iov_align, sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
-        MPIR_Assert(originv_huge != NULL);
-        for (j = 0; j < num_contig; j++) {
-            l = 0;
-            if (originv[j].iov_len > MPIDI_OFI_global.max_msg_size) {
-                while (l < originv[j].iov_len) {
-                    length = originv[j].iov_len - l;
-                    if (length > MPIDI_OFI_global.max_msg_size)
-                        length = MPIDI_OFI_global.max_msg_size;
-                    originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
-                    originv_huge[k].iov_len = length;
-                    k++;
-                    l += length;
-                }
-
-            } else {
-                originv_huge[k].iov_base = originv[j].iov_base;
-                originv_huge[k].iov_len = originv[j].iov_len;
-                k++;
-            }
-        }
-    }
-
-    if (huge && k > omax) {
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
-        MPL_free(originv_huge);
-        goto unpack;
-    }
-
-    if (huge) {
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
-        MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = originv_huge;
-        originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
-        oout = k;
-    }
+    originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[0]));
 
     if (rreq->comm == NULL) {
         rreq->comm = comm;
         MPIR_Comm_add_ref(comm);
     }
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
-
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
     MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
     msg.msg_iov = originv;
     msg.desc = NULL;
-    msg.iov_count = oout;
+    msg.iov_count = num_contig;
     msg.tag = match_bits;
     msg.ignore = mask_bits;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
@@ -212,7 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     recv_buf = (char *) buf + dt_true_lb;
 
-    if (!dt_contig) {
+    if (!dt_contig && data_sz) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
