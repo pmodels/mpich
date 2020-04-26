@@ -97,7 +97,7 @@ struct pollinfo {
 #endif
     union {
         struct {
-            MPL_IOV *ptr;
+            struct iovec *ptr;
             int count;
             int offset;
         } iov;
@@ -112,7 +112,7 @@ struct pollinfo {
     MPIDI_CH3I_Sock_progress_update_func_t read_progress_update_fn;
     union {
         struct {
-            MPL_IOV *ptr;
+            struct iovec *ptr;
             int count;
             int offset;
         } iov;
@@ -205,7 +205,7 @@ static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo,
                                             int os_errno, const char *fcname, int line,
                                             int *conn_failed);
 
-static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov,
+static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec * const iov,
                                        const int count, int *const offsetp);
 
 static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set *sock_set,
@@ -707,24 +707,24 @@ static int MPIDI_CH3I_Socki_os_to_mpi_errno(struct pollinfo *pollinfo, int os_er
  * values.  If the iovec has been consumed, return
  * true; otherwise return false.
  *
- * The input is an iov (MPL_IOV is just an iov) and the offset into which
+ * The input is an iov (struct iovec is just an iov) and the offset into which
  * to start (start with entry iov[*offsetp]) and remove nb bytes from the iov.
  * The use of the offsetp term allows use to remove values from the iov without
  * making a copy to shift down elements when only part of the iov is
  * consumed.
  */
-static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov, const int count,
+static int MPIDI_CH3I_Socki_adjust_iov(ssize_t nb, struct iovec * const iov, const int count,
                                        int *const offsetp)
 {
     int offset = *offsetp;
 
     while (offset < count) {
-        if (iov[offset].MPL_IOV_LEN <= nb) {
-            nb -= iov[offset].MPL_IOV_LEN;
+        if (iov[offset].iov_len <= nb) {
+            nb -= iov[offset].iov_len;
             offset++;
         } else {
-            iov[offset].MPL_IOV_BUF = (char *) iov[offset].MPL_IOV_BUF + nb;
-            iov[offset].MPL_IOV_LEN -= nb;
+            iov[offset].iov_base = (char *) iov[offset].iov_base + nb;
+            iov[offset].iov_len -= nb;
             *offsetp = offset;
             return FALSE;
         }
@@ -1955,7 +1955,7 @@ int MPIDI_CH3I_Sock_post_read(struct MPIDI_CH3I_Sock *sock, void *buf, size_t mi
 /* end MPIDI_CH3I_Sock_post_read() */
 
 
-int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_readv(struct MPIDI_CH3I_Sock *sock, struct iovec * iov, int iov_n,
                                MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
@@ -2051,7 +2051,7 @@ int MPIDI_CH3I_Sock_post_write(struct MPIDI_CH3I_Sock *sock, void *buf, size_t m
 /* end MPIDI_CH3I_Sock_post_write() */
 
 
-int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, MPL_IOV * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_writev(struct MPIDI_CH3I_Sock *sock, struct iovec * iov, int iov_n,
                                 MPIDI_CH3I_Sock_progress_update_func_t fn)
 {
     struct pollfd *pollfd;
@@ -2506,7 +2506,7 @@ int MPIDI_CH3I_Sock_read(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t *
 /* end MPIDI_CH3I_Sock_read() */
 
 
-int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read)
+int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_read)
 {
     struct pollfd *pollfd;
     struct pollinfo *pollinfo;
@@ -2680,7 +2680,7 @@ int MPIDI_CH3I_Sock_write(MPIDI_CH3I_Sock_t sock, void *buf, size_t len, size_t 
 /* end MPIDI_CH3I_Sock_write() */
 
 
-int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
+int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_written)
 {
     struct pollinfo *pollinfo;
     ssize_t nb;

@@ -137,7 +137,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPI_Datatype target_datatype;
     MPIR_Datatype*target_dtp = NULL, *origin_dtp = NULL;
     int is_origin_contig;
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
     int iovcnt = 0;
     MPIR_Request *req = NULL;
     MPI_Aint dt_true_lb;
@@ -179,8 +179,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         dt_true_lb = 0;
     }
 
-    iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & (rma_op->pkt);
-    iov[iovcnt].MPL_IOV_LEN = sizeof(rma_op->pkt);
+    iov[iovcnt].iov_base = (void *) & (rma_op->pkt);
+    iov[iovcnt].iov_len = sizeof(rma_op->pkt);
     iovcnt++;
 
     MPIDI_CH3_PKT_RMA_GET_FLAGS(rma_op->pkt, pkt_flags, mpi_errno);
@@ -193,9 +193,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
          */
 
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].MPL_IOV_BUF =
-                (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-            iov[iovcnt].MPL_IOV_LEN = stream_size;
+            iov[iovcnt].iov_base =
+                (void *) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].iov_len = stream_size;
             iovcnt++;
         }
 
@@ -233,8 +233,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.ext_hdr_ptr = ext_hdr_ptr;
         req->dev.flattened_type = NULL;
 
-        iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-        iov[iovcnt].MPL_IOV_LEN = ext_hdr_sz;
+        iov[iovcnt].iov_base = (void *) req->dev.ext_hdr_ptr;
+        iov[iovcnt].iov_len = ext_hdr_sz;
         iovcnt++;
     }
 
@@ -247,9 +247,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (is_origin_contig) {
         /* origin data is contiguous */
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].MPL_IOV_BUF =
-                (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-            iov[iovcnt].MPL_IOV_LEN = stream_size;
+            iov[iovcnt].iov_base =
+                (void *) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].iov_len = stream_size;
             iovcnt++;
         }
 
@@ -270,7 +270,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.OnDataAvail = 0;
 
         MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
-        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN,
+        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].iov_base, iov[0].iov_len,
                                          &iov[1], iovcnt - 1);
         MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -774,7 +774,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPI_Datatype target_datatype;
     MPIR_Request *req = NULL;
     MPIR_Request *curr_req = NULL;
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_GET_OP);
@@ -836,10 +836,10 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_Typerep_flatten(dtp, ext_hdr_ptr);
         ext_hdr_sz = get_pkt->info.flattened_type_size;
 
-        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_pkt;
-        iov[0].MPL_IOV_LEN = sizeof(*get_pkt);
-        iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ext_hdr_ptr;
-        iov[1].MPL_IOV_LEN = ext_hdr_sz;
+        iov[0].iov_base = (void *) get_pkt;
+        iov[0].iov_len = sizeof(*get_pkt);
+        iov[1].iov_base = (void *) ext_hdr_ptr;
+        iov[1].iov_len = ext_hdr_sz;
 
         MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 2, &req);

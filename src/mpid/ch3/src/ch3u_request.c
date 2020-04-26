@@ -79,7 +79,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
  * Expects sreq->dev.OnFinal to be initialized (even if it's NULL).
  */
 int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
-				     MPL_IOV * const iov, int * const iov_n)
+				     struct iovec * const iov, int * const iov_n)
 {
     MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
@@ -145,8 +145,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	iov_data_copied = 0;
 	for (i = 0; i < *iov_n; i++) {
 	    MPIR_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied,
-		   iov[i].MPL_IOV_BUF, iov[i].MPL_IOV_LEN);
-	    iov_data_copied += iov[i].MPL_IOV_LEN;
+		   iov[i].iov_base, iov[i].iov_len);
+	    iov_data_copied += iov[i].iov_len;
 	}
 	sreq->dev.msg_offset = last;
 
@@ -163,8 +163,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
                        max_pack_bytes, &actual_pack_bytes);
         last = sreq->dev.msg_offset + actual_pack_bytes;
 
-	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)sreq->dev.tmpbuf;
-	iov[0].MPL_IOV_LEN = actual_pack_bytes + iov_data_copied;
+	iov[0].iov_base = (void *)sreq->dev.tmpbuf;
+	iov[0].iov_len = actual_pack_bytes + iov_data_copied;
 	*iov_n = 1;
 	if (last == sreq->dev.msgsize)
 	{
@@ -234,10 +234,10 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    {
 		data_sz = tmpbuf_sz;
 	    }
-	    rreq->dev.iov[0].MPL_IOV_BUF = 
-		(MPL_IOV_BUF_CAST)((char *) rreq->dev.tmpbuf + 
+	    rreq->dev.iov[0].iov_base =
+		(void *)((char *) rreq->dev.tmpbuf +
 				    rreq->dev.tmpbuf_off);
-	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
+	    rreq->dev.iov[0].iov_len = data_sz;
             rreq->dev.iov_offset = 0;
 	    rreq->dev.iov_count = 1;
 	    MPIR_Assert(rreq->dev.msg_offset - rreq->dev.orig_msg_offset + data_sz +
@@ -376,7 +376,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 	    "updating rreq to read overflow data into the SRBuf and complete");
-	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
+	    rreq->dev.iov[0].iov_len = data_sz;
 	    MPIR_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
@@ -386,12 +386,12 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 	  "updating rreq to read overflow data into the SRBuf and reload IOV");
-	    rreq->dev.iov[0].MPL_IOV_LEN = rreq->dev.tmpbuf_sz;
+	    rreq->dev.iov[0].iov_len = rreq->dev.tmpbuf_sz;
 	    rreq->dev.msg_offset += rreq->dev.tmpbuf_sz;
 	    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReloadIOV;
 	}
 	
-	rreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)rreq->dev.tmpbuf;
+	rreq->dev.iov[0].iov_base = (void *)rreq->dev.tmpbuf;
 	rreq->dev.iov_count = 1;
     }
     

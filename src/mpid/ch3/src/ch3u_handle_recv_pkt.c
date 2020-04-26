@@ -149,9 +149,9 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
         {
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
             
-            rreq->dev.iov[0].MPL_IOV_BUF = 
-                (MPL_IOV_BUF_CAST)((char*)(rreq->dev.user_buf) + dt_true_lb);
-            rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
+            rreq->dev.iov[0].iov_base =
+                (void *)((char*)(rreq->dev.user_buf) + dt_true_lb);
+            rreq->dev.iov[0].iov_len = data_sz;
             rreq->dev.iov_count = 1;
             *buflen = 0;
             *complete = FALSE;
@@ -248,8 +248,8 @@ int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t 
     }
     else
     {
-        rreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)((char *)rreq->dev.tmpbuf);
-        rreq->dev.iov[0].MPL_IOV_LEN = rreq->dev.recv_data_sz;
+        rreq->dev.iov[0].iov_base = (void *)((char *)rreq->dev.tmpbuf);
+        rreq->dev.iov[0].iov_len = rreq->dev.recv_data_sz;
         rreq->dev.iov_count = 1;
         rreq->dev.recv_pending_count = 2;
         *buflen = 0;
@@ -311,9 +311,9 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 	   entire message.  However, we haven't yet *read* the data 
 	   (this code describes how to read the data into the destination) */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
-	rreq->dev.iov[0].MPL_IOV_BUF = 
-	    (MPL_IOV_BUF_CAST)((char*)(rreq->dev.user_buf) + dt_true_lb);
-	rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
+	rreq->dev.iov[0].iov_base =
+	    (void *)((char*)(rreq->dev.user_buf) + dt_true_lb);
+	rreq->dev.iov[0].iov_len = data_sz;
 	rreq->dev.iov_count = 1;
 	/* FIXME: We want to set the OnDataAvail to the appropriate 
 	   function, which depends on whether this is an RMA 
@@ -360,8 +360,8 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
     }
     rreq->dev.tmpbuf_sz = rreq->dev.recv_data_sz;
     
-    rreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)rreq->dev.tmpbuf;
-    rreq->dev.iov[0].MPL_IOV_LEN = rreq->dev.recv_data_sz;
+    rreq->dev.iov[0].iov_base = (void *)rreq->dev.tmpbuf;
+    rreq->dev.iov[0].iov_len = rreq->dev.recv_data_sz;
     rreq->dev.iov_count = 1;
     rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_UnpackUEBufComplete;
     rreq->dev.recv_pending_count = 2;
