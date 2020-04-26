@@ -126,7 +126,7 @@ static int check_terminating_vcs(void)
 int MPIDI_CH3I_Shm_send_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPL_IOV *iov;
+    struct iovec *iov;
     int n_iov;
     MPIR_Request *sreq;
     int again = 0;
@@ -141,7 +141,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     {
         if (!sreq->ch.noncontig)
         {
-            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].MPL_IOV_LEN > 0);
+            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].iov_len > 0);
 
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
@@ -183,7 +183,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
         if (!sreq->ch.noncontig)
         {
-            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].MPL_IOV_LEN > 0);
+            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].iov_len > 0);
 
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
@@ -689,7 +689,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
         /* copy data into user buffer described by iov in rreq */
         MPIR_Assert(rreq);
-        MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
+        MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].iov_len > 0);
         MPIR_Assert(buflen >= 0);
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    copying into user buffer from IOV");
@@ -704,18 +704,18 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
         while (buflen && !complete)
         {
-            MPL_IOV *iov;
+            struct iovec *iov;
             int n_iov;
 
             iov = &rreq->dev.iov[rreq->dev.iov_offset];
             n_iov = rreq->dev.iov_count;
 		
-            while (n_iov && buflen >= iov->MPL_IOV_LEN)
+            while (n_iov && buflen >= iov->iov_len)
             {
-                size_t iov_len = iov->MPL_IOV_LEN;
+                size_t iov_len = iov->iov_len;
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %d", (int)iov_len);
                 if (rreq->dev.drop_data == FALSE) {
-                    MPIR_Memcpy (iov->MPL_IOV_BUF, buf, iov_len);
+                    MPIR_Memcpy (iov->iov_base, buf, iov_len);
                 }
 
                 buflen -= iov_len;
@@ -730,17 +730,17 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 {
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %" PRIdPTR, buflen);
                     if (rreq->dev.drop_data == FALSE) {
-                        MPIR_Memcpy (iov->MPL_IOV_BUF, buf, buflen);
+                        MPIR_Memcpy (iov->iov_base, buf, buflen);
                     }
-                    iov->MPL_IOV_BUF = (void *)((char *)iov->MPL_IOV_BUF + buflen);
-                    iov->MPL_IOV_LEN -= buflen;
+                    iov->iov_base = (void *)((char *)iov->iov_base + buflen);
+                    iov->iov_len -= buflen;
                     buflen = 0;
                 }
 
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 rreq->dev.iov_count = n_iov;
                 vc_ch->recv_active = rreq;
-		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: %" PRIdPTR " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: %" PRIdPTR " bytes + %d iov entries", iov->iov_len, n_iov));
             }
             else
             {
@@ -767,7 +767,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 if (!complete)
                 {
                     rreq->dev.iov_offset = 0;
-                    MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
+                    MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].iov_len > 0);
                     vc_ch->recv_active = rreq;
                     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...not complete");
                 }

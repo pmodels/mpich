@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_Aint offset,
-                        MPL_IOV * iov, int max_iov_len, MPI_Aint max_iov_bytes,
+                        struct iovec *iov, int max_iov_len, MPI_Aint max_iov_bytes,
                         int *actual_iov_len, MPI_Aint * actual_iov_bytes)
 {
     MPIR_Segment *seg;

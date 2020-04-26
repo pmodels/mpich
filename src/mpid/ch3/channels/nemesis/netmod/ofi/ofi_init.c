@@ -320,14 +320,14 @@ static inline int compile_time_checking()
 {
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
-    MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
+    MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(struct iovec));
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= 16);
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
-                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
+                ((void *) &(((struct iovec *) 0)->iov_base)));
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
-                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_LEN)));
-    MPIR_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
+                ((void *) &(((struct iovec *) 0)->iov_len)));
+    MPIR_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((struct iovec *) 0)->iov_len));
 
     /* ------------------------------------------------------------------------ */
     /* Generate the MPICH catalog files                                         */

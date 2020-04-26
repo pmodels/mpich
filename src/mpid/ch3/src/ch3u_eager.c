@@ -21,17 +21,17 @@
    packed data) at most.  */
 int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
                                  void *header, intptr_t hdr_sz,
-                                 MPL_IOV *hdr_iov, int n_hdr_iov)
+                                 struct iovec *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n, iovcnt = 0;
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
-    iov[iovcnt].MPL_IOV_BUF = header;
-    iov[iovcnt].MPL_IOV_LEN = hdr_sz;
+    iov[iovcnt].iov_base = header;
+    iov[iovcnt].iov_len = hdr_sz;
     iovcnt++;
 
     iov_n = MPL_IOV_LIMIT - 1;
@@ -41,8 +41,8 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
         int i;
         MPIR_Assert(iov_n - n_hdr_iov > 0); /* secure at least 1 iov for data */
         for (i = 0; i < n_hdr_iov; i++) {
-             iov[iovcnt].MPL_IOV_BUF = hdr_iov[i].MPL_IOV_BUF;
-             iov[iovcnt].MPL_IOV_LEN = hdr_iov[i].MPL_IOV_LEN;
+             iov[iovcnt].iov_base = hdr_iov[i].iov_base;
+             iov[iovcnt].iov_len = hdr_iov[i].iov_len;
              iovcnt++;
              iov_n--;
         }
@@ -164,7 +164,7 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     MPIR_Request *sreq = *sreq_p;
-    MPL_IOV iov[2];
+    struct iovec iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
     eager_pkt->match.parts.rank	= comm->rank;
@@ -173,15 +173,15 @@ int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
-    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)eager_pkt;
-    iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
+    iov[0].iov_base = (void *)eager_pkt;
+    iov[0].iov_len = sizeof(*eager_pkt);
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 	       "sending contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
 	    
-    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
-    iov[1].MPL_IOV_LEN = data_sz;
+    iov[1].iov_base = (void *) buf;
+    iov[1].iov_len = data_sz;
     
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
@@ -516,7 +516,7 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     MPIR_Request *sreq = *sreq_p;
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 	       "sending contiguous eager message, data_sz=%" PRIdPTR,
@@ -531,11 +531,11 @@ int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
     eager_pkt->sender_req_id	= sreq->handle;
     eager_pkt->data_sz		= data_sz;
     
-    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)eager_pkt;
-    iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
+    iov[0].iov_base = (void *)eager_pkt;
+    iov[0].iov_len = sizeof(*eager_pkt);
     
-    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
-    iov[1].MPL_IOV_LEN = data_sz;
+    iov[1].iov_base = (void *) buf;
+    iov[1].iov_len = data_sz;
     
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);

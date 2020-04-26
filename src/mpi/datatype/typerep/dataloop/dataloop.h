@@ -37,7 +37,7 @@ void MPIR_Segment_unpack_external32(MPIR_Segment * segp,
                                     MPI_Aint first, MPI_Aint * lastp, const void *unpack_buffer);
 
 void MPIR_Segment_to_iov(MPIR_Segment * segp,
-                         MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vector, int *lengthp);
+                         MPI_Aint first, MPI_Aint * lastp, struct iovec *vector, int *lengthp);
 void MPIR_Segment_count_contig_blocks(MPIR_Segment * segp,
                                       MPI_Aint first, MPI_Aint * lastp, MPI_Aint * countp);
 

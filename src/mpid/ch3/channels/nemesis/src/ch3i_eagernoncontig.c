@@ -14,7 +14,7 @@
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as msg_offset and msgsize. */
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
-                              MPL_IOV *hdr_iov, int n_hdr_iov)
+                              struct iovec *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;

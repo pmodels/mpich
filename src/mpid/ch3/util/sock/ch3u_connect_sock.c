@@ -1203,11 +1203,11 @@ static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POST_SEND_PKT_AND_PGID);
     
-    conn->iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) &conn->pkt;
-    conn->iov[0].MPL_IOV_LEN = (int) sizeof(conn->pkt);
+    conn->iov[0].iov_base = (void *) &conn->pkt;
+    conn->iov[0].iov_len = (int) sizeof(conn->pkt);
 
-    conn->iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) MPIDI_Process.my_pg->id;
-    conn->iov[1].MPL_IOV_LEN = (int) strlen(MPIDI_Process.my_pg->id) + 1;
+    conn->iov[1].iov_base = (void *) MPIDI_Process.my_pg->id;
+    conn->iov[1].iov_len = (int) strlen(MPIDI_Process.my_pg->id) + 1;
 
     MPL_DBG_PKT(conn,&conn->pkt,"connect-pgid");
     mpi_errno = MPIDI_CH3I_Sock_post_writev(conn->sock, conn->iov, 2, NULL);

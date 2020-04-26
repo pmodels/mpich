@@ -416,7 +416,7 @@ typedef struct MPIDI_OFI_seg_state {
     size_t origin_count;
     MPI_Datatype origin_type;
     MPI_Aint origin_iov_len;    /* Length of data actually packed */
-    MPL_IOV origin_iov;         /* IOVEC returned after pack */
+    struct iovec origin_iov;    /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
     size_t target_cursor;
@@ -425,7 +425,7 @@ typedef struct MPIDI_OFI_seg_state {
     size_t target_count;
     MPI_Datatype target_type;
     MPI_Aint target_iov_len;
-    MPL_IOV target_iov;
+    struct iovec target_iov;
     uintptr_t target_addr;
 
     size_t result_cursor;
@@ -434,7 +434,7 @@ typedef struct MPIDI_OFI_seg_state {
     size_t result_count;
     MPI_Datatype result_type;
     MPI_Aint result_iov_len;
-    MPL_IOV result_iov;
+    struct iovec result_iov;
     uintptr_t result_addr;
 } MPIDI_OFI_seg_state_t;
 

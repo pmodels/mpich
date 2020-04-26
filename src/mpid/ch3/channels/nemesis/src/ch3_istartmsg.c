@@ -89,8 +89,8 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 	MPIR_Object_set_ref (sreq, 2);
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-	sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;
-	sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz;
+	sreq->dev.iov[0].iov_base = (char *) &sreq->dev.pending_pkt;
+	sreq->dev.iov[0].iov_len = hdr_sz;
 	sreq->dev.iov_count = 1;
 	sreq->dev.iov_offset = 0;
         sreq->ch.noncontig = FALSE;

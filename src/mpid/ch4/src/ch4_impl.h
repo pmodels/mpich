@@ -951,7 +951,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         (*uop) (source_buf, target_buf, &source_count, &source_dtp);
     } else {
         /* derived datatype */
-        MPL_IOV *typerep_vec;
+        struct iovec *typerep_vec;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -964,8 +964,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         MPIR_Assert(dtp != NULL);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        typerep_vec = (MPL_IOV *)
-            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_RMA);
+        typerep_vec = (struct iovec *)
+            MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_RMA);
         /* --BEGIN ERROR HANDLING-- */
         if (!typerep_vec) {
             mpi_errno =
@@ -996,14 +996,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             src_type_stride = source_dtp_extent;
 
         i = 0;
-        curr_loc = typerep_vec[0].MPL_IOV_BUF;
-        curr_len = typerep_vec[0].MPL_IOV_LEN;
+        curr_loc = typerep_vec[0].iov_base;
+        curr_len = typerep_vec[0].iov_len;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += typerep_vec[i].MPL_IOV_LEN;
+                curr_len += typerep_vec[i].iov_len;
                 continue;
             }
 
@@ -1015,8 +1015,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = typerep_vec[i].MPL_IOV_BUF;
-                    curr_len = typerep_vec[i].MPL_IOV_LEN;
+                    curr_loc = typerep_vec[i].iov_base;
+                    curr_len = typerep_vec[i].iov_len;
                 }
             } else {
                 curr_loc = (void *) ((char *) curr_loc + type_extent * count);

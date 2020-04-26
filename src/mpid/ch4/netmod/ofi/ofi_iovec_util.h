@@ -111,10 +111,10 @@ do {                                                                         \
   } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * state,
-                                                    MPL_IOV * out_vector,
+                                                    struct iovec *out_vector,
                                                     MPIDI_OFI_segment_side_t side)
 {
-    MPL_IOV typerep_vec;
+    struct iovec typerep_vec;
     MPI_Aint last;
     size_t *cursor;
     int num_contig = 1;
