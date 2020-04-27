@@ -73,7 +73,7 @@ int MPIR_Group_create(int nproc, MPIR_Group ** new_group_ptr)
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref(*new_group_ptr, 1);
     (*new_group_ptr)->lrank_to_lpid =
-        (MPII_Group_pmap_t *) MPL_malloc(nproc * sizeof(MPII_Group_pmap_t), MPL_MEM_GROUP);
+        (MPII_Group_pmap_t *) MPL_calloc(nproc, sizeof(MPII_Group_pmap_t), MPL_MEM_GROUP);
     /* --BEGIN ERROR HANDLING-- */
     if (!(*new_group_ptr)->lrank_to_lpid) {
         MPIR_Handle_obj_free(&MPIR_Group_mem, *new_group_ptr);
