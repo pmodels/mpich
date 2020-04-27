@@ -61,13 +61,6 @@ C See the C version (typename.c) for the relevant MPI sections
            print *, "Expected MPI_2INTEGER but got "//name(1:namelen)
       endif
 
-C 2COMPLEX was present only in MPI 1.0
-C      call MPI_Type_get_name( MPI_2COMPLEX, name, namelen, ierr )
-C      if (name(1:namelen) .ne. "MPI_2COMPLEX") then
-C           errs = errs + 1
-C           print *, "Expected MPI_2COMPLEX but got "//name(1:namelen)
-C      endif
-C
       call MPI_Type_get_name(MPI_2DOUBLE_PRECISION, name, namelen, ierr)
       if (name(1:namelen) .ne. "MPI_2DOUBLE_PRECISION") then
            errs = errs + 1
@@ -80,14 +73,6 @@ C
            errs = errs + 1
            print *, "Expected MPI_2REAL but got "//name(1:namelen)
       endif
-
-C 2DOUBLE_COMPLEX isn't in MPI 2.1
-C      call MPI_Type_get_name( MPI_2DOUBLE_COMPLEX, name, namelen, ierr )
-C      if (name(1:namelen) .ne. "MPI_2DOUBLE_COMPLEX") then
-C           errs = errs + 1
-C           print *, "Expected MPI_2DOUBLE_COMPLEX but got "//
-C     &          name(1:namelen)
-C      endif
 
       call MPI_Type_get_name( MPI_CHARACTER, name, namelen, ierr )
       if (name(1:namelen) .ne. "MPI_CHARACTER") then
