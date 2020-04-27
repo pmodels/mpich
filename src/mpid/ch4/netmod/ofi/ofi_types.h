@@ -105,11 +105,9 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 
 
 #ifdef HAVE_FORTRAN_BINDING
-#ifdef MPICH_DEFINE_2COMPLEX
-#define MPIDI_OFI_DT_SIZES 63
-#else
+/* number of basic types defined in mpi.h */
+/* FIXME: should be defined in mpi.h or mpir_datatype.h and avoid magic number here */
 #define MPIDI_OFI_DT_SIZES 61
-#endif
 #else
 #define MPIDI_OFI_DT_SIZES 40
 #endif
