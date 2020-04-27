@@ -3889,10 +3889,12 @@ dnl     len_doublecplx=$hexlen
 
     MPI_DOUBLE_COMPLEX=0x4c00${len_doublecplx}22
     MPI_2DOUBLE_PRECISION=0x4c00${len_doublecplx}23
-    MPI_2COMPLEX=0x4c00${len_doublecplx}24
     AC_SUBST(MPI_DOUBLE_COMPLEX)
     AC_SUBST(MPI_2DOUBLE_PRECISION)
-    AC_SUBST(MPI_2COMPLEX)
+
+dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain the gap in seq id
+    # MPI_2COMPLEX=0x4c00${len_doublecplx}24
+    # MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
 
     #
     # Temporary for the vast majority of systems that use 4 byte reals and
@@ -3910,26 +3912,6 @@ dnl     len_doublecplx=$hexlen
         F77_COMPLEX32="MPI_DATATYPE_NULL"
     fi
 
-    len_2dc=`expr $pac_cv_f77_sizeof_double_precision \* 4`
-    firstdigit=0
-    seconddigit=0
-    while test $len_2dc -ge 16 ; do
-        firstdigit=`expr $firstdigit + 1`
-        len_2dc=`expr $len_2dc - 16`
-    done
-    case $len_2dc in
-        10) seconddigit=a ;;
-        11) seconddigit=b ;;
-        12) seconddigit=c ;;
-        13) seconddigit=d ;;
-        14) seconddigit=e ;;
-        15) seconddigit=f ;;
-         *) seconddigit=$len_2dc ;;
-    esac
-    len_2dc="$firstdigit$seconddigit"
-    #echo "2double complex = $len_2dc"
-    MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
-    AC_SUBST(MPI_2DOUBLE_COMPLEX)
     MPI_F77_PACKED=$MPI_PACKED
     MPI_F77_UB=$MPI_UB
     MPI_F77_LB=$MPI_LB
@@ -3945,8 +3927,8 @@ dnl     len_doublecplx=$hexlen
     # even when used only with the match (:) command.  Rather than have
     # configure figure out if expr works, we just use sed.  Sigh.
     for var in CHARACTER INTEGER REAL LOGICAL DOUBLE_PRECISION COMPLEX \
-        DOUBLE_COMPLEX 2INTEGER 2REAL 2COMPLEX 2DOUBLE_PRECISION \
-        2DOUBLE_COMPLEX F77_PACKED F77_UB F77_LB F77_BYTE; do
+        DOUBLE_COMPLEX 2INTEGER 2REAL 2DOUBLE_PRECISION \
+        F77_PACKED F77_UB F77_LB F77_BYTE; do
         fullvar="MPI_$var"
         eval fullvarvalue=\$$fullvar
         #echo "$fullvar = $fullvarvalue"
@@ -5067,7 +5049,6 @@ pthread_mutex_t *MPL_atomic_emulation_lock;
 
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
-    # Removed the invalid 2COMPLEX and 2DOUBLE_COMPLEX
     for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
 	2INTEGER 2REAL DOUBLE_COMPLEX 2DOUBLE_PRECISION ; do
 	fullname="MPI_$name"
@@ -5088,8 +5069,6 @@ AC_SUBST(MPI_2INTEGER)
 AC_SUBST(MPI_2REAL)
 AC_SUBST(MPI_DOUBLE_COMPLEX)
 AC_SUBST(MPI_2DOUBLE_PRECISION)
-dnl AC_SUBST(MPI_2COMPLEX)
-dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
 # If ROMIO was successfully configured, then ROMIO will have exported the
