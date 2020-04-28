@@ -174,12 +174,6 @@ static void *create_container(struct json_object *obj)
 }
 
 static int choose_netmod(void);
-static const char *get_mt_model_name(int mt);
-static void print_runtime_configurations(void);
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
-static int parse_mt_model(const char *name);
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
-static int set_runtime_configurations(void);
 static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
 static int init_builtin_comms(void);
@@ -221,6 +215,17 @@ static int choose_netmod(void)
     goto fn_exit;
 }
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+/* NOTE: MPIDI_CH4_USE_MT_RUNTIME currently are not supported. The key part is
+ * guarded by "#if 0".
+ */
+/* TODO: move them to ch4i_workq_init.c. */
+
+static const char *get_mt_model_name(int mt);
+static void print_runtime_configurations(void);
+static int parse_mt_model(const char *name);
+static int set_runtime_configurations(void);
+
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
@@ -242,7 +247,6 @@ static void print_runtime_configurations(void)
     printf("================================\n");
 }
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name)
 {
     int i;
@@ -256,13 +260,12 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
     int mt = parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
     if (mt < 0)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -274,13 +277,15 @@ static int set_runtime_configurations(void)
     if (strcmp(MPIR_CVAR_CH4_MT_MODEL, "") != 0)
         printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+#endif /* MPIDI_CH4_USE_MT_RUNTIME */
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
   fn_fail:
 #endif
     return mpi_errno;
 }
+
+#endif /* MPIDI_CH4_USE_WORK_QUEUES */
 
 static int create_init_comm(MPIR_Comm ** comm)
 {
@@ -473,10 +478,6 @@ int MPID_Init(int requested, int *provided)
             break;
     }
 
-    mpi_errno = set_runtime_configurations();
-    if (mpi_errno != MPI_SUCCESS)
-        return mpi_errno;
-
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
     MPIDI_CH4_DBG_MAP = MPL_dbg_class_alloc("CH4_MAP", "ch4_map");
@@ -529,12 +530,15 @@ int MPID_Init(int requested, int *provided)
     MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &err);
     MPIR_Assert(err == 0);
 
-#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = set_runtime_configurations();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIDI_workq_init(&MPIDI_global.workqueue);
-#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
+#endif
 
     init_av_table();
 
