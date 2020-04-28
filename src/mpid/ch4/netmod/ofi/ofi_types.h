@@ -466,10 +466,6 @@ typedef struct MPIDI_OFI_win_request {
         int event_id;           /* fixed field, do not move */
         union {
             struct {
-                struct iovec *originv;
-                struct fi_rma_iov *targetv;
-            } put_get;
-            struct {
                 struct fi_ioc *originv;
                 struct fi_rma_ioc *targetv;
                 struct fi_ioc *resultv;
