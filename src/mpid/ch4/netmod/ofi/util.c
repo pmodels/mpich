@@ -416,10 +416,6 @@ static MPI_Datatype mpi_dtypes[] = {
 #ifdef HAVE_FORTRAN_BINDING
     MPI_COMPLEX, MPI_DOUBLE_COMPLEX, MPI_LOGICAL, MPI_REAL,
     MPI_DOUBLE_PRECISION, MPI_INTEGER, MPI_2INTEGER,
-
-#ifdef MPICH_DEFINE_2COMPLEX
-    MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX,
-#endif
     MPI_2REAL, MPI_2DOUBLE_PRECISION, MPI_CHARACTER,
     MPI_REAL4, MPI_REAL8, MPI_REAL16, MPI_COMPLEX8, MPI_COMPLEX16,
     MPI_COMPLEX32, MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8,
@@ -566,10 +562,6 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_DOUBLE_PRECISION, &idx);      /* count=40 */
     add_index(MPI_INTEGER, &idx);
     add_index(MPI_2INTEGER, &idx);
-#ifdef MPICH_DEFINE_2COMPLEX
-    add_index(MPI_2COMPLEX, &idx);
-    add_index(MPI_2DOUBLE_COMPLEX, &idx);
-#endif
     add_index(MPI_2REAL, &idx);
     add_index(MPI_2DOUBLE_PRECISION, &idx);
     add_index(MPI_CHARACTER, &idx);

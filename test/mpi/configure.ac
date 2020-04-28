@@ -1473,38 +1473,6 @@ fi
 if test "$pac_cv_have_mpi_integer16" = yes ; then 
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
 fi
-AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],
-pac_cv_have_mpi_2double_complex,[
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([#include "mpi.h"],[
-            MPI_Datatype t = MPI_2DOUBLE_COMPLEX;
-        ])
-    ],[
-        pac_cv_have_mpi_2double_complex=yes
-    ],[
-        pac_cv_have_mpi_2double_complex=no
-    ])
-])
-if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
-    AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBLE_COMPLEX is available])
-fi
-# 2COMPLEX was in MPI 1.0 and removed after that.  This allows us to 
-# test 2COMPLEX if it is present
-AC_CACHE_CHECK([whether MPI_2COMPLEX is available],
-pac_cv_have_mpi_2complex,[
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([#include "mpi.h"],[
-            MPI_Datatype t = MPI_2COMPLEX;
-        ])
-    ],[
-        pac_cv_have_mpi_2complex=yes
-    ],[
-        pac_cv_have_mpi_2complex=no
-    ])
-])
-if test "$pac_cv_have_mpi_2complex" = yes ; then 
-    AC_DEFINE(HAVE_MPI_2COMPLEX,1,[Define if MPI_2COMPLEX is available])
-fi
 
 # MPI_Aint was intended as an address-sized int.  However, MPI didn't 
 # specify this - MPI_Aint must be large enough to hold an address-sized
