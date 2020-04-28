@@ -281,18 +281,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         PAC_APPEND_FLAG([${ac_libfabric_deps}],[WRAPPER_LIBS])
     fi
 
-    # Check for required functions
-
-    # Does MPL provide MPL_aligned_malloc?
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mplconfig.h>]],
-                                       [[
-                                       #ifndef MPL_DEFINE_ALIGNED_ALLOC
-                                       # error
-                                       #endif
-                                       ]])],
-                                       [],
-                                       [AC_MSG_ERROR(MPL_aligned_alloc is required to build OFI netmod)])
-
     AC_ARG_ENABLE(ofi-domain,
     [--enable-ofi-domain
        Use fi_domain for vni contexts. This is the default. Use --disable-ofi-domain to use fi_contexts
