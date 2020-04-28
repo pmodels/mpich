@@ -27,9 +27,10 @@ volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
 volatile int MPIDI_CH3I_progress_blocked = FALSE;
 volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
 
-    /* This value must be static so that it isn't an uninitialized
-     * common symbol */
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
+/* This value must be static so that it isn't an uninitialized common symbol */
 static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
+#endif
 
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count);
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
