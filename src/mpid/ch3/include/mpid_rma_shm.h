@@ -223,11 +223,6 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
         case MPI_2INTEGER:
 #endif
 
-#if 0   /* Random types not present in the standard */
-        case MPI_2COMPLEX:
-        case MPI_2DOUBLE_COMPLEX:
-#endif
-
         default:
             /* Just to make sure the switch statement is not empty */
             ;

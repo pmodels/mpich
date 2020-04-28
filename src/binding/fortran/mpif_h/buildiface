@@ -3855,10 +3855,6 @@ if ($write_mpif) {
 	print MPIFFD "       INTEGER MPI_$key\n";
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_$key\@)\n";
     }
-    # 2COMPLEX and 2DOUBLE_COMPLEX were defined in MPI 1 and removed in 
-    # MPI 1.1.  Don't define them for the Fortran interface.
-    #foreach $key ('2COMPLEX', '2DOUBLE_COMPLEX') {
-    #}
     # Value of MPI_BYTE from top level configure!
     $mpidef{"MPI_BYTE"} = hex "0x4c00010d";
     foreach $key (BYTE, UB, LB, PACKED) {
