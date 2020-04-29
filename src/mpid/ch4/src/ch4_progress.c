@@ -36,18 +36,10 @@ static int MPIDI_Progress_test(int flags)
 
     if (flags & MPIDI_PROGRESS_NM) {
         mpi_errno = MPIDI_NM_progress(0, 0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-            MPIR_ERR_POP(mpi_errno);
-        }
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (flags & MPIDI_PROGRESS_SHM) {
+    if (flags & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
         mpi_errno = MPIDI_SHM_progress(0, 0);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-            MPIR_ERR_POP(mpi_errno);
-        }
     }
 #endif
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
