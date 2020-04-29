@@ -177,7 +177,6 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GREQUEST_START);
 
     /* Validate parameters if error checking is enabled */
@@ -204,7 +203,6 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GREQUEST_START);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:
@@ -259,7 +257,6 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     class_ptr = (MPIR_Grequest_class *)
         MPIR_Handle_obj_alloc(&MPIR_Grequest_class_mem);
     /* --BEGIN ERROR HANDLING-- */
@@ -299,7 +296,6 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
     /* ... end of body of routine ... */
   fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -347,7 +343,6 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
     MPIR_Grequest_class *class_ptr;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     *request = MPI_REQUEST_NULL;
     MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
     mpi_errno = MPIR_Grequest_start(class_ptr->query_fn, class_ptr->free_fn,
@@ -359,7 +354,6 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
         lrequest_ptr->u.ureq.greq_fns->greq_class = greq_class;
     }
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 }
 
@@ -400,7 +394,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
     MPIR_Request *lrequest_ptr;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     *request = MPI_REQUEST_NULL;
     mpi_errno =
         MPIX_Grequest_start_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn, extra_state,
@@ -411,7 +404,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
     }
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 }
 
