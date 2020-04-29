@@ -68,7 +68,6 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_CREATE_KEYVAL);
 
     /* Validate parameters and objects (post conversion) */
@@ -111,7 +110,6 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_CREATE_KEYVAL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

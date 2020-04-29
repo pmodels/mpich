@@ -107,10 +107,8 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
 
     /* ROMIO will call MPI-functions. Take off the lock taken by MPI_Comm_split_type */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
