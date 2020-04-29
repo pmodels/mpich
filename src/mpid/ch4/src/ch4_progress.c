@@ -103,6 +103,12 @@ int MPID_Progress_poke(void)
     return ret;
 }
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDI_PROGRESS_YIELD() MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX)
+#else
+#define MPIDI_PROGRESS_YIELD() MPL_thread_yield()
+#endif
+
 int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -113,7 +119,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPIDI_PROGRESS_YIELD();
 
 #else
     /* track progress from last time left off */
@@ -124,7 +130,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         if (MPIDI_Progress_made(state)) {
             break;
         }
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+        MPIDI_PROGRESS_YIELD();
     }
 
 #endif
