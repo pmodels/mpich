@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-int MPIDI_Progress_test(int flags)
+static int MPIDI_Progress_test(int flags)
 {
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
