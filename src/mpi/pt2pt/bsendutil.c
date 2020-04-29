@@ -115,6 +115,7 @@ int MPIR_Bsend_attach(void *buffer, int buffer_size)
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     if (!initialized) {
         initialized = 1;
         MPIR_Add_finalize(MPIR_Bsend_finalize, (void *) 0, 10);
@@ -148,6 +149,7 @@ int MPIR_Bsend_attach(void *buffer, int buffer_size)
     p->next = p->prev = NULL;
     p->msg.msgbuf = (char *) p + BSENDDATA_HEADER_TRUE_SIZE;
 
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return MPI_SUCCESS;
 }
 
@@ -161,6 +163,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     if (BsendBuffer.pending) {
         /* FIXME: Process pending bsend requests in detach */
         return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -193,6 +196,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
     BsendBuffer.pending = 0;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -210,6 +214,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     MPI_Aint packsize;
     int pass;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     /*
      * We may want to decide here whether we need to pack at all
      * or if we can just use (a MPIR_Memcpy) of the buffer.
@@ -309,6 +314,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     }
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -317,11 +323,13 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 /*
  * The following routine looks up the segment used by request req
  * and frees it. The request is assumed to be completed. This routine
- * is called by only MPIR_Ibsend_free.
+ * is called by only MPIR_Ibsend_cancel.
  */
 int MPIR_Bsend_free_req_seg(MPIR_Request * req)
 {
     int mpi_errno = MPI_ERR_INTERN;
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
+
     MPII_Bsend_data_t *active = BsendBuffer.active;
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
@@ -337,6 +345,7 @@ int MPIR_Bsend_free_req_seg(MPIR_Request * req)
         MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Next active is %p", active);
     }
 
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     return mpi_errno;
 }
 
@@ -591,6 +600,7 @@ static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, size_t size)
 
 static int MPIR_Bsend_finalize(void *p ATTRIBUTE((unused)))
 {
+    /* No lock since this is inside MPI_Finalize */
     void *b;
     int s;
 
