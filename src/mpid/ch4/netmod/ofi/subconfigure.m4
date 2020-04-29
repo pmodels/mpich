@@ -119,6 +119,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             "bgq")
                 enable_bgq="yes"
                 ;;
+            "verbs;ofi_rxm")
+                enable_verbs="yes"
+                enable_rxm="yes"
+                ;;
 
             dnl For these providers, we don't know exactly which capabilities we
             dnl want to select by default so we turn on runtime checks. At some point
@@ -255,6 +259,11 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             "netdir")
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_netdir="yes"
+                ;;
+            "verbs;ofi_rxm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_VERBS_RXM], [1], [Define to use verbs;ofi_rxm capability set])
+                enable_verbs="yes"
+                enable_rxm="yes"
                 ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
