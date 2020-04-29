@@ -5,7 +5,16 @@
 
 #include "mpidimpl.h"
 
-static int MPIDI_Progress_test(int flags)
+static int MPIDI_Progress_made(MPID_Progress_state * state)
+{
+    if (state->progress_count != state->progress_start) {
+        return TRUE;
+    }
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    return (state->progress_count != state->progress_start);
+}
+
+static int MPIDI_Progress_test(MPID_Progress_state * state)
 {
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
@@ -21,7 +30,7 @@ static int MPIDI_Progress_test(int flags)
     }
 #endif
 
-    if (flags & MPIDI_PROGRESS_HOOKS) {
+    if (state->flag & MPIDI_PROGRESS_HOOKS) {
         mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -33,15 +42,16 @@ static int MPIDI_Progress_test(int flags)
 #endif
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-
-    if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_NM_progress(0, 0);
-    }
+    if (!MPIDI_Progress_made(state)) {
+        if (state->flag & MPIDI_PROGRESS_NM) {
+            mpi_errno = MPIDI_NM_progress(0, 0);
+        }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (flags & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-        mpi_errno = MPIDI_SHM_progress(0, 0);
-    }
+        if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
+            mpi_errno = MPIDI_SHM_progress(0, 0);
+        }
 #endif
+    }
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
@@ -51,9 +61,33 @@ static int MPIDI_Progress_test(int flags)
     goto fn_exit;
 }
 
+void MPID_Progress_start(MPID_Progress_state * state)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
+
+    state->flag = MPIDI_PROGRESS_ALL;
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    state->progress_start = state->progress_count;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
+    return;
+}
+
+void MPID_Progress_end(MPID_Progress_state * state)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
+    return;
+}
+
 int MPID_Progress_test(void)
 {
-    return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
+    MPID_Progress_state state;
+    MPID_Progress_start(&state);
+    return MPIDI_Progress_test(&state);
 }
 
 int MPID_Progress_poke(void)
@@ -69,24 +103,6 @@ int MPID_Progress_poke(void)
     return ret;
 }
 
-void MPID_Progress_start(MPID_Progress_state * state)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
-    return;
-}
-
-void MPID_Progress_end(MPID_Progress_state * state)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
-    return;
-}
-
 int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -95,16 +111,17 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
 #else
-    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    /* track progress from last time left off */
+    state->progress_start = state->progress_count;
     while (1) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPIDI_Progress_test(state);
         MPIR_ERR_CHECK(mpi_errno);
-        if (state->progress_count != MPL_atomic_load_int(&MPIDI_global.progress_count)) {
+        if (MPIDI_Progress_made(state)) {
             break;
         }
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
