@@ -150,20 +150,6 @@ typedef struct MPID_nem_cell
 } MPID_nem_cell_t;
 typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
 
-#define MPID_NEM_CELL_TO_PACKET(cellp) (&(cellp)->pkt)
-#define MPID_NEM_PACKET_TO_CELL(packetp) \
-    ((MPID_nem_cell_ptr_t) ((char*)(packetp) - (char *)MPID_NEM_CELL_TO_PACKET((MPID_nem_cell_ptr_t)0)))
-#define MPID_NEM_MIN_PACKET_LEN (sizeof (MPID_nem_pkt_header_t))
-#define MPID_NEM_MAX_PACKET_LEN (MPID_NEM_CELL_PAYLOAD_LEN)
-#define MPID_NEM_PACKET_LEN(pkt) ((pkt)->header.datalen + MPID_NEM_MPICH_HEAD_LEN)
-
-#define MPID_NEM_OPT_LOAD     16 
-#define MPID_NEM_OPT_SIZE     ((sizeof(MPIDI_CH3_Pkt_t)) + (MPID_NEM_OPT_LOAD))
-#define MPID_NEM_OPT_HEAD_LEN ((MPID_NEM_MPICH_HEAD_LEN) + (MPID_NEM_OPT_SIZE))
-
-#define MPID_NEM_PACKET_OPT_LEN(pkt) \
-    (((pkt)->header.datalen < MPID_NEM_OPT_SIZE) ? (MPID_NEM_OPT_HEAD_LEN) : (MPID_NEM_PACKET_LEN(pkt)))
-
 typedef struct MPID_nem_queue
 {
     MPID_nem_cell_rel_ptr_t head;
