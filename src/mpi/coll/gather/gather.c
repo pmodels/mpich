@@ -138,10 +138,7 @@ int MPIR_Gather_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype se
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,

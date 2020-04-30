@@ -165,7 +165,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
                                                 comm_ptr,
                                                 cnt->u.ireduce.intra_gentran_tree.tree_type,
                                                 cnt->u.ireduce.intra_gentran_tree.k,
-                                                cnt->u.ireduce.intra_gentran_tree.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_tree.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_tree.buffer_per_child,
                                                 request);
             break;
@@ -174,7 +174,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
             mpi_errno =
                 MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                 comm_ptr,
-                                                cnt->u.ireduce.intra_gentran_ring.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_ring.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_ring.buffer_per_child,
                                                 request);
             break;
@@ -306,6 +306,11 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_tree:
+                /*Only knomial_1 tree supports non-commutative operations */
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, MPIR_Op_is_commutative(op) ||
+                                               MPIR_Ireduce_tree_type == MPIR_TREE_TYPE_KNOMIAL_1,
+                                               mpi_errno,
+                                               "Ireduce gentran_tree cannot be applied.\n");
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                     comm_ptr, MPIR_Ireduce_tree_type,
@@ -376,6 +381,11 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno =
+        MPIR_Ireduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, request);
 
   fn_exit:
     return mpi_errno;

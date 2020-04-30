@@ -231,6 +231,7 @@ typedef enum {
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatter_allcomm_nb,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear,
     MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb,
+    MPII_CSEL_CONTAINER_TYPE__ALGORITHM__Algorithm_count,
 } MPII_Csel_container_type_e;
 
 typedef struct {
@@ -269,7 +270,7 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_tree;
             struct {
@@ -309,10 +310,10 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
             } intra_gentran_tree;
             struct {
-                int maxbytes;
+                int chunk_size;
             } intra_gentran_ring;
             struct {
                 int scatterv_k;
@@ -328,11 +329,11 @@ typedef struct {
             struct {
                 int tree_type;
                 int k;
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_tree;
             struct {
-                int maxbytes;
+                int chunk_size;
                 int buffer_per_child;
             } intra_gentran_ring;
         } ireduce;

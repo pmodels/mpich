@@ -200,10 +200,7 @@ int MPIR_Bcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int 
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,

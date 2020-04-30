@@ -60,7 +60,7 @@ cvars:
       type        : enum
       group       : MPIR_CVAR_GROUP_COLL_ALGO
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
@@ -105,7 +105,8 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
                     mpi_errno =
                         MPIDI_POSIX_mpi_barrier_release_gather(comm, errflag);
                     break;
-
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Barrier_impl:
+                    goto fallback;
                 default:
                     MPIR_Assert(0);
             }
@@ -168,7 +169,8 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
                         MPIDI_POSIX_mpi_bcast_release_gather(buffer, count, datatype, root, comm,
                                                              errflag);
                     break;
-
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Bcast_impl:
+                    goto fallback;
                 default:
                     MPIR_Assert(0);
             }
@@ -235,6 +237,9 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                         MPIDI_POSIX_mpi_allreduce_release_gather(sendbuf, recvbuf, count, datatype,
                                                                  op, comm, errflag);
                     break;
+
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Allreduce_impl:
+                    goto fallback;
 
                 default:
                     MPIR_Assert(0);
@@ -514,6 +519,9 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                         MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype, op,
                                                               root, comm, errflag);
                     break;
+
+                case MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Reduce_impl:
+                    goto fallback;
 
                 default:
                     MPIR_Assert(0);

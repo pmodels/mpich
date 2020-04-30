@@ -108,10 +108,7 @@ int MPIR_Neighbor_allgatherv_allcomm_auto(const void *sendbuf, int sendcount, MP
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount,
