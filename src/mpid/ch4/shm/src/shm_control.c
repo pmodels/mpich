@@ -9,6 +9,10 @@
 #include "../xpmem/xpmem_control.h"
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+#include "../gpu/gpu_control.h"
+#endif
+
 int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -29,6 +33,14 @@ int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
             break;
         case MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE:
             mpi_errno = MPIDI_XPMEM_ctrl_send_lmt_cnt_free_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
+            break;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+        case MPIDI_SHM_GPU_SEND_IPC_RECV_REQ:
+            mpi_errno = MPIDI_GPU_ctrl_send_ipc_recv_req_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
+            break;
+        case MPIDI_SHM_GPU_SEND_IPC_RECV_ACK:
+            mpi_errno = MPIDI_GPU_ctrl_send_ipc_recv_ack_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
             break;
 #endif
         default:

@@ -14,6 +14,10 @@ typedef enum {
     MPIDI_SHM_XPMEM_SEND_LMT_RECV_FIN,  /* issued by receiver to notify completion of coop copy or single copy */
     MPIDI_SHM_XPMEM_SEND_LMT_CNT_FREE,  /* issued by sender to notify free counter obj in coop copy */
 #endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    MPIDI_SHM_GPU_SEND_IPC_RECV_REQ,    /* issued by sender to request a receiver driven data transfer */
+    MPIDI_SHM_GPU_SEND_IPC_RECV_ACK,    /* issued by receiver to acknowledge receiver driven data transfer completion */
+#endif
     MPIDI_SHM_CTRL_IDS_MAX
 } MPIDI_SHM_ctrl_id_t;
 
@@ -54,6 +58,23 @@ typedef struct MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free {
 typedef MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t;
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+typedef struct MPIDI_SHM_ctrl_gpu_send_recv_req {
+    uint64_t data_sz;
+    MPL_gpu_ipc_mem_handle_t mem_handle;
+    uint64_t sreq_ptr;
+
+    /* matching info */
+    int src_rank;
+    int tag;
+    MPIR_Context_id_t context_id;
+} MPIDI_SHM_ctrl_gpu_send_recv_req_t;
+
+typedef struct MPIDI_SHM_ctrl_gpu_send_recv_ack {
+    uint64_t req_ptr;
+} MPIDI_SHM_ctrl_gpu_send_recv_ack_t;
+#endif
+
 typedef union {
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     MPIDI_SHM_ctrl_xpmem_send_lmt_rts_t xpmem_slmt_rts;
@@ -61,6 +82,10 @@ typedef union {
     MPIDI_SHM_ctrl_xpmem_send_lmt_send_fin_t xpmem_slmt_send_fin;
     MPIDI_SHM_ctrl_xpmem_send_lmt_recv_fin_t xpmem_slmt_recv_fin;
     MPIDI_SHM_ctrl_xpmem_send_lmt_cnt_free_t xpmem_slmt_cnt_free;
+#endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    MPIDI_SHM_ctrl_gpu_send_recv_req_t gpu_recv_req;
+    MPIDI_SHM_ctrl_gpu_send_recv_ack_t gpu_recv_ack;
 #endif
     char dummy;                 /* some compilers (suncc) does not like empty struct */
 } MPIDI_SHM_ctrl_hdr_t;

@@ -154,6 +154,17 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
         }
     }
 }
+#else
+static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
+{
+    return MPI_SUCCESS;
+}
+
+static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
+{
+    return;
+}
+
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
 
 #endif /* CH4R_REQUEST_H_INCLUDED */

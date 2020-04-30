@@ -35,13 +35,16 @@ cvars:
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "../xpmem/shm_inline.h"
 #endif
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+#include "../gpu/shm_inline.h"
+#endif
 #include "../posix/shm_inline.h"
 
 #define MPIDI_SHM_PT2PT_DEFAULT 1
 #define MPIDI_SHM_PT2PT_MULTIMODS 2
 
 /* Enable multi-shmmods protocol when more than one shmmod is enabled. */
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+#if defined(MPIDI_CH4_SHM_ENABLE_XPMEM) || defined(MPIDI_CH4_SHM_ENABLE_GPU_IPC)
 #define MPIDI_SHM_PT2PT_PROT MPIDI_SHM_PT2PT_MULTIMODS
 #else
 #define MPIDI_SHM_PT2PT_PROT MPIDI_SHM_PT2PT_DEFAULT
@@ -81,14 +84,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mmods_try_matched_recv(void *buf,
         MPIR_ERR_CHECK(mpi_errno);
 
         *recvd_flag = true;
+        goto fn_exit;
     }
-
-  fn_fail:
-    goto fn_exit;
-  fn_exit:
 #endif /* MPIDI_CH4_SHM_ENABLE_XPMEM */
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    /* GPU IPC special receive */
+    if (MPIDI_SHM_REQUEST(message, status) & MPIDI_SHM_REQ_GPU_IPC_RECV) {
+        /* Matching GPU IPC receive is now posted */
+        MPIR_Datatype_add_ref_if_not_builtin(datatype); /* will -1 once completed in handle_lmt_recv */
+        MPIDIG_REQUEST(message, datatype) = datatype;
+        MPIDIG_REQUEST(message, buffer) = (char *) buf;
+        MPIDIG_REQUEST(message, count) = count;
+
+        MPIDI_GPU_am_unexp_rreq_t *unexp_rreq = &MPIDI_GPU_IPC_REQUEST(message, unexp_rreq);
+        mpi_errno = MPIDI_GPU_handle_ipc_recv(unexp_rreq->data_sz, unexp_rreq->sreq_ptr,
+                                              unexp_rreq->mem_handle, message);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        *recvd_flag = true;
+    }
+#endif /* MPIDI_CH4_SHM_ENABLE_GPU_IPC */
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MMODS_TRY_MATCHED_RECV);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 #endif /* end of (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS) */
 
@@ -154,8 +174,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISEND);
 
 #if (MPIDI_SHM_PT2PT_PROT == MPIDI_SHM_PT2PT_MULTIMODS)
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     bool dt_contig;
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     size_t data_sz;
 
     MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
@@ -170,6 +190,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
         goto fn_exit;
     }
 #endif /* end of MPIDI_CH4_SHM_ENABLE_XPMEM */
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    MPL_pointer_type_t mem_type;
+    MPL_gpu_query_pointer_type(buf, &mem_type);
+    MPIDI_Datatype_check_size(datatype, count, data_sz);
+
+    if (mem_type == MPL_GPU_POINTER_DEV && data_sz > MPIDI_SHM_am_eager_limit()) {
+        mpi_errno = MPIDI_GPU_ipc_isend(buf, count, datatype, rank, tag, comm,
+                                        context_offset, MPIDI_SHM_GPU_SEND_IPC_RECV_REQ, request);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+#endif /* end of MPIDI_CH4_SHM_ENABLE_GPU_IPC */
     mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
                                       context_offset, addr, request);
     MPIR_ERR_CHECK(mpi_errno);

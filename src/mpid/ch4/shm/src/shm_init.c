@@ -27,6 +27,11 @@ int MPIDI_SHMI_mpi_init_hook(int rank, int size, int *tag_bits)
     }
 #endif
 
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    ret = MPIDI_GPU_mpi_init_hook(rank, size, tag_bits);
+    MPIR_ERR_CHECK(ret);
+#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_MPI_INIT_HOOK);
     return ret;
@@ -46,6 +51,11 @@ int MPIDI_SHMI_mpi_finalize_hook(void)
         ret = MPIDI_XPMEM_mpi_finalize_hook();
         MPIR_ERR_CHECK(ret);
     }
+#endif
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU_IPC
+    ret = MPIDI_GPU_mpi_finalize_hook();
+    MPIR_ERR_CHECK(ret);
 #endif
 
     ret = MPIDI_POSIX_mpi_finalize_hook();
