@@ -615,6 +615,7 @@ AS_CASE([$enable_yield],
 #######################################################################
 
 PAC_ARG_THREAD_PACKAGE
+PAC_ARG_POSIX_MUTEX
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
@@ -672,9 +673,17 @@ case $with_thread_package in
 	;;
 esac
 
-# Define and export the selected thread library so that other packages
-# know what's used in MPL
+case $with_posix_mutex in
+    ticketlock)
+        POSIX_MUTEX_NAME=MPL_POSIX_MUTEX_TICKETLOCK
+        ;;
+    *)
+        POSIX_MUTEX_NAME=MPL_POSIX_MUTEX_NATIVE
+        ;;
+esac
+
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
+AC_DEFINE_UNQUOTED([POSIX_MUTEX_NAME],[$POSIX_MUTEX_NAME],[set to the choice of the posix mutex])
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 PAC_CC_CHECK_TLS

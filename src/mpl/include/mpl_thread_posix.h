@@ -14,7 +14,14 @@
 #include <errno.h>
 #include <pthread.h>
 
+#define MPL_POSIX_MUTEX_NATIVE 0
+#define MPL_POSIX_MUTEX_TICKETLOCK 1
+
+#if MPL_POSIX_MUTEX_NAME == MPL_POSIX_MUTEX_TICKETLOCK
+#include "mpl_posix_mutex_ticketlock.h"
+#else
 #include "mpl_posix_mutex_native.h"
+#endif
 
 typedef pthread_t MPL_thread_id_t;
 typedef pthread_key_t MPL_thread_tls_key_t;
