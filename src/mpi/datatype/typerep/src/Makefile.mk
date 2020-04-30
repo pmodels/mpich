@@ -13,7 +13,8 @@ mpi_core_sources += \
     src/mpi/datatype/typerep/src/typerep_dataloop_commit.c \
     src/mpi/datatype/typerep/src/typerep_dataloop_debug.c \
     src/mpi/datatype/typerep/src/typerep_dataloop_subarray.c \
-    src/mpi/datatype/typerep/src/typerep_dataloop_darray.c
+    src/mpi/datatype/typerep/src/typerep_dataloop_darray.c \
+    src/mpi/datatype/typerep/src/typerep_dataloop_size_external.c
 
 noinst_HEADERS += \
     src/mpi/datatype/typerep/src/typerep_internal.h
