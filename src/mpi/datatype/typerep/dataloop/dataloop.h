@@ -96,6 +96,7 @@ void MPIR_Segment_pack(MPIR_Segment * segp, MPI_Aint first, MPI_Aint * lastp, vo
 void MPIR_Segment_unpack(MPIR_Segment * segp,
                          MPI_Aint first, MPI_Aint * lastp, const void *streambuf);
 
+MPI_Aint MPIR_Dataloop_size_external32(MPI_Datatype type);
 void MPIR_Segment_pack_external32(MPIR_Segment * segp,
                                   MPI_Aint first, MPI_Aint * lastp, void *pack_buffer);
 void MPIR_Segment_unpack_external32(MPIR_Segment * segp,

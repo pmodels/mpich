@@ -525,17 +525,17 @@ void MPIR_Dataloop_create_resized(MPI_Datatype oldtype, MPI_Aint extent, void **
     *new_loop_p_ = new_loop;
 }
 
-MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
+MPI_Aint MPIR_Dataloop_size_external32(MPI_Datatype type)
 {
     if (HANDLE_IS_BUILTIN(type)) {
-        return MPII_Datatype_get_basic_size_external32(type);
+        return MPII_Dataloop_get_basic_size_external32(type);
     } else {
         MPII_Dataloop *dlp = NULL;
 
         MPIR_DATALOOP_GET_LOOPPTR(type, dlp);
         MPIR_Assert(dlp != NULL);
 
-        return MPII_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
+        return MPII_Dataloop_stream_size(dlp, MPII_Dataloop_get_basic_size_external32);
     }
 }
 
