@@ -209,10 +209,7 @@ int MPIR_Reduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,

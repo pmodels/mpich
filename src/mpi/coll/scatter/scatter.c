@@ -137,11 +137,7 @@ int MPIR_Scatter_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype s
         default:
             MPIR_Assert(0);
     }
-
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
