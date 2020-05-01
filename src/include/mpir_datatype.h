@@ -537,10 +537,6 @@ char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
 char *MPIR_Datatype_combiner_to_string(int combiner);
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct);
 
-MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type);
-
-MPI_Aint MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type);
-
 MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
                                             const MPI_Aint * blocklength_array,
                                             const void *displacement_array,

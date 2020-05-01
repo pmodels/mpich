@@ -181,6 +181,7 @@ int MPI_Finalize(void)
     MPII_finalize_memory_tracing();
 
     MPII_thread_mutex_destroy();
+    MPIR_Typerep_finalize();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
     /* ... end of body of routine ... */

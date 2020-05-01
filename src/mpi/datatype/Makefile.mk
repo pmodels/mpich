@@ -61,7 +61,6 @@ noinst_HEADERS += src/mpi/datatype/datatype.h
 
 mpi_core_sources +=                              \
     src/mpi/datatype/typeutil.c                  \
-    src/mpi/datatype/ext32_datatype.c            \
     src/mpi/datatype/type_blockindexed.c         \
     src/mpi/datatype/type_create_pairtype.c      \
     src/mpi/datatype/type_debug.c

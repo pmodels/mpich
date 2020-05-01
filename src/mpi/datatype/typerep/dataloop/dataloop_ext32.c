@@ -5,6 +5,7 @@
 
 #include <mpiimpl.h>
 #include <mpir_typerep.h>
+#include "dataloop_internal.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,7 +81,7 @@ static external32_basic_size_t external32_basic_size_array[] = {
     {MPI_CXX_LONG_DOUBLE_COMPLEX, 2 * 16}
 };
 
-MPI_Aint MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type)
+MPI_Aint MPII_Dataloop_get_basic_size_external32(MPI_Datatype el_type)
 {
     MPI_Aint ret = (MPI_Aint) 0;
     unsigned int i = 0;

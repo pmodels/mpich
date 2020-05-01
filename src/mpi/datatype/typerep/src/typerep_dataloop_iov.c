@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_Aint offset,
-                        MPL_IOV * iov, int max_iov_len, MPI_Aint max_iov_bytes,
+                        struct iovec *iov, int max_iov_len, MPI_Aint max_iov_bytes,
                         int *actual_iov_len, MPI_Aint * actual_iov_bytes)
 {
     MPIR_Segment *seg;
@@ -27,16 +27,16 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_
     return mpi_errno;
 }
 
-int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint offset,
-                         MPI_Aint max_iov_bytes, MPI_Aint * iov_len)
+int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_bytes,
+                         MPI_Aint * iov_len)
 {
     MPIR_Segment *seg;
     int mpi_errno = MPI_SUCCESS;
 
     seg = MPIR_Segment_alloc(NULL, count, type);
 
-    MPI_Aint last = offset + max_iov_bytes;
-    MPIR_Segment_count_contig_blocks(seg, offset, &last, iov_len);
+    MPI_Aint last = max_iov_bytes;
+    MPIR_Segment_count_contig_blocks(seg, 0, &last, iov_len);
 
     MPIR_Segment_free(seg);
 
