@@ -15,9 +15,9 @@ static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nproc
                        int rank, int darg, int order, MPI_Aint orig_extent,
                        MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
 
-int MPII_Typerep_convert_darray(int size, int rank, int ndims, int *array_of_gsizes,
-                                int *array_of_distribs, int *array_of_dargs,
-                                int *array_of_psizes, int order, MPI_Datatype oldtype,
+int MPII_Typerep_convert_darray(int size, int rank, int ndims, const int *array_of_gsizes,
+                                const int *array_of_distribs, const int *array_of_dargs,
+                                const int *array_of_psizes, int order, MPI_Datatype oldtype,
                                 MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
