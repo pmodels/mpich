@@ -43,7 +43,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(MPL_IOV ** iovp, int *countp, size_t nb);
+static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb);
 
 static int MPIDI_CH3i_Progress_test(void)
 {
@@ -489,7 +489,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                     } else {    /* more data to send */
 
                         for (;;) {
-                            MPL_IOV *iovp;
+                            struct iovec *iovp;
                             size_t nb;
 
                             iovp = sreq->dev.iov;
@@ -709,19 +709,19 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: What is this routine for? */
-static int adjust_iov(MPL_IOV ** iovp, int *countp, size_t nb)
+static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb)
 {
-    MPL_IOV *const iov = *iovp;
+    struct iovec *const iov = *iovp;
     const int count = *countp;
     int offset = 0;
 
     while (offset < count) {
-        if (iov[offset].MPL_IOV_LEN <= nb) {
-            nb -= iov[offset].MPL_IOV_LEN;
+        if (iov[offset].iov_len <= nb) {
+            nb -= iov[offset].iov_len;
             offset++;
         } else {
-            iov[offset].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) iov[offset].MPL_IOV_BUF + nb);
-            iov[offset].MPL_IOV_LEN -= nb;
+            iov[offset].iov_base = (void *) ((char *) iov[offset].iov_base + nb);
+            iov[offset].iov_len -= nb;
             break;
         }
     }
@@ -740,7 +740,7 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     while (1) {
-        MPL_IOV *iovp;
+        struct iovec *iovp;
         size_t nb;
 
         iovp = rreq->dev.iov;

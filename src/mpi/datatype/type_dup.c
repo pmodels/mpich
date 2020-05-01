@@ -78,10 +78,11 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
-            MPIR_Assert(old_dtp->typerep != NULL);
-            MPIR_Typerep_dup(old_dtp->typerep, &new_dtp->typerep);
             MPID_Type_commit_hook(new_dtp);
         }
+
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "dup type %x created.", *newtype);

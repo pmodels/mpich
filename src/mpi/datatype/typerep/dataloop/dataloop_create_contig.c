@@ -22,7 +22,7 @@
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
+int MPIR_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, void **dlp_p)
 {
     MPI_Aint count;
     int is_builtin, apply_contig_coalescing = 0;
@@ -38,7 +38,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
         MPI_Aint old_size = 0, old_extent = 0;
         MPII_Dataloop *old_loop_ptr;
 
-        MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
+        MPIR_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
         MPIR_Datatype_get_size_macro(oldtype, old_size);
         MPIR_Datatype_get_extent_macro(oldtype, old_extent);
 
@@ -72,7 +72,7 @@ int MPII_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, MPII_
         /* user-defined base type (oldtype) */
         MPII_Dataloop *old_loop_ptr;
 
-        MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
+        MPIR_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
 
         if (apply_contig_coalescing) {
             /* make a copy of the old loop and multiply the count */

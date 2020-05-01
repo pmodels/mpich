@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
 
     /* if we cannot fit the entire data into a single IOV array,
      * fallback to pack */
-    MPIR_Typerep_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), 0, dt_ptr->size * count,
+    MPIR_Typerep_iov_len(count, MPIDI_OFI_REQUEST(rreq, datatype), dt_ptr->size * count,
                          &num_contig);
     if (num_contig > MPIDI_OFI_global.rx_iov_limit)
         goto unpack;

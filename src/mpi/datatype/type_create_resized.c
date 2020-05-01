@@ -105,11 +105,17 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
     }
 
+    int mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *newtype_p = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "resized type %x created.", new_dtp->handle);
 
-    return MPI_SUCCESS;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /*@

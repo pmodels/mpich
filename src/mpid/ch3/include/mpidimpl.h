@@ -717,7 +717,7 @@ typedef struct MPIDI_VC
        n_hdr_iov should not exceed MPL_IOV_LIMIT - 2 (one for header and one
        for packed data).*/
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
-			      void *header, intptr_t hdr_sz, MPL_IOV *hdr_iov, int n_hdr_iov);
+			      void *header, intptr_t hdr_sz, struct iovec *hdr_iov, int n_hdr_iov);
 
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_ops_t *comm_ops;
@@ -1305,7 +1305,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * pkt, intptr_t pkt_sz,
   If the send completes immediately, the channel implementation should return 
   NULL.
 @*/
-int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int iov_n, 
+int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int iov_n,
 			 MPIR_Request **sreq_ptr);
 
 
@@ -1369,7 +1369,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * pkt,
   If the send completes immediately, the channel implementation still must 
   call the OnDataAvail routine in the request, if any.
 @*/
-int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov,
+int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, struct iovec * iov,
 		     int iov_n);
 
 /*@
@@ -1409,7 +1409,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr);
 
 
 int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
-				     MPL_IOV * const iov, int * const iov_n);
+				     struct iovec * const iov, int * const iov_n);
 int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq);
 int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq);
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq);
@@ -1781,7 +1781,7 @@ int MPIDI_CH3_EagerSyncZero(MPIR_Request **, int, int, MPIR_Comm *, int );
 
 int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPIR_Request *sreq,
                                  void *header, intptr_t hdr_sz,
-                                 MPL_IOV *hdr_iov, int n_hdr_iov);
+                                 struct iovec *hdr_iov, int n_hdr_iov);
 
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */

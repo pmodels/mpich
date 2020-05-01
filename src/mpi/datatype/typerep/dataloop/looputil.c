@@ -25,7 +25,7 @@ struct piece_params {
             char *pack_buffer;
         } pack;
         struct {
-            MPL_IOV *vectorp;
+            struct iovec *vectorp;
             int index;
             int length;
         } pack_vector;
@@ -250,7 +250,7 @@ static inline void segment_init(const void *buf,
         depth = 1;
     } else if (count == 1) {
         /* don't use the builtin */
-        MPII_DATALOOP_GET_LOOPPTR(handle, dlp);
+        MPIR_DATALOOP_GET_LOOPPTR(handle, dlp);
     } else {
         /* default: need to use builtin to handle contig; must check
          * loop depth first
@@ -259,7 +259,7 @@ static inline void segment_init(const void *buf,
         MPI_Aint type_size, type_extent;
         MPI_Datatype el_type;
 
-        MPII_DATALOOP_GET_LOOPPTR(handle, oldloop);
+        MPIR_DATALOOP_GET_LOOPPTR(handle, oldloop);
         MPIR_Assert(oldloop != NULL);
         MPIR_Datatype_get_size_macro(handle, type_size);
         MPIR_Datatype_get_extent_macro(handle, type_extent);
@@ -651,7 +651,7 @@ static int contig_pack_external32_to_buf(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Datatype_get_basic_size_external32(el_type);
+    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -697,7 +697,7 @@ static int contig_unpack_external32_to_buf(MPI_Aint * blocks_p,
     MPIR_FUNC_VERBOSE_ENTER(MPIR_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIR_Datatype_get_basic_size(el_type);
-    dest_el_size = MPII_Datatype_get_basic_size_external32(el_type);
+    dest_el_size = MPII_Dataloop_get_basic_size_external32(el_type);
     MPIR_Assert(dest_el_size);
 
     /*
@@ -747,7 +747,7 @@ void MPIR_Segment_pack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_pack_external32_to_buf, NULL,    /* MPIR_Segment_vector_pack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_pack_external32_to_buf, */
-                            MPII_Datatype_get_basic_size_external32, &pack_params);
+                            MPII_Dataloop_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPIR_STATE_MPID_SEGMENT_PACK_EXTERNAL);
     return;
@@ -765,7 +765,7 @@ void MPIR_Segment_unpack_external32(struct MPIR_Segment *segp,
     MPII_Segment_manipulate(segp, first, lastp, contig_unpack_external32_to_buf, NULL,  /* MPIR_Segment_vector_unpack_external32_to_buf, */
                             NULL,       /* blkidx */
                             NULL,       /* MPIR_Segment_index_unpack_external32_to_buf, */
-                            MPII_Datatype_get_basic_size_external32, &pack_params);
+                            MPII_Dataloop_get_basic_size_external32, &pack_params);
 
     MPIR_FUNC_VERBOSE_EXIT(MPIR_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
     return;
@@ -837,7 +837,7 @@ void MPIR_Type_release_contents(MPI_Datatype type,
 *           the amount of the array that has actual data)
 */
 void MPIR_Segment_to_iov(struct MPIR_Segment *segp,
-                         MPI_Aint first, MPI_Aint * lastp, MPL_IOV * vectorp, int *lengthp)
+                         MPI_Aint first, MPI_Aint * lastp, struct iovec *vectorp, int *lengthp)
 {
     struct piece_params packvec_params;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_SEGMENT_TO_IOV);
@@ -890,8 +890,8 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 
     last_idx = paramp->u.pack_vector.index - 1;
     if (last_idx >= 0) {
-        last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_BUF) +
-            paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN;
+        last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+            paramp->u.pack_vector.vectorp[last_idx].iov_len;
     }
 
     if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((char *) bufp + rel_off))) {
@@ -904,10 +904,10 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
         return 1;
     } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
         /* add this size to the last vector rather than using up another one */
-        paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN += size;
+        paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
     } else {
-        paramp->u.pack_vector.vectorp[last_idx + 1].MPL_IOV_BUF = (char *) bufp + rel_off;
-        paramp->u.pack_vector.vectorp[last_idx + 1].MPL_IOV_LEN = size;
+        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+        paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
         paramp->u.pack_vector.index++;
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_SEGMENT_CONTIG_PACK_TO_IOV);
@@ -972,8 +972,8 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 
         last_idx = paramp->u.pack_vector.index - 1;
         if (last_idx >= 0) {
-            last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_BUF) +
-                paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN;
+            last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+                paramp->u.pack_vector.vectorp[last_idx].iov_len;
         }
 
         if ((last_idx == paramp->u.pack_vector.length - 1) &&
@@ -993,10 +993,10 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
             return 1;
         } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
             /* add this size to the last vector rather than using up new one */
-            paramp->u.pack_vector.vectorp[last_idx].MPL_IOV_LEN += size;
+            paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
         } else {
-            paramp->u.pack_vector.vectorp[last_idx + 1].MPL_IOV_BUF = (char *) bufp + rel_off;
-            paramp->u.pack_vector.vectorp[last_idx + 1].MPL_IOV_LEN = size;
+            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+            paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
             paramp->u.pack_vector.index++;
         }
 

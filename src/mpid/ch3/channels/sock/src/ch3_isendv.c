@@ -5,7 +5,7 @@
 
 #include "mpidi_ch3_impl.h"
 
-static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
+static void update_request(MPIR_Request * sreq, struct iovec * iov, int iov_count,
                            int iov_offset, size_t nb)
 {
     int i;
@@ -17,19 +17,19 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
         sreq->dev.iov[i] = iov[i];
     }
     if (iov_offset == 0) {
-        MPIR_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
-        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
-        sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
+        MPIR_Assert(iov[0].iov_len == sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].iov_base;
+        sreq->dev.iov[0].iov_base = (void *) & sreq->dev.pending_pkt;
     }
-    sreq->dev.iov[iov_offset].MPL_IOV_BUF =
-        (MPL_IOV_BUF_CAST) ((char *) sreq->dev.iov[iov_offset].MPL_IOV_BUF + nb);
-    sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
+    sreq->dev.iov[iov_offset].iov_base =
+        (void *) ((char *) sreq->dev.iov[iov_offset].iov_base + nb);
+    sreq->dev.iov[iov_offset].iov_len -= nb;
     sreq->dev.iov_count = iov_count;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
 
-int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_iov)
+int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, struct iovec * iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vcch = &vc->ch;
@@ -39,13 +39,13 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
     MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
-    MPIR_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert(iov[0].iov_len <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The sock channel uses a fixed length header, the size of which is the
      * maximum of all possible packet headers */
-    iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
     MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                 MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF));
+                 MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) iov[0].iov_base));
 
     if (vcch->state == MPIDI_CH3I_VC_STATE_CONNECTED) { /* MT */
         /* Connection already formed.  If send queue is empty attempt to send
@@ -56,7 +56,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "send queue empty, attempting to write");
 
-            MPL_DBG_PKT(vcch->conn, (MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF, "isendv");
+            MPL_DBG_PKT(vcch->conn, (MPIDI_CH3_Pkt_t *) iov[0].iov_base, "isendv");
             /* MT - need some signalling to lock down our right to use the
              * channel, thus insuring that the progress engine does
              * also try to write */
@@ -73,8 +73,8 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq, MPL_IOV * iov, int n_
                               "wrote %ld bytes", (unsigned long) nb);
 
                 while (offset < n_iov) {
-                    if (iov[offset].MPL_IOV_LEN <= nb) {
-                        nb -= iov[offset].MPL_IOV_LEN;
+                    if (iov[offset].iov_len <= nb) {
+                        nb -= iov[offset].iov_len;
                         offset++;
                     } else {
                         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE,

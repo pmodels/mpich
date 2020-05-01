@@ -17,7 +17,7 @@
 int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
 {
     MPIDI_VC_t *vc;
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
     int i, size, my_rank;
     MPIR_Request *request;
@@ -54,8 +54,8 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
 
             MPIDI_Comm_get_vc_set_active(comm_ptr, i, &vc);
 
-            iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) revoke_pkt;
-            iov[0].MPL_IOV_LEN = sizeof(*revoke_pkt);
+            iov[0].iov_base = (void *) revoke_pkt;
+            iov[0].iov_len = sizeof(*revoke_pkt);
 
             MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 1, &request);
