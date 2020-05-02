@@ -94,10 +94,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
         if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
             if (MPIDI_REQUEST(rreq, is_local)) {
                 /* SHM, cancel NM partner */
+                /* canceling a netmod recv request in libfabric ultimately
+                 * has one of the two results: 1. COMPLETION event 2. or,
+                 * FI_ECANCELED.
+                 * MPIDI_NM_mpi_cancel_recv() may not wait for COMPLETION
+                 * event when fi_cancel returns FI_NOENT. In other cases,
+                 * progress call is invoked and recv_event may happen
+                 * for recv completion. In this case, it frees up
+                 * anysrc_partner in recv_event(). Therefore, increase
+                 * ref count here to prevent free since here we will check
+                 * the request status */
+                MPIR_Request_add_ref(anysrc_partner);
                 mpi_errno = MPIDI_NM_mpi_cancel_recv(anysrc_partner);
                 MPIR_ERR_CHECK(mpi_errno);
                 if (!MPIR_STATUS_GET_CANCEL_BIT(anysrc_partner->status)) {
-                    /* failed, cancel SHM rreq instead
+                    /* either complete or failed, cancel SHM rreq instead
                      * NOTE: comm and datatype will be defreferenced at caller site
                      */
                     MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -111,6 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                     /* cancel freed it once, freed once more on behalf of mpi-layer */
                     MPIR_Request_free_unsafe(anysrc_partner);
                 }
+                MPIR_Request_free_unsafe(anysrc_partner);
             } else {
                 /* NM, cancel SHM partner */
                 /* prevent free, we'll complete it separately */
