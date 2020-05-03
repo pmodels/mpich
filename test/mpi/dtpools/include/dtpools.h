@@ -37,6 +37,8 @@ int DTP_pool_free(DTP_pool_s dtp);
 int DTP_pool_set_rand_idx(DTP_pool_s dtp, int rand_idx);
 
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize);
+int DTP_obj_create_custom(DTP_pool_s dtp, DTP_obj_s * obj, const char *desc);
+
 int DTP_obj_free(DTP_obj_s obj);
 const char *DTP_obj_get_description(DTP_obj_s obj);
 
