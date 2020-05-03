@@ -360,8 +360,16 @@ int MPIR_Type_struct(int count,
         new_dtp->is_contig = 0;
     }
 
+    mpi_errno = MPIR_Typerep_create_struct(count, blocklength_array, displacement_array,
+                                           oldtype_array, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *newtype = new_dtp->handle;
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
@@ -394,10 +402,6 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
                                            count,       /* types */
                                            ints, array_of_displacements, array_of_types);
 
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Typerep_create_struct(count, array_of_blocklengths, array_of_displacements,
-                                           array_of_types, &new_dtp->typerep);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
