@@ -12,19 +12,22 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_eager_iqueue_cell_t
     * MPIDI_POSIX_eager_iqueue_new_cell(MPIDI_POSIX_eager_iqueue_transport_t * transport)
 {
     int i;
+    MPIDI_POSIX_eager_iqueue_cell_t *cell = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
 
     for (i = 0; i < transport->num_cells; i++) {
-        MPIDI_POSIX_eager_iqueue_cell_t *cell = MPIDI_POSIX_EAGER_IQUEUE_THIS_CELL(transport, i);
+        cell = MPIDI_POSIX_EAGER_IQUEUE_THIS_CELL(transport, i);
         if (cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL) {
-            return cell;
+            goto fn_exit;
         }
     }
+    cell = NULL;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_IQUEUE_NEW_CELL);
-    return NULL;
+    return cell;
 }
 
 /* This function attempts to send the next chunk of a message via the queue. If no cells are
@@ -145,7 +148,7 @@ MPIDI_POSIX_eager_send(int grank,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_SEND);
     return ret;
 }
 
