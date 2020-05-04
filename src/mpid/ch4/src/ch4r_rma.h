@@ -72,8 +72,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
-    am_hdr.count = target_count;
-    am_hdr.datatype = target_datatype;
+    am_hdr.data_sz = data_sz;
     am_hdr.preq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
 
@@ -239,8 +238,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
-    am_hdr.count = target_count;
-    am_hdr.datatype = target_datatype;
+    am_hdr.data_sz = data_sz;
     am_hdr.greq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
