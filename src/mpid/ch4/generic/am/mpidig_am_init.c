@@ -84,8 +84,8 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_REQ, &MPIDIG_put_iov_origin_cb, &MPIDIG_put_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_ACK, NULL, &MPIDIG_put_iov_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PUT_DT_REQ, &MPIDIG_put_dt_origin_cb, &MPIDIG_put_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PUT_DT_ACK, NULL, &MPIDIG_put_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
                      &MPIDIG_put_data_origin_cb, &MPIDIG_put_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_REQ, &MPIDIG_acc_iov_origin_cb, &MPIDIG_acc_iov_target_msg_cb);

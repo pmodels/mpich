@@ -104,11 +104,11 @@ typedef struct MPIDIG_rreq_t {
 typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
     MPIR_Request *preq_ptr;
-    void *dt_iov;
+    void *flattened_dt;
+    MPIR_Datatype *dt;
     void *origin_addr;
     int origin_count;
     MPI_Datatype origin_datatype;
-    int n_iov;
     void *target_addr;
 } MPIDIG_put_req_t;
 
