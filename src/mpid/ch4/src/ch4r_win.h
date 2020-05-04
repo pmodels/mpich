@@ -290,9 +290,9 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
         MPIR_Group_release(group);
         MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
     } else {
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPID_Progress_test();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         *flag = 0;
     }
 
@@ -472,9 +472,9 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     /* MPIR_Barrier's state is protected by ALLFUNC_MUTEX.
      * In VCI granularity, individual send/recv/wait operations will take
      * the VCI lock internally. */
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FENCE);
