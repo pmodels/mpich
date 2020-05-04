@@ -403,9 +403,9 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
 #define MPIDIU_PROGRESS()                                   \
     do {                                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
         mpi_errno = MPID_Progress_test();                       \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
         MPIR_ERR_CHECK(mpi_errno);  \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -415,13 +415,13 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
 #define MPIDIU_PROGRESS_WHILE(cond)         \
     do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
         while (cond) {                          \
             mpi_errno = MPID_Progress_test();   \
             if (mpi_errno) break;               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         } \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
         MPIR_ERR_CHECK(mpi_errno);              \
     } while (0)
 
@@ -432,13 +432,13 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
  */
 #define MPIDIU_PROGRESS_DO_WHILE(cond) \
     do {                                        \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
         do {                          \
             mpi_errno = MPID_Progress_test();   \
             if (mpi_errno) break;               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         } while (cond); \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock); \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
         MPIR_ERR_CHECK(mpi_errno);              \
     } while (0)
 
