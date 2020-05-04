@@ -10,12 +10,12 @@
 int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
 
     mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
     return mpi_errno;
 }
 
@@ -114,8 +114,8 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_HUGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
     /* Look up the communicator */
     comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
@@ -181,7 +181,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     recv_elem->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
   fn_exit:
     return mpi_errno;

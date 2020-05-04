@@ -184,8 +184,8 @@ static void finalize_av_table(void);
 static int choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_NETMOD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHOOSE_NETMOD);
 
     MPIR_Assert(MPIR_CVAR_CH4_NETMOD != NULL);
 
@@ -208,7 +208,7 @@ static int choose_netmod(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s",
                          MPIR_CVAR_CH4_NETMOD);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHOOSE_NETMOD);
     return mpi_errno;
   fn_fail:
 

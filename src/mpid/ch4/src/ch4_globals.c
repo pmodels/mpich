@@ -70,8 +70,8 @@ void MPIDI_sigusr1_handler(int sig)
 
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ABORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ABORT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ABORT);
 
     char world_str[MPI_MAX_ERROR_STRING] = "";
     if (MPIR_Process.comm_world) {
@@ -104,7 +104,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_Debugger_set_aborting(error_msg);
 #endif
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ABORT);
     fflush(stderr);
     fflush(stdout);
     if (NULL == comm || (MPIR_Comm_size(comm) == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM))
