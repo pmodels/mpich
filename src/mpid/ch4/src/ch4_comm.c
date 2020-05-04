@@ -130,8 +130,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_COMMIT_PRE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
@@ -196,7 +196,7 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 #endif
 #endif
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_COMMIT_PRE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -205,8 +205,8 @@ int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_COMMIT_POST_HOOK);
 
     mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
@@ -220,7 +220,7 @@ int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_COMMIT_POST_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -231,8 +231,8 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FREE_HOOK);
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_NONE:
@@ -303,7 +303,7 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_FREE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

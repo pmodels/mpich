@@ -199,8 +199,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_DO_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_DO_PUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_DO_PUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_DO_PUT);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
@@ -236,7 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_DO_PUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_DO_PUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -257,8 +257,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     size_t offset;
     MPI_Aint origin_true_lb, target_true_lb;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_DO_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_DO_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_DO_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_DO_GET);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
     MPIDI_Datatype_check_origin_target_contig_size_lb(origin_datatype, target_datatype,
@@ -289,7 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_DO_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_DO_GET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -304,8 +304,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_PUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_PUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PUT);
 
 #ifdef MPICH_UCX_AM_ONLY
     mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
@@ -321,7 +321,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_PUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
     return mpi_errno;
 }
 
@@ -334,8 +334,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
 #ifdef MPICH_UCX_AM_ONLY
     mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
@@ -351,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     }
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
     return mpi_errno;
 }
 
@@ -371,8 +371,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                            target_disp, target_count, target_datatype, win, request);
 #else
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_RGET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RPUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
@@ -395,7 +395,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_RGET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -476,8 +476,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                            target_disp, target_count, target_datatype, win, request);
 #else
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_RGET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
 
     if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
@@ -500,7 +500,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_RGET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

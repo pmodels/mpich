@@ -15,8 +15,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
                                                  MPI_Status * status)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROBE_UNSAFE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROBE_UNSAFE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_UNSAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_UNSAFE);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROBE_UNSAFE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE_UNSAFE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

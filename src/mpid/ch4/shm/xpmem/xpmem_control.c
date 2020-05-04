@@ -14,15 +14,15 @@ int MPIDI_XPMEM_ctrl_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_recv_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
 
     XPMEM_TRACE("send_lmt_recv_fin_cb: complete sreq %p\n", sreq);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, datatype));
     MPID_Request_complete(sreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_RECV_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -33,8 +33,8 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_send_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
 
     XPMEM_TRACE("send_lmt_send_fin_cb: complete rreq %p\n", rreq);
 
@@ -45,7 +45,7 @@ int MPIDI_XPMEM_ctrl_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPID_Request_complete(rreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_CTRL_SEND_LMT_SEND_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

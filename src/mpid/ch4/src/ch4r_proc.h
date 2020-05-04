@@ -242,8 +242,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RANK_TO_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RANK_TO_LPID);
 
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
@@ -253,7 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
         ret = -1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RANK_TO_LPID);
     return ret;
 }
 
