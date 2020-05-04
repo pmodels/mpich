@@ -62,6 +62,7 @@ noinst_PROGRAMS =  \
     large_tag \
     pingping  \
     pingping_barrier  \
+    dtpools_pt2pt \
     sendrecv1 \
     sendself
 

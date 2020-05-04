@@ -52,3 +52,4 @@ dtype_send 2
 recv_any 2
 irecv_any 2
 large_tag 2
+dtpools_pt2pt 2
