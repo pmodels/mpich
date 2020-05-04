@@ -44,7 +44,7 @@ int MPIR_Dataloop_create_contiguous(MPI_Aint icount, MPI_Datatype oldtype, void 
 
         /* if we have a simple combination of contigs, coalesce */
         if (((old_loop_ptr->kind & MPII_DATALOOP_KIND_MASK) == MPII_DATALOOP_KIND_CONTIG)
-            && (old_size == old_extent)) {
+            && (old_size == old_extent) && (old_loop_ptr->el_size == old_loop_ptr->el_extent)) {
             /* will just copy contig and multiply count */
             apply_contig_coalescing = 1;
         }
