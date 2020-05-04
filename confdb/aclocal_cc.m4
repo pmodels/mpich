@@ -542,7 +542,7 @@ if test "$enable_strict_done" != "yes" ; then
 	     stdgnu99)
 	        c_std=gnu99
 		;;
-	     !stdc)
+	     nostdc)
 		c_std=none
 		;;
 	     posix1995)
@@ -554,13 +554,13 @@ if test "$enable_strict_done" != "yes" ; then
 	     posix2008)
 		posix_std=2008
 		;;
-	     !posix)
+	     noposix)
 		posix_std=none
 		;;
 	     opt)
 		enable_opt=yes
 		;;
-	     !opt)
+	     noopt)
 		enable_opt=no
 		;;
 	     all|yes)
