@@ -1397,8 +1397,8 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
         MPIDIG_REQUEST(rreq, req->preq.dt_iov) = NULL;
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
-        MPIDIG_REQUEST(rreq, count) = msg_hdr->count;
-        MPIDIG_REQUEST(rreq, datatype) = msg_hdr->datatype;
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
+        MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         MPIDIG_recv_type_init(in_data_sz, rreq);
     }
 
@@ -2040,8 +2040,8 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;
     MPIDIG_REQUEST(rreq, req->greq.n_iov) = msg_hdr->n_iov;
     MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
-    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->count;
-    MPIDIG_REQUEST(rreq, req->greq.datatype) = msg_hdr->datatype;
+    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->data_sz;
+    MPIDIG_REQUEST(rreq, req->greq.datatype) = MPI_BYTE;
     MPIDIG_REQUEST(rreq, req->greq.dt_iov) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
     MPIDIG_REQUEST(rreq, rank) = msg_hdr->src_rank;
