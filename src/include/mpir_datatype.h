@@ -267,6 +267,21 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
         }                                                                      \
     } while (0)
 
+#define MPIR_Datatype_get_density(datatype_, density_)          \
+    do {                                                        \
+        int is_contig_;                                         \
+        MPIR_Datatype_is_contig((datatype_), &is_contig_);      \
+        if (is_contig_) {                                       \
+            (density_) = INT_MAX;                               \
+        } else {                                                \
+            MPIR_Datatype *dt_ptr_;                             \
+            MPIR_Datatype_get_ptr((datatype_), dt_ptr_);        \
+            MPI_Aint size_;                                     \
+            MPIR_Datatype_get_size_macro((datatype_), size_);   \
+            (density_) = size_ / dt_ptr_->max_contig_blocks;    \
+        }                                                       \
+    } while (0)
+
 /* MPIR_Datatype_ptr_release decrements the reference count on the MPIR_Datatype
  * and, if the refct is then zero, frees the MPIR_Datatype and associated
  * structures.
