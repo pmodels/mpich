@@ -102,18 +102,17 @@ typedef struct MPIDIG_put_msg_t {
     uint64_t win_id;
     MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_put_msg_t;
 
-typedef struct MPIDIG_put_iov_ack_msg_t {
+typedef struct MPIDIG_put_dt_ack_msg_t {
     int src_rank;
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
-} MPIDIG_put_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
+} MPIDIG_put_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
 
 typedef struct MPIDIG_put_dat_msg_t {
     MPIR_Request *preq_ptr;
@@ -130,9 +129,8 @@ typedef struct MPIDIG_get_msg_t {
     uint64_t win_id;
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
