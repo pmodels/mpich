@@ -6,6 +6,11 @@
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
 
+static int MPIDIU_alloc_globals_for_avtid(int avtid);
+static int MPIDIU_free_globals_for_avtid(int avtid);
+static int MPIDIU_get_next_avtid(int *avtid);
+static int MPIDIU_free_avtid(int avtid);
+
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -87,7 +92,7 @@ int MPIDIU_get_avt_size(int avtid)
     return ret;
 }
 
-int MPIDIU_alloc_globals_for_avtid(int avtid)
+static int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
     int *new_node_map = NULL;
@@ -105,7 +110,7 @@ int MPIDIU_alloc_globals_for_avtid(int avtid)
     goto fn_exit;
 }
 
-int MPIDIU_free_globals_for_avtid(int avtid)
+static int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
@@ -117,7 +122,7 @@ int MPIDIU_free_globals_for_avtid(int avtid)
     return MPI_SUCCESS;
 }
 
-int MPIDIU_get_next_avtid(int *avtid)
+static int MPIDIU_get_next_avtid(int *avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
@@ -149,7 +154,7 @@ int MPIDIU_get_next_avtid(int *avtid)
     return *avtid;
 }
 
-int MPIDIU_free_avtid(int avtid)
+static int MPIDIU_free_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVTID);
@@ -272,6 +277,10 @@ int MPIDIU_avt_init(void)
         MPIDI_global.avt_mgr.free_avtid[i] = i + 1;
     }
     MPIDI_global.avt_mgr.free_avtid[MPIDI_global.avt_mgr.max_n_avts - 1] = -1;
+
+    int first_avtid;
+    MPIDIU_get_next_avtid(&first_avtid);
+    MPIR_Assert(first_avtid == 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_INIT);
