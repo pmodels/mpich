@@ -13,6 +13,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -43,6 +44,7 @@ int MPIDIU_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upi
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
     return mpi_errno;
   fn_fail:
