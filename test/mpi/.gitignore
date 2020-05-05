@@ -532,7 +532,6 @@
 /f08/datatype/allctypesf08
 /f08/datatype/createf08
 /f08/datatype/gaddressf08
-/f08/datatype/get_elem_d
 /f08/datatype/get_elem_u
 /f08/datatype/hindex1f08
 /f08/datatype/hindexed_blockf08
@@ -841,7 +840,6 @@
 /f90/datatype/createf90
 /f90/datatype/gaddressf90
 /f90/datatype/gaddressf90.f90
-/f90/datatype/get_elem_d
 /f90/datatype/get_elem_u
 /f90/datatype/hindex1f90
 /f90/datatype/hindex1f90.f90
