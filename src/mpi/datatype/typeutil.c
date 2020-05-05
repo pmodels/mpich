@@ -307,6 +307,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
@@ -564,5 +565,22 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr)
     if (ptr->typerep) {
         MPIR_Typerep_free(&(ptr->typerep));
     }
+    MPL_free(ptr->flattened);
     MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
+}
+
+void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz)
+{
+    MPIR_Datatype *dt_ptr;
+
+    MPIR_Datatype_get_ptr(type, dt_ptr);
+    if (dt_ptr->flattened == NULL) {
+        MPIR_Typerep_flatten_size(dt_ptr, &dt_ptr->flattened_sz);
+        dt_ptr->flattened = MPL_malloc(dt_ptr->flattened_sz, MPL_MEM_DATATYPE);
+        MPIR_Assert(dt_ptr->flattened);
+        MPIR_Typerep_flatten(dt_ptr, dt_ptr->flattened);
+    }
+
+    *flattened = dt_ptr->flattened;
+    *flattened_sz = dt_ptr->flattened_sz;
 }

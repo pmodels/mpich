@@ -54,6 +54,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
