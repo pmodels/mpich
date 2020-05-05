@@ -66,6 +66,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->preq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -83,8 +84,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-        MPIDIG_REQUEST(sreq, req->preq.flattened_dt) = NULL;
-        MPIDIG_REQUEST(sreq, req->preq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
@@ -103,23 +102,17 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    MPIR_Datatype *dt_ptr;
-    MPIR_Datatype_get_ptr(target_datatype, dt_ptr);
     int flattened_sz;
-    MPIR_Typerep_flatten_size(dt_ptr, &flattened_sz);
+    void *flattened_dt;
+    MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    void *flattened_dt = MPL_malloc(flattened_sz, MPL_MEM_BUFFER);
-    MPIR_Assert(flattened_dt);
-    MPIR_Typerep_flatten(dt_ptr, flattened_dt);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
     am_iov[1].iov_base = flattened_dt;
     am_iov[1].iov_len = flattened_sz;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-
-    MPIDIG_REQUEST(sreq, req->preq.flattened_dt) = flattened_dt;
-    MPIDIG_REQUEST(sreq, req->preq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     am_hdr_max_size = is_local ? MPIDI_SHM_am_hdr_max_sz() : MPIDI_NM_am_hdr_max_sz();
@@ -225,6 +218,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, req->greq.addr) = origin_addr;
     MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
+    MPIDIG_REQUEST(sreq, req->greq.target_datatype) = target_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
@@ -243,8 +237,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     if (HANDLE_IS_BUILTIN(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-        MPIDIG_REQUEST(sreq, req->greq.flattened_dt) = NULL;
-        MPIDIG_REQUEST(sreq, req->greq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
@@ -263,18 +255,12 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
         goto fn_exit;
     }
 
-    MPIR_Datatype *dt_ptr;
-    MPIR_Datatype_get_ptr(target_datatype, dt_ptr);
     int flattened_sz;
-    MPIR_Typerep_flatten_size(dt_ptr, &flattened_sz);
+    void *flattened_dt;
+    MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    void *flattened_dt = MPL_malloc(flattened_sz, MPL_MEM_BUFFER);
-    MPIR_Assert(flattened_dt);
-    MPIR_Typerep_flatten(dt_ptr, flattened_dt);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-
-    MPIDIG_REQUEST(sreq, req->greq.flattened_dt) = flattened_dt;
-    MPIDIG_REQUEST(sreq, req->greq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (is_local)

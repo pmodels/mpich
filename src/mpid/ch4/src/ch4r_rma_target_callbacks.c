@@ -1096,7 +1096,7 @@ static int get_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACK_TARGET_CMPL_CB);
 
-    MPL_free(MPIDIG_REQUEST(rreq, req->greq.flattened_dt));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->greq.target_datatype));
 
     win = MPIDIG_REQUEST(rreq, req->greq.win_ptr);
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(rreq, rank));
@@ -1165,9 +1165,7 @@ int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     preq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = MPIDIG_REQUEST(preq, req->preq.win_ptr);
 
-    MPL_free(MPIDIG_REQUEST(preq, req->preq.flattened_dt));
-    if (MPIDIG_REQUEST(preq, req->preq.dt))
-        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(preq, req->preq.dt));
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(preq, req->preq.target_datatype));
 
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(preq, rank));
 
