@@ -184,13 +184,11 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
                                 MPI_Datatype target_datatype, MPIR_Win * win,
                                 MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, n_iov, c;
+    int mpi_errno = MPI_SUCCESS, c;
     size_t offset;
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
     size_t data_sz;
-    MPI_Aint num_iov;
-    struct iovec *dt_iov;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
@@ -243,9 +241,10 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
     if (HANDLE_IS_BUILTIN(target_datatype)) {
-        am_hdr.n_iov = 0;
+        am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-        MPIDIG_REQUEST(sreq, req->greq.dt_iov) = NULL;
+        MPIDIG_REQUEST(sreq, req->greq.flattened_dt) = NULL;
+        MPIDIG_REQUEST(sreq, req->greq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
@@ -264,35 +263,30 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
         goto fn_exit;
     }
 
-    MPIR_Typerep_iov_len(target_count, target_datatype, data_sz, &num_iov);
-    n_iov = (int) num_iov;
-    MPIR_Assert(n_iov > 0);
-    am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
-    MPIR_Assert(dt_iov);
-
-    int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
-    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
-                        &actual_iov_len, &actual_iov_bytes);
-    n_iov = actual_iov_len;
-
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    MPIR_Datatype *dt_ptr;
+    MPIR_Datatype_get_ptr(target_datatype, dt_ptr);
+    int flattened_sz;
+    MPIR_Typerep_flatten_size(dt_ptr, &flattened_sz);
+    am_hdr.flattened_sz = flattened_sz;
+    void *flattened_dt = MPL_malloc(flattened_sz, MPL_MEM_BUFFER);
+    MPIR_Assert(flattened_dt);
+    MPIR_Typerep_flatten(dt_ptr, flattened_dt);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
-    MPIDIG_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
+    MPIDIG_REQUEST(sreq, req->greq.flattened_dt) = flattened_dt;
+    MPIDIG_REQUEST(sreq, req->greq.dt) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (is_local)
         mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
-                                       &am_hdr, sizeof(am_hdr), dt_iov,
-                                       sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
+                                       &am_hdr, sizeof(am_hdr), flattened_dt,
+                                       flattened_sz, MPI_BYTE, sreq);
     else
 #endif
     {
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
-                                      &am_hdr, sizeof(am_hdr), dt_iov,
-                                      sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq);
+                                      &am_hdr, sizeof(am_hdr), flattened_dt,
+                                      flattened_sz, MPI_BYTE, sreq);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

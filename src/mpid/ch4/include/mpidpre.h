@@ -118,8 +118,8 @@ typedef struct MPIDIG_get_req_t {
     void *addr;
     MPI_Datatype datatype;
     int count;
-    int n_iov;
-    void *dt_iov;
+    void *flattened_dt;
+    MPIR_Datatype *dt;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
