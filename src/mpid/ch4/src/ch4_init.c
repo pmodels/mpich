@@ -527,6 +527,9 @@ int MPID_Init(int requested, int *provided)
     MPIR_Assert(err == 0);
 #endif
 
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
     MPIR_ERR_CHECK(mpi_errno);
@@ -718,6 +721,9 @@ int MPID_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
     MPIR_Assert(err == 0);
 #endif
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
