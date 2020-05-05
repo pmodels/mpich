@@ -554,7 +554,7 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
             break;
     }
 
-    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+    MPL_gpu_free_host(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
     MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
 
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
