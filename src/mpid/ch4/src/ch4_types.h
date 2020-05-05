@@ -130,7 +130,7 @@ typedef struct MPIDIG_get_msg_t {
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
     MPI_Aint data_sz;
-    int n_iov;
+    int flattened_sz;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
