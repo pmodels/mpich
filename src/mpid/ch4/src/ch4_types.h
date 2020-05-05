@@ -217,15 +217,20 @@ typedef struct {
  * definitions; However, it makes debugging a bit cryptic */
 #define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
 #define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[1]
+
+/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
 #define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[2]
+
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
 #ifdef HAVE_LIBHCOLL
 #define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
 #endif
-/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
 
-#define MAX_CH4_MUTEXES 6
+/* Protects dynamic process tag, connection_id, avtable etc. */
+#define MPIDIU_THREAD_DYNPROC_MUTEX       MPIDI_global.m[6]
+
+#define MAX_CH4_MUTEXES 7
 
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {
