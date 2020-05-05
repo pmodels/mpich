@@ -178,7 +178,7 @@ static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
 static int init_builtin_comms(void);
 static void finalize_builtin_comms(void);
-static int init_av_table(void);
+static void init_av_table(void);
 static void finalize_av_table(void);
 
 static int choose_netmod(void)
@@ -388,16 +388,13 @@ static int init_builtin_comms(void)
     goto fn_exit;
 }
 
-static int init_av_table(void)
+static void init_av_table(void)
 {
     int i;
-    int avtid = -1;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
 
     MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
@@ -427,8 +424,6 @@ static int init_av_table(void)
                          MPIDI_global.node_map[0][rank]));
     }
 #endif
-
-    return avtid;
 }
 
 /* This local function is temporary until we decide where the
