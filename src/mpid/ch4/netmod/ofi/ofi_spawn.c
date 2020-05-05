@@ -52,12 +52,14 @@ static void free_port_name_tag(int tag)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_FREE_PORT_NAME_TAG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_FREE_PORT_NAME_TAG);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
     idx = tag / (sizeof(int) * 8);
     rem_tag = tag - (idx * sizeof(int) * 8);
 
     MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_FREE_PORT_NAME_TAG);
 }
 
@@ -68,6 +70,7 @@ static int get_port_name_tag(int *port_name_tag)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_PORT_NAME_TAG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_PORT_NAME_TAG);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
     for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++)
         if (MPIDI_OFI_global.port_name_tag_mask[i] != ~0)
@@ -85,6 +88,7 @@ static int get_port_name_tag(int *port_name_tag)
         goto fn_fail;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_PORT_NAME_TAG);
     return mpi_errno;
 
@@ -511,6 +515,7 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
     int conn_id = -1;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
     /* We've run out of space in the connection table. Allocate more. */
     if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
@@ -543,6 +548,7 @@ static int conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     return conn_id;
 }
