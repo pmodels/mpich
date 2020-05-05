@@ -110,6 +110,7 @@ typedef struct MPIDIG_put_req_t {
     int origin_count;
     MPI_Datatype origin_datatype;
     void *target_addr;
+    MPI_Datatype target_datatype;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
@@ -120,6 +121,7 @@ typedef struct MPIDIG_get_req_t {
     int count;
     void *flattened_dt;
     MPIR_Datatype *dt;
+    MPI_Datatype target_datatype;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
