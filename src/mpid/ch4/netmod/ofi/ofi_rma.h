@@ -1448,8 +1448,8 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * av)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
 
     if (
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1474,7 +1474,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                             target_datatype, op, win, av, NULL);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
     return mpi_errno;
 }
 

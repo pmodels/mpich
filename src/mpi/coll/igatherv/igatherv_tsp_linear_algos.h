@@ -103,7 +103,7 @@ int MPIR_TSP_Igatherv_allcomm_linear(const void *sendbuf, int sendcount, MPI_Dat
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_TSP_IGATHERV_ALLCOMM_LINEAR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IGATHERV_ALLCOMM_LINEAR);
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
