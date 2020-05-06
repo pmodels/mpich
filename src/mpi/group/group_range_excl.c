@@ -66,9 +66,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
      * was enabled *and* we are not MPI_THREAD_MULTIPLE, but since this
      * is a low-usage routine, we haven't taken that optimization.  */
 
-    /* First, mark the members to exclude */
-    for (i = 0; i < size; i++)
-        group_ptr->lrank_to_lpid[i].flag = 0;
+    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
 
     for (i = 0; i < n; i++) {
         first = ranges[i][0];
@@ -76,11 +74,11 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
         stride = ranges[i][2];
         if (stride > 0) {
             for (j = first; j <= last; j += stride) {
-                group_ptr->lrank_to_lpid[j].flag = 1;
+                flags[j] = 1;
             }
         } else {
             for (j = first; j >= last; j += stride) {
-                group_ptr->lrank_to_lpid[j].flag = 1;
+                flags[j] = 1;
             }
         }
     }
@@ -88,7 +86,7 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
      * not excluded */
     k = 0;
     for (i = 0; i < size; i++) {
-        if (!group_ptr->lrank_to_lpid[i].flag) {
+        if (!flags[i]) {
             (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr->lrank_to_lpid[i].lpid;
             if (group_ptr->rank == i) {
                 (*new_group_ptr)->rank = k;
@@ -96,6 +94,8 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
             k++;
         }
     }
+
+    MPL_free(flags);
 
     /* TODO calculate is_local_dense_monotonic */
 

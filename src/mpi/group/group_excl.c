@@ -43,22 +43,23 @@ int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     /* Use flag fields to mark the members to *exclude* . */
 
-    for (i = 0; i < size; i++) {
-        group_ptr->lrank_to_lpid[i].flag = 0;
-    }
+    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
+
     for (i = 0; i < n; i++) {
-        group_ptr->lrank_to_lpid[ranks[i]].flag = 1;
+        flags[ranks[i]] = 1;
     }
 
     newi = 0;
     for (i = 0; i < size; i++) {
-        if (group_ptr->lrank_to_lpid[i].flag == 0) {
+        if (flags[i] == 0) {
             (*new_group_ptr)->lrank_to_lpid[newi].lpid = group_ptr->lrank_to_lpid[i].lpid;
             if (group_ptr->rank == i)
                 (*new_group_ptr)->rank = newi;
             newi++;
         }
     }
+
+    MPL_free(flags);
 
     (*new_group_ptr)->size = size - n;
     (*new_group_ptr)->idx_of_first_lpid = -1;
