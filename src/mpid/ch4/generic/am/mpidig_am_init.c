@@ -88,11 +88,11 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_PUT_DT_ACK, NULL, &MPIDIG_put_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
                      &MPIDIG_put_data_origin_cb, &MPIDIG_put_data_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_REQ, &MPIDIG_acc_iov_origin_cb, &MPIDIG_acc_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_REQ,
-                     &MPIDIG_get_acc_iov_origin_cb, &MPIDIG_get_acc_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_ACK, NULL, &MPIDIG_acc_iov_ack_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_ACK, NULL, &MPIDIG_get_acc_iov_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_ACC_DT_REQ, &MPIDIG_acc_dt_origin_cb, &MPIDIG_acc_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DT_REQ,
+                     &MPIDIG_get_acc_dt_origin_cb, &MPIDIG_get_acc_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_ACC_DT_ACK, NULL, &MPIDIG_acc_dt_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DT_ACK, NULL, &MPIDIG_get_acc_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_ACC_DAT_REQ,
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,

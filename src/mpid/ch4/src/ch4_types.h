@@ -111,8 +111,8 @@ typedef struct MPIDIG_put_dt_ack_msg_t {
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
 } MPIDIG_put_dt_ack_msg_t;
-typedef MPIDIG_put_dt_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
-typedef MPIDIG_put_dt_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_acc_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_get_acc_dt_ack_msg_t;
 
 typedef struct MPIDIG_put_dat_msg_t {
     MPIR_Request *preq_ptr;
@@ -161,6 +161,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     MPI_Aint target_disp;
     uint64_t result_data_sz;
     int n_iov;
+    int flattened_sz;
 } MPIDIG_acc_req_msg_t;
 
 typedef struct MPIDIG_acc_req_msg_t MPIDIG_get_acc_req_msg_t;
