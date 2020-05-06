@@ -108,7 +108,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
     MPL_free(dtcopy_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_BRUCKS_SCHED_PUP);
 
     return sink_id;
 }

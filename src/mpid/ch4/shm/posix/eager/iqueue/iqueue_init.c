@@ -42,8 +42,8 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     size_t size_of_cells;
     size_t size_of_shared_memory;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IQUEUE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IQUEUE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
 
     /* Get the internal data structure to describe the iqueues */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
@@ -94,7 +94,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IQUEUE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -105,15 +105,15 @@ int MPIDI_POSIX_iqueue_finalize()
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     int mpi_errno;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IQUEUE_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IQUEUE_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
     mpi_errno = MPIDU_Init_shm_free(transport->pointer_to_shared_memory);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IQUEUE_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -22,22 +22,23 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_init(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_finalize(MPIR_Request * req)
 {
     MPIDI_POSIX_am_request_header_t *req_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_OFI_CLEAR_REQ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_OFI_CLEAR_REQ);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);
 
     MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(req);
 
     req_hdr = MPIDI_POSIX_AMREQUEST(req, req_hdr);
 
     if (!req_hdr)
-        return;
+        goto fn_exit;
 
     POSIX_TRACE("Completed request %d (%d)\n", req->kind, req_hdr->dst_grank);
 
     MPIDI_POSIX_am_release_req_hdr(&req_hdr);
     MPIDI_POSIX_AMREQUEST(req, req_hdr) = NULL;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_OFI_CLEAR_REQ);
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);
     return;
 }
 

@@ -68,8 +68,8 @@ void MPIDIG_progress_compl_list(void)
     MPIR_Request *req;
     MPIDIG_req_ext_t *curr, *tmp;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
@@ -82,7 +82,7 @@ void MPIDIG_progress_compl_list(void)
         }
     }
     /* MPIDI_CS_EXIT(); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
 }
 
 static int handle_unexp_cmpl(MPIR_Request * rreq)
@@ -95,8 +95,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_UNEXP_CMPL);
 
     /* Check if this message has already been claimed by mprobe. */
     /* MPIDI_CS_ENTER(); */
@@ -200,7 +200,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_UNEXP_CMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -212,8 +212,8 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_TARGET_CMPL_CB);
 
     /* Check if this request is supposed to complete next or if it should be delayed. */
     if (!MPIDIG_check_cmpl_order(rreq))
@@ -258,7 +258,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDIG_progress_compl_list();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RECV_TARGET_CMPL_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

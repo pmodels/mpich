@@ -613,10 +613,10 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 */
 static inline uintptr_t MPIDIG_win_base_at_origin(const MPIR_Win * win, int target_rank)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_BASE_AT_ORIGIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_BASE_AT_ORIGIN);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
 
     /* TODO: In future we may want to calculate the full virtual address
      * in the target at the origin side. It can be done by looking at

@@ -316,8 +316,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     int is_local;
 #endif
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_ACCUMULATE);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     is_local = MPIDI_rank_is_local(target_rank, win->comm_ptr);
@@ -464,7 +464,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     else if (sreq != NULL)
         MPIR_Request_free(sreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_ACCUMULATE);
     return mpi_errno;
 
   immed_cmpl:
