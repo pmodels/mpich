@@ -16,7 +16,6 @@
 typedef struct MPII_Group_pmap_t {
     int lpid;                   /* local process id, from VCONN */
     int next_lpid;              /* Index of next lpid (in lpid order) */
-    int flag;                   /* marker, used to implement group operations */
 } MPII_Group_pmap_t;
 
 /* Any changes in the MPIR_Group structure must be made to the

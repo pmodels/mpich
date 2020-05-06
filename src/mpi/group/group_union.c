@@ -54,9 +54,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Clear the flag bits on the second group.  The flag is set if
      * a member of the second group belongs to the union */
     size2 = group_ptr2->size;
-    for (i = 0; i < size2; i++) {
-        group_ptr2->lrank_to_lpid[i].flag = 0;
-    }
+    int *flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
+
     /* Loop through the lists that are ordered by lpid (local process
      * id) to detect which processes in group 2 are not in group 1
      */
@@ -66,7 +65,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid > l2_pid) {
             nnew++;
-            group_ptr2->lrank_to_lpid[g2_idx].flag = 1;
+            flags[g2_idx] = 1;
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
         } else if (l1_pid == l2_pid) {
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
@@ -79,7 +78,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* If we hit the end of group1, add the remaining members of group 2 */
     while (g2_idx >= 0) {
         nnew++;
-        group_ptr2->lrank_to_lpid[g2_idx].flag = 1;
+        flags[g2_idx] = 1;
         g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
     }
 
@@ -112,7 +111,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     }
     k = size1;
     for (i = 0; i < size2; i++) {
-        if (group_ptr2->lrank_to_lpid[i].flag) {
+        if (flags[i]) {
             (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr2->lrank_to_lpid[i].lpid;
             if ((*new_group_ptr)->rank == MPI_UNDEFINED &&
                 group_ptr2->lrank_to_lpid[i].lpid == mylpid)
@@ -120,6 +119,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
             k++;
         }
     }
+
+    MPL_free(flags);
 
     /* TODO calculate is_local_dense_monotonic */
 

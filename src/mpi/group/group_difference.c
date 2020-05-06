@@ -39,8 +39,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Insure that the lpid lists are setup */
     MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    for (i = 0; i < size1; i++)
-        group_ptr1->lrank_to_lpid[i].flag = 0;
+    int *flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
 
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
@@ -55,7 +54,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
         } else {
             /* Equal */
-            group_ptr1->lrank_to_lpid[g1_idx].flag = 1;
+            flags[g1_idx] = 1;
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
             nnew--;
@@ -78,7 +77,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         (*new_group_ptr)->rank = MPI_UNDEFINED;
         k = 0;
         for (i = 0; i < size1; i++) {
-            if (!group_ptr1->lrank_to_lpid[i].flag) {
+            if (!flags[i]) {
                 (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr1->lrank_to_lpid[i].lpid;
                 if (i == group_ptr1->rank)
                     (*new_group_ptr)->rank = k;
@@ -88,6 +87,7 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         /* TODO calculate is_local_dense_monotonic */
     }
 
+    MPL_free(flags);
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
