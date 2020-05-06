@@ -64,6 +64,7 @@ int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE *);
+int MTest_thread_yield(void);
 int MTest_thread_barrier_init(void);
 int MTest_thread_barrier(int);
 int MTest_thread_barrier_free(void);
