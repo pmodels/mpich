@@ -175,6 +175,7 @@ int MPIR_Type_struct(int count,
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
