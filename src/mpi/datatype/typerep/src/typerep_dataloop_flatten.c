@@ -98,6 +98,7 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->has_sticky_ub = flatten_hdr->has_sticky_ub;
     datatype_ptr->has_sticky_lb = flatten_hdr->has_sticky_lb;
     datatype_ptr->contents = NULL;
+    datatype_ptr->flattened = NULL;
 
     mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_dataloop);
     MPIR_ERR_CHECK(mpi_errno);

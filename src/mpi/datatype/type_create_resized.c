@@ -58,6 +58,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->attributes = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = 0;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 

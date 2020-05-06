@@ -132,6 +132,10 @@ struct MPIR_Datatype {
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
 
+    /* flattened representation */
+    void *flattened;
+    int flattened_sz;
+
     /* internal type representation */
     void *typerep;              /* might be optimized for homogenous */
 
@@ -146,6 +150,7 @@ extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
+void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
 
 #define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
@@ -441,6 +446,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
         MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
     }
     new_dtp->contents = cp;
+    new_dtp->flattened = NULL;
 
     /* increment reference counts on all the derived types used here */
     for (i = 0; i < nr_types; i++) {
