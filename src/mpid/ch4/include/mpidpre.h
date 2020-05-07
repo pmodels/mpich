@@ -142,9 +142,8 @@ typedef struct MPIDIG_acc_req_t {
     MPI_Datatype target_datatype;
     int origin_count;
     int target_count;
-    int n_iov;
     void *target_addr;
-    void *dt_iov;
+    void *flattened_dt;
     void *data;
     size_t data_sz;
     MPI_Op op;

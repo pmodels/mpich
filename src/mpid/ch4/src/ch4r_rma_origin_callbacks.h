@@ -22,8 +22,8 @@ int MPIDIG_put_data_origin_cb(MPIR_Request * sreq);
 int MPIDIG_acc_data_origin_cb(MPIR_Request * sreq);
 int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq);
 int MPIDIG_put_dt_origin_cb(MPIR_Request * sreq);
-int MPIDIG_acc_iov_origin_cb(MPIR_Request * sreq);
-int MPIDIG_get_acc_iov_origin_cb(MPIR_Request * sreq);
+int MPIDIG_acc_dt_origin_cb(MPIR_Request * sreq);
+int MPIDIG_get_acc_dt_origin_cb(MPIR_Request * sreq);
 int MPIDIG_get_origin_cb(MPIR_Request * sreq);
 
 #endif /* CH4R_RMA_ORIGIN_CALLBACKS_H_INCLUDED */
