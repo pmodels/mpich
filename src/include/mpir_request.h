@@ -534,6 +534,16 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_
     return mpi_errno;
 }
 
+int MPIR_Test_state(MPIR_Request * request, int *flag, MPI_Status * status,
+                    MPID_Progress_state * state);
+int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
+                       MPI_Status array_of_statuses[], int requests_property,
+                       MPID_Progress_state * state);
+int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[], int *indx, int *flag,
+                       MPI_Status * status, MPID_Progress_state * state);
+int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[], int *outcount,
+                        int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state);
 int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[], int requests_property);
@@ -542,6 +552,14 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 
+int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state);
+int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
+                       int request_properties, MPID_Progress_state * state);
+int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status,
+                       MPID_Progress_state * state);
+int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
+                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state);
 int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status);
 int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
                       int request_properties);
