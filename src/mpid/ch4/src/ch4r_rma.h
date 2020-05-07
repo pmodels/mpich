@@ -303,13 +303,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
                                                   MPI_Op op, MPIR_Win * win,
                                                   MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c, n_iov;
+    int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
-    MPI_Aint num_iov;
-    struct iovec *dt_iov, am_iov[2];
+    struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -337,6 +336,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->areq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -367,9 +369,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_IS_BUILTIN(target_datatype)) {
-        am_hdr.n_iov = 0;
+        am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-        MPIDIG_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
@@ -390,31 +391,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
         goto fn_exit;
     }
 
-    MPIDI_Datatype_get_size_dt_ptr(target_count, target_datatype, data_sz, dt_ptr);
-    am_hdr.target_datatype = dt_ptr->basic_type;
-    am_hdr.target_count = dt_ptr->n_builtin_elements;
-
-    MPIR_Typerep_iov_len(target_count, target_datatype, data_sz, &num_iov);
-    n_iov = (int) num_iov;
-    MPIR_Assert(n_iov > 0);
-    am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
-    MPIR_Assert(dt_iov);
-
-    int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
-    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
-                        &actual_iov_len, &actual_iov_bytes);
-    n_iov = actual_iov_len;
-
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    int flattened_sz;
+    void *flattened_dt;
+    MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
+    am_hdr.flattened_sz = flattened_sz;
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
-    am_iov[1].iov_base = dt_iov;
-    am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
+    am_iov[1].iov_base = flattened_dt;
+    am_iov[1].iov_len = flattened_sz;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-    MPIDIG_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     am_hdr_max_sz = is_local ? MPIDI_SHM_am_hdr_max_sz() : MPIDI_NM_am_hdr_max_sz();
@@ -445,13 +431,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_DT_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                            am_iov[1].iov_len, MPI_BYTE, sreq);
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_IOV_REQ,
+            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_DT_REQ,
                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                           am_iov[1].iov_len, MPI_BYTE, sreq);
         }
@@ -489,13 +475,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
                                                       MPI_Op op, MPIR_Win * win,
                                                       MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c, n_iov;
+    int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
-    MPI_Aint num_iov;
-    struct iovec *dt_iov, am_iov[2];
+    struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -530,6 +515,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIDIG_REQUEST(sreq, req->areq.result_count) = result_count;
     MPIDIG_REQUEST(sreq, req->areq.result_datatype) = result_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(result_datatype);
+    MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     /* TODO: have common routine for accumulate/get_accumulate */
@@ -563,9 +550,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_IS_BUILTIN(target_datatype)) {
-        am_hdr.n_iov = 0;
+        am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-        MPIDIG_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
@@ -586,31 +572,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
         goto fn_exit;
     }
 
-    MPIDI_Datatype_get_size_dt_ptr(target_count, target_datatype, data_sz, dt_ptr);
-    am_hdr.target_datatype = dt_ptr->basic_type;
-    am_hdr.target_count = dt_ptr->n_builtin_elements;
-
-    MPIR_Typerep_iov_len(target_count, target_datatype, data_sz, &num_iov);
-    n_iov = (int) num_iov;
-    MPIR_Assert(n_iov > 0);
-    am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
-    MPIR_Assert(dt_iov);
-
-    int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
-    MPIR_Typerep_to_iov(NULL, target_count, target_datatype, 0, dt_iov, n_iov, data_sz,
-                        &actual_iov_len, &actual_iov_bytes);
-    n_iov = actual_iov_len;
-
-    MPIR_Assert(actual_iov_bytes == (MPI_Aint) data_sz);
+    int flattened_sz;
+    void *flattened_dt;
+    MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
+    am_hdr.flattened_sz = flattened_sz;
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
-    am_iov[1].iov_base = dt_iov;
-    am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
+    am_iov[1].iov_base = flattened_dt;
+    am_iov[1].iov_len = flattened_sz;
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
-    MPIDIG_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     am_hdr_max_sz = is_local ? MPIDI_SHM_am_hdr_max_sz() : MPIDI_NM_am_hdr_max_sz();
@@ -641,13 +612,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (is_local)
-            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_IOV_REQ,
+            mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_DT_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                            am_iov[1].iov_len, MPI_BYTE, sreq);
         else
 #endif
         {
-            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_IOV_REQ,
+            mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_DT_REQ,
                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                           am_iov[1].iov_len, MPI_BYTE, sreq);
         }
