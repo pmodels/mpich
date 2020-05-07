@@ -77,7 +77,6 @@ int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
     /* ... body of routine ...  */
@@ -122,7 +121,6 @@ int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */

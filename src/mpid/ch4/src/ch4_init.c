@@ -178,7 +178,7 @@ static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
 static int init_builtin_comms(void);
 static void finalize_builtin_comms(void);
-static int init_av_table(void);
+static void init_av_table(void);
 static void finalize_av_table(void);
 
 static int choose_netmod(void)
@@ -388,16 +388,13 @@ static int init_builtin_comms(void)
     goto fn_exit;
 }
 
-static int init_av_table(void)
+static void init_av_table(void)
 {
     int i;
-    int avtid = -1;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
 
     MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
@@ -427,8 +424,6 @@ static int init_av_table(void)
                          MPIDI_global.node_map[0][rank]));
     }
 #endif
-
-    return avtid;
 }
 
 /* This local function is temporary until we decide where the
@@ -526,6 +521,9 @@ int MPID_Init(int requested, int *provided)
     MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
     MPIR_Assert(err == 0);
 #endif
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
     mpi_errno = set_runtime_configurations();
@@ -718,6 +716,9 @@ int MPID_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
     MPIR_Assert(err == 0);
 #endif
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);

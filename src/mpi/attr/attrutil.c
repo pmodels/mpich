@@ -80,14 +80,12 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
      * functions, so we need to release the lock here. This is safe to do
      * as GLOBAL is not at all recursive in our implementation. */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     rc = kv->delfn.proxy(kv->delfn.user_function,
                          handle,
                          attr_p->keyval->handle,
                          attr_p->attrType,
                          (void *) (intptr_t) attr_p->value, attr_p->keyval->extra_state);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
 #if MPICH_ERROR_MSG_LEVEL < MPICH_ERROR_MSG__ALL
@@ -139,14 +137,12 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
      * release the lock here. This is safe to do as GLOBAL is not at
      * all recursive in our implementation. */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     rc = kv->copyfn.proxy(kv->copyfn.user_function,
                           handle,
                           attr_p->keyval->handle,
                           attr_p->keyval->extra_state,
                           attr_p->attrType, (void *) (intptr_t) attr_p->value, value_copy, flag);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {

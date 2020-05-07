@@ -99,7 +99,6 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
         }
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     }
     MPID_Progress_end(&progress_state);
 
@@ -175,7 +174,6 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_WAITSOME);
 
     /* Check the arguments */
@@ -301,7 +299,6 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAITSOME);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

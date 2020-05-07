@@ -11,10 +11,6 @@
 int MPIDIU_get_n_avts(void);
 int MPIDIU_get_max_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
-int MPIDIU_alloc_globals_for_avtid(int avtid);
-int MPIDIU_free_globals_for_avtid(int avtid);
-int MPIDIU_get_next_avtid(int *avtid);
-int MPIDIU_free_avtid(int avtid);
 int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);
 int MPIDIU_avt_add_ref(int avtid);
