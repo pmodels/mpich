@@ -157,3 +157,13 @@ int MPL_gpu_free(void *ptr)
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_init()
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_finalize()
+{
+    return MPL_SUCCESS;
+}
