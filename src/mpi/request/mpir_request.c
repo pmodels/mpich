@@ -290,12 +290,10 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 #endif
             /* Take off the global locks before calling user functions */
             MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             rc = (request_ptr->u.ureq.greq_fns->U.C.query_fn) (request_ptr->u.ureq.
                                                                greq_fns->grequest_extra_state,
                                                                &request_ptr->status);
             MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);
             break;
@@ -307,7 +305,6 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
                 MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
                 /* Take off the global locks before calling user functions */
                 MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
                 (request_ptr->u.ureq.greq_fns->U.F.query_fn) (request_ptr->u.ureq.
                                                               greq_fns->grequest_extra_state, is,
                                                               &ierr);
@@ -315,7 +312,6 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
                 if (rc == MPI_SUCCESS)
                     PMPI_Status_f2c(is, &request_ptr->status);
                 MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
                 MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                      , "**user", "**userquery %d", rc);
             }

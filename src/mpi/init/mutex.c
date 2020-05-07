@@ -38,10 +38,13 @@ void MPII_thread_mutex_create(void)
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_HANDLE_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_CTX_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
@@ -85,10 +88,13 @@ void MPII_thread_mutex_destroy(void)
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_HANDLE_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_CTX_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_VCI_BSEND_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE

@@ -57,7 +57,6 @@ static void progress_fn(void *data)
      * within an internal function and will call NMPI functions
      * directly. */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     /* FIXME: We assume that waiting on some request forces progress
      * on all requests. With fine-grained threads, will this still
@@ -76,7 +75,6 @@ static void progress_fn(void *data)
     MPIR_Assert(!mpi_errno);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     return;
 }
@@ -121,7 +119,6 @@ int MPIR_Finalize_async_thread(void)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
@@ -131,7 +128,6 @@ int MPIR_Finalize_async_thread(void)
     MPIR_Assert(!mpi_errno);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
 
     MPID_Thread_join(progress_thread_id);
 

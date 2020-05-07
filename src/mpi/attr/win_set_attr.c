@@ -38,7 +38,6 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     /* The thread lock prevents a valid attr delete on the same window
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -140,7 +139,6 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:
