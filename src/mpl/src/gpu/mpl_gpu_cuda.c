@@ -127,3 +127,33 @@ int MPL_gpu_unregister_host(const void *ptr)
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_malloc(void **ptr, size_t size, int devid)
+{
+    int mpl_errno = MPL_SUCCESS;
+    int prev_devid;
+    cudaError_t ret;
+    cudaGetDevice(&prev_devid);
+    cudaSetDevice(devid);
+    ret = cudaMalloc(ptr, size);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    cudaSetDevice(prev_devid);
+    return mpl_errno;
+  fn_fail:
+    mpl_errno = MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
+}
+
+int MPL_gpu_free(void *ptr)
+{
+    cudaError_t ret;
+    ret = cudaFree(ptr);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}

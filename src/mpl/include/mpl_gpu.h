@@ -37,4 +37,7 @@ int MPL_gpu_free_host(void *ptr);
 int MPL_gpu_register_host(const void *ptr, size_t size);
 int MPL_gpu_unregister_host(const void *ptr);
 
+int MPL_gpu_malloc(void **ptr, size_t size, int devid);
+int MPL_gpu_free(void *ptr);
+
 #endif /* ifndef MPL_GPU_H_INCLUDED */
