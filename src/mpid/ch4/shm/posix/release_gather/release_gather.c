@@ -269,25 +269,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
                 fallback = 0;
                 mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
             }
         } else {
             mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
             if (fallback) {
                 MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
             }
@@ -314,14 +300,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                                                  MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL,
                                                  &release_gather_info_ptr->reduce_tree,
                                                  &topotree_fail[1], &errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    errflag =
-                        MPIX_ERR_PROC_FAILED ==
-                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                    MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
             } else {
                 /* Finalize was already called and MPIR_Process.hwloc_topology has been destroyed */
                 topotree_fail[0] = -1;
@@ -342,14 +321,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Bcast_tree_type,
                                           MPIR_CVAR_BCAST_INTRANODE_TREE_KVAL, 0,
                                           &release_gather_info_ptr->bcast_tree);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
         }
 
         if (topotree_fail[1] != 0) {
@@ -359,14 +331,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_Treealgo_tree_create(rank, num_ranks, MPIDI_POSIX_Reduce_tree_type,
                                           MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL, 0,
                                           &release_gather_info_ptr->reduce_tree);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
         }
 
         release_gather_info_ptr->gather_state = release_gather_info_ptr->release_state
@@ -379,14 +344,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
                             (void **) &(release_gather_info_ptr->flags_addr), &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        if (mapfail_flag) {
+            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
 
         /* Calculate gather and release flag address and initialize to the gather and release states */
         release_gather_info_ptr->gather_flag_addr =
@@ -400,14 +361,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
 
         /* Make sure all the flags are set before ranks start reading each other's flags from shm */
         mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
     }
 
     if (initialize_bcast_buf) {
@@ -416,14 +370,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIDU_shm_alloc(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr)),
                             &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        if (mapfail_flag) {
+            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret);
     }
 
     if (initialize_reduce_buf) {
@@ -436,14 +386,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             MPIDU_shm_alloc(comm_ptr, num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
                             (void **) &(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr)),
                             &mapfail_flag);
-        if (mpi_errno || mapfail_flag) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        if (mapfail_flag) {
+            MPIR_ERR_ADD(mpi_errno_ret, MPIR_ERR_OTHER);
         }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno_ret);
 
         /* Store address of each of the children's reduce buffer */
         for (i = 0; i < RELEASE_GATHER_FIELD(comm_ptr, reduce_tree.num_children); i++) {
@@ -473,7 +419,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     /* Clean up is not required for NULL struct */
     if (RELEASE_GATHER_FIELD(comm_ptr, is_initialized) == 0) {
@@ -482,39 +427,18 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
 
     /* destroy and detach shared memory used for flags */
     mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, flags_addr));
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
 
     if (RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
         /* destroy and detach shared memory used for bcast buffer */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr) != NULL) {
         /* destroy and detach shared memory used for reduce buffers */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr));
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
 
         MPL_free(RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr));
     }
