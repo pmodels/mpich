@@ -308,6 +308,7 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             }
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, topotree_fail, 2, MPI_INT,
                                             MPI_MAX, comm_ptr, &errflag);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
         } else {
             topotree_fail[0] = -1;
             topotree_fail[1] = -1;
