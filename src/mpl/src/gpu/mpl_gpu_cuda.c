@@ -74,3 +74,51 @@ int MPL_gpu_ipc_close_mem_handle(void *ptr)
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_malloc_host(void **ptr, size_t size)
+{
+    cudaError_t ret;
+    ret = cudaMallocHost(ptr, size);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free_host(void *ptr)
+{
+    cudaError_t ret;
+    ret = cudaFreeHost(ptr);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_register_host(const void *ptr, size_t size)
+{
+    cudaError_t ret;
+    ret = cudaHostRegister((void *) ptr, size, cudaHostRegisterDefault);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_unregister_host(const void *ptr)
+{
+    cudaError_t ret;
+    ret = cudaHostUnregister((void *) ptr);
+    CUDA_ERR_CHECK(ret);
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}

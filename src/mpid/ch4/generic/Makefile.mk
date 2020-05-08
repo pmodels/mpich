@@ -4,3 +4,4 @@
 ##
 
 include $(top_srcdir)/src/mpid/ch4/generic/am/Makefile.mk
+include $(top_srcdir)/src/mpid/ch4/generic/gpu/Makefile.mk
