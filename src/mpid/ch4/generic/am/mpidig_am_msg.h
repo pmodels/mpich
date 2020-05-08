@@ -201,21 +201,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
                                                   MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    p->in_data_sz -= payload_sz;
 
-    if (p->recv_type == MPIDIG_RECV_DATATYPE) {
+    if (rreq->status.MPI_ERROR) {
+        /* we already detected error, don't bother copying data, just check whether
+         * it's the last segment */
+        return (p->in_data_sz == 0);
+    } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint actual_unpack_bytes;
         MPIR_Typerep_unpack(payload, payload_sz,
                             MPIDIG_REQUEST(rreq, buffer),
                             MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype), p->offset, &actual_unpack_bytes);
-        p->in_data_sz -= actual_unpack_bytes;
-        p->offset += actual_unpack_bytes;
-        if (!rreq->status.MPI_ERROR && payload_sz > actual_unpack_bytes) {
+        p->offset += payload_sz;
+        if (payload_sz > actual_unpack_bytes) {
             /* basic element size mismatch */
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_TYPE, "**dtypemismatch", 0);
-            return 1;
+            return (p->in_data_sz == 0);
         } else if (p->in_data_sz == 0) {
             /* done */
             MPIR_STATUS_SET_COUNT(rreq->status, p->offset);
@@ -226,7 +230,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
         }
     } else {
         /* MPIDIG_RECV_CONTIG and MPIDIG_RECV_IOV */
-        p->in_data_sz -= payload_sz;
         p->offset += payload_sz;
         int iov_done = 0;
         for (int i = 0; i < p->iov_num; i++) {
