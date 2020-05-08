@@ -887,7 +887,20 @@ cvars:
     do {                                                        \
         (err_) = MPIR_Err_combine_codes((err_), (newerr_));     \
     } while (0)
-#else
+
+/* For collective communication errors, record the error and continue */
+/* NOTE: this one assumes we are using mpi_errno and mpi_errno_ret */
+/* TODO: document the cases or criteria that we can safely do this */
+#define MPIR_ERR_COLL_CHECKANDCONT(err_) \
+    do { \
+        if (err_) { \
+            int errflag_ = (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(err_)) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER; \
+            MPIR_ERR_SET(mpi_errno, errflag_, "**fail"); \
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno); \
+        } \
+    } while (0)
+
+#else /* HAVE_ERROR_CHECKING */
 /* Simply set the class, being careful not to override a previously
    set class. */
 #define MPIR_ERR_SETSIMPLE(err_,class_,msg_)    \
@@ -944,14 +957,16 @@ cvars:
     MPIR_ERR_SETANDSTMT(err_,class_,stmt_,gmsg_)
 #define MPIR_ERR_SETFATALANDSTMT4(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_,arg3_,arg4_) \
     MPIR_ERR_SETANDSTMT(err_,class_,stmt_,gmsg_)
-    /* No-op - use original error class; discard newerr_ unless err is
-     * MPI_SUCCESS */
+/* No-op - use original error class; discard newerr_ unless err is MPI_SUCCESS */
 #define MPIR_ERR_ADD(err_, newerr_)             \
     do {                                        \
         if (!err_)                              \
             err_ = newerr_;                     \
     } while (0)
-#endif
+/* No-op */
+#define MPIR_ERR_COLL_CHECKANDCONT(err_)  do { } while (0)
+
+#endif /* HAVE_ERROR_CHECKING */
 
 /* The following definitions are the same independent of the choice of
    HAVE_ERROR_CHECKING */
