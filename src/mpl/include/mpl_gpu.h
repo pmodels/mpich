@@ -21,7 +21,12 @@ typedef enum {
     MPL_GPU_POINTER_MANAGED
 } MPL_pointer_type_t;
 
-int MPL_gpu_query_pointer_type(const void *ptr, MPL_pointer_type_t * attr);
+typedef struct {
+    MPL_pointer_type_t type;
+    int device;
+} MPL_pointer_attr_t;
+
+int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
 int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr);
 int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem);
