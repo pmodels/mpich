@@ -29,3 +29,25 @@ int MPL_gpu_ipc_close_mem_handle(void *ptr)
     abort();
     return MPL_ERR_GPU_INTERNAL;
 }
+
+int MPL_gpu_malloc_host(void **ptr, size_t size)
+{
+    *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_free_host(void *ptr)
+{
+    MPL_free(ptr);
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_register_host(const void *ptr, size_t size)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_unregister_host(const void *ptr)
+{
+    return MPL_SUCCESS;
+}
