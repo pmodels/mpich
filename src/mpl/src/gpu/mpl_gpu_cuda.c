@@ -7,7 +7,7 @@
 
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
 
-int MPL_gpu_query_pointer_type(const void *ptr, MPL_pointer_type_t * attr)
+int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     cudaError_t ret;
     struct cudaPointerAttributes ptr_attr = { 0 };
@@ -15,20 +15,25 @@ int MPL_gpu_query_pointer_type(const void *ptr, MPL_pointer_type_t * attr)
     if (ret == cudaSuccess) {
         switch (ptr_attr.type) {
             case cudaMemoryTypeUnregistered:
-                *attr = MPL_GPU_POINTER_UNREGISTERED_HOST;
+                attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+                attr->device = ptr_attr.device;
                 break;
             case cudaMemoryTypeHost:
-                *attr = MPL_GPU_POINTER_REGISTERED_HOST;
+                attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+                attr->device = ptr_attr.device;
                 break;
             case cudaMemoryTypeDevice:
-                *attr = MPL_GPU_POINTER_DEV;
+                attr->type = MPL_GPU_POINTER_DEV;
+                attr->device = ptr_attr.device;
                 break;
             case cudaMemoryTypeManaged:
-                *attr = MPL_GPU_POINTER_MANAGED;
+                attr->type = MPL_GPU_POINTER_MANAGED;
+                attr->device = ptr_attr.device;
                 break;
         }
     } else if (ret == cudaErrorInvalidValue) {
-        *attr = MPL_GPU_POINTER_UNREGISTERED_HOST;
+        attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+        attr->device = -1;
     } else {
         goto fn_fail;
     }
