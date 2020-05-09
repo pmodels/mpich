@@ -120,4 +120,12 @@ int MPIDI_OFI_progress(int vci, int blocking);
 #define MPIDI_NM_progress MPIDI_OFI_progress
 #endif
 
+/* internal functions that are defined in a .c file */
+
+int MPIDI_OFI_vni_init(void);
+int MPIDI_OFI_vni_finalize(void);
+
+int MPIDI_OFI_conn_manager_init(void);
+int MPIDI_OFI_conn_manager_destroy(void);
+
 #endif
