@@ -9,12 +9,18 @@
 
 static int dynproc_send_disconnect(int conn_id);
 
+static MPID_Thread_mutex_t conn_manager_lock;
+
 int MPIDI_OFI_conn_manager_init()
 {
     int mpi_errno = MPI_SUCCESS, i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INIT);
+
+    int err;
+    MPID_Thread_mutex_create(&conn_manager_lock, &err);
+    MPIR_Assert(err == 0);
 
     MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
@@ -59,6 +65,10 @@ int MPIDI_OFI_conn_manager_destroy()
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_DESTROY);
+
+    int err;
+    MPID_Thread_mutex_destroy(&conn_manager_lock, &err);
+    MPIR_Assert(err == 0);
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
@@ -127,7 +137,7 @@ int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
     int conn_id = -1;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, conn_manager_lock);
 
     /* We've run out of space in the connection table. Allocate more. */
     if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
@@ -160,7 +170,7 @@ int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, conn_manager_lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
     return conn_id;
 }
