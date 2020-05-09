@@ -127,5 +127,6 @@ int MPIDI_OFI_vni_finalize(void);
 
 int MPIDI_OFI_conn_manager_init(void);
 int MPIDI_OFI_conn_manager_destroy(void);
+int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t addr, int rank, int state);
 
 #endif

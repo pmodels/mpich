@@ -122,6 +122,49 @@ int MPIDI_OFI_conn_manager_destroy()
     goto fn_exit;
 }
 
+int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
+{
+    int conn_id = -1;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INSERT_CONN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INSERT_CONN);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
+
+    /* We've run out of space in the connection table. Allocate more. */
+    if (MPIDI_OFI_global.conn_mgr.next_conn_id == -1) {
+        int old_max, new_max, i;
+        old_max = MPIDI_OFI_global.conn_mgr.max_n_conn;
+        new_max = old_max + 1;
+        MPIDI_OFI_global.conn_mgr.free_conn_id =
+            (int *) MPL_realloc(MPIDI_OFI_global.conn_mgr.free_conn_id, new_max * sizeof(int),
+                                MPL_MEM_ADDRESS);
+        for (i = old_max; i < new_max - 1; ++i) {
+            MPIDI_OFI_global.conn_mgr.free_conn_id[i] = i + 1;
+        }
+        MPIDI_OFI_global.conn_mgr.free_conn_id[new_max - 1] = -1;
+        MPIDI_OFI_global.conn_mgr.max_n_conn = new_max;
+        MPIDI_OFI_global.conn_mgr.next_conn_id = old_max;
+    }
+
+    conn_id = MPIDI_OFI_global.conn_mgr.next_conn_id;
+    MPIDI_OFI_global.conn_mgr.next_conn_id = MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id];
+    MPIDI_OFI_global.conn_mgr.free_conn_id[conn_id] = -1;
+    MPIDI_OFI_global.conn_mgr.n_conn++;
+
+    MPIR_Assert(MPIDI_OFI_global.conn_mgr.n_conn <= MPIDI_OFI_global.conn_mgr.max_n_conn);
+
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest = conn;
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank = rank;
+    MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state = state;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
+                     conn_id, conn, rank, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INSERT_CONN);
+    return conn_id;
+}
+
 static int dynproc_send_disconnect(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
