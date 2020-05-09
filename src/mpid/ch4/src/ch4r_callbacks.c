@@ -219,10 +219,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     if (!MPIDIG_check_cmpl_order(rreq))
         return mpi_errno;
 
-    /* If the request contained noncontiguous data, free the iov array that described it. */
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->iov));
-    }
+    MPIDIG_recv_finish(rreq);
 
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXPECTED) {
         mpi_errno = handle_unexp_cmpl(rreq);

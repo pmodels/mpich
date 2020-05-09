@@ -812,9 +812,7 @@ static int put_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PUT_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PUT_TARGET_CMPL_CB);
 
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->iov));
-    }
+    MPIDIG_recv_finish(rreq);
 
     MPL_free(MPIDIG_REQUEST(rreq, req->preq.flattened_dt));
     if (MPIDIG_REQUEST(rreq, req->preq.dt))
@@ -1067,9 +1065,7 @@ static int get_acc_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_ACC_ACK_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_ACC_ACK_TARGET_CMPL_CB);
 
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->iov));
-    }
+    MPIDIG_recv_finish(rreq);
 
     win = MPIDIG_REQUEST(rreq, req->areq.win_ptr);
     MPIDIG_win_remote_cmpl_cnt_decr(win, MPIDIG_REQUEST(rreq, rank));
