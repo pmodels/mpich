@@ -7,12 +7,21 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
+static int flush_send_queue(void)
+{
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int barrier[2] = { 0 };
+
+    /* Barrier over allreduce, but force non-immediate send */
+    MPIDI_OFI_global.max_buffered_send = 0;
+    return MPIR_Allreduce_allcomm_auto(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM,
+                                       MPIR_Process.comm_world, &errflag);
+}
+
 int MPIDI_OFI_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i = 0;
-    int barrier[2] = { 0 };
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
@@ -28,10 +37,8 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
 
-    /* Barrier over allreduce, but force non-immediate send */
-    MPIDI_OFI_global.max_buffered_send = 0;
-    mpi_errno = MPIR_Allreduce_allcomm_auto(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM,
-                                            MPIR_Process.comm_world, &errflag);
+    /* Flush any last lightweight send */
+    mpi_errno = flush_send_queue();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
