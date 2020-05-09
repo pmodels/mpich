@@ -5,6 +5,8 @@
 
 #include "mpidimpl.h"
 
+#define MPIDI_CH4_GLOBAL_POLL_FREQ 100
+
 static inline int progress_made(MPID_Progress_state * state)
 {
     if (state->progress_count != state->progress_start) {
@@ -12,6 +14,38 @@ static inline int progress_made(MPID_Progress_state * state)
     }
     state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
     return (state->progress_count != state->progress_start);
+}
+
+static int get_progress_vci(MPID_Progress_state * state)
+{
+    int vci;
+
+    if (MPIDI_global.n_vcis == 1) {
+        /* single vci */
+        vci = 0;
+    } else if ((++state->poll_count) == MPIDI_CH4_GLOBAL_POLL_FREQ) {
+        /* time to poll global progress */
+        state->poll_count = 0;
+        vci = MPL_atomic_fetch_add_int(&MPIDI_global.next_global_vci, 1);
+        if (vci >= MPIDI_global.n_vcis - 1) {
+            MPL_atomic_store_int(&MPIDI_global.next_global_vci, 0);
+            if (vci >= MPIDI_global.n_vcis) {
+                /* hit a race condition, it's ok to just reset */
+                vci = 0;
+            }
+        }
+    } else if (state->vci_count == 1) {
+        /* fast path */
+        vci = state->vci[0];
+    } else {
+        /* slow path */
+        vci = state->vci[state->vci_idx++];
+        if (state->vci_idx == state->vci_count) {
+            state->vci_idx = 0;
+        }
+    }
+
+    return vci;
 }
 
 static int MPIDI_Progress_test(MPID_Progress_state * state, int wait)
@@ -41,18 +75,25 @@ static int MPIDI_Progress_test(MPID_Progress_state * state, int wait)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    if (!wait || !progress_made(state)) {
-        if (state->flag & MPIDI_PROGRESS_NM) {
-            mpi_errno = MPIDI_NM_progress(0, 0);
+    int vci = get_progress_vci(state);
+
+    if (state->flag & MPIDI_PROGRESS_NM) {
+        if (!wait || !progress_made(state)) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+            mpi_errno = MPIDI_NM_progress(vci, 0);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
         }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-            mpi_errno = MPIDI_SHM_progress(0, 0);
-        }
-#endif
     }
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
+        if (!wait || !progress_made(state)) {
+            /* SHM do single-vci for now */
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_SHM_progress(0, 0);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        }
+    }
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -69,6 +110,14 @@ static void progress_state_init(MPID_Progress_state * state, int wait)
         state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
         state->progress_start = state->progress_count;
     }
+
+    /* global progress by default */
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        state->vci[i] = i;
+    }
+    state->vci_idx = 0;
+    state->vci_count = MPIDI_global.n_vcis;
+
 }
 
 void MPID_Progress_start(MPID_Progress_state * state)

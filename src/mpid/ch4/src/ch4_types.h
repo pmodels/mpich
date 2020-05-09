@@ -273,6 +273,8 @@ typedef struct MPIDI_CH4_Global_t {
     int my_sigusr1_count;
 #endif
     MPL_atomic_int_t progress_count;
+    /* with per-vci progress, we'll poll global progress in a rotation for correctness */
+    MPL_atomic_int_t next_global_vci;
 
     int n_vcis;
     MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
