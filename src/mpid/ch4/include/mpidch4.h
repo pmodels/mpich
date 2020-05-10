@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int, int, MPIR_Comm *, int, MPIR_Reques
                                          MPI_Status *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int, int, MPIR_Comm *, int, int *, MPIR_Request **,
                                           MPI_Status *) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Progress_test(void);
+int MPID_Progress_test(MPID_Progress_state *);
 int MPID_Progress_poke(void);
 void MPID_Progress_start(MPID_Progress_state *);
 void MPID_Progress_end(MPID_Progress_state *);

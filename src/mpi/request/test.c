@@ -28,7 +28,7 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_Request_has_poll_fn(request_ptr)) {

@@ -262,7 +262,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                (MPIDI_OFI_global.ctx[0].rx, &msg,
                                 FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), 0, trecv);
             do {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(NULL);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 MPL_wtime(&time_now);
@@ -291,7 +291,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
         time_gap = 0.0;
         MPL_wtime(&time_sta);
         do {
-            mpi_errno = MPID_Progress_test();
+            mpi_errno = MPID_Progress_test(NULL);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_wtime(&time_now);

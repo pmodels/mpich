@@ -42,7 +42,7 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
      * progress even if some requests have already completed;
      * therefore, we kick the pipes once and then fall into a loop
      * checking for completion and waiting for progress. */
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(NULL);
     if (mpi_errno != MPI_SUCCESS) {
         /* --BEGIN ERROR HANDLING-- */
         goto fn_fail;
@@ -56,7 +56,7 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
 
         for (i = 0; i < incount; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(NULL);
                 if (mpi_errno != MPI_SUCCESS) {
                     MPID_Progress_end(&progress_state);
                     goto fn_fail;
@@ -90,7 +90,7 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
             break;
         }
 
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
             MPID_Progress_end(&progress_state);

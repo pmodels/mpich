@@ -126,7 +126,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     while (MPIR_cc_get(MPIDI_XPMEM_global.num_pending_cnt)) {
         /* Since it is non-critical in finalize, we call global progress
          * instead of shm/posix progress for simplicity */
-        MPID_Progress_test();
+        MPID_Progress_test(NULL);
     }
 
     /* Free pre-attached direct coop counter */

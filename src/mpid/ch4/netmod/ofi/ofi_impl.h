@@ -165,7 +165,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        mpi_errno = MPID_Progress_test();                   \
+        mpi_errno = MPID_Progress_test(NULL);                   \
         MPIR_ERR_CHECK(mpi_errno);                          \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \

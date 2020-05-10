@@ -43,7 +43,7 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
 
         for (i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(NULL);
                 if (mpi_errno != MPI_SUCCESS) {
                     MPID_Progress_end(&progress_state);
                     goto fn_fail;
@@ -86,7 +86,7 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
             goto fn_exit;
         }
 
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

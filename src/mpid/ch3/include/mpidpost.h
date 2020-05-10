@@ -171,7 +171,7 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPID_Progress_end(progress_state_)   MPIDI_CH3_Progress_end(progress_state_)
 /* This is static inline instead of macro because otherwise MPID_Progress_test will
  * be a chain of macros and therefore can not be used as a callback function */
-static inline int MPID_Progress_test(void)
+static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is unused */
 {
     return MPIDI_CH3_Progress_test();
 }

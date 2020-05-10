@@ -1023,7 +1023,7 @@ int MPID_Win_test(MPIR_Win * win_ptr, int *flag)
     MPIR_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_PSCW_EXPO,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(NULL);
     MPIR_ERR_CHECK(mpi_errno);
 
     *flag = (win_ptr->at_completion_counter) ? 0 : 1;
