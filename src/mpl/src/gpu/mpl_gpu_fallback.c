@@ -5,9 +5,10 @@
 
 #include "mpl.h"
 
-int MPL_gpu_query_pointer_type(const void *ptr, MPL_pointer_type_t * attr)
+int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
-    *attr = MPL_GPU_POINTER_UNREGISTERED_HOST;
+    attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+    attr->device = -1;
 
     return MPL_SUCCESS;
 }
@@ -50,4 +51,16 @@ int MPL_gpu_register_host(const void *ptr, size_t size)
 int MPL_gpu_unregister_host(const void *ptr)
 {
     return MPL_SUCCESS;
+}
+
+int MPL_gpu_malloc(void **ptr, size_t size, int devid)
+{
+    abort();
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free(void *ptr)
+{
+    abort();
+    return MPL_ERR_GPU_INTERNAL;
 }
