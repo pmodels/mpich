@@ -403,8 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_tag(uint64_t match_bits)
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *context)
 {
-    char *base = (char *) context;
-    return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
+    return (MPIR_Request *) MPL_container_of(context, MPIR_Request, dev.ch4.netmod);
 }
 
 struct MPIDI_OFI_contig_blocks_params {
