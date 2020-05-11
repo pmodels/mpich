@@ -1616,7 +1616,9 @@ bool match_global_settings(struct fi_info * prov)
               (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
     CHECK_CAP(MPIDI_OFI_ENABLE_RMA, !(prov->caps & FI_RMA));
-
+#ifdef FI_HMEM
+    CHECK_CAP(MPIDI_OFI_ENABLE_HMEM, !(prov->caps & FI_HMEM));
+#endif
     uint64_t msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
@@ -1728,7 +1730,9 @@ static void update_global_settings(struct fi_info *prov_use, struct fi_info *hin
                            (FI_MSG | FI_MULTI_RECV | FI_READ));
     UPDATE_SETTING_BY_INFO(enable_rma, prov_use->caps & FI_RMA);
     UPDATE_SETTING_BY_INFO(enable_atomics, prov_use->caps & FI_ATOMICS);
-
+#ifdef FI_HMEM
+    UPDATE_SETTING_BY_INFO(enable_hmem, prov_use->caps & FI_HMEM);
+#endif
     UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
                            hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
     UPDATE_SETTING_BY_INFO(enable_control_auto_progress,
@@ -1916,6 +1920,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
             MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_HMEM: %d\n", MPIDI_OFI_ENABLE_HMEM);
     fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
     fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
     fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
