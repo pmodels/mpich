@@ -43,6 +43,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_s
     }
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
+{
+    /* Free the iov array if we allocated it */
+    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
+        MPL_free(MPIDIG_REQUEST(rreq, req->iov));
+    }
+}
+
 /* Transport-specific data copy, such as RDMA, need explicit iov pointers.
  * Providing helper routine keeps the internal of MPIDIG_rreq_async_t here.
  */
