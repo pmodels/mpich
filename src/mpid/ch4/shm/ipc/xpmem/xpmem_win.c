@@ -27,14 +27,14 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Get node group if it is not yet initialized */
-    if (!MPIDI_XPMEM_global.node_group_ptr) {
+    if (!MPIDI_IPC_xpmem_global.node_group_ptr) {
         mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world->node_comm,
-                                         &MPIDI_XPMEM_global.node_group_ptr);
+                                         &MPIDI_IPC_xpmem_global.node_group_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Group_translate_ranks_impl(shm_group_ptr, shm_comm_ptr->local_size,
-                                                shm_ranks, MPIDI_XPMEM_global.node_group_ptr,
+                                                shm_ranks, MPIDI_IPC_xpmem_global.node_group_ptr,
                                                 node_ranks);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -48,10 +48,10 @@ static int get_node_ranks(MPIR_Comm * shm_comm_ptr, int *shm_ranks, int *node_ra
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
+int MPIDI_IPC_xpmem_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_XPMEM_win_t *xpmem_win = NULL;
+    MPIDI_IPC_xpmem_win_t *xpmem_win = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i;
@@ -59,15 +59,15 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
     MPIDIG_win_shared_info_t *shared_table = NULL;
     int *ranks_in_shm_grp = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_CREATE_HOOK);
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
 
     if (!shm_comm_ptr)
         goto fn_exit;
 
-    xpmem_win = &win->dev.shm.xpmem;
+    xpmem_win = &win->dev.shm.ipc.xpmem;
     xpmem_win->regist_segs = NULL;
 
     /* Exchange shared memory region information */
@@ -103,8 +103,8 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
         goto fn_exit;
     }
 
-    MPIR_CHKPMEM_MALLOC(xpmem_win->regist_segs, MPIDI_XPMEM_seg_t **,
-                        sizeof(MPIDI_XPMEM_seg_t) * shm_comm_ptr->local_size,
+    MPIR_CHKPMEM_MALLOC(xpmem_win->regist_segs, MPIDI_IPC_xpmem_seg_t **,
+                        sizeof(MPIDI_IPC_xpmem_seg_t) * shm_comm_ptr->local_size,
                         mpi_errno, "xpmem regist segments", MPL_MEM_RMA);
 
     /* Register remote memory regions */
@@ -118,12 +118,12 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
         if (shared_table[i].size > 0 && i != shm_comm_ptr->rank) {
             int node_rank = ranks_in_shm_grp[shm_comm_ptr->local_size + i];
             void *remote_vaddr = shared_table[i].shm_base_addr;
-            mpi_errno = MPIDI_XPMEM_seg_regist(node_rank, shared_table[i].size,
-                                               remote_vaddr,
-                                               &xpmem_win->regist_segs[i],
-                                               &shared_table[i].shm_base_addr,
-                                               &MPIDI_XPMEM_global.
-                                               segmaps[node_rank].segcache_ubuf);
+            mpi_errno = MPIDI_IPC_xpmem_seg_regist(node_rank, shared_table[i].size,
+                                                   remote_vaddr,
+                                                   &xpmem_win->regist_segs[i],
+                                                   &shared_table[i].shm_base_addr,
+                                                   &MPIDI_IPC_xpmem_global.
+                                                   segmaps[node_rank].segcache_ubuf);
             MPIR_ERR_CHECK(mpi_errno);
         } else if (shared_table[i].size == 0)
             shared_table[i].shm_base_addr = NULL;
@@ -136,21 +136,21 @@ int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win)
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
-int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
+int MPIDI_IPC_xpmem_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIDI_XPMEM_win_t *xpmem_win = &win->dev.shm.xpmem;
+    MPIDI_IPC_xpmem_win_t *xpmem_win = &win->dev.shm.ipc.xpmem;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_FREE_HOOK);
 
     if (!shm_comm_ptr || win->create_flavor != MPI_WIN_FLAVOR_CREATE ||
         !MPIDIG_WIN(win, shared_table))
@@ -159,7 +159,7 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     /* Deregister segments for remote processes */
     for (i = 0; i < shm_comm_ptr->local_size; i++) {
         if (MPIDIG_WIN(win, shared_table)[i].size > 0 && i != shm_comm_ptr->rank) {
-            mpi_errno = MPIDI_XPMEM_seg_deregist(xpmem_win->regist_segs[i]);
+            mpi_errno = MPIDI_IPC_xpmem_seg_deregist(xpmem_win->regist_segs[i]);
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
@@ -168,7 +168,7 @@ int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win)
     MPL_free(xpmem_win->regist_segs);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_MPI_WIN_FREE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
