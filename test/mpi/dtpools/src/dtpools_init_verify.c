@@ -62,133 +62,98 @@ static int init_verify_basic_datatype(MPI_Datatype type_, char *buf, int val, in
     else if (type == MPI_LONG_LONG)
         type = MPI_LONG_LONG_INT;
 
-    switch (type) {
-        case MPI_CHAR:
-        case MPI_BYTE:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, char);
-            val += val_stride;
-            break;
-        case MPI_WCHAR:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, wchar_t);
-            val += val_stride;
-            break;
-        case MPI_SHORT:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, short);
-            val += val_stride;
-            break;
-        case MPI_INT:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int);
-            val += val_stride;
-            break;
-        case MPI_LONG:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long);
-            val += val_stride;
-            break;
-        case MPI_LONG_LONG_INT:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long long);
-            val += val_stride;
-            break;
-        case MPI_UNSIGNED_CHAR:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned char);
-            val += val_stride;
-            break;
-        case MPI_UNSIGNED:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned);
-            val += val_stride;
-            break;
-        case MPI_UNSIGNED_LONG:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned long);
-            val += val_stride;
-            break;
-        case MPI_UNSIGNED_LONG_LONG:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned long long);
-            val += val_stride;
-            break;
-        case MPI_FLOAT:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, float);
-            val += val_stride;
-            break;
-        case MPI_DOUBLE:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, double);
-            val += val_stride;
-            break;
-        case MPI_LONG_DOUBLE:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long double);
-            val += val_stride;
-            break;
-        case MPI_INT8_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int8_t);
-            val += val_stride;
-            break;
-        case MPI_INT16_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int16_t);
-            val += val_stride;
-            break;
-        case MPI_INT32_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int32_t);
-            val += val_stride;
-            break;
-        case MPI_INT64_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int64_t);
-            val += val_stride;
-            break;
-        case MPI_UINT8_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint8_t);
-            val += val_stride;
-            break;
-        case MPI_UINT16_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint16_t);
-            val += val_stride;
-            break;
-        case MPI_UINT32_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint32_t);
-            val += val_stride;
-            break;
-        case MPI_UINT64_T:
-            INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint64_t);
-            val += val_stride;
-            break;
-
-        case MPI_C_COMPLEX:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, float, float);
-            val += (2 * val_stride);
-            break;
-        case MPI_C_DOUBLE_COMPLEX:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, double, double);
-            val += (2 * val_stride);
-            break;
-        case MPI_C_LONG_DOUBLE_COMPLEX:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long double,
-                                   long double);
-            val += (2 * val_stride);
-            break;
-        case MPI_FLOAT_INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, float, int);
-            val += (2 * val_stride);
-            break;
-        case MPI_DOUBLE_INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, double, int);
-            val += (2 * val_stride);
-            break;
-        case MPI_LONG_INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long, int);
-            val += (2 * val_stride);
-            break;
-        case MPI_2INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, int, int);
-            val += (2 * val_stride);
-            break;
-        case MPI_SHORT_INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, short, int);
-            val += (2 * val_stride);
-            break;
-        case MPI_LONG_DOUBLE_INT:
-            INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long double, int);
-            val += (2 * val_stride);
-            break;
-
-        default:
-            DTPI_ERR_ASSERT(0, rc);
+    if (type == MPI_CHAR || type == MPI_BYTE) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, char);
+        val += val_stride;
+    } else if (type == MPI_WCHAR) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, wchar_t);
+        val += val_stride;
+    } else if (type == MPI_SHORT) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, short);
+        val += val_stride;
+    } else if (type == MPI_INT) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int);
+        val += val_stride;
+    } else if (type == MPI_LONG) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long);
+        val += val_stride;
+    } else if (type == MPI_LONG_LONG_INT) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long long);
+        val += val_stride;
+    } else if (type == MPI_UNSIGNED_CHAR) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned char);
+        val += val_stride;
+    } else if (type == MPI_UNSIGNED) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned);
+        val += val_stride;
+    } else if (type == MPI_UNSIGNED_LONG) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned long);
+        val += val_stride;
+    } else if (type == MPI_UNSIGNED_LONG_LONG) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, unsigned long long);
+        val += val_stride;
+    } else if (type == MPI_FLOAT) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, float);
+        val += val_stride;
+    } else if (type == MPI_DOUBLE) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, double);
+        val += val_stride;
+    } else if (type == MPI_LONG_DOUBLE) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, long double);
+        val += val_stride;
+    } else if (type == MPI_INT8_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int8_t);
+        val += val_stride;
+    } else if (type == MPI_INT16_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int16_t);
+        val += val_stride;
+    } else if (type == MPI_INT32_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int32_t);
+        val += val_stride;
+    } else if (type == MPI_INT64_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, int64_t);
+        val += val_stride;
+    } else if (type == MPI_UINT8_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint8_t);
+        val += val_stride;
+    } else if (type == MPI_UINT16_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint16_t);
+        val += val_stride;
+    } else if (type == MPI_UINT32_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint32_t);
+        val += val_stride;
+    } else if (type == MPI_UINT64_T) {
+        INIT_VERIFY_SINGLE_VAL(rc, buf, val, verify, uint64_t);
+        val += val_stride;
+    } else if (type == MPI_C_COMPLEX) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, float, float);
+        val += (2 * val_stride);
+    } else if (type == MPI_C_DOUBLE_COMPLEX) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, double, double);
+        val += (2 * val_stride);
+    } else if (type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long double, long double);
+        val += (2 * val_stride);
+    } else if (type == MPI_FLOAT_INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, float, int);
+        val += (2 * val_stride);
+    } else if (type == MPI_DOUBLE_INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, double, int);
+        val += (2 * val_stride);
+    } else if (type == MPI_LONG_INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long, int);
+        val += (2 * val_stride);
+    } else if (type == MPI_2INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, int, int);
+        val += (2 * val_stride);
+    } else if (type == MPI_SHORT_INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, short, int);
+        val += (2 * val_stride);
+    } else if (type == MPI_LONG_DOUBLE_INT) {
+        INIT_VERIFY_DOUBLE_VAL(rc, buf, val, val + val_stride, verify, long double, int);
+        val += (2 * val_stride);
+    } else {
+        DTPI_ERR_ASSERT(0, rc);
     }
 
   fn_exit:
