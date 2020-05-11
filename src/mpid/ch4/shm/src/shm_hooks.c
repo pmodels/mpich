@@ -6,9 +6,7 @@
 #include "mpidimpl.h"
 #include "shm_noinline.h"
 #include "../posix/posix_noinline.h"
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-#include "../xpmem/xpmem_noinline.h"
-#endif
+#include "../ipc/src/ipc_noinline.h"
 
 int MPIDI_SHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
@@ -111,12 +109,8 @@ int MPIDI_SHM_mpi_win_create_hook(MPIR_Win * win)
     ret = MPIDI_POSIX_mpi_win_create_hook(win);
     MPIR_ERR_CHECK(ret);
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
-        ret = MPIDI_XPMEM_mpi_win_create_hook(win);
-        MPIR_ERR_CHECK(ret);
-    }
-#endif
+    ret = MPIDI_IPC_mpi_win_create_hook(win);
+    MPIR_ERR_CHECK(ret);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_WIN_CREATE_HOOK);
@@ -197,12 +191,9 @@ int MPIDI_SHM_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_WIN_FREE_HOOK);
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
-        ret = MPIDI_XPMEM_mpi_win_free_hook(win);
-        MPIR_ERR_CHECK(ret);
-    }
-#endif
+    ret = MPIDI_IPC_mpi_win_free_hook(win);
+    MPIR_ERR_CHECK(ret);
+
     ret = MPIDI_POSIX_mpi_win_free_hook(win);
     MPIR_ERR_CHECK(ret);
 
