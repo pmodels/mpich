@@ -8,25 +8,6 @@
 
 #include "ofi_am_impl.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_CH4_OFI_AM_IOV_MIN_SEG_SIZE
-      category    : CH4_OFI
-      type        : int
-      default     : 100
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        For non-contiguous large message in active message path, sets the minimum
-        average iov segment size to use direct RDMA read. When the average segement
-        size is too small, extra unpack buffer is used.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_get_next_recv_seqno(fi_addr_t addr)
 {
     uint64_t id = addr;
@@ -438,7 +419,7 @@ static inline void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
                                    MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     int num_iov = MPIDIG_get_recv_iov_count(rreq);
-    if (num_iov > 1 && in_data_sz / num_iov < MPIR_CVAR_CH4_OFI_AM_IOV_MIN_SEG_SIZE) {
+    if (num_iov > 1 && in_data_sz / num_iov < MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         /* noncontig data with mostly tiny segments */
         do_long_am_recv_unpack(in_data_sz, rreq, lmt_msg);
     } else {
