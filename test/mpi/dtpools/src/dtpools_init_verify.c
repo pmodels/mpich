@@ -3,6 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
+#include <stdint.h>
 #include "dtpools_internal.h"
 
 #define MAX_ERRCOUNT 10
