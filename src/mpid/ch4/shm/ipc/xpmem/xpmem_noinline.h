@@ -6,12 +6,14 @@
 #ifndef XPMEM_NOINLINE_H_INCLUDED
 #define XPMEM_NOINLINE_H_INCLUDED
 
-#include "xpmem_impl.h"
+#include "mpidimpl.h"
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
-
-int MPIDI_XPMEM_mpi_win_create_hook(MPIR_Win * win);
-int MPIDI_XPMEM_mpi_win_free_hook(MPIR_Win * win);
+#else
+#define MPIDI_XPMEM_mpi_init_hook(...) MPI_SUCCESS
+#define MPIDI_XPMEM_mpi_finalize_hook(...) MPI_SUCCESS
+#endif
 
 #endif /* XPMEM_NOINLINE_H_INCLUDED */
