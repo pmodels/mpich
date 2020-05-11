@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     int contig_indexed_count = 3;
     int contig_indexed_blocklens[] = { 1, 2, 1 };
     int contig_indexed_indices[] = { 4, 8, 16 };
-    int contig_indexed_inner_type = MPI_INT;
-    int contig_indexed_type;
+    MPI_Datatype contig_indexed_inner_type = MPI_INT;
+    MPI_Datatype contig_indexed_type;
 
     MTest_Init(&argc, &argv);
     ret = MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
