@@ -3,8 +3,8 @@
 
 Summary:        A high-performance implementation of MPI
 Name:           mpich
-Version:        3.3
-Release:        5%{?dist}
+Version:        3.4~a2
+Release:        1%{?dist}
 License:        MIT
 URL:            http://www.mpich.org/
 
@@ -341,6 +341,9 @@ make check VERBOSE=1
 %{python3_sitearch}/%{name}.pth
 
 %changelog
+* Tue May 12 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
+- Update to 3.4a2
+
 * Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
 - Add Provides: to allow consumers to target cart and daos ABI versions

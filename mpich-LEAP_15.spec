@@ -26,8 +26,8 @@
 # % define build_static_devel 1
 
 %define pname mpich
-%define vers  3.3
-%define _vers 3_3
+%define vers  3.4~a2
+%define _vers 3_4
 
 %if "%{flavor}" == ""
 ExclusiveArch:  do_not_build
@@ -147,7 +147,7 @@ ExclusiveArch:  do_not_build
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        5
+Release:        1
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -516,6 +516,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Tue May 12 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
+- Update to 3.4a2
+
 * Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
 - Add Provides: to allow consumers to target cart and daos ABI versions

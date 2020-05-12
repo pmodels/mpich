@@ -6,6 +6,8 @@
 # Put site overrides (i.e. REPOSITORY_URL, DAOS_STACK_*_LOCAL_REPO) in here
 -include Makefile.local
 
+# default to Leap 15 distro for chrootbuild
+CHROOT_NAME ?= opensuse-leap-15.1-x86_64
 include packaging/Makefile_distro_vars.mk
 
 ifeq ($(DEB_NAME),)
@@ -19,10 +21,10 @@ RPM_BUILD_OPTIONS += $(EXTERNAL_RPM_BUILD_OPTIONS)
 
 # some defaults the caller can override
 BUILD_OS ?= leap.15
-CHROOT_NAME ?= opensuse-leap-15-x86_64
 PACKAGING_CHECK_DIR ?= ../packaging
 LOCAL_REPOS ?= true
 
+PR_REPOS         := $(shell set -x; git show -s --format=%B | sed -ne 's/^PR-repos: *\(.*\)/\1/p')
 COMMON_RPM_ARGS  := --define "%_topdir $$PWD/_topdir" $(BUILD_DEFINES)
 SPEC             := $(shell if [ -f $(NAME)-$(DISTRO_BASE).spec ]; then echo $(NAME)-$(DISTRO_BASE).spec; else echo $(NAME).spec; fi)
 VERSION           = $(eval VERSION := $(shell rpm $(COMMON_RPM_ARGS) --specfile --qf '%{version}\n' $(SPEC) | sed -n '1p'))$(VERSION)
@@ -35,8 +37,8 @@ RPMS              = $(eval RPMS := $(addsuffix .rpm,$(addprefix _topdir/RPMS/x86
 DEB_TOP          := _topdir/BUILD
 DEB_BUILD        := $(DEB_TOP)/$(NAME)-$(DEB_VERS)
 DEB_TARBASE      := $(DEB_TOP)/$(DEB_NAME)_$(DEB_VERS)
-SOURCE            = $(eval SOURCE := $(shell CHROOT_NAME=$(CHROOT_NAME) spectool -S -l $(SPEC) | sed -e 2,\$$d -e 's/.*:  *//'))$(SOURCE)
-PATCHES           = $(eval PATCHES := $(shell CHROOT_NAME=$(CHROOT_NAME) spectool -l $(SPEC) | sed -e 1d -e 's/.*:  *//' -e 's/.*\///'))$(PATCHES)
+SOURCE           ?= $(eval SOURCE := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) -S -l $(SPEC) | sed -e 2,\$$d -e 's/.*:  *//'))$(SOURCE)
+PATCHES          ?= $(eval PATCHES := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) -l $(SPEC) | sed -e 1d -e 's/.*:  *//' -e 's/.*\///'))$(PATCHES)
 SOURCES          := $(addprefix _topdir/SOURCES/,$(notdir $(SOURCE)) $(PATCHES))
 ifeq ($(ID_LIKE),debian)
 DEBS             := $(addsuffix _$(DEB_VERS)-1_amd64.deb,$(shell sed -n '/-udeb/b; s,^Package:[[:blank:]],$(DEB_TOP)/,p' debian/control))
@@ -337,10 +339,10 @@ gpgcheck=False\n" >> /etc/mock/$(CHROOT_NAME).cfg;                              
 	    else                                                                            \
 	        LOCAL_REPOS="$($(DISTRO_BASE)_LOCAL_REPOS)";                                \
 	    fi;                                                                             \
-	    for repo in $$LOCAL_REPOS $($(DISTRO_BASE)_REPOS); do                           \
+	    for repo in $(JOB_REPOS) $$LOCAL_REPOS $($(DISTRO_BASE)_REPOS); do              \
 	        repo_name=$${repo##*://};                                                   \
 	        repo_name=$${repo_name//\//_};                                              \
-	        echo -e "[$$repo_name]\n\
+	        echo -e "[$${repo_name//@/_}]\n\
 name=$${repo_name}\n\
 baseurl=$${repo}\n\
 enabled=1\n" >> /etc/mock/$(CHROOT_NAME).cfg;                                               \
