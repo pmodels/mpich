@@ -951,8 +951,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     } else {
         /* derived datatype */
         struct iovec *typerep_vec;
-        int vec_len, i, count;
-        MPI_Aint type_extent, type_size, src_type_stride;
+        int i, count;
+        MPI_Aint vec_len, type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype *dtp;
         MPI_Aint curr_len;
@@ -974,8 +974,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         }
         /* --END ERROR HANDLING-- */
 
-        int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
+        MPI_Aint actual_iov_len, actual_iov_bytes;
         MPIR_Typerep_to_iov(NULL, target_count, target_dtp, 0, typerep_vec, vec_len,
                             source_count * source_dtp_size, &actual_iov_len, &actual_iov_bytes);
         vec_len = actual_iov_len;
