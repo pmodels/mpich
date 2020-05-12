@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-static int MPIDI_Progress_made(MPID_Progress_state * state)
+static inline int progress_made(MPID_Progress_state * state)
 {
     if (state->progress_count != state->progress_start) {
         return TRUE;
@@ -42,7 +42,7 @@ static int MPIDI_Progress_test(MPID_Progress_state * state)
 #endif
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    if (!MPIDI_Progress_made(state)) {
+    if (!progress_made(state)) {
         if (state->flag & MPIDI_PROGRESS_NM) {
             mpi_errno = MPIDI_NM_progress(0, 0);
         }
@@ -131,7 +131,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     while (1) {
         mpi_errno = MPIDI_Progress_test(state);
         MPIR_ERR_CHECK(mpi_errno);
-        if (MPIDI_Progress_made(state)) {
+        if (progress_made(state)) {
             break;
         }
         MPIDI_PROGRESS_YIELD();
