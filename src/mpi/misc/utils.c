@@ -15,6 +15,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
     int sendtype_iscontig, recvtype_iscontig;
     MPI_Aint sendsize, recvsize, sdata_sz, rdata_sz, copy_sz;
     MPI_Aint true_extent, sendtype_true_lb, recvtype_true_lb;
+    char *buf = NULL;
+    MPL_pointer_attr_t send_attr, recv_attr;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_LOCALCOPY);
 
@@ -25,6 +27,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
     sdata_sz = sendsize * sendcount;
     rdata_sz = recvsize * recvcount;
+
+    send_attr.type = recv_attr.type = MPL_GPU_POINTER_UNREGISTERED_HOST;
 
     /* if there is no data to copy, bail out */
     if (!sdata_sz || !rdata_sz)
@@ -40,26 +44,13 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         copy_sz = sdata_sz;
 
     /* Builtin types is the common case; optimize for it */
-    if ((HANDLE_IS_BUILTIN(sendtype)) && HANDLE_IS_BUILTIN(recvtype)) {
-        MPIR_Memcpy(recvbuf, sendbuf, copy_sz);
-        goto fn_exit;
-    }
-
     MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
     MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
 
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
 
-    if (sendtype_iscontig && recvtype_iscontig) {
-#if defined(HAVE_ERROR_CHECKING)
-        MPIR_ERR_CHKMEMCPYANDJUMP(mpi_errno,
-                                  ((char *) recvbuf + recvtype_true_lb),
-                                  ((char *) sendbuf + sendtype_true_lb), copy_sz);
-#endif
-        MPIR_Memcpy(((char *) recvbuf + recvtype_true_lb),
-                    ((char *) sendbuf + sendtype_true_lb), copy_sz);
-    } else if (sendtype_iscontig) {
+    if (sendtype_iscontig) {
         MPI_Aint actual_unpack_bytes;
         MPIR_Typerep_unpack((char *) sendbuf + sendtype_true_lb, copy_sz, recvbuf, recvcount,
                             recvtype, 0, &actual_unpack_bytes);
@@ -72,11 +63,19 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
         MPIR_ERR_CHKANDJUMP(actual_pack_bytes != copy_sz, mpi_errno, MPI_ERR_TYPE,
                             "**dtypemismatch");
     } else {
-        char *buf;
         intptr_t sfirst;
         intptr_t rfirst;
 
-        MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
+        MPL_gpu_query_pointer_attr(sendbuf, &send_attr);
+        MPL_gpu_query_pointer_attr(recvbuf, &recv_attr);
+
+        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_malloc((void **) &buf, COPY_BUFFER_SZ, recv_attr.device);
+        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_malloc_host((void **) &buf, COPY_BUFFER_SZ);
+        } else {
+            MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
+        }
 
         sfirst = 0;
         rfirst = 0;
@@ -114,13 +113,25 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
                 break;
             }
         }
+
+        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_free(buf);
+        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_free_host(buf);
+        }
     }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_LOCALCOPY);
     return mpi_errno;
-
   fn_fail:
+    if (buf) {
+        if (send_attr.type == MPL_GPU_POINTER_DEV && recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_free(buf);
+        } else if (send_attr.type == MPL_GPU_POINTER_DEV || recv_attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_free_host(buf);
+        }
+    }
     goto fn_exit;
 }
