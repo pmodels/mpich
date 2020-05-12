@@ -49,7 +49,7 @@ void MPIR_Typerep_free(void **typerep)
     if (type != YAKSA_TYPE__FLOAT_INT && type != YAKSA_TYPE__DOUBLE_INT &&
         type != YAKSA_TYPE__LONG_INT && type != YAKSA_TYPE__SHORT_INT &&
         type != YAKSA_TYPE__LONG_DOUBLE_INT) {
-        yaksa_free(type);
+        yaksa_type_free(type);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_FREE);
