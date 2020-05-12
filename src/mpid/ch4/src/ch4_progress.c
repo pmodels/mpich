@@ -14,7 +14,7 @@ static inline int progress_made(MPID_Progress_state * state)
     return (state->progress_count != state->progress_start);
 }
 
-static int MPIDI_Progress_test(MPID_Progress_state * state)
+static int MPIDI_Progress_test(MPID_Progress_state * state, int wait)
 {
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
@@ -42,7 +42,7 @@ static int MPIDI_Progress_test(MPID_Progress_state * state)
 #endif
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    if (!progress_made(state)) {
+    if (!wait || !progress_made(state)) {
         if (state->flag & MPIDI_PROGRESS_NM) {
             mpi_errno = MPIDI_NM_progress(0, 0);
         }
@@ -61,14 +61,22 @@ static int MPIDI_Progress_test(MPID_Progress_state * state)
     goto fn_exit;
 }
 
+static void progress_state_init(MPID_Progress_state * state, int wait)
+{
+    state->flag = MPIDI_PROGRESS_ALL;
+    if (wait) {
+        /* only wait functions need check progress_count */
+        state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+        state->progress_start = state->progress_count;
+    }
+}
+
 void MPID_Progress_start(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
 
-    state->flag = MPIDI_PROGRESS_ALL;
-    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
-    state->progress_start = state->progress_count;
+    progress_state_init(state, 1);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START);
     return;
@@ -87,10 +95,11 @@ int MPID_Progress_test(MPID_Progress_state * state)
 {
     if (state == NULL) {
         MPID_Progress_state progress_state;
-        MPID_Progress_start(&progress_state);
-        return MPIDI_Progress_test(&progress_state);
+
+        progress_state_init(&progress_state, 0);
+        return MPIDI_Progress_test(&progress_state, 0);
     } else {
-        return MPIDI_Progress_test(state);
+        return MPIDI_Progress_test(state, 0);
     }
 }
 
@@ -129,7 +138,7 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     /* track progress from last time left off */
     state->progress_start = state->progress_count;
     while (1) {
-        mpi_errno = MPIDI_Progress_test(state);
+        mpi_errno = MPIDI_Progress_test(state, 1);
         MPIR_ERR_CHECK(mpi_errno);
         if (progress_made(state)) {
             break;
