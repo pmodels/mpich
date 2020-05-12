@@ -56,7 +56,8 @@ int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem)
+int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
+                                MPL_gpu_device_handle_t h_device)
 {
     cudaError_t ret;
     ret = cudaIpcOpenMemHandle(ptr, h_mem, cudaIpcMemLazyEnablePeerAccess);
@@ -128,13 +129,13 @@ int MPL_gpu_unregister_host(const void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_malloc(void **ptr, size_t size, int devid)
+int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
     int mpl_errno = MPL_SUCCESS;
     int prev_devid;
     cudaError_t ret;
     cudaGetDevice(&prev_devid);
-    cudaSetDevice(devid);
+    cudaSetDevice(h_device);
     ret = cudaMalloc(ptr, size);
     CUDA_ERR_CHECK(ret);
 
