@@ -122,6 +122,30 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
     goto fn_exit;
 }
 
+int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                               MPI_Aint iov_offset, struct iovec *iov, MPI_Aint max_iov_len,
+                               MPI_Aint * actual_iov_len)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_TO_IOV_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_TO_IOV_OFFSET);
+
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
+    uintptr_t yaksa_actual_iov_len;
+    rc = yaksa_iov(buf, count, type, iov_offset, iov, max_iov_len, &yaksa_actual_iov_len);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+
+    *actual_iov_len = (MPI_Aint) yaksa_actual_iov_len;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_TO_IOV_OFFSET);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov_bytes,
                          MPI_Aint * iov_len)
 {

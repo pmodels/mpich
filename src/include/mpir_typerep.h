@@ -47,9 +47,15 @@ int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_
 int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
 int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type);
 
+/* byte-based offset routine: do not use; only maintained for backward
+ * compatibility with ch3 */
 int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype type, MPI_Aint byte_offset,
                         struct iovec *iov, int max_iov_len, MPI_Aint max_iov_bytes,
                         int *actual_iov_len, MPI_Aint * actual_iov_bytes);
+/* iov element count based routine */
+int MPIR_Typerep_to_iov_offset(const void *buf, MPI_Aint count, MPI_Datatype type,
+                               MPI_Aint iov_offset, struct iovec *iov, MPI_Aint max_iov_len,
+                               MPI_Aint * actual_iov_len);
 int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype type, MPI_Aint max_iov_bytes,
                          MPI_Aint * iov_len);
 
