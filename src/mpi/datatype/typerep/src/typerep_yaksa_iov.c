@@ -16,8 +16,9 @@
  * cleaner if the Typerep API was modified to match what yaksa
  * provides. */
 int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                        MPI_Aint byte_offset, struct iovec *iov, int max_iov_len,
-                        MPI_Aint max_iov_bytes, int *actual_iov_len, MPI_Aint * actual_iov_bytes)
+                        MPI_Aint byte_offset, struct iovec *iov, MPI_Aint max_iov_len,
+                        MPI_Aint max_iov_bytes, MPI_Aint * actual_iov_len,
+                        MPI_Aint * actual_iov_bytes)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_TO_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_TO_IOV);
@@ -38,21 +39,21 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
     /* fast-path: user wants the full IOV */
     if (byte_offset == 0 && max_iov_bytes >= count * size && max_iov_len == yaksa_max_iov_len) {
         uintptr_t yaksa_actual_iov_len;
-        rc = yaksa_iov(buf, count, type, 0, iov, max_iov_len, &yaksa_actual_iov_len);
+        rc = yaksa_iov(buf, count, type, 0, iov, (uintptr_t) max_iov_len, &yaksa_actual_iov_len);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
         assert(max_iov_len == yaksa_actual_iov_len);
 
-        *actual_iov_len = (int) yaksa_actual_iov_len;
+        *actual_iov_len = (MPI_Aint) yaksa_actual_iov_len;
         *actual_iov_bytes = count * size;
 
         goto fn_exit;
     } else if (byte_offset == 0) {
         uintptr_t yaksa_actual_iov_len;
-        rc = yaksa_iov(buf, count, type, 0, iov, max_iov_len, &yaksa_actual_iov_len);
+        rc = yaksa_iov(buf, count, type, 0, iov, (uintptr_t) max_iov_len, &yaksa_actual_iov_len);
         MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
-        *actual_iov_len = (int) yaksa_actual_iov_len;
+        *actual_iov_len = (MPI_Aint) yaksa_actual_iov_len;
     } else {
         /* yaksa does not accept offsets in bytes, but in number of
          * IOV elements.  So we cannot directly pass in the
@@ -74,7 +75,8 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
             } else if (skip_bytes == tmp_iov[i].iov_len) {
                 tmp_iov[i].iov_len = skip_bytes = 0;
 
-                rc = yaksa_iov(buf, count, type, i + 1, iov, max_iov_len, &yaksa_actual_iov_len);
+                rc = yaksa_iov(buf, count, type, i + 1, iov, (uintptr_t) max_iov_len,
+                               &yaksa_actual_iov_len);
                 MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
                 break;
@@ -85,7 +87,7 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
 
                 iov[0] = tmp_iov[i];
 
-                rc = yaksa_iov(buf, count, type, i + 1, iov + 1, max_iov_len - 1,
+                rc = yaksa_iov(buf, count, type, i + 1, iov + 1, (uintptr_t) (max_iov_len - 1),
                                &yaksa_actual_iov_len);
                 MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
                 yaksa_actual_iov_len++;
@@ -93,7 +95,7 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                 break;
             }
         }
-        *actual_iov_len = (int) yaksa_actual_iov_len;
+        *actual_iov_len = (MPI_Aint) yaksa_actual_iov_len;
 
         MPL_free(tmp_iov);
     }
@@ -113,7 +115,7 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
             break;
         }
     }
-    *actual_iov_bytes = (int) total_bytes;
+    *actual_iov_bytes = (MPI_Aint) total_bytes;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_TO_IOV);
