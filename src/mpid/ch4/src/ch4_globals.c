@@ -117,7 +117,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
         MPL_exit(exit_code);
 
     if (comm != MPIR_Process.comm_world) {
-        MPIDIG_comm_abort(comm, exit_code);
+        MPIDIG_am_comm_abort(comm, exit_code);
     } else {
         MPIR_pmi_abort(exit_code, error_msg);
     }

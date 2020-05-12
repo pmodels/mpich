@@ -253,7 +253,6 @@ AC_ARG_ENABLE(timer-type,
         gcc_ia64_cycle     - IPF ar.itc timer*
 	mach_absolute_time - Mach absolute time (alternative to clock_gettime
                              for OSX)
-        device             - The timer is provided by the device
 
         *Note that the cycle timers are intended to be used by
         developers for internal low-level timing.  Normal users should
@@ -506,11 +505,6 @@ pac_cv_ia64_cycle,[
     MPL_TIMER_TYPE="uint64_t"
     ;;
 
-    device)
-    # The device selected should export the datatype for the timer
-    MPL_TIMER_TYPE="void *"
-    ;;
-
     ppc64_cycle)
     AC_CACHE_CHECK([that ppc64 timebase cycle counter is available],
                 pac_cv_ppc64_cycle,[
@@ -623,7 +617,7 @@ PAC_ARG_THREAD_PACKAGE
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
-    yes|posix|pthreads|uti)
+    yes|posix|pthreads)
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
@@ -642,14 +636,11 @@ case $with_thread_package in
 
         # this check should come after the AC_CHECK_LIB for -lpthread
         AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
-
-	if test "${with_thread_package}" = "uti" ; then
-	    PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
-	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
-	else
-	    AC_MSG_NOTICE([POSIX will be used for thread package.])
-	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
-	fi
+	THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
+	;;
+    uti)
+	PAC_CHECK_HEADER_LIB_FATAL(uti,uti.h,uti,uti_attr_init)
+	THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)
@@ -685,9 +676,7 @@ esac
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 # check for compiler-support for thread-local storage (MPL_TLS)
-if test "${with_thread_package}" != "argobots" ; then
-    PAC_CC_CHECK_TLS
-fi
+PAC_CC_CHECK_TLS
 
 #######################################################################
 ## END OF THREADS CODE
@@ -793,9 +782,10 @@ fi
 
 PAC_ARG_ATOMIC_PRIMITIVES
 
-AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
-        #include "$1"
-    ]],[[
+AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_SOURCE([[
+    #include "$1"
+    int main()
+    {
         struct MPL_atomic_int_t a, b;
         int c;
 
@@ -816,6 +806,9 @@ AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_PROGRAM([[
         MPL_atomic_write_barrier();
         MPL_atomic_read_barrier();
         MPL_atomic_read_write_barrier();
+
+        return c;
+    }
     ]])]
 )
 
@@ -988,6 +981,17 @@ fi
 if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "yes"; then
    AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
 fi
+
+# Define some configurable constants
+AC_ARG_WITH([cacheline],
+[--with-cacheline=<N>
+   Define cacheline size (default is 64)],
+[],
+[with_cacheline=64])
+if test $with_cacheline -le 0 ; then
+    AC_MSG_ERROR(Cache line size must be greater than 0)
+fi
+AC_DEFINE_UNQUOTED([CACHELINE_SIZE],[$with_cacheline], [Define cache-line size.])
 
 # Check for execinfo backtrace support
 AX_EXECINFO

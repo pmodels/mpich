@@ -17,7 +17,6 @@
 enum {
     MPIDI_CH4_MT_DIRECT,
     MPIDI_CH4_MT_HANDOFF,
-    MPIDI_CH4_MT_TRYLOCK,
 
     MPIDI_CH4_NUM_MT_MODELS,
 };
@@ -77,8 +76,8 @@ struct MPIDI_av_entry;
 typedef struct MPIDI_workq_elemt {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIDI_workq_op_t op;
-    OPA_int_t *processed;       /* set to true by the progress thread when
-                                 * this work item is done */
+    MPL_atomic_int_t *processed;        /* set to true by the progress thread when
+                                         * this work item is done */
     union {
         union {
             struct MPIDI_workq_send {

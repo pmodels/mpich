@@ -24,9 +24,10 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],
                                             const int rdispls[], MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t * s);
+                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t * s);
 
 int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                       const int recvcounts[], const int rdispls[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req);
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, int bblock,
+                                      MPIR_Request ** req);

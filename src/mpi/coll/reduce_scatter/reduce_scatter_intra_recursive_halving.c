@@ -260,8 +260,8 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
         if (recvcounts[rank]) {
             mpi_errno = MPIR_Localcopy((char *) tmp_results +
                                        disps[rank] * extent,
-                                       recvcounts[rank], datatype, recvbuf,
-                                       recvcounts[rank], datatype);
+                                       recvcounts[rank], datatype, recvbuf, recvcounts[rank],
+                                       datatype);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

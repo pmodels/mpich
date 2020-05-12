@@ -11,7 +11,7 @@
 #ifndef POSIX_EAGER_STUB_DIRECT_H_INCLUDED
 #define POSIX_EAGER_STUB_DIRECT_H_INCLUDED
 
-#include "stub_init.h"
+#include "stub_noinline.h"
 #include "stub_send.h"
 #include "stub_recv.h"
 

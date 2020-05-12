@@ -17,11 +17,21 @@ cvars:
       category    : CH4
       type        : string
       default     : ""
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-empty, this cvar specifies which shm posix eager module to use
+
+    - name        : MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -32,6 +42,7 @@ cvars:
 
 #include "posix_eager.h"
 #include "posix_noinline.h"
+#include "posix_csel_container.h"
 extern MPL_atomic_uint64_t *MPIDI_POSIX_shm_limit_counter;
 
 static int choose_posix_eager(void);
@@ -71,7 +82,38 @@ static int choose_posix_eager(void)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
+static void *create_container(struct json_object *obj)
+{
+    MPIDI_POSIX_csel_container_s *cnt =
+        MPL_malloc(sizeof(MPIDI_POSIX_csel_container_s), MPL_MEM_COLL);
+
+    json_object_object_foreach(obj, key, val) {
+        char *ckey = MPL_strdup_no_spaces(key);
+
+        if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_bcast_release_gather"))
+            cnt->id =
+                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_bcast_release_gather;
+        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_barrier_release_gather"))
+            cnt->id =
+                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_barrier_release_gather;
+        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_allreduce_release_gather"))
+            cnt->id =
+                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_allreduce_release_gather;
+        else if (!strcmp(ckey, "algorithm=MPIDI_POSIX_mpi_reduce_release_gather"))
+            cnt->id =
+                MPIDI_POSIX_CSEL_CONTAINER_TYPE__ALGORITHM__MPIDI_POSIX_mpi_reduce_release_gather;
+        else {
+            fprintf(stderr, "unrecognized key %s\n", key);
+            MPIR_Assert(0);
+        }
+
+        MPL_free(ckey);
+    }
+
+    return cnt;
+}
+
+int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
@@ -105,7 +147,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag
     MPIDI_POSIX_global.my_local_rank = MPIR_Process.local_rank;
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
-    *n_vcis_provided = 1;
 
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
@@ -173,6 +214,16 @@ int MPIDI_POSIX_coll_init(int rank, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_INIT);
 
+    /* Initialize collective selection */
+    if (!strcmp(MPIR_CVAR_CH4_POSIX_COLL_SELECTION_TUNING_JSON_FILE, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_POSIX_coll_generic_json,
+                                              create_container, &MPIDI_global.shm.posix.csel_root);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
+                                               create_container, &MPIDI_global.shm.posix.csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_Init_shm_alloc(sizeof(int), &MPIDI_POSIX_global.shm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
@@ -202,6 +253,11 @@ int MPIDI_POSIX_coll_finalize(void)
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
+
+    if (MPIDI_global.shm.posix.csel_root) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.shm.posix.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);

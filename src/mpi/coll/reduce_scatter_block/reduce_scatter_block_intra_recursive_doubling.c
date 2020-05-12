@@ -8,7 +8,7 @@
 
 /* This implementation of MPI_Reduce_scatter_block was obtained by taking
    the implementation of MPI_Reduce_scatter from reduce_scatter.c and replacing
-   recvcnts[i] with recvcount everywhere. */
+   recvcounts[i] with recvcount everywhere. */
 
 
 #include "mpiimpl.h"

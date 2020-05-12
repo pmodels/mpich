@@ -32,7 +32,8 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .get_local_upids = MPIDI_SHMI_get_local_upids,
     .upids_to_lupids = MPIDI_SHMI_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_SHM_create_intercomm_from_lpids,
-    .mpi_comm_create_hook = MPIDI_SHMI_mpi_comm_create_hook,
+    .mpi_comm_commit_pre_hook = MPIDI_SHMI_mpi_comm_commit_pre_hook,
+    .mpi_comm_commit_post_hook = MPIDI_SHMI_mpi_comm_commit_post_hook,
     .mpi_comm_free_hook = MPIDI_SHMI_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_SHMI_mpi_win_create_hook,
@@ -59,7 +60,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .am_send_hdr_reply = MPIDI_SHM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_SHM_am_isend_reply,
     .am_hdr_max_sz = MPIDI_SHM_am_hdr_max_sz,
-    .am_recv = MPIDI_SHM_am_recv
+    .am_eager_limit = MPIDI_SHM_am_eager_limit
 };
 
 MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs = {

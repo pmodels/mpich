@@ -14,7 +14,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 2
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -24,7 +24,7 @@ cvars:
       category    : COLLECTIVE
       type        : string
       default     : kary
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -37,7 +37,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : -1
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -48,7 +48,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -59,7 +59,7 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -74,42 +74,46 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto                  - Internal algorithm selection
-        binomial              - Force binomial algorithm
-        reduce_scatter_gather - Force reduce scatter gather algorithm
-        gentran_tree          - Force Generic Transport Tree
-        gentran_ring          - Force Generic Transport Ring
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
+        sched_smp                   - Force smp algorithm
+        sched_binomial              - Force binomial algorithm
+        sched_reduce_scatter_gather - Force reduce scatter gather algorithm
+        gentran_tree                - Force Generic Transport Tree
+        gentran_ring                - Force Generic Transport Ring
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto                     - Internal algorithm selection
-        local_reduce_remote_send - Force local-reduce-remote-send algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
+        sched_local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
     - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Ireduce will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level ireduce function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Ireduce will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -134,7 +138,89 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef MPI_Ireduce
 #define MPI_Ireduce PMPI_Ireduce
 
-int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+
+int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                              MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IREDUCE,
+        .comm_ptr = comm_ptr,
+
+        .u.ireduce.sendbuf = sendbuf,
+        .u.ireduce.recvbuf = recvbuf,
+        .u.ireduce.count = count,
+        .u.ireduce.datatype = datatype,
+        .u.ireduce.op = op,
+        .u.ireduce.root = root,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_gentran_tree:
+            mpi_errno =
+                MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
+                                                comm_ptr,
+                                                cnt->u.ireduce.intra_gentran_tree.tree_type,
+                                                cnt->u.ireduce.intra_gentran_tree.k,
+                                                cnt->u.ireduce.intra_gentran_tree.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_tree.buffer_per_child,
+                                                request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_gentran_ring:
+            mpi_errno =
+                MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
+                                                comm_ptr,
+                                                cnt->u.ireduce.intra_gentran_ring.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_ring.buffer_per_child,
+                                                request);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_sched_binomial:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_binomial, comm_ptr, request, sendbuf,
+                               recvbuf, count, datatype, op, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_sched_reduce_scatter_gather:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_reduce_scatter_gather, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_intra_sched_smp:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_smp, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_inter_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op, root);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ireduce_inter_sched_local_reduce_remote_send:
+            MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_local_reduce_remote_send, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op, root);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Ireduce_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
@@ -142,6 +228,15 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     int pof2, type_size;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT && MPIR_Op_is_commutative(op)) {
+        mpi_errno = MPIR_Ireduce_intra_sched_smp(sendbuf, recvbuf, count,
+                                                 datatype, op, root, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        goto fn_exit;
+    }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -152,13 +247,13 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
         (HANDLE_IS_BUILTIN(op)) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno =
-            MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
+            MPIR_Ireduce_intra_sched_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
                                                            root, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* use a binomial tree algorithm */
         mpi_errno =
-            MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+            MPIR_Ireduce_intra_sched_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                               s);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -169,80 +264,29 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Ireduce_sched_inter_auto(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_inter_sched_auto(const void *sendbuf, void *recvbuf,
                                   int count, MPI_Datatype datatype, MPI_Op op, int root,
                                   MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Ireduce_inter_sched_local_reduce_remote_send(sendbuf, recvbuf, count,
                                                                   datatype, op, root, comm_ptr, s);
 
     return mpi_errno;
 }
 
-int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+int MPIR_Ireduce_sched_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                             MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
-            MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
-            mpi_errno = MPIR_Ireduce_sched_intra_smp(sendbuf, recvbuf, count,
-                                                     datatype, op, root, comm_ptr, s);
-        } else {
-            /* intracommunicator */
-            switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_binomial:
-                    mpi_errno = MPIR_Ireduce_sched_intra_binomial(sendbuf, recvbuf, count,
-                                                                  datatype, op, root, comm_ptr, s);
-                    break;
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_reduce_scatter_gather:
-                    mpi_errno =
-                        MPIR_Ireduce_sched_intra_reduce_scatter_gather(sendbuf, recvbuf, count,
-                                                                       datatype, op, root, comm_ptr,
-                                                                       s);
-                    break;
-                case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
-                                                              datatype, op, root, comm_ptr, s);
-                    break;
-            }
-        }
+        mpi_errno = MPIR_Ireduce_intra_sched_auto(sendbuf, recvbuf, count,
+                                                  datatype, op, root, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_local_reduce_remote_send:
-                mpi_errno =
-                    MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
-                                                                      datatype, op, root, comm_ptr,
-                                                                      s);
-                break;
-            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ireduce_sched_inter_auto(sendbuf, recvbuf, count,
-                                                          datatype, op, root, comm_ptr, s);
-                break;
-        }
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                       MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ireduce_sched_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                            s);
+        mpi_errno = MPIR_Ireduce_inter_sched_auto(sendbuf, recvbuf, count,
+                                                  datatype, op, root, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -253,8 +297,6 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                       MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
     /* If the user picks one of the transport-enabled algorithms, branch there
@@ -263,39 +305,77 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
      * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
      * will require sufficient performance testing and replacement algorithms. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
         switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_tree:
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
-                                                    comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                    comm_ptr, MPIR_Ireduce_tree_type,
+                                                    MPIR_CVAR_IREDUCE_TREE_KVAL,
+                                                    MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE,
+                                                    MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD,
+                                                    request);
                 break;
+
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_ring:
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
-                                                    comm_ptr, request);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                                                    comm_ptr, MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE,
+                                                    MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD,
+                                                    request);
                 break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_binomial:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_binomial, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_smp:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_smp, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_reduce_scatter_gather:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_reduce_scatter_gather, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_sched_auto:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_intra_sched_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ireduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                              request);
+                break;
+
             default:
-                /* go down to the MPIR_Sched-based algorithms */
+                MPIR_Assert(0);
+        }
+    } else {
+        switch (MPIR_CVAR_IREDUCE_INTER_ALGORITHM) {
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_local_reduce_remote_send:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_local_reduce_remote_send, comm_ptr,
+                                   request, sendbuf, recvbuf, count, datatype, op, root);
                 break;
+
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_sched_auto:
+                MPII_SCHED_WRAPPER(MPIR_Ireduce_inter_sched_auto, comm_ptr, request, sendbuf,
+                                   recvbuf, count, datatype, op, root);
+                break;
+
+            case MPIR_CVAR_IREDUCE_INTER_ALGORITHM_auto:
+                mpi_errno =
+                    MPIR_Ireduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                              request);
+                break;
+
+            default:
+                MPIR_Assert(0);
         }
     }
 
-    /* If the user doesn't pick a transport-enabled algorithm, go to the old
-     * sched function. */
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -310,7 +390,9 @@ int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE)) {
         mpi_errno = MPID_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, request);
     } else {
         mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
@@ -353,7 +435,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -444,7 +526,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IREDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

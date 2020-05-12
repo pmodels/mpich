@@ -19,14 +19,14 @@
 
 int MPIR_Ibcast_intra_gentran_ring(void *buffer, int count,
                                    MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
-                                   MPIR_Request ** request)
+                                   int chunk_size, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* Ring algorithm is equivalent to kary tree algorithm with k = 1 */
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
-                                               comm_ptr, request, MPIR_TREE_TYPE_KARY,
-                                               1, MPIR_CVAR_IBCAST_RING_CHUNK_SIZE);
+                                               comm_ptr, request, MPIR_TREE_TYPE_KARY, 1,
+                                               chunk_size);
 
     return mpi_errno;
 }

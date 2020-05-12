@@ -22,9 +22,6 @@ typedef struct {
     MPI_Aint DTP_bufsize;
     MPI_Aint DTP_buf_offset;
 
-    /* datatype description for debugging purposes */
-    char *DTP_description;
-
     void *priv;
 } DTP_obj_s;
 
@@ -41,6 +38,7 @@ int DTP_pool_free(DTP_pool_s dtp);
 
 int DTP_obj_create(DTP_pool_s dtp, DTP_obj_s * obj, MPI_Aint maxbufsize);
 int DTP_obj_free(DTP_obj_s obj);
+int DTP_obj_get_description(DTP_obj_s obj, char **desc);
 
 int DTP_obj_buf_init(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);
 int DTP_obj_buf_check(DTP_obj_s obj, void *buf, int val_start, int val_stride, MPI_Aint val_count);

@@ -19,7 +19,7 @@
 typedef pthread_mutex_t MPL_thread_mutex_t;
 typedef pthread_cond_t MPL_thread_cond_t;
 typedef pthread_t MPL_thread_id_t;
-typedef pthread_key_t MPL_thread_tls_t;
+typedef pthread_key_t MPL_thread_tls_key_t;
 
 #if defined(MPL_NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL)
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
@@ -46,6 +46,11 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
 #define MPL_thread_self(id_)                    \
     do {                                        \
         *(id_) = pthread_self();                \
+    } while (0)
+
+#define MPL_thread_join(id_)                    \
+    do {                                        \
+        pthread_join(id_, NULL);                \
     } while (0)
 
 #define MPL_thread_same(id1_, id2_, same_)                              \
@@ -120,24 +125,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
         if (unlikely(err__)) {                                          \
             MPL_internal_sys_error_printf("pthread_mutex_lock", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
-        }                                                               \
-        *(int *)(err_ptr_) = err__;                                     \
-    } while (0)
-
-#define MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)      \
-    do {                                                                \
-        int err__;                                                      \
-        *(int*)cs_acq_ptr = 1;                                          \
-        err__ = pthread_mutex_trylock(mutex_ptr_);                      \
-        if (unlikely(err__ != 0 && err__ != EBUSY)) {                   \
-            *(int*)cs_acq_ptr = 0;                                      \
-            MPL_internal_sys_error_printf("pthread_mutex_trylock", err__,  \
-                                          "    %s:%d\n", __FILE__, __LINE__); \
-        }                                                               \
-        else {                                                          \
-            if (unlikely(err__ != 0))                                   \
-                *(int*)cs_acq_ptr = 0;                                  \
-             err__ = 0;                                                 \
         }                                                               \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)

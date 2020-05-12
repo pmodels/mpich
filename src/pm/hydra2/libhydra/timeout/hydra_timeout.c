@@ -54,7 +54,7 @@ int HYD_get_timeout_signal(struct timeout_s *timeout)
 
 int HYD_get_time_left(struct timeout_s *timeout)
 {
-    if (timeout->start_time <= 0) {
+    if (timeout->sec <= 0) {
         return -1;
     }
 

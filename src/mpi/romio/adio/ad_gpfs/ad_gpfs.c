@@ -59,5 +59,10 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     "GPFS: IBM GPFS",
 #endif
     ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
-    ADIOI_GEN_IwriteStridedColl /* IwriteStridedColl */
+    ADIOI_GEN_IwriteStridedColl,        /* IwriteStridedColl */
+#if defined(F_SETLKW64)
+    ADIOI_GEN_SetLock   /* SetLock */
+#else
+    ADIOI_GEN_SetLock64 /* SetLock */
+#endif
 };

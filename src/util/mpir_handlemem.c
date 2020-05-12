@@ -16,7 +16,7 @@ cvars:
       category    : MEMORY
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -67,6 +67,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
     MPIR_Handle_common *ptr;
     int leaked_handles = FALSE;
     int directSize = objmem->direct_size;
+    /* NOTE: direct could be NULL (and directSize == 0) */
     char *direct = (char *) objmem->direct;
     char *directEnd = (char *) direct + directSize * objmem->size - 1;
     int nDirect = 0;
@@ -86,7 +87,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
     while (ptr) {
         /* printf("Looking at %p\n", ptr); */
         /* Find where this object belongs */
-        if ((char *) ptr >= direct && (char *) ptr < directEnd) {
+        if (direct && (char *) ptr >= direct && (char *) ptr < directEnd) {
             nDirect++;
         } else {
             void **indirect = (void **) objmem->indirect;

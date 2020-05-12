@@ -102,15 +102,4 @@ static inline int MPIDI_STUBSHM_am_send_hdr_reply(MPIR_Context_id_t context_id, 
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_am_recv(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
-    return MPI_SUCCESS;
-}
-
 #endif /* STUBSHM_AM_H_INCLUDED */

@@ -131,13 +131,13 @@ int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key, MP
     /* --END ERROR HANDLING-- */
 }
 
-int MPID_Comm_create_hook(MPIR_Comm * comm)
+int MPID_Comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_COMMIT_PRE_HOOK);
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
@@ -185,10 +185,10 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
     mpi_errno = MPIDIG_init_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
+    mpi_errno = MPIDI_NM_mpi_comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
+    mpi_errno = MPIDI_SHM_mpi_comm_commit_pre_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
@@ -202,7 +202,31 @@ int MPID_Comm_create_hook(MPIR_Comm * comm)
 #endif
 #endif
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_COMMIT_PRE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_Comm_commit_post_hook(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
+
+    mpi_errno = MPIDI_NM_mpi_comm_commit_post_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_comm_commit_post_hook(comm);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
+
+    /* prune selection tree */
+    mpi_errno = MPIR_Csel_prune(MPIDI_global.csel_root, comm, &MPIDI_COMM(comm, csel_comm));
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COLL_COMM_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -275,6 +299,11 @@ int MPID_Comm_free_hook(MPIR_Comm * comm)
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
     MPIR_ERR_CHECK(mpi_errno);
 #endif
+
+    if (MPIDI_COMM(comm, csel_comm)) {
+        mpi_errno = MPIR_Csel_free(MPIDI_COMM(comm, csel_comm));
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     mpi_errno = MPIDIG_destroy_comm(comm);
     MPIR_ERR_CHECK(mpi_errno);

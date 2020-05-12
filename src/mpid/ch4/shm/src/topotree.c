@@ -405,7 +405,6 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
                                  int *reduce_topotree_fail, MPIR_Errflag_t * errflag)
 {
     int *shared_region;
-    MPL_shm_hnd_t fd;
     int num_ranks, rank;
     int mpi_errno = MPI_SUCCESS, mpi_errno_ret = MPI_SUCCESS;
     size_t shm_size;
@@ -429,8 +428,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     shm_size = sizeof(int) * topo_depth * num_ranks + sizeof(int) * 5 * num_ranks;
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
-    mpi_errno = MPIDIU_allocate_shm_segment(comm_ptr, shm_size, &fd, (void **) &shared_region,
-                                            &mapfail_flag);
+    mpi_errno = MPIDU_shm_alloc(comm_ptr, shm_size, (void **) &shared_region, &mapfail_flag);
     if (mpi_errno || mapfail_flag) {
         /* for communication errors, just record the error but continue */
         *errflag =
@@ -603,7 +601,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         MPL_free(max_entries_per_level);
         MPL_free(bind_map);
     }
-    MPIDIU_destroy_shm_segment(shm_size, &fd, (void **) &shared_region);
+    MPIDU_shm_free(shared_region);
 
   fn_exit:
     if (rank == root && MPIDI_SHM_TOPOTREE_DEBUG)

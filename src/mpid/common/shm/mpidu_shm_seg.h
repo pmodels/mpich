@@ -8,6 +8,8 @@
 #ifndef MPIDU_SHM_SEG_H_INCLUDED
 #define MPIDU_SHM_SEG_H_INCLUDED
 
+#include "mpidu_init_shm.h"
+
 typedef struct MPIDU_shm_seg {
     size_t segment_len;
     /* Handle to shm seg */

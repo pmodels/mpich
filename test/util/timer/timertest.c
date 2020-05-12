@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
     double t1, t2;
     double tick;
-    MPID_Time_t l1, l2;
+    MPL_time_t l1, l2;
     int i;
 
     MPI_Init(&argc, &argv);
@@ -22,11 +22,11 @@ int main(int argc, char **argv)
     t2 = MPI_Wtime();
     fprintf(stdout,
             "Two successive calls to MPI_Wtime gave: (%f) (%f) diff (%f)\n", t1, t2, t2 - t1);
-    MPID_Wtime(&l1);
-    MPID_Wtime(&l2);
-    MPID_Wtime_diff(&l1, &l2, &t1);
+    MPL_wtime(&l1);
+    MPL_wtime(&l2);
+    MPL_wtime_diff(&l1, &l2, &t1);
     fprintf(stdout,
-            "Two successive calls to MPID_Wtime gave: (%llx) (%llx) diff (%f)\n", l1, l2, t1);
+            "Two successive calls to MPL_wtime gave: (%llx) (%llx) diff (%f)\n", l1, l2, t1);
     fprintf(stdout, "Five approximations to one second:\n");
     for (i = 0; i < 5; i++) {
         t1 = MPI_Wtime();

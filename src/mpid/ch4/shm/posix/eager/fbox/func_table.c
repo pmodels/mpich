@@ -17,8 +17,8 @@
 #include "posix_eager_inline.h"
 
 MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_fbox_funcs = {
-    MPIDI_POSIX_eager_init,
-    MPIDI_POSIX_eager_finalize,
+    MPIDI_POSIX_fbox_init,
+    MPIDI_POSIX_fbox_finalize,
 
     MPIDI_POSIX_eager_send,
 

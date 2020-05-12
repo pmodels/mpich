@@ -10,11 +10,13 @@
 #include "ucx_impl.h"
 
 /* ucx_comm.h */
-int MPIDI_UCX_mpi_comm_create_hook(MPIR_Comm * comm);
+int MPIDI_UCX_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
+int MPIDI_UCX_mpi_comm_commit_post_hook(MPIR_Comm * comm);
 int MPIDI_UCX_mpi_comm_free_hook(MPIR_Comm * comm);
 
 #ifdef NETMOD_INLINE
-#define MPIDI_NM_mpi_comm_create_hook MPIDI_UCX_mpi_comm_create_hook
+#define MPIDI_NM_mpi_comm_commit_pre_hook MPIDI_UCX_mpi_comm_commit_pre_hook
+#define MPIDI_NM_mpi_comm_commit_post_hook MPIDI_UCX_mpi_comm_commit_post_hook
 #define MPIDI_NM_mpi_comm_free_hook MPIDI_UCX_mpi_comm_free_hook
 #endif
 
@@ -84,8 +86,7 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win);
 #endif
 
 /* ucx_init.h */
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided);
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm);
 int MPIDI_UCX_mpi_finalize_hook(void);
 int MPIDI_UCX_get_vci_attr(int vci);
 void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);

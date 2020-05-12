@@ -21,21 +21,18 @@
 
 #include "mpid_thread.h"
 #include "mpid_sched.h"
-#include "mpid_timers_fallback.h"
 #include "netmodpre.h"
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #include "shmpre.h"
 #endif
 #include "uthash.h"
-#include "ch4_coll_params.h"
+#include "ch4_csel_container.h"
 #include "ch4i_workq_types.h"
 
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
 #elif defined MPIDI_CH4_USE_MT_HANDOFF
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
-#elif defined MPIDI_CH4_USE_MT_TRYLOCK
-#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
 #elif defined MPIDI_CH4_USE_MT_RUNTIME
 #define MPIDI_CH4_MT_MODEL MPIDI_global.settings.mt_model
 #else
@@ -153,6 +150,24 @@ typedef struct MPIDIG_acc_req_t {
     MPI_Datatype result_datatype;
 } MPIDIG_acc_req_t;
 
+typedef int (*MPIDIG_req_cmpl_cb) (MPIR_Request * req);
+
+/* structure used for supporting asynchronous payload transfer */
+typedef enum {
+    MPIDIG_RECV_DATATYPE,       /* use the datatype info in MPIDIG_req_t */
+    MPIDIG_RECV_CONTIG,         /* set and use the contig recv-buffer info */
+    MPIDIG_RECV_IOV             /* set and use the iov recv-buffer info */
+} MPIDIG_recv_type;
+
+typedef struct MPIDIG_req_async {
+    MPIDIG_recv_type recv_type;
+    MPI_Aint in_data_sz;
+    struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
+    int iov_num;                /* used with MPIDIG_RECV_IOV */
+    struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
+    MPI_Aint offset;            /* used with MPIDIG_RECV_DATATYPE */
+} MPIDIG_rreq_async_t;
+
 typedef struct MPIDIG_req_ext_t {
     union {
         MPIDIG_sreq_t sreq;
@@ -164,8 +179,9 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_acc_req_t areq;
     };
 
+    MPIDIG_rreq_async_t async;
     struct iovec *iov;
-    void *target_cmpl_cb;
+    MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
     MPIR_Request *request;
     uint64_t status;
@@ -237,7 +253,7 @@ typedef struct {
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
 /* `(r)->dev.ch4.am.req` might not be allocated right after SHM_mpi_recv when
- * the operations are enqueued with trylock/handoff models. */
+ * the operations are enqueued with the handoff model. */
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req && ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS))
 #else
 #define MPIDIG_REQUEST_IN_PROGRESS(r)   ((r)->dev.ch4.am.req->status & MPIDIG_REQ_IN_PROGRESS)
@@ -396,8 +412,6 @@ typedef struct MPIDIG_win_t {
     void *mmap_addr;
     int64_t mmap_sz;
 
-    MPL_shm_hnd_t shm_segment_handle;
-
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
@@ -519,6 +533,7 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        void *csel_comm;        /* collective selection handle */
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDIG_COMM(comm,field) ((comm)->dev.ch4.am).field
@@ -555,11 +570,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
 
 #define MPIDIU_get_node_map(avtid)   (MPIDI_global.node_map[(avtid)])
-
-#define MPID_Progress_register_hook(fn_, id_) MPID_Progress_register(fn_, id_)
-#define MPID_Progress_deregister_hook(id_) MPID_Progress_deregister(id_)
-#define MPID_Progress_activate_hook(id_) MPID_Progress_activate(id_)
-#define MPID_Progress_deactivate_hook(id_) MPID_Progress_deactivate(id_)
 
 #define HAVE_DEV_COMM_HOOK
 

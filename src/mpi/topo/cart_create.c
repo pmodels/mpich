@@ -63,7 +63,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         if (rank == 0) {
             MPIR_Comm *comm_self_ptr;
             MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-            mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &newcomm_ptr);
+            mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, &newcomm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the topology structure */
@@ -108,7 +108,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
             MPIR_ERR_CHECK(mpi_errno);
 
         } else {
-            mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, newsize, &newcomm_ptr);
+            mpi_errno = MPII_Comm_copy((MPIR_Comm *) comm_ptr, newsize, NULL, &newcomm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
             rank = comm_ptr->rank;
         }
@@ -227,7 +227,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -291,7 +291,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

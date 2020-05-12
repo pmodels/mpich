@@ -392,7 +392,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     }
 #endif
 
+    /* Not using the OFI_CALL macro because there are error cases here that we want to catch */
     ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
+    if (ret == -FI_ENOENT) {
+        /* The context was not found inside libfabric which means it was matched previously and has
+         * already been handled. Note that it is impossible to tell the difference in this case
+         * between a request that was previously matched and one that never existed. So this will
+         * probably never return an error if the user tries to cancel a request that was not
+         * previously started. */
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
+                        (MPL_DBG_FDEST, "Request not found. Assuming already cancelled"));
+        goto fn_exit;
+    } else if (ret < 0) {
+        MPIR_ERR_CHKANDJUMP4(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ofid_cancel",
+                             "**ofid_cancel %s %d %s %s", __SHORT_FILE__, __LINE__, __func__,
+                             fi_strerror(-ret));
+    }
 
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
@@ -411,6 +426,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* OFI_RECV_H_INCLUDED */

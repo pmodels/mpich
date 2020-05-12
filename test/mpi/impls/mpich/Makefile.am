@@ -9,7 +9,7 @@ include $(top_srcdir)/Makefile.mtest
 
 EXTRA_DIST = testlist.in
 
-static_subdirs = mpi_t
+static_subdirs = mpi_t comm
 # For future tests - note that the IO and RMA directories are optional,
 # and need to be handled as shown in this comment
 #SUBDIRS      = $(static_subdirs) $(iodir) $(rmadir)

@@ -67,26 +67,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    if (handler_id == MPIDIG_SEND &&
-        am_hdr_sz + sizeof(MPIDI_UCX_am_header_t) + data_sz > MPIDI_UCX_MAX_AM_EAGER_SZ) {
-        MPIDIG_send_long_req_mst_t lreq_hdr;
-
-        MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
-        lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = sreq;
-        MPIDIG_REQUEST(sreq, req->lreq).src_buf = data;
-        MPIDIG_REQUEST(sreq, req->lreq).count = count;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDIG_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
-        MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
-        MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
-        MPIDIG_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr));
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    }
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
@@ -331,6 +311,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
+{
+    return (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
@@ -424,29 +409,5 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
   fn_fail:
     goto fn_exit;
 }
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDIG_send_long_ack_msg_t msg;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
-
-    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = req;
-    MPIR_Assert((void *) msg.sreq_ptr != NULL);
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
-                                           MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
-                                           sizeof(msg));
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 
 #endif /* UCX_AM_H_INCLUDED */

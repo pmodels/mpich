@@ -15,12 +15,12 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatterv algorithm
-        auto   - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -28,12 +28,12 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select scatterv algorithm
-        auto   - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -41,15 +41,16 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_scatterv will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level scatterv function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Scatterv will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -75,44 +76,50 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
 
-int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const int *displs,
-                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                             MPIR_Errflag_t * errflag)
+
+int MPIR_Scatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const int *displs,
+                               MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                               MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                               MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno =
-        MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                     recvtype, root, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__SCATTERV,
+        .comm_ptr = comm_ptr,
+
+        .u.scatterv.sendbuf = sendbuf,
+        .u.scatterv.sendcounts = sendcounts,
+        .u.scatterv.displs = displs,
+        .u.scatterv.sendtype = sendtype,
+        .u.scatterv.recvcount = recvcount,
+        .u.scatterv.recvbuf = recvbuf,
+        .u.scatterv.recvtype = recvtype,
+        .u.scatterv.root = root,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_linear:
+            mpi_errno =
+                MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                             recvcount, recvtype, root, comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Scatterv_allcomm_nb:
+            mpi_errno =
+                MPIR_Scatterv_allcomm_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                         recvtype, root, comm_ptr, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
 
   fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const int *displs,
-                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                             MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                     recvtype, root, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
@@ -137,12 +144,12 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_SCATTERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
-                    MPIR_Scatterv_intra_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                             recvcount, recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                               recvcount, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_SCATTERV_INTER_ALGORITHM) {
@@ -157,12 +164,12 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                                              recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_SCATTERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
-                    MPIR_Scatterv_inter_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                             recvcount, recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_auto(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                               recvcount, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -182,9 +189,12 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                  recvtype, root, comm_ptr, errflag);
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE)) {
+        mpi_errno =
+            MPID_Scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root,
+                          comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
                                        recvtype, root, comm_ptr, errflag);
@@ -238,7 +248,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_SCATTERV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -386,7 +396,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
   fn_exit:
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_SCATTERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

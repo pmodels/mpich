@@ -20,7 +20,7 @@ cvars:
       category    : COMMUNICATOR
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -432,7 +432,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SPLIT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -480,7 +480,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SPLIT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

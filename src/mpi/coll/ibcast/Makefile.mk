@@ -16,11 +16,11 @@ mpi_sources += \
     src/mpi/coll/ibcast/ibcast.c
 
 mpi_core_sources += \
-    src/mpi/coll/ibcast/ibcast_intra_binomial.c                             \
-    src/mpi/coll/ibcast/ibcast_intra_scatter_ring_allgather.c               \
-    src/mpi/coll/ibcast/ibcast_intra_scatter_recursive_doubling_allgather.c \
-    src/mpi/coll/ibcast/ibcast_intra_smp.c                                  \
-    src/mpi/coll/ibcast/ibcast_inter_flat.c                                 \
+    src/mpi/coll/ibcast/ibcast_intra_sched_binomial.c                             \
+    src/mpi/coll/ibcast/ibcast_intra_sched_scatter_ring_allgather.c               \
+    src/mpi/coll/ibcast/ibcast_intra_sched_scatter_recursive_doubling_allgather.c \
+    src/mpi/coll/ibcast/ibcast_intra_sched_smp.c                                  \
+    src/mpi/coll/ibcast/ibcast_inter_sched_flat.c                                 \
     src/mpi/coll/ibcast/ibcast_gentran_algos.c                              \
     src/mpi/coll/ibcast/ibcast_intra_gentran_tree.c                                 \
     src/mpi/coll/ibcast/ibcast_intra_gentran_scatterv_recexch_allgatherv.c  \

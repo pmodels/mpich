@@ -50,14 +50,7 @@ static char temp_filename[MAXPATHLEN] = "";
 static int world_num = 0;
 static int world_rank = -1;
 static int which_rank = -1;     /* all ranks */
-static int reset_time_origin = 1;
 static double time_origin = 0.0;
-
-/* This variable is initialized to the appropriate threading level in
- * the DBG_Init call.  Before the debug init, the application cannot
- * be threaded, anyway.  So it is safe to statically set it to "0"
- * here. */
-static int is_threaded = 0;
 
 static int dbg_usage(const char *, const char *);
 static int dbg_openfile(FILE ** dbg_fp);
@@ -66,7 +59,7 @@ static int dbg_set_level(const char *, const char *(names[]));
 static int dbg_get_filename(char *filename, int len);
 
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
-static MPL_thread_tls_t dbg_tls_key;
+static MPL_thread_tls_key_t dbg_tls_key;
 #endif
 
 static FILE *dbg_static_fp = 0;
@@ -107,12 +100,10 @@ static FILE *get_fp(void)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (is_threaded) {
-        if (dbg_initialized == DBG_INITIALIZED) {
-            FILE *fp;
-            MPL_thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
-            return fp;
-        }
+    if (dbg_initialized == DBG_INITIALIZED) {
+        FILE *fp;
+        MPL_thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
+        return fp;
     }
 #endif
 
@@ -125,11 +116,9 @@ static void set_fp(FILE * fp)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (is_threaded) {
-        if (dbg_initialized == DBG_INITIALIZED) {
-            MPL_thread_tls_set(&dbg_tls_key, (void *) fp, &err);
-            return;
-        }
+    if (dbg_initialized == DBG_INITIALIZED) {
+        MPL_thread_tls_set(&dbg_tls_key, (void *) fp, &err);
+        return;
     }
 #endif
 
@@ -455,7 +444,7 @@ MPL_dbg_class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
  * full initialization is not required for updating the environment
  * and/or command-line arguments.
  */
-int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
+int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
 {
     MPL_time_t t;
 
@@ -475,11 +464,9 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 
     dbg_process_args(argc_p, argv_p);
 
-    if (wtimeNotReady == 0) {
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
+    MPL_wtime_init();
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &time_origin);
 
     /* Allocate the predefined classes */
     MPL_DBG_ROUTINE_ENTER = MPL_dbg_class_alloc("ROUTINE_ENTER", "routine_enter");
@@ -497,8 +484,7 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
     return MPL_DBG_SUCCESS;
 }
 
-int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
-                 int wnum, int wrank, int threaded)
+int MPL_dbg_init(int wnum, int wrank)
 {
     int ret;
     FILE *dbg_fp = NULL;
@@ -517,31 +503,8 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
 
     dbg_fp = get_fp();
 
-    /* We may need to wait until the device is set up to initialize
-     * the timer */
-    if (reset_time_origin) {
-        MPL_time_t t;
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
-    /* Check to see if any debugging was selected.  The order of these
-     * tests is important, as they allow general defaults to be set,
-     * followed by more specific modifications. */
-    /* Both of these may have already been set in the PreInit call; if
-     * the command line and/or environment variables are set before
-     * the full initialization, then don't call the routines to check
-     * those values (as they were already handled in DBG_PreInit) */
-    /* First, the environment variables */
-    if (!has_env)
-        dbg_process_env();
-    /* Now the command-line arguments */
-    if (!has_args)
-        dbg_process_args(argc_p, argv_p);
-
     world_num = wnum;
     world_rank = wrank;
-    is_threaded = threaded;
 
     if (which_rank >= 0 && which_rank != wrank) {
         /* Turn off logging on this process */

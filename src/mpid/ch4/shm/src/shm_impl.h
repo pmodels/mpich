@@ -117,16 +117,12 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_RECV);
+    ret = MPIDI_SHM_src_funcs.am_eager_limit();
 
-    ret = MPIDI_SHM_src_funcs.am_recv(req);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_RECV);
     return ret;
 }
 
@@ -865,15 +861,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert, MPIR_Win * w
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   const void *algo_parameters_container)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_BARRIER);
 
-    ret = MPIDI_SHM_native_src_funcs.mpi_barrier(comm, errflag, algo_parameters_container);
+    ret = MPIDI_SHM_native_src_funcs.mpi_barrier(comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_BARRIER);
     return ret;
@@ -881,17 +876,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errfla
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                  int root, MPIR_Comm * comm,
-                                                 MPIR_Errflag_t * errflag,
-                                                 const void *algo_parameters_container)
+                                                 MPIR_Errflag_t * errflag)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_BCAST);
 
-    ret =
-        MPIDI_SHM_native_src_funcs.mpi_bcast(buffer, count, datatype, root, comm, errflag,
-                                             algo_parameters_container);
+    ret = MPIDI_SHM_native_src_funcs.mpi_bcast(buffer, count, datatype, root, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_BCAST);
     return ret;
@@ -899,8 +891,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Da
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                                      MPI_Datatype datatype, MPI_Op op,
-                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     const void *algo_parameters_container)
+                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -909,7 +900,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm,
-                                                 errflag, algo_parameters_container);
+                                                 errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLREDUCE);
     return ret;
@@ -918,8 +909,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgather(const void *sendbuf, int sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
                                                      int recvcount, MPI_Datatype recvtype,
-                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     const void *algo_parameters_container)
+                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -927,8 +917,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgather(const void *sendbuf, int se
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ALLGATHER);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                   recvtype, comm, errflag,
-                                                   algo_parameters_container);
+                                                   recvtype, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLGATHER);
     return ret;
@@ -938,8 +927,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgatherv(const void *sendbuf, int s
                                                       MPI_Datatype sendtype, void *recvbuf,
                                                       const int *recvcounts, const int *displs,
                                                       MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                      MPIR_Errflag_t * errflag,
-                                                      const void *algo_parameters_container)
+                                                      MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -948,8 +936,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgatherv(const void *sendbuf, int s
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                  displs, recvtype, comm, errflag,
-                                                  algo_parameters_container);
+                                                  displs, recvtype, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLGATHERV);
     return ret;
@@ -958,8 +945,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgatherv(const void *sendbuf, int s
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatter(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype, int root,
-                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   const void *algo_parameters_container)
+                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -967,8 +953,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatter(const void *sendbuf, int send
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SCATTER);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                 recvtype, root, comm, errflag,
-                                                 algo_parameters_container);
+                                                 recvtype, root, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SCATTER);
     return ret;
@@ -978,8 +963,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf, const i
                                                     const int *displs, MPI_Datatype sendtype,
                                                     void *recvbuf, int recvcount,
                                                     MPI_Datatype recvtype, int root,
-                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                    const void *algo_parameters_container)
+                                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -987,8 +971,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf, const i
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SCATTERV);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
-                                                  recvcount, recvtype, root, comm_ptr, errflag,
-                                                  algo_parameters_container);
+                                                  recvcount, recvtype, root, comm_ptr, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SCATTERV);
     return ret;
@@ -997,8 +980,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf, const i
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gather(const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype, int root,
-                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                  const void *algo_parameters_container)
+                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1006,8 +988,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gather(const void *sendbuf, int sendc
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GATHER);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                recvtype, root, comm, errflag,
-                                                algo_parameters_container);
+                                                recvtype, root, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GATHER);
     return ret;
@@ -1017,8 +998,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gatherv(const void *sendbuf, int send
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    const int *recvcounts, const int *displs,
                                                    MPI_Datatype recvtype, int root,
-                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   const void *algo_parameters_container)
+                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1026,8 +1006,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gatherv(const void *sendbuf, int send
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GATHERV);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                                 displs, recvtype, root, comm, errflag,
-                                                 algo_parameters_container);
+                                                 displs, recvtype, root, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GATHERV);
     return ret;
@@ -1036,8 +1015,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gatherv(const void *sendbuf, int send
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoall(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     int recvcount, MPI_Datatype recvtype,
-                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                    const void *algo_parameters_container)
+                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1045,8 +1023,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoall(const void *sendbuf, int sen
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ALLTOALL);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                                  recvtype, comm, errflag,
-                                                  algo_parameters_container);
+                                                  recvtype, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLTOALL);
     return ret;
@@ -1056,8 +1033,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallv(const void *sendbuf, const 
                                                      const int *sdispls, MPI_Datatype sendtype,
                                                      void *recvbuf, const int *recvcounts,
                                                      const int *rdispls, MPI_Datatype recvtype,
-                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     const void *algo_parameters_container)
+                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1065,8 +1041,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallv(const void *sendbuf, const 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ALLTOALLV);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                                   recvcounts, rdispls, recvtype, comm, errflag,
-                                                   algo_parameters_container);
+                                                   recvcounts, rdispls, recvtype, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLTOALLV);
     return ret;
@@ -1077,8 +1052,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
                                                      const MPI_Datatype sendtypes[], void *recvbuf,
                                                      const int *recvcounts, const int *rdispls,
                                                      const MPI_Datatype recvtypes[],
-                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     const void *algo_parameters_container)
+                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1086,8 +1060,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ALLTOALLW);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
-                                                   recvcounts, rdispls, recvtypes, comm, errflag,
-                                                   algo_parameters_container);
+                                                   recvcounts, rdispls, recvtypes, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ALLTOALLW);
     return ret;
@@ -1095,8 +1068,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op, int root,
-                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                  const void *algo_parameters_container)
+                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1105,7 +1077,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *rec
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                              errflag, algo_parameters_container);
+                                              errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_REDUCE);
     return ret;
@@ -1115,8 +1087,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, v
                                                           const int *recvcounts,
                                                           MPI_Datatype datatype, MPI_Op op,
                                                           MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t * errflag,
-                                                          const void *algo_parameters_container)
+                                                          MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1124,8 +1095,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, v
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_REDUCE_SCATTER);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op,
-                                                        comm_ptr, errflag,
-                                                        algo_parameters_container);
+                                                        comm_ptr, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_REDUCE_SCATTER);
     return ret;
@@ -1135,8 +1105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
                                                                 int recvcount,
                                                                 MPI_Datatype datatype, MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t * errflag, const void
-                                                                *algo_parameters_container)
+                                                                MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1145,8 +1114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
 
     ret =
         MPIDI_SHM_native_src_funcs.mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                                                            op, comm_ptr, errflag,
-                                                            algo_parameters_container);
+                                                            op, comm_ptr, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_REDUCE_SCATTER_BLOCK);
     return ret;
@@ -1154,17 +1122,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                                MPIR_Errflag_t * errflag,
-                                                const void *algo_parameters_container)
+                                                MPIR_Errflag_t * errflag)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SCAN);
 
-    ret =
-        MPIDI_SHM_native_src_funcs.mpi_scan(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                            algo_parameters_container);
+    ret = MPIDI_SHM_native_src_funcs.mpi_scan(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SCAN);
     return ret;
@@ -1172,8 +1137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scan(const void *sendbuf, void *recvb
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
-                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                  const void *algo_parameters_container)
+                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -1181,8 +1145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_exscan(const void *sendbuf, void *rec
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_EXSCAN);
 
     ret =
-        MPIDI_SHM_native_src_funcs.mpi_exscan(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                              algo_parameters_container);
+        MPIDI_SHM_native_src_funcs.mpi_exscan(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_EXSCAN);
     return ret;

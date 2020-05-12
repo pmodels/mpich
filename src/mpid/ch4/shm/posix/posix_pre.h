@@ -38,10 +38,17 @@ typedef enum {
 
 struct MPIR_Request;
 
+typedef struct {
+    void *csel_root;
+} MPIDI_POSIX_Global_t;
+
+extern char MPIDI_POSIX_coll_generic_json[];
+
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    MPIDI_POSIX_release_gather_comm_t *release_gather;
+    MPIDI_POSIX_release_gather_comm_t release_gather;
+    void *csel_comm;
 } MPIDI_POSIX_comm_t;
 
 typedef struct {
@@ -78,8 +85,6 @@ typedef struct MPIDI_POSIX_am_request_header {
     MPIDI_POSIX_am_header_t msg_hdr_buf;
 
     uint8_t am_hdr_buf[MPIDI_POSIX_MAX_AM_HDR_SIZE];
-
-    int (*cmpl_handler_fn) (MPIR_Request * req);
 
     int handler_id;
     int dst_grank;
@@ -138,7 +143,6 @@ do { \
 
 typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
-    MPL_shm_hnd_t shm_mutex_segment_handle;
 } MPIDI_POSIX_win_t;
 
 /*
@@ -177,6 +181,4 @@ typedef struct {
                              "**windows_mutex %s", "MPL_proc_mutex_unlock");        \
 } while (0)
 
-#include "posix_coll_params.h"
-#include "posix_coll_containers.h"
 #endif /* POSIX_PRE_H_INCLUDED */

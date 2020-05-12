@@ -57,7 +57,7 @@
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
 #define MPIR_TSP_sched_free                MPII_Genutil_sched_free
 
-extern MPII_Coll_queue_t coll_queue;
+extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* Transport function to initialize a new schedule */
@@ -74,7 +74,7 @@ int MPII_Genutil_sched_generic(int type_id, void *data,
                                MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs,
                                int *vtx_id);
 
-/* Transport function to schedule a isend vertex */
+/* Transport function to schedule an isend vertex */
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -92,7 +92,7 @@ int MPII_Genutil_sched_issend(const void *buf,
                               MPIR_Comm * comm_ptr,
                               MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
-/* Transport function to schedule a irecv vertex */
+/* Transport function to schedule an irecv vertex */
 int MPII_Genutil_sched_irecv(void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -101,7 +101,7 @@ int MPII_Genutil_sched_irecv(void *buf,
                              MPIR_Comm * comm_ptr,
                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
-/* Transport function to schedule a imcast vertex */
+/* Transport function to schedule an imcast vertex */
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
                               MPI_Datatype dt,

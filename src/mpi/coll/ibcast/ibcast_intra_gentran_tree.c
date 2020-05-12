@@ -19,14 +19,12 @@
 
 int MPIR_Ibcast_intra_gentran_tree(void *buffer, int count,
                                    MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
-                                   MPIR_Request ** request)
+                                   int tree_type, int k, int chunk_size, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
-                                               comm_ptr, request, MPIR_Ibcast_tree_type,
-                                               MPIR_CVAR_IBCAST_TREE_KVAL,
-                                               MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
+                                               comm_ptr, request, tree_type, k, chunk_size);
 
     return mpi_errno;
 }

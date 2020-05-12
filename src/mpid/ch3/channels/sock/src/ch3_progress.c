@@ -45,22 +45,11 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
 static int adjust_iov(MPL_IOV ** iovp, int *countp, size_t nb);
 
-#define MAX_PROGRESS_HOOKS 4
-typedef int (*progress_func_ptr_t) (int *made_progress);
-
-typedef struct progress_hook_slot {
-    progress_func_ptr_t func_ptr;
-    int active;
-} progress_hook_slot_t;
-
-static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-
 static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
     int made_progress;
-    int i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
@@ -91,13 +80,8 @@ static int MPIDI_CH3i_Progress_test(void)
     }
 #endif
 
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i].active == TRUE) {
-            MPIR_Assert(progress_hooks[i].func_ptr != NULL);
-            mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-    }
+    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
@@ -175,27 +159,16 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 
     do {
         int made_progress = FALSE;
-        int i;
 
-        for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-            if (progress_hooks[i].active == TRUE) {
-                MPIR_Assert(progress_hooks[i].func_ptr != NULL);
-                mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-                MPIR_ERR_CHECK(mpi_errno);
-                if (made_progress) {
-                    MPIDI_CH3_Progress_signal_completion();
-                    break;      /* break the for loop */
-                }
-            }
+        mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (made_progress) {
+            MPIDI_CH3_Progress_signal_completion();
+            break;      /* break from the do loop */
         }
-        if (made_progress)
-            break;      /* break the do loop */
 
-#ifdef MPICH_IS_THREADED
-
-        /* The logic for this case is just complicated enough that
-         * we write separate code for each possibility */
-        if (MPIR_ThreadInfo.isThreaded) {
+        if (MPIR_IS_THREADED) {
             MPIDI_CH3I_progress_blocked = TRUE;
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
@@ -205,11 +178,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
         }
-
-#else
-        mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
-                                         MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
-#	endif
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
@@ -281,7 +249,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 
 int MPIDI_CH3I_Progress_init(void)
 {
-    int i;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
@@ -312,12 +279,6 @@ int MPIDI_CH3I_Progress_init(void)
     /* Initialize the code to handle incoming packets */
     mpi_errno = MPIDI_CH3_PktHandler_Init(pktArray, MPIDI_CH3_PKT_END_CH3 + 1);
     MPIR_ERR_CHECK(mpi_errno);
-
-    /* Initialize progress hook slots */
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        progress_hooks[i].func_ptr = NULL;
-        progress_hooks[i].active = FALSE;
-    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
@@ -859,105 +820,6 @@ int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state * state)
         mpi_errno = MPIDI_CH3i_Progress_test();
 
     return mpi_errno;
-}
-
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn) (int *), int *id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i].func_ptr == NULL) {
-            progress_hooks[i].func_ptr = progress_fn;
-            progress_hooks[i].active = FALSE;
-            break;
-        }
-    }
-
-    if (i >= MAX_PROGRESS_HOOKS) {
-        return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                    "MPIDI_CH3I_Progress_register_hook", __LINE__,
-                                    MPI_ERR_INTERN, "**progresshookstoomany", 0);
-    }
-
-    (*id) = i;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDI_CH3I_Progress_deregister_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
-
-    progress_hooks[id].func_ptr = NULL;
-    progress_hooks[id].active = FALSE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDI_CH3I_Progress_activate_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
-                progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
-    progress_hooks[id].active = TRUE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-int MPIDI_CH3I_Progress_deactivate_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
-                progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
-    progress_hooks[id].active = FALSE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 /* A convenience dummy symbol so that the PETSc folks can configure test to

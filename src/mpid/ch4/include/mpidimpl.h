@@ -20,11 +20,7 @@
 
 #define MPICH_SKIP_MPICXX
 #include "mpiimpl.h"
-
-#ifndef MPICH_MPIDPRE_H_INCLUDED
 #include "mpidpre.h"
-#endif
-
 #include "mpidch4.h"
 
 #endif /* MPIDIMPL_H_INCLUDED */

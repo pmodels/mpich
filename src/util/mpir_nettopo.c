@@ -13,7 +13,7 @@ cvars:
       category    : DEBUGGER
       type        : string
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-

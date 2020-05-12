@@ -18,14 +18,14 @@
 
 int MPIR_Ireduce_scatter_intra_gentran_recexch(const void *sendbuf, void *recvbuf,
                                                const int *recvcounts, MPI_Datatype datatype,
-                                               MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req)
+                                               MPI_Op op, MPIR_Comm * comm, int k,
+                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPII_Gentran_Ireduce_scatter_intra_recexch(sendbuf, recvbuf, recvcounts,
                                                            datatype, op,
-                                                           comm, req,
-                                                           MPIR_CVAR_IREDUCE_SCATTER_RECEXCH_KVAL,
+                                                           comm, req, k,
                                                            IREDUCE_SCATTER_RECEXCH_TYPE_DISTANCE_DOUBLING);
 
     return mpi_errno;

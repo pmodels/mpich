@@ -16,8 +16,8 @@ mpi_sources +=                                  \
     src/mpi/coll/igather/igather.c
 
 mpi_core_sources +=                          \
-    src/mpi/coll/igather/igather_intra_binomial.c  \
-    src/mpi/coll/igather/igather_inter_short.c \
-    src/mpi/coll/igather/igather_inter_long.c \
+    src/mpi/coll/igather/igather_intra_sched_binomial.c  \
+    src/mpi/coll/igather/igather_inter_sched_short.c \
+    src/mpi/coll/igather/igather_inter_sched_long.c \
     src/mpi/coll/igather/igather_gentran_algos.c \
     src/mpi/coll/igather/igather_intra_gentran_tree.c

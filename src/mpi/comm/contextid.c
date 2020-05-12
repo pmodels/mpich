@@ -15,7 +15,7 @@ cvars:
       category    : THREADS
       type        : int
       default     : 2
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -503,7 +503,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                  * When we do a collective operation, we anyway yield
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
             }
         } else if (st.own_mask) {
@@ -533,7 +533,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                  * When we do a collective operation, we anyway yield
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
             }
         } else {
@@ -542,7 +542,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
              * do a collective operation, we anyway yield for other
              * others */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+            MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
             MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
@@ -667,8 +667,8 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
             MPIR_SCHED_BARRIER(st->s);
         }
 
-        mpi_errno = MPIR_Ibcast_sched(st->ctx1, 1,
-                                      MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr, st->s);
+        mpi_errno = MPIR_Ibcast_sched_auto(st->ctx1, 1,
+                                           MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr, st->s);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
     }
@@ -840,9 +840,9 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         }
     }
 
-    mpi_errno = MPIR_Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
-                                      MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
-                                      st->comm_ptr, st->s);
+    mpi_errno = MPIR_Iallreduce_sched_auto(MPI_IN_PLACE, st->local_mask,
+                                           MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
+                                           st->comm_ptr, st->s);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
 

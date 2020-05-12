@@ -72,8 +72,7 @@ typedef struct MPIDI_CH3I_Progress_state {
    and must be available to the routines in src/mpi */
 extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
 
-/* MPICH_IS_THREADED isn't defined yet */
-#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
+#if defined(MPICH_IS_THREADED)
 #define MPIDI_CH3I_PROGRESS_WAKEUP                                                                \
     do {                                                                                          \
         if (MPIDI_CH3I_progress_blocked == TRUE && MPIDI_CH3I_progress_wakeup_signalled == FALSE) \

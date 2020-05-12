@@ -39,17 +39,74 @@ static int cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
 
 static int peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
-    size_t count;
+    int mpi_errno = MPI_SUCCESS;
+    size_t count = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
-    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
     rreq->status.MPI_SOURCE = cqe_get_source(wc, false);
     rreq->status.MPI_TAG = MPIDI_OFI_init_get_tag(wc->tag);
-    count = wc->len;
     rreq->status.MPI_ERROR = MPI_SUCCESS;
+
+    if (MPIDI_OFI_HUGE_SEND & wc->tag) {
+        MPIDI_OFI_huge_recv_t *list_ptr;
+        bool found_msg = false;
+
+        /* If this is a huge message, find the control message on the unexpected list that matches
+         * with this and return the size in that. */
+        LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
+            uint64_t context_id = MPIDI_OFI_CONTEXT_MASK & wc->tag;
+            uint64_t tag = MPIDI_OFI_TAG_MASK & wc->tag;
+            if (list_ptr->remote_info.comm_id == context_id &&
+                list_ptr->remote_info.origin_rank == cqe_get_source(wc, false) &&
+                list_ptr->remote_info.tag == tag) {
+                count = list_ptr->remote_info.msgsize;
+                found_msg = true;
+            }
+        }
+        if (!found_msg) {
+            MPIDI_OFI_huge_recv_t *recv_elem;
+            MPIDI_OFI_huge_recv_list_t *huge_list_ptr;
+
+            /* Create an element in the posted list that only indicates a peek and will be
+             * deleted as soon as it's fulfilled without being matched. */
+            recv_elem = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv_elem), 1, MPL_MEM_COMM);
+            MPIR_ERR_CHKANDJUMP(recv_elem == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            recv_elem->peek = true;
+            MPIR_Comm *comm_ptr = MPIDIG_context_id_to_comm(MPIDI_OFI_CONTEXT_MASK & wc->tag);
+            recv_elem->comm_ptr = comm_ptr;
+            MPIDIU_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv_elem,
+                           MPL_MEM_BUFFER);
+
+            huge_list_ptr =
+                (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*huge_list_ptr), 1, MPL_MEM_COMM);
+            MPIR_ERR_CHKANDJUMP(huge_list_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+            recv_elem->remote_info.comm_id = huge_list_ptr->comm_id =
+                MPIDI_OFI_CONTEXT_MASK & wc->tag;
+            recv_elem->remote_info.origin_rank = huge_list_ptr->rank = cqe_get_source(wc, false);
+            recv_elem->remote_info.tag = huge_list_ptr->tag = MPIDI_OFI_TAG_MASK & wc->tag;
+            recv_elem->localreq = huge_list_ptr->rreq = rreq;
+            recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+            recv_elem->done_fn = recv_event;
+            recv_elem->wc = *wc;
+            recv_elem->cur_offset = MPIDI_OFI_global.max_msg_size;
+
+            LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, huge_list_ptr);
+            goto fn_exit;
+        }
+    } else {
+        /* Otherwise just get the size of the message we've already received. */
+        count = wc->len;
+    }
     MPIR_STATUS_SET_COUNT(rreq->status, count);
+    /* util_id should be the last thing to change in rreq. Reason is
+     * we use util_id to indicate peek_event has completed and all the
+     * relevant values have been copied to rreq. */
+    MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PEEK_EVENT);
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static int peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
@@ -92,22 +149,11 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
     MPIR_STATUS_SET_COUNT(rreq->status, count);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-
-    if (MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-        int continue_matching = 1;
-
-        MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_NETMOD,
-                                &continue_matching);
-
-        /* It is always possible to cancel a request on shm side w/o an aux thread */
-
-        /* Decouple requests */
-        if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-        }
-        MPIR_Request_free(rreq);
-    }
+    int is_cancelled;
+    MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+    /* Cancel SHM partner is always successful */
+    MPIR_Assert(is_cancelled);
+    MPIDI_anysrc_free_partner(rreq);
 #endif
     if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) &&
         (MPIDI_OFI_REQUEST(rreq, noncontig.pack))) {
@@ -239,6 +285,8 @@ static int recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* Plug the information for the huge event into the receive request and go
      * to the MPIDI_OFI_get_huge_event function. */
     recv_elem->event_id = MPIDI_OFI_EVENT_GET_HUGE;
+    recv_elem->peek = false;
+    recv_elem->comm_ptr = comm_ptr;
     recv_elem->localreq = rreq;
     recv_elem->done_fn = recv_event;
     recv_elem->wc = *wc;
@@ -302,7 +350,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         MPIDIU_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             uint64_t key = fi_mr_key(huge_send_mr);
             MPIDI_OFI_mr_key_free(key);
         }
@@ -339,7 +387,7 @@ static int ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 
 static uintptr_t recv_rbase(MPIDI_OFI_huge_recv_t * recv_elem)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         return 0;
     } else {
         return recv_elem->remote_info.send_buf;
@@ -434,7 +482,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     if (!incomplete) {
         MPL_free(MPIDI_OFI_REQUEST(req, util.inject_buf));
         MPIR_Request_free(req);
-        OPA_decr_int(&MPIDI_OFI_global.am_inflight_inject_emus);
+        MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_inject_emus, 1);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_INJECT_EMU_EVENT);
@@ -617,8 +665,8 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPID_Request_complete(rreq);        /* FIXME: Should not call MPIDI in NM ? */
-    ofi_req->req_hdr->target_cmpl_cb(rreq);
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    MPID_Request_complete(rreq);
   fn_exit:
     MPIDIU_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_READ_EVENT);
@@ -785,7 +833,7 @@ int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
     goto fn_exit;
 }
 
-int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
@@ -795,7 +843,7 @@ int MPIDI_OFI_handle_cq_error(int vci_idx, ssize_t ret)
 
     switch (ret) {
         case -FI_EAVAIL:
-            fi_cq_readerr(MPIDI_OFI_global.ctx[vci_idx].cq, &e, 0);
+            fi_cq_readerr(MPIDI_OFI_global.ctx[vni_idx].cq, &e, 0);
 
             switch (e.err) {
                 case FI_ETRUNC:

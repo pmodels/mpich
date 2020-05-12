@@ -22,6 +22,14 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     if [test "x$ofi_direct_provider" != "x"]; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
     fi
+
+        AC_ARG_ENABLE(ch4-ofi-ipv6,
+            AC_HELP_STRING([--disable-ch4-ofi-ipv6], [Skip providers with addr_format FI_SOCKADDR_IN6])
+        )
+
+        if test "x$enable_ch4_ofi_ipv6" = "xno" ; then
+            AC_DEFINE(MPIDI_CH4_OFI_SKIP_IPV6, 1, [CH4-OFI should skip providers with IPv6])
+        fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 ])dnl
@@ -284,6 +292,18 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                                        ]])],
                                        [],
                                        [AC_MSG_ERROR(MPL_aligned_alloc is required to build OFI netmod)])
+
+    AC_ARG_ENABLE(ofi-domain,
+    [--enable-ofi-domain
+       Use fi_domain for vni contexts. This is the default. Use --disable-ofi-domain to use fi_contexts
+       within a scalable endpoint instead.
+         yes        - Enabled (default)
+         no         - Disabled
+    ],,enable_ofi_domain=yes)
+
+    if test "$enable_ofi_domain" = "yes"; then
+        AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vni contexts])
+    fi
 
     AC_ARG_ENABLE(legacy-ofi,
     [--enable-legacy-ofi

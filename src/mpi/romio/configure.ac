@@ -724,7 +724,7 @@ AC_TRY_COMPILE([#include <fcntl.h>],
 ],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
 AC_MSG_RESULT($pac_cv_struct_flock_and_mpi_offset)
 # FIXME: We should look for struct flock64 and the F_SETLK64/F_GETLK64
-# ADIOI_Set_lock could use these instead.
+# ADIOI_GEN_SetLock. could use these instead.
 if test "$pac_cv_struct_flock_and_mpi_offset" = no ; then
     AC_MSG_CHECKING([whether struct flock compatible with int])
     AC_TRY_COMPILE([#include <fcntl.h>],
@@ -757,7 +757,7 @@ if test -n "$FILE_SYSTEM" ; then
    # we could set the IFS to tokenize FILE_SYSTEM, but the FILE_SYSTEM env var
    # is used in multiple places in the build system: get rid of the '+'s so we
    # can use the 'for x in $FILE_SYSTEM ...' idiom 
-   FILE_SYSTEM=`echo $FILE_SYSTEM|sed -e 's/\+/ /g'`
+   FILE_SYSTEM=`echo $FILE_SYSTEM|tr '+' ' '`
    for x in $FILE_SYSTEM
    do
       found=no

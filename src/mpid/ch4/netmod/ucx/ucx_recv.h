@@ -23,7 +23,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     if (ucp_request->req)
         rreq = ucp_request->req;
     else
-        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -38,12 +38,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
         rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
         MPIR_STATUS_SET_COUNT(rreq->status, count);
     }
-
-#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
-    /* FIXME: is this too strong? The reason a barrier is needed in fine-grained locking
-     * is to avoid detecting request completion before changes to rreq->status is visible.*/
-    OPA_read_write_barrier();
-#endif
 
     if (ucp_request->req) {
         MPIDIU_request_complete(rreq);
@@ -68,11 +62,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 
     /* complete the request if we have it, or allocate a status object */
-    if (ucp_request->req) {
+    int has_request = (ucp_request->req != NULL);
+    if (has_request) {
         MPIR_Request *rreq = ucp_request->req;
-        MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
         mrecv_status = &rreq->status;
     } else {
         mrecv_status = MPL_malloc(sizeof(MPI_Status), MPL_MEM_BUFFER);
@@ -89,6 +81,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     mrecv_status->MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
     mrecv_status->MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
 
+    /* complete the request */
+    if (has_request) {
+        MPIR_Request *rreq = ucp_request->req;
+        MPIDIU_request_complete(rreq);
+        ucp_request->req = NULL;
+        ucp_request_release(ucp_request);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
@@ -137,10 +136,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             req = ucp_request->req;
         } else {
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
-#if MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__GLOBAL
-            /* FIXME: is this too strong? same reason as in the above callback */
-            OPA_read_write_barrier();
-#endif
             MPIR_cc_set(&req->cc, 0);
             MPIR_Request_free((MPIR_Request *) ucp_request->req);
         }
@@ -148,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         ucp_request_release(ucp_request);
     } else {
         if (req == NULL)
-            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).ucp_request = ucp_request;

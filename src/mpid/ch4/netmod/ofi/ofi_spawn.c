@@ -222,7 +222,7 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
 
     MPIR_Comm_commit(tmp_comm_ptr);
 
-    mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, newcomm);
+    mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, NULL, newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     tmp_comm_ptr->local_comm = NULL;    /* avoid freeing local comm with comm_release */
@@ -244,7 +244,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
     uint64_t mask_bits = 0;
     struct fi_msg_tagged msg;
     int buf = 0;
-    MPID_Time_t time_sta, time_now;
+    MPL_time_t time_sta, time_now;
     double time_gap;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_HANDSHAKE);
@@ -271,7 +271,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                          "connecting port_id %d, conn %" PRIu64
                          ", waiting for dynproc_handshake", port_id, *conn));
         time_gap = 0.0;
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         while (req.done != MPIDI_OFI_PEEK_FOUND) {
             req.done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
@@ -281,8 +281,8 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                 mpi_errno = MPID_Progress_test();
                 MPIR_ERR_CHECK(mpi_errno);
 
-                MPID_Wtime(&time_now);
-                MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+                MPL_wtime(&time_now);
+                MPL_wtime_diff(&time_sta, &time_now, &time_gap);
             } while (req.done == MPIDI_OFI_PEEK_START && (int) time_gap < timeout);
             if ((int) time_gap >= timeout) {
                 /* connection is timed out */
@@ -304,13 +304,13 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                       NULL,
                                       *conn, match_bits, mask_bits, &req.context), trecv, FALSE);
         time_gap = 0.0;
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_test();
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPID_Wtime(&time_now);
-            MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+            MPL_wtime(&time_now);
+            MPL_wtime_diff(&time_sta, &time_now, &time_gap);
         } while (!req.done && (int) time_gap < timeout);
         if ((int) time_gap >= timeout) {
             /* connection is mismatched */
@@ -588,7 +588,8 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         char conname[FI_NAME_MAX];
         mpi_errno = get_conn_name_from_port(port_name, conname);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, conname, 1, &conn, 0ULL, NULL), avmap);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
+                       avmap);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -597,7 +598,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         mpi_errno = dynproc_handshake(root, DYNPROC_RECEIVER, timeout, port_id, &conn, comm_ptr);
         if (mpi_errno == MPI_ERR_PORT || mpi_errno == MPI_SUCCESS) {
             root_errno = mpi_errno;
-            mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+            mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
             MPIR_ERR_CHECK(mpi_errno);
             if (root_errno != MPI_SUCCESS) {
                 mpi_errno = root_errno;
@@ -621,7 +622,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
     }
 
     if (rank != root) {
-        mpi_errno = MPIR_Bcast_intra_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
         if (root_errno != MPI_SUCCESS) {
             mpi_errno = root_errno;
@@ -651,7 +652,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
                                            MPIDI_OFI_DYNPROC_CONNECTED_CHILD);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     if (rank == root) {
@@ -770,7 +771,8 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                  &child_root, &remote_size, &remote_upid_size, &remote_upids,
                                  &remote_node_ids);
         MPIR_ERR_CHECK(mpi_errno);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, conname, 1, &conn, 0ULL, NULL), avmap);
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
+                       avmap);
         mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
@@ -812,7 +814,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
                                            MPIDI_OFI_DYNPROC_CONNECTED_PARENT);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     if (rank == root) {

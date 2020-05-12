@@ -13,13 +13,13 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-int MPIDI_OFI_handle_cq_error_util(int vci_idx, ssize_t ret)
+int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
 
-    mpi_errno = MPIDI_OFI_handle_cq_error(vci_idx, ret);
+    mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     return mpi_errno;
@@ -149,6 +149,17 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
                     MPIDIU_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
                                       list_ptr->rreq->handle);
 
+                /* If this is a "peek" element for an MPI_Probe, it shouldn't be matched. Grab the
+                 * important information and remove the element from the list. */
+                if (recv_elem->peek) {
+                    MPIR_STATUS_SET_COUNT(recv_elem->localreq->status, info->msgsize);
+                    MPIDI_OFI_REQUEST(recv_elem->localreq, util_id) = MPIDI_OFI_PEEK_FOUND;
+                    MPIDIU_map_erase(MPIDI_OFI_COMM(recv_elem->comm_ptr).huge_recv_counters,
+                                     recv_elem->localreq->handle);
+                    MPL_free(recv_elem);
+                    recv_elem = NULL;
+                }
+
                 MPL_free(list_ptr);
                 break;
             }
@@ -184,17 +195,14 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     goto fn_exit;
 }
 
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
-                              void **data,
-                              size_t * data_sz,
-                              int is_local,
-                              int *is_contig,
-                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
+                              int is_local, int is_async, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
-    *req = NULL;
-    *target_cmpl_cb = NULL;
+
+    if (is_async)
+        *req = NULL;
 
     switch (ctrlsend->type) {
         case MPIDI_OFI_CTRL_HUGEACK:{

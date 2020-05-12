@@ -21,7 +21,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 64
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -31,7 +31,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 4
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -47,7 +47,8 @@ cvars:
 int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              int recvcount, MPI_Datatype recvtype,
-                                             MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                             MPIR_Comm * comm, int batch_size, int bblock,
+                                             MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int src, dst;
@@ -60,7 +61,6 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
     MPI_Aint recvtype_lb, sendtype_lb, sendtype_true_extent, recvtype_true_extent;
     int size, rank;
     int is_inplace;
-    int batch_size, bblock;
     int tag = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_SCATTERED);
@@ -74,8 +74,6 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
     size = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
     is_inplace = (sendbuf == MPI_IN_PLACE);
-    batch_size = MPIR_CVAR_IALLTOALL_SCATTERED_BATCH_SIZE;
-    bblock = MPIR_CVAR_IALLTOALL_SCATTERED_OUTSTANDING_TASKS;
 
     /* vtcs is twice the batch size to store both send and recv ids */
     vtcs = (int *) MPL_malloc(sizeof(int) * 2 * batch_size, MPL_MEM_COLL);
@@ -165,7 +163,8 @@ int MPIR_TSP_Ialltoall_sched_intra_scattered(const void *sendbuf, int sendcount,
 int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
                                        MPI_Datatype sendtype, void *recvbuf,
                                        int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm * comm, MPIR_Request ** req)
+                                       MPIR_Comm * comm, int batch_size, int bblock,
+                                       MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -181,7 +180,8 @@ int MPIR_TSP_Ialltoall_intra_scattered(const void *sendbuf, int sendcount,
 
     mpi_errno =
         MPIR_TSP_Ialltoall_sched_intra_scattered(sendbuf, sendcount, sendtype,
-                                                 recvbuf, recvcount, recvtype, comm, sched);
+                                                 recvbuf, recvcount, recvtype, comm, batch_size,
+                                                 bblock, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Start and register the schedule */

@@ -27,11 +27,8 @@ MPL_dbg_class MPIR_DBG_STRING;
 
 void MPII_pre_init_dbg_logging(int *argc, char ***argv)
 {
-    /* set last arg, wtimeNotReady, to 0 will cause reset time_origin
-     * (for dbg messages), which should be OK here.
-     */
     /* we are ignoring any argument error here as they shouldn't affect MPI operations */
-    MPL_dbg_pre_init(argc, argv, 0);
+    MPL_dbg_pre_init(argc, argv);
 }
 
 void MPII_init_dbg_logging(void)
@@ -39,14 +36,7 @@ void MPII_init_dbg_logging(void)
     /* FIXME: This is a hack to handle the common case of two worlds.
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
-#ifdef MPICH_IS_THREADED
-    MPL_dbg_init(NULL, NULL, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
-                 MPIR_ThreadInfo.isThreaded);
-#else
-    MPL_dbg_init(NULL, NULL, TRUE, TRUE,
-                 MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank, 0);
-#endif
+    MPL_dbg_init(MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank);
 
     MPIR_DBG_INIT = MPL_dbg_class_alloc("INIT", "init");
     MPIR_DBG_PT2PT = MPL_dbg_class_alloc("PT2PT", "pt2pt");

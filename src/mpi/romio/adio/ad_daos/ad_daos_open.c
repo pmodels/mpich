@@ -1,14 +1,12 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
+ *  (C) 2020 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  *
- * Copyright (C) 2018-2020 Intel Corporation
- *
- * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
- * The Government's rights to use, modify, reproduce, release, perform, display,
- * or disclose this software are subject to the terms of the Apache License as
- * provided in Contract No. 8F-30005.
- * Any reproduction of computer software, computer software documentation, or
- * portions thereof marked with this legend must also reproduce the markings.
+ *  Portions of this code were written by Intel Corporation.
+ *  Copyright (C) 2018-2020 Intel Corporation.  Intel provides this material
+ *  to Argonne National Laboratory subject to Software Grant and Corporate
+ *  Contributor License Agreement dated February 8, 2012.
  */
 
 #include "ad_daos.h"
@@ -790,50 +788,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
                                                __LINE__, rc, "File Open error", 0);
             goto err_free;
         }
-#if 0
-        share_uuid_info(cont, rank, comm);
-        rc = handle_share(&cont->poh, NULL, NULL, NULL, HANDLE_POOL, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-        rc = handle_share(&cont->poh, &cont->coh, NULL, NULL, HANDLE_CO, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-
-        if (rank != 0) {
-            rc = cache_handles(cont, error_code);
-            if (rc)
-                goto err_free;
-        }
-
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, NULL, HANDLE_DFS, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-
-        if (rank != 0) {
-            if (cont->c->dfs == NULL) {
-                cont->c->dfs = cont->dfs;
-            } else {
-                dfs_umount(cont->dfs);
-                cont->dfs = cont->c->dfs;
-            }
-        }
-
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, &cont->obj, HANDLE_OBJ, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-#endif
     }
 
     fd->is_open = 1;

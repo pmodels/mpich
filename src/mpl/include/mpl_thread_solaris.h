@@ -13,7 +13,7 @@
 typedef mutex_t MPL_thread_mutex_t;
 typedef cond_t MPL_thread_cond_t;
 typedef thread_t MPL_thread_id_t;
-typedef thread_key_t MPL_thread_tls_t;
+typedef thread_key_t MPL_thread_tls_key_t;
 
 typedef void (*MPL_thread_func_t) (void *data);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
@@ -40,6 +40,11 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
 #define MPL_thread_self(id_ptr_)                \
     do {                                        \
         *(id_ptr_) = thr_self();                \
+    } while (0)
+
+#define MPL_thread_join(id_ptr_)                \
+    do {                                        \
+        thr_join(id_ptr_, NULL, NULL);          \
     } while (0)
 
 #define MPL_thread_same(id1_ptr_, id2_ptr_, same_ptr_)                  \
@@ -85,23 +90,6 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
             *(err_ptr_) = mutex_lock(mutex_ptr_);                       \
             /* FIXME: convert error to an MPL_THREAD_ERR value */       \
         }                                                               \
-    } while (0)
-
-#define MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)      \
-    do {                                                                \
-        int err__;                                                      \
-        *(int*)cs_acq_ptr = 1;                                          \
-        err__ = mutex_trylock(mutex_ptr_);                              \
-        if (unlikely(err__ != 0 && err__ != EBUSY)) {                   \
-            *(int*)cs_acq_ptr = 0;                                      \
-        }                                                               \
-        else {                                                          \
-            if (unlikely(err__ != 0))                                   \
-                *(int*)cs_acq_ptr = 0;                                  \
-             err__ = 0;                                                 \
-        }                                                               \
-        if (err_ptr_ != NULL)                                           \
-            *(int *)(err_ptr_) = err__;                                 \
     } while (0)
 
 #define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)                   \

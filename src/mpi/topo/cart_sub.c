@@ -65,7 +65,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_SUB);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -197,7 +197,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_SUB);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

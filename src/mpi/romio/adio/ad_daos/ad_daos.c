@@ -1,14 +1,12 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
+ *  (C) 2020 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  *
- * Copyright (C) 2018-2020 Intel Corporation
- *
- * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
- * The Government's rights to use, modify, reproduce, release, perform, display,
- * or disclose this software are subject to the terms of the Apache License as
- * provided in Contract No. 8F-30005.
- * Any reproduction of computer software, computer software documentation, or
- * portions thereof marked with this legend must also reproduce the markings.
+ *  Portions of this code were written by Intel Corporation.
+ *  Copyright (C) 2018-2020 Intel Corporation.  Intel provides this material
+ *  to Argonne National Laboratory subject to Software Grant and Corporate
+ *  Contributor License Agreement dated February 8, 2012.
  */
 
 #include "ad_daos.h"
@@ -44,4 +42,9 @@ struct ADIOI_Fns_struct ADIO_DAOS_operations = {
     "DAOS: ROMIO driver for DAOS",
     ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
     ADIOI_GEN_IwriteStridedColl,        /* IwriteStridedColl */
+#if defined(F_SETLKW64)
+    ADIOI_GEN_SetLock   /* SetLock */
+#else
+    ADIOI_GEN_SetLock64 /* SetLock */
+#endif
 };

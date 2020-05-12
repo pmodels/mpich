@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -215,30 +215,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
                                              int context_offset, MPIDI_av_entry_t * av,
                                              MPI_Status * status, MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
-
-    if (!cs_acq) {
-        *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(RECV, NULL /*send_buf */ , buf, count, datatype,
-                                  rank, tag, comm, context_offset, av,
-                                  status, *req, NULL /*flag */ , NULL /*message */ ,
-                                  NULL /*processed */);
-    } else {
-        *(req) = NULL;
-        MPIDI_workq_vci_progress_unsafe();
-        mpi_errno =
-            MPIDI_recv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, status,
-                              req);
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDI_workq_pt2pt_enqueue(RECV, NULL /*send_buf */ , buf, count, datatype,
+                              rank, tag, comm, context_offset, av,
+                              status, *req, NULL /*flag */ , NULL /*message */ ,
+                              NULL /*processed */);
+#else
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    *(req) = NULL;
+    mpi_errno = MPIDI_recv_unsafe(buf, count, datatype, rank, tag, comm,
+                                  context_offset, av, status, req);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+#endif
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RECV_SAFE);
     return mpi_errno;
 
@@ -247,7 +244,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,
@@ -255,29 +252,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
                                               int context_offset, MPIDI_av_entry_t * av,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
-
-    if (!cs_acq) {
-        *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
-                                  rank, tag, comm, context_offset, av,
-                                  NULL /*status */ , *req, NULL /*flag */ , NULL /*message */ ,
-                                  NULL /*processed */);
-    } else {
-        *(req) = NULL;
-        MPIDI_workq_vci_progress_unsafe();
-        mpi_errno =
-            MPIDI_irecv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
+                              rank, tag, comm, context_offset, av,
+                              NULL /*status */ , *req, NULL /*flag */ , NULL /*message */ ,
+                              NULL /*processed */);
+#else
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    *(req) = NULL;
+    mpi_errno = MPIDI_irecv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+#endif
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IRECV_SAFE);
     return mpi_errno;
 
@@ -289,28 +283,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                                MPI_Aint count, MPI_Datatype datatype,
                                                MPIR_Request * message)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMRECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMRECV_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
-
-    if (!cs_acq) {
-        MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
-                                  0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
-                                  0 /*context_offset */ , NULL /*av */ ,
-                                  NULL /*status */ , request, NULL /*flag */ ,
-                                  &message, NULL /*processed */);
-    } else {
-        MPIDI_workq_vci_progress_unsafe();
-        mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message);
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
+                              0 /*rank */ , 0 /*tag */ , NULL /*comm */ ,
+                              0 /*context_offset */ , NULL /*av */ ,
+                              NULL /*status */ , request, NULL /*flag */ ,
+                              &message, NULL /*processed */);
+#else
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+#endif
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMRECV_SAFE);
     return mpi_errno;
 
@@ -368,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
-                                            int count,
+                                            MPI_Aint count,
                                             MPI_Datatype datatype,
                                             int rank,
                                             int tag,
@@ -380,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
-    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
+    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 0);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = rreq;

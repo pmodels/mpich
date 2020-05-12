@@ -36,8 +36,7 @@
     do {                                                                \
         if (sigreq)                                                     \
         {                                                               \
-            MPIDI_OFI_REQUEST_CREATE((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
-            MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
         else {                                                          \
@@ -170,6 +169,18 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+{
+    if (sigreq) {
+        /* If sigreq is not NULL, *sigreq should be a valid object after
+         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
+         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
+         * depending on MPIDI_CH4_MT_MODEL. */
+        MPIR_Assert(*sigreq != NULL);
+        MPID_Request_complete(*sigreq);
+    }
+}
+
 /* _count: count of data elements of certain datatype
  * _datatype: the datatype
  * _bytes: total byte size
@@ -206,7 +217,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
         + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     req->noncontig =
         (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
@@ -269,7 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
         + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     req->noncontig =
         (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
@@ -340,7 +351,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
         + MPIDI_OFI_align_iov_len(alloc_iovs * r_size)
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     req->noncontig =
         (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
@@ -451,6 +462,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
@@ -511,6 +524,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -625,6 +640,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
@@ -687,6 +704,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
@@ -986,6 +1005,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     MPIDI_OFI_finalize_seg_state(p);
 
@@ -1169,6 +1190,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     if (op != MPI_NO_OP)
         MPIDI_OFI_finalize_seg_state2(p);
@@ -1199,7 +1222,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);

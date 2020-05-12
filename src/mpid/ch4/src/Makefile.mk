@@ -30,7 +30,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4i_comm.h    \
                   src/mpid/ch4/src/ch4r_recvq.h   \
                   src/mpid/ch4/src/ch4r_recv.h    \
-                  src/mpid/ch4/src/ch4r_symheap.h \
                   src/mpid/ch4/src/ch4r_buf.h     \
                   src/mpid/ch4/src/ch4r_callbacks.h     \
                   src/mpid/ch4/src/ch4r_rma_origin_callbacks.h     \
@@ -53,12 +52,9 @@ mpi_core_sources += src/mpid/ch4/src/ch4_globals.c        \
                     src/mpid/ch4/src/ch4r_callbacks.c     \
                     src/mpid/ch4/src/ch4r_rma_origin_callbacks.c     \
                     src/mpid/ch4/src/ch4r_rma_target_callbacks.c     \
-                    src/mpid/ch4/src/ch4r_symheap.c       \
                     src/mpid/ch4/src/ch4r_win.c           \
                     src/mpid/ch4/src/mpid_ch4_net_array.c
 
 if BUILD_CH4_COLL_TUNING
 mpi_core_sources += src/mpid/ch4/src/ch4_coll_globals.c
-else
-mpi_core_sources += src/mpid/ch4/src/ch4_coll_globals_default.c
 endif

@@ -161,9 +161,12 @@ int main(int argc, char *argv[])
                 if (err != DTP_SUCCESS) {
                     errs++;
                     if (errs < 10) {
+                        char *target_desc, *orig_desc;
+                        DTP_obj_get_description(target_obj, &target_desc);
+                        DTP_obj_get_description(orig_obj, &orig_desc);
                         fprintf(stderr,
                                 "Data received with type %s does not match data sent with type %s\n",
-                                target_obj.DTP_description, orig_obj.DTP_description);
+                                target_desc, orig_desc);
                         fflush(stderr);
                     }
                 }

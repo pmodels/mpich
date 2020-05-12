@@ -25,6 +25,11 @@
 
 /* Defines */
 
+/* configure option --enable-ofi-domain */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+#define MPIDI_OFI_VNI_USE_SEPCTX       1
+#endif
+
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
@@ -39,11 +44,14 @@ struct MPIR_Comm;
 struct MPIR_Request;
 
 typedef struct {
+    int dummy;
+} MPIDI_OFI_Global_t;
+
+typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;
     /* support for connection */
     int conn_id;
-    int eagain;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
@@ -105,7 +113,6 @@ typedef struct {
     void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
-    int (*target_cmpl_cb) (struct MPIR_Request * req);
     uint16_t am_hdr_sz;
     uint8_t pad[6];
     MPIDI_OFI_am_header_t msg_hdr;
@@ -203,16 +210,9 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-#else                           /* This is necessary for older GCC compilers that don't properly detect
-                                 * elif statements */
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-#endif
 #endif
 } MPIDI_OFI_addr_t;
 
-#include "ofi_coll_params.h"
-#include "ofi_coll_containers.h"
 #endif /* OFI_PRE_H_INCLUDED */

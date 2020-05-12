@@ -12,21 +12,12 @@
 #define CH4_IMPL_H_INCLUDED
 
 #include "ch4_types.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
+#include "mpidu_shm.h"
 
 int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
 uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
-/* Collectively allocate shared memory region.
- * MPL_shm routines and MPI collectives are internally used. */
-int MPIDIU_allocate_shm_segment(MPIR_Comm * shm_comm_ptr, MPI_Aint shm_segment_len,
-                                MPL_shm_hnd_t * shm_segment_hdl_ptr, void **base_ptr,
-                                bool * mapfail_flag_ptr);
-/* Destroy shared memory region on the local process.
- * MPL_shm routines are internally used. */
-int MPIDIU_destroy_shm_segment(MPI_Aint shm_segment_len, MPL_shm_hnd_t * shm_segment_hdl_ptr,
-                               void **base_ptr);
-
 
 /* Static inlines */
 
@@ -370,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
 
 #define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)        \
     do {                                                                \
-        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);         \
+        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);         \
         if ((rreq_) != NULL) {                                          \
             MPIR_cc_set(&(rreq_)->cc, 0);                               \
             MPIR_Status_set_procnull(&(rreq_)->status);                 \

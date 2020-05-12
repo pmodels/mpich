@@ -245,17 +245,6 @@ extern MPIDI_Process_t MPIDI_Process;
  *     cancelled state
  */
 
-/* FIXME XXX DJG for TLS hack */
-#define MPIR_REQUEST_TLS_MAX 128
-
-#  define MPIDI_Request_tls_alloc(req_) \
-    do { \
-	(req_) = MPIR_Handle_obj_alloc(&MPIR_Request_mem); \
-        MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
-	       "allocated request, handle=0x%08x", req_);\
-    } while (0)
-
-
 /* If the channel doesn't initialize anything in the request, 
    provide a dummy */
 #ifndef MPIDI_CH3_REQUEST_INIT
@@ -277,7 +266,7 @@ extern MPIDI_Process_t MPIDI_Process;
 */
 #define MPIDI_Request_create_sreq(sreq_, mpi_errno_, FAIL_)	\
 {								\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);     \
+    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);     \
     MPIR_Object_set_ref((sreq_), 2);				\
     (sreq_)->comm = comm;					\
     (sreq_)->dev.partner_request   = NULL;                         \
@@ -294,7 +283,7 @@ extern MPIDI_Process_t MPIDI_Process;
 /* This is the receive request version of MPIDI_Request_create_sreq */
 #define MPIDI_Request_create_rreq(rreq_, mpi_errno_, FAIL_)	\
 {								\
-    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);           \
+    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);           \
     MPIR_Object_set_ref((rreq_), 2);				\
     (rreq_)->dev.partner_request   = NULL;                         \
 }
@@ -303,7 +292,7 @@ extern MPIDI_Process_t MPIDI_Process;
  * returning when a user passed MPI_PROC_NULL */
 #define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)           \
     do {                                                                   \
-        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);               \
+        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);               \
         if ((rreq_) != NULL) {                                             \
             MPIR_Object_set_ref((rreq_), 1);                               \
             /* MT FIXME should these be handled by MPIR_Request_create? */ \
@@ -515,13 +504,13 @@ int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt);
 int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect);
 int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr);
 
-int MPIDI_PG_Init( int *, char ***, 
-		   MPIDI_PG_Compare_ids_fn_t, MPIDI_PG_Destroy_fn_t);
+int MPIDI_PG_Init(MPIDI_PG_Compare_ids_fn_t, MPIDI_PG_Destroy_fn_t);
 int MPIDI_PG_Finalize(void);
 int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** ppg);
 int MPIDI_PG_Destroy(MPIDI_PG_t * pg);
 int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pgp);
 int MPIDI_PG_Id_compare(void *id1, void *id2);
+void MPIDI_PG_set_verbose(int level);
 
 /* Always use the MPIDI_PG_iterator type, never its expansion.  Otherwise it
    will be difficult to make any changes later. */
@@ -1848,8 +1837,8 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request *);
 
 #define MPIDI_CH3_GET_EAGER_THRESHOLD(eager_threshold_p, comm, vc)  \
     do {                                                            \
-        if ((comm)->dev.eager_max_msg_sz != -1)                     \
-            *(eager_threshold_p) = (comm)->dev.eager_max_msg_sz;    \
+        if ((comm)->hints[MPIR_COMM_HINT_EAGER_THRESH] != -1)                     \
+            *(eager_threshold_p) = (comm)->hints[MPIR_COMM_HINT_EAGER_THRESH];    \
         else                                                        \
             *(eager_threshold_p) = (vc)->eager_max_msg_sz;          \
     } while (0)
