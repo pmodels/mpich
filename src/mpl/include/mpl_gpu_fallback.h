@@ -7,5 +7,6 @@
 #define MPL_GPU_CUDA_H_INCLUDED
 
 typedef int MPL_gpu_ipc_mem_handle_t;
+typedef int MPL_gpu_device_handle_t;
 
 #endif /* ifndef MPL_GPU_CUDA_H_INCLUDED */

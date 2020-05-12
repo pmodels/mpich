@@ -56,7 +56,8 @@ int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem)
+int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
+                                MPL_gpu_device_handle_t h_device)
 {
     cudaError_t ret;
     ret = cudaIpcOpenMemHandle(ptr, h_mem, cudaIpcMemLazyEnablePeerAccess);
@@ -164,6 +165,11 @@ int MPL_gpu_init()
 }
 
 int MPL_gpu_finalize()
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_device_handle(const void *buf, void *h_device)
 {
     return MPL_SUCCESS;
 }
