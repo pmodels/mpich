@@ -788,10 +788,9 @@ AC_ARG_WITH([cart],
 
 AS_IF([test "x$with_cart" != xno], [
     CART="yes"
-    LDFLAGS="$LDFLAGS -L$with_cart/lib"
-    CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
-    AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
-    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART])
+    PAC_SET_HEADER_LIB_PATH(cart)
+    AC_CHECK_HEADERS(gurt/hash.h,, [unset CART])
+    AC_CHECK_LIB([gurt], [d_hash_table_create],, [unset CART])
 ])
 
 AC_ARG_WITH([daos],
@@ -801,8 +800,7 @@ AC_ARG_WITH([daos],
 
 AS_IF([test "x$with_daos" != xno], [
     DAOS="yes"
-    LDFLAGS="$LDFLAGS -L$with_daos/lib -L$with_daos/lib64"
-    CPPFLAGS="$CPPFLAGS -I$with_daos/include"
+    PAC_SET_HEADER_LIB_PATH(daos)
     AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
     AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
