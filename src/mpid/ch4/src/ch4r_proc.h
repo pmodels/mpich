@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4R_PROC_H_INCLUDED
 #define CH4R_PROC_H_INCLUDED
 
@@ -16,10 +11,6 @@
 int MPIDIU_get_n_avts(void);
 int MPIDIU_get_max_n_avts(void);
 int MPIDIU_get_avt_size(int avtid);
-int MPIDIU_alloc_globals_for_avtid(int avtid);
-int MPIDIU_free_globals_for_avtid(int avtid);
-int MPIDIU_get_next_avtid(int *avtid);
-int MPIDIU_free_avtid(int avtid);
 int MPIDIU_new_avt(int size, int *avtid);
 int MPIDIU_free_avt(int avtid);
 int MPIDIU_avt_add_ref(int avtid);
@@ -247,8 +238,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_av_is_local(MPIDI_av_entry_t * av)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RANK_TO_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RANK_TO_LPID);
 
     int avtid = 0, lpid = 0;
     MPIDIU_comm_rank_to_pid(comm, rank, &lpid, &avtid);
@@ -258,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_rank_to_lpid(int rank, MPIR_Comm * comm)
         ret = -1;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RANK_TO_LPID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RANK_TO_LPID);
     return ret;
 }
 

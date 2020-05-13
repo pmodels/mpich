@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Type_get_true_extent_f08(datatype, true_lb, true_extent, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Datatype

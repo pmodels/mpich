@@ -1,10 +1,10 @@
+!
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
 ! This file created from test/mpi/f77/datatype/typenamef.f with f77tof90
-! -*- Mode: Fortran; -*-
-!
-!
-!  (C) 2003 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
-!
+
       program main
       use mpi_f08
       character*(MPI_MAX_OBJECT_NAME) name
@@ -62,13 +62,6 @@
            print *, "Expected MPI_2INTEGER but got "//name(1:namelen)
       endif
 
-! 2COMPLEX was present only in MPI 1.0
-!      call MPI_Type_get_name( MPI_2COMPLEX, name, namelen, ierr )
-!      if (name(1:namelen) .ne. "MPI_2COMPLEX") then
-!           errs = errs + 1
-!           print *, "Expected MPI_2COMPLEX but got "//name(1:namelen)
-!      endif
-!
       call MPI_Type_get_name(MPI_2DOUBLE_PRECISION, name, namelen, ierr)
       if (name(1:namelen) .ne. "MPI_2DOUBLE_PRECISION") then
            errs = errs + 1
@@ -81,14 +74,6 @@
            errs = errs + 1
            print *, "Expected MPI_2REAL but got "//name(1:namelen)
       endif
-
-! 2DOUBLE_COMPLEX isn't in MPI 2.1
-!      call MPI_Type_get_name( MPI_2DOUBLE_COMPLEX, name, namelen, ierr )
-!      if (name(1:namelen) .ne. "MPI_2DOUBLE_COMPLEX") then
-!           errs = errs + 1
-!           print *, "Expected MPI_2DOUBLE_COMPLEX but got "//
-!     &          name(1:namelen)
-!      endif
 
       call MPI_Type_get_name( MPI_CHARACTER, name, namelen, ierr )
       if (name(1:namelen) .ne. "MPI_CHARACTER") then

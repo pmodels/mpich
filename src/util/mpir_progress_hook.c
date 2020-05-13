@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2020 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -26,7 +25,7 @@ int MPIR_Progress_hook_exec_all(int *made_progress)
         int is_active = MPL_atomic_acquire_load_int(&progress_hooks[i].active);
         if (is_active == TRUE) {
             MPIR_Assert(progress_hooks[i].func_ptr != NULL);
-            int tmp_progress;
+            int tmp_progress = 0;
             mpi_errno = progress_hooks[i].func_ptr(&tmp_progress);
             MPIR_ERR_CHECK(mpi_errno);
 

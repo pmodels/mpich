@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2012 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_IMPL_H_INCLUDED
 #define OFI_IMPL_H_INCLUDED
 
@@ -295,13 +291,13 @@ DECLARE_TWO_API_SETS(void, MPID_nem_ofi_anysource_posted, MPIR_Request * rreq);
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq);
 int MPID_nem_ofi_send_data(cq_tagged_entry_t * wc, MPIR_Request * sreq);
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                               MPL_IOV * hdr_iov, int n_hdr_iov);
+                               struct iovec * hdr_iov, int n_hdr_iov);
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz,
                                  void *data, intptr_t data_sz, MPIR_Request ** sreq_ptr);
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
                              intptr_t hdr_sz, void *data, intptr_t data_sz);
 int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                          MPL_IOV * iov, int n_iov);
+                          struct iovec * iov, int n_iov);
 /* ************************************************************************** */
 /* OFI utility functions : not exposed as a netmod public API                 */
 /* ************************************************************************** */

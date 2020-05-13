@@ -1,8 +1,6 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2011 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 # nodist_ b/c these are created by config.status and should not be distributed
@@ -38,7 +36,7 @@ noinst_HEADERS +=                   \
     src/include/mpii_cxxinterface.h \
     src/include/mpii_fortlogical.h   \
     src/include/mpiallstates.h      \
-    src/include/mpii_bsend.h          \
+    src/include/mpir_bsend.h          \
     src/include/mpir_cvars.h        \
     src/include/mpichconfconst.h    \
     src/include/mpir_err.h          \

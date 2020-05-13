@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,6 +167,8 @@ int main(int argc, char *argv[])
                                 "Data received with type %s does not match data sent with type %s\n",
                                 target_desc, orig_desc);
                         fflush(stderr);
+                        free(target_desc);
+                        free(orig_desc);
                     }
                 }
             } else {

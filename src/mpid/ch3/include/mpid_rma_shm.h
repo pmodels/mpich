@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_RMA_SHM_H_INCLUDED
@@ -222,11 +221,6 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
         case MPI_2REAL:
         case MPI_2DOUBLE_PRECISION:
         case MPI_2INTEGER:
-#endif
-
-#if 0   /* Random types not present in the standard */
-        case MPI_2COMPLEX:
-        case MPI_2DOUBLE_COMPLEX:
 #endif
 
         default:

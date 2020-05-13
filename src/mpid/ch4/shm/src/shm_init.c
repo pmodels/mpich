@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -64,12 +62,12 @@ int MPIDI_SHMI_get_vci_attr(int vci)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHMI_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHMI_GET_VCI_ATTR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHMI_GET_VCI_ATTR);
 
     ret = MPIDI_POSIX_get_vci_attr(vci);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHMI_GET_VCI_ATTR);
     return ret;
 }
 

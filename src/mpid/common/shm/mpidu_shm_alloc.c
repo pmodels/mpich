@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* vim: set ft=c.mpich : */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include <mpidimpl.h>
@@ -242,7 +240,7 @@ static int allreduce_maxloc(size_t mysz, int myloc, MPIR_Comm * comm, size_t * m
  * segment can be allocated, thus the caller should stop retrying. */
 static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int *map_result_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     int all_map_result = SYMSHM_MAP_FAIL;
     bool mapped_flag = false;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -257,7 +255,7 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
                                                               (void **) &(shm_seg->base_addr), 0);
                 if (mpl_err) {
                     *map_result_ptr =
-                        (mpl_err == MPL_SHM_EINVAL) ? SYMSHM_MAP_FAIL : SYMSHM_OTHER_FAIL;
+                        (mpl_err == MPL_ERR_SHM_INVAL) ? SYMSHM_MAP_FAIL : SYMSHM_OTHER_FAIL;
                     goto root_sync;
                 } else
                     mapped_flag = true;
@@ -310,7 +308,7 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
                                                    (void **) &(shm_seg->base_addr), 0);
                 if (mpl_err) {
                     *map_result_ptr =
-                        (mpl_err == MPL_SHM_EINVAL) ? SYMSHM_MAP_FAIL : SYMSHM_OTHER_FAIL;
+                        (mpl_err == MPL_ERR_SHM_INVAL) ? SYMSHM_MAP_FAIL : SYMSHM_OTHER_FAIL;
                 } else
                     mapped_flag = true;
             }
@@ -364,7 +362,7 @@ static int map_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, int
 
 static int unmap_symm_shm(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg)
 {
-    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
 
     if (shm_comm_ptr != NULL) {
         /* destroy successful shm segment */
@@ -458,7 +456,7 @@ static int shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t offset, MPIDU_shm_seg
 
 static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool * fail_flag)
 {
-    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     bool shm_fail_flag = false;
     bool any_shm_fail_flag = false;
     bool mapped_flag = false;
@@ -471,14 +469,14 @@ static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool *
         /* root prepare shm segment */
         mpl_err = MPL_shm_seg_create_and_attach(shm_seg->hnd, shm_seg->segment_len,
                                                 (void **) &(shm_seg->base_addr), 0);
-        if (mpl_err != MPL_SHM_SUCCESS) {
+        if (mpl_err != MPL_SUCCESS) {
             shm_fail_flag = true;
             goto hnd_sync;
         } else
             mapped_flag = true;
 
         mpl_err = MPL_shm_hnd_get_serialized_by_ref(shm_seg->hnd, &serialized_hnd);
-        if (mpl_err != MPL_SHM_SUCCESS)
+        if (mpl_err != MPL_SUCCESS)
             shm_fail_flag = true;
 
       hnd_sync:
@@ -517,14 +515,14 @@ static int shm_alloc(MPIR_Comm * shm_comm_ptr, MPIDU_shm_seg_t * shm_seg, bool *
             goto map_fail;
 
         mpl_err = MPL_shm_hnd_deserialize(shm_seg->hnd, serialized_hnd, strlen(serialized_hnd));
-        if (mpl_err != MPL_SHM_SUCCESS) {
+        if (mpl_err != MPL_SUCCESS) {
             shm_fail_flag = true;
             goto result_sync;
         }
 
         mpl_err = MPL_shm_seg_attach(shm_seg->hnd, shm_seg->segment_len,
                                      (void **) &shm_seg->base_addr, 0);
-        if (mpl_err != MPL_SHM_SUCCESS) {
+        if (mpl_err != MPL_SUCCESS) {
             shm_fail_flag = true;
             goto result_sync;
         } else
@@ -559,7 +557,7 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef USE_SYM_HEAP
-    int mpl_err = MPL_SHM_SUCCESS;
+    int mpl_err = MPL_SUCCESS;
     MPIDU_shm_seg_t *shm_seg = NULL;
     seg_list_t *el = NULL;
     MPIR_CHKPMEM_DECL(2);
@@ -617,7 +615,7 @@ int MPIDU_shm_alloc_symm_all(MPIR_Comm * comm_ptr, size_t len, size_t offset, vo
 
 int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fail_flag)
 {
-    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIDU_shm_seg_t *shm_seg = NULL;
     seg_list_t *el = NULL;
     MPIR_CHKPMEM_DECL(2);
@@ -665,7 +663,7 @@ int MPIDU_shm_alloc(MPIR_Comm * shm_comm_ptr, size_t len, void **ptr, bool * fai
 
 int MPIDU_shm_free(void *ptr)
 {
-    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SHM_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIDU_shm_seg_t *shm_seg = NULL;
     seg_list_t *el = NULL;
 

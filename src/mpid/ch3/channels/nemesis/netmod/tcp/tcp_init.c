@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "tcp_impl.h"
@@ -380,7 +379,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname, MPL_soc
 int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPL_STR_SUCCESS;
+    int str_errno = MPL_SUCCESS;
     MPL_sockaddr_t addr;
     char ifname[MAX_HOST_DESCRIPTION_LEN];
     int ret;
@@ -399,7 +398,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     str_errno =
         MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifname);
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -412,7 +411,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
         MPL_str_add_int_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY,
                             MPL_sockaddr_port(&sock_id));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -421,7 +420,7 @@ int MPID_nem_tcp_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
         MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT, VERBOSE, "ifname = %s", ifname);
         str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
-            MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER,
+            MPIR_ERR_CHKANDJUMP(str_errno == MPL_ERR_STR_NOMEM, mpi_errno, MPI_ERR_OTHER,
                                 "**buscard_len");
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
         }
@@ -542,20 +541,20 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
      * ret = MPL_str_get_string_arg (business_card, MPIDI_CH3I_HOST_DESCRIPTION_KEY, desc_str, sizeof(desc_str));
-     * MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+     * MPIR_ERR_CHKANDJUMP (ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
      */
 
     /* sizeof(in_port_t) != sizeof(int) on most platforms, so we need to use
      * port_int as the arg to MPL_str_get_int_arg. */
     ret = MPL_str_get_int_arg(business_card, MPIDI_CH3I_PORT_KEY, &port_int);
-    /* MPL_STR_FAIL is not a valid MPI error code so we store the result in ret
+    /* MPL_ERR_STR_FAIL is not a valid MPI error code so we store the result in ret
      * instead of mpi_errno. */
-    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
+    MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
     MPIR_Assert((port_int >> (8 * sizeof(*port))) == 0);        /* ensure port_int isn't too large for *port */
     *port = htons((in_port_t) port_int);
 
     ret = MPL_str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
-    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
+    MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
 
     ret = inet_pton(AF_INET, (const char *) ifname, addr);
     MPIR_ERR_CHKANDJUMP(ret == 0, mpi_errno, MPI_ERR_OTHER, "**ifnameinvalid");

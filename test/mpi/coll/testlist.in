@@ -28,7 +28,7 @@ allgather2 10
 allgather3 10
 allgatherv2 10
 allgatherv3 10
-allgatherv4 4 timeLimit=600
+allgatherv4 4
 allgather_struct 10
 bcasttest 4
 bcasttest 8
@@ -131,11 +131,11 @@ nonblocking 10 mpiversion=3.0
 nonblocking2 1 mpiversion=3.0
 nonblocking2 4 mpiversion=3.0
 nonblocking2 5 mpiversion=3.0
-nonblocking2 10 timeLimit=420 mpiversion=3.0
+nonblocking2 10 mpiversion=3.0
 nonblocking3 1 mpiversion=3.0
 nonblocking3 4 mpiversion=3.0
 nonblocking3 5 mpiversion=3.0
-nonblocking3 10 timeLimit=600 mpiversion=3.0
+nonblocking3 10 mpiversion=3.0
 iallred 2 mpiversion=3.0
 # ibarrier will hang forever if it fails, but will complete quickly if it
 # succeeds

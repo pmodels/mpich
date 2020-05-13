@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpiimpl.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_create_subarray */
@@ -84,7 +83,6 @@ int MPI_Type_create_subarray(int ndims,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -297,6 +295,9 @@ int MPI_Type_create_subarray(int ndims,
                                            ints, NULL, &oldtype);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Typerep_create_subarray(ndims, array_of_sizes, array_of_subsizes,
+                                             array_of_starts, order, oldtype, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
@@ -305,7 +306,6 @@ int MPI_Type_create_subarray(int ndims,
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

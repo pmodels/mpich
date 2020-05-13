@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- Mode: perl; -*-
-# 
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This script is a replacement for several scripts that process source
 # files, extracting information from them.  This file provides a set 
 # of routines for processing files and maintaining a cache of the results.

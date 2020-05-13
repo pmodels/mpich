@@ -1,9 +1,7 @@
-# -*- Mode: Makefile; -*-
-# vim: set ft=automake :
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 include $(top_srcdir)/Makefile_f77.mtest
 
@@ -58,11 +56,8 @@ nodist_writeordf_SOURCES     = writeordf.f
 nodist_writeshf_SOURCES      = writeshf.f
 
 c2fmultio_SOURCES     = c2fmultio.c
-# this is a C only program, so we must either:
-# A) prevent the makefile-wide "LDADD=mtestf.o" from affecting this program, or
-# B) link with the fortran compiler, otherwise we'll get link failures from
-# compilers with runtime support libs, such as PGI
-c2fmultio_LDADD = $(top_builddir)/util/mtest.o
+# this is a C only program, so we must include mtest_c_objects
+c2fmultio_LDADD       = $(mtest_c_objects)
 
 c2f2ciof_SOURCES      = c2f2cio.c c2f2ciof.f
 

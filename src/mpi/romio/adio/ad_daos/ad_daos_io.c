@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2020 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2018-2020 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_daos.h"
@@ -31,7 +25,6 @@ static void DAOS_IOContig(ADIO_File fd, void *buf, int count,
 {
     MPI_Count datatype_size;
     uint64_t len;
-    daos_range_t *rg, loc_rg;
     d_sg_list_t *sgl, loc_sgl;
     d_iov_t *iov, loc_iov;
     daos_size_t *nbytes, loc_nbytes;

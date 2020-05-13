@@ -1,12 +1,12 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2015 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "mpitest.h"
 #include "dtpools.h"
 
@@ -101,8 +101,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
      * checking. */
     if (rank == orig) {
         origbuf = malloc(orig_obj.DTP_bufsize);
-        if (origbuf == NULL)
-            errs++;
+        assert(origbuf);
 
         err = DTP_obj_buf_init(orig_obj, origbuf, 0, 1, count);
         if (err != DTP_SUCCESS)
@@ -133,8 +132,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
             }
         } else {
             resultbuf = malloc(result_obj.DTP_bufsize);
-            if (resultbuf == NULL)
-                errs++;
+            assert(resultbuf);
 
 #if !defined(MULTI_ORIGIN) && !defined(MULTI_TARGET)
             err = DTP_obj_buf_init(result_obj, resultbuf, -1, -1, count);
@@ -260,9 +258,7 @@ int main(int argc, char *argv[])
     }
 
     targetbuf = malloc(maxbufsize);
-    if (targetbuf == NULL) {
-        errs++;
-    }
+    assert(targetbuf);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL) {

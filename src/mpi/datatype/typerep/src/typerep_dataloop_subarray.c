@@ -1,20 +1,16 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
- *
- * Note: This code originally appeared in ROMIO.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
-#include "mpiimpl.h"
-#include "dataloop_internal.h"
+/* Note: This code originally appeared in ROMIO. */
 
-int MPII_Dataloop_convert_subarray(int ndims,
-                                   int *array_of_sizes,
-                                   int *array_of_subsizes,
-                                   int *array_of_starts,
-                                   int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+#include "mpiimpl.h"
+#include "typerep_internal.h"
+
+int MPII_Typerep_convert_subarray(int ndims, int *array_of_sizes, int *array_of_subsizes,
+                                  int *array_of_starts, int order, MPI_Datatype oldtype,
+                                  MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint extent, disps[3], size;
@@ -29,8 +25,7 @@ int MPII_Dataloop_convert_subarray(int ndims,
             mpi_errno = MPIR_Type_contiguous_impl(array_of_subsizes[0], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
-            mpi_errno = MPIR_Type_vector_impl(array_of_subsizes[1],
-                                              array_of_subsizes[0],
+            mpi_errno = MPIR_Type_vector_impl(array_of_subsizes[1], array_of_subsizes[0],
                                               array_of_sizes[0], oldtype, &tmp1);
             MPIR_ERR_CHECK(mpi_errno);
 
@@ -52,10 +47,7 @@ int MPII_Dataloop_convert_subarray(int ndims,
             disps[1] += size * (MPI_Aint) (array_of_starts[i]);
         }
         /* rest done below for both Fortran and C order */
-    }
-
-    else {      /* order == MPI_ORDER_C */
-
+    } else {    /* order == MPI_ORDER_C */
         /* dimension ndims-1 changes fastest */
         if (ndims == 1) {
             mpi_errno = MPIR_Type_contiguous_impl(array_of_subsizes[0], oldtype, &tmp1);

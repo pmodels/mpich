@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Fetch_and_op_f08ts(origin_addr, result_addr, datatype, target_rank, &
     target_disp, op, win, ierror)
     use, intrinsic :: iso_c_binding, only : c_int

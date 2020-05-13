@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- * (C) 2016 by Argonne National Laboratory.
- *     See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef MPID_PORT_H_INCLUDED
 #define MPID_PORT_H_INCLUDED
 

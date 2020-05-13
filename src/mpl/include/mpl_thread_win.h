@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_THREAD_WIN_H_INCLUDED
@@ -68,7 +66,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
                 *(int *)(err_ptr_) = GetLastError();                    \
             }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
+                *(int *)(err_ptr_) = MPL_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)
@@ -79,7 +77,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
         result__ = TlsFree(*(tls_ptr_));                        \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
+                *(int *)(err_ptr_) = MPL_SUCCESS;        \
             }                                                   \
             else {                                              \
                 *(int *)(err_ptr_) = GetLastError();            \
@@ -93,7 +91,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
         result__ = TlsSetValue(*(tls_ptr_), (value_));          \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
+                *(int *)(err_ptr_) = MPL_SUCCESS;        \
             }                                                   \
             else {                                              \
                 *(int *)(err_ptr_) = GetLastError();            \
@@ -109,7 +107,7 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
                 *(int *)(err_ptr_) = GetLastError();                    \
             }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
+                *(int *)(err_ptr_) = MPL_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)

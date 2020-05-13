@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef MPIDPRE_H_INCLUDED
 #define MPIDPRE_H_INCLUDED
 
@@ -29,6 +24,11 @@
 #include "ch4_csel_container.h"
 #include "ch4i_workq_types.h"
 
+/* Currently, workq is a configure-time only option and guarded by macro
+ * MPIDI_CH4_USE_WORK_QUEUES. If we want to enable runtime option, we will
+ * need to switch everywhere from "#ifdef MPIDI_CH4_USE_WORK_QUEUES" into
+ * runtime "if - else".
+ */
 #ifdef MPIDI_CH4_USE_MT_DIRECT
 #define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
 #elif defined MPIDI_CH4_USE_MT_HANDOFF
@@ -49,7 +49,9 @@ typedef struct {
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 
 typedef struct {
+    int flag;
     int progress_count;
+    int progress_start;
 } MPID_Progress_state;
 
 typedef enum {
@@ -104,12 +106,13 @@ typedef struct MPIDIG_rreq_t {
 typedef struct MPIDIG_put_req_t {
     MPIR_Win *win_ptr;
     MPIR_Request *preq_ptr;
-    void *dt_iov;
+    void *flattened_dt;
+    MPIR_Datatype *dt;
     void *origin_addr;
     int origin_count;
     MPI_Datatype origin_datatype;
-    int n_iov;
     void *target_addr;
+    MPI_Datatype target_datatype;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
@@ -118,8 +121,9 @@ typedef struct MPIDIG_get_req_t {
     void *addr;
     MPI_Datatype datatype;
     int count;
-    int n_iov;
-    void *dt_iov;
+    void *flattened_dt;
+    MPIR_Datatype *dt;
+    MPI_Datatype target_datatype;
 } MPIDIG_get_req_t;
 
 typedef struct MPIDIG_cswap_req_t {
@@ -138,9 +142,8 @@ typedef struct MPIDIG_acc_req_t {
     MPI_Datatype target_datatype;
     int origin_count;
     int target_count;
-    int n_iov;
     void *target_addr;
-    void *dt_iov;
+    void *flattened_dt;
     void *data;
     size_t data_sz;
     MPI_Op op;
@@ -162,10 +165,10 @@ typedef enum {
 typedef struct MPIDIG_req_async {
     MPIDIG_recv_type recv_type;
     MPI_Aint in_data_sz;
+    MPI_Aint offset;
     struct iovec *iov_ptr;      /* used with MPIDIG_RECV_IOV */
     int iov_num;                /* used with MPIDIG_RECV_IOV */
     struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
-    MPI_Aint offset;            /* used with MPIDIG_RECV_DATATYPE */
 } MPIDIG_rreq_async_t;
 
 typedef struct MPIDIG_req_ext_t {

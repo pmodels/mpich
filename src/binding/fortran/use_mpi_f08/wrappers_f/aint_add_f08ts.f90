@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 function MPI_Aint_add_f08(base, disp) result(res)
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_nobuf, only : MPIR_Aint_add_c

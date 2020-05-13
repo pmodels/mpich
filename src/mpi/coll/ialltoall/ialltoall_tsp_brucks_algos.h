@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IALLTOALL_TSP_BRUCKS_ALGOS_H_INCLUDED) is
@@ -114,7 +108,7 @@ brucks_sched_pup(int pack, void *rbuf, void *pupbuf, MPI_Datatype rtype, int cou
     sink_id = MPIR_TSP_sched_selective_sink(sched, counter, dtcopy_id);
     MPL_free(dtcopy_id);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_BRUCKS_SCHED_PUP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_BRUCKS_SCHED_PUP);
 
     return sink_id;
 }

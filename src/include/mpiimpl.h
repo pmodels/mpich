@@ -1,16 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- * Portions of this code were written by Microsoft. Those portions are
- * Copyright (c) 2007 Microsoft Corporation. Microsoft grants
- * permission to use, reproduce, prepare derivative works, and to
- * redistribute to others. The code is licensed "as is." The User
- * bears the risk of using it. Microsoft gives no express warranties,
- * guarantees or conditions. To the extent permitted by law, Microsoft
- * excludes the implied warranties of merchantability, fitness for a
- * particular purpose and non-infringement.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIIMPL_H_INCLUDED
@@ -240,6 +230,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_func.h"
 #include "mpir_err.h"
 #include "mpir_nbc.h"
+#include "mpir_bsend.h"
 #include "mpir_process.h"
 #include "mpir_typerep.h"
 #include "mpir_datatype.h"

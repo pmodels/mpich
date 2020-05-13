@@ -1,7 +1,6 @@
-! -*- Mode: Fortran; -*- 
 !
-!  (C) 2013 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
 
 ! Based on a test written by Jim Hoekstra on behalf of Cray, Inc.

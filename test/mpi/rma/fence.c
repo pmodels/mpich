@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
@@ -140,6 +139,9 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
     }
+
+    free(orig_desc);
+    free(target_desc);
 
     return errs;
 }

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDRMA_H_INCLUDED
@@ -869,7 +868,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     }
     else {
         /* derived datatype */
-        MPL_IOV *typerep_vec;
+        struct iovec *typerep_vec;
         int vec_len, i, count;
         MPI_Aint type_extent, type_size, src_type_stride;
         MPI_Datatype type;
@@ -881,8 +880,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
-        typerep_vec = (MPL_IOV *)
-            MPL_malloc(vec_len * sizeof(MPL_IOV), MPL_MEM_DATATYPE);
+        typerep_vec = (struct iovec *)
+            MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_DATATYPE);
         /* --BEGIN ERROR HANDLING-- */
         if (!typerep_vec) {
             mpi_errno =
@@ -913,14 +912,14 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             src_type_stride = type_extent;
 
         i = 0;
-        curr_loc = typerep_vec[0].MPL_IOV_BUF;
-        curr_len = typerep_vec[0].MPL_IOV_LEN;
+        curr_loc = typerep_vec[0].iov_base;
+        curr_len = typerep_vec[0].iov_len;
         accumulated_count = 0;
         while (i != vec_len) {
             if (curr_len < type_size) {
                 MPIR_Assert(i != vec_len);
                 i++;
-                curr_len += typerep_vec[i].MPL_IOV_LEN;
+                curr_len += typerep_vec[i].iov_len;
                 continue;
             }
 
@@ -932,8 +931,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             if (curr_len % type_size == 0) {
                 i++;
                 if (i != vec_len) {
-                    curr_loc = typerep_vec[i].MPL_IOV_BUF;
-                    curr_len = typerep_vec[i].MPL_IOV_LEN;
+                    curr_loc = typerep_vec[i].iov_base;
+                    curr_len = typerep_vec[i].iov_len;
                 }
             }
             else {

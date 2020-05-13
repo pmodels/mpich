@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
@@ -93,9 +92,6 @@ M*/
 
 M*/
 
-/* NOTE: Stateful CS_{ENTER,EXIT} currently is only used by ch3:sock and only with
- * GRANULARITY_GLOBAL */
-
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
@@ -127,6 +123,9 @@ M*/
                 MPIR_Assert(err_ == 0);                                 \
                 MPIR_Assert(mutex.count == 0);                          \
                 MPL_thread_self(&mutex.owner);                          \
+            } else {                                                    \
+                /* assert all recursive usage */                        \
+                MPIR_Assert(0);                                         \
             }                                                           \
             mutex.count++;                                              \
         }                                                               \
@@ -155,9 +154,9 @@ M*/
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
             if (equal_ && mutex.count > 0) {                            \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield %p", &mutex); \
                 MPIDU_Thread_yield(&mutex, &err_);                          \
-                MPL_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield %p", &mutex); \
                 MPIR_Assert(err_ == 0);                                 \
             }                                                           \
         }                                                               \
@@ -272,10 +271,8 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_, prio_)            \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         MPL_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_, prio_);\
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
     } while (0)
 
 /*@

@@ -1,3 +1,8 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.67)
 dnl
@@ -19,10 +24,9 @@ AC_INIT([mpich-testsuite],
         [http://www.mpich.org/])
 
 AC_CONFIG_HEADER(include/mpitestconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef MPITESTCONF_H_INCLUDED
 #define MPITESTCONF_H_INCLUDED
@@ -1468,38 +1472,6 @@ else
 fi
 if test "$pac_cv_have_mpi_integer16" = yes ; then 
     AC_DEFINE(HAVE_MPI_INTEGER16,1,[Define if MPI_INTEGER16 is available])
-fi
-AC_CACHE_CHECK([whether MPI_2DOUBLE_COMPLEX is available],
-pac_cv_have_mpi_2double_complex,[
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([#include "mpi.h"],[
-            MPI_Datatype t = MPI_2DOUBLE_COMPLEX;
-        ])
-    ],[
-        pac_cv_have_mpi_2double_complex=yes
-    ],[
-        pac_cv_have_mpi_2double_complex=no
-    ])
-])
-if test "$pac_cv_have_mpi_2double_complex" = yes ; then 
-    AC_DEFINE(HAVE_MPI_2DOUBLE_COMPLEX,1,[Define if MPI_2DOUBLE_COMPLEX is available])
-fi
-# 2COMPLEX was in MPI 1.0 and removed after that.  This allows us to 
-# test 2COMPLEX if it is present
-AC_CACHE_CHECK([whether MPI_2COMPLEX is available],
-pac_cv_have_mpi_2complex,[
-    AC_COMPILE_IFELSE([
-        AC_LANG_PROGRAM([#include "mpi.h"],[
-            MPI_Datatype t = MPI_2COMPLEX;
-        ])
-    ],[
-        pac_cv_have_mpi_2complex=yes
-    ],[
-        pac_cv_have_mpi_2complex=no
-    ])
-])
-if test "$pac_cv_have_mpi_2complex" = yes ; then 
-    AC_DEFINE(HAVE_MPI_2COMPLEX,1,[Define if MPI_2COMPLEX is available])
 fi
 
 # MPI_Aint was intended as an address-sized int.  However, MPI didn't 

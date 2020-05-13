@@ -1,11 +1,9 @@
-# -*- Mode: Makefile; -*-
-# vim: set ft=automake :
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
-include $(top_srcdir)/Makefile.mtest
+include $(top_srcdir)/Makefile_single.mtest
 
 EXTRA_DIST = testlist
 
@@ -17,11 +15,7 @@ noinst_PROGRAMS = \
     grouptest2    \
     groupcreate   \
     gtranks       \
-    groupnullincl \
-    gtranksperf
-
-# gtranksperf uses fabs, which may require -lm
-gtranksperf_LDADD = $(LDADD) -lm
+    groupnullincl
 
 # glpid is a whitebox test that uses mpiimpl.h; it is unlikely to build with the
 # current build system setup

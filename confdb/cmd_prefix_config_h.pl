@@ -1,4 +1,9 @@
-#!/usr/bin/perl
+#! /usr/bin/env perl
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 use strict;
 
 # This script is to be run by AC_CONFIG_COMMANDS in configure.ac.

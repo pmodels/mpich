@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include <mpiimpl.h>
@@ -63,6 +61,7 @@ int MPIR_Type_blockindexed(int count,
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
@@ -159,6 +158,20 @@ int MPIR_Type_blockindexed(int count,
         }
     }
 
+    if (dispinbytes) {
+        mpi_errno = MPIR_Typerep_create_hindexed_block(count, blocklength, displacement_array,
+                                                       oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Typerep_create_indexed_block(count, blocklength, displacement_array,
+                                                      oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     *newtype = new_dtp->handle;
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -97,6 +91,17 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Defines the location of tuning file.
+
+    - name        : MPIR_CVAR_CH4_IOV_DENSITY_MIN
+      category    : CH4
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Defines the threshold of high-density datatype. The
+        density is calculated by (datatype_size / datatype_max_contig_blocks).
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -180,24 +185,18 @@ static void *create_container(struct json_object *obj)
 }
 
 static int choose_netmod(void);
-static const char *get_mt_model_name(int mt);
-static void print_runtime_configurations(void);
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
-static int parse_mt_model(const char *name);
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
-static int set_runtime_configurations(void);
 static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
 static int init_builtin_comms(void);
 static void finalize_builtin_comms(void);
-static int init_av_table(void);
+static void init_av_table(void);
 static void finalize_av_table(void);
 
 static int choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_NETMOD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHOOSE_NETMOD);
 
     MPIR_Assert(MPIR_CVAR_CH4_NETMOD != NULL);
 
@@ -220,12 +219,23 @@ static int choose_netmod(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s",
                          MPIR_CVAR_CH4_NETMOD);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHOOSE_NETMOD);
     return mpi_errno;
   fn_fail:
 
     goto fn_exit;
 }
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+/* NOTE: MPIDI_CH4_USE_MT_RUNTIME currently are not supported. The key part is
+ * guarded by "#if 0".
+ */
+/* TODO: move them to ch4i_workq_init.c. */
+
+static const char *get_mt_model_name(int mt);
+static void print_runtime_configurations(void);
+static int parse_mt_model(const char *name);
+static int set_runtime_configurations(void);
 
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
@@ -248,7 +258,6 @@ static void print_runtime_configurations(void)
     printf("================================\n");
 }
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name)
 {
     int i;
@@ -262,13 +271,12 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
     int mt = parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
     if (mt < 0)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -280,13 +288,15 @@ static int set_runtime_configurations(void)
     if (strcmp(MPIR_CVAR_CH4_MT_MODEL, "") != 0)
         printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+#endif /* MPIDI_CH4_USE_MT_RUNTIME */
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
   fn_fail:
 #endif
     return mpi_errno;
 }
+
+#endif /* MPIDI_CH4_USE_WORK_QUEUES */
 
 static int create_init_comm(MPIR_Comm ** comm)
 {
@@ -389,16 +399,13 @@ static int init_builtin_comms(void)
     goto fn_exit;
 }
 
-static int init_av_table(void)
+static void init_av_table(void)
 {
     int i;
-    int avtid = -1;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
 
     MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
@@ -428,8 +435,6 @@ static int init_av_table(void)
                          MPIDI_global.node_map[0][rank]));
     }
 #endif
-
-    return avtid;
 }
 
 /* This local function is temporary until we decide where the
@@ -478,10 +483,6 @@ int MPID_Init(int requested, int *provided)
             *provided = MAX_THREAD_MODE;
             break;
     }
-
-    mpi_errno = set_runtime_configurations();
-    if (mpi_errno != MPI_SUCCESS)
-        return mpi_errno;
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
@@ -532,15 +533,18 @@ int MPID_Init(int requested, int *provided)
     MPIR_Assert(err == 0);
 #endif
 
-    MPID_Thread_mutex_create(&MPIDI_global.vci_lock, &err);
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = set_runtime_configurations();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIDI_workq_init(&MPIDI_global.workqueue);
-#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
+#endif
 
     init_av_table();
 
@@ -724,7 +728,7 @@ int MPID_Finalize(void)
     MPIR_Assert(err == 0);
 #endif
 
-    MPID_Thread_mutex_destroy(&MPIDI_global.vci_lock, &err);
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
     MPIR_Assert(err == 0);
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {

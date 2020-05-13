@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /************************************************/
@@ -53,15 +51,26 @@ extern ABT_pool pools[MTEST_NUM_XSTREAMS];
 int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
 {
     int ret;
+    ABT_thread_attr thread_attr;
 
     if (nthreads >= MTEST_MAX_THREADS) {
         fprintf(stderr, "Too many threads already created: max is %d\n", MTEST_MAX_THREADS);
         return 1;
     }
+
+    /* Make stack size large. */
+    ret = ABT_thread_attr_create(&thread_attr);
+    MTEST_ABT_ERROR(ret, "ABT_thread_attr_create");
+    ret = ABT_thread_attr_set_stacksize(thread_attr, 2 * 1024 * 1024);
+    MTEST_ABT_ERROR(ret, "ABT_thread_attr_set_stacksize");
+
     /* We push threads to pools[0] and let the random work-stealing
      * scheduler balance things out. */
-    ret = ABT_thread_create(pools[0], fn, arg, ABT_THREAD_ATTR_NULL, &threads[nthreads]);
+    ret = ABT_thread_create(pools[0], fn, arg, thread_attr, &threads[nthreads]);
     MTEST_ABT_ERROR(ret, "ABT_thread_create");
+
+    ret = ABT_thread_attr_free(&thread_attr);
+    MTEST_ABT_ERROR(ret, "ABT_thread_attr_free");
 
     nthreads++;
 
@@ -108,6 +117,14 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
     int ret;
     ret = ABT_mutex_free(lock);
     MTEST_ABT_ERROR(ret, "ABT_mutex_free");
+    return 0;
+}
+
+int MTest_thread_yield(void)
+{
+    int ret;
+    ret = ABT_thread_yield();
+    MTEST_ABT_ERROR(ret, "ABT_thread_yield");
     return 0;
 }
 
@@ -169,12 +186,12 @@ static ABT_xstream xstreams[MTEST_NUM_XSTREAMS];
 static ABT_sched scheds[MTEST_NUM_XSTREAMS];
 ABT_pool pools[MTEST_NUM_XSTREAMS];
 
-void MTest_init_thread_pkg(int argc, char **argv)
+void MTest_init_thread_pkg(void)
 {
     int i, k, ret;
     int num_xstreams;
 
-    ABT_init(argc, argv);
+    ABT_init(0, NULL);
 
     /* Create pools */
     for (i = 0; i < MTEST_NUM_XSTREAMS; i++) {
@@ -206,7 +223,7 @@ void MTest_init_thread_pkg(int argc, char **argv)
     }
 }
 
-void MTest_finalize_thread_pkg()
+void MTest_finalize_thread_pkg(void)
 {
     int i, ret;
     int num_xstreams = MTEST_NUM_XSTREAMS;

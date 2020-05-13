@@ -1,31 +1,24 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
- *
- * Note: This code originally appeared in ROMIO.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
+/* Note: This code originally appeared in ROMIO. */
+
 #include "mpiimpl.h"
-#include "dataloop_internal.h"
+#include "typerep_internal.h"
 
-static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims,
-                           int nprocs, int rank, int darg, int order, MPI_Aint orig_extent,
-                           MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
-static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                            int rank, int darg, int order, MPI_Aint orig_extent,
-                            MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
+static int type_block(const int *array_of_gsizes, int dim, int ndims,
+                      int nprocs, int rank, int darg, int order, MPI_Aint orig_extent,
+                      MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
+static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nprocs,
+                       int rank, int darg, int order, MPI_Aint orig_extent,
+                       MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset);
 
-
-int MPII_Dataloop_convert_darray(int size,
-                                 int rank,
-                                 int ndims,
-                                 int *array_of_gsizes,
-                                 int *array_of_distribs,
-                                 int *array_of_dargs,
-                                 int *array_of_psizes,
-                                 int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPII_Typerep_convert_darray(int size, int rank, int ndims, const int *array_of_gsizes,
+                                const int *array_of_distribs, const int *array_of_dargs,
+                                const int *array_of_psizes, int order, MPI_Datatype oldtype,
+                                MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype type_old, type_new = MPI_DATATYPE_NULL, types[3];
@@ -56,25 +49,24 @@ int MPII_Dataloop_convert_darray(int size,
         for (i = 0; i < ndims; i++) {
             switch (array_of_distribs[i]) {
                 case MPI_DISTRIBUTE_BLOCK:
-                    mpi_errno = MPII_Type_block(array_of_gsizes, i, ndims,
-                                                array_of_psizes[i],
-                                                coords[i], array_of_dargs[i],
-                                                order, orig_extent,
-                                                type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_block(array_of_gsizes, i, ndims,
+                                           array_of_psizes[i],
+                                           coords[i], array_of_dargs[i],
+                                           order, orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPI_DISTRIBUTE_CYCLIC:
-                    mpi_errno = MPII_Type_cyclic(array_of_gsizes, i, ndims,
-                                                 array_of_psizes[i], coords[i],
-                                                 array_of_dargs[i], order,
-                                                 orig_extent, type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_cyclic(array_of_gsizes, i, ndims,
+                                            array_of_psizes[i], coords[i],
+                                            array_of_dargs[i], order,
+                                            orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPI_DISTRIBUTE_NONE:
                     /* treat it as a block distribution on 1 process */
-                    mpi_errno = MPII_Type_block(array_of_gsizes, i, ndims, 1, 0,
-                                                MPI_DISTRIBUTE_DFLT_DARG, order,
-                                                orig_extent, type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_block(array_of_gsizes, i, ndims, 1, 0,
+                                           MPI_DISTRIBUTE_DFLT_DARG, order,
+                                           orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
             }
@@ -91,31 +83,28 @@ int MPII_Dataloop_convert_darray(int size,
             disps[1] += ((MPI_Aint) tmp_size) * st_offsets[i];
         }
         /* rest done below for both Fortran and C order */
-    }
-
-    else {      /* order == MPI_ORDER_C */
-
+    } else {    /* order == MPI_ORDER_C */
         /* dimension ndims-1 changes fastest */
         for (i = ndims - 1; i >= 0; i--) {
             switch (array_of_distribs[i]) {
                 case MPI_DISTRIBUTE_BLOCK:
-                    mpi_errno = MPII_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
-                                                coords[i], array_of_dargs[i], order,
-                                                orig_extent, type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
+                                           coords[i], array_of_dargs[i], order,
+                                           orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPI_DISTRIBUTE_CYCLIC:
-                    mpi_errno = MPII_Type_cyclic(array_of_gsizes, i, ndims,
-                                                 array_of_psizes[i], coords[i],
-                                                 array_of_dargs[i], order,
-                                                 orig_extent, type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_cyclic(array_of_gsizes, i, ndims,
+                                            array_of_psizes[i], coords[i],
+                                            array_of_dargs[i], order,
+                                            orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
                 case MPI_DISTRIBUTE_NONE:
                     /* treat it as a block distribution on 1 process */
-                    mpi_errno = MPII_Type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
-                                                coords[i], MPI_DISTRIBUTE_DFLT_DARG, order,
-                                                orig_extent, type_old, &type_new, st_offsets + i);
+                    mpi_errno = type_block(array_of_gsizes, i, ndims, array_of_psizes[i],
+                                           coords[i], MPI_DISTRIBUTE_DFLT_DARG, order,
+                                           orig_extent, type_old, &type_new, st_offsets + i);
                     MPIR_ERR_CHECK(mpi_errno);
                     break;
             }
@@ -164,9 +153,9 @@ int MPII_Dataloop_convert_darray(int size,
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
-static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                           int rank, int darg, int order, MPI_Aint orig_extent,
-                           MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
+static int type_block(const int *array_of_gsizes, int dim, int ndims, int nprocs,
+                      int rank, int darg, int order, MPI_Aint orig_extent,
+                      MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
@@ -229,9 +218,9 @@ static int MPII_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs,
 /* Returns MPI_SUCCESS on success, an MPI error code on failure.  Code above
  * needs to call MPIO_Err_return_xxx.
  */
-static int MPII_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nprocs,
-                            int rank, int darg, int order, MPI_Aint orig_extent,
-                            MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
+static int type_cyclic(const int *array_of_gsizes, int dim, int ndims, int nprocs,
+                       int rank, int darg, int order, MPI_Aint orig_extent,
+                       MPI_Datatype type_old, MPI_Datatype * type_new, MPI_Aint * st_offset)
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */

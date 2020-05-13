@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -206,7 +205,7 @@ int MPIR_Iallreduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Iallreduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                    cnt->u.iallreduce.intra_gentran_tree.tree_type,
                                                    cnt->u.iallreduce.intra_gentran_tree.k,
-                                                   cnt->u.iallreduce.intra_gentran_tree.maxbytes,
+                                                   cnt->u.iallreduce.intra_gentran_tree.chunk_size,
                                                    cnt->u.iallreduce.
                                                    intra_gentran_tree.buffer_per_child, request);
             break;
@@ -526,7 +525,6 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -610,7 +608,6 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLREDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

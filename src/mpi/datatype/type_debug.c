@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -131,10 +129,6 @@ char *MPIR_Datatype_builtin_to_string(MPI_Datatype type)
     static char t_doubleprecision[] = "MPI_DOUBLE_PRECISION";
     static char t_integer[] = "MPI_INTEGER";
     static char t_2integer[] = "MPI_2INTEGER";
-#ifdef MPICH_DEFINE_2COMPLEX
-    static char t_2complex[] = "MPI_2COMPLEX";
-    static char t_2doublecomplex[] = "MPI_2DOUBLE_COMPLEX";
-#endif
     static char t_2real[] = "MPI_2REAL";
     static char t_2doubleprecision[] = "MPI_2DOUBLE_PRECISION";
     static char t_character[] = "MPI_CHARACTER";
@@ -208,12 +202,6 @@ char *MPIR_Datatype_builtin_to_string(MPI_Datatype type)
         return t_integer;
     if (type == MPI_2INTEGER)
         return t_2integer;
-#ifdef MPICH_DEFINE_2COMPLEX
-    if (type == MPI_2COMPLEX)
-        return t_2complex;
-    if (type == MPI_2DOUBLE_COMPLEX)
-        return t_2doublecomplex;
-#endif
     if (type == MPI_2REAL)
         return t_2real;
     if (type == MPI_2DOUBLE_PRECISION)

@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef MPIDIG_AM_H_INCLUDED
 #define MPIDIG_AM_H_INCLUDED
 
@@ -25,24 +20,24 @@ enum {
 
     MPIDIG_PUT_REQ,
     MPIDIG_PUT_ACK,
-    MPIDIG_PUT_IOV_REQ,
+    MPIDIG_PUT_DT_REQ,
     MPIDIG_PUT_DAT_REQ,
-    MPIDIG_PUT_IOV_ACK,
+    MPIDIG_PUT_DT_ACK,
 
     MPIDIG_GET_REQ,
     MPIDIG_GET_ACK,
 
     MPIDIG_ACC_REQ,
     MPIDIG_ACC_ACK,
-    MPIDIG_ACC_IOV_REQ,
+    MPIDIG_ACC_DT_REQ,
     MPIDIG_ACC_DAT_REQ,
-    MPIDIG_ACC_IOV_ACK,
+    MPIDIG_ACC_DT_ACK,
 
     MPIDIG_GET_ACC_REQ,
     MPIDIG_GET_ACC_ACK,
-    MPIDIG_GET_ACC_IOV_REQ,
+    MPIDIG_GET_ACC_DT_REQ,
     MPIDIG_GET_ACC_DAT_REQ,
-    MPIDIG_GET_ACC_IOV_ACK,
+    MPIDIG_GET_ACC_DT_ACK,
 
     MPIDIG_CSWAP_REQ,
     MPIDIG_CSWAP_ACK,

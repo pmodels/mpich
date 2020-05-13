@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -553,13 +552,19 @@ int MPIR_Csel_create_from_buf(const char *json,
                               void *(*create_container) (struct json_object *), void **csel_)
 {
     csel_s *csel = NULL;
+    struct json_object *tree;
 
     csel = (csel_s *) MPL_malloc(sizeof(csel_s), MPL_MEM_COLL);
     csel->type = CSEL_TYPE__ROOT;
-    csel->u.root.tree = parse_json_tree(json_tokener_parse(json), create_container);
+    tree = json_tokener_parse(json);
+    if (tree == NULL)
+        goto fn_exit;
+    csel->u.root.tree = parse_json_tree(tree, create_container);
 
     if (csel->u.root.tree)
         validate_tree(csel->u.root.tree);
+
+    json_object_put(tree);
 
   fn_exit:
     *csel_ = csel;
@@ -585,15 +590,10 @@ int MPIR_Csel_create_from_file(const char *json_file,
 
 static csel_node_s *prune_tree(csel_node_s * root, MPIR_Comm * comm_ptr)
 {
+    /* Do not prune tree based on CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED, as during init
+     * MPIR_IS_THREADED is set to 0 temporarily, which results in having incorrect pruned tree */
     for (csel_node_s * node = root; node;) {
         switch (node->type) {
-            case CSEL_NODE_TYPE__OPERATOR__IS_MULTI_THREADED:
-                if (MPIR_IS_THREADED == node->u.is_multi_threaded.val)
-                    node = node->success;
-                else
-                    node = node->failure;
-                break;
-
             case CSEL_NODE_TYPE__OPERATOR__COMM_TYPE_INTRA:
                 if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                     node = node->success;

@@ -1,8 +1,9 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.63)
-#
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
 
 AC_INIT([MPL], [0.1])
 
@@ -614,6 +615,7 @@ AS_CASE([$enable_yield],
 #######################################################################
 
 PAC_ARG_THREAD_PACKAGE
+PAC_ARG_POSIX_MUTEX
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
@@ -671,9 +673,17 @@ case $with_thread_package in
 	;;
 esac
 
-# Define and export the selected thread library so that other packages
-# know what's used in MPL
+case $with_posix_mutex in
+    ticketlock)
+        POSIX_MUTEX_NAME=MPL_POSIX_MUTEX_TICKETLOCK
+        ;;
+    *)
+        POSIX_MUTEX_NAME=MPL_POSIX_MUTEX_NATIVE
+        ;;
+esac
+
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
+AC_DEFINE_UNQUOTED([POSIX_MUTEX_NAME],[$POSIX_MUTEX_NAME],[set to the choice of the posix mutex])
 
 # check for compiler-support for thread-local storage (MPL_TLS)
 PAC_CC_CHECK_TLS
@@ -941,6 +951,20 @@ AC_SUBST(libmpl_so_versionflags)
 
 #######################################################################
 
+#######################################################################
+## START OF GPU CODE
+#######################################################################
+
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([MPL_HAVE_CUDA],[1],[Define if CUDA is available])
+fi
+AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+
+#######################################################################
+## END OF GPU CODE
+#######################################################################
 
 # Check for strdup
 AC_CHECK_FUNCS(strdup)

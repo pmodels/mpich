@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -59,6 +57,7 @@ int MPIR_Type_vector(int count,
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
@@ -138,11 +137,24 @@ int MPIR_Type_vector(int count,
         new_dtp->is_contig = 0;
     }
 
+    if (strideinbytes) {
+        mpi_errno =
+            MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     *newtype = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "vector type %x created.", new_dtp->handle);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype,
@@ -209,7 +221,6 @@ int MPI_Type_vector(int count,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_VECTOR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -246,7 +257,6 @@ int MPI_Type_vector(int count,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_VECTOR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_CAPABILITY_SETS_H_INCLUDED
 #define OFI_CAPABILITY_SETS_H_INCLUDED
 
@@ -93,7 +88,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_MINOR_VERSION             The minor API version of libfabric required
  *
  * === Compile time only ===
- * MPIDI_OFI_IOVEC_ALIGN               Required alignment for iovecs
  * The first four values an optimization to avoid calculating this value every time they are needed.
  * They can be calculated from the bits above.
  * MPIDI_OFI_PROTOCOL_MASK             The bitmask used to extract the protocol from the match_bits in an OFI message
@@ -151,7 +145,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM2
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_PSM2
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2
-#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2
@@ -216,7 +209,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_SOCKETS
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_SOCKETS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS
-#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_SOCKETS
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_SOCKETS
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS
@@ -281,7 +273,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_BGQ
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_BGQ
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ
-#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_BGQ
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_BGQ
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ
@@ -346,7 +337,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                    MPIDI_OFI_ENABLE_RMA_RXM
 #define MPIDI_OFI_ENABLE_ATOMICS                MPIDI_OFI_ENABLE_ATOMICS_RXM
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS           MPIDI_OFI_FETCH_ATOMIC_IOVECS_RXM
-#define MPIDI_OFI_IOVEC_ALIGN                   (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS     MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_RXM
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_RXM
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK           MPIDI_OFI_ENABLE_PT2PT_NOPACK_RXM
@@ -383,7 +373,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_AM_DEFAULT                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_DEFAULT            MPIDI_OFI_ENABLE_RMA_DEFAULT
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_DEFAULT       1
-#define MPIDI_OFI_IOVEC_ALIGN_DEFAULT               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_DEFAULT MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_DEFAULT  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_DEFAULT       MPIDI_OFI_ON
@@ -417,7 +406,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_AM_MINIMAL                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_MINIMAL            MPIDI_OFI_ENABLE_RMA_MINIMAL
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_MINIMAL       1
-#define MPIDI_OFI_IOVEC_ALIGN_MINIMAL               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_MINIMAL MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_MINIMAL  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_MINIMAL       MPIDI_OFI_ON
@@ -455,7 +443,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_global.settings.enable_rma
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_global.settings.enable_atomics
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_global.settings.fetch_atomic_iovecs
-#define MPIDI_OFI_IOVEC_ALIGN               (1) /* Compile time configuration only */
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_global.settings.enable_data_auto_progress
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_global.settings.enable_control_auto_progress
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_global.settings.enable_pt2pt_nopack

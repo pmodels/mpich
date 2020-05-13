@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_THREAD_H_INCLUDED
@@ -41,6 +40,7 @@ typedef void (*MPL_thread_func_t) (void *data);
 #define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = 0;}
 #define MPL_thread_init(err_ptr_)      do { } while (0)
 #define MPL_thread_finalize(err_ptr_)  do { } while (0)
+#define MPL_thread_yield()             do { } while (0)
 #else
 #error "thread package (MPL_THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
@@ -58,11 +58,6 @@ typedef void (*MPL_thread_func_t) (void *data);
 /* undef MPL_TLS */
 
 #endif
-
-/* Error values */
-#define MPL_THREAD_SUCCESS 0
-#define MPL_THREAD_ERROR   1
-/* FIXME: Define other error codes.  For now, any non-zero value is an error. */
 
 #include "mpl_thread_priv.h"
 

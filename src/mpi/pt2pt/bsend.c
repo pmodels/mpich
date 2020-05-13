@@ -1,12 +1,9 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
-#include "bsendutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Bsend */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -87,13 +84,11 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BSEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(MPID_STATE_MPI_BSEND);
 
     /* Validate handle parameters needing to be converted */
@@ -155,9 +150,7 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, BSEND, &request_ptr);
-    /* Note that we can ignore the request_ptr because it is handled internally
-     * by the bsend util routines */
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
@@ -166,7 +159,6 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
   fn_exit:
     MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_BSEND);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

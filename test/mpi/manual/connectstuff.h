@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #ifndef CONNECTSTUFF_H_INCLUDED
 #define CONNECTSTUFF_H_INCLUDED
 

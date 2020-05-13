@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef MPL_THREAD_SOLARIS_H_INCLUDED
 #define MPL_THREAD_SOLARIS_H_INCLUDED
 
@@ -188,7 +187,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id,
          * have shutdown from continuing to receive callbacks.          \
          */                                                             \
         if ((err_ptr_) != NULL) {                                       \
-            *(err_ptr_) = MPL_THREAD_SUCCESS;                           \
+            *(err_ptr_) = MPL_SUCCESS;                           \
         }                                                               \
     } while (0)
 

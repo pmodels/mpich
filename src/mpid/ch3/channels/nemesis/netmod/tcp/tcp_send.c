@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "tcp_impl.h"
@@ -66,7 +65,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
     intptr_t offset;
-    MPL_IOV *iov;
+    struct iovec *iov;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
@@ -118,16 +117,16 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t * vc, MPIDI_nem_tcp_request_queue_t * se
         complete = 1;
         for (iov = &sreq->dev.iov[sreq->dev.iov_offset];
              iov < &sreq->dev.iov[sreq->dev.iov_offset + sreq->dev.iov_count]; ++iov) {
-            if (offset < iov->MPL_IOV_LEN) {
-                iov->MPL_IOV_BUF = (char *) iov->MPL_IOV_BUF + offset;
-                iov->MPL_IOV_LEN -= offset;
+            if (offset < iov->iov_len) {
+                iov->iov_base = (char *) iov->iov_base + offset;
+                iov->iov_len -= offset;
                 /* iov_count should be equal to the number of iov's remaining */
                 sreq->dev.iov_count -= ((iov - sreq->dev.iov) - sreq->dev.iov_offset);
                 sreq->dev.iov_offset = iov - sreq->dev.iov;
                 complete = 0;
                 break;
             }
-            offset -= iov->MPL_IOV_LEN;
+            offset -= iov->iov_len;
         }
         if (!complete) {
             /* writev couldn't write the entire iov, give up for now */
@@ -210,7 +209,7 @@ int MPID_nem_tcp_conn_est(MPIDI_VC_t * vc)
 
 /* Common routine that transfers iovs and handles any failure.
  * Called by sending functions. */
-static inline int tcp_large_writev(MPIDI_VC_t * vc, const MPL_IOV * iov, int iov_n,
+static inline int tcp_large_writev(MPIDI_VC_t * vc, const struct iovec * iov, int iov_n,
                                    intptr_t * offset_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -281,7 +280,7 @@ static inline int tcp_enqueue_sreq(MPIDI_VC_t * vc, MPIR_Request * sreq, bool pa
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
-    MPIR_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPL_IOV_LEN > 0);
+    MPIR_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].iov_len > 0);
 
     if (!paused_send && MPID_nem_tcp_vc_send_paused(vc_tcp)) {
         MPIDI_CH3I_Sendq_enqueue(&vc_tcp->paused_send_queue, sreq);
@@ -327,12 +326,12 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
         if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
             if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
-                MPL_IOV iov[2];
+                struct iovec iov[2];
 
-                iov[0].MPL_IOV_BUF = hdr;
-                iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
-                iov[1].MPL_IOV_BUF = data;
-                iov[1].MPL_IOV_LEN = data_sz;
+                iov[0].iov_base = hdr;
+                iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
+                iov[1].iov_base = data;
+                iov[1].iov_len = data_sz;
 
                 mpi_errno = tcp_large_writev(vc, iov, 2, &offset);
                 MPIR_ERR_CHECK(mpi_errno);
@@ -366,17 +365,17 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
 
     if (offset < sizeof(MPIDI_CH3_Pkt_t)) {
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-        sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
+        sreq->dev.iov[0].iov_base = (char *) &sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t) - offset;
         if (data_sz) {
-            sreq->dev.iov[1].MPL_IOV_BUF = data;
-            sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
+            sreq->dev.iov[1].iov_base = data;
+            sreq->dev.iov[1].iov_len = data_sz;
             sreq->dev.iov_count = 2;
         } else
             sreq->dev.iov_count = 1;
     } else {
-        sreq->dev.iov[0].MPL_IOV_BUF = (char *) data + (offset - sizeof(MPIDI_CH3_Pkt_t));
-        sreq->dev.iov[0].MPL_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].iov_base = (char *) data + (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].iov_len = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count = 1;
     }
 
@@ -411,12 +410,12 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
 
     if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
         if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
-            MPL_IOV iov[2];
+            struct iovec iov[2];
 
-            iov[0].MPL_IOV_BUF = hdr;
-            iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
-            iov[1].MPL_IOV_BUF = data;
-            iov[1].MPL_IOV_LEN = data_sz;
+            iov[0].iov_base = hdr;
+            iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
+            iov[1].iov_base = data;
+            iov[1].iov_len = data_sz;
 
             mpi_errno = tcp_large_writev(vc, iov, 2, &offset);
             MPIR_ERR_CHECK(mpi_errno);
@@ -449,17 +448,17 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
 
     if (offset < sizeof(MPIDI_CH3_Pkt_t)) {
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-        sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
+        sreq->dev.iov[0].iov_base = (char *) &sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t) - offset;
         if (data_sz) {
-            sreq->dev.iov[1].MPL_IOV_BUF = data;
-            sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
+            sreq->dev.iov[1].iov_base = data;
+            sreq->dev.iov[1].iov_len = data_sz;
             sreq->dev.iov_count = 2;
         } else
             sreq->dev.iov_count = 1;
     } else {
-        sreq->dev.iov[0].MPL_IOV_BUF = (char *) data + (offset - sizeof(MPIDI_CH3_Pkt_t));
-        sreq->dev.iov[0].MPL_IOV_LEN = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].iov_base = (char *) data + (offset - sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.iov[0].iov_len = data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count = 1;
     }
 
@@ -494,15 +493,15 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
         if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
             if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
-                MPL_IOV iov[3];
+                struct iovec iov[3];
                 int iov_n = 0;
 
-                iov[iov_n].MPL_IOV_BUF = hdr;
-                iov[iov_n].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+                iov[iov_n].iov_base = hdr;
+                iov[iov_n].iov_len = sizeof(MPIDI_CH3_Pkt_t);
                 iov_n++;
 
-                iov[iov_n].MPL_IOV_BUF = data;
-                iov[iov_n].MPL_IOV_LEN = data_sz;
+                iov[iov_n].iov_base = data;
+                iov[iov_n].iov_len = data_sz;
                 iov_n++;
 
                 mpi_errno = tcp_large_writev(vc, iov, iov_n, &offset);
@@ -535,19 +534,19 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     if (offset < sizeof(MPIDI_CH3_Pkt_t)) {
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
 
-        sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
+        sreq->dev.iov[sreq->dev.iov_count].iov_base = (char *) &sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[sreq->dev.iov_count].iov_len = sizeof(MPIDI_CH3_Pkt_t) - offset;
         sreq->dev.iov_count++;
 
         if (data_sz) {
-            sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF = data;
-            sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN = data_sz;
+            sreq->dev.iov[sreq->dev.iov_count].iov_base = data;
+            sreq->dev.iov[sreq->dev.iov_count].iov_len = data_sz;
             sreq->dev.iov_count++;
         }
     } else {
-        sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF =
+        sreq->dev.iov[sreq->dev.iov_count].iov_base =
             (char *) data + (offset - sizeof(MPIDI_CH3_Pkt_t));
-        sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN =
+        sreq->dev.iov[sreq->dev.iov_count].iov_len =
             data_sz - (offset - sizeof(MPIDI_CH3_Pkt_t));
         sreq->dev.iov_count++;
     }
@@ -570,7 +569,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
 
 
 int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                          MPL_IOV * iov, int n_iov)
+                          struct iovec * iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS, i;
     intptr_t offset = 0, data_sz = 0;
@@ -583,18 +582,18 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
         if (MPID_nem_tcp_vc_is_connected(vc_tcp)) {
             if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue)) {
-                MPL_IOV tcp_iov[MPL_IOV_LIMIT];
+                struct iovec tcp_iov[MPL_IOV_LIMIT];
                 int tcp_iov_n = 1 + n_iov;
 
                 MPIR_Assert(tcp_iov_n >= 0 && tcp_iov_n < MPL_IOV_LIMIT);
 
                 /* Merge header into iov */
-                tcp_iov[0].MPL_IOV_BUF = hdr;
-                tcp_iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+                tcp_iov[0].iov_base = hdr;
+                tcp_iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
                 for (i = 0; i < n_iov; i++) {
-                    tcp_iov[i + 1].MPL_IOV_BUF = iov[i].MPL_IOV_BUF;
-                    tcp_iov[i + 1].MPL_IOV_LEN = iov[i].MPL_IOV_LEN;
-                    data_sz += iov[i].MPL_IOV_LEN;
+                    tcp_iov[i + 1].iov_base = iov[i].iov_base;
+                    tcp_iov[i + 1].iov_len = iov[i].iov_len;
+                    data_sz += iov[i].iov_len;
                 }
 
                 mpi_errno = tcp_large_writev(vc, tcp_iov, tcp_iov_n, &offset);
@@ -624,16 +623,16 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     if (offset < sizeof(MPIDI_CH3_Pkt_t)) {
         /* save pending header */
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-        sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt + offset;
-        sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t) - offset;
+        sreq->dev.iov[0].iov_base = (char *) &sreq->dev.pending_pkt + offset;
+        sreq->dev.iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t) - offset;
         sreq->dev.iov_count = 1;
 
         /* save whole iov */
         if (n_iov > 0) {
             sreq->dev.iov_count += n_iov;
             for (i = 0; i < n_iov; i++) {
-                sreq->dev.iov[i + 1].MPL_IOV_BUF = iov[i].MPL_IOV_BUF;
-                sreq->dev.iov[i + 1].MPL_IOV_LEN = iov[i].MPL_IOV_LEN;
+                sreq->dev.iov[i + 1].iov_base = iov[i].iov_base;
+                sreq->dev.iov[i + 1].iov_len = iov[i].iov_len;
             }
         }
     } else {
@@ -641,14 +640,14 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
         sreq->dev.iov_count = 0;
         offset -= sizeof(MPIDI_CH3_Pkt_t);
         for (i = 0; i < n_iov; i++) {
-            if (offset < iov[i].MPL_IOV_LEN) {  /* unsent iov starts */
-                sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF =
-                    (MPL_IOV_BUF_CAST) ((char *) iov[i].MPL_IOV_BUF + offset);
-                sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN = iov[i].MPL_IOV_LEN - offset;
+            if (offset < iov[i].iov_len) {  /* unsent iov starts */
+                sreq->dev.iov[sreq->dev.iov_count].iov_base =
+                    (void *) ((char *) iov[i].iov_base + offset);
+                sreq->dev.iov[sreq->dev.iov_count].iov_len = iov[i].iov_len - offset;
                 offset = 0;
                 sreq->dev.iov_count++;
             } else
-                offset -= iov[i].MPL_IOV_LEN;   /* sent iov */
+                offset -= iov[i].iov_len;   /* sent iov */
         }
     }
 
@@ -669,12 +668,12 @@ int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
 }
 
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz,
-                               MPL_IOV * hdr_iov, int n_hdr_iov)
+                               struct iovec * hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
-    MPL_IOV iov[MPL_IOV_LIMIT];
-    MPL_IOV *iov_p;
+    struct iovec iov[MPL_IOV_LIMIT];
+    struct iovec *iov_p;
     intptr_t offset;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
@@ -687,8 +686,8 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
 
     iov_n = 0;
 
-    iov[iov_n].MPL_IOV_BUF = header;
-    iov[iov_n].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    iov[iov_n].iov_base = header;
+    iov[iov_n].iov_len = sizeof(MPIDI_CH3_Pkt_t);
     iov_n++;
 
     if (n_hdr_iov > 0) {
@@ -697,8 +696,8 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
          * ensure at least 1 iov is left for data. */
         MPIR_Assert(MPL_IOV_LIMIT - iov_n - n_hdr_iov > 0);
         for (i = 0; i < n_hdr_iov; i++) {
-            iov[iov_n].MPL_IOV_BUF = hdr_iov[i].MPL_IOV_BUF;
-            iov[iov_n].MPL_IOV_LEN = hdr_iov[i].MPL_IOV_LEN;
+            iov[iov_n].iov_base = hdr_iov[i].iov_base;
+            iov[iov_n].iov_len = hdr_iov[i].iov_len;
             iov_n++;
         }
     }
@@ -726,26 +725,26 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *heade
         }
     }
 
-    if (offset < iov[0].MPL_IOV_LEN) {
+    if (offset < iov[0].iov_len) {
         /* header was not yet sent, save it in req */
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) header;
-        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
-        iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+        iov[0].iov_base = (void *) & sreq->dev.pending_pkt;
+        iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
     }
 
     /* check if whole iov was sent, and save any unsent portion of iov */
     sreq->dev.iov_count = 0;
     complete = 1;
     for (iov_p = &iov[0]; iov_p < &iov[iov_n]; ++iov_p) {
-        if (offset < iov_p->MPL_IOV_LEN) {
-            sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_BUF =
-                (MPL_IOV_BUF_CAST) ((char *) iov_p->MPL_IOV_BUF + offset);
-            sreq->dev.iov[sreq->dev.iov_count].MPL_IOV_LEN = iov_p->MPL_IOV_LEN - offset;
+        if (offset < iov_p->iov_len) {
+            sreq->dev.iov[sreq->dev.iov_count].iov_base =
+                (void *) ((char *) iov_p->iov_base + offset);
+            sreq->dev.iov[sreq->dev.iov_count].iov_len = iov_p->iov_len - offset;
             offset = 0;
             ++sreq->dev.iov_count;
             complete = 0;
         } else
-            offset -= iov_p->MPL_IOV_LEN;
+            offset -= iov_p->iov_len;
     }
 
     if (complete) {

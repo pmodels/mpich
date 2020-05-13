@@ -1,8 +1,8 @@
-C -*- Mode: Fortran; -*- 
 C
-C  (C) 2003 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
+
         subroutine MTest_Init( ierr )
 C       Place the include first so that we can automatically create a
 C       Fortran 90 version that uses the mpi module instead.  If

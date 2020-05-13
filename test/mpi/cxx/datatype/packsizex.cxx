@@ -1,9 +1,8 @@
-/* -*- Mode: C++; c-basic-offset:4 ; -*- */
 /*
- *
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include "mpitestconf.h"
 #ifdef HAVE_IOSTREAM
@@ -79,6 +78,7 @@ int main(int argc, char *argv[])
             char *desc;
             DTP_obj_get_description(msobj, &desc);
             cerr << "Pack size of datatype " << desc << " is not positive\n";
+            free(desc);
         }
         if (size1 >= size2) {
             errs++;
@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
             DTP_obj_get_description(msobj, &desc);
             cerr << "Pack size of 2 of " << desc <<
                 " is smaller or the same as the pack size of 1 instance\n";
+            free(desc);
         }
 
         if (mrobj.DTP_datatype != msobj.DTP_datatype) {
@@ -101,6 +102,7 @@ int main(int argc, char *argv[])
                 char *desc;
                 DTP_obj_get_description(mrobj, &desc);
                 cerr << "Pack size of datatype " << desc << " is not positive\n";
+                free(desc);
             }
             if (size1 >= size2) {
                 errs++;
@@ -108,6 +110,7 @@ int main(int argc, char *argv[])
                 DTP_obj_get_description(mrobj, &desc);
                 cerr << "Pack size of 2 of " << desc <<
                     " is smaller or the same as the pack size of 1 instance\n";
+                free(desc);
             }
         }
         DTP_obj_free(mrobj);

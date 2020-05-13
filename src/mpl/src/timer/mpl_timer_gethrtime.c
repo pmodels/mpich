@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -30,35 +29,35 @@ int MPL_wtime(MPL_time_t * timeval)
 {
     *timeval = gethrtime();
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = 1.0e-9 * (double) (*t2 - *t1);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
 {
     *val = (unsigned int) (*t & 0xffffffffUL);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = 1.0e-9 * (*t);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += ((*t2) - (*t1));
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtick(double *wtick)
@@ -67,7 +66,7 @@ int MPL_wtick(double *wtick)
      * is untested */
     *wtick = 1.0e-9;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_init(void)
@@ -78,7 +77,7 @@ int MPL_wtime_init(void)
     is_initialized = 1;
 
   fn_exit:
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif

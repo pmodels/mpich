@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDU_SHM_STATES_H_INCLUDED
@@ -21,4 +20,3 @@ MPID_STATE_MPIDU_INIT_SHM_SEG_PUT, \
 MPID_STATE_MPIDU_INIT_SHM_SEG_GET,
 
 #endif /* MPIDU_SHM_STATES_H_INCLUDED */
-/* vim: ft=c */

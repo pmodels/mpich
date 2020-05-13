@@ -1,8 +1,7 @@
-# -*- Mode: Makefile; -*-
-#
-# (C) 2009 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 external_subdirs = @mpl_srcdir@
 external_dist_subdirs = @mpl_dist_srcdir@

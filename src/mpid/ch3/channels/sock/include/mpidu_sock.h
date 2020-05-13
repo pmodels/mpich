@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDU_SOCK_H_INCLUDED
@@ -665,7 +664,7 @@ that one thread is not attempting to post a new operation while another thread i
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_post_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_readv(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n,
                                MPIDI_CH3I_Sock_progress_update_func_t fn);
 
 
@@ -785,7 +784,7 @@ that one thread is not attempting to post a new operation while another thread i
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_post_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n,
+int MPIDI_CH3I_Sock_post_writev(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n,
                                 MPIDI_CH3I_Sock_progress_update_func_t fn);
 
 
@@ -946,7 +945,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read);
+int MPIDI_CH3I_Sock_readv(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_read);
 
 
 /*@
@@ -1044,7 +1043,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written);
+int MPIDI_CH3I_Sock_writev(MPIDI_CH3I_Sock_t sock, struct iovec * iov, int iov_n, size_t * num_written);
 
 
 /*@

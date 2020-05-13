@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2007 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* a test to exercise very large extents: on most platforms with 32 bit
@@ -203,7 +202,3 @@ int main(int argc, char **argv)
     return (-ret);
 
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

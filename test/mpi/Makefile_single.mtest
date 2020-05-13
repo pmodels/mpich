@@ -1,0 +1,18 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
+## This is an automake makefile fragment that should be included by:
+##
+##   include $(top_srcdir)/Makefile_single.mtest
+##
+## This makefile is for single-threaded tests.
+
+include $(top_srcdir)/Makefile_common.mtest
+
+## then add rules/vars for mtest_single.o
+LDADD += $(top_builddir)/util/mtest_single.$(OBJEXT)
+
+$(top_builddir)/util/mtest_single.$(OBJEXT): $(top_srcdir)/util/mtest_single.c
+	(cd $(top_builddir)/util && $(MAKE) mtest_single.$(OBJEXT))

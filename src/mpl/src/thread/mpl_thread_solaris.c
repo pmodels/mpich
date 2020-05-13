@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -40,7 +39,7 @@ void *MPLI_thread_start(void *arg);
 void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp)
 {
     struct MPLI_thread_info *thread_info;
-    int err = MPL_THREAD_SUCCESS;
+    int err = MPL_SUCCESS;
 
     /* FIXME: faster allocation, or avoid it all together? */
     thread_info =

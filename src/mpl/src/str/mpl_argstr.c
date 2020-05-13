@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -26,16 +25,16 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
             dest++;
             *dest = '\0';
             *num_encoded = 0;
-            return MPL_STR_SUCCESS;
+            return MPL_SUCCESS;
         } else {
-            return MPL_STR_TRUNCATED;
+            return MPL_ERR_STR_TRUNCATED;
         }
     }
     while (src_length && dest_length) {
         num_used = MPL_snprintf(dest, dest_length, "%02X", (unsigned char) *src);
         if (num_used < 0) {
             *num_encoded = n;
-            return MPL_STR_TRUNCATED;
+            return MPL_ERR_STR_TRUNCATED;
         }
         /*MPL_DBG_MSG_FMT(STRING,VERBOSE,(MPL_DBG_FDEST," %c = %c%c",
          * ch, dest[0], dest[1])); */
@@ -46,7 +45,7 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
         src_length--;
     }
     *num_encoded = n;
-    return src_length ? MPL_STR_TRUNCATED : MPL_STR_SUCCESS;
+    return src_length ? MPL_ERR_STR_TRUNCATED : MPL_SUCCESS;
 }
 
 static int decode_buffer(const char *str, char *dest, int length, int *num_decoded)
@@ -56,12 +55,12 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
     int n = 0;
 
     if (str == NULL || dest == NULL || num_decoded == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
     if (length < 1) {
         *num_decoded = 0;
         if (*str == '\0')
-            return MPL_STR_SUCCESS;
-        return MPL_STR_TRUNCATED;
+            return MPL_SUCCESS;
+        return MPL_ERR_STR_TRUNCATED;
     }
     if (*str == MPL_STR_QUOTE_CHAR)
         str++;
@@ -72,7 +71,7 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
         hex[1] = *str;
         str++;
         if (0 == sscanf(hex, "%X", &value))
-            return MPL_STR_TRUNCATED;
+            return MPL_ERR_STR_TRUNCATED;
         *dest = (char) value;
         /*MPL_DBG_MSG_FMT(STRING,VERBOSE,(MPL_DBG_FDEST," %s = %c",
          * hex, *dest)); */
@@ -83,9 +82,9 @@ static int decode_buffer(const char *str, char *dest, int length, int *num_decod
     *num_decoded = n;
     if (length == 0) {
         if (*str != '\0' && *str != MPL_STR_SEPAR_CHAR && *str != MPL_STR_QUOTE_CHAR)
-            return MPL_STR_TRUNCATED;
+            return MPL_ERR_STR_TRUNCATED;
     }
-    return MPL_STR_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 static const char *first_token(const char *str)
@@ -209,28 +208,28 @@ static int token_copy(const char *token, char *str, int maxlen)
 {
     /* check parameters */
     if (token == NULL || str == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* check special buffer lengths */
     if (maxlen < 1)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
     if (maxlen == 1) {
         *str = '\0';
-        return (str[0] == '\0') ? MPL_STR_SUCCESS : MPL_STR_TRUNCATED;
+        return (str[0] == '\0') ? MPL_SUCCESS : MPL_ERR_STR_TRUNCATED;
     }
 
     /* cosy up to the token */
     token = first_token(token);
     if (token == NULL) {
         *str = '\0';
-        return MPL_STR_SUCCESS;
+        return MPL_SUCCESS;
     }
 
     if (*token == MPL_STR_DELIM_CHAR) {
         /* copy the special deliminator token */
         str[0] = MPL_STR_DELIM_CHAR;
         str[1] = '\0';
-        return MPL_STR_SUCCESS;
+        return MPL_SUCCESS;
     }
 
     if (*token == MPL_STR_QUOTE_CHAR) {
@@ -244,7 +243,7 @@ static int token_copy(const char *token, char *str, int maxlen)
             } else {
                 if (*token == MPL_STR_QUOTE_CHAR) {
                     *str = '\0';
-                    return MPL_STR_SUCCESS;
+                    return MPL_SUCCESS;
                 }
                 *str = *token;
             }
@@ -256,7 +255,7 @@ static int token_copy(const char *token, char *str, int maxlen)
          * terminate the string */
         str--;
         *str = '\0';
-        return MPL_STR_TRUNCATED;
+        return MPL_ERR_STR_TRUNCATED;
     }
 
     /* literal copy */
@@ -269,11 +268,11 @@ static int token_copy(const char *token, char *str, int maxlen)
     }
     if (maxlen) {
         *str = '\0';
-        return MPL_STR_SUCCESS;
+        return MPL_SUCCESS;
     }
     str--;
     *str = '\0';
-    return MPL_STR_TRUNCATED;
+    return MPL_ERR_STR_TRUNCATED;
 }
 
 /*@ MPL_str_get_string_arg - Extract an option from a string with a
@@ -288,7 +287,7 @@ Output Parameters:
 .   val - output string
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine searches for a "key = value" entry in a string
@@ -299,12 +298,12 @@ Output Parameters:
 int MPL_str_get_string_arg(const char *str, const char *flag, char *val, int maxlen)
 {
     if (maxlen < 1)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* line up with the first token */
     str = first_token(str);
     if (str == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* This loop will match the first instance of "flag = value" in the string. */
     do {
@@ -313,14 +312,14 @@ int MPL_str_get_string_arg(const char *str, const char *flag, char *val, int max
             if (compare_token(str, MPL_STR_DELIM_STR) == 0) {
                 str = next_token(str);
                 if (str == NULL)
-                    return MPL_STR_FAIL;
+                    return MPL_ERR_STR_FAIL;
                 return token_copy(str, val, maxlen);
             }
         } else {
             str = next_token(str);
         }
     } while (str);
-    return MPL_STR_FAIL;
+    return MPL_ERR_STR_FAIL;
 }
 
 /*@ MPL_str_get_binary_arg - Extract an option from a string with a maximum
@@ -336,7 +335,7 @@ Output Parameters:
 -   out_length - output length
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine searches for a "key = value" entry in a string and decodes
@@ -351,12 +350,12 @@ int MPL_str_get_binary_arg(const char *str, const char *flag, char *buffer,
                            int maxlen, int *out_length)
 {
     if (maxlen < 1)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* line up with the first token */
     str = first_token(str);
     if (str == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* This loop will match the first instance of "flag = value" in the string. */
     do {
@@ -365,14 +364,14 @@ int MPL_str_get_binary_arg(const char *str, const char *flag, char *buffer,
             if (compare_token(str, MPL_STR_DELIM_STR) == 0) {
                 str = next_token(str);
                 if (str == NULL)
-                    return MPL_STR_FAIL;
+                    return MPL_ERR_STR_FAIL;
                 return decode_buffer(str, buffer, maxlen, out_length);
             }
         } else {
             str = next_token(str);
         }
     } while (str);
-    return MPL_STR_FAIL;
+    return MPL_ERR_STR_FAIL;
 }
 
 /*@ MPL_str_get_int_arg - Extract an option from a string
@@ -385,7 +384,7 @@ Output Parameters:
 .   val_ptr - pointer to the output integer
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine searches for a "key = value" entry in a string and decodes the value
@@ -400,9 +399,9 @@ int MPL_str_get_int_arg(const char *str, const char *flag, int *val_ptr)
     char int_str[12];
 
     result = MPL_str_get_string_arg(str, flag, int_str, 12);
-    if (result == MPL_STR_SUCCESS) {
+    if (result == MPL_SUCCESS) {
         *val_ptr = atoi(int_str);
-        return MPL_STR_SUCCESS;
+        return MPL_SUCCESS;
     }
     return result;
 }
@@ -459,7 +458,7 @@ Output Parameters:
 -   maxlen_ptr - maxlen is decremented by the amount str_ptr is incremented
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine adds a string to a string in such a way that
@@ -523,7 +522,7 @@ Output Parameters:
 -   val - location to store the string
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Return Value:
     The return value is 0 for success, -1 for insufficient buffer space, and
@@ -561,11 +560,11 @@ int MPL_str_get_string(char **str_ptr, char *val, int maxlen)
 
     /* copy the token */
     result = token_copy(str, val, maxlen);
-    if (result == MPL_STR_SUCCESS) {
+    if (result == MPL_SUCCESS) {
         str = (char *) next_token(str);
         *str_ptr = str;
         return 0;
-    } else if (result == MPL_STR_TRUNCATED) {
+    } else if (result == MPL_ERR_STR_TRUNCATED) {
         return -1;
     }
 
@@ -587,7 +586,7 @@ Output Parameters:
 -   maxlen_ptr - maxlen is reduced by the number of characters written
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine adds a string option to a string in the form "key = value".
@@ -601,12 +600,12 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
     char **orig_str_ptr;
 
     if (maxlen_ptr == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     orig_str_ptr = str_ptr;
 
     if (*maxlen_ptr < 1)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* add the flag */
     if (strstr(flag, MPL_STR_SEPAR_STR) || strstr(flag, MPL_STR_DELIM_STR) ||
@@ -619,7 +618,7 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
     if (*maxlen_ptr < 1) {
         MPL_DBG_MSG_S(MPIR_DBG_STRING, VERBOSE, "partial argument added to string: '%s'", *str_ptr);
         **str_ptr = '\0';
-        return MPL_STR_NOMEM;
+        return MPL_ERR_STR_NOMEM;
     }
     *str_ptr = *str_ptr + num_chars;
 
@@ -645,7 +644,7 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
     if (*maxlen_ptr < 2) {
         MPL_DBG_MSG_S(MPIR_DBG_STRING, VERBOSE, "partial argument added to string: '%s'", *str_ptr);
         **orig_str_ptr = '\0';
-        return MPL_STR_NOMEM;
+        return MPL_ERR_STR_NOMEM;
     }
 
     /* add the trailing space */
@@ -654,7 +653,7 @@ int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag, co
     **str_ptr = '\0';
     *maxlen_ptr = *maxlen_ptr - 1;
 
-    return MPL_STR_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /*@ MPL_str_add_int_arg - Add an option to a string with a maximum length
@@ -671,7 +670,7 @@ Output Parameters:
 -   maxlen_ptr - maxlen is reduced by the number of characters written
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine adds an integer option to a string in the form "key = value".
@@ -701,7 +700,7 @@ Output Parameters:
 -   maxlen_ptr - maxlen is reduced by the number of characters written
 
     Return value:
-    MPL_STR_SUCCESS, MPL_STR_NOMEM, MPL_STR_FAIL
+    MPL_SUCCESS, MPL_ERR_STR_NOMEM, MPL_ERR_STR
 
     Notes:
     This routine encodes binary data into a string option in the form
@@ -718,12 +717,12 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     char **orig_str_ptr;
 
     if (maxlen_ptr == NULL)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     orig_str_ptr = str_ptr;
 
     if (*maxlen_ptr < 1)
-        return MPL_STR_FAIL;
+        return MPL_ERR_STR_FAIL;
 
     /* add the flag */
     if (strstr(flag, MPL_STR_SEPAR_STR) || strstr(flag, MPL_STR_DELIM_STR) ||
@@ -736,7 +735,7 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     if (*maxlen_ptr < 1) {
         MPL_DBG_MSG_S(MPIR_DBG_STRING, VERBOSE, "partial argument added to string: '%s'", *str_ptr);
         **str_ptr = '\0';
-        return MPL_STR_NOMEM;
+        return MPL_ERR_STR_NOMEM;
     }
     *str_ptr = *str_ptr + num_chars;
 
@@ -747,7 +746,7 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 
     /* add the value string */
     result = encode_buffer(*str_ptr, *maxlen_ptr, buffer, length, &num_chars);
-    if (result != MPL_STR_SUCCESS) {
+    if (result != MPL_SUCCESS) {
         **orig_str_ptr = '\0';
         return result;
     }
@@ -758,7 +757,7 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     if (*maxlen_ptr < 2) {
         MPL_DBG_MSG_S(MPIR_DBG_STRING, VERBOSE, "partial argument added to string: '%s'", *str_ptr);
         **orig_str_ptr = '\0';
-        return MPL_STR_NOMEM;
+        return MPL_ERR_STR_NOMEM;
     }
 
     /* add the trailing space */
@@ -767,5 +766,5 @@ int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     **str_ptr = '\0';
     *maxlen_ptr = *maxlen_ptr - 1;
 
-    return MPL_STR_SUCCESS;
+    return MPL_SUCCESS;
 }

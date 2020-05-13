@@ -1,8 +1,6 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2011 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 include $(top_srcdir)/src/mpi/datatype/typerep/Makefile.mk
@@ -59,12 +57,10 @@ mpi_sources +=                                   \
 ## what's the scoop here with win_sources?
 ##    src/mpi/datatype/register_datarep.c
 
-noinst_HEADERS += src/mpi/datatype/datatype.h    \
-                  src/mpi/datatype/veccpy.h
+noinst_HEADERS += src/mpi/datatype/datatype.h
 
 mpi_core_sources +=                              \
     src/mpi/datatype/typeutil.c                  \
-    src/mpi/datatype/ext32_datatype.c            \
     src/mpi/datatype/type_blockindexed.c         \
     src/mpi/datatype/type_create_pairtype.c      \
     src/mpi/datatype/type_debug.c

@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4_TYPES_H_INCLUDED
 #define CH4_TYPES_H_INCLUDED
 
@@ -107,18 +102,17 @@ typedef struct MPIDIG_put_msg_t {
     uint64_t win_id;
     MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_put_msg_t;
 
-typedef struct MPIDIG_put_iov_ack_msg_t {
+typedef struct MPIDIG_put_dt_ack_msg_t {
     int src_rank;
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
-} MPIDIG_put_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
+} MPIDIG_put_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_acc_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_get_acc_dt_ack_msg_t;
 
 typedef struct MPIDIG_put_dat_msg_t {
     MPIR_Request *preq_ptr;
@@ -135,9 +129,8 @@ typedef struct MPIDIG_get_msg_t {
     uint64_t win_id;
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
@@ -168,6 +161,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     MPI_Aint target_disp;
     uint64_t result_data_sz;
     int n_iov;
+    int flattened_sz;
 } MPIDIG_acc_req_msg_t;
 
 typedef struct MPIDIG_acc_req_msg_t MPIDIG_get_acc_req_msg_t;
@@ -224,15 +218,20 @@ typedef struct {
  * definitions; However, it makes debugging a bit cryptic */
 #define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
 #define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[1]
+
+/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
 #define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[2]
+
 #define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
 #define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
 #ifdef HAVE_LIBHCOLL
 #define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
 #endif
-/* Protects MPIDIG global structures (e.g. global unexpected message queue) */
 
-#define MAX_CH4_MUTEXES 6
+/* Protects dynamic process tag, connection_id, avtable etc. */
+#define MPIDIU_THREAD_DYNPROC_MUTEX       MPIDI_global.m[6]
+
+#define MAX_CH4_MUTEXES 7
 
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {
@@ -275,7 +274,6 @@ typedef struct MPIDI_CH4_Global_t {
 #endif
     MPL_atomic_int_t progress_count;
 
-    MPID_Thread_mutex_t vci_lock;
     int n_vcis;
     MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)

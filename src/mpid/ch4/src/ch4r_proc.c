@@ -1,16 +1,15 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
 #include "ch4r_proc.h"
+
+static int alloc_globals_for_avtid(int avtid);
+static int free_globals_for_avtid(int avtid);
+static int get_next_avtid(int *avtid);
+static int free_avtid(int avtid);
 
 int MPIDIU_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
@@ -93,7 +92,7 @@ int MPIDIU_get_avt_size(int avtid)
     return ret;
 }
 
-int MPIDIU_alloc_globals_for_avtid(int avtid)
+static int alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
     int *new_node_map = NULL;
@@ -111,7 +110,7 @@ int MPIDIU_alloc_globals_for_avtid(int avtid)
     goto fn_exit;
 }
 
-int MPIDIU_free_globals_for_avtid(int avtid)
+static int free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);
@@ -123,7 +122,7 @@ int MPIDIU_free_globals_for_avtid(int avtid)
     return MPI_SUCCESS;
 }
 
-int MPIDIU_get_next_avtid(int *avtid)
+static int get_next_avtid(int *avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
@@ -155,7 +154,7 @@ int MPIDIU_get_next_avtid(int *avtid)
     return *avtid;
 }
 
-int MPIDIU_free_avtid(int avtid)
+static int free_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVTID);
@@ -185,7 +184,7 @@ int MPIDIU_new_avt(int size, int *avtid)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_NEW_AVT);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " new_avt: size=%d", size));
 
-    MPIDIU_get_next_avtid(avtid);
+    get_next_avtid(avtid);
 
     new_av_table = (MPIDI_av_table_t *) MPL_malloc(size * sizeof(MPIDI_av_entry_t)
                                                    + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
@@ -194,7 +193,7 @@ int MPIDIU_new_avt(int size, int *avtid)
 
     MPIR_Object_set_ref(MPIDI_av_table[*avtid], 0);
 
-    MPIDIU_alloc_globals_for_avtid(*avtid);
+    alloc_globals_for_avtid(*avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_NEW_AVT);
     return mpi_errno;
@@ -207,10 +206,10 @@ int MPIDIU_free_avt(int avtid)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVT);
 
-    MPIDIU_free_globals_for_avtid(avtid);
+    free_globals_for_avtid(avtid);
     MPL_free(MPIDI_av_table[avtid]);
     MPIDI_av_table[avtid] = NULL;
-    MPIDIU_free_avtid(avtid);
+    free_avtid(avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_AVT);
     return mpi_errno;
@@ -278,6 +277,10 @@ int MPIDIU_avt_init(void)
         MPIDI_global.avt_mgr.free_avtid[i] = i + 1;
     }
     MPIDI_global.avt_mgr.free_avtid[MPIDI_global.avt_mgr.max_n_avts - 1] = -1;
+
+    int first_avtid;
+    get_next_avtid(&first_avtid);
+    MPIR_Assert(first_avtid == 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_INIT);

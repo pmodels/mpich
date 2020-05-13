@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -306,6 +305,8 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
                 break;
 
             case MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM_sched_inplace:
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, sendbuf != MPI_IN_PLACE, mpi_errno,
+                                               "Ialltoallv sched_inplace cannot be applied.\n");
                 MPII_SCHED_WRAPPER(MPIR_Ialltoallv_intra_sched_inplace, comm_ptr, request, sendbuf,
                                    sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                                    recvtype);
@@ -427,7 +428,6 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLTOALLV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLTOALLV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -514,7 +514,6 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLTOALLV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

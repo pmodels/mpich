@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -30,7 +29,7 @@ int MPIDI_NM_mpi_comm_commit_post_hook(MPIR_Comm * comm)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_HOOK_POS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_POST_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_COMMIT_POST_HOOK);
 
     ret = MPIDI_NM_func->mpi_comm_commit_post_hook(comm);
@@ -387,12 +386,12 @@ int MPIDI_NM_get_vci_attr(int vci)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_GET_VCI_ATTR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_GET_VCI_ATTR);
 
     ret = MPIDI_NM_func->get_vci_attr(vci);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_GET_VCI_ATTR);
     return ret;
 }
 
@@ -466,12 +465,12 @@ int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_TYPE_COMMIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_TYPE_COMMIT_HOOK);
 
     ret = MPIDI_NM_native_func->mpi_type_commit_hook(datatype_p);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_TYPE_COMMIT_HOOK);
     return ret;
 }
 

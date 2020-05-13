@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -270,7 +269,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPL_STR_SUCCESS) {
+    if (mpi_errno != MPL_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 
@@ -380,7 +379,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPL_STR_SUCCESS) {
+    if (mpi_errno != MPL_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 

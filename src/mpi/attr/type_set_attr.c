@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -41,7 +39,6 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     /* The thread lock prevents a valid attr delete on the same datatype
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -140,7 +137,6 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

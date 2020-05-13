@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef MPITHREADTEST_H_INCLUDED
 #define MPITHREADTEST_H_INCLUDED
 
@@ -65,11 +64,12 @@ int MTest_thread_lock_create(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_lock(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_unlock(MTEST_THREAD_LOCK_TYPE *);
 int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE *);
+int MTest_thread_yield(void);
 int MTest_thread_barrier_init(void);
 int MTest_thread_barrier(int);
 int MTest_thread_barrier_free(void);
 
-void MTest_init_thread_pkg(int argc, char **argv);
+void MTest_init_thread_pkg(void);
 void MTest_finalize_thread_pkg(void);
 
 #endif

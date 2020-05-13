@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpiimpl.h"
 #include "treealgo.h"
 #include "treeutil.h"
@@ -40,8 +36,8 @@ int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TREEALGO_TREE_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TREEALGO_TREE_CREATE);
 
     switch (tree_type) {
         case MPIR_TREE_TYPE_KARY:
@@ -65,7 +61,7 @@ int MPIR_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TREEALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TREEALGO_TREE_CREATE);
 
   fn_exit:
     return mpi_errno;

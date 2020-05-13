@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2012 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "ofi_impl.h"
 
 /* ------------------------------------------------------------------------ */
@@ -256,7 +252,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
 }
 
 int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                          MPL_IOV * iov, int n_iov)
+                          struct iovec * iov, int n_iov)
 {
     int pgid, c, mpi_errno = MPI_SUCCESS;
     char *pack_buffer = NULL;
@@ -274,7 +270,7 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     pkt_len = sizeof(MPIDI_CH3_Pkt_t);
     for (i = 0; i < n_iov; i++)
-        pkt_len += iov[i].MPL_IOV_LEN;
+        pkt_len += iov[i].iov_len;
 
     pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
@@ -284,8 +280,8 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
     MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
     for (i = 0; i < n_iov; i++) {
-        MPIR_Memcpy(pack_buffer + buf_offset, iov[i].MPL_IOV_BUF, iov[i].MPL_IOV_LEN);
-        buf_offset += iov[i].MPL_IOV_LEN;
+        MPIR_Memcpy(pack_buffer + buf_offset, iov[i].iov_base, iov[i].iov_len);
+        buf_offset += iov[i].iov_len;
     }
     START_COMM();
 
@@ -297,7 +293,7 @@ int MPID_nem_ofi_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intpt
 }
 
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                               MPL_IOV * hdr_iov, int n_hdr_iov)
+                               struct iovec * hdr_iov, int n_hdr_iov)
 {
     int c, i, pgid, mpi_errno = MPI_SUCCESS;
     char *pack_buffer;
@@ -317,7 +313,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     if (n_hdr_iov > 0) {
         /* add length of extended header iovs */
         for (i = 0; i < n_hdr_iov; i++)
-            pkt_len += hdr_iov[i].MPL_IOV_LEN;
+            pkt_len += hdr_iov[i].iov_len;
     }
 
     pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
@@ -329,8 +325,8 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, 
     if (n_hdr_iov > 0) {
         /* pack extended header iovs */
         for (i = 0; i < n_hdr_iov; i++) {
-            MPIR_Memcpy(pack_buffer + buf_offset, hdr_iov[i].MPL_IOV_BUF, hdr_iov[i].MPL_IOV_LEN);
-            buf_offset += hdr_iov[i].MPL_IOV_LEN;
+            MPIR_Memcpy(pack_buffer + buf_offset, hdr_iov[i].iov_base, hdr_iov[i].iov_len);
+            buf_offset += hdr_iov[i].iov_len;
         }
     }
 

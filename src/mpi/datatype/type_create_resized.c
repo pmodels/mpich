@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -60,6 +58,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->attributes = 0;
     new_dtp->name[0] = 0;
     new_dtp->contents = 0;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
@@ -107,11 +106,17 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
     }
 
+    int mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *newtype_p = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "resized type %x created.", new_dtp->handle);
 
-    return MPI_SUCCESS;
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /*@
@@ -146,7 +151,6 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
 
     /* Get handles to MPI objects. */
@@ -194,7 +198,6 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

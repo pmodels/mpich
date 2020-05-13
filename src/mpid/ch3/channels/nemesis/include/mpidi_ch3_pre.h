@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDI_CH3_PRE_H_INCLUDED
@@ -110,7 +109,7 @@ typedef struct MPIDI_CH3I_VC
        n_iov should not exceed MPL_IOV_LIMIT - 1. network module should complete the request once the
        message has been completely sent. */
     int (* iSendIov)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
-                     MPL_IOV *iov, int n_iov);
+                     struct iovec *iov, int n_iov);
 
 #ifdef ENABLE_CHECKPOINTING
     /* ckpt_pause_send -- netmod should stop sending on this vc and queue messages to be sent after ckpt_continue()*/
@@ -123,9 +122,9 @@ typedef struct MPIDI_CH3I_VC
 
     /* LMT function pointers */
     int (* lmt_initiate_lmt)(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt, struct MPIR_Request *req);
-    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPIR_Request *req, MPL_IOV s_cookie);
-    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, MPL_IOV r_cookie);
-    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPIR_Request *req, MPL_IOV cookie);
+    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPIR_Request *req, struct iovec s_cookie);
+    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, struct iovec r_cookie);
+    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPIR_Request *req, struct iovec cookie);
     int (* lmt_done_send)(struct MPIDI_VC *vc, struct MPIR_Request *req);
     int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPIR_Request *req);
     int (* lmt_vc_terminated)(struct MPIDI_VC *vc);
@@ -173,7 +172,7 @@ struct MPIDI_CH3I_Request
     MPI_Request          lmt_req_id;     /* request id of remote side */
     struct MPIR_Request *lmt_req;        /* pointer to original send/recv request */
     intptr_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
-    MPL_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
+    struct iovec             lmt_tmp_cookie; /* temporary storage for received cookie */
     void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
 
     union
@@ -202,8 +201,8 @@ struct MPIDI_CH3I_Request
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  cc = %d\n", (req)->cc);     \
         for (i = 0; i < (req)->iov_count; ++i)                          \
             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "  dev.iov[%d] = (%p, %d)\n", i, \
-                                                (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_BUF, \
-                                                (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_LEN)); \
+                                                (req)->dev.iov[i+(req)->dev.iov_offset].iov_base, \
+                                                (req)->dev.iov[i+(req)->dev.iov_offset].iov_len)); \
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  dev.iov_count = %d\n",      \
                        (req)->dev.iov_count);                           \
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "  dev.state = 0x%x\n", (req)->dev.state)); \

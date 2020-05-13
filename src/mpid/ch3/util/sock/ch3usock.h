@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef CH3USOCK_H_INCLUDED
@@ -38,7 +37,7 @@ typedef struct MPIDI_CH3I_Connection
     struct MPIR_Request * recv_active;
     MPIDI_CH3_Pkt_t pkt;
     char * pg_id;
-    MPL_IOV iov[2];
+    struct iovec iov[2];
 } MPIDI_CH3I_Connection_t;
 
 

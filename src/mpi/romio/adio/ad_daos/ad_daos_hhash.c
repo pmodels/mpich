@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2020 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2018-2020 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_daos.h"
@@ -265,7 +259,19 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
     /* If fails with NOEXIST we can create it then reopen if create mode */
     if (rc == -DER_NONEXIST && create) {
         rc = dfs_cont_create(poh, uuid, NULL, &co_hdl->open_hdl, &co_hdl->dfs);
-        if (rc) {
+        /** if someone got there first, re-open*/
+        if (rc == EEXIST) {
+            rc = daos_cont_open(poh, uuid, DAOS_COO_RW, &co_hdl->open_hdl, NULL, NULL);
+            if (rc) {
+                PRINT_MSG(stderr, "Failed to create DFS container (%d)\n", rc);
+                goto free_coh;
+            }
+            rc = dfs_mount(poh, co_hdl->open_hdl, amode, &co_hdl->dfs);
+            if (rc) {
+                PRINT_MSG(stderr, "Failed to mount DFS namesapce (%d)\n", rc);
+                goto err_cont;
+            }
+        } else if (rc) {
             PRINT_MSG(stderr, "Failed to create DFS container (%d)\n", rc);
             goto free_coh;
         }
@@ -273,7 +279,7 @@ adio_daos_coh_lookup_create(daos_handle_t poh, uuid_t uuid, int amode,
         /* Mount a DFS namespace on the container */
         rc = dfs_mount(poh, co_hdl->open_hdl, amode, &co_hdl->dfs);
         if (rc) {
-            PRINT_MSG(stderr, "Failed to mount flat namespace (%d)\n", rc);
+            PRINT_MSG(stderr, "Failed to mount DFS namespace (%d)\n", rc);
             goto err_cont;
         }
     } else {

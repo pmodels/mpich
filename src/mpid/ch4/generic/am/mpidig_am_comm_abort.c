@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2020 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -35,8 +29,8 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
     int size = 0;
     MPIR_Request *sreq = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_AM_COMM_ABORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_COMM_ABORT);
 
     struct am_comm_abort_hdr am_hdr;
     am_hdr.exit_code = exit_code;
@@ -65,7 +59,7 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_COMM_ABORT);
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPL_exit(exit_code);
 
@@ -83,13 +77,13 @@ static int comm_abort_target_msg_cb(int handler_id, void *am_hdr,
                                     void *data, MPI_Aint data_sz,
                                     int is_local, int is_async, MPIR_Request ** req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_ABORT_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_ABORT_TARGET_MSG_CB);
 
     struct am_comm_abort_hdr *hdr = am_hdr;
 
     MPL_exit(hdr->exit_code);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_ABORT_TARGET_MSG_CB);
     return MPI_SUCCESS;
 }

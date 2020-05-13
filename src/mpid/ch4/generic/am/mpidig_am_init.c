@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -90,15 +84,15 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_WIN_LOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL, NULL, &MPIDIG_win_ctrl_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_WIN_UNLOCKALL_ACK, NULL, &MPIDIG_win_ctrl_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_REQ, &MPIDIG_put_iov_origin_cb, &MPIDIG_put_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_PUT_IOV_ACK, NULL, &MPIDIG_put_iov_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PUT_DT_REQ, &MPIDIG_put_dt_origin_cb, &MPIDIG_put_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_PUT_DT_ACK, NULL, &MPIDIG_put_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_DAT_REQ,
                      &MPIDIG_put_data_origin_cb, &MPIDIG_put_data_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_REQ, &MPIDIG_acc_iov_origin_cb, &MPIDIG_acc_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_REQ,
-                     &MPIDIG_get_acc_iov_origin_cb, &MPIDIG_get_acc_iov_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_ACC_IOV_ACK, NULL, &MPIDIG_acc_iov_ack_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_IOV_ACK, NULL, &MPIDIG_get_acc_iov_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_ACC_DT_REQ, &MPIDIG_acc_dt_origin_cb, &MPIDIG_acc_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DT_REQ,
+                     &MPIDIG_get_acc_dt_origin_cb, &MPIDIG_get_acc_dt_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_ACC_DT_ACK, NULL, &MPIDIG_acc_dt_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DT_ACK, NULL, &MPIDIG_get_acc_dt_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_ACC_DAT_REQ,
                      &MPIDIG_acc_data_origin_cb, &MPIDIG_acc_data_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_ACC_DAT_REQ,

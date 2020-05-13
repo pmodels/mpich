@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /*
@@ -128,11 +126,11 @@ int MTest_thread_barrier(int nt)
 #endif /* Default barrier routine */
 
 #if !defined(HAVE_MTEST_INIT_THREAD_PKG)
-void MTest_init_thread_pkg(int argc, char **argv)
+void MTest_init_thread_pkg(void)
 {
 }
 
-void MTest_finalize_thread_pkg()
+void MTest_finalize_thread_pkg(void)
 {
 }
 #endif /* Default MTest_init_thread_pkg */

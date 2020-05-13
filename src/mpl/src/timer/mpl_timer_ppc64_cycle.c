@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -84,12 +83,12 @@ int MPL_wtick(double *wtick)
 {
     *wtick = seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_init(void)
 {
-    int rc = MPL_TIMER_SUCCESS;
+    int rc = MPL_SUCCESS;
 
     if (is_initialized)
         goto fn_exit;
@@ -97,7 +96,7 @@ int MPL_wtime_init(void)
     clockMHz = getClockMHz();
     seconds_per_tick = 1.0 / ((double) clockMHz * 1000000.0);
     if (clockMHz == -1ULL)
-        rc = MPL_TIMER_ERR_NOT_INITIALIZED;
+        rc = MPL_ERR_TIMER_NOT_INITIALIZED;
 
     is_initialized = 1;
 
@@ -109,28 +108,28 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = (double) (*t2 - *t1) * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
 {
     *val = (unsigned int) (*t & 0xffffffffUL);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) *t * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += (*t2 - *t1);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
@@ -20,7 +19,7 @@ static inline void MPL_wtime(MPL_time_t * timeval)
 
     *timeval = t_val;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED */

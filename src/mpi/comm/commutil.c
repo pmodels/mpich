@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -438,10 +437,10 @@ static int get_node_count(MPIR_Comm * comm, int *node_count)
         *node_count = comm->local_size;
         goto fn_exit;
     } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        *node_count = comm->local_size;
+        *node_count = 1;
         goto fn_exit;
     } else if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS) {
-        *node_count = 1;
+        *node_count = comm->local_size;
         goto fn_exit;
     }
 

@@ -1,7 +1,6 @@
-/* -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2011 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -984,15 +983,25 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 /* returns TRUE in (*made_progress) if any of the outstanding schedules completed */
 int MPIDU_Sched_progress(int *made_progress)
 {
-    int mpi_errno;
+    /* Sched progress may call callback functions that will call into progress again.
+     * For example, with MPI_Comm_idup, sched_cb_gcn_allocate_cid will call MPIR_Allreduce.
+     * This inner progress should skip Sched progress to avoid recursive situation.
+     */
+    static int in_sched_progress = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+    if (in_sched_progress) {
+        return MPI_SUCCESS;
+    } else {
+        int mpi_errno;
 
-    mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
-    if (!mpi_errno && all_schedules.head == NULL)
-        MPIR_Progress_hook_deactivate(MPIR_Nbc_progress_hook_id);
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+        in_sched_progress = 1;
+        mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
+        if (!mpi_errno && all_schedules.head == NULL)
+            MPIR_Progress_hook_deactivate(MPIR_Nbc_progress_hook_id);
+        in_sched_progress = 0;
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
-
-    return mpi_errno;
+        return mpi_errno;
+    }
 }

@@ -1,12 +1,8 @@
-/* MPICH notes:
- * - The file name has been changed to avoid conflicts with any system-installed
- *   "utlist.h" header files.
- * - malloc/free/realloc usages have been substituted with utarray_malloc_
- *   (etc.) indirection macros and then changed to use MPL_malloc and friends
- * - add a ut_ptr_icd for the common case of dynamic tables of pointers
- * - intentionally omitted from "mpiimpl.h" in order to require using code to
- *   opt-in
- * [goodell@ 2011-10-04] */
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 /*
 Copyright (c) 2008-2011, Troy D. Hanson   http://uthash.sourceforge.net
 All rights reserved.
@@ -29,6 +25,16 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
+/* MPICH notes:
+ * - The file name has been changed to avoid conflicts with any system-installed
+ *   "utlist.h" header files.
+ * - malloc/free/realloc usages have been substituted with utarray_malloc_
+ *   (etc.) indirection macros and then changed to use MPL_malloc and friends
+ * - add a ut_ptr_icd for the common case of dynamic tables of pointers
+ * - intentionally omitted from "mpiimpl.h" in order to require using code to
+ *   opt-in
+ * [goodell@ 2011-10-04] */
 
 /* a dynamic array implementation using macros
  * see http://uthash.sourceforge.net/utarray

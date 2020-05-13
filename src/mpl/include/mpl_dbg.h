@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2005 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_DBG_H_INCLUDED
@@ -106,10 +105,6 @@
 #define MPL_DBG_OUT(_class,_msg)
 #define MPL_DBG_OUT_FMT(_class,_fmtargs)
 #endif
-
-#define MPL_DBG_SUCCESS       0
-#define MPL_DBG_ERR_INTERN    1
-#define MPL_DBG_ERR_OTHER     2
 
 typedef unsigned int MPL_dbg_class;
 

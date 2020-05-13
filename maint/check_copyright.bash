@@ -1,4 +1,8 @@
-#! /bin/bash
+#! /usr/bin/env bash
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 numfiles=`git ls-files | egrep -v '(src/openpa)' | wc -l`
 

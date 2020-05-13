@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -29,10 +27,10 @@ static void blockindexed_array_copy(MPI_Aint count,
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
+int MPIR_Dataloop_create_blockindexed(MPI_Aint icount,
                                       MPI_Aint iblklen,
                                       const void *disp_array,
-                                      int dispinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
+                                      int dispinbytes, MPI_Datatype oldtype, void **dlp_p)
 {
     int err, is_builtin, is_vectorizable = 1;
     int i;
@@ -47,7 +45,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
 
     /* if count or blklen are zero, handle with contig code, call it a int */
     if (count == 0 || blklen == 0) {
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
     }
 
@@ -71,7 +69,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
     if ((contig_count == 1) &&
         ((!dispinbytes && ((int *) disp_array)[0] == 0) ||
          (dispinbytes && ((MPI_Aint *) disp_array)[0] == 0))) {
-        err = MPII_Dataloop_create_contiguous(icount * iblklen, oldtype, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(icount * iblklen, oldtype, (void **) dlp_p);
         return err;
     }
 
@@ -113,8 +111,8 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
             }
         }
         if (is_vectorizable) {
-            err = MPII_Dataloop_create_vector(count, blklen, last_stride, 1,    /* strideinbytes */
-                                              oldtype, dlp_p);
+            err = MPIR_Dataloop_create_vector(count, blklen, last_stride, 1,    /* strideinbytes */
+                                              oldtype, (void **) dlp_p);
             return err;
         }
     }
@@ -153,7 +151,7 @@ int MPII_Dataloop_create_blockindexed(MPI_Aint icount,
     } else {
         MPII_Dataloop *old_loop_ptr = NULL;
 
-        MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
+        MPIR_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
 
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_BLOCKINDEXED,
                                      count, old_loop_ptr, &new_dlp);

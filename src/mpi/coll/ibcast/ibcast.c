@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -175,7 +174,8 @@ int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int
                 MPIR_Ibcast_intra_gentran_tree(buffer, count, datatype, root, comm_ptr,
                                                cnt->u.ibcast.intra_gentran_tree.tree_type,
                                                cnt->u.ibcast.intra_gentran_tree.k,
-                                               cnt->u.ibcast.intra_gentran_tree.maxbytes, request);
+                                               cnt->u.ibcast.intra_gentran_tree.chunk_size,
+                                               request);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_scatterv_recexch_allgatherv:
@@ -192,7 +192,8 @@ int MPIR_Ibcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_gentran_ring:
             mpi_errno =
                 MPIR_Ibcast_intra_gentran_ring(buffer, count, datatype, root, comm_ptr,
-                                               cnt->u.ibcast.intra_gentran_ring.maxbytes, request);
+                                               cnt->u.ibcast.intra_gentran_ring.chunk_size,
+                                               request);
             break;
 
         case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Ibcast_intra_sched_auto:
@@ -463,7 +464,6 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IBCAST);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IBCAST);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -527,7 +527,6 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IBCAST);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

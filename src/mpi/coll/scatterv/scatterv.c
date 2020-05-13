@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -118,10 +116,7 @@ int MPIR_Scatterv_allcomm_auto(const void *sendbuf, const int *sendcounts, const
             MPIR_Assert(0);
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
@@ -248,7 +243,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_SCATTERV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -376,9 +370,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                     MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, recvtype, mpi_errno);
                 }
             }
-
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -396,7 +387,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
   fn_exit:
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_SCATTERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

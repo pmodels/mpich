@@ -1,7 +1,6 @@
-## -*- Mode: Makefile; -*-
 ##
-## (C) 2011 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 libhydra_la_SOURCES += tools/topo/hwloc/topo_hwloc.c

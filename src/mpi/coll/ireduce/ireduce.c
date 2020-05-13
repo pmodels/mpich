@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -166,7 +165,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
                                                 comm_ptr,
                                                 cnt->u.ireduce.intra_gentran_tree.tree_type,
                                                 cnt->u.ireduce.intra_gentran_tree.k,
-                                                cnt->u.ireduce.intra_gentran_tree.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_tree.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_tree.buffer_per_child,
                                                 request);
             break;
@@ -175,7 +174,7 @@ int MPIR_Ireduce_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI
             mpi_errno =
                 MPIR_Ireduce_intra_gentran_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                 comm_ptr,
-                                                cnt->u.ireduce.intra_gentran_ring.maxbytes,
+                                                cnt->u.ireduce.intra_gentran_ring.chunk_size,
                                                 cnt->u.ireduce.intra_gentran_ring.buffer_per_child,
                                                 request);
             break;
@@ -307,6 +306,11 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_CVAR_IREDUCE_INTRA_ALGORITHM) {
             case MPIR_CVAR_IREDUCE_INTRA_ALGORITHM_gentran_tree:
+                /*Only knomial_1 tree supports non-commutative operations */
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm_ptr->rank, MPIR_Op_is_commutative(op) ||
+                                               MPIR_Ireduce_tree_type == MPIR_TREE_TYPE_KNOMIAL_1,
+                                               mpi_errno,
+                                               "Ireduce gentran_tree cannot be applied.\n");
                 mpi_errno =
                     MPIR_Ireduce_intra_gentran_tree(sendbuf, recvbuf, count, datatype, op, root,
                                                     comm_ptr, MPIR_Ireduce_tree_type,
@@ -377,6 +381,11 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
     }
 
     MPIR_ERR_CHECK(mpi_errno);
+    goto fn_exit;
+
+  fallback:
+    mpi_errno =
+        MPIR_Ireduce_allcomm_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, request);
 
   fn_exit:
     return mpi_errno;
@@ -435,7 +444,6 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -526,7 +534,6 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IREDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

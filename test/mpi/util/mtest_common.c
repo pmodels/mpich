@@ -1,9 +1,7 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
-*/
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
 
 #include "mpitest.h"
 
@@ -23,11 +21,6 @@ MPI_Aint MTestDefaultMaxBufferSize()
     envval = getenv("MPITEST_MAXBUFFER");
     if (envval) {
         max_size = atol(envval);
-        if (max_size < 100000) {
-            fprintf(stderr, "MPITEST_MAXBUFFER (%s) is too small, we need at least 100MB\n",
-                    envval);
-            exit(1);
-        }
     }
     return max_size;
 }

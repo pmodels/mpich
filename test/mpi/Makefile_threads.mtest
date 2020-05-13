@@ -1,16 +1,14 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2011 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 ## This is an automake makefile fragment that should be included by:
 ##
-##   include $(top_srcdir)/threads/Makefile.mtest
+##   include $(top_srcdir)/threads/Makefile_threads.mtest
 
 ## start with the basic rules for mtest-based C programs
-include $(top_srcdir)/Makefile.mtest
+include $(top_srcdir)/Makefile_common.mtest
 
 ## let mtest.c know that we need call MTest_init_thread_pkg
 AM_CPPFLAGS += -DMTEST_USE_THREAD

@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* vim: set ft=c.mpich : */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* This file contains "pre" definitions and declarations for the OS wrappers.
@@ -13,11 +11,6 @@
 #define MPL_SHM_H_INCLUDED
 
 #include "mplconfig.h"
-
-#define MPL_SHM_SUCCESS 0
-#define MPL_SHM_EINTERN -1
-#define MPL_SHM_EINVAL -2
-#define MPL_SHM_ENOMEM -3
 
 #ifdef MPL_USE_SYSV_SHM
 #include "mpl_shm_sysv.h"
@@ -61,10 +54,10 @@
 #define MPLI_shm_lhnd_is_init(hnd)  1
 
 /* Allocate mem for references within the handle */
-/* Returns MPL_SHM_SUCCESS on success, MPL_SHM_ENOMEM on error */
+/* Returns MPL_SUCCESS on success, MPL_ERR_SHM_NOMEM on error */
 #define MPL_shm_hnd_ref_alloc(hnd)(\
     ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
-                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? MPL_SHM_SUCCESS : MPL_SHM_ENOMEM \
+                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? MPL_SUCCESS : MPL_ERR_SHM_NOMEM \
 )
 
 
@@ -74,14 +67,14 @@
 /* Returns -1 on error, 0 on success */
 #define MPLI_shm_ghnd_get_by_val(hnd, str, strlen)  (\
     (MPL_snprintf(str, strlen, "%s",                                       \
-        MPLI_shm_ghnd_get_by_ref(hnd))) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN \
+        MPLI_shm_ghnd_get_by_ref(hnd))) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN \
 )
 #define MPLI_shm_ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
 /* FIXME: What if val is a non-null terminated string ? */
 #define MPLI_shm_ghnd_set_by_val(hnd, fmt, val) (\
     (MPL_snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                         \
-        MPLI_SHM_GHND_SZ, fmt, val)) ? MPL_SHM_SUCCESS : MPL_SHM_EINTERN  \
+        MPLI_SHM_GHND_SZ, fmt, val)) ? MPL_SUCCESS : MPL_ERR_SHM_INTERN  \
 )
 
 #define MPLI_shm_ghnd_is_valid(hnd) (\
@@ -102,12 +95,12 @@ static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd, MPL_memory_class class)
     if (!(hnd->ghnd)) {
         hnd->ghnd = (MPLI_shm_ghnd_t) MPL_malloc(MPLI_SHM_GHND_SZ, class);
         if (!(hnd->ghnd)) {
-            return MPL_SHM_ENOMEM;
+            return MPL_ERR_SHM_NOMEM;
         }
     }
     /* Global handle is no longer static */
     hnd->flag &= ~MPLI_SHM_FLAG_GHND_STATIC;
-    return MPL_SHM_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 
@@ -119,9 +112,9 @@ static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t * hnd_ptr, MPL_memory_class c
     if (*hnd_ptr) {
         (*hnd_ptr)->flag = MPLI_SHM_FLAG_GHND_STATIC;
     } else {
-        return MPL_SHM_ENOMEM;
+        return MPL_ERR_SHM_NOMEM;
     }
-    return MPL_SHM_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /* Close Handle */

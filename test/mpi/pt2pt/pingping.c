@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -116,6 +115,7 @@ int main(int argc, char *argv[])
                 DTP_obj_get_description(send_obj, &desc);
                 MTestPrintfMsg(1, "Sending count = %d of sendtype %s of total size %d bytes\n",
                                count[0], desc, nbytes * count[0]);
+                free(desc);
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                     err =
@@ -167,6 +167,8 @@ int main(int argc, char *argv[])
                                     "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %ld, message iteration %d of %d\n",
                                     recv_desc, send_desc, count[0], nmsg, maxmsg);
                             fflush(stderr);
+                            free(recv_desc);
+                            free(send_desc);
                         }
                         errs++;
                     }
@@ -176,6 +178,15 @@ int main(int argc, char *argv[])
             }
             DTP_obj_free(recv_obj);
             DTP_obj_free(send_obj);
+#ifdef USE_BARRIER
+            /* NOTE: Without MPI_Barrier, recv side can easily accumulate large unexpected queue
+             * across multiple batches, especially in an async test. Currently, both libfabric and ucx
+             * netmod does not handle large message queue well, resulting in exponential slow-downs.
+             * Adding barrier let the current tests pass.
+             */
+            /* FIXME: fix netmod issues then remove the barrier (and corresponding tests). */
+            MPI_Barrier(comm);
+#endif
         }
         MTestFreeComm(&comm);
     }

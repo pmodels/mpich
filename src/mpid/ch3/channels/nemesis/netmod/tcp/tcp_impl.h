@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef TCP_IMPL_H_INCLUDED
@@ -104,9 +103,9 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
                                         intptr_t data_sz, MPIR_Request ** sreq_ptr);
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *header, intptr_t hdr_sz,
-                               MPL_IOV * hdr_iov, int n_hdr_iov);
+                               struct iovec * hdr_iov, int n_hdr_iov);
 int MPID_nem_tcp_iSendIov(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
-                          MPL_IOV * iov, int n_iov);
+                          struct iovec * iov, int n_iov);
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr,
                                        in_port_t * port);
 

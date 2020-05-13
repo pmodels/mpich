@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -56,9 +54,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* Clear the flag bits on the second group.  The flag is set if
      * a member of the second group belongs to the union */
     size2 = group_ptr2->size;
-    for (i = 0; i < size2; i++) {
-        group_ptr2->lrank_to_lpid[i].flag = 0;
-    }
+    int *flags = MPL_calloc(size2, sizeof(int), MPL_MEM_OTHER);
+
     /* Loop through the lists that are ordered by lpid (local process
      * id) to detect which processes in group 2 are not in group 1
      */
@@ -68,7 +65,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid > l2_pid) {
             nnew++;
-            group_ptr2->lrank_to_lpid[g2_idx].flag = 1;
+            flags[g2_idx] = 1;
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
         } else if (l1_pid == l2_pid) {
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
@@ -81,7 +78,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     /* If we hit the end of group1, add the remaining members of group 2 */
     while (g2_idx >= 0) {
         nnew++;
-        group_ptr2->lrank_to_lpid[g2_idx].flag = 1;
+        flags[g2_idx] = 1;
         g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
     }
 
@@ -114,7 +111,7 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
     }
     k = size1;
     for (i = 0; i < size2; i++) {
-        if (group_ptr2->lrank_to_lpid[i].flag) {
+        if (flags[i]) {
             (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr2->lrank_to_lpid[i].lpid;
             if ((*new_group_ptr)->rank == MPI_UNDEFINED &&
                 group_ptr2->lrank_to_lpid[i].lpid == mylpid)
@@ -122,6 +119,8 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
             k++;
         }
     }
+
+    MPL_free(flags);
 
     /* TODO calculate is_local_dense_monotonic */
 
@@ -169,7 +168,6 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_UNION);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -218,7 +216,6 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_UNION);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_GLOBAL_MUTEX);
     return mpi_errno;
 
   fn_fail:

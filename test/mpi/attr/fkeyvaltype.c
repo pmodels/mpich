@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
@@ -101,6 +100,7 @@ int main(int argc, char *argv[])
             char *desc;
             DTP_obj_get_description(obj, &desc);
             printf("attrval is %d, should be 1, before dup in type %s\n", attrval, desc);
+            free(desc);
         }
         MPI_Type_dup(type, &duptype);
         /* Check that the attribute was copied */
@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
             char *desc;
             DTP_obj_get_description(obj, &desc);
             printf("Attribute not incremented when type dup'ed (%s)\n", desc);
+            free(desc);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         MPI_Type_free(&duptype);
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
             char *desc;
             DTP_obj_get_description(obj, &desc);
             printf("Attribute not decremented when duptype %s freed\n", desc);
+            free(desc);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         /* Check that the attribute was freed in the duptype */
@@ -128,6 +130,7 @@ int main(int argc, char *argv[])
                 char *desc;
                 DTP_obj_get_description(obj, &desc);
                 fprintf(stderr, "Attribute not decremented when type %s freed\n", desc);
+                free(desc);
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
         } else {

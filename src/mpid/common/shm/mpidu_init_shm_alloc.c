@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 #include "mpidu_init_shm.h"
@@ -214,9 +214,9 @@ int MPIDU_Init_shm_is_symm(void *ptr)
 static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_ALLOC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_ALLOC);
 
     if (MPIR_Process.local_rank == 0) {
         asym_check_region_p->base_ptr = memory->base_addr;
@@ -239,7 +239,7 @@ static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SHM_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_ALLOC);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

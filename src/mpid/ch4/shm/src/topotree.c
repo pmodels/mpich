@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -416,8 +410,8 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
     int package_level = 0, i, max_ranks_per_package = 0;
     bool mapfail_flag = false;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TOPOLOGY_TREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SHM_TOPOLOGY_TREE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_TOPOLOGY_TREE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_TOPOLOGY_TREE_INIT);
 
     num_ranks = MPIR_Comm_size(comm_ptr);
     rank = MPIR_Comm_rank(comm_ptr);
@@ -606,7 +600,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
   fn_exit:
     if (rank == root && MPIDI_SHM_TOPOTREE_DEBUG)
         fprintf(stderr, "Done creating tree for %d\n", num_ranks);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_SHM_TOPOLOGY_TREE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_TOPOLOGY_TREE_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

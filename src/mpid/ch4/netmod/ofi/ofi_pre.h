@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef OFI_PRE_H_INCLUDED
@@ -107,9 +101,24 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
+    MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
+    void *unpack_buffer;
+    MPI_Aint pack_size;
+} MPIDI_OFI_lmt_unpack_t;
+
+typedef enum {
+    MPIDI_OFI_AM_LMT_IOV,
+    MPIDI_OFI_AM_LMT_UNPACK
+} MPIDI_OFI_lmt_type_t;
+
+typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;
-    uint64_t lmt_cntr;
     struct fid_mr *lmt_mr;
+    MPIDI_OFI_lmt_type_t lmt_type;
+    union {
+        uint64_t lmt_cntr;
+        MPIDI_OFI_lmt_unpack_t unpack;
+    } lmt_u;
     void *pack_buffer;
     MPIR_Request *rreq_ptr;
     void *am_hdr;
@@ -118,12 +127,7 @@ typedef struct {
     MPIDI_OFI_am_header_t msg_hdr;
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
     struct iovec iov[3];
-#else
-    /* need bigger alignment */
-    struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-#endif
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
@@ -134,29 +138,21 @@ typedef struct {
 
 
 typedef struct {
-    void *buf;
-    size_t count;
-    MPI_Datatype datatype;
-    char pack_buffer[];
-} MPIDI_OFI_pack_t;
-
-typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
     MPI_Datatype datatype;
     union {
-        MPIDI_OFI_pack_t *pack;
+        struct {
+            void *buf;
+            size_t count;
+            MPI_Datatype datatype;
+            char *pack_buffer;
+        } pack;
         struct iovec *nopack;
     } noncontig;
     union {
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
         struct iovec iov;
-#else
-        /* Enforce larger alignment. */
-        /*   icc complains alignment attribute without packed struct */
-        char iov_store[sizeof(struct iovec) + MPIDI_OFI_IOVEC_ALIGN - 1];
-#endif
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;

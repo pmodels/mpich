@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -22,10 +20,10 @@
    Returns 0 on success, -1 on failure.
 
 @*/
-int MPII_Dataloop_create_vector(MPI_Aint icount,
+int MPIR_Dataloop_create_vector(MPI_Aint icount,
                                 MPI_Aint iblocklength,
                                 MPI_Aint astride,
-                                int strideinbytes, MPI_Datatype oldtype, MPII_Dataloop ** dlp_p)
+                                int strideinbytes, MPI_Datatype oldtype, void **dlp_p)
 {
     int err, is_builtin;
 
@@ -42,7 +40,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
      */
     if (count == 0 || blocklength == 0) {
 
-        err = MPII_Dataloop_create_contiguous(0, MPI_INT, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
     }
 
@@ -51,7 +49,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
      * if count == 1, store as a contiguous rather than a vector dataloop.
      */
     if (count == 1) {
-        err = MPII_Dataloop_create_contiguous(iblocklength, oldtype, dlp_p);
+        err = MPIR_Dataloop_create_contiguous(iblocklength, oldtype, (void **) dlp_p);
         return err;
     }
 
@@ -76,7 +74,7 @@ int MPII_Dataloop_create_vector(MPI_Aint icount,
 
         MPII_Dataloop *old_loop_ptr;
 
-        MPII_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
+        MPIR_DATALOOP_GET_LOOPPTR(oldtype, old_loop_ptr);
 
         MPII_Dataloop_alloc_and_copy(MPII_DATALOOP_KIND_VECTOR, count, old_loop_ptr, &new_dlp);
         /* --BEGIN ERROR HANDLING-- */

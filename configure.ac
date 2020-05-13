@@ -1,8 +1,10 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.63)
-#
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes
@@ -200,10 +202,9 @@ echo "Running on system: `uname -a`"
 
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(src/include/mpichconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef MPICHCONF_H_INCLUDED
 #define MPICHCONF_H_INCLUDED
@@ -1209,6 +1210,68 @@ if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; the
         zmlibdir="-L${with_zm_prefix}/lib"
     fi
 fi
+
+# YAKSA
+AC_ARG_VAR([YAKSALIBNAME],[can be used to override the name of the YAKSA library (default: "yaksa")])
+YAKSALIBNAME=${YAKSALIBNAME:-"yaksa"}
+export YAKSALIBNAME
+AC_SUBST(YAKSALIBNAME)
+AC_ARG_WITH([yaksa-prefix],
+            [AS_HELP_STRING([[--with-yaksa-prefix[=DIR]]],
+                            [use the YAKSA library installed in DIR,
+                             rather than the one included in modules/yaksa.  Pass
+                             "embedded" to force usage of the YAKSA source
+                             distributed with MPICH.])],
+            [],dnl action-if-given
+            [with_yaksa_prefix=embedded]) dnl action-if-not-given
+
+yaksasrcdir=""
+AC_SUBST([yaksasrcdir])
+yaksalibdir=""
+AC_SUBST([yaksalibdir])
+yaksalib=""
+AC_SUBST([yaksalib])
+
+if test "$with_yaksa_prefix" = "embedded" ; then
+    # no need for libtool versioning when embedding YAKSA
+    yaksa_subdir_args="--enable-embedded"
+    PAC_CONFIG_SUBDIR_ARGS([modules/yaksa],[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
+    PAC_APPEND_FLAG([-I${master_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+
+    yaksasrcdir="modules/yaksa"
+    yaksalib="modules/yaksa/lib${YAKSALIBNAME}.la"
+else
+    # The user specified an already-installed YAKSA; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_yaksa_prefix}/include/yaksa_config.h"],
+          [:],[AC_MSG_ERROR([the YAKSA installation in "${with_yaksa_prefix}" appears broken])])
+    PAC_APPEND_FLAG([-I${with_yaksa_prefix}/include],[CPPFLAGS])
+    PAC_PREPEND_FLAG([-l${YAKSALIBNAME}],[WRAPPER_LIBS])
+    PAC_APPEND_FLAG([-L${with_yaksa_prefix}/lib],[WRAPPER_LDFLAGS])
+    yaksalibdir="-L${with_yaksa_prefix}/lib"
+fi
+
+
+##### allow selection of datatype engine
+AC_ARG_WITH([datatype-engine],
+            [AS_HELP_STRING([--with-datatype-engine={yaksa|dataloop|auto}],[controls datatype engine to use])],
+            [],[with_datatype_engine=dataloop])
+if test "${with_datatype_engine}" = "yaksa" ; then
+    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
+elif test "${with_datatype_engine}" = "dataloop" ; then
+    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
+else
+    if test "$device_name" = "ch4" ; then
+        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
+        with_datatype_engine=yaksa
+    else
+        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
+        with_datatype_engine=dataloop
+    fi
+fi
+AM_CONDITIONAL([BUILD_YAKSA_ENGINE], [test "${with_datatype_engine}" = "yaksa"])
+AM_CONDITIONAL([BUILD_DATALOOP_ENGINE], [test "${with_datatype_engine}" = "dataloop"])
 
 
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
@@ -3848,10 +3911,12 @@ dnl     len_doublecplx=$hexlen
 
     MPI_DOUBLE_COMPLEX=0x4c00${len_doublecplx}22
     MPI_2DOUBLE_PRECISION=0x4c00${len_doublecplx}23
-    MPI_2COMPLEX=0x4c00${len_doublecplx}24
     AC_SUBST(MPI_DOUBLE_COMPLEX)
     AC_SUBST(MPI_2DOUBLE_PRECISION)
-    AC_SUBST(MPI_2COMPLEX)
+
+dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain the gap in seq id
+    # MPI_2COMPLEX=0x4c00${len_doublecplx}24
+    # MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
 
     #
     # Temporary for the vast majority of systems that use 4 byte reals and
@@ -3869,26 +3934,6 @@ dnl     len_doublecplx=$hexlen
         F77_COMPLEX32="MPI_DATATYPE_NULL"
     fi
 
-    len_2dc=`expr $pac_cv_f77_sizeof_double_precision \* 4`
-    firstdigit=0
-    seconddigit=0
-    while test $len_2dc -ge 16 ; do
-        firstdigit=`expr $firstdigit + 1`
-        len_2dc=`expr $len_2dc - 16`
-    done
-    case $len_2dc in
-        10) seconddigit=a ;;
-        11) seconddigit=b ;;
-        12) seconddigit=c ;;
-        13) seconddigit=d ;;
-        14) seconddigit=e ;;
-        15) seconddigit=f ;;
-         *) seconddigit=$len_2dc ;;
-    esac
-    len_2dc="$firstdigit$seconddigit"
-    #echo "2double complex = $len_2dc"
-    MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
-    AC_SUBST(MPI_2DOUBLE_COMPLEX)
     MPI_F77_PACKED=$MPI_PACKED
     MPI_F77_UB=$MPI_UB
     MPI_F77_LB=$MPI_LB
@@ -3904,8 +3949,8 @@ dnl     len_doublecplx=$hexlen
     # even when used only with the match (:) command.  Rather than have
     # configure figure out if expr works, we just use sed.  Sigh.
     for var in CHARACTER INTEGER REAL LOGICAL DOUBLE_PRECISION COMPLEX \
-        DOUBLE_COMPLEX 2INTEGER 2REAL 2COMPLEX 2DOUBLE_PRECISION \
-        2DOUBLE_COMPLEX F77_PACKED F77_UB F77_LB F77_BYTE; do
+        DOUBLE_COMPLEX 2INTEGER 2REAL 2DOUBLE_PRECISION \
+        F77_PACKED F77_UB F77_LB F77_BYTE; do
         fullvar="MPI_$var"
         eval fullvarvalue=\$$fullvar
         #echo "$fullvar = $fullvarvalue"
@@ -4875,13 +4920,21 @@ fi
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
 #define MPI_Datatype int
 typedef $MPI_AINT MPI_Aint;
+
+struct MPIR_Request;
+typedef struct MPIR_Request MPIR_Request;
+
+struct MPIR_Comm;
+typedef struct MPIR_Comm MPIR_Comm;
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
-#include "${master_top_srcdir}/src/include/mpii_bsend.h"]
+
+#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
@@ -5008,17 +5061,8 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
-# SIZEOF_MPL_ATOMIC_PTR_T is needed by ch3:nemesis. Only works after the MPL
-# configuration is done.
-AC_CHECK_SIZEOF(MPL_atomic_ptr_t,0,[
-#include <pthread.h>
-#include "${master_top_srcdir}/src/mpl/include/mpl_atomic.h"
-pthread_mutex_t *MPL_atomic_emulation_lock;
-])
-
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
-    # Removed the invalid 2COMPLEX and 2DOUBLE_COMPLEX
     for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
 	2INTEGER 2REAL DOUBLE_COMPLEX 2DOUBLE_PRECISION ; do
 	fullname="MPI_$name"
@@ -5039,8 +5083,6 @@ AC_SUBST(MPI_2INTEGER)
 AC_SUBST(MPI_2REAL)
 AC_SUBST(MPI_DOUBLE_COMPLEX)
 AC_SUBST(MPI_2DOUBLE_PRECISION)
-dnl AC_SUBST(MPI_2COMPLEX)
-dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
 # If ROMIO was successfully configured, then ROMIO will have exported the

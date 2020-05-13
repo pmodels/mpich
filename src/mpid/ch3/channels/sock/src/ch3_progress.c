@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -28,9 +27,10 @@ volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
 volatile int MPIDI_CH3I_progress_blocked = FALSE;
 volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
 
-    /* This value must be static so that it isn't an uninitialized
-     * common symbol */
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
+/* This value must be static so that it isn't an uninitialized common symbol */
 static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
+#endif
 
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count);
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
@@ -43,17 +43,23 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(MPL_IOV ** iovp, int *countp, size_t nb);
+static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb);
 
 static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
-    int made_progress;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
+    int made_progress = 0;
+    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (made_progress) {
+        goto fn_exit;
+    }
 #ifdef MPICH_IS_THREADED
     {
         /* We don't bother testing whether threads are enabled in the
@@ -79,9 +85,6 @@ static int MPIDI_CH3i_Progress_test(void)
         }
     }
 #endif
-
-    mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
@@ -134,29 +137,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     }
 #endif
 
-#ifdef MPICH_IS_THREADED
-    MPIR_THREAD_CHECK_BEGIN;
-    {
-        if (MPIDI_CH3I_progress_blocked == TRUE) {
-            /*
-             * Another thread is already blocking in the progress engine.
-             *
-             * MT: Another thread is already blocking in poll.  Right now,
-             * calls to MPIDI_CH3_Progress_wait() are effectively
-             * serialized by the device.  The only way another thread may
-             * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
-             * this changes, a flag other than MPIDI_CH3I_Progress_blocked
-             * may be required to determine if another thread is in
-             * the progress engine.
-             */
-            MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
-
-            goto fn_exit;
-        }
-    }
-    MPIR_THREAD_CHECK_END;
-#endif
-
     do {
         int made_progress = FALSE;
 
@@ -169,11 +149,29 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
         }
 
         if (MPIR_IS_THREADED) {
+#if MPICH_IS_THREADED
+            if (MPIDI_CH3I_progress_blocked == TRUE) {
+                /*
+                 * Another thread is already blocking in the progress engine.
+                 *
+                 * MT: Another thread is already blocking in poll.  Right now,
+                 * calls to MPIDI_CH3_Progress_wait() are effectively
+                 * serialized by the device.  The only way another thread may
+                 * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
+                 * this changes, a flag other than MPIDI_CH3I_Progress_blocked
+                 * may be required to determine if another thread is in
+                 * the progress engine.
+                 */
+                MPIDI_CH3I_Progress_delay(MPIDI_CH3I_progress_completion_count);
+
+                goto fn_exit;
+            }
             MPIDI_CH3I_progress_blocked = TRUE;
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
             MPIDI_CH3I_progress_blocked = FALSE;
             MPIDI_CH3I_progress_wakeup_signalled = FALSE;
+#endif
         } else {
             mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
                                              MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
@@ -491,7 +489,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
                     } else {    /* more data to send */
 
                         for (;;) {
-                            MPL_IOV *iovp;
+                            struct iovec *iovp;
                             size_t nb;
 
                             iovp = sreq->dev.iov;
@@ -711,19 +709,19 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: What is this routine for? */
-static int adjust_iov(MPL_IOV ** iovp, int *countp, size_t nb)
+static int adjust_iov(struct iovec ** iovp, int *countp, size_t nb)
 {
-    MPL_IOV *const iov = *iovp;
+    struct iovec *const iov = *iovp;
     const int count = *countp;
     int offset = 0;
 
     while (offset < count) {
-        if (iov[offset].MPL_IOV_LEN <= nb) {
-            nb -= iov[offset].MPL_IOV_LEN;
+        if (iov[offset].iov_len <= nb) {
+            nb -= iov[offset].iov_len;
             offset++;
         } else {
-            iov[offset].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) iov[offset].MPL_IOV_BUF + nb);
-            iov[offset].MPL_IOV_LEN -= nb;
+            iov[offset].iov_base = (void *) ((char *) iov[offset].iov_base + nb);
+            iov[offset].iov_len -= nb;
             break;
         }
     }
@@ -742,7 +740,7 @@ static int ReadMoreData(MPIDI_CH3I_Connection_t * conn, MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     while (1) {
-        MPL_IOV *iovp;
+        struct iovec *iovp;
         size_t nb;
 
         iovp = rreq->dev.iov;

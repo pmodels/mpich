@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -55,7 +53,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                                                    MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
                         mpi_errno = prequest_ptr->status.MPI_ERROR;
                     } else {
-                        /* This is needed for persistent Bsend requests */
                         mpi_errno = MPIR_Grequest_query(prequest_ptr);
                         MPIR_Status_set_cancel_bit(status,
                                                    MPIR_STATUS_GET_CANCEL_BIT
@@ -291,9 +288,12 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 #ifdef HAVE_CXX_BINDING
         case MPIR_LANG__CXX:
 #endif
+            /* Take off the global locks before calling user functions */
+            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             rc = (request_ptr->u.ureq.greq_fns->U.C.query_fn) (request_ptr->u.ureq.
                                                                greq_fns->grequest_extra_state,
                                                                &request_ptr->status);
+            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                  , "**user", "**userquery %d", rc);
             break;
@@ -303,12 +303,15 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
             {
                 MPI_Fint ierr;
                 MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
+                /* Take off the global locks before calling user functions */
+                MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 (request_ptr->u.ureq.greq_fns->U.F.query_fn) (request_ptr->u.ureq.
                                                               greq_fns->grequest_extra_state, is,
                                                               &ierr);
                 rc = (int) ierr;
                 if (rc == MPI_SUCCESS)
                     PMPI_Status_f2c(is, &request_ptr->status);
+                MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, {;}
                                      , "**user", "**userquery %d", rc);
             }

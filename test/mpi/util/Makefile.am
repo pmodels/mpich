@@ -1,9 +1,7 @@
-# -*- Mode: Makefile; -*-
-# vim: set ft=automake :
-#
-# (C) 2011 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include
 
@@ -46,6 +44,13 @@ EXTRA_LIBRARIES += libmtest_f08.a
 libmtest_f08_a_SOURCES = mtest_f08.f90
 
 endif
+
+#---- single ---------------------------------------------------------------------
+all_objs += mtest_single.$(OBJEXT)
+
+## another dummy library
+EXTRA_LIBRARIES += libmtest_single.a
+libmtest_single_a_SOURCES = mtest_single.c
 
 #---- thread ---------------------------------------------------------------------
 all_objs += mtest_thread.$(OBJEXT)

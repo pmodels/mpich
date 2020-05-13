@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include <mpidimpl.h>
@@ -16,12 +10,12 @@
 int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
 
     mpi_errno = MPIDI_OFI_handle_cq_error(vni_idx, ret);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ERROR_UTIL);
     return mpi_errno;
 }
 
@@ -30,7 +24,7 @@ int MPIDI_OFI_retry_progress()
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.
      */
-    return MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM);
+    return MPID_Progress_test();
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {
@@ -120,8 +114,8 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_HUGE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
     /* Look up the communicator */
     comm_ptr = MPIDIG_context_id_to_comm(info->comm_id);
@@ -187,7 +181,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     recv_elem->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv_elem);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_GET_HUGE);
 
   fn_exit:
     return mpi_errno;
@@ -422,10 +416,6 @@ static MPI_Datatype mpi_dtypes[] = {
 #ifdef HAVE_FORTRAN_BINDING
     MPI_COMPLEX, MPI_DOUBLE_COMPLEX, MPI_LOGICAL, MPI_REAL,
     MPI_DOUBLE_PRECISION, MPI_INTEGER, MPI_2INTEGER,
-
-#ifdef MPICH_DEFINE_2COMPLEX
-    MPI_2COMPLEX, MPI_2DOUBLE_COMPLEX,
-#endif
     MPI_2REAL, MPI_2DOUBLE_PRECISION, MPI_CHARACTER,
     MPI_REAL4, MPI_REAL8, MPI_REAL16, MPI_COMPLEX8, MPI_COMPLEX16,
     MPI_COMPLEX32, MPI_INTEGER1, MPI_INTEGER2, MPI_INTEGER4, MPI_INTEGER8,
@@ -572,10 +562,6 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_DOUBLE_PRECISION, &idx);      /* count=40 */
     add_index(MPI_INTEGER, &idx);
     add_index(MPI_2INTEGER, &idx);
-#ifdef MPICH_DEFINE_2COMPLEX
-    add_index(MPI_2COMPLEX, &idx);
-    add_index(MPI_2DOUBLE_COMPLEX, &idx);
-#endif
     add_index(MPI_2REAL, &idx);
     add_index(MPI_2DOUBLE_PRECISION, &idx);
     add_index(MPI_CHARACTER, &idx);

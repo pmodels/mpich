@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -18,28 +17,28 @@ int MPL_wtime(MPL_time_t * timeval)
 {
     clock_gettime(CLOCK_REALTIME, timeval);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = ((double) (t2->tv_sec - t1->tv_sec) + 1.0e-9 * (double) (t2->tv_nsec - t1->tv_nsec));
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
 {
     *val = (unsigned int) t->tv_nsec;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = ((double) (t->tv_sec - time_epoch) + 1.0e-9 * (double) (t->tv_nsec));
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
@@ -56,7 +55,7 @@ int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
         t3->tv_sec++;
     }
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtick(double *wtick)
@@ -72,7 +71,7 @@ int MPL_wtick(double *wtick)
     else
         *wtick = tickval;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_init(void)
@@ -91,7 +90,7 @@ int MPL_wtime_init(void)
     is_initialized = 1;
 
   fn_exit:
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif

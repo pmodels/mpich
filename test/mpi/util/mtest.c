@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpitest.h"
 #if defined(HAVE_STDIO_H) || defined(STDC_HEADERS)
 #include <stdio.h>
@@ -82,9 +81,7 @@ void MTest_Init_thread(int *argc, char ***argv, int required, int *provided)
     int flag;
     char *envval = 0;
 
-#ifdef MTEST_USE_THREAD
-    MTest_init_thread_pkg(*argc, *argv);
-#endif
+    MTest_init_thread_pkg();
 
     MPI_Initialized(&flag);
     if (!flag) {
@@ -215,9 +212,7 @@ void MTest_Finalize(int errs)
 
     MPI_Finalize();
 
-#ifdef MTEST_USE_THREAD
     MTest_finalize_thread_pkg();
-#endif
 }
 
 /* ------------------------------------------------------------------------ */

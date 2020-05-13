@@ -1,8 +1,9 @@
-#!/bin/sh
-#
-# (C) 2018 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+#! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 testlist_cvar=coll/testlist.cvar
 #start an empty testlist
 echo "" > ${testlist_cvar}

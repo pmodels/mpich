@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -44,8 +38,8 @@ static int progress_recv(int blocking)
     uint8_t *payload;
     size_t payload_left;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_RECV);
 
     /* Check to see if any new messages are ready for processing from the eager submodule. */
     result = MPIDI_POSIX_eager_recv_begin(&transaction);
@@ -116,7 +110,7 @@ static int progress_recv(int blocking)
     MPIDI_POSIX_eager_recv_commit(&transaction);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_RECV);
     return mpi_errno;
 }
 
@@ -128,8 +122,8 @@ static int progress_send(int blocking)
     MPIR_Request *sreq = NULL;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_SEND);
 
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */
@@ -175,7 +169,7 @@ static int progress_send(int blocking)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_SEND);
     return mpi_errno;
 }
 

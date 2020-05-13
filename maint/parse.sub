@@ -1,5 +1,9 @@
 #! /usr/bin/env perl
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # File of useful routines use to process the MPI source files.  This is 
 # included by routines that process parameters and error messages, along with
 # tools to check for proper usage (such as system routines and preprocessor
