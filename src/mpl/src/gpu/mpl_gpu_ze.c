@@ -121,6 +121,38 @@ int MPL_gpu_query_pointer_type(const void *ptr, MPL_pointer_type_t * attr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
+int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    ze_result_t ret;
+    ze_memory_allocation_properties_t ptr_attr;
+    ze_device_handle_t device;
+    ze_device_properties_t p_device_properties;
+    ret = zeDriverGetMemAllocProperties(global_ze_driver_handle, ptr, &ptr_attr, &device);
+    ZE_ERR_CHECK(ret);
+    switch (ptr_attr.type) {
+        case ZE_MEMORY_TYPE_UNKNOWN:
+            attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+            break;
+        case ZE_MEMORY_TYPE_HOST:
+            attr->type = MPL_GPU_POINTER_REGISTERED_HOST;
+            break;
+        case ZE_MEMORY_TYPE_DEVICE:
+            attr->type = MPL_GPU_POINTER_DEV;
+            break;
+        case ZE_MEMORY_TYPE_SHARED:
+            attr->type = MPL_GPU_POINTER_MANAGED;
+            break;
+    }
+    ret = zeDeviceGetProperties(device, &p_device_properties);
+    ZE_ERR_CHECK(ret);
+    attr->device = p_device_properties.deviceId;;
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
 /* Find device where a given memory address is allocated */
 int get_ze_device_from_memhandle(ze_driver_handle_t driver_handle, const char *buff,
                                  ze_device_handle_t * device)
@@ -185,6 +217,118 @@ int MPL_gpu_ipc_close_mem_handle(void *ptr)
     return MPL_SUCCESS;
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
+}
+
+/* Get device handle object for the given device id */
+int get_ze_device_from_id(ze_driver_handle_t driver_handle, uint32_t device_id,
+                          ze_device_handle_t * device)
+{
+    ze_result_t ret;
+    int i;
+    uint32_t device_count = 0;
+    ze_device_handle_t *devices;
+    ze_device_properties_t p_device_properties;
+    ret = zeDeviceGet(driver_handle, &device_count, NULL);
+    ZE_ERR_CHECK(ret);
+    if (device_count == 0) {
+        goto fn_fail;
+    }
+
+    /* Search a device that matches device_id */
+    devices =
+        (ze_device_handle_t *) MPL_malloc(sizeof(ze_device_handle_t) * device_count, MPL_MEM_OTHER);
+    ret = zeDeviceGet(driver_handle, &device_count, devices);
+    ZE_ERR_CHECK(ret);
+    for (i = 0; i < device_count; i++) {
+        ret = zeDeviceGetProperties(devices[i], &p_device_properties);
+        ZE_ERR_CHECK(ret);
+        if (p_device_properties.deviceId == device_id) {
+            *device = devices[i];
+            goto fn_exit;
+        }
+    }
+    goto fn_fail;
+
+  fn_exit:
+    if (devices)
+        MPL_free(devices);
+    return MPL_SUCCESS;
+  fn_fail:
+    if (devices)
+        MPL_free(devices);
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+
+int MPL_gpu_malloc(void **ptr, size_t size, int devid)
+{
+    int ret;
+    ze_device_mem_alloc_desc_t device_desc;
+    MPL_gpu_device_handle_t device;
+
+    device_desc.flags = ZE_DEVICE_MEM_ALLOC_FLAG_DEFAULT;
+    device_desc.ordinal = 0;    /* 0 is correct value for GPU */
+    device_desc.version = ZE_DEVICE_MEM_ALLOC_DESC_VERSION_CURRENT;
+
+    ret = get_ze_device_from_id(global_ze_driver_handle, devid, &device);
+
+    /* FIXME: set different alignment? e.g., some ze tests use 4096u */
+    ret = zeDriverAllocDeviceMem(global_ze_driver_handle, &device_desc,
+                                 size, 1 /*alignment */ , device, ptr);
+
+    ZE_ERR_CHECK(ret);
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_malloc_host(void **ptr, size_t size)
+{
+    int ret;
+    ze_device_mem_alloc_desc_t device_desc;
+    device_desc.flags = ZE_HOST_MEM_ALLOC_FLAG_DEFAULT;
+    device_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
+
+    /* FIXME: set different alignment? e.g., some ze tests use 4096u */
+    ret = zeDriverAllocHostMem(global_ze_driver_handle, &device_desc, size, 1 /*alignment */ , ptr);
+    ZE_ERR_CHECK(ret);
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free(void *ptr)
+{
+    int ret;
+    ret = zeDriverFreeMem(global_ze_driver_handle, ptr);
+    ZE_ERR_CHECK(ret);
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_free_host(void *ptr)
+{
+    int ret;
+    ret = zeDriverFreeMem(global_ze_driver_handle, ptr);
+    ZE_ERR_CHECK(ret);
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_register_host(const void *ptr, size_t size)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_unregister_host(const void *ptr)
+{
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_HAVE_ZE */
