@@ -385,7 +385,7 @@ fi
 %dir /usr/%_lib/mpi/gcc
 %dir /usr/share/modules
 %dir %{_moduledir}
-# not sure why this is needed a second time %{_moduledir}
+%{_moduledir}
 %else
 %hpc_mpi_dirs
 %hpc_modules_files
