@@ -181,6 +181,7 @@ mpich support for Python 3.
         --disable-rpath                                         \
         --disable-silent-rules                                  \
         --enable-fc                                             \
+        --disable-cxx                                           \
         --with-device=%{selected_channels}                      \
         --with-pm=hydra:gforker                                 \
         --includedir=%{_includedir}/%{name}-%{_arch}            \
@@ -193,10 +194,15 @@ mpich support for Python 3.
         --with-hwloc-prefix=embedded                            \
         --enable-fortran=all                                    \
         --enable-romio                                          \
-        --enable-cxx                                            \
         --with-file-system=ufs+daos                             \
         --with-daos=/usr                                        \
         --with-cart=/usr                                        \
+        --disable-checkerrors                                   \
+        --disable-perftest                                      \
+        --disable-large-tests                                   \
+        --disable-ft-tests                                      \
+        --disable-comm-overlap-tests                            \
+        --enable-threads=single                                 \
         FC=%{opt_fc}                                            \
         F77=%{opt_f77}                                          \
         CFLAGS="%{m_option} -O2 %{?XFLAGS}"                     \
@@ -284,7 +290,7 @@ install -pDm0644 %{SOURCE3} %{buildroot}%{python3_sitearch}/%{name}.pth
 find %{buildroot} -type f -name "*.la" -delete
 
 %check
-make check VERBOSE=1
+make testing
 
 %if (0%{?fedora} >= 30)
 %ldconfig_scriptlets

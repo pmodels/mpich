@@ -219,6 +219,13 @@ echo without HPC
     --libexecdir=%{p_libexecdir} \
     --mandir=%{p_mandir} \
 %endif
+    --disable-cxx \
+    --disable-checkerrors \
+    --disable-perftest \
+    --disable-large-tests \
+    --disable-ft-tests \
+    --disable-comm-overlap-tests \
+    --enable-threads=single \
     --with-file-system=ufs+daos \
     --with-daos=/usr \
     --with-cart=/usr \
@@ -271,7 +278,7 @@ find %{buildroot} -name "*.a" -delete
 rm -rf %{buildroot}/*
 
 %check
-make check
+make testing
 
 %else
 
