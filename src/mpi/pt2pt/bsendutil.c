@@ -166,9 +166,10 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_BSEND_MUTEX);
     if (BsendBuffer.pending) {
         /* FIXME: Process pending bsend requests in detach */
-        return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                    "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER, "**bsendpending",
-                                    0);
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         "MPIR_Bsend_detach", __LINE__, MPI_ERR_OTHER,
+                                         "**bsendpending", 0);
+        goto fn_fail;
     }
     if (BsendBuffer.active) {
         /* Loop through each active element and wait on it */
