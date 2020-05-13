@@ -295,7 +295,7 @@ static void coll_handle_complete(void *handle)
     MPIR_Request *req;
     if (NULL != handle) {
         req = (MPIR_Request *) handle;
-        MPID_Request_complete(req);
+        MPIR_Request_complete(req);
     }
 }
 
