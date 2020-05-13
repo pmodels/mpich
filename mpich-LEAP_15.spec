@@ -18,8 +18,6 @@
 %global cart_major 4
 %global daos_major 0
 
-%global flavor @BUILD_FLAVOR@%nil
-
 # Static libraries are disabled by default
 # for non HPC builds
 # To enable them, simply uncomment:
@@ -29,90 +27,8 @@
 %define vers  3.4~a2
 %define _vers 3_4
 
-%if "%{flavor}" == ""
-ExclusiveArch:  do_not_build
-%{bcond_with hpc}
-%endif
-
-%if "%{flavor}" == "standard"
-%define build_flavor verbs
-%{bcond_with hpc}
-%endif
-%if "%{flavor}" == "testsuite"
-%define build_flavor verbs
-%define testsuite 1
-%{bcond_with hpc}
-%endif
-
-%if "%{flavor}" == "ofi"
 %define build_flavor ofi
 %{bcond_with hpc}
-%endif
-%if "%{flavor}" == "ofi-testsuite"
-%define build_flavor ofi
-%define testsuite 1
-%{bcond_with hpc}
-%endif
-
-%if "%flavor" == "gnu-hpc"
-%define compiler_family gnu
-%undefine c_f_ver
-%define build_flavor verbs
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu-hpc-testsuite"
-%define compiler_family gnu
-%undefine c_f_ver
-%define testsuite 1
-%define build_flavor verbs
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu-hpc-ofi"
-%define compiler_family gnu
-%undefine c_f_ver
-%define build_flavor ofi
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu-hpc-ofi-testsuite"
-%define compiler_family gnu
-%undefine c_f_ver
-%define testsuite 1
-%define build_flavor ofi
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu7-hpc"
-%define compiler_family gnu
-%define c_f_ver 7
-%define build_flavor verbs
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu7-hpc-testsuite"
-%define compiler_family gnu
-%define c_f_ver 7
-%define testsuite 1
-%define build_flavor verbs
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu7-hpc-ofi"
-%define compiler_family gnu
-%define c_f_ver 7
-%define build_flavor ofi
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu7-hpc-ofi-testsuite"
-%define compiler_family gnu
-%define c_f_ver 7
-%define testsuite 1
-%define build_flavor ofi
-%{bcond_without hpc}
-%endif
 
 %if "%{build_flavor}" != "verbs"
 %define pack_suff %{?build_flavor:-%{build_flavor}}
@@ -128,7 +44,7 @@ ExclusiveArch:  do_not_build
 %define p_libdir  %{p_prefix}/%{_lib}
 %define p_libexecdir %{p_prefix}/%{_lib}
 %define _moduledir /usr/share/modules/gnu-%{module_name}
-%define package_name %{pname}%{?pack_suff}
+%define package_name %{pname}
 %else
 %{hpc_init -M -c %compiler_family %{?c_f_ver:-v %{c_f_ver}} -m mpich %{?pack_suff:-e %{build_flavor}} %{?mpi_f_ver:-V %{mpi_f_ver}}}
 %define p_prefix   %{hpc_prefix}
@@ -182,9 +98,7 @@ BuildRequires:  libtool
 BuildRequires:  mpi-selector
 BuildRequires:  python-devel
 BuildRequires:  sysfsutils
-#if "%{flavor}" == "ofi"
 BuildRequires:  libfabric-devel
-#endif
 BuildRequires:  daos-devel
 Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
 
@@ -279,7 +193,6 @@ the dynamic library and headers.
 %endif # ! testsuite
 
 %prep
-echo FLAVOR %{flavor}
 %if %{with hpc}
 echo with HPC
 %endif
@@ -312,9 +225,7 @@ echo without HPC
     --docdir=%{_datadir}/doc/%{name} \
     --disable-rpath      \
     --disable-wrapper-rpath      \
-%if "%{flavor}" == "ofi"
    --with-device=ch3:nemesis:ofi \
-%endif
    
 	CFLAGS="%optflags -fPIC"			\
 	CXXLAGS="%optflags -fPIC"			\
@@ -516,9 +427,9 @@ fi
 %endif # !testsuite
 
 %changelog
-* Tue May 12 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
+* Wed May 13 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
 - Update to 3.4a2
-- Always install librabric-devel as it's needed for ch4
+- Reduce "flavor"s down to just "ofi"
 
 * Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
