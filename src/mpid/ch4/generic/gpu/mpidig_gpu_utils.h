@@ -5,8 +5,6 @@
 #ifndef MPIDIG_GPU_UTIL_H_INCLUDED
 #define MPIDIG_GPU_UTIL_H_INCLUDED
 
-#include "ch4_impl.h"
-
 /* MPIDIG_gpu_stage_copy_d2h - moving data from device buffer to stage host buffer. */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_gpu_stage_copy_d2h(const void *sbuf, void *dbuf,
                                                         MPI_Aint count, MPI_Datatype datatype)
