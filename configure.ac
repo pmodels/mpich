@@ -1306,7 +1306,10 @@ AC_SUBST([jsonsrcdir])
 jsonlib=""
 AC_SUBST([jsonlib])
 
+PAC_PUSH_ALL_FLAGS()
+PAC_RESET_ALL_FLAGS()
 PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+PAC_POP_ALL_FLAGS()
 jsonsrcdir="${master_top_builddir}/modules/json-c"
 jsonlib="${master_top_builddir}/modules/json-c/libjson-c.la"
 PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
