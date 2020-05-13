@@ -418,6 +418,17 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
+/* Requests that are not created inside device (general requests, nonblocking collective
+ * requests such as sched, gentran, hcoll) should call MPIR_Request_complete.
+ * MPID_Request_complete are called inside device critical section, therefore, potentially
+ * are unsafe to call outside the device. (NOTE: this will come into effect with ch4 multi-vci.)
+ */
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_complete(MPIR_Request * req)
+{
+    MPIR_cc_set(&req->cc, 0);
+    MPIR_Request_free(req);
+}
+
 /* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
  * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
  * deal with status structures under the assumption that bleeding fast code will
