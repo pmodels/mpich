@@ -219,7 +219,6 @@ echo without HPC
     --libexecdir=%{p_libexecdir} \
     --mandir=%{p_mandir} \
 %endif
-    --disable-cxx \
     --disable-checkerrors \
     --disable-perftest \
     --disable-large-tests \
