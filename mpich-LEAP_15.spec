@@ -182,9 +182,9 @@ BuildRequires:  libtool
 BuildRequires:  mpi-selector
 BuildRequires:  python-devel
 BuildRequires:  sysfsutils
-%if "%{flavor}" == "ofi"
+#if "%{flavor}" == "ofi"
 BuildRequires:  libfabric-devel
-%endif
+#endif
 BuildRequires:  daos-devel
 Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
 
@@ -518,6 +518,7 @@ fi
 %changelog
 * Tue May 12 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
 - Update to 3.4a2
+- Always install librabric-devel as it's needed for ch4
 
 * Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
