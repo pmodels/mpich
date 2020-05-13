@@ -407,13 +407,6 @@ if test "$enable_strictmpi" = "yes" -o "$enable_perftest" = "no" ; then
 fi
 AC_SUBST(perfdir)
 
-# The ft tests are not part of the MPI standard and some of the netmods can't handle them
-ftdir="#ft"
-if test "$first_pm" = "hydra" -a  "$enable_strictmpi" = "no" -a "$enable_ft_tests" = "yes" ; then
-    ftdir="ft"
-fi
-AC_SUBST(ftdir)
-
 # Setup "comm_overlap" variable based on whether comm_overlap tests
 # are enabled or not
 if test "${enable_comm_overlap_tests}" = "yes" ; then
