@@ -324,6 +324,8 @@ make testing
 %{_libdir}/%{name}/lib/pkgconfig/
 %{_libdir}/%{name}/lib/*.so
 %{_libdir}/%{name}/bin/mpicc
+%{_libdir}/%{name}/bin/mpic++
+%{_libdir}/%{name}/bin/mpicxx
 %{_libdir}/%{name}/bin/mpif77
 %{_libdir}/%{name}/bin/mpif90
 %{_libdir}/%{name}/bin/mpifort
