@@ -35,7 +35,7 @@
 %endif
 
 %if %{without hpc}
-%define module_name mpich%{?pack_suff}
+%define module_name mpich
 %define p_prefix /usr/%_lib/mpi/gcc/%{module_name}
 %define p_bindir  %{p_prefix}/bin
 %define p_datadir %{p_prefix}/share
@@ -339,7 +339,7 @@ family "MPI"
 EOF
 cat <<EOF >  %{buildroot}/%{p_bindir}/mpivars.sh
 %hpc_setup_compiler
-module load %{hpc_mpi_family}%{?pack_suff}/%{version}
+module load %{hpc_mpi_family}/%{version}
 EOF
 sed -e "s/export/setenv/" -e "s/=/ /" \
     %{buildroot}/%{p_bindir}/mpivars.sh > \
@@ -357,7 +357,7 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 # Always register. We might be already registered in the case of an udate
 # but mpi-selector handles it fine
 /usr/bin/mpi-selector \
-        --register %{name}%{?pack_suff} \
+        --register %{name} \
         --source-dir %{p_bindir} \
         --yes
 %endif
@@ -367,9 +367,9 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 %if %{without hpc}
 # Only unregister when uninstalling
 if [ "$1" = "0" ]; then
-	/usr/bin/mpi-selector --unregister %{name}%{?pack_suff} --yes
+	/usr/bin/mpi-selector --unregister %{name} --yes
 	# Deregister the default if we are uninstalling it
-	if [ "$(/usr/bin/mpi-selector --system --query)" = "%{name}%{?pack_suff}" ]; then
+	if [ "$(/usr/bin/mpi-selector --system --query)" = "%{name}" ]; then
 		/usr/bin/mpi-selector --system --unset --yes
 	fi
 fi
@@ -431,6 +431,6 @@ fi
 - Update to 3.4a2
 - Reduce "flavor"s down to just "ofi"
 
-* Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
+* Wed Dec 18 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
 - Add Provides: to allow consumers to target cart and daos ABI versions
