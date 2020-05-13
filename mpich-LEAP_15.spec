@@ -385,7 +385,7 @@ fi
 %dir /usr/%_lib/mpi/gcc
 %dir /usr/share/modules
 %dir %{_moduledir}
-%{_moduledir}
+# not sure why this is needed a second time %{_moduledir}
 %else
 %hpc_mpi_dirs
 %hpc_modules_files
@@ -411,6 +411,8 @@ fi
 %{p_libdir}/*.so
 %{p_libdir}/pkgconfig/mpich.pc
 %{p_libdir}/pkgconfig/openpa.pc
+%{p_libdir}/pkgconfig/json-c.pc
+%{p_libdir}/pkgconfig/yaksa.pc
 
 %if 0%{?build_static_devel}
 %files devel-static
@@ -429,7 +431,8 @@ fi
 %changelog
 * Wed May 13 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
 - Update to 3.4a2
-- Reduce "flavor"s down to just "ofi"
+- Reduce "folavor"s down to just "ofi"
+- Add a couple of more pkgconfig/ files
 
 * Wed Dec 18 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
