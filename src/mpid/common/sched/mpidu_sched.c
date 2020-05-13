@@ -962,8 +962,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
             }
 
-            mpi_errno = MPID_Request_complete(s->req);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Request_complete(s->req);
 
             s->req = NULL;
             MPL_free(s->entries);
