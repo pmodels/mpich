@@ -268,7 +268,7 @@ int MPII_Genutil_progress_hook(int *made_progress)
 
             req = MPL_container_of(coll_req, MPIR_Request, u.nbc.coll);
             DL_DELETE(MPII_coll_queue.head, coll_req);
-            MPID_Request_complete(req);
+            MPIR_Request_complete(req);
         }
         if (++count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
             break;
