@@ -560,29 +560,17 @@ int MPID_Request_complete(MPIR_Request *req)
 {
     int incomplete, notify_counter;
     int mpi_errno = MPI_SUCCESS;
-    static int called_cnt = 0;
-
-    MPIR_Assert(called_cnt <= REQUEST_CB_DEPTH);
-    called_cnt++;
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
-        /* trigger request_completed callback function */
-        if (req->dev.request_completed_cb != NULL) {
-            mpi_errno = req->dev.request_completed_cb(req);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
         /* decrement completion_notification counter */
         if (req->completion_notification)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
 	MPIR_Request_free(req);
-	MPIDI_CH3_Progress_signal_completion();
     }
 
  fn_exit:
-    called_cnt--;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -590,7 +578,22 @@ int MPID_Request_complete(MPIR_Request *req)
 
 void MPID_Request_free_hook(MPIR_Request *req)
 {
-    return;
+    static int called_cnt = 0;
+
+    MPIR_Assert(called_cnt <= REQUEST_CB_DEPTH);
+    called_cnt++;
+
+    /* trigger request_completed callback function */
+    if (req->dev.request_completed_cb != NULL && MPIR_Request_is_complete(req)) {
+        int mpi_errno = req->dev.request_completed_cb(req);
+        MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
+        req->dev.request_completed_cb = NULL;
+    }
+
+    MPIDI_CH3_Progress_signal_completion();
+
+    called_cnt--;
 }
 
 void MPID_Request_destroy_hook(MPIR_Request *req)
