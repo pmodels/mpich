@@ -122,6 +122,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_Request *sreq = *request;
     char *send_buf;
     uint64_t match_bits;
+    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, -1 };
+    bool alloc_stage_buf = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
@@ -156,6 +158,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     send_buf = (char *) buf + dt_true_lb;
+    MPL_gpu_query_pointer_attr(send_buf, &attr);
+    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
+        if (!MPIDI_OFI_ENABLE_HMEM) {
+            /* FIXME: at this point, GPU data takes host-buffer staging
+             * path for the whole chunk. For large memory size, pipeline
+             * transfer should be applied. */
+            /* Move whole chunk of data from GPU to host buf. */
+            void *host_buf = NULL;
+            MPL_gpu_malloc_host(&host_buf, data_sz);
+            alloc_stage_buf = true;
+            /* Remember host_buf (asigned to send_buf already) in request. */
+            MPIDIG_GPU_REQUEST(sreq, host_buf) = host_buf;
+            MPIDIG_gpu_stage_copy_d2h(buf, host_buf, count, datatype);
+            send_buf = host_buf;
+            dt_contig = 1;
+        }
+    }
 
     if (!dt_contig && data_sz) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
@@ -268,6 +287,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     return mpi_errno;
   fn_fail:
+    if (alloc_stage_buf) {
+        /* Free stage host buf (asigned to send_buf already) */
+        MPL_gpu_free_host(send_buf);
+        MPIDIG_GPU_REQUEST(sreq, host_buf) = NULL;
+    }
     goto fn_exit;
 }
 
@@ -291,8 +315,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
-        mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
+        MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, -1 };
+        bool alloc_stage_buf = false;
+        void *send_buf = (char *) buf + dt_true_lb;
+        MPL_gpu_query_pointer_attr(send_buf, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV) {
+            if (!MPIDI_OFI_ENABLE_HMEM) {
+                /* Move whole chunk of data from GPU to stage host buf. */
+                void *host_buf = NULL;
+                MPL_gpu_malloc_host(&host_buf, data_sz);
+                alloc_stage_buf = true;
+                MPIDIG_gpu_stage_copy_d2h(buf, host_buf, count, datatype);
+                send_buf = host_buf;
+            }
+        }
+        mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz,
                                                cq_data, dst_rank, tag, comm, context_offset, addr);
+        if (alloc_stage_buf) {
+            /* Free stage host buf (asigned to send_buf already) after
+             * lightweight_send. */
+            MPL_gpu_free_host(send_buf);
+        }
         if (!noreq) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         }
