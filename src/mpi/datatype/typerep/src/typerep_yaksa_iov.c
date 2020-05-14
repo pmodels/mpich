@@ -28,7 +28,7 @@ int MPIR_Typerep_to_iov(const void *buf, MPI_Aint count, MPI_Datatype datatype,
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
     uintptr_t size;
-    rc = yaksa_get_size(type, &size);
+    rc = yaksa_type_get_size(type, &size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     uintptr_t yaksa_max_iov_len;
@@ -138,7 +138,7 @@ int MPIR_Typerep_iov_len(MPI_Aint count, MPI_Datatype datatype, MPI_Aint max_iov
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     uintptr_t size;
-    rc = yaksa_get_size(type, &size);
+    rc = yaksa_type_get_size(type, &size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     if (max_iov_bytes >= count * size) {        /* fast path */
