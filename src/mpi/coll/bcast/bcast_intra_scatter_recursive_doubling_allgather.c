@@ -131,15 +131,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                                       (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
                                       MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
-                /* --BEGIN ERROR HANDLING-- */
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
                 recv_size = 0;
-                /* --END ERROR HANDLING-- */
             } else
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
             curr_size += recv_size;
@@ -220,15 +213,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
                     /* nprocs_completed is also equal to the no. of processes
                      * whose data we don't have */
                     if (mpi_errno) {
-                        /* --BEGIN ERROR HANDLING-- */
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
                         recv_size = 0;
-                        /* --END ERROR HANDLING-- */
                     } else
                         MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
                     curr_size += recv_size;

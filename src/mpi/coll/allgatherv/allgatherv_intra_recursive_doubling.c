@@ -115,12 +115,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                       (total_count - recv_offset) * recvtype_sz, MPI_BYTE, dst,
                                       MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag =
-                    MPIX_ERR_PROC_FAILED ==
-                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
                 last_recv_cnt = 0;
             } else
                 /* for convenience, recv is posted for a bigger amount
@@ -200,12 +195,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
                                           (total_count - offset) * recvtype_sz, MPI_BYTE,
                                           dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                     if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag =
-                            MPIX_ERR_PROC_FAILED ==
-                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
                         last_recv_cnt = 0;
                     } else
                         /* for convenience, recv is posted for a

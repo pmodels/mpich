@@ -81,12 +81,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
                                   (total_count - curr_cnt) * recvtype_sz, MPI_BYTE,
                                   src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_COLL_CHECKANDCONT(mpi_errno);
             recv_cnt = 0;
         } else
             MPIR_Get_count_impl(&status, recvtype, &recv_cnt);
