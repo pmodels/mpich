@@ -294,7 +294,7 @@ MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->iov) = iov;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
 
-        int actual_iov_len;
+        MPI_Aint actual_iov_len;
         MPI_Aint actual_iov_bytes;
         MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype), 0, iov, num_iov,

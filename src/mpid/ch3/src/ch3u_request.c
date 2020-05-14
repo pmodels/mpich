@@ -96,10 +96,11 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     MPIR_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
 
     int max_iov_len = *iov_n;
-    MPI_Aint actual_iov_bytes;
+    MPI_Aint actual_iov_bytes, actual_iov_len;
     MPIR_Typerep_to_iov(sreq->dev.user_buf, sreq->dev.user_count, sreq->dev.datatype,
-                     sreq->dev.msg_offset, iov, max_iov_len,
-                     sreq->dev.msgsize - sreq->dev.msg_offset, iov_n, &actual_iov_bytes);
+                     sreq->dev.msg_offset, iov, (MPI_Aint) max_iov_len,
+                     sreq->dev.msgsize - sreq->dev.msg_offset, &actual_iov_len, &actual_iov_bytes);
+    *iov_n = (int) actual_iov_len;
     last = sreq->dev.msg_offset + actual_iov_bytes;
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
@@ -268,11 +269,12 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	MPIR_Assert(rreq->dev.msg_offset < last);
 	MPIR_Assert(last > 0);
 
-        MPI_Aint actual_iov_bytes;
+        MPI_Aint actual_iov_bytes, actual_iov_len;
         MPIR_Typerep_to_iov(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                          rreq->dev.msg_offset, &rreq->dev.iov[0], MPL_IOV_LIMIT,
                          rreq->dev.msgsize - rreq->dev.msg_offset,
-                         &rreq->dev.iov_count, &actual_iov_bytes);
+                         &actual_iov_len, &actual_iov_bytes);
+        rreq->dev.iov_count = (int) actual_iov_len;
         last = rreq->dev.msg_offset + actual_iov_bytes;
 
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,(MPL_DBG_FDEST,
