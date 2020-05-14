@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -178,9 +172,9 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
     posix_win = &win->dev.shm.posix;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
-                                            &posix_win->shm_mutex_segment_handle,
-                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
+    mpi_errno =
+        MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t), (void **) &posix_win->shm_mutex_ptr,
+                        &mapfail_flag);
 
     /* disable shm_allocated optimization if mutex allocation fails */
     if (!mapfail_flag) {
@@ -215,9 +209,9 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
     posix_win = &win->dev.shm.posix;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno = MPIDIU_allocate_shm_segment(win->comm_ptr, sizeof(MPL_proc_mutex_t),
-                                            &posix_win->shm_mutex_segment_handle,
-                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
+    mpi_errno =
+        MPIDU_shm_alloc(win->comm_ptr, sizeof(MPL_proc_mutex_t),
+                        (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
 
     /* disable shm_allocated optimization if mutex allocation fails */
     if (!mapfail_flag) {
@@ -285,9 +279,9 @@ int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win)
         goto fn_exit;
 
     /* allocate interprocess mutex for RMA atomics over shared memory */
-    mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, sizeof(MPL_proc_mutex_t),
-                                            &posix_win->shm_mutex_segment_handle,
-                                            (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
+    mpi_errno =
+        MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t), (void **) &posix_win->shm_mutex_ptr,
+                        &mapfail_flag);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!mapfail_flag) {
@@ -318,9 +312,7 @@ int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
         if (win->comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_DESTROY(posix_win->shm_mutex_ptr);
 
-        mpi_errno = MPIDIU_destroy_shm_segment(sizeof(MPL_proc_mutex_t),
-                                               &posix_win->shm_mutex_segment_handle,
-                                               (void **) &posix_win->shm_mutex_ptr);
+        mpi_errno = MPIDU_shm_free(posix_win->shm_mutex_ptr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -270,7 +269,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPL_STR_SUCCESS) {
+    if (mpi_errno != MPL_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 
@@ -281,19 +280,19 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
      * before timed out. The response is handled in MPIDI_CH3_PktHandler_ConnResp
      * in progress.*/
     {
-        MPID_Time_t time_sta, time_now;
+        MPL_time_t time_sta, time_now;
         double time_gap = 0;
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE,
                        (MPL_DBG_FDEST, "connect: waiting accept in %d(s)", timeout));
 
-        MPID_Wtime(&time_sta);
+        MPL_wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_poke();
             MPIR_ERR_CHECK(mpi_errno);
 
-            MPID_Wtime(&time_now);
-            MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
+            MPL_wtime(&time_now);
+            MPL_wtime_diff(&time_sta, &time_now, &time_gap);
 
             /* Avoid blocking other threads since I am inside an infinite loop */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -380,7 +379,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPL_STR_SUCCESS) {
+    if (mpi_errno != MPL_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 
@@ -553,7 +552,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
-    mpi_errno = MPID_Comm_create_hook(tmp_comm);
+    mpi_errno = MPID_Comm_commit_pre_hook(tmp_comm);
     MPIR_ERR_CHECK(mpi_errno);
     
     *comm_pptr = tmp_comm;
@@ -665,7 +664,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     /* broadcast the received info to local processes */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"broadcasting the received 3 ints");
-    mpi_errno = MPIR_Bcast_intra_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -719,7 +718,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     /* Broadcast out the remote rank translation array */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Broadcasting remote translation");
-    mpi_errno = MPIR_Bcast_intra_auto(remote_translation, remote_comm_size * 2, MPI_INT,
+    mpi_errno = MPIR_Bcast_allcomm_auto(remote_translation, remote_comm_size * 2, MPI_INT,
                                  root, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -759,7 +758,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     }
 
     /*printf("connect:barrier\n");fflush(stdout);*/
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Free new_vc. It was explicitly allocated in MPIDI_CH3_Connect_to_root.*/
@@ -805,7 +804,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
         /* notify other processes to return an error */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"broadcasting 3 ints: error case");
-        mpi_errno2 = MPIR_Bcast_intra_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno2 = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno2) MPIR_ERR_ADD(mpi_errno, mpi_errno2);
         if (errflag) {
             MPIR_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**coll_fail");
@@ -960,7 +959,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 
 	/* Broadcast the size and data to the local communicator */
 	/*printf("accept:broadcasting 1 int\n");fflush(stdout);*/
-	mpi_errno = MPIR_Bcast_intra_auto(&j, 1, MPI_INT, root, comm_ptr, &errflag);
+	mpi_errno = MPIR_Bcast_allcomm_auto(&j, 1, MPI_INT, root, comm_ptr, &errflag);
 	MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -972,7 +971,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	    }
 	}
 	/*printf("accept:broadcasting string of length %d\n", j);fflush(stdout);*/
-	mpi_errno = MPIR_Bcast_intra_auto(pg_str, j, MPI_CHAR, root, comm_ptr, &errflag);
+	mpi_errno = MPIR_Bcast_allcomm_auto(pg_str, j, MPI_CHAR, root, comm_ptr, &errflag);
 	MPIR_ERR_CHECK(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	/* Then reconstruct the received process group.  This step
@@ -1216,7 +1215,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 
     /* broadcast the received info to local processes */
     /*printf("accept:broadcasting 2 ints - %d and %d\n", recv_ints[0], recv_ints[1]);fflush(stdout);*/
-    mpi_errno = MPIR_Bcast_intra_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast_allcomm_auto(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -1271,7 +1270,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 
     /* Broadcast out the remote rank translation array */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Broadcast remote_translation");
-    mpi_errno = MPIR_Bcast_intra_auto(remote_translation, remote_comm_size * 2, MPI_INT,
+    mpi_errno = MPIR_Bcast_allcomm_auto(remote_translation, remote_comm_size * 2, MPI_INT,
                                  root, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -1309,7 +1308,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     }
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Free new_vc once the connection is completed. It was explicitly 
@@ -1390,7 +1389,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     MPIR_ERR_CHECK(mpi_errno);
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Barrier");
-    mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_allcomm_auto(comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
  fn_exit:

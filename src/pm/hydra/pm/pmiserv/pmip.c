@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "hydra.h"
@@ -49,7 +48,6 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.spawner_kvsname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
-    HYD_pmcd_pmip.local.ckpoint_prefix_list = NULL;
     HYD_pmcd_pmip.local.retries = -1;
 
     HYD_pmcd_pmip.exec_list = NULL;
@@ -61,8 +59,6 @@ static HYD_status init_params(void)
 
 static void cleanup_params(void)
 {
-    int i;
-
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
     /* System global */
@@ -88,12 +84,6 @@ static void cleanup_params(void)
     MPL_free(HYD_pmcd_pmip.local.iface_ip_env_name);
     MPL_free(HYD_pmcd_pmip.local.hostname);
     MPL_free(HYD_pmcd_pmip.local.spawner_kvsname);
-
-    if (HYD_pmcd_pmip.local.ckpoint_prefix_list) {
-        for (i = 0; HYD_pmcd_pmip.local.ckpoint_prefix_list[i]; i++)
-            MPL_free(HYD_pmcd_pmip.local.ckpoint_prefix_list[i]);
-        MPL_free(HYD_pmcd_pmip.local.ckpoint_prefix_list);
-    }
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 

@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2012 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "ofi_impl.h"
 
 static inline int compile_time_checking();
@@ -19,7 +15,7 @@ cvars:
       category    : DEVELOPER
       type        : string
       default     : NULL
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -244,7 +240,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
         ret = MPL_str_get_binary_arg(bc, "OFI",
                                      (char *) &addrs[i * gl_data.bound_addrlen],
                                      gl_data.bound_addrlen, &len);
-        MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
+        MPIR_ERR_CHKANDJUMP((ret != MPL_SUCCESS && ret != MPL_ERR_STR_NOMEM) ||
                             (size_t) len != gl_data.bound_addrlen,
                             mpi_errno, MPI_ERR_OTHER, "**business_card");
     }
@@ -324,14 +320,14 @@ static inline int compile_time_checking()
 {
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
     MPL_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
-    MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
+    MPL_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(struct iovec));
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= 16);
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
-                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
+                ((void *) &(((struct iovec *) 0)->iov_base)));
     MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
-                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_LEN)));
-    MPIR_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
+                ((void *) &(((struct iovec *) 0)->iov_len)));
+    MPIR_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((struct iovec *) 0)->iov_len));
 
     /* ------------------------------------------------------------------------ */
     /* Generate the MPICH catalog files                                         */

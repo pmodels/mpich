@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IALLREDUCE_TSP_ALGOS_H_INCLUDED) is
@@ -20,8 +14,8 @@
 /* Routine to schedule a pipelined tree based allreduce */
 int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op,
-                                         MPIR_Comm * comm, int tree_type, int k, int maxbytes,
-                                         MPIR_TSP_sched_t * sched)
+                                         MPIR_Comm * comm, int tree_type, int k, int chunk_size,
+                                         int buffer_per_child, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, t;
@@ -39,7 +33,6 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int sink_id;
     int nvtcs;
-    int buffer_per_child = MPIR_CVAR_IALLREDUCE_TREE_BUFFER_PER_CHILD;
     int tag;
     int root = 0;
 
@@ -61,12 +54,12 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
 
     /* calculate chunking information for pipelining */
-    MPIR_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
+    MPIR_Algo_calculate_pipeline_chunk_info(chunk_size, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
     /* print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
-                                             "Reduce pipeline info: maxbytes=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d ",
-                                             maxbytes, count, num_chunks,
+                                             "Reduce pipeline info: chunk_size=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d ",
+                                             chunk_size, count, num_chunks,
                                              chunk_size_floor, chunk_size_ceil));
 
     if (!is_commutative) {
@@ -230,7 +223,8 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 /* Non-blocking tree based allreduce */
 int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                   MPIR_Request ** req, int tree_type, int k, int maxbytes)
+                                   MPIR_Request ** req, int tree_type, int k, int chunk_size,
+                                   int buffer_per_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_TSP_sched_t *sched;
@@ -248,7 +242,7 @@ int MPIR_TSP_Iallreduce_intra_tree(const void *sendbuf, void *recvbuf, int count
     /* schedule pipelined tree algo */
     mpi_errno =
         MPIR_TSP_Iallreduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, comm,
-                                             tree_type, k, maxbytes, sched);
+                                             tree_type, k, chunk_size, buffer_per_child, sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

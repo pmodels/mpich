@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
@@ -20,10 +19,18 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    MPI_Info mem_hints;
+    MPI_Info hints;
+    MPI_Info_create(&mem_hints);
+    hints = mem_hints;
+
+    /* try allocating ddr memory first (default) */
+    MPI_Info_set(mem_hints, "bind_memory", "ddr");
+
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     for (count = 1; count < 128000; count *= 2) {
 
-        err = MPI_Alloc_mem(count, MPI_INFO_NULL, &ap);
+        err = MPI_Alloc_mem(count, hints, &ap);
         if (err) {
             int errclass;
             /* An error of  MPI_ERR_NO_MEM is allowed */
@@ -31,6 +38,11 @@ int main(int argc, char *argv[])
             if (errclass != MPI_ERR_NO_MEM) {
                 errs++;
                 MTestPrintError(err);
+            } else {
+                /* if MPI_ERR_NO_MEM memory cannot be allocated
+                 * to the requested type. Fall back to system
+                 * default and try again. */
+                hints = MPI_INFO_NULL;
             }
 
         } else {
@@ -41,6 +53,39 @@ int main(int argc, char *argv[])
             MPI_Free_mem(ap);
         }
     }
+
+    hints = mem_hints;
+
+    /* try allocating hbm memory second (non-default) */
+    MPI_Info_set(mem_hints, "bind_memory", "hbm");
+
+    for (count = 1; count < 128000; count *= 2) {
+
+        err = MPI_Alloc_mem(count, hints, &ap);
+        if (err) {
+            int errclass;
+            /* An error of  MPI_ERR_NO_MEM is allowed */
+            MPI_Error_class(err, &errclass);
+            if (errclass != MPI_ERR_NO_MEM) {
+                errs++;
+                MTestPrintError(err);
+            } else {
+                /* if MPI_ERR_NO_MEM memory cannot be allocated
+                 * to the requested type. Fall back to system
+                 * default and try again. */
+                hints = MPI_INFO_NULL;
+            }
+
+        } else {
+            /* Access all of this memory */
+            for (j = 0; j < count; j++) {
+                ap[j] = (char) (j & 0x7f);
+            }
+            MPI_Free_mem(ap);
+        }
+    }
+
+    MPI_Info_free(&mem_hints);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

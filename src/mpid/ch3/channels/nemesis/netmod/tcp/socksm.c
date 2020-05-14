@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #define SOCKSM_H_DEFGLOBALS_
@@ -427,6 +426,7 @@ static int send_id_info(const sockconn_t * const sc)
     int buf_size, iov_cnt = 2;
     ssize_t offset;
     size_t pg_id_len = 0;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SEND_ID_INFO);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_ID_INFO);
@@ -448,9 +448,9 @@ static int send_id_info(const sockconn_t * const sc)
     hdr.datalen = sizeof(MPIDI_nem_tcp_idinfo_t) + pg_id_len;
     id_info.pg_rank = MPIDI_Process.my_pg_rank;
 
-    iov[0].iov_base = (MPL_IOV_BUF_CAST) & hdr;
+    iov[0].iov_base = (void *) & hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = (MPL_IOV_BUF_CAST) & id_info;
+    iov[1].iov_base = (void *) & id_info;
     iov[1].iov_len = sizeof(id_info);
     buf_size = sizeof(hdr) + sizeof(id_info);
 
@@ -464,9 +464,9 @@ static int send_id_info(const sockconn_t * const sc)
     offset = MPL_large_writev(sc->fd, iov, iov_cnt);
     MPIR_ERR_CHKANDJUMP1(offset == -1 &&
                          errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     MPIR_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 /*     FIXME log appropriate error */
 /*     FIXME-Z1  socket is just connected and we are sending a few bytes. So, there should not */
 /*     be a problem of partial data only being written to. If partial data written, */
@@ -478,7 +478,7 @@ static int send_id_info(const sockconn_t * const sc)
   fn_fail:
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                     (MPL_DBG_FDEST, "failure. mpi_errno = %d, offset=%lld, errno=%d %s", mpi_errno,
-                     (long long) offset, errno, MPIR_Strerror(errno)));
+                     (long long) offset, errno, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE)));
     goto fn_exit;
 }
 
@@ -491,6 +491,7 @@ static int send_tmpvc_info(const sockconn_t * const sc)
     struct iovec iov[3];
     int buf_size, iov_cnt = 2;
     ssize_t offset;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SEND_TMPVC_INFO);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_TMPVC_INFO);
@@ -509,18 +510,18 @@ static int send_tmpvc_info(const sockconn_t * const sc)
     hdr.datalen = sizeof(MPIDI_nem_tcp_portinfo_t);
     port_info.port_name_tag = sc->vc->port_name_tag;
 
-    iov[0].iov_base = (MPL_IOV_BUF_CAST) & hdr;
+    iov[0].iov_base = (void *) & hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = (MPL_IOV_BUF_CAST) & port_info;
+    iov[1].iov_base = (void *) & port_info;
     iov[1].iov_len = sizeof(port_info);
     buf_size = sizeof(hdr) + sizeof(port_info);
 
     offset = MPL_large_writev(sc->fd, iov, iov_cnt);
     MPIR_ERR_CHKANDJUMP1(offset == -1 &&
                          errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     MPIR_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 /*     FIXME log appropriate error */
 /*     FIXME-Z1  socket is just connected and we are sending a few bytes. So, there should not */
 /*     be a problem of partial data only being written to. If partial data written, */
@@ -532,7 +533,7 @@ static int send_tmpvc_info(const sockconn_t * const sc)
   fn_fail:
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                     (MPL_DBG_FDEST, "failure. mpi_errno = %d, offset=%lld, errno=%d %s", mpi_errno,
-                     (long long) offset, errno, MPIR_Strerror(errno)));
+                     (long long) offset, errno, MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE)));
     goto fn_exit;
 }
 
@@ -546,6 +547,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
     int hdr_len = sizeof(MPIDI_nem_tcp_header_t);
     struct iovec iov[2];
     char *pg_id = NULL;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
@@ -565,7 +567,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
     }
     MPIR_ERR_CHKANDJUMP1(nread == -1 &&
                          errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     MPIR_ERR_CHKANDJUMP(nread != hdr_len, mpi_errno, MPI_ERR_OTHER, "**read");  /* FIXME-Z1 */
     MPIR_Assert(hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO ||
                 hdr.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_INFO);
@@ -585,7 +587,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
         nread = MPL_large_readv(sc->fd, iov, iov_cnt);
         MPIR_ERR_CHKANDJUMP1(nread == -1 &&
                              errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                             MPIR_Strerror(errno));
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
         MPIR_ERR_CHKANDJUMP(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read");  /* FIXME-Z1 */
         if (pg_id_len == 0) {
             sc->is_same_pg = TRUE;
@@ -658,7 +660,7 @@ static int recv_id_or_tmpvc_info(sockconn_t * const sc, int *got_sc_eof)
         nread = MPL_large_readv(sc->fd, iov, iov_cnt);
         MPIR_ERR_CHKANDJUMP1(nread == -1 &&
                              errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                             MPIR_Strerror(errno));
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
         MPIR_ERR_CHKANDJUMP(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read");  /* FIXME-Z1 */
         sc->is_same_pg = FALSE;
         sc->pg_id = NULL;
@@ -694,6 +696,7 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
     ssize_t offset;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_Assert(pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
@@ -709,8 +712,9 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
     CHECK_EINTR(offset, write(fd, &pkt, pkt_len));
     MPIR_ERR_CHKANDJUMP1(offset == -1 &&
                          errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
-                         MPIR_Strerror(errno));
-    MPIR_ERR_CHKANDJUMP1(offset != pkt_len, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", MPIR_Strerror(errno));   /* FIXME-Z1 */
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+    MPIR_ERR_CHKANDJUMP1(offset != pkt_len, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));   /* FIXME-Z1 */
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -730,6 +734,7 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t * pkt_type)
     ssize_t nread;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_CMD_PKT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_CMD_PKT);
@@ -737,8 +742,9 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t * pkt_type)
     CHECK_EINTR(nread, read(fd, &pkt, pkt_len));
     MPIR_ERR_CHKANDJUMP1(nread == -1 &&
                          errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                         MPIR_Strerror(errno));
-    MPIR_ERR_CHKANDJUMP2(nread != pkt_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %d %s", nread, MPIR_Strerror(errno));    /* FIXME-Z1 */
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
+    MPIR_ERR_CHKANDJUMP2(nread != pkt_len, mpi_errno, MPI_ERR_OTHER, "**read", "**read %d %s", nread,
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));    /* FIXME-Z1 */
     MPIR_Assert(pkt.datalen == 0);
     MPIR_Assert(pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_ACK ||
                 pkt.pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_ID_NAK ||
@@ -767,6 +773,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     struct pollfd *plfd = NULL;
     int idx = -1;
     int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONNECT);
@@ -849,7 +856,8 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 
         CHECK_EINTR(sc->fd, socket(AF_INET, SOCK_STREAM, 0));
         MPIR_ERR_CHKANDJUMP2(sc->fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create",
-                             "**sock_create %s %d", MPIR_Strerror(errno), errno);
+                             "**sock_create %s %d", MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE),
+                             errno);
 
         plfd->fd = sc->fd;
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
@@ -866,7 +874,8 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         /* connect should not be called with CHECK_EINTR macro */
         MPIR_ERR_CHKANDJUMP2(rc < 0 &&
                              errno != EINPROGRESS, mpi_errno, MPI_ERR_OTHER, "**sock_connect",
-                             "**sock_connect %d %s", errno, MPIR_Strerror(errno));
+                             "**sock_connect %d %s", errno,
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
         if (rc == 0) {
             CHANGE_STATE(sc, CONN_STATE_TC_C_CNTD);
@@ -984,6 +993,7 @@ int close_cleanup_and_free_sc_plfd(sockconn_t * const sc)
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno2 = MPI_SUCCESS;
     int rc;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
@@ -996,7 +1006,8 @@ int close_cleanup_and_free_sc_plfd(sockconn_t * const sc)
 
     CHECK_EINTR(rc, close(sc->fd));
     if (rc == -1 && errno != EAGAIN && errno != EBADF)
-        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**close", "**close %s", MPIR_Strerror(errno));
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**close", "**close %s",
+                      MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
 
     mpi_errno2 = cleanup_and_free_sc_plfd(sc);
     if (mpi_errno2)
@@ -1488,6 +1499,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
     MPIR_AssertDeclValue(MPID_nem_tcp_vc_area * const sc_vc_tcp, VC_TCP(sc_vc));
     int mpi_errno = MPI_SUCCESS;
     ssize_t bytes_recvd;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_RECV_HANDLER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_RECV_HANDLER);
@@ -1525,7 +1537,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
                 }
             } else {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                                     MPIR_Strerror(errno));
+                                     MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
             }
         }
 
@@ -1540,7 +1552,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
         /* there is a pending receive, receive it directly into the user buffer */
         MPIDI_CH3I_VC *const sc_vc_ch = &sc_vc->ch;
         MPIR_Request *const rreq = sc_vc_ch->recv_active;
-        MPL_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
+        struct iovec *iov = &rreq->dev.iov[rreq->dev.iov_offset];
         int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
 
         MPIR_Assert(rreq->dev.iov_count > 0);
@@ -1555,7 +1567,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_closed");
             } else {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**read", "**read %s",
-                                     MPIR_Strerror(errno));
+                                     MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
             }
         }
 
@@ -1564,21 +1576,21 @@ static int MPID_nem_tcp_recv_handler(sockconn_t * const sc)
         /* update the iov */
         for (iov = &rreq->dev.iov[rreq->dev.iov_offset];
              iov < &rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count]; ++iov) {
-            if (bytes_recvd < iov->MPL_IOV_LEN) {
-                iov->MPL_IOV_BUF = (char *) iov->MPL_IOV_BUF + bytes_recvd;
-                iov->MPL_IOV_LEN -= bytes_recvd;
+            if (bytes_recvd < iov->iov_len) {
+                iov->iov_base = (char *) iov->iov_base + bytes_recvd;
+                iov->iov_len -= bytes_recvd;
                 rreq->dev.iov_count =
                     (int) (&rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count] - iov);
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "bytes_recvd = %ld",
                               (long int) bytes_recvd);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov len = %ld",
-                              (long int) iov->MPL_IOV_LEN);
+                              (long int) iov->iov_len);
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_offset = %lld",
                               (long long) rreq->dev.iov_offset);
                 goto fn_exit;
             }
-            bytes_recvd -= iov->MPL_IOV_LEN;
+            bytes_recvd -= iov->iov_len;
         }
 
         /* the whole iov has been received */
@@ -1735,6 +1747,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
     /* num_polled is needed b/c the call to it_sc->handler() can change the
      * size of the table, which leads to iterating over invalid revents. */
     int num_polled = g_tbl_size;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     if (num_polled) {
         MPIR_Assert(MPID_nem_tcp_plfd_tbl != NULL);
@@ -1753,7 +1766,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
 
     CHECK_EINTR(n, poll(MPID_nem_tcp_plfd_tbl, num_polled, 0));
     MPIR_ERR_CHKANDJUMP1(n == -1, mpi_errno, MPI_ERR_OTHER, "**poll", "**poll %s",
-                         MPIR_Strerror(errno));
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     /* MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPL_DBG_FDEST, "some sc fd poll event")); */
     for (i = 0; i < num_polled; i++) {
         struct pollfd *it_plfd = &MPID_nem_tcp_plfd_tbl[i];
@@ -1772,7 +1785,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                  * (Stevens Network Programming Vol 1, pg 184) */
                 rc = read(it_plfd->fd, &dummy, 1);
                 if (rc < 0)
-                    err_str = MPIR_Strerror(errno);
+                    err_str = MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE);
 
                 MPL_DBG_MSG(MPIDI_NEM_TCP_DBG_DET, VERBOSE, "error polling fd, closing sc");
                 if (it_sc->vc) {
@@ -1840,6 +1853,7 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
     socklen_t len;
     SA_IN rmt_addr;
     sockconn_t *l_sc;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_STATE_LISTENING_HANDLER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_STATE_LISTENING_HANDLER);
@@ -1852,14 +1866,15 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
             MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                             (MPL_DBG_FDEST,
                              "after accept, l_sc=%p lstnfd=%d connfd=%d, errno=%d:%s ", l_sc,
-                             l_sc->fd, connfd, errno, MPIR_Strerror(errno)));
+                             l_sc->fd, connfd, errno,
+                             MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE)));
             if (errno == EINTR)
                 continue;
             else if (errno == EWOULDBLOCK || errno == EAGAIN)
                 break;  /*  no connection in the listen queue. get out of here.(N1) */
 
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s",
-                                 MPIR_Strerror(errno));
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
         } else {
             int idx = -1;
             struct pollfd *plfd;

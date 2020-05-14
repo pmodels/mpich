@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4_RMA_H_INCLUDED
 #define CH4_RMA_H_INCLUDED
 
@@ -400,27 +395,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_safe(const void *origin_addr,
                                             int target_count, MPI_Datatype target_datatype,
                                             MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
-
-    if (!cs_acq) {
-        MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
-        MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
-        MPIDI_workq_rma_enqueue(PUT, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
-                                MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
-                                target_datatype, MPI_OP_NULL, win, NULL, NULL);
-    } else {
-        MPIDI_workq_vci_progress_unsafe();
-        mpi_errno = MPIDI_put_unsafe(origin_addr, origin_count, origin_datatype,
-                                     target_rank, target_disp, target_count, target_datatype, win);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+    MPIDI_workq_rma_enqueue(PUT, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
+                            MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
+                            target_datatype, MPI_OP_NULL, win, NULL, NULL);
+#else
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_put_unsafe(origin_addr, origin_count, origin_datatype,
+                                 target_rank, target_disp, target_count, target_datatype, win);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_SAFE);
     return mpi_errno;
   fn_fail:
@@ -435,29 +428,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_safe(void *origin_addr,
                                             int target_count, MPI_Datatype target_datatype,
                                             MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_SAFE);
 
-    MPID_THREAD_SAFE_BEGIN(VCI, MPIDI_global.vci_lock, cs_acq);
-
-    if (!cs_acq) {
-        MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
-        MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
-        /* For MPI_Get, "origin" has to be passed to the "result" parameter
-         * field, because `origin_addr` is declared as `const void *`. */
-        MPIDI_workq_rma_enqueue(GET, NULL, origin_count, origin_datatype, NULL, origin_addr, 0,
-                                MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
-                                target_datatype, MPI_OP_NULL, win, NULL, NULL);
-    } else {
-        MPIDI_workq_vci_progress_unsafe();
-        mpi_errno = MPIDI_get_unsafe(origin_addr, origin_count, origin_datatype,
-                                     target_rank, target_disp, target_count, target_datatype, win);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
+    /* For MPI_Get, "origin" has to be passed to the "result" parameter
+     * field, because `origin_addr` is declared as `const void *`. */
+    MPIDI_workq_rma_enqueue(GET, NULL, origin_count, origin_datatype, NULL, origin_addr, 0,
+                            MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
+                            target_datatype, MPI_OP_NULL, win, NULL, NULL);
+#else
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno = MPIDI_get_unsafe(origin_addr, origin_count, origin_datatype,
+                                 target_rank, target_disp, target_count, target_datatype, win);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_SAFE);
     return mpi_errno;
   fn_fail:
@@ -473,22 +464,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_safe(const void *origin_addr,
                                                    MPI_Datatype target_datatype, MPI_Op op,
                                                    MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno = MPIDI_accumulate_unsafe(origin_addr, origin_count, origin_datatype, target_rank,
                                         target_disp, target_count, target_datatype, op, win);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACCUMULATE_SAFE);
     return mpi_errno;
   fn_fail:
@@ -502,23 +494,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_safe(const void *origin_addr
                                                          int target_rank, MPI_Aint target_disp,
                                                          MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno =
         MPIDI_compare_and_swap_unsafe(origin_addr, compare_addr, result_addr, datatype,
                                       target_rank, target_disp, win);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP_SAFE);
     return mpi_errno;
   fn_fail:
@@ -540,14 +533,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_safe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RACCUMULATE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno = MPIDI_raccumulate_unsafe(origin_addr, origin_count, origin_datatype, target_rank,
                                          target_disp, target_count, target_datatype, op, win,
                                          request);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
@@ -574,15 +569,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_safe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno =
         MPIDI_rget_accumulate_unsafe(origin_addr, origin_count, origin_datatype, result_addr,
                                      result_count, result_datatype, target_rank, target_disp,
                                      target_count, target_datatype, op, win, request);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -600,22 +597,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_safe(const void *origin_addr,
                                                      MPI_Aint target_disp, MPI_Op op,
                                                      MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, cs_acq = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno = MPIDI_fetch_and_op_unsafe(origin_addr, result_addr, datatype, target_rank,
                                           target_disp, op, win);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPID_THREAD_SAFE_END(VCI, MPIDI_global.vci_lock, cs_acq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP_SAFE);
     return mpi_errno;
   fn_fail:
@@ -635,14 +633,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_safe(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno =
         MPIDI_rget_unsafe(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                           target_count, target_datatype, win, request);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -666,14 +666,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_safe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RPUT_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RPUT_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno =
         MPIDI_rput_unsafe(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                           target_count, target_datatype, win, request);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -700,14 +702,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_safe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
     MPIDI_workq_vci_progress_unsafe();
+#endif
 
     mpi_errno = MPIDI_get_accumulate_unsafe(origin_addr, origin_count, origin_datatype, result_addr,
                                             result_count, result_datatype, target_rank, target_disp,
                                             target_count, target_datatype, op, win);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     MPIR_ERR_CHECK(mpi_errno);
 

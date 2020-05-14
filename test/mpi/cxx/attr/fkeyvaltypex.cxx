@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 
 
@@ -110,19 +109,28 @@ int main(int argc, char *argv[])
 
         if (attrval != 1) {
             errs++;
-            cerr << "attrval is " << attrval << ", should be 1, before dup in type " << obj.DTP_description
+            char *desc;
+            DTP_obj_get_description(obj, &desc);
+            cerr << "attrval is " << attrval << ", should be 1, before dup in type " << desc
                 << "\n";
+            free(desc);
         }
         duptype = type.Dup();
         /* Check that the attribute was copied */
         if (attrval != 2) {
             errs++;
-            cerr << "Attribute not incremented when type dup'ed (" << obj.DTP_description << ")\n";
+            char *desc;
+            DTP_obj_get_description(obj, &desc);
+            cerr << "Attribute not incremented when type dup'ed (" << desc << ")\n";
+            free(desc);
         }
         duptype.Free();
         if (attrval != 1) {
             errs++;
-            cerr << "Attribute not decremented when duptype " << obj.DTP_description << " freed\n";
+            char *desc;
+            DTP_obj_get_description(obj, &desc);
+            cerr << "Attribute not decremented when duptype " << desc << " freed\n";
+            free(desc);
         }
         /* Check that the attribute was freed in the duptype */
 
@@ -130,7 +138,10 @@ int main(int argc, char *argv[])
             DTP_obj_free(obj);
             if (attrval != 0) {
                 errs++;
-                cerr << "Attribute not decremented when type " << obj.DTP_description << "reed\n";
+                char *desc;
+                DTP_obj_get_description(obj, &desc);
+                cerr << "Attribute not decremented when type " << desc << "reed\n";
+                free(desc);
             }
         } else {
             MPI_Type_delete_attr(type, saveKeyval);

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -15,7 +14,7 @@ cvars:
       category    : THREADS
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -42,9 +41,6 @@ static int MPIR_async_thread_initialized = 0;
 
 static MPIR_Comm *progress_comm_ptr;
 static MPID_Thread_id_t progress_thread_id;
-static MPID_Thread_mutex_t progress_mutex;
-static MPID_Thread_cond_t progress_cond;
-static volatile int progress_thread_done = 0;
 
 /* We can use whatever tag we want; we use a different communicator
  * for communicating with the progress thread. */
@@ -61,7 +57,6 @@ static void progress_fn(void *data)
      * within an internal function and will call NMPI functions
      * directly. */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* FIXME: We assume that waiting on some request forces progress
      * on all requests. With fine-grained threads, will this still
@@ -79,20 +74,7 @@ static void progress_fn(void *data)
     mpi_errno = MPIR_Wait(&request, &status);
     MPIR_Assert(!mpi_errno);
 
-    /* Send a signal to the main thread saying we are done */
-    MPID_Thread_mutex_lock(&progress_mutex, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
-
-    progress_thread_done = 1;
-
-    MPID_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
-
-    MPID_Thread_cond_signal(&progress_cond, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
-
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return;
 }
@@ -110,16 +92,8 @@ int MPIR_Init_async_thread(void)
 
     /* Dup comm world for the progress thread */
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, &progress_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
-
-    MPID_Thread_cond_create(&progress_cond, &err);
-    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s",
-                         strerror(err));
-
-    MPID_Thread_mutex_create(&progress_mutex, &err);
-    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
-                         strerror(err));
 
     MPID_Thread_create((MPID_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
     MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
@@ -144,6 +118,8 @@ int MPIR_Finalize_async_thread(void)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+
     mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
@@ -151,31 +127,11 @@ int MPIR_Finalize_async_thread(void)
     mpi_errno = MPIR_Wait(&request, &status);
     MPIR_Assert(!mpi_errno);
 
-    /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPID_Thread_mutex_lock(&progress_mutex, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
-
-    while (!progress_thread_done) {
-        MPID_Thread_cond_wait(&progress_cond, &progress_mutex, &mpi_errno);
-        MPIR_Assert(!mpi_errno);
-    }
-
-    MPID_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
+    MPID_Thread_join(progress_thread_id);
 
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
-    MPIR_Assert(!mpi_errno);
-
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPID_Thread_cond_destroy(&progress_cond, &mpi_errno);
-    MPIR_Assert(!mpi_errno);
-
-    MPID_Thread_mutex_destroy(&progress_mutex, &mpi_errno);
     MPIR_Assert(!mpi_errno);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
@@ -184,7 +140,7 @@ int MPIR_Finalize_async_thread(void)
 }
 
 /* called inside MPIR_Init_thread */
-int MPII_init_async(int thread_provided)
+int MPII_init_async(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,7 +149,7 @@ int MPII_init_async(int thread_provided)
         printf("WARNING: Asynchronous progress is not supported with Argobots\n");
         goto fn_fail;
 #else
-        if (thread_provided == MPI_THREAD_MULTIPLE) {
+        if (MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
                 goto fn_fail;
@@ -235,7 +191,7 @@ int MPIR_Init_async_thread(void)
     return MPI_SUCCESS;
 }
 
-int MPII_init_async(int thread_provided ATTRIBUTE((unused)))
+int MPII_init_async(void)
 {
     return MPI_SUCCESS;
 }

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -93,7 +92,6 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_GET);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -140,14 +138,12 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 
     /* ... body of routine ...  */
     mpi_errno = MPIR_Info_get_impl(info_ptr, key, valuelen, value, flag);
+    MPIR_ERR_CHECK(mpi_errno);
     /* ... end of body of routine ... */
-    if (mpi_errno)
-        goto fn_fail;
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_GET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -160,8 +156,8 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
                                          "**mpi_info_get %I %s %d %p %p", info, key, valuelen,
                                          value, flag);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
 #endif
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

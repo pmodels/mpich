@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -100,8 +98,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
             }
         }
 
-        mpi_errno = MPIR_Type_create_indexed_block_impl(count, recvcount,
-                                                        displs, recvtype, &newtype);
+        mpi_errno =
+            MPIR_Type_create_indexed_block_impl(count, recvcount, displs, recvtype, &newtype);
         MPIR_ERR_CHECK(mpi_errno);
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);

@@ -1,11 +1,6 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef GENTRAN_UTILS_H_INCLUDED
@@ -16,7 +11,7 @@
 #include "tsp_gentran.h"
 #include "utarray.h"
 
-extern MPII_Coll_queue_t coll_queue;
+extern MPII_Coll_queue_t MPII_coll_queue;
 extern int MPII_Genutil_progress_hook_id;
 
 /* vertex copy function, required by utarray */

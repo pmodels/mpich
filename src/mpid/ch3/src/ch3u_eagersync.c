@@ -1,8 +1,6 @@
-
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -59,15 +57,15 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 
     if (dt_contig)
     {
-        MPL_IOV iov[2];
+        struct iovec iov[2];
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                                             "sending contiguous sync eager message, data_sz=%" PRIdPTR,
 					    data_sz));
 	
-        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)es_pkt;
-        iov[0].MPL_IOV_LEN = sizeof(*es_pkt);
-	iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *)buf + dt_true_lb);
-	iov[1].MPL_IOV_LEN = data_sz;	
+        iov[0].iov_base = (void *)es_pkt;
+        iov[0].iov_len = sizeof(*es_pkt);
+	iov[1].iov_base = (void *) ((char *)buf + dt_true_lb);
+	iov[1].iov_len = data_sz;
 	
 	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 	mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);

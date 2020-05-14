@@ -1,13 +1,17 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include <mpiimpl.h>
-#include <dataloop.h>
 #include <stdlib.h>
+#include "typerep_internal.h"
+
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+#include "yaksa.h"
+#else
+#include <dataloop.h>
+#endif
 
 struct flatten_hdr {
     MPI_Aint size;
@@ -30,11 +34,22 @@ int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_
     int flattened_loop_size;
     int mpi_errno = MPI_SUCCESS;
 
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+    uintptr_t size;
+    int rc = yaksa_flatten_size((yaksa_type_t) datatype_ptr->typerep, &size);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    assert(size <= INT_MAX);
+    flattened_loop_size = (int) size;
+#else
     MPIR_Dataloop_flatten_size(datatype_ptr, &flattened_loop_size);
+#endif
 
     *flattened_type_size = flattened_loop_size + sizeof(struct flatten_hdr);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /*
@@ -47,7 +62,7 @@ int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_
 int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
-    void *flattened_dataloop = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
+    void *flattened_typerep = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
     int mpi_errno = MPI_SUCCESS;
 
     flatten_hdr->size = datatype_ptr->size;
@@ -62,8 +77,13 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     flatten_hdr->basic_type = datatype_ptr->basic_type;
     flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
 
-    mpi_errno = MPIR_Dataloop_flatten(datatype_ptr, flattened_dataloop);
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+    int rc = yaksa_flatten((yaksa_type_t) datatype_ptr->typerep, flattened_typerep);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+#else
+    mpi_errno = MPIR_Dataloop_flatten(datatype_ptr, flattened_typerep);
     MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
     return mpi_errno;
@@ -82,7 +102,7 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
 {
     struct flatten_hdr *flatten_hdr = (struct flatten_hdr *) flattened_type;
-    void *flattened_dataloop = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
+    void *flattened_typerep = (void *) ((char *) flattened_type + sizeof(struct flatten_hdr));
     int mpi_errno = MPI_SUCCESS;
 
     datatype_ptr->is_committed = 1;
@@ -100,9 +120,15 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->has_sticky_ub = flatten_hdr->has_sticky_ub;
     datatype_ptr->has_sticky_lb = flatten_hdr->has_sticky_lb;
     datatype_ptr->contents = NULL;
+    datatype_ptr->flattened = NULL;
 
-    mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_dataloop);
+#if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
+    int rc = yaksa_unflatten((yaksa_type_t *) & datatype_ptr->typerep, flattened_typerep);
+    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+#else
+    mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_typerep);
     MPIR_ERR_CHECK(mpi_errno);
+#endif
 
   fn_exit:
     return mpi_errno;

@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include <mpidimpl.h>
 #include "ofi_impl.h"
 MPIDI_OFI_global_t MPIDI_OFI_global = { 0 };
@@ -27,6 +22,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_DEFAULT,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_DEFAULT,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_DEFAULT,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_DEFAULT,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_DEFAULT,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_DEFAULT,
      .enable_am = MPIDI_OFI_ENABLE_AM_DEFAULT,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_DEFAULT,
@@ -49,6 +46,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_MINIMAL,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_MINIMAL,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_MINIMAL,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_MINIMAL,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_MINIMAL,
      .enable_am = MPIDI_OFI_ENABLE_AM_MINIMAL,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_MINIMAL,
@@ -71,6 +70,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_PSM2,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_PSM2,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_PSM2,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_PSM2,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_PSM2,
      .enable_am = MPIDI_OFI_ENABLE_AM_PSM2,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_PSM2,
@@ -93,6 +94,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_SOCKETS,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_SOCKETS,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_SOCKETS,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_SOCKETS,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_SOCKETS,
      .enable_am = MPIDI_OFI_ENABLE_AM_SOCKETS,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_SOCKETS,
@@ -115,6 +118,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_BGQ,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_BGQ,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_BGQ,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_BGQ,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_BGQ,
      .enable_am = MPIDI_OFI_ENABLE_AM_BGQ,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_BGQ,
@@ -137,6 +142,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_RXM,
      .enable_shared_contexts = MPIDI_OFI_ENABLE_SHARED_CONTEXTS_RXM,
      .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_RXM,
+     .enable_mr_virt_address = MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS_RXM,
+     .enable_mr_prov_key = MPIDI_OFI_ENABLE_MR_PROV_KEY_RXM,
      .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_RXM,
      .enable_am = MPIDI_OFI_ENABLE_AM_RXM,
      .enable_rma = MPIDI_OFI_ENABLE_RMA_RXM,

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_TRMEM_H_INCLUDED
@@ -381,5 +380,7 @@ void *MPL_traligned_alloc(size_t alignment, size_t length, MPL_memory_class, int
 #include <stdio.h>
 void MPL_trdump(FILE *, int);
 void MPL_trcategorydump(FILE * fp);
+
+char *MPL_strdup_no_spaces(const char *str);
 
 #endif /* MPL_TRMEM_H_INCLUDED */

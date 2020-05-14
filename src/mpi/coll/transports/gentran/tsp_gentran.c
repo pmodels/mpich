@@ -1,11 +1,6 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -409,7 +404,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
 
     /* Create a request */
-    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
     if (!reqp)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     *req = reqp;
@@ -420,7 +415,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
         MPID_Request_complete(reqp);
         goto fn_exit;
     }
-    /* Make some progress */
+    /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {
         MPID_Request_complete(reqp);
@@ -429,13 +424,15 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
 
     /* Enqueue schedule and activate progress hook if not already activated */
     reqp->u.nbc.coll.sched = (void *) sched;
-    if (coll_queue.head == NULL)
-        MPID_Progress_activate_hook(MPII_Genutil_progress_hook_id);
-    DL_APPEND(coll_queue.head, &(reqp->u.nbc.coll));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    DL_APPEND(MPII_coll_queue.head, &(reqp->u.nbc.coll));
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+
+    MPIR_Progress_hook_activate(MPII_Genutil_progress_hook_id);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_START);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

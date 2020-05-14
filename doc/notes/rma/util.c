@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 MPIR_Copy_data(src_addr, src_count, src_datatype,
 	       dest_buff_addr, dest_count, dest_datatype)
 {

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_NEM_POST_H_INCLUDED
@@ -53,8 +52,8 @@ MPID_nem_mpich_win_t;
 
 #if !defined (MPID_NEM_INLINE) || !MPID_NEM_INLINE
 int MPID_nem_mpich_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich_sendv(MPL_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich_sendv_header(MPL_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich_sendv(struct iovec **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich_sendv_header(struct iovec **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 int MPID_nem_mpich_test_recv_wait(MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 int MPID_nem_recv_seqno_matches(MPID_nem_queue_ptr_t qhead) ;

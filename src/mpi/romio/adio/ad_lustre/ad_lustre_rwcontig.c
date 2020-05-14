@@ -1,11 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
- *
- *   Copyright (C) 2007 Oak Ridge National Laboratory
- *
- *   Copyright (C) 2008 Sun Microsystems, Lustre group
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include <unistd.h>

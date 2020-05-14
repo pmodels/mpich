@@ -1,11 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef UCX_PROBE_H_INCLUDED
 #define UCX_PROBE_H_INCLUDED
 
@@ -33,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
 
     if (message_h) {
         *flag = 1;
-        req = (MPIR_Request *) MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
+        req = (MPIR_Request *) MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE, 0);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).message_handler = message_h;

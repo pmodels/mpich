@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /*
@@ -50,14 +49,7 @@ static char temp_filename[MAXPATHLEN] = "";
 static int world_num = 0;
 static int world_rank = -1;
 static int which_rank = -1;     /* all ranks */
-static int reset_time_origin = 1;
 static double time_origin = 0.0;
-
-/* This variable is initialized to the appropriate threading level in
- * the DBG_Init call.  Before the debug init, the application cannot
- * be threaded, anyway.  So it is safe to statically set it to "0"
- * here. */
-static int is_threaded = 0;
 
 static int dbg_usage(const char *, const char *);
 static int dbg_openfile(FILE ** dbg_fp);
@@ -66,7 +58,7 @@ static int dbg_set_level(const char *, const char *(names[]));
 static int dbg_get_filename(char *filename, int len);
 
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
-static MPL_thread_tls_t dbg_tls_key;
+static MPL_thread_tls_key_t dbg_tls_key;
 #endif
 
 static FILE *dbg_static_fp = 0;
@@ -107,12 +99,10 @@ static FILE *get_fp(void)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (is_threaded) {
-        if (dbg_initialized == DBG_INITIALIZED) {
-            FILE *fp;
-            MPL_thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
-            return fp;
-        }
+    if (dbg_initialized == DBG_INITIALIZED) {
+        FILE *fp;
+        MPL_thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
+        return fp;
     }
 #endif
 
@@ -125,11 +115,9 @@ static void set_fp(FILE * fp)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (is_threaded) {
-        if (dbg_initialized == DBG_INITIALIZED) {
-            MPL_thread_tls_set(&dbg_tls_key, (void *) fp, &err);
-            return;
-        }
+    if (dbg_initialized == DBG_INITIALIZED) {
+        MPL_thread_tls_set(&dbg_tls_key, (void *) fp, &err);
+        return;
     }
 #endif
 
@@ -138,7 +126,7 @@ static void set_fp(FILE * fp)
 
 int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char *fmat, ...)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     va_list list;
     char *str, stmp[MPL_DBG_MAXLINE];
     int i;
@@ -378,7 +366,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
             }
         }
     }
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /* could two different environment variables control the same thing?  sure they
@@ -442,7 +430,7 @@ static int dbg_process_env(void)
             which_rank = -1;
         }
     }
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 MPL_dbg_class MPL_DBG_ROUTINE_ENTER;
@@ -455,17 +443,17 @@ MPL_dbg_class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
  * full initialization is not required for updating the environment
  * and/or command-line arguments.
  */
-int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
+int MPL_dbg_pre_init(int *argc_p, char ***argv_p)
 {
     MPL_time_t t;
 
     /* if the DBG_MSG system was already initialized, say by the
      * device, then return immediately */
     if (dbg_initialized != DBG_UNINIT)
-        return MPL_DBG_SUCCESS;
+        return MPL_SUCCESS;
 
     if (dbg_init_tls())
-        return MPL_DBG_ERR_OTHER;
+        return MPL_ERR_DBG_OTHER;
 
     /* Check to see if any debugging was selected.  The order of these
      * tests is important, as they allow general defaults to be set,
@@ -475,11 +463,9 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 
     dbg_process_args(argc_p, argv_p);
 
-    if (wtimeNotReady == 0) {
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
+    MPL_wtime_init();
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &time_origin);
 
     /* Allocate the predefined classes */
     MPL_DBG_ROUTINE_ENTER = MPL_dbg_class_alloc("ROUTINE_ENTER", "routine_enter");
@@ -494,11 +480,10 @@ int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 
     dbg_initialized = DBG_PREINIT;
 
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
 }
 
-int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
-                 int wnum, int wrank, int threaded)
+int MPL_dbg_init(int wnum, int wrank)
 {
     int ret;
     FILE *dbg_fp = NULL;
@@ -508,40 +493,17 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
      * responsible for handling the file mode (e.g., reopen when the
      * rank become available) */
     if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR)
-        return MPL_DBG_SUCCESS;
+        return MPL_SUCCESS;
 
     if (dbg_initialized != DBG_PREINIT) {
         if (dbg_init_tls())
-            return MPL_DBG_ERR_OTHER;
+            return MPL_ERR_DBG_OTHER;
     }
 
     dbg_fp = get_fp();
 
-    /* We may need to wait until the device is set up to initialize
-     * the timer */
-    if (reset_time_origin) {
-        MPL_time_t t;
-        MPL_wtime(&t);
-        MPL_wtime_todouble(&t, &time_origin);
-        reset_time_origin = 0;
-    }
-    /* Check to see if any debugging was selected.  The order of these
-     * tests is important, as they allow general defaults to be set,
-     * followed by more specific modifications. */
-    /* Both of these may have already been set in the PreInit call; if
-     * the command line and/or environment variables are set before
-     * the full initialization, then don't call the routines to check
-     * those values (as they were already handled in DBG_PreInit) */
-    /* First, the environment variables */
-    if (!has_env)
-        dbg_process_env();
-    /* Now the command-line arguments */
-    if (!has_args)
-        dbg_process_args(argc_p, argv_p);
-
     world_num = wnum;
     world_rank = wrank;
-    is_threaded = threaded;
 
     if (which_rank >= 0 && which_rank != wrank) {
         /* Turn off logging on this process */
@@ -576,7 +538,7 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
     dbg_initialized = DBG_INITIALIZED;
 
   fn_exit:
-    return MPL_DBG_SUCCESS;
+    return MPL_SUCCESS;
   fn_fail:
     dbg_initialized = DBG_ERROR;
     goto fn_exit;
@@ -615,7 +577,7 @@ Environment variables\n\
  * for the log file */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
     char *basename;
@@ -646,7 +608,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -656,7 +618,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
  * for the log file */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
     int fd;
     char *basename;
@@ -688,7 +650,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -703,7 +665,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
 */
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     char *cret;
 
     cret = tmpnam(temp_filename);
@@ -719,7 +681,7 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
   fn_fail:
     MPL_error_printf("Could not open log file %s\n", temp_filename);
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 
@@ -844,7 +806,7 @@ static int dbg_get_filename(char *filename, int len)
  * calls. */
 static int dbg_openfile(FILE ** dbg_fp)
 {
-    int mpl_errno = MPL_DBG_SUCCESS;
+    int mpl_errno = MPL_SUCCESS;
     if (!file_pattern || *file_pattern == 0 || strcmp(file_pattern, "-stdout-") == 0) {
         *dbg_fp = stdout;
     } else if (strcmp(file_pattern, "-stderr-") == 0) {
@@ -874,7 +836,7 @@ static int dbg_openfile(FILE ** dbg_fp)
     return mpl_errno;
   fn_fail:
     dbg_initialized = DBG_ERROR;
-    mpl_errno = MPL_DBG_ERR_INTERN;
+    mpl_errno = MPL_ERR_DBG_INTERN;
     goto fn_exit;
 }
 

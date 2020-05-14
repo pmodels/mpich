@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2013 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Types and interfaces in this file are internally used by MPIR_T itself.
@@ -235,10 +234,10 @@ typedef struct {
 /* Timer type */
 typedef struct {
     /* Accumulated time */
-    MPID_Time_t total;
+    MPL_time_t total;
 
     /* Time when the timer was started recently */
-    MPID_Time_t curstart;
+    MPL_time_t curstart;
 
     /* A counter recording how many times the timer is started */
     unsigned long long count;
@@ -700,22 +699,22 @@ extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype
 #define MPIR_T_PVAR_TIMER_INIT_VAR_impl(ptr_) \
     do { \
         /* FIXME: need a generic approach to init a timer */ \
-        memset(&((ptr_)->total), 0, sizeof(MPID_Time_t)); \
+        memset(&((ptr_)->total), 0, sizeof(MPL_time_t)); \
     } while (0)
 #define MPIR_T_PVAR_TIMER_GET_VAR_impl(ptr_, buf) \
     do { \
-        MPID_Wtime_todouble(&((ptr_)->total), buf); \
+        MPL_wtime_todouble(&((ptr_)->total), buf); \
     } while (0)
 #define MPIR_T_PVAR_TIMER_START_VAR_impl(ptr_) \
     do { \
-        MPID_Wtime(&((ptr_)->curstart)); \
+        MPL_wtime(&((ptr_)->curstart)); \
         (ptr_)->count++; \
     } while (0)
 #define MPIR_T_PVAR_TIMER_END_VAR_impl(ptr_) \
     do { \
-        MPID_Time_t tmp_; \
-        MPID_Wtime(&tmp_); \
-        MPID_Wtime_acc(&((ptr_)->curstart), &tmp_, &((ptr_)->total)); \
+        MPL_time_t tmp_; \
+        MPL_wtime(&tmp_); \
+        MPL_wtime_acc(&((ptr_)->curstart), &tmp_, &((ptr_)->total)); \
     } while (0)
 
 #define MPIR_T_PVAR_TIMER_INIT_impl(name_) \
@@ -736,7 +735,7 @@ static inline
 {
     int i;
     for (i = 0; i < count; i++)
-        MPID_Wtime_todouble(&(timer[i].total), &buf[i]);
+        MPL_wtime_todouble(&(timer[i].total), &buf[i]);
 }
 
 /* Registration for static storage */
@@ -1192,6 +1191,8 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
     do { \
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
+        MPID_Thread_init(&err_); \
+        MPIR_Assert(err_ == 0); \
         MPID_Thread_mutex_create(&mpi_t_mutex, &err_); \
         MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
@@ -1202,6 +1203,8 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
         MPID_Thread_mutex_destroy(&mpi_t_mutex, &err_); \
+        MPIR_Assert(err_ == 0); \
+        MPID_Thread_finalize(&err_); \
         MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
     } while (0)

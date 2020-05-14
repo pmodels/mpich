@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_TIMER_PPC64_CYCLE_H_INCLUDED
@@ -33,7 +32,7 @@ static inline uint64_t tb()
 static inline int MPL_wtime(MPL_time_t * timeval)
 {
     *timeval = tb();
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_TIMER_PPC64_CYCLE_H_INCLUDED */

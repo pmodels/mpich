@@ -1,14 +1,12 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2017 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 
 /* This implementation of MPI_Reduce_scatter_block was obtained by taking
    the implementation of MPI_Reduce_scatter from reduce_scatter.c and replacing
-   recvcnts[i] with recvcount everywhere. */
+   recvcounts[i] with recvcount everywhere. */
 
 
 #include "mpiimpl.h"
@@ -162,7 +160,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
         newrank = rank - rem;
 
     if (newrank != -1) {
-        /* recalculate the recvcnts and disps arrays because the
+        /* recalculate the recvcounts and disps arrays because the
          * even-numbered processes who no longer participate will
          * have their result calculated by the process to their
          * right (rank+1). */

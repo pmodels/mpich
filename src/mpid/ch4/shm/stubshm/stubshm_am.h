@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef STUBSHM_AM_H_INCLUDED
 #define STUBSHM_AM_H_INCLUDED
 
@@ -99,17 +95,6 @@ static inline int MPIDI_STUBSHM_am_send_hdr_reply(MPIR_Context_id_t context_id, 
     MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_AM_SEND_HDR_REPLY);
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_STUBSHM_am_recv(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_AM_RECV);
     return MPI_SUCCESS;
 }
 

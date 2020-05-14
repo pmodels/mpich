@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_NEM_INLINE_H_INCLUDED
@@ -16,10 +15,10 @@ extern int MPID_nem_lmt_shm_pending;
 extern MPID_nem_cell_ptr_t MPID_nem_prefetched_cell;
 
 static inline int MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again);
-static inline int MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
+static inline int MPID_nem_mpich_sendv (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline void MPID_nem_mpich_dequeue_fastbox (int local_rank);
 static inline void MPID_nem_mpich_enqueue_fastbox (int local_rank);
-static inline int MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
+static inline int MPID_nem_mpich_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
@@ -125,9 +124,9 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
         
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, buf, size);
+        MPIR_Memcpy((void *)pbox->cell.pkt.payload, buf, size);
 
-        OPA_store_release_int(&pbox->flag.value, 1);
+        MPL_atomic_release_store_int(&pbox->flag.value, 1);
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
@@ -171,7 +170,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     el->pkt.header.seqno   = vc_ch->send_seqno++;
     MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, el->pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
     
-    MPIR_Memcpy((void *)el->pkt.p.payload, buf, size);
+    MPIR_Memcpy((void *)el->pkt.payload, buf, size);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues11));
 
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent queue");
@@ -218,7 +217,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
   sets again to 1 if it can't get a free cell, 0 otherwise
 */
 static inline int
-MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_sendv (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
@@ -230,7 +229,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV);
 
-    MPIR_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN > 0);
+    MPIR_Assert (*n_iov > 0 && (*iov)->iov_len > 0);
     MPIR_Assert(vc_ch->is_local);
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
@@ -261,12 +260,12 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 #endif /*PREFETCH_CELL     */
 
     payload_len = MPID_NEM_MPICH_DATA_LEN;
-    cell_buf    = (char *) el->pkt.p.payload; /* cast away volatile */
+    cell_buf    = (char *) el->pkt.payload; /* cast away volatile */
     
-    while (*n_iov && payload_len >= (*iov)->MPL_IOV_LEN)
+    while (*n_iov && payload_len >= (*iov)->iov_len)
     {
-	size_t _iov_len = (*iov)->MPL_IOV_LEN;
-	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
+	size_t _iov_len = (*iov)->iov_len;
+	MPIR_Memcpy (cell_buf, (*iov)->iov_base, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -275,9 +274,9 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     
     if (*n_iov && payload_len > 0)
     {
-	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
-	(*iov)->MPL_IOV_BUF = (char *)(*iov)->MPL_IOV_BUF + payload_len;
-	(*iov)->MPL_IOV_LEN -= payload_len;
+	MPIR_Memcpy (cell_buf, (*iov)->iov_base, payload_len);
+	(*iov)->iov_base = (char *)(*iov)->iov_base + payload_len;
+	(*iov)->iov_len -= payload_len;
  	payload_len = 0;
     }
 
@@ -316,7 +315,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 /* MPID_nem_mpich_sendv_header (struct iovec **iov, int *n_iov, int dest)
    same as above but first iov element is an MPICH header */
 static inline int
-MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
@@ -332,12 +331,12 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     MPIR_Assert(vc_ch->is_local);
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
-    MPIR_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert (*n_iov > 0 && (*iov)->iov_len == sizeof(MPIDI_CH3_Pkt_t));
 
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (*n_iov == 2 && (*iov)[1].MPL_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
+    if (*n_iov == 2 && (*iov)[1].iov_len + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
@@ -345,14 +344,14 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
             goto usequeue_l;
 
         pbox->cell.pkt.header.source  = MPID_nem_mem_region.local_rank;
-        pbox->cell.pkt.header.datalen = (*iov)[1].MPL_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t);
+        pbox->cell.pkt.header.datalen = (*iov)[1].iov_len + sizeof(MPIDI_CH3_Pkt_t);
         pbox->cell.pkt.header.seqno   = vc_ch->send_seqno++;
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, (*iov)[0].MPL_IOV_BUF, (*iov)[0].MPL_IOV_LEN);
-        MPIR_Memcpy ((char *)pbox->cell.pkt.p.payload + (*iov)[0].MPL_IOV_LEN, (*iov)[1].MPL_IOV_BUF, (*iov)[1].MPL_IOV_LEN);
+        MPIR_Memcpy((void *)pbox->cell.pkt.payload, (*iov)[0].iov_base, (*iov)[0].iov_len);
+        MPIR_Memcpy ((char *)pbox->cell.pkt.payload + (*iov)[0].iov_len, (*iov)[1].iov_base, (*iov)[1].iov_len);
         
-        OPA_store_release_int(&pbox->flag.value, 1);
+        MPL_atomic_release_store_int(&pbox->flag.value, 1);
         *n_iov = 0;
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
@@ -388,18 +387,18 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);
 #endif /*PREFETCH_CELL */
 
-    MPIR_Memcpy((void *)el->pkt.p.payload, (*iov)->MPL_IOV_BUF, sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Memcpy((void *)el->pkt.payload, (*iov)->iov_base, sizeof(MPIDI_CH3_Pkt_t));
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
-    cell_buf = (char *)(el->pkt.p.payload) + buf_offset;
+    cell_buf = (char *)(el->pkt.payload) + buf_offset;
     ++(*iov);
     --(*n_iov);
 
     payload_len = MPID_NEM_MPICH_DATA_LEN - buf_offset;
-    while (*n_iov && payload_len >= (*iov)->MPL_IOV_LEN)
+    while (*n_iov && payload_len >= (*iov)->iov_len)
     {
-	size_t _iov_len = (*iov)->MPL_IOV_LEN;
-	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
+	size_t _iov_len = (*iov)->iov_len;
+	MPIR_Memcpy (cell_buf, (*iov)->iov_base, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -408,9 +407,9 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *aga
     
     if (*n_iov && payload_len > 0)
     {
-	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
-	(*iov)->MPL_IOV_BUF = (char *)(*iov)->MPL_IOV_BUF + payload_len;
-	(*iov)->MPL_IOV_LEN -= payload_len;
+	MPIR_Memcpy (cell_buf, (*iov)->iov_base, payload_len);
+	(*iov)->iov_base = (char *)(*iov)->iov_base + payload_len;
+	(*iov)->iov_len -= payload_len;
 	payload_len = 0;
     }
 
@@ -507,16 +506,16 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
             MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
 
             /* copy header */
-            MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, header, header_sz);
+            MPIR_Memcpy((void *)pbox->cell.pkt.payload, header, header_sz);
             
             /* copy data */
             MPI_Aint actual_pack_bytes;
             MPIR_Typerep_pack(buf, count, datatype, *msg_offset,
-                           (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t),
+                           (char *)pbox->cell.pkt.payload + sizeof(MPIDI_CH3_Pkt_t),
                            msgsize - *msg_offset, &actual_pack_bytes);
             MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
 
-            OPA_store_release_int(&pbox->flag.value, 1);
+            MPL_atomic_release_store_int(&pbox->flag.value, 1);
 
             *msg_offset += actual_pack_bytes;;
 
@@ -555,7 +554,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 #endif /*PREFETCH_CELL */
 
     /* copy header */
-    MPIR_Memcpy((void *)el->pkt.p.payload, header, header_sz);
+    MPIR_Memcpy((void *)el->pkt.payload, header, header_sz);
     
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
@@ -567,7 +566,7 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload + buf_offset,
+    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.payload + buf_offset,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = buf_offset + actual_pack_bytes;
     *msg_offset += actual_pack_bytes;
@@ -653,7 +652,7 @@ MPID_nem_mpich_send_seg (void *buf, MPI_Aint count, MPI_Datatype datatype,
         max_pack_bytes = MPID_NEM_MPICH_DATA_LEN;
 
     MPI_Aint actual_pack_bytes;
-    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.p.payload,
+    MPIR_Typerep_pack(buf, count, datatype, *msg_offset, (char *)el->pkt.payload,
                    max_pack_bytes, &actual_pack_bytes);
     datalen = actual_pack_bytes;
     *msg_offset += actual_pack_bytes;
@@ -935,10 +934,8 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_BLOCKING_RECV);
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
-#ifdef MPICH_IS_THREADED
     /* We should never enter this function in a multithreaded app */
-    MPIR_Assert(!MPIR_ThreadInfo.isThreaded);
-#endif
+    MPIR_Assert(!MPIR_IS_THREADED);
 
 #ifdef USE_FASTBOX
     if (poll_active_fboxes(cell)) goto fbox_l;
@@ -972,7 +969,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
             }
 	}
 
-        if (completions != OPA_load_int(&MPIDI_CH3I_progress_completion_count)) {
+        if (completions != MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count)) {
             *cell = NULL;
             *in_fbox = 0;
             goto exit_l;

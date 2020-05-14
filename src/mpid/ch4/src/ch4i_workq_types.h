@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4I_WORKQ_TYPES_H_INCLUDED
 #define CH4I_WORKQ_TYPES_H_INCLUDED
 
@@ -17,7 +12,6 @@
 enum {
     MPIDI_CH4_MT_DIRECT,
     MPIDI_CH4_MT_HANDOFF,
-    MPIDI_CH4_MT_TRYLOCK,
 
     MPIDI_CH4_NUM_MT_MODELS,
 };
@@ -77,8 +71,8 @@ struct MPIDI_av_entry;
 typedef struct MPIDI_workq_elemt {
     MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPIDI_workq_op_t op;
-    OPA_int_t *processed;       /* set to true by the progress thread when
-                                 * this work item is done */
+    MPL_atomic_int_t *processed;        /* set to true by the progress thread when
+                                         * this work item is done */
     union {
         union {
             struct MPIDI_workq_send {

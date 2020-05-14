@@ -1,8 +1,8 @@
-#!/bin/sh
-#
-# (C) 2018 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+#! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # Create and/or update the f90 tests
 printf "Create or update the Fortran 90 tests derived from the Fortran 77 tests... "

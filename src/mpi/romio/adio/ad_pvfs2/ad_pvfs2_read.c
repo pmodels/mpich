@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*-
- *     vim: ts=8 sts=4 sw=4 noexpandtab
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -157,5 +155,4 @@ void ADIOI_PVFS2_ReadStrided(ADIO_File fd, void *buf, int count,
 
 
 /*
- * vim: ts=8 sts=4 sw=4 noexpandtab
  */

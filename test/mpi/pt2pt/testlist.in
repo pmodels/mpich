@@ -1,6 +1,6 @@
 sendrecv2 2
 sendrecv3 2
-sendflood 8 timeLimit=600
+sendflood 8
 sendall 4
 anyall 2
 eagerdt 2
@@ -21,7 +21,9 @@ rqstatus 2
 rqfreeb 4
 greq1 1
 probe_unexp 4
+probe_unexp 4 env=MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE=16384
 probenull 1
+probenull 1 env=MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE=16384
 # For testing, scancel will run with 1 process as well
 scancel 2 xfail=ticket2266 xfail=ticket2270
 scancel2 2 xfail=ticket2266 xfail=ticket2270

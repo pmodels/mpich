@@ -1,32 +1,25 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_EAGER_FBOX_TYPES_H_INCLUDED
 #define POSIX_EAGER_FBOX_TYPES_H_INCLUDED
 
 #include <mpidimpl.h>
 #include "mpidu_init_shm.h"
 
-#define MPIDI_POSIX_FBOX_DATA_LEN  (16 * 1024 - sizeof(uint64_t) - 2 * sizeof(int))
-#define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
+#define MPIDI_POSIX_FBOX_SIZE       (16 * 1024)
 
 typedef struct {
-
-    volatile uint64_t data_ready;
-
+    MPL_atomic_int_t data_ready;
     int is_header;
     size_t payload_sz;
-
-    uint8_t payload[MPIDI_POSIX_FBOX_DATA_LEN];
-
+    uint8_t payload[];
 } MPIDI_POSIX_fastbox_t;
+
+#define MPIDI_POSIX_FBOX_DATA_LEN  (MPIDI_POSIX_FBOX_SIZE - sizeof(MPIDI_POSIX_fastbox_t))
+#define MPIDI_POSIX_FBOX_THRESHOLD (MPIDI_POSIX_FBOX_DATA_LEN)
 
 typedef struct MPIDI_POSIX_fbox_arrays {
     MPIDI_POSIX_fastbox_t **in;

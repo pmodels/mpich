@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -482,10 +480,12 @@ int MPIR_hwtopo_mem_bind(void *baseaddr, size_t len, MPIR_hwtopo_gid_t gid)
 #ifdef HAVE_HWLOC
     const struct hwloc_topology_support *support = hwloc_topology_get_support(hwloc_topology);
     if (!support->membind->set_area_membind) {
-        fprintf(stderr,
-                "%s: hwloc_set_area_membind() is not supported, skipping memory binding\n",
-                __func__);
-        return MPI_ERR_OTHER;
+#ifdef HAVE_ERROR_CHECKING
+        ret =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomembind", 0);
+#endif /* HAVE_ERROR_CHECKING */
+        return ret;
     }
 
     hwloc_membind_policy_t policy = HWLOC_MEMBIND_BIND;
@@ -503,8 +503,13 @@ int MPIR_hwtopo_mem_bind(void *baseaddr, size_t len, MPIR_hwtopo_gid_t gid)
     if (hwloc_obj->type == HWLOC_OBJ_NUMANODE) {
         flags |= HWLOC_MEMBIND_BYNODESET;
     } else {
-        fprintf(stderr, "%s: object type not valid, skipping memory binding\n", __func__);
-        return MPI_ERR_OTHER;
+#ifdef HAVE_ERROR_CHECKING
+        ret =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**invalidmembind", "**invalidmembind %d", gid);
+#endif /* HAVE_ERROR_CHECKING */
+        hwloc_bitmap_free(bitmap);
+        return ret;
     }
 
     ret = hwloc_set_area_membind(hwloc_topology, baseaddr, len, bitmap, policy, flags);

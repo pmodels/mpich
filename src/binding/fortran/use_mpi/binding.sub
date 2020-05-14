@@ -1,5 +1,9 @@
 #! /usr/bin/env perl
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This file contains common routines for reading a file of function prototypes
 # (such as mpi.h) and extracting the function prototypes.
 

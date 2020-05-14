@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPI_INIT_H_INCLUDED
@@ -19,7 +18,7 @@ cvars:
       category    : DEVELOPER
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -30,7 +29,7 @@ cvars:
       category    : DEVELOPER
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -43,16 +42,11 @@ cvars:
 /* Definitions local to src/mpi/init only */
 int MPIR_Init_thread(int *, char ***, int, int *);
 
-void MPII_init_thread_and_enter_cs(int thread_required);
-void MPII_init_thread_and_exit_cs(int thread_provided);
-void MPII_init_thread_failed_exit_cs(void);
-void MPII_finalize_thread_and_enter_cs(void);
-void MPII_finalize_thread_and_exit_cs(void);
-void MPII_finalize_thread_failed_exit_cs(void);
+void MPII_thread_mutex_create(void);
+void MPII_thread_mutex_destroy(void);
 
-int MPII_init_global(int *p_thread_required);
-int MPII_post_init_global(int thread_provided);
-int MPII_finalize_global(void);
+int MPII_init_local_proc_attrs(int *p_thread_required);
+int MPII_finalize_local_proc_attrs(void);
 
 void MPII_init_windows(void);
 void MPII_init_binding_fortran(void);
@@ -61,7 +55,7 @@ void MPII_init_binding_f08(void);
 void MPII_pre_init_dbg_logging(int *argc, char ***argv);
 void MPII_init_dbg_logging(void);
 
-int MPII_init_async(int thread_provided);
+int MPII_init_async(void);
 int MPII_finalize_async(void);
 
 static inline void MPII_pre_init_memory_tracing(void)
@@ -74,11 +68,8 @@ static inline void MPII_pre_init_memory_tracing(void)
 static inline void MPII_post_init_memory_tracing(void)
 {
 #ifdef USE_MEMORY_TRACING
-#ifdef MPICH_IS_THREADED
-    MPL_trconfig(MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded);
-#else
-    MPL_trconfig(MPIR_Process.comm_world->rank, 0);
-#endif
+    MPL_trconfig(MPIR_Process.comm_world->rank,
+                 MPIR_ThreadInfo.thread_provided == MPI_THREAD_MULTIPLE);
 #endif
 }
 

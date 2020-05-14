@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -180,7 +179,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
 
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         /* this is the last window, de-register RMA progress hook */
-        mpi_errno = MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+        mpi_errno = MPIR_Progress_hook_deregister(MPIDI_CH3I_RMA_Progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

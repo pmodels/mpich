@@ -1,10 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -30,7 +26,8 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .get_vci_attr = MPIDI_STUBNM_get_vci_attr,
     .upids_to_lupids = MPIDI_STUBNM_upids_to_lupids,
     .create_intercomm_from_lpids = MPIDI_STUBNM_create_intercomm_from_lpids,
-    .mpi_comm_create_hook = MPIDI_STUBNM_mpi_comm_create_hook,
+    .mpi_comm_commit_pre_hook = MPIDI_STUBNM_mpi_comm_commit_pre_hook,
+    .mpi_comm_commit_post_hook = MPIDI_STUBNM_mpi_comm_commit_post_hook,
     .mpi_comm_free_hook = MPIDI_STUBNM_mpi_comm_free_hook,
     /* Window initialization/cleanup routines */
     .mpi_win_create_hook = MPIDI_STUBNM_mpi_win_create_hook,
@@ -55,7 +52,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
-    .am_recv = MPIDI_NM_am_recv
+    .am_eager_limit = MPIDI_NM_am_eager_limit
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {
@@ -154,28 +151,6 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {
     .mpi_iscan = MPIDI_NM_mpi_iscan,
     .mpi_iscatter = MPIDI_NM_mpi_iscatter,
     .mpi_iscatterv = MPIDI_NM_mpi_iscatterv,
-    .mpi_ibarrier_sched = MPIDI_NM_mpi_ibarrier_sched,
-    .mpi_ibcast_sched = MPIDI_NM_mpi_ibcast_sched,
-    .mpi_iallgather_sched = MPIDI_NM_mpi_iallgather_sched,
-    .mpi_iallgatherv_sched = MPIDI_NM_mpi_iallgatherv_sched,
-    .mpi_iallreduce_sched = MPIDI_NM_mpi_iallreduce_sched,
-    .mpi_ialltoall_sched = MPIDI_NM_mpi_ialltoall_sched,
-    .mpi_ialltoallv_sched = MPIDI_NM_mpi_ialltoallv_sched,
-    .mpi_ialltoallw_sched = MPIDI_NM_mpi_ialltoallw_sched,
-    .mpi_iexscan_sched = MPIDI_NM_mpi_iexscan_sched,
-    .mpi_igather_sched = MPIDI_NM_mpi_igather_sched,
-    .mpi_igatherv_sched = MPIDI_NM_mpi_igatherv_sched,
-    .mpi_ireduce_scatter_block_sched = MPIDI_NM_mpi_ireduce_scatter_block_sched,
-    .mpi_ireduce_scatter_sched = MPIDI_NM_mpi_ireduce_scatter_sched,
-    .mpi_ireduce_sched = MPIDI_NM_mpi_ireduce_sched,
-    .mpi_iscan_sched = MPIDI_NM_mpi_iscan_sched,
-    .mpi_iscatter_sched = MPIDI_NM_mpi_iscatter_sched,
-    .mpi_iscatterv_sched = MPIDI_NM_mpi_iscatterv_sched,
-    .mpi_ineighbor_allgather_sched = MPIDI_NM_mpi_ineighbor_allgather_sched,
-    .mpi_ineighbor_allgatherv_sched = MPIDI_NM_mpi_ineighbor_allgatherv_sched,
-    .mpi_ineighbor_alltoall_sched = MPIDI_NM_mpi_ineighbor_alltoall_sched,
-    .mpi_ineighbor_alltoallv_sched = MPIDI_NM_mpi_ineighbor_alltoallv_sched,
-    .mpi_ineighbor_alltoallw_sched = MPIDI_NM_mpi_ineighbor_alltoallw_sched,
     /* Datatype hooks */
     .mpi_type_commit_hook = MPIDI_STUBNM_mpi_type_commit_hook,
     .mpi_type_free_hook = MPIDI_STUBNM_mpi_type_free_hook,

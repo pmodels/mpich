@@ -1,19 +1,13 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
 #include "stubnm_impl.h"
 
 int MPIDI_STUBNM_mpi_init_hook(int rank, int size, int appnum, int *tag_bits,
-                               MPIR_Comm * comm_world, int *n_vcis_provided)
+                               MPIR_Comm * comm_world)
 {
     int mpi_errno = MPI_SUCCESS;
 

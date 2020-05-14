@@ -1,15 +1,13 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2011 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 ## This is an automake makefile fragment that should be included by:
 ##
-##   include $(top_srcdir)/Makefile_cxx.mtest
+##   include $(top_srcdir)/Makefile_f77.mtest
 ##
-## see Makefile.mtest for a description why this file exists, but for C++
+## see Makefile_common.mtest for a description why this file exists, but for f77
 
 # these CPPFLAGS are only used when building C/C++ source files, not for actual
 # F77 code itself
@@ -19,15 +17,20 @@ AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 # configure test, but this version is no worse than the simplemake version was.
 AM_FFLAGS = -I.
 
-LDADD = $(top_builddir)/f77/util/mtestf.o
+LDADD = $(top_builddir)/util/mtest_f77.$(OBJEXT)
+mtest_c_objects = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_single.$(OBJEXT)
 
 ## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
 ## prog_DEPENDENCIES variable, but it would be better to figure out the right
 ## way to do this
-##DEPADD = @MPILIBLOC@ ../util/mtest.o
+##DEPADD = @MPILIBLOC@ ../util/mtest.$(OBJEXT)
 
-$(top_builddir)/f77/util/mtestf.o: $(top_srcdir)/f77/util/mtestf.f
-	(cd $(top_builddir)/f77/util && $(MAKE) mtestf.o)
+$(top_builddir)/util/mtest_f77.$(OBJEXT): $(top_srcdir)/util/mtest_f77.f
+	(cd $(top_builddir)/util && $(MAKE) mtest_f77.$(OBJEXT))
+$(top_builddir)/util/mtest.$(OBJEXT): $(top_srcdir)/util/mtest.c
+	(cd $(top_builddir)/util && $(MAKE) mtest.$(OBJEXT))
+$(top_builddir)/util/mtest_single.$(OBJEXT): $(top_srcdir)/util/mtest_single.c
+	(cd $(top_builddir)/util && $(MAKE) mtest_single.$(OBJEXT))
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \

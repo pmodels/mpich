@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef HYDRA_H_INCLUDED
@@ -390,11 +389,6 @@ struct HYD_user_global {
     char *mapping;
     char *membind;
 
-    /* Checkpoint restart */
-    char *ckpointlib;
-    char *ckpoint_prefix;
-    int ckpoint_num;
-
     /* Demux engine */
     char *demux;
 
@@ -407,6 +401,7 @@ struct HYD_user_global {
     int usize;
 
     int auto_cleanup;
+    int pmi_port;
 
     struct HYD_env_global global_env;
 };

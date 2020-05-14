@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_SOCKADDR_H_INCLUDED
@@ -21,6 +20,9 @@
 
 typedef struct sockaddr_storage MPL_sockaddr_t;
 
+/* The following functions when return an int, it returns 0 on success,
+ * non-zero indicates error. It is consistent with posix socket functions.
+ */
 void MPL_sockaddr_set_aftype(int type);
 int MPL_get_sockaddr(const char *s_hostname, MPL_sockaddr_t * p_addr);
 int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr);

@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -260,8 +258,8 @@ int MPIR_Reduce_scatter_intra_recursive_halving(const void *sendbuf, void *recvb
         if (recvcounts[rank]) {
             mpi_errno = MPIR_Localcopy((char *) tmp_results +
                                        disps[rank] * extent,
-                                       recvcounts[rank], datatype, recvbuf,
-                                       recvcounts[rank], datatype);
+                                       recvcounts[rank], datatype, recvbuf, recvcounts[rank],
+                                       datatype);
             MPIR_ERR_CHECK(mpi_errno);
         }
 

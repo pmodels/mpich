@@ -1,12 +1,11 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
 
-static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset, size_t nb)
+static MPIR_Request *create_request(struct iovec * iov, int iov_count, int iov_offset, size_t nb)
 {
     MPIR_Request *sreq;
     int i;
@@ -14,7 +13,7 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
         return NULL;
@@ -25,13 +24,13 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
         sreq->dev.iov[i] = iov[i];
     }
     if (iov_offset == 0) {
-        MPIR_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
-        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
-        sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
+        MPIR_Assert(iov[0].iov_len == sizeof(MPIDI_CH3_Pkt_t));
+        sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].iov_base;
+        sreq->dev.iov[0].iov_base = (void *) & sreq->dev.pending_pkt;
     }
-    sreq->dev.iov[iov_offset].MPL_IOV_BUF =
-        (MPL_IOV_BUF_CAST) ((char *) sreq->dev.iov[iov_offset].MPL_IOV_BUF + nb);
-    sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
+    sreq->dev.iov[iov_offset].iov_base =
+        (void *) ((char *) sreq->dev.iov[iov_offset].iov_base + nb);
+    sreq->dev.iov[iov_offset].iov_len -= nb;
     sreq->dev.iov_count = iov_count;
     sreq->dev.OnDataAvail = 0;
 
@@ -62,7 +61,7 @@ static MPIR_Request *create_request(MPL_IOV * iov, int iov_count, int iov_offset
    be described by a single iovec of size
    MPL_IOV_LIMIT. */
 
-int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request ** sreq_ptr)
+int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int n_iov, MPIR_Request ** sreq_ptr)
 {
     MPIR_Request *sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
@@ -75,9 +74,9 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
 
     /* The SOCK channel uses a fixed length header, the size of which is the
      * maximum of all possible packet headers */
-    iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    iov[0].iov_len = sizeof(MPIDI_CH3_Pkt_t);
     MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
-                 MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF));
+                 MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) iov[0].iov_base));
 
     if (vcch->state == MPIDI_CH3I_VC_STATE_CONNECTED) { /* MT */
         /* Connection already formed.  If send queue is empty attempt to send
@@ -87,7 +86,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
             size_t nb;
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "send queue empty, attempting to write");
-            MPL_DBG_PKT(vcch->conn, (MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF, "isend");
+            MPL_DBG_PKT(vcch->conn, (MPIDI_CH3_Pkt_t *) iov[0].iov_base, "isend");
 
             /* MT - need some signalling to lock down our right to use the
              * channel, thus insuring that the progress engine does
@@ -100,8 +99,8 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
                               "wrote %ld bytes", (unsigned long) nb);
 
                 while (offset < n_iov) {
-                    if (nb >= (int) iov[offset].MPL_IOV_LEN) {
-                        nb -= iov[offset].MPL_IOV_LEN;
+                    if (nb >= (int) iov[offset].iov_len) {
+                        nb -= iov[offset].iov_len;
                         offset++;
                     } else {
                         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
@@ -139,7 +138,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
             else {
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, TYPICAL,
                               "ERROR - MPIDI_CH3I_Sock_writev failed, rc=%d", rc);
-                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
                 if (sreq == NULL) {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                 }
@@ -195,7 +194,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, MPIR_Request
     else {
         /* Connection failed, so allocate a request and return an error. */
         MPL_DBG_VCUSE(vc, "ERROR - connection failed");
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
         if (sreq == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         }

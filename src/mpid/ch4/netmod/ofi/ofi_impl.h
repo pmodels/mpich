@@ -1,20 +1,15 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_IMPL_H_INCLUDED
 #define OFI_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
 #include "ofi_types.h"
 #include "mpidch4r.h"
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
@@ -99,10 +94,79 @@ int MPIDI_OFI_progress(int vci, int blocking);
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);        \
         MPIR_ERR_CHECK(mpi_errno);                               \
+        _retry--;                                           \
+    } while (_ret == -FI_EAGAIN);                           \
+    } while (0)
+
+/* per-vci macros - we'll transition into these macros once the locks are
+ * moved down to ofi-layer */
+#define MPIDI_OFI_VCI_PROGRESS(vci_)                                    \
+    do {                                                                \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                \
+        mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                 \
+        MPIR_ERR_CHECK(mpi_errno);                                      \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+    } while (0)
+
+#define MPIDI_OFI_VCI_PROGRESS_WHILE(vci_, cond)                            \
+    do {                                                                    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);                    \
+        while (cond) {                                                      \
+            mpi_errno = MPIDI_OFI_progress(vci_, 0);                        \
+            if (mpi_errno) {                                                \
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);             \
+                MPIR_ERR_POP(mpi_errno);                                    \
+            }                                                               \
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
+        }                                                                   \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);                     \
+    } while (0)
+
+#define MPIDI_OFI_VCI_CALL(FUNC,vci_,STR)                   \
+    do {                                                    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        ssize_t _ret = FUNC;                                \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+        MPIDI_OFI_ERR(_ret<0,                               \
+                              mpi_errno,                    \
+                              MPI_ERR_OTHER,                \
+                              "**ofid_"#STR,                \
+                              "**ofid_"#STR" %s %d %s %s",  \
+                              __SHORT_FILE__,               \
+                              __LINE__,                     \
+                              __func__,                     \
+                              fi_strerror(-_ret));          \
+    } while (0)
+
+#define MPIDI_OFI_VCI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
+    do {                                                    \
+    ssize_t _ret;                                           \
+    int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
+    do {                                                    \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
+        _ret = FUNC;                                        \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
+        if (likely(_ret==0)) break;                         \
+        MPIDI_OFI_ERR(_ret!=-FI_EAGAIN,                     \
+                              mpi_errno,                    \
+                              MPI_ERR_OTHER,                \
+                              "**ofid_"#STR,                \
+                              "**ofid_"#STR" %s %d %s %s",  \
+                              __SHORT_FILE__,               \
+                              __LINE__,                     \
+                              __func__,                     \
+                              fi_strerror(-_ret));          \
+        MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
+                            mpi_errno,                      \
+                            MPIX_ERR_EAGAIN,                \
+                            "**eagain");                    \
+        mpi_errno = MPID_Progress_test();                   \
+        MPIR_ERR_CHECK(mpi_errno);                          \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -116,7 +180,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
   do                                                            \
     {                                                           \
       str_errno = FUNC;                                         \
-      MPIDI_OFI_ERR(str_errno!=MPL_STR_SUCCESS,        \
+      MPIDI_OFI_ERR(str_errno!=MPL_SUCCESS,        \
                             mpi_errno,                          \
                             MPI_ERR_OTHER,                      \
                             "**"#STR,                           \
@@ -129,39 +193,17 @@ int MPIDI_OFI_progress(int vci, int blocking);
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
-        (req) = MPIR_Request_create(kind);  \
+        (req) = MPIR_Request_create(kind, 0);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
 {
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
-        return (req == NULL);   /* Depends on upper layer */
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
         return 1;       /* Always allocated by netmod */
     } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
         return (req == NULL);
-    } else {
-        /* Invalid MT model */
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
-/* Initial value of the completion counter of request objects for lightweight (injection) operations */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
-{
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
-        /* Note on CC initialization: this might be overkill when trylock succeeds
-         * and the main thread directly issues injection.
-         * However, at this moment we assume trylock always goes through progress thread
-         * to simplify implementation. */
-        return 1;
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
-        return 0;
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
-        return 1;
     } else {
         /* Invalid MT model */
         MPIR_Assert(0);
@@ -174,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           if (MPIDI_OFI_need_request_creation(req)) {                   \
               MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
                           (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind);                        \
+              (req) = MPIR_Request_create(kind, 0);                        \
               MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                   "**nomemreq");                        \
           }                                                             \
@@ -183,39 +225,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           MPIR_Request_add_ref((req));                                  \
       } while (0)
 
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
-    do {                                                                \
-        if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
-            (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
-        } else {                                                        \
-            if (MPIDI_OFI_need_request_creation(req)) {                 \
-                MPIR_Assert((req) == NULL);                             \
-                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);   \
-                MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
-                                    "**nomemreq");                      \
-            }                                                           \
-            /* At this line we should always have a valid request */    \
-            MPIR_Assert((req) != NULL);                                 \
-            /* Completing lightweight (injection) requests:             \
-               If a progess thread is issuing injection, we need to     \
-               keep CC>0 until the actual injection completes. */       \
-            MPIR_cc_set(&(req)->cc, MPIDI_OFI_lw_request_cc_val());     \
-        }                                                               \
-    } while (0)
-
-/* If we set CC>0 in case of injection, we need to decrement the CC
-   to tell the main thread we completed the injection. */
-#define MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(req) \
-    do {                                                    \
-        if (MPIDI_OFI_lw_request_cc_val()) {                \
-            int incomplete_;                                \
-            MPIR_cc_decr(&(req)->cc, &incomplete_);         \
-        }                                                   \
-    } while (0)
-
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS)
         return 0;
     else
         return MPIDI_OFI_WIN(w).winfo[rank].base;
@@ -223,7 +235,7 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 {
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY)
         return MPIDI_OFI_WIN(w).mr_key;
     else
         return MPIDI_OFI_WIN(w).winfo[rank].mr_key;
@@ -242,9 +254,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 /* Externs:  see util.c for definition */
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_retry_progress(void);
-int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
-                              void **data, size_t * data_sz, int is_local, int *is_contig,
-                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
+int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
+                              int is_local, int is_async, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
 int MPIDI_OFI_mr_key_allocator_init(void);
@@ -278,29 +289,37 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
     return max_size;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
+MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(void)
 {
-    int in_use;
-    MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-    MPIR_Object_release_ref(req, &in_use);
-    if (!in_use) {
-        MPL_free(req->noncontig);
-        MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
-    }
+    MPIDI_OFI_win_request_t *winreq;
+    winreq = MPL_malloc(sizeof(*winreq), MPL_MEM_OTHER);
+    return winreq;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int rank, void *addrname)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
+{
+    MPL_free(winreq->noncontig.iov_store);
+    MPL_free(winreq);
+}
+
+/* This function implements netmod vci to vni(context) mapping.
+ * Currently, we only support one-to-one mapping.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni(int vci)
+{
+    /* MPIR_Assert(MPIDI_OFI_global.num_ctx == MPIDI_global.n_vcis); */
+    return vci;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrname)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t addr;
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.av, addrname, 1, &addr, 0ULL, NULL), avmap);
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest = addr;
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
-#else
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-    MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).ep_idx = 0;
-#endif
+    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni].av, addrname, 1, &addr, 0ULL, NULL),
+                   avmap);
+    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).dest = addr;
+#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
+    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).ep_idx = 0;
 #endif
 
   fn_exit:
@@ -411,7 +430,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     do {
         MPI_Aint tmp_size = (rem_size > max_pipe) ? max_pipe : rem_size;
 
-        MPIR_Typerep_iov_len(NULL, dt_count, dt_datatype, 0, tmp_size, &num_iov);
+        MPIR_Typerep_iov_len(dt_count, dt_datatype, tmp_size, &num_iov);
         total_iov += num_iov;
 
         rem_size -= tmp_size;
@@ -421,36 +440,5 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_count_iov(int dt_count,       /* numbe
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
     return total_iov;
 }
-
-/* Find the nearest length of iov that meets alignment requirement */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
-{
-    size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
-    size_t mask = ~pad;
-
-    return (len + pad) & mask;
-}
-
-/* Find the minimum address that is >= ptr && meets alignment requirement */
-MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
-{
-    size_t aligned_iov = MPIDI_OFI_align_iov_len((size_t) ptr);
-    return (void *) (uintptr_t) aligned_iov;
-}
-
-MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
-{
-#if MPIDI_OFI_IOVEC_ALIGN <= SIZEOF_VOID_P
-    return &MPIDI_OFI_REQUEST(req, util.iov);
-#else
-    return (struct iovec *) MPIDI_OFI_aligned_next_iov(&MPIDI_OFI_REQUEST(req, util.iov_store));
-#endif
-}
-
-/* Make sure `p` is properly aligned */
-#define MPIDI_OFI_ASSERT_IOVEC_ALIGN(p)                                 \
-    do {                                                                \
-        MPIR_Assert((((uintptr_t)(void *) p) & (MPIDI_OFI_IOVEC_ALIGN - 1)) == 0); \
-    } while (0)
 
 #endif /* OFI_IMPL_H_INCLUDED */

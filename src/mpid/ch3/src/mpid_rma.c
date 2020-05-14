@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -226,7 +225,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     MPIR_ERR_CHKANDJUMP1(!(*win_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
                          "**nomem %s", "MPIR_Win_mem");
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Object_set_ref(*win_ptr, 1);
@@ -321,7 +320,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         /* this is the first window, register RMA progress hook */
-        mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global,
+        mpi_errno = MPIR_Progress_hook_register(MPIDI_CH3I_RMA_Make_progress_global,
                                                 &MPIDI_CH3I_RMA_Progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
     }

@@ -1,7 +1,6 @@
-/* -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2011 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -19,7 +18,7 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -136,12 +135,16 @@ struct MPIDU_Sched_state {
 };
 
 /* holds on to all incomplete schedules on which progress should be made */
-struct MPIDU_Sched_state all_schedules = { NULL };
+static struct MPIDU_Sched_state all_schedules = { NULL };
 
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
 int MPIDU_Sched_are_pending(void)
 {
+    /* this function is only called within a critical section to decide whether
+     * yield is necessary. (ref: .../ch3/.../mpid_nem_inline.h)
+     * therefore, there is no need for additional lock protection.
+     */
     return (all_schedules.head != NULL);
 }
 
@@ -174,11 +177,13 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
         end = tag_ub / 2;
     }
     if (start != MPI_UNDEFINED) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
         DL_FOREACH(all_schedules.head, elt) {
             if (elt->tag >= start && elt->tag < end) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
             }
         }
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     }
 #endif
 
@@ -465,7 +470,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPIR_Assert(s->entries != NULL);
 
     /* now create and populate the request */
-    r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* FIXME is this right when comm/datatype GC is used? */
@@ -488,10 +493,12 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
-    if (all_schedules.head == NULL)
-        MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
     DL_APPEND(all_schedules.head, s);
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+
+    MPIR_Progress_hook_activate(MPIR_Nbc_progress_hook_id);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -976,15 +983,25 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 /* returns TRUE in (*made_progress) if any of the outstanding schedules completed */
 int MPIDU_Sched_progress(int *made_progress)
 {
-    int mpi_errno;
+    /* Sched progress may call callback functions that will call into progress again.
+     * For example, with MPI_Comm_idup, sched_cb_gcn_allocate_cid will call MPIR_Allreduce.
+     * This inner progress should skip Sched progress to avoid recursive situation.
+     */
+    static int in_sched_progress = 0;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    if (in_sched_progress) {
+        return MPI_SUCCESS;
+    } else {
+        int mpi_errno;
 
-    mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
-    if (!mpi_errno && all_schedules.head == NULL)
-        MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
+        in_sched_progress = 1;
+        mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
+        if (!mpi_errno && all_schedules.head == NULL)
+            MPIR_Progress_hook_deactivate(MPIR_Nbc_progress_hook_id);
+        in_sched_progress = 0;
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_SCHED_LIST_MUTEX);
 
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    return mpi_errno;
+        return mpi_errno;
+    }
 }

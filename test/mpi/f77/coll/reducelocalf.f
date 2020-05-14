@@ -1,9 +1,8 @@
-C -*- Mode: Fortran; -*- 
 C
-C  (C) 2009 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
-C
+
 C Test Fortran MPI_Reduce_local with MPI_OP_SUM and with user-defined operation.
 C
       subroutine user_op( invec, outvec, count, datatype )

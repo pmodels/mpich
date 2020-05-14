@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -117,10 +116,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     int    val_max_remaining;
     int    grank;
     size_t len;
-    MPID_nem_fastbox_t *fastboxes_p = NULL;
-    MPID_nem_cell_t (*cells_p)[MPID_NEM_NUM_CELLS];
+    void *fastboxes_p = NULL;
+    void *cells_p = NULL;
     MPID_nem_queue_t *recv_queues_p = NULL;
     MPID_nem_queue_t *free_queues_p = NULL;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_CHKPMEM_DECL(8);
 
@@ -133,16 +133,15 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_Assert(sizeof(MPIDI_CH3_nem_pkt_t) <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The MPID_nem_cell_rel_ptr_t defined in mpid_nem_datatypes.h
-       should only contain a OPA_ptr_t.  This is to check that
+       should only contain a MPL_atomic_ptr_t.  This is to check that
        absolute pointers are exactly the same size as relative
        pointers. */
-    MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(OPA_ptr_t));
+    MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(MPL_atomic_ptr_t));
 
-    /* Make sure the cell structure looks like it should */
-    MPIR_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
-    MPIR_Assert(sizeof(MPID_nem_cell_t) == sizeof(MPID_nem_abs_cell_t));
-    /* Make sure payload is aligned on a double */
-    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.p.payload[0], sizeof(double)));
+    /* Make sure payload is aligned on 8-byte boundary */
+    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.payload[0], 8));
+    /* Make sure the padding to cacheline size in MPID_nem_queue_t works */
+    MPIR_Assert(MPID_NEM_CACHE_LINE_LEN > 2 * sizeof(MPID_nem_cell_rel_ptr_t));
 
     /* Initialize the business card */
     mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
@@ -150,7 +149,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     publish_bc_orig = bc_val;
 
     ret = gethostname (MPID_nem_hostname, MAX_HOSTNAME_LEN);
-    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", MPIR_Strerror (errno), errno);
+    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d",
+                          MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
 
     MPID_nem_hostname[MAX_HOSTNAME_LEN-1] = '\0';
 
@@ -235,11 +235,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Request fastboxes region */
-    size_t fbox_len = MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))),
+    size_t fbox_len = MPL_MAX((num_local*((num_local-1) * MPID_NEM_FBOX_LEN)),
                               MPID_NEM_ASYMM_NULL_VAL);
 
     /* Request data cells region */
-    size_t cells_len = num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t);
+    size_t cells_len = num_local * MPID_NEM_NUM_CELLS * MPID_NEM_CELL_LEN;
 
     /* Request free q region */
     size_t freeQ_len = num_local * sizeof(MPID_nem_queue_t);
@@ -263,8 +263,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
-    fastboxes_p = (MPID_nem_fastbox_t *) MPID_nem_mem_region.shm_ptr;
-    cells_p = (MPID_nem_cell_t (*)[MPID_NEM_NUM_CELLS])((char *) fastboxes_p + fbox_len);
+    fastboxes_p = (void *) MPID_nem_mem_region.shm_ptr;
+    cells_p = (char *) fastboxes_p + fbox_len;
     free_queues_p = (MPID_nem_queue_t *)((char *) cells_p + cells_len);
     recv_queues_p = (MPID_nem_queue_t *)((char *) free_queues_p + freeQ_len);
 
@@ -273,7 +273,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* find our cell region */
-    MPID_nem_mem_region.Elements = cells_p[local_rank];
+    MPID_nem_mem_region.Elements = (void *) ((char *) cells_p + local_rank * MPID_NEM_NUM_CELLS * MPID_NEM_CELL_LEN);
 
     /* Tables of pointers to shared memory Qs */
     MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "FreeQ", MPL_MEM_SHM);
@@ -290,8 +290,9 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     /* Init and enqueue our free cells */
     for (idx = 0; idx < MPID_NEM_NUM_CELLS; ++idx)
     {
-	MPID_nem_cell_init(&(MPID_nem_mem_region.Elements[idx]));
-	MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], &(MPID_nem_mem_region.Elements[idx]));
+        MPID_nem_cell_t *cell = (void *) ((char *) MPID_nem_mem_region.Elements + idx * MPID_NEM_CELL_LEN);
+        MPID_nem_cell_init(cell);
+        MPID_nem_queue_enqueue(MPID_nem_mem_region.FreeQ[pg_rank], cell);
     }
 
     mpi_errno = MPID_nem_coll_init();
@@ -368,10 +369,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	}
 	else
 	{
-	    MPID_nem_mem_region.mailboxes.in [i] = &fastboxes_p[MAILBOX_INDEX(i, local_rank)];
-	    MPID_nem_mem_region.mailboxes.out[i] = &fastboxes_p[MAILBOX_INDEX(local_rank, i)];
-	    OPA_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
-	    OPA_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
+	    MPID_nem_mem_region.mailboxes.in [i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(i, local_rank)) * MPID_NEM_FBOX_LEN);
+	    MPID_nem_mem_region.mailboxes.out[i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(local_rank, i)) * MPID_NEM_FBOX_LEN);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
 	}
     }
 #undef MAILBOX_INDEX

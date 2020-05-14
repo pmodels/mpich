@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -482,7 +481,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     if (assert & MPI_MODE_NOPRECEDE) {
@@ -649,7 +648,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
   finish_fence:
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
   fn_exit:
@@ -681,7 +680,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     /* Set window exposure state properly. */
@@ -887,7 +886,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
   fn_exit:
@@ -917,7 +916,7 @@ int MPID_Win_complete(MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     if (win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED) {
@@ -1001,7 +1000,7 @@ int MPID_Win_wait(MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
   fn_exit:
@@ -1034,7 +1033,7 @@ int MPID_Win_test(MPIR_Win * win_ptr, int *flag)
 
         /* Ensure ordering of load/store operations. */
         if (win_ptr->shm_allocated == TRUE) {
-            OPA_read_write_barrier();
+            MPL_atomic_read_write_barrier();
         }
     }
 
@@ -1138,7 +1137,7 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win * win_ptr)
   finish_lock:
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
   fn_exit:
@@ -1166,7 +1165,7 @@ int MPID_Win_unlock(int dest, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     /* Find or recreate target. */
@@ -1255,7 +1254,7 @@ int MPID_Win_flush(int dest, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
@@ -1335,7 +1334,7 @@ int MPID_Win_flush_local(int dest, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
@@ -1441,7 +1440,7 @@ int MPID_Win_lock_all(int assert, MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
   fn_exit:
@@ -1473,7 +1472,7 @@ int MPID_Win_unlock_all(MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     /* Unlock MYSELF and processes on SHM. */
@@ -1591,7 +1590,7 @@ int MPID_Win_flush_all(MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     mpi_errno = flush_all(win_ptr);
@@ -1622,7 +1621,7 @@ int MPID_Win_flush_local_all(MPIR_Win * win_ptr)
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
+        MPL_atomic_read_write_barrier();
     }
 
     mpi_errno = flush_local_all(win_ptr);
@@ -1651,7 +1650,7 @@ int MPID_Win_sync(MPIR_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    OPA_read_write_barrier();
+    MPL_atomic_read_write_barrier();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_WIN_SYNC);

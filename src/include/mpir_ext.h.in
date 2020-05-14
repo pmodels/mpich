@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* This file contains the prototypes for routines that are used with
@@ -72,6 +71,9 @@ extern int MPIR_Ext_dbg_romio_verbose_enabled;
 /* to be called early by ROMIO's initialization process in order to setup init-time
  * glue code that cannot be initialized statically */
 int MPIR_Ext_init(void);
+
+void MPIR_Ext_mutex_init(void);
+void MPIR_Ext_mutex_finalize(void);
 
 void MPIR_Ext_cs_enter(void);
 void MPIR_Ext_cs_exit(void);

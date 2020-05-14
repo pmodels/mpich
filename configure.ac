@@ -1,8 +1,10 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.63)
-#
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl aclocal_cache.m4, included by sowing/confdb/aclocal.m4, fixes
@@ -200,10 +202,9 @@ echo "Running on system: `uname -a`"
 
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(src/include/mpichconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef MPICHCONF_H_INCLUDED
 #define MPICHCONF_H_INCLUDED
@@ -475,6 +476,32 @@ AC_ARG_WITH(device,
 	AC_HELP_STRING([--with-device=name], [Specify the communication device for MPICH]),,
 	with_device=default)
 
+if test $with_device = "default" -o $with_device = "ch4" ; then
+  dnl default linux builds must choose a netmod.
+  AC_MSG_ERROR([no ch4 netmod selected
+
+  The default ch4 device requires users to choose a netmod. Supported
+  options are ofi (libfabric) and ucx:
+
+    --with-device=ch4:ofi or --with-device=ch4:ucx
+
+  Configure will attempt to discover external libfabric or ucx
+  libraries to link with. Users may also specify an installation by
+  adding
+
+    --with-libfabric=<path/to/install> or --with-ucx=<path/to/install>
+
+  to the configuration. If no installation is specified or found, an
+  embedded library will be built and used.
+
+  The previous MPICH default device (ch3) is also available and
+  supported with option:
+
+    --with-device=ch3
+  ])
+fi
+
+
 AC_ARG_WITH(pmi,
 	AC_HELP_STRING([--with-pmi=name], [Specify the pmi interface for MPICH]),,
 	with_pmi=default)
@@ -512,14 +539,14 @@ AC_ARG_ENABLE(thread-cs,
 	AC_HELP_STRING([--enable-thread-cs=type],
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
-                         threads are present.  Values may be global
-                         (default), per-object, per-vci, lock-free]),,enable_thread_cs=global)
+                         threads are present.  Values may be default, global,
+                         per-object, per-vci, lock-free. By default, CH3 uses global,
+                         while CH4 uses per-vci.]),,enable_thread_cs=default)
 
-AC_ARG_ENABLE(mdta,
-    AC_HELP_STRING([--enable-mdta],
-            [Optimize global granularity using message-driven thread activation.
-                         Only available for ch4 device with --enable-thread-cs=global]),
-    AC_DEFINE(MPICH_THREAD_USE_MDTA,1,[Define to enable message-driven thread activation]))
+AC_ARG_ENABLE(vci-method,
+	AC_HELP_STRING([--enable-vci-method=type],
+			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
+                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_vci_method=zero)
 
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
@@ -827,10 +854,7 @@ export OPALIBNAME
 export MPLLIBNAME
 # ----------------------------------------------------------------------------
 # with-device
-if test "$with_device" = "default" ; then
-    # Pick the device.  For now, always choose ch3
-    with_device=ch3
-fi
+#
 # Extract the device name from any options
 # Allow the device to specify a directory; if no directory, use the
 # included directories
@@ -1107,58 +1131,10 @@ fi
 
 # Izem
 
-AC_ARG_ENABLE([izem],
-[  --enable-izem@<:@=ARGS@:>@   Enable features from the Izem library.
-                          "ARGS" is a list of comma separated features.
-                          Accepted arguments are:
-			  sync     - use the Izem interface for sychronization objects
-                                     (locks and condition variables) instead of the MPL interface
-                          queue    - use the Izem interface for atomic queue objects
-                          atomic   - use the Izem interface for CPU atomics
-                          yes/all  - all of the above features are enabled
-                          no/none  - none of the above features are enabled],,
-[enable_izem=no])
-
-# strip off multiple options, separated by commas
-save_IFS="$IFS"
-IFS=","
-for option in $enable_izem ; do
-    case "$option" in
-        sync)
-            izem_sync=yes
-        ;;
-        queue)
-            izem_queue=yes
-        ;;
-        atomic)
-            izem_atomic=yes
-        ;;
-        yes|all)
-            izem_sync=yes
-            izem_queue=yes
-            izem_atomic=yes
-        ;;
-        no|none)
-        ;;
-        *)
-            AC_MSG_ERROR([Unknown value $option for enable-izem])
-        ;;
-    esac
-done
-IFS="$save_IFS"
-
-if test "$izem_sync" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_SYNC,1,[Define to enable using Izem locks and condition variables])
-fi
-
-if test "$izem_queue" = "yes" ; then
+AC_ARG_ENABLE([izem-queue],[  --enable-izem-queue],,[enable_izem_queue=no])
+if test "${enable_izem_queue}" = "yes" ; then
     AC_DEFINE(ENABLE_IZEM_QUEUE,1,[Define to enable using Izem queues])
 fi
-
-if test "$izem_atomic" = "yes" ; then
-    AC_DEFINE(ENABLE_IZEM_ATOMIC,1,[Define to enable using Izem CPU atomics])
-fi
-AM_CONDITIONAL([ENABLE_IZEM_ATOMIC], [test x$izem_atomic = xyes])
 
 AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
 ZMLIBNAME=${ZMLIBNAME:-"zm"}
@@ -1181,7 +1157,7 @@ AC_SUBST([zmlibdir])
 zmlib=""
 AC_SUBST([zmlib])
 
-if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
+if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
     if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
         if test -e "${use_top_srcdir}/src/izem" ; then
             zm_subdir_args="--enable-embedded"
@@ -1235,6 +1211,68 @@ if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
     fi
 fi
 
+# YAKSA
+AC_ARG_VAR([YAKSALIBNAME],[can be used to override the name of the YAKSA library (default: "yaksa")])
+YAKSALIBNAME=${YAKSALIBNAME:-"yaksa"}
+export YAKSALIBNAME
+AC_SUBST(YAKSALIBNAME)
+AC_ARG_WITH([yaksa-prefix],
+            [AS_HELP_STRING([[--with-yaksa-prefix[=DIR]]],
+                            [use the YAKSA library installed in DIR,
+                             rather than the one included in modules/yaksa.  Pass
+                             "embedded" to force usage of the YAKSA source
+                             distributed with MPICH.])],
+            [],dnl action-if-given
+            [with_yaksa_prefix=embedded]) dnl action-if-not-given
+
+yaksasrcdir=""
+AC_SUBST([yaksasrcdir])
+yaksalibdir=""
+AC_SUBST([yaksalibdir])
+yaksalib=""
+AC_SUBST([yaksalib])
+
+if test "$with_yaksa_prefix" = "embedded" ; then
+    # no need for libtool versioning when embedding YAKSA
+    yaksa_subdir_args="--enable-embedded"
+    PAC_CONFIG_SUBDIR_ARGS([modules/yaksa],[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
+    PAC_APPEND_FLAG([-I${master_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+
+    yaksasrcdir="modules/yaksa"
+    yaksalib="modules/yaksa/lib${YAKSALIBNAME}.la"
+else
+    # The user specified an already-installed YAKSA; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_yaksa_prefix}/include/yaksa_config.h"],
+          [:],[AC_MSG_ERROR([the YAKSA installation in "${with_yaksa_prefix}" appears broken])])
+    PAC_APPEND_FLAG([-I${with_yaksa_prefix}/include],[CPPFLAGS])
+    PAC_PREPEND_FLAG([-l${YAKSALIBNAME}],[WRAPPER_LIBS])
+    PAC_APPEND_FLAG([-L${with_yaksa_prefix}/lib],[WRAPPER_LDFLAGS])
+    yaksalibdir="-L${with_yaksa_prefix}/lib"
+fi
+
+
+##### allow selection of datatype engine
+AC_ARG_WITH([datatype-engine],
+            [AS_HELP_STRING([--with-datatype-engine={yaksa|dataloop|auto}],[controls datatype engine to use])],
+            [],[with_datatype_engine=dataloop])
+if test "${with_datatype_engine}" = "yaksa" ; then
+    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
+elif test "${with_datatype_engine}" = "dataloop" ; then
+    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
+else
+    if test "$device_name" = "ch4" ; then
+        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
+        with_datatype_engine=yaksa
+    else
+        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
+        with_datatype_engine=dataloop
+    fi
+fi
+AM_CONDITIONAL([BUILD_YAKSA_ENGINE], [test "${with_datatype_engine}" = "yaksa"])
+AM_CONDITIONAL([BUILD_DATALOOP_ENGINE], [test "${with_datatype_engine}" = "dataloop"])
+
 
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
 # and -lp$MPILIBNAME.
@@ -1261,21 +1299,25 @@ if test "$NEEDSPLIB" = "yes" ; then
     VISIBILITY_CFLAGS=""
 fi
 
+# json-c
+
+jsonsrcdir=""
+AC_SUBST([jsonsrcdir])
+jsonlib=""
+AC_SUBST([jsonlib])
+
+PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+jsonsrcdir="${master_top_builddir}/modules/json-c"
+jsonlib="${master_top_builddir}/modules/json-c/libjson-c.la"
+PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
+PAC_APPEND_FLAG([-I${master_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
 # HWLOC
 # ----------------------------------------------------------------------------
 # Allow the user to override the hwloc location (from embedded to user
-# path)
-# HWLOC
-AC_ARG_WITH([hwloc-prefix],
-            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
-                            [use the HWLOC library installed in DIR,
-                             rather than the one included in src/hwloc.  Pass
-                             "embedded" to force usage of the HWLOC source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_hwloc_prefix=embedded]) dnl action-if-not-given
+# or system path)
+PAC_CHECK_PREFIX(hwloc)
 hwlocsrcdir=""
 AC_SUBST([hwlocsrcdir])
 hwloclibdir=""
@@ -1290,9 +1332,7 @@ elif test "$with_hwloc_prefix" = "embedded" ; then
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
    HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
-   # Only build hwloc in embedded mode
    if test "$have_hwloc" = "yes" ; then
-      use_embedded_hwloc=yes
       hwlocsrcdir="src/hwloc"
       hwloclib="$HWLOC_EMBEDDED_LDADD"
       PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
@@ -1303,12 +1343,15 @@ elif test "$with_hwloc_prefix" = "embedded" ; then
    PAC_POP_FLAG([enable_visibility])
 else
    AC_CHECK_HEADERS([hwloc.h])
+   PAC_PUSH_FLAG([LIBS])
    # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
    # minimum required version
    AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
+   PAC_POP_FLAG([LIBS])
    AC_MSG_CHECKING([if non-embedded hwloc works])
    if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
       have_hwloc=yes
+      PAC_PREPEND_FLAG([-lhwloc], [WRAPPER_LIBS])
    else
       have_hwloc=no
    fi
@@ -1319,12 +1362,10 @@ else
    AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
 
    if test "$have_hwloc" = "yes" ; then
-      hwloclib="-lhwloc"
       if test -d ${with_hwloc_prefix}/lib64 ; then
          PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
-         hwloclibdir="-L${with_hwloc_prefix}/lib64"
       else
-	 hwloclibdir="-L${with_hwloc_prefix}/lib"
+         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib],[WRAPPER_LDFLAGS])
       fi
    fi
 fi
@@ -1376,6 +1417,19 @@ fi
 # ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
+# config time:
+# * MPID_MAX_THREAD_LEVEL, set in one of the device subconfigure.m4,
+#    determines the maximum thread level, typically MPI_THREAD_MULTIPLE.
+#    If missing, equivallent to single.
+# * --enable-threads, explict user config option, raise error if beyond
+#    MPID_MAX_THREAD_LEVEL.
+#    It default to MPID_MAX_THREAD_LEVEL.
+# * MPICH_THREAD_LEVEL is set by enable_threads
+# * MPICH_IS_THREADED is set when MPICH_THREAD_LEVEL==MPI_THREAD_MULTIPLE
+# runtime:
+# * MPI_Init checks MPIR_CVAR_DEFAULT_THREAD_LEVEL, default to single
+# * MPI_Init_thread may request thread level explicitly
+# * MPID_Init_thread_level may overwrite the requested thread level
 #
 # Threads must be supported by the device.  First, set the default to
 # be the highest supported by the device
@@ -1468,10 +1522,16 @@ fi
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPICH_THREAD_GRANULARITY__SINGLE
 thread_refcount=MPICH_REFCOUNT__NONE
-if test "$device_name" = "ch4" ; then
-    enable_thread_cs="per-vci"
-fi
 if test "$enable_threads" = "multiple" ; then
+    # default depends on ch3 or ch4
+    if test "$enable_thread_cs" = "default" ; then
+        if test "$device_name" = "ch4" ; then
+            enable_thread_cs="per-vci"
+        else
+            enable_thread_cs="global"
+        fi
+    fi
+
     case $enable_thread_cs in
     global)
     thread_granularity=MPICH_THREAD_GRANULARITY__GLOBAL
@@ -1510,18 +1570,41 @@ if test "$enable_threads" = "multiple" ; then
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
 
+# Check for enable-vci-method choice
+vci_method=MPICH_VCI__ZERO
+case $enable_vci_method in
+    zero)
+    # Essentially single VCI
+    vci_method=MPICH_VCI__ZERO
+    ;;
+    communicator)
+    # Every communicator gets a new VCI in a round-robin fashion
+    vci_method=MPICH_VCI__COMM
+    ;;
+    tag)
+    # Explicit VCI info embedded with a tag scheme (5 bit src vci, 5 bit dst vci, plus 5 bit user)
+    vci_method=MPICH_VCI__TAG
+    ;;
+    implicit)
+    # An automatic scheme taking into account of user hints
+    vci_method=MPICH_VCI__IMPLICIT
+    ;;
+    explicit)
+    # Directly passing down vci in parameters (MPIX or Endpoint rank)
+    vci_method=MPICH_VCI__EXPLICIT
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $enable_vci_method for --enable-vci-method])
+    ;;
+esac
+AC_DEFINE_UNQUOTED([MPIDI_CH4_VCI_METHOD], $vci_method, [Method used to select vci])
+
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
     AC_MSG_ERROR([the ch4 device does not support the per-object critical section])
 fi
 
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__VCI" -a "$device_name" != "ch4" ; then
     AC_MSG_ERROR([per-vci critical section granularity is only supported for the ch4 device])
-fi
-
-if test "$enable_mdta" = "yes" ; then
-    if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
-        AC_MSG_ERROR([--enable-mdta is not supported for this setting])
-    fi
 fi
 
 if test "$enable_predefined_refcount" = "no" ; then
@@ -3828,10 +3911,12 @@ dnl     len_doublecplx=$hexlen
 
     MPI_DOUBLE_COMPLEX=0x4c00${len_doublecplx}22
     MPI_2DOUBLE_PRECISION=0x4c00${len_doublecplx}23
-    MPI_2COMPLEX=0x4c00${len_doublecplx}24
     AC_SUBST(MPI_DOUBLE_COMPLEX)
     AC_SUBST(MPI_2DOUBLE_PRECISION)
-    AC_SUBST(MPI_2COMPLEX)
+
+dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain the gap in seq id
+    # MPI_2COMPLEX=0x4c00${len_doublecplx}24
+    # MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
 
     #
     # Temporary for the vast majority of systems that use 4 byte reals and
@@ -3849,26 +3934,6 @@ dnl     len_doublecplx=$hexlen
         F77_COMPLEX32="MPI_DATATYPE_NULL"
     fi
 
-    len_2dc=`expr $pac_cv_f77_sizeof_double_precision \* 4`
-    firstdigit=0
-    seconddigit=0
-    while test $len_2dc -ge 16 ; do
-        firstdigit=`expr $firstdigit + 1`
-        len_2dc=`expr $len_2dc - 16`
-    done
-    case $len_2dc in
-        10) seconddigit=a ;;
-        11) seconddigit=b ;;
-        12) seconddigit=c ;;
-        13) seconddigit=d ;;
-        14) seconddigit=e ;;
-        15) seconddigit=f ;;
-         *) seconddigit=$len_2dc ;;
-    esac
-    len_2dc="$firstdigit$seconddigit"
-    #echo "2double complex = $len_2dc"
-    MPI_2DOUBLE_COMPLEX=0x4c00${len_2dc}25
-    AC_SUBST(MPI_2DOUBLE_COMPLEX)
     MPI_F77_PACKED=$MPI_PACKED
     MPI_F77_UB=$MPI_UB
     MPI_F77_LB=$MPI_LB
@@ -3884,8 +3949,8 @@ dnl     len_doublecplx=$hexlen
     # even when used only with the match (:) command.  Rather than have
     # configure figure out if expr works, we just use sed.  Sigh.
     for var in CHARACTER INTEGER REAL LOGICAL DOUBLE_PRECISION COMPLEX \
-        DOUBLE_COMPLEX 2INTEGER 2REAL 2COMPLEX 2DOUBLE_PRECISION \
-        2DOUBLE_COMPLEX F77_PACKED F77_UB F77_LB F77_BYTE; do
+        DOUBLE_COMPLEX 2INTEGER 2REAL 2DOUBLE_PRECISION \
+        F77_PACKED F77_UB F77_LB F77_BYTE; do
         fullvar="MPI_$var"
         eval fullvarvalue=\$$fullvar
         #echo "$fullvar = $fullvarvalue"
@@ -4667,7 +4732,7 @@ if test "$ac_cv_func_vsnprintf" = "yes" ; then
 #include <stdarg.h>],vsnprintf)
 fi
 # We would like to use strerror in the file namepublisher; it is also used
-# in MPIR_Strerror (whose implementation is broken if strerror is not found)
+# in MPIR_Strerror
 AC_CHECK_FUNCS(strerror strncasecmp)
 AC_FUNC_STRERROR_R
 if test "$ac_cv_func_strerror_r" = "yes" ; then
@@ -4855,13 +4920,21 @@ fi
 AC_CHECK_SIZEOF(MPII_Bsend_data_t,0,[
 #define MPI_Datatype int
 typedef $MPI_AINT MPI_Aint;
+
+struct MPIR_Request;
+typedef struct MPIR_Request MPIR_Request;
+
+struct MPIR_Comm;
+typedef struct MPIR_Comm MPIR_Comm;
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
-#include "${master_top_srcdir}/src/include/mpii_bsend.h"]
+
+#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
@@ -4988,17 +5061,8 @@ dnl PAC_SUBDIR_CACHE_CLEANUP
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"
 
-# Find the size of OPA_ptr_t. This step needs to come after the OPA
-# configure above in order to get the size OPA_ptr_t evaluated for
-# this platform.
-AC_CHECK_SIZEOF(OPA_ptr_t,0,[
-#include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"
-pthread_mutex_t *OPA_emulation_lock;
-])
-
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
-    # Removed the invalid 2COMPLEX and 2DOUBLE_COMPLEX
     for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
 	2INTEGER 2REAL DOUBLE_COMPLEX 2DOUBLE_PRECISION ; do
 	fullname="MPI_$name"
@@ -5019,8 +5083,6 @@ AC_SUBST(MPI_2INTEGER)
 AC_SUBST(MPI_2REAL)
 AC_SUBST(MPI_DOUBLE_COMPLEX)
 AC_SUBST(MPI_2DOUBLE_PRECISION)
-dnl AC_SUBST(MPI_2COMPLEX)
-dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
 # If ROMIO was successfully configured, then ROMIO will have exported the

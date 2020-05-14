@@ -18,108 +18,24 @@
 %global cart_major 4
 %global daos_major 0
 
-%global flavor @BUILD_FLAVOR@%nil
-
 # Static libraries are disabled by default
 # for non HPC builds
 # To enable them, simply uncomment:
 # % define build_static_devel 1
 
 %define pname mpich
-%define vers  3.3
-%define _vers 3_3
+%define vers  3.4~a2
+%define _vers 3_4
 
-%if "%{flavor}" == ""
-ExclusiveArch:  do_not_build
-%{bcond_with hpc}
-%endif
-
-%if "%{flavor}" == "standard"
-%define build_flavor verbs
-%{bcond_with hpc}
-%endif
-%if "%{flavor}" == "testsuite"
-%define build_flavor verbs
-%define testsuite 1
-%{bcond_with hpc}
-%endif
-
-%if "%{flavor}" == "ofi"
 %define build_flavor ofi
 %{bcond_with hpc}
-%endif
-%if "%{flavor}" == "ofi-testsuite"
-%define build_flavor ofi
-%define testsuite 1
-%{bcond_with hpc}
-%endif
-
-%if "%flavor" == "gnu-hpc"
-%define compiler_family gnu
-%undefine c_f_ver
-%define build_flavor verbs
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu-hpc-testsuite"
-%define compiler_family gnu
-%undefine c_f_ver
-%define testsuite 1
-%define build_flavor verbs
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu-hpc-ofi"
-%define compiler_family gnu
-%undefine c_f_ver
-%define build_flavor ofi
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu-hpc-ofi-testsuite"
-%define compiler_family gnu
-%undefine c_f_ver
-%define testsuite 1
-%define build_flavor ofi
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu7-hpc"
-%define compiler_family gnu
-%define c_f_ver 7
-%define build_flavor verbs
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu7-hpc-testsuite"
-%define compiler_family gnu
-%define c_f_ver 7
-%define testsuite 1
-%define build_flavor verbs
-%{bcond_without hpc}
-%endif
-
-%if "%flavor" == "gnu7-hpc-ofi"
-%define compiler_family gnu
-%define c_f_ver 7
-%define build_flavor ofi
-%define build_static_devel 1
-%{bcond_without hpc}
-%endif
-%if "%flavor" == "gnu7-hpc-ofi-testsuite"
-%define compiler_family gnu
-%define c_f_ver 7
-%define testsuite 1
-%define build_flavor ofi
-%{bcond_without hpc}
-%endif
 
 %if "%{build_flavor}" != "verbs"
 %define pack_suff %{?build_flavor:-%{build_flavor}}
 %endif
 
 %if %{without hpc}
-%define module_name mpich%{?pack_suff}
+%define module_name mpich
 %define p_prefix /usr/%_lib/mpi/gcc/%{module_name}
 %define p_bindir  %{p_prefix}/bin
 %define p_datadir %{p_prefix}/share
@@ -128,7 +44,7 @@ ExclusiveArch:  do_not_build
 %define p_libdir  %{p_prefix}/%{_lib}
 %define p_libexecdir %{p_prefix}/%{_lib}
 %define _moduledir /usr/share/modules/gnu-%{module_name}
-%define package_name %{pname}%{?pack_suff}
+%define package_name %{pname}
 %else
 %{hpc_init -M -c %compiler_family %{?c_f_ver:-v %{c_f_ver}} -m mpich %{?pack_suff:-e %{build_flavor}} %{?mpi_f_ver:-V %{mpi_f_ver}}}
 %define p_prefix   %{hpc_prefix}
@@ -147,7 +63,7 @@ ExclusiveArch:  do_not_build
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        5
+Release:        1
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -182,9 +98,7 @@ BuildRequires:  libtool
 BuildRequires:  mpi-selector
 BuildRequires:  python-devel
 BuildRequires:  sysfsutils
-%if "%{flavor}" == "ofi"
 BuildRequires:  libfabric-devel
-%endif
 BuildRequires:  daos-devel
 Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
 
@@ -279,7 +193,6 @@ the dynamic library and headers.
 %endif # ! testsuite
 
 %prep
-echo FLAVOR %{flavor}
 %if %{with hpc}
 echo with HPC
 %endif
@@ -306,15 +219,19 @@ echo without HPC
     --libexecdir=%{p_libexecdir} \
     --mandir=%{p_mandir} \
 %endif
+    --disable-checkerrors \
+    --disable-perftest \
+    --disable-large-tests \
+    --disable-ft-tests \
+    --disable-comm-overlap-tests \
+    --enable-threads=single \
     --with-file-system=ufs+daos \
     --with-daos=/usr \
     --with-cart=/usr \
     --docdir=%{_datadir}/doc/%{name} \
     --disable-rpath      \
     --disable-wrapper-rpath      \
-%if "%{flavor}" == "ofi"
    --with-device=ch3:nemesis:ofi \
-%endif
    
 	CFLAGS="%optflags -fPIC"			\
 	CXXLAGS="%optflags -fPIC"			\
@@ -360,7 +277,8 @@ find %{buildroot} -name "*.a" -delete
 rm -rf %{buildroot}/*
 
 %check
-make check
+# disabled due to https://github.com/pmodels/mpich/issues/4534
+#make testing
 
 %else
 
@@ -428,7 +346,7 @@ family "MPI"
 EOF
 cat <<EOF >  %{buildroot}/%{p_bindir}/mpivars.sh
 %hpc_setup_compiler
-module load %{hpc_mpi_family}%{?pack_suff}/%{version}
+module load %{hpc_mpi_family}/%{version}
 EOF
 sed -e "s/export/setenv/" -e "s/=/ /" \
     %{buildroot}/%{p_bindir}/mpivars.sh > \
@@ -446,7 +364,7 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 # Always register. We might be already registered in the case of an udate
 # but mpi-selector handles it fine
 /usr/bin/mpi-selector \
-        --register %{name}%{?pack_suff} \
+        --register %{name} \
         --source-dir %{p_bindir} \
         --yes
 %endif
@@ -456,9 +374,9 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 %if %{without hpc}
 # Only unregister when uninstalling
 if [ "$1" = "0" ]; then
-	/usr/bin/mpi-selector --unregister %{name}%{?pack_suff} --yes
+	/usr/bin/mpi-selector --unregister %{name} --yes
 	# Deregister the default if we are uninstalling it
-	if [ "$(/usr/bin/mpi-selector --system --query)" = "%{name}%{?pack_suff}" ]; then
+	if [ "$(/usr/bin/mpi-selector --system --query)" = "%{name}" ]; then
 		/usr/bin/mpi-selector --system --unset --yes
 	fi
 fi
@@ -500,6 +418,8 @@ fi
 %{p_libdir}/*.so
 %{p_libdir}/pkgconfig/mpich.pc
 %{p_libdir}/pkgconfig/openpa.pc
+%{p_libdir}/pkgconfig/json-c.pc
+%{p_libdir}/pkgconfig/yaksa.pc
 
 %if 0%{?build_static_devel}
 %files devel-static
@@ -516,6 +436,19 @@ fi
 %endif # !testsuite
 
 %changelog
-* Wed Dec 17 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
+* Wed May 13 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
+- Update to 3.4a2
+- Reduce "folavor"s down to just "ofi"
+- Add a couple of more pkgconfig/ files
+- Disabled %check due to https://github.com/pmodels/mpich/issues/4534
+- Added switches to configure:
+    --disable-checkerrors \
+    --disable-perftest \
+    --disable-large-tests \
+    --disable-ft-tests \
+    --disable-comm-overlap-tests \
+    --enable-threads=single \
+
+* Wed Dec 18 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
 - Add Provides: to allow consumers to target cart and daos ABI versions

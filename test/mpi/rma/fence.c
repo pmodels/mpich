@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <string.h>
@@ -32,9 +31,12 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
     targettype = target_obj.DTP_datatype;
     targetcount = target_obj.DTP_type_count;
 
+    char *orig_desc, *target_desc;
+    DTP_obj_get_description(orig_obj, &orig_desc);
+    DTP_obj_get_description(target_obj, &target_desc);
     MTestPrintfMsg(1,
                    "Getting count = %ld of origtype %s - count = %ld target type %s\n",
-                   origcount, orig_obj.DTP_description, targetcount, target_obj.DTP_description);
+                   origcount, orig_desc, targetcount, target_desc);
 
     if (rank == target) {
 #if defined(USE_GET)
@@ -61,7 +63,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
             if (errs < 10) {
                 printf
                     ("Data in target buffer did not match for target datatype %s (get with orig datatype %s)\n",
-                     target_obj.DTP_description, orig_obj.DTP_description);
+                     target_desc, orig_desc);
             }
         }
 #endif
@@ -127,7 +129,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
             if (errs < 10) {
                 printf
                     ("Data in origin buffer did not match for origin datatype %s (get with target datatype %s)\n",
-                     orig_obj.DTP_description, target_obj.DTP_description);
+                     orig_desc, target_desc);
             }
         }
 #endif
@@ -137,6 +139,9 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
         MPI_Win_fence(0, win);
         MPI_Win_fence(0, win);
     }
+
+    free(orig_desc);
+    free(target_desc);
 
     return errs;
 }

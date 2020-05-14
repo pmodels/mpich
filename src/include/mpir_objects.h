@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIR_OBJECTS_H_INCLUDED
@@ -274,18 +273,17 @@ typedef int Handle_ref_count;
 
 #elif MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE
 
-#include "opa_primitives.h"
-typedef OPA_int_t Handle_ref_count;
+typedef MPL_atomic_int_t Handle_ref_count;
 
 #define MPIR_Object_set_ref(objptr_,val)                        \
     do {                                                        \
-        OPA_store_int(&(objptr_)->ref_count, val);              \
+        MPL_atomic_store_int(&(objptr_)->ref_count, val); \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");        \
     } while (0)
 
 /* must be used with care, since there is no synchronization for this read */
 #define MPIR_Object_get_ref(objptr_) \
-    (OPA_load_int(&(objptr_)->ref_count))
+    (MPL_atomic_load_int(&(objptr_)->ref_count))
 
 #ifdef MPICH_DEBUG_HANDLES
 /*
@@ -300,13 +298,13 @@ typedef OPA_int_t Handle_ref_count;
 #define MPIR_Object_add_ref_always(objptr_)                             \
     do {                                                                \
         int new_ref_;                                                   \
-        new_ref_ = OPA_fetch_and_incr_int(&((objptr_)->ref_count)) + 1; \
+        new_ref_ = MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1) + 1; \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "incr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"incr");                 \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
-        int new_ref_ = OPA_fetch_and_decr_int(&((objptr_)->ref_count)) - 1; \
+        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
         *(inuse_ptr) = new_ref_;                                        \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_ref_, "decr");          \
         HANDLE_CHECK_REFCOUNT(objptr_,new_ref_,"decr");                 \
@@ -315,12 +313,12 @@ typedef OPA_int_t Handle_ref_count;
 /* MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE && !MPICH_DEBUG_HANDLES */
 #define MPIR_Object_add_ref_always(objptr_)     \
     do {                                        \
-        OPA_incr_int(&((objptr_)->ref_count));  \
+        MPL_atomic_fetch_add_int(&((objptr_)->ref_count), 1);  \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
-        int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
-        *(inuse_ptr) = got_zero_ ? 0 : 1;                               \
+        int new_ref_ = MPL_atomic_fetch_sub_int(&((objptr_)->ref_count), 1) - 1; \
+        *(inuse_ptr) = new_ref_;                                        \
     } while (0)
 #endif /* MPICH_DEBUG_HANDLES */
 #else
@@ -483,7 +481,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 #define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,OP,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
-#define MPIR_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
+/* Request objects are handled differently. See mpir_request.h */
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPIR_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition,

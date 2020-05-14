@@ -1,10 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -22,8 +18,7 @@ static void request_init_callback(void *request)
 
 }
 
-int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided)
+int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
@@ -34,13 +29,11 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     ucp_worker_params_t worker_params;
     ucp_ep_params_t ep_params;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
 
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
-
-    *n_vcis_provided = 1;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -125,7 +118,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     if (MPIDI_UCX_global.worker != NULL)

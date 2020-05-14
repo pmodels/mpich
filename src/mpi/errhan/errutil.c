@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* style: allow:fprintf:4 sig:0 */
@@ -45,7 +43,7 @@ cvars:
       category    : ERROR_HANDLING
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -55,7 +53,7 @@ cvars:
       category    : ERROR_HANDLING
       type        : int
       default     : 0
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -211,9 +209,9 @@ void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
 /* --BEGIN ERROR HANDLING-- */
 void MPIR_Err_preOrPostInit(void)
 {
-    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
+    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT) {
         MPL_error_printf("Attempting to use an MPI routine before initializing MPICH\n");
-    } else if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    } else if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
         MPL_error_printf("Attempting to use an MPI routine after finalizing MPICH\n");
     } else {
         MPL_error_printf
@@ -243,8 +241,8 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     checkValidErrcode(error_class, fcname, &errcode);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT ||
-        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT ||
+        MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
         /* for whatever reason, we aren't initialized (perhaps error
          * during MPI_Init) */
         MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);

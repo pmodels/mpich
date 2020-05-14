@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2004 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* OWNER=gropp */
@@ -419,7 +418,7 @@ static int AddEnvSetToCmdLine(const char *envName, const char *envValue, const c
             else
                 sname++;
             /* printf("Sname is %s\n", sname); */
-            if (strcmp(sname, "bash") == 0 || strcmp(sname, "sh") || strcmp(sname, "ash") == 0)
+            if (strcmp(sname, "bash") == 0 || strcmp(sname, "sh") == 0 || strcmp(sname, "ash") == 0)
                 useCSHFormat = 0;
             else
                 useCSHFormat = 1;

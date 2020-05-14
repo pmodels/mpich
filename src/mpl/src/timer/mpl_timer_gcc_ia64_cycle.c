@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -13,12 +12,13 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <sys/time.h>
 
 static double seconds_per_tick = 0.0;
+static int is_initialized = 0;
 
 int MPL_wtick(double *wtick)
 {
     *wtick = seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_init(void)
@@ -26,6 +26,9 @@ int MPL_wtime_init(void)
     unsigned long long t1, t2;
     struct timeval tv1, tv2;
     double td1, td2;
+
+    if (is_initialized)
+        goto fn_exit;
 
     gettimeofday(&tv1, NULL);
     MPL_wtime(&t1);
@@ -38,7 +41,10 @@ int MPL_wtime_init(void)
 
     seconds_per_tick = (td2 - td1) / (double) (t2 - t1);
 
-    return MPL_TIMER_SUCCESS;
+    is_initialized = 1;
+
+  fn_exit:
+    return MPL_SUCCESS;
 }
 
 /* Time stamps created by a macro */
@@ -46,7 +52,7 @@ int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = (double) (*t2 - *t1) * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
@@ -56,7 +62,7 @@ int MPL_wtime_touint(MPL_time_t * t, unsigned int *val)
      * counters into test programs */
     *val = (unsigned int) *t;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_todouble(MPL_time_t * t, double *val)
@@ -66,14 +72,14 @@ int MPL_wtime_todouble(MPL_time_t * t, double *val)
      * counters into test programs */
     *val = (double) *t * seconds_per_tick;
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += (*t2 - *t1);
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif

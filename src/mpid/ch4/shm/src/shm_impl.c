@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "posix_impl.h"
@@ -10,14 +9,14 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
-int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vcis_provided, int *tag_bits)
+int MPIDI_SHM_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
 
-    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, n_vcis_provided, tag_bits);
+    ret = MPIDI_SHM_src_funcs.mpi_init(rank, size, tag_bits);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_INIT_HOOK);
     return ret;
@@ -40,25 +39,38 @@ int MPIDI_SHM_get_vci_attr(int vci)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
 
     ret = MPIDI_SHM_src_funcs.get_vci_attr(vci);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_GET_VCI_ATTR);
     return ret;
 }
 
-int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
+int MPIDI_SHM_mpi_comm_commit_pre_hook(MPIR_Comm * comm)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
 
-    ret = MPIDI_SHM_src_funcs.mpi_comm_create_hook(comm);
+    ret = MPIDI_SHM_src_funcs.mpi_comm_commit_pre_hook(comm);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_PRE_HOOK);
+    return ret;
+}
+
+int MPIDI_SHM_mpi_comm_commit_post_hook(MPIR_Comm * comm)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_POST_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_POST_HOOK);
+
+    ret = MPIDI_SHM_src_funcs.mpi_comm_commit_post_hook(comm);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMM_COMMIT_POST_HOOK);
     return ret;
 }
 
@@ -425,12 +437,12 @@ int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     int ret;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_TYPE_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_TYPE_COMMIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_TYPE_COMMIT_HOOK);
 
     ret = MPIDI_SHM_native_src_funcs.mpi_type_commit_hook(datatype_p);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_TYPE_COMMIT_HOOK);
     return ret;
 }
 

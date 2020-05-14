@@ -1,8 +1,9 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 AC_PREREQ(2.62)
-#
-# (C) 2008 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
 
 m4_include([version.m4])
 AC_INIT([Hydra], MPICH_VERSION_m4)
@@ -494,71 +495,6 @@ fi
 # POSIX Regcomp
 #########################################################################
 AX_CHECK_POSIX_REGCOMP
-
-#########################################################################
-# Checkpoint/Restart
-#########################################################################
-
-# checkpoint requires pthreads
-AC_CHECK_HEADERS(pthread.h)
-AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
-if test "$have_pthreads" = "yes" ; then
-    PAC_PREPEND_FLAG([-lpthread],[LIBS])
-    AC_DEFINE(HAVE_PTHREADS,1,[Define if pthreads is available])
-fi
-
-AC_ARG_WITH(hydra-ckpointlib, [  --with-hydra-ckpointlib=name - Checkpointing Library (blcr)],
-			   [ hydra_ckpointlib_list=$withval ],
-			   [ hydra_ckpointlib_list=blcr ])
-AC_MSG_CHECKING(checkpointing library)
-
-if test "$have_pthreads" != "yes" -a "$hydra_ckpointlib_list" != "none" ; then
-    AC_MSG_ERROR([pthreads is required for checkpointing, but was not found])
-else
-    AC_MSG_RESULT($hydra_ckpointlib_list)
-fi
-
-hydra_ckpointlibs="`echo $hydra_ckpointlib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
-
-have_blcr=no
-for hydra_ckpointlib in ${hydra_ckpointlibs}; do
-    case "$hydra_ckpointlib" in
-    	blcr)
-	    PAC_SET_HEADER_LIB_PATH(blcr)
-	    PAC_PUSH_FLAG(LIBS)
-	    PAC_CHECK_HEADER_LIB(libcr.h, cr, cr_init, have_blcr=yes, have_blcr=no)
-	    PAC_POP_FLAG(LIBS)
-	    # BLCR works
-	    if test "$have_blcr" = "yes" ; then
-	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
-	       available_ckpointlibs="$available_ckpointlibs blcr"
-	       PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
-	    fi
-	    ;;		
-	*)
-	    ;;
-    esac
-done
-
-tmp_list=
-for hydra_ckpointlib in ${available_ckpointlibs}; do
-    if test -z "$hydra_default_ckpointlib" ; then
-       hydra_default_ckpointlib=${hydra_ckpointlib}
-       tmp_list="${hydra_ckpointlib}"
-    else
-       tmp_list="$tmp_list ${hydra_ckpointlib}"
-    fi
-done
-available_ckpointlibs=$tmp_list
-
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_CKPOINTLIBS,"$available_ckpointlibs",
-		[Definition of enabled checkpointing libraries])
-if test "$hydra_default_ckpointlib" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
-		[Default checkpointing library])
-fi
-AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
-
 
 #########################################################################
 # Demux engine

@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_IOVEC_UTIL_H_INCLUDED
 #define OFI_IOVEC_UTIL_H_INCLUDED
 
@@ -116,10 +111,10 @@ do {                                                                         \
   } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * state,
-                                                    MPL_IOV * out_vector,
+                                                    struct iovec *out_vector,
                                                     MPIDI_OFI_segment_side_t side)
 {
-    MPL_IOV typerep_vec;
+    struct iovec typerep_vec;
     MPI_Aint last;
     size_t *cursor;
     int num_contig = 1;

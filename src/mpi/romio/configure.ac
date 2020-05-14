@@ -1,4 +1,8 @@
-# -*- Mode: shell-script -*-
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # build with
 # autoconf --localdir=../confdb configure.ac
 # (or wherever the confdb is)
@@ -49,8 +53,8 @@ fi
 
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 AH_TOP([/*
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef ROMIOCONF_H_INCLUDED
 #define ROMIOCONF_H_INCLUDED
@@ -724,7 +728,7 @@ AC_TRY_COMPILE([#include <fcntl.h>],
 ],pac_cv_struct_flock_and_mpi_offset=yes,pac_cv_struct_flock_and_mpi_offset=no)
 AC_MSG_RESULT($pac_cv_struct_flock_and_mpi_offset)
 # FIXME: We should look for struct flock64 and the F_SETLK64/F_GETLK64
-# ADIOI_Set_lock could use these instead.
+# ADIOI_GEN_SetLock. could use these instead.
 if test "$pac_cv_struct_flock_and_mpi_offset" = no ; then
     AC_MSG_CHECKING([whether struct flock compatible with int])
     AC_TRY_COMPILE([#include <fcntl.h>],
@@ -757,7 +761,7 @@ if test -n "$FILE_SYSTEM" ; then
    # we could set the IFS to tokenize FILE_SYSTEM, but the FILE_SYSTEM env var
    # is used in multiple places in the build system: get rid of the '+'s so we
    # can use the 'for x in $FILE_SYSTEM ...' idiom 
-   FILE_SYSTEM=`echo $FILE_SYSTEM|sed -e 's/\+/ /g'`
+   FILE_SYSTEM=`echo $FILE_SYSTEM|tr '+' ' '`
    for x in $FILE_SYSTEM
    do
       found=no
@@ -784,10 +788,9 @@ AC_ARG_WITH([cart],
 
 AS_IF([test "x$with_cart" != xno], [
     CART="yes"
-    LDFLAGS="$LDFLAGS -L$with_cart/lib"
-    CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
-    AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
-    AC_CHECK_LIB([gurt], [d_hash_murmur64],, [unset CART])
+    PAC_SET_HEADER_LIB_PATH(cart)
+    AC_CHECK_HEADERS(gurt/hash.h,, [unset CART])
+    AC_CHECK_LIB([gurt], [d_hash_table_create],, [unset CART])
 ])
 
 AC_ARG_WITH([daos],
@@ -797,8 +800,7 @@ AC_ARG_WITH([daos],
 
 AS_IF([test "x$with_daos" != xno], [
     DAOS="yes"
-    LDFLAGS="$LDFLAGS -L$with_daos/lib -L$with_daos/lib64"
-    CPPFLAGS="$CPPFLAGS -I$with_daos/include"
+    PAC_SET_HEADER_LIB_PATH(daos)
     AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
     AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
     AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])

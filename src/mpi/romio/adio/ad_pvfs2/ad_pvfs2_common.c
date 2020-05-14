@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 2003 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_pvfs2.h"
@@ -140,7 +139,3 @@ int ADIOI_PVFS2_error_convert(int pvfs_error)
     }
 
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

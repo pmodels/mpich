@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef POSIX_TYPES_H_INCLUDED
@@ -28,7 +22,7 @@ enum {
 #define MPIDI_POSIX_AMREQUEST_HDR(req, field) ((req)->dev.ch4.am.shm_am.posix.req_hdr->field)
 #define MPIDI_POSIX_AMREQUEST_HDR_PTR(req)    ((req)->dev.ch4.am.shm_am.posix.req_hdr)
 #define MPIDI_POSIX_REQUEST(req, field)       ((req)->dev.ch4.shm.posix.field)
-#define MPIDI_POSIX_COMM(comm)                (&(comm)->dev.ch4.shm.posix)
+#define MPIDI_POSIX_COMM(comm, field)         ((comm)->dev.ch4.shm.posix.field)
 
 typedef struct {
     MPIDIU_buf_pool_t *am_buf_pool;

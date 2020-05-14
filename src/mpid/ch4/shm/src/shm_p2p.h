@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /*
@@ -22,7 +20,7 @@ cvars:
       category    : CH4
       type        : int
       default     : 4096
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -296,8 +294,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        mpi_errno = MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
-        MPIR_ERR_CHECK(mpi_errno);
+        MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
 
         MPIR_Comm_add_ref(root_comm);   /* +1 for queuing into posted_list */
         MPIDIG_enqueue_posted(rreq, &MPIDIG_COMM(root_comm, posted_list));

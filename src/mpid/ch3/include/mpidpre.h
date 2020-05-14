@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* FIXME: This header should contain only the definitions exported to the
@@ -35,10 +34,6 @@ typedef struct {
 #include "mpid_thread.h"
 
 #include "mpid_sched.h"
-
-/* We simply use the fallback timer functionality and do not define
- * our own */
-#include "mpid_timers_fallback.h"
 
 union MPIDI_CH3_Pkt;
 struct MPIDI_VC;
@@ -168,7 +163,8 @@ typedef union {
  * by the channel instance.
  */
 
-#define MPID_Comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
+#define MPID_Comm_commit_pre_hook(comm_) MPIDI_CH3I_Comm_commit_pre_hook(comm_)
+#define MPID_Comm_commit_post_hook(comm_) MPIDI_CH3I_Comm_commit_post_hook(comm_)
 #define MPID_Comm_free_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 
 #ifndef HAVE_MPIDI_VCRT
@@ -178,7 +174,6 @@ typedef struct MPIDI_VC * MPIDI_VCR;
 
 typedef struct MPIDI_CH3I_comm
 {
-    int eager_max_msg_sz;   /* comm-wide eager/rendezvous message threshold */
     int anysource_enabled;  /* TRUE iff this anysource recvs can be posted on this communicator */
     int last_ack_rank;      /* The rank of the last acknowledged failure */
     int waiting_for_revoke; /* The number of other processes from which we are
@@ -394,7 +389,7 @@ typedef struct MPIDI_Request {
 
     /* iov and iov_count define the data to be transferred/received.  
        iov_offset points to the current head element in the IOV */
-    MPL_IOV iov[MPL_IOV_LIMIT];
+    struct iovec iov[MPL_IOV_LIMIT];
     int iov_count;
     size_t iov_offset;
 
@@ -537,9 +532,7 @@ typedef struct {
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
-int MPID_Init(int *argc_p, char ***argv_p, int requested, int *provided);
-
-int MPID_Init_spawn(void);
+int MPID_Init(int required, int *provided);
 
 int MPID_InitCompleted( void );
 

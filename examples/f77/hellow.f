@@ -1,5 +1,7 @@
-c  (C) 2008 by Argonne National Laboratory.
-c      See COPYRIGHT in top-level directory.
+C
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
+C
 
       program main
 

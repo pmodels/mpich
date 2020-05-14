@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_ARGSTR_H_INCLUDED
@@ -17,11 +16,6 @@
 #if defined (MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
-
-#define MPL_STR_SUCCESS    0
-#define MPL_STR_FAIL       1
-#define MPL_STR_NOMEM      2
-#define MPL_STR_TRUNCATED  3
 
 #define MPL_STR_QUOTE_CHAR     '\"'
 #define MPL_STR_QUOTE_STR      "\""

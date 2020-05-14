@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef XPMEM_SEG_H_INCLUDED
@@ -506,7 +505,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_seg_regist(int node_rank, size_t size,
                                                     MPIDI_XPMEM_seg_t ** seg_ptr, void **vaddr,
                                                     MPIDI_XPMEM_segtree_t * segcache)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEM_segmap_t *segmap = &MPIDI_XPMEM_global.segmaps[node_rank];
     MPIDI_XPMEM_seg_t *seg = NULL;
     off_t offset_diff = 0, voffset = 0;

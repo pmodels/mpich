@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef OFI_NOINLINE_H_INCLUDED
@@ -10,11 +9,13 @@
 #include "ofi_impl.h"
 
 /* ofi_comm.h */
-int MPIDI_OFI_mpi_comm_create_hook(MPIR_Comm * comm);
+int MPIDI_OFI_mpi_comm_commit_pre_hook(MPIR_Comm * comm);
+int MPIDI_OFI_mpi_comm_commit_post_hook(MPIR_Comm * comm);
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm);
 
 #ifdef NETMOD_INLINE
-#define MPIDI_NM_mpi_comm_create_hook MPIDI_OFI_mpi_comm_create_hook
+#define MPIDI_NM_mpi_comm_commit_pre_hook MPIDI_OFI_mpi_comm_commit_pre_hook
+#define MPIDI_NM_mpi_comm_commit_post_hook MPIDI_OFI_mpi_comm_commit_post_hook
 #define MPIDI_NM_mpi_comm_free_hook MPIDI_OFI_mpi_comm_free_hook
 #endif
 
@@ -84,8 +85,7 @@ int MPIDI_OFI_mpi_win_free_hook(MPIR_Win * win);
 #endif
 
 /* ofi_init.h */
-int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm,
-                            int *n_vcis_provided);
+int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm);
 int MPIDI_OFI_mpi_finalize_hook(void);
 int MPIDI_OFI_get_vci_attr(int vci);
 void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);

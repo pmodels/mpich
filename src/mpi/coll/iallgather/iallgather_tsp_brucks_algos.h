@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IALLGATHER_TSP_BRUCKS_ALGOS_H_INCLUDED) is
@@ -94,8 +88,8 @@ MPIR_TSP_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount,
     /* Step1: copy own data from sendbuf to top of recvbuf. */
     if (is_inplace && rank != 0)
         MPIR_TSP_sched_localcopy((char *) recvbuf + rank * recvcount * recvtype_extent,
-                                 recvcount, recvtype, tmp_recvbuf, recvcount,
-                                 recvtype, sched, 0, NULL);
+                                 recvcount, recvtype, tmp_recvbuf, recvcount, recvtype, sched, 0,
+                                 NULL);
     else if (!is_inplace)
         MPIR_TSP_sched_localcopy(sendbuf, sendcount, sendtype, tmp_recvbuf,
                                  recvcount, recvtype, sched, 0, NULL);

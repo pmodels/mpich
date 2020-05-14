@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -80,10 +78,11 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
-            MPIR_Assert(old_dtp->typerep != NULL);
-            MPIR_Typerep_dup(old_dtp->typerep, &new_dtp->typerep);
             MPID_Type_commit_hook(new_dtp);
         }
+
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, &new_dtp->typerep);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, VERBOSE, "dup type %x created.", *newtype);
@@ -120,7 +119,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_DUP);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -189,7 +187,6 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_DUP);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

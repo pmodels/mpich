@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #ifndef STUBSHM_COLL_PARAMS_H_INCLUDED
 #define STUBSHM_COLL_PARAMS_H_INCLUDED
 

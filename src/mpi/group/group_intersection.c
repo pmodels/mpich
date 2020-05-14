@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -41,9 +39,8 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     /* Insure that the lpid lists are setup */
     MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
-    for (i = 0; i < size1; i++) {
-        group_ptr1->lrank_to_lpid[i].flag = 0;
-    }
+    int *flags = MPL_calloc(size1, sizeof(int), MPL_MEM_OTHER);
+
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
 
@@ -57,7 +54,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
         } else {
             /* Equal */
-            group_ptr1->lrank_to_lpid[g1_idx].flag = 1;
+            flags[g1_idx] = 1;
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
             nnew++;
@@ -76,7 +73,7 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
     (*new_group_ptr)->is_local_dense_monotonic = TRUE;
     k = 0;
     for (i = 0; i < size1; i++) {
-        if (group_ptr1->lrank_to_lpid[i].flag) {
+        if (flags[i]) {
             int lpid = group_ptr1->lrank_to_lpid[i].lpid;
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
@@ -89,6 +86,8 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
             k++;
         }
     }
+
+    MPL_free(flags);
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INTERSECTION_IMPL);
@@ -139,7 +138,6 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgr
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_INTERSECTION);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -188,7 +186,6 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgr
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_INTERSECTION);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

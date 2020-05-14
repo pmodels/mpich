@@ -1,8 +1,9 @@
 #! /bin/sh
-# 
-# (C) 2006 by Argonne National Laboratory.
-#     See COPYRIGHT in top-level directory.
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Update all of the derived files
 # For best performance, execute this in the top-level directory.
 # There are some experimental features to allow it to be executed in

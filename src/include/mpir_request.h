@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIR_REQUEST_H_INCLUDED
@@ -22,7 +20,7 @@ cvars:
       category    : REQUEST
       type        : int
       default     : 8
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -33,7 +31,7 @@ cvars:
       category    : REQUEST
       type        : int
       default     : 64
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -160,11 +158,6 @@ struct MPIR_Request {
      * 32 bytes and 32-bit integers */
     MPIR_cc_t cc;
 
-#ifdef MPICH_THREAD_USE_MDTA
-    /* Synchronization variable for wait/signal */
-    MPIR_Thread_sync_t *sync;
-#endif
-
     /* completion notification counter: this must be decremented by
      * the request completion routine, when the completion count hits
      * zero.  this counter allows us to keep track of the completion
@@ -204,11 +197,61 @@ struct MPIR_Request {
 #endif
 };
 
+/* Multiple Request Pools
+ * Request objects creation and freeing is in a hot path. Multiple pools allow different
+ * threads to access different pools without incurring global locks. Because only request
+ * objects benefit from this multi-pool scheme, the normal handlemem macros and functions
+ * are extended here for request objects. It is separate from the other objects, and the
+ * bit patterns for POOL and BLOCK sizes can be adjusted if necessary.
+ *
+ * NOTE: MPIR_Request_create/free are patched to work with pools.
+ */
+/* Handle Bits - 2+4+6+8+12 - Type, Kind, Pool_idx, Block_idx, Object_idx */
+#define REQUEST_POOL_MASK    0x03f00000
+#define REQUEST_POOL_SHIFT   20
+#define REQUEST_POOL_MAX     64
+#define REQUEST_BLOCK_MASK   0x000ff000
+#define REQUEST_BLOCK_SHIFT  12
+#define REQUEST_BLOCK_MAX    256
+#define REQUEST_OBJECT_MASK  0x00000fff
+#define REQUEST_OBJECT_SHIFT 0
+#define REQUEST_OBJECT_MAX   4096
+
+#define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
-extern MPIR_Object_alloc_t MPIR_Request_mem;
-/* Preallocated request objects */
-extern MPIR_Request MPIR_Request_direct[];
+extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
+extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
+
+#define MPIR_Request_get_ptr(a, ptr) \
+    do { \
+        int pool, blk, idx; \
+        pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
+        switch (HANDLE_GET_KIND(a)) { \
+        case HANDLE_KIND_DIRECT: \
+            MPIR_Assert(pool == 0); \
+            ptr = MPIR_Request_direct + HANDLE_INDEX(a); \
+            break; \
+        case HANDLE_KIND_INDIRECT: \
+            blk = ((a) & REQUEST_BLOCK_MASK) >> REQUEST_BLOCK_SHIFT; \
+            idx = ((a) & REQUEST_OBJECT_MASK) >> REQUEST_OBJECT_SHIFT; \
+            ptr = ((MPIR_Request *) MPIR_Request_mem[pool].indirect[blk]) + idx; \
+            break; \
+        default: \
+            ptr = NULL; \
+            break; \
+        } \
+    } while (0)
+
+static inline void MPII_init_request(void)
+{
+    /* *INDENT-OFF* */
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC };
+    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0 };
+    }
+    /* *INDENT-ON* */
+}
 
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
@@ -235,11 +278,23 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
-static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int pool)
 {
     MPIR_Request *req;
 
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    /* NOTE: observes HANDLE_NUM_BLOCKS and HANDLE_NUM_INDICES */
+    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem[pool]);
+    if (req != NULL) {
+        /* Patch the handle.
+         * Or, we could use a custom "Request_obj_alloc" to save some cycles */
+        if (HANDLE_BLOCK(req->handle) >= REQUEST_BLOCK_MAX) {
+            /* FIXME: free the request */
+            req = NULL;
+        } else {
+            req->handle |= (pool << REQUEST_POOL_SHIFT);
+        }
+    }
+
     if (req != NULL) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
@@ -270,9 +325,6 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
         req->comm = NULL;
-#ifdef MPICH_THREAD_USE_MDTA
-        req->sync = NULL;
-#endif
 
         switch (kind) {
             case MPIR_REQUEST_KIND__SEND:
@@ -305,7 +357,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     MPIR_Request *req;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind);
+    req = MPIR_Request_create(kind, 0);
     MPIR_cc_set(&req->cc, 0);
 #else
     req = MPIR_Process.lw_req;
@@ -324,14 +376,6 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     /* inform the device that we are decrementing the ref-count on
      * this request */
     MPID_Request_free_hook(req);
-
-#ifdef MPICH_THREAD_USE_MDTA
-    /* We signal the possible waiter to complete this request. */
-    if (req->sync) {
-        MPIR_Thread_sync_signal(req->sync, 0);
-        req->sync = NULL;
-    }
-#endif
 
     if (inuse == 0) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "freeing request, handle=0x%08x", req->handle);
@@ -369,20 +413,10 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         MPID_Request_destroy_hook(req);
 
-        MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+        MPIR_Handle_obj_free(&MPIR_Request_mem[pool], req);
     }
 }
-
-#ifdef MPICH_THREAD_USE_MDTA
-MPL_STATIC_INLINE_PREFIX void MPIR_Request_attach_sync(MPIR_Request * req_ptr,
-                                                       MPIR_Thread_sync_t * sync)
-{
-    req_ptr->sync = sync;
-    if (MPIR_Request_is_persistent(req_ptr)) {
-        req_ptr->u.persist.real_request->sync = sync;
-    }
-}
-#endif
 
 /* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
  * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
@@ -469,15 +503,24 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_wait_fn(MPIR_Request * request_ptr
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return (request_ptr->u.ureq.greq_fns->wait_fn) (1,
-                                                    &request_ptr->u.ureq.greq_fns->
-                                                    grequest_extra_state, 0, status);
+    int mpi_errno;
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    mpi_errno = (request_ptr->u.ureq.greq_fns->wait_fn) (1,
+                                                         &request_ptr->u.ureq.greq_fns->
+                                                         grequest_extra_state, 0, status);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
-                                                    greq_fns->grequest_extra_state, status);
+    int mpi_errno;
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    mpi_errno =
+        (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.greq_fns->grequest_extra_state,
+                                                 status);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    return mpi_errno;
 }
 
 int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);

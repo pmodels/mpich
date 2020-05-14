@@ -1,15 +1,11 @@
-/* ---------------------------------------------------------------- */
-/* (C)Copyright IBM Corp.  2007, 2008                               */
-/* ---------------------------------------------------------------- */
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 /**
  * \file ad_gpfs_open.c
  * \brief ???
- */
-
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
  */
 
 #include "ad_gpfs.h"
@@ -147,7 +143,3 @@ void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
     } else
         *error_code = MPI_SUCCESS;
 }
-
-/*
- *vim: ts=8 sts=4 sw=4 noexpandtab
- */

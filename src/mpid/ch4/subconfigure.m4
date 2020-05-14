@@ -44,19 +44,8 @@ MPID_MAX_ERROR_STRING=512
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
-    # need pick a netmod
-    if test $have_libfabric = yes ; then
-        ch4_netmods="ofi"
-    elif test $have_ucx = yes ; then
-        ch4_netmods="ucx"
-    elif test -n $with_libfabric ; then
-        ch4_netmods="ofi"
-    elif test -n $with_ucx ; then
-        ch4_netmods="ucx"
-    else
-        ch4_netmods="ofi"
-        with_libfabric=embedded
-    fi
+    AC_MSG_ERROR([Netmod configuration not specified. To build ch4, you must select a netmod:
+    --with-device=ch4:ofi or --with-device=ch4:ucx])
 else
     changequote(<<,>>)
     netmod_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://' -e 's/,/ /g'`
@@ -175,108 +164,6 @@ MPIDI_${net_upper}_dt_t ${net};"
         ch4_netmod_op_decl="${ch4_netmod_op_decl} \\
 MPIDI_${net_upper}_op_t ${net};"
     fi
-    if test -z "$ch4_netmod_barrier_params_decl" ; then
-        ch4_netmod_barrier_params_decl="MPIDI_${net_upper}_BARRIER_PARAMS_DECL"
-    else
-        ch4_netmod_barrier_params_decl="${ch4_netmod_barrier_params_decl} \\
-MPIDI_${net_upper}_BARRIER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_bcast_params_decl" ; then
-        ch4_netmod_bcast_params_decl="MPIDI_${net_upper}_BCAST_PARAMS_DECL"
-    else
-        ch4_netmod_bcast_params_decl="${ch4_netmod_bcast_params_decl} \\
-MPIDI_${net_upper}_BCAST_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_params_decl" ; then
-        ch4_netmod_reduce_params_decl="MPIDI_${net_upper}_REDUCE_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_params_decl="${ch4_netmod_reduce_params_decl} \\
-MPIDI_${net_upper}_REDUCE_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allreduce_params_decl" ; then
-        ch4_netmod_allreduce_params_decl="MPIDI_${net_upper}_ALLREDUCE_PARAMS_DECL"
-    else
-        ch4_netmod_allreduce_params_decl="${ch4_netmod_allreduce_params_decl} \\
-MPIDI_${net_upper}_ALLREDUCE_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoall_params_decl" ; then
-        ch4_netmod_alltoall_params_decl="MPIDI_${net_upper}_ALLTOALL_PARAMS_DECL"
-    else
-        ch4_netmod_alltoall_params_decl="${ch4_netmod_alltoall_params_decl} \\
-MPIDI_${net_upper}_ALLTOALL_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoallv_params_decl" ; then
-        ch4_netmod_alltoallv_params_decl="MPIDI_${net_upper}_ALLTOALLV_PARAMS_DECL"
-    else
-        ch4_netmod_alltoallv_params_decl="${ch4_netmod_alltoallv_params_decl} \\
-MPIDI_${net_upper}_ALLTOALLV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_alltoallw_params_decl" ; then
-        ch4_netmod_alltoallw_params_decl="MPIDI_${net_upper}_ALLTOALLW_PARAMS_DECL"
-    else
-        ch4_netmod_alltoallw_params_decl="${ch4_netmod_alltoallw_params_decl} \\
-MPIDI_${net_upper}_ALLTOALLW_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allgather_params_decl" ; then
-        ch4_netmod_allgather_params_decl="MPIDI_${net_upper}_ALLGATHER_PARAMS_DECL"
-    else
-        ch4_netmod_allgather_params_decl="${ch4_netmod_allgather_params_decl} \\
-MPIDI_${net_upper}_ALLGATHER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_allgatherv_params_decl" ; then
-        ch4_netmod_allgatherv_params_decl="MPIDI_${net_upper}_ALLGATHERV_PARAMS_DECL"
-    else
-        ch4_netmod_allgatherv_params_decl="${ch4_netmod_allgatherv_params_decl} \\
-MPIDI_${net_upper}_ALLGATHERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_gather_params_decl" ; then
-        ch4_netmod_gather_params_decl="MPIDI_${net_upper}_GATHER_PARAMS_DECL"
-    else
-        ch4_netmod_gather_params_decl="${ch4_netmod_gather_params_decl} \\
-MPIDI_${net_upper}_GATHER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_gatherv_params_decl" ; then
-        ch4_netmod_gatherv_params_decl="MPIDI_${net_upper}_GATHERV_PARAMS_DECL"
-    else
-        ch4_netmod_gatherv_params_decl="${ch4_netmod_gatherv_params_decl} \\
-MPIDI_${net_upper}_GATHERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scatter_params_decl" ; then
-        ch4_netmod_scatter_params_decl="MPIDI_${net_upper}_SCATTER_PARAMS_DECL"
-    else
-        ch4_netmod_scatter_params_decl="${ch4_netmod_scatter_params_decl} \\
-MPIDI_${net_upper}_SCATTER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scatterv_params_decl" ; then
-        ch4_netmod_scatterv_params_decl="MPIDI_${net_upper}_SCATTERV_PARAMS_DECL"
-    else
-        ch4_netmod_scatterv_params_decl="${ch4_netmod_scatterv_params_decl} \\
-MPIDI_${net_upper}_SCATTERV_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_scatter_params_decl" ; then
-        ch4_netmod_reduce_scatter_params_decl="MPIDI_${net_upper}_REDUCE_SCATTER_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_scatter_params_decl="${ch4_netmod_reduce_scatter_params_decl} \\
-MPIDI_${net_upper}_REDUCE_SCATTER_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_reduce_scatter_block_params_decl" ; then
-        ch4_netmod_reduce_scatter_block_params_decl="MPIDI_${net_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL"
-    else
-        ch4_netmod_reduce_scatter_block_params_decl="${ch4_netmod_reduce_scatter_block_params_decl} \\
-MPIDI_${net_upper}_REDUCE_SCATTER_BLOCK_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_scan_params_decl" ; then
-        ch4_netmod_scan_params_decl="MPIDI_${net_upper}_SCAN_PARAMS_DECL"
-    else
-        ch4_netmod_scan_params_decl="${ch4_netmod_scan_params_decl} \\
-MPIDI_${net_upper}_SCAN_PARAMS_DECL"
-    fi
-    if test -z "$ch4_netmod_exscan_params_decl" ; then
-        ch4_netmod_exscan_params_decl="MPIDI_${net_upper}_EXSCAN_PARAMS_DECL"
-    else
-        ch4_netmod_exscan_params_decl="${ch4_netmod_exscan_params_decl} \\
-MPIDI_${net_upper}_EXSCAN_PARAMS_DECL"
-    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -316,23 +203,6 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
-AC_SUBST(ch4_netmod_barrier_params_decl)
-AC_SUBST(ch4_netmod_bcast_params_decl)
-AC_SUBST(ch4_netmod_reduce_params_decl)
-AC_SUBST(ch4_netmod_allreduce_params_decl)
-AC_SUBST(ch4_netmod_alltoall_params_decl)
-AC_SUBST(ch4_netmod_alltoallv_params_decl)
-AC_SUBST(ch4_netmod_alltoallw_params_decl)
-AC_SUBST(ch4_netmod_allgather_params_decl)
-AC_SUBST(ch4_netmod_allgatherv_params_decl)
-AC_SUBST(ch4_netmod_gather_params_decl)
-AC_SUBST(ch4_netmod_gatherv_params_decl)
-AC_SUBST(ch4_netmod_scatter_params_decl)
-AC_SUBST(ch4_netmod_scatterv_params_decl)
-AC_SUBST(ch4_netmod_reduce_scatter_params_decl)
-AC_SUBST(ch4_netmod_reduce_scatter_block_params_decl)
-AC_SUBST(ch4_netmod_scan_params_decl)
-AC_SUBST(ch4_netmod_exscan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
@@ -343,23 +213,6 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_barrier_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_bcast_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allreduce_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoall_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoallv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_alltoallw_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allgather_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_allgatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_gather_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_gatherv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scatterv_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
-AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-inline,
     [--enable-ch4-netmod-inline
@@ -478,12 +331,20 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
+AC_ARG_WITH(ch4-max-vcis,
+    [--with-ch4-max-vcis=<N>
+       Select max number of VCIs to configure (default is 1; minimum is 1)],
+    [], [with_ch4_max_vcis=1 ])
+if test $with_ch4_max_vcis -le 0 ; then
+   AC_MSG_ERROR(Number of VCIs must be greater than 0)
+fi
+AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs configured in CH4])
+
 AC_ARG_ENABLE(ch4-mt,
     [--enable-ch4-mt=model
        Select model for multi-threading
          direct    - Each thread directly accesses lower-level fabric (default)
          handoff   - Use the hand-off model (spawns progress thread)
-         trylock   - Use the trylock-enqueue model
          runtime   - Determine the model at runtime through a CVAR
     ],,enable_ch4_mt=direct)
 
@@ -496,10 +357,6 @@ case $enable_ch4_mt in
          AC_DEFINE([MPIDI_CH4_USE_MT_HANDOFF], [1],
             [Define to enable hand-off multi-threading model])
         ;;
-     trylock)
-         AC_DEFINE([MPIDI_CH4_USE_MT_TRYLOCK], [1],
-            [Define to enable trylock-enqueue multi-threading model])
-        ;;
      runtime)
          AC_DEFINE([MPIDI_CH4_USE_MT_RUNTIME], [1],
             [Define to enable runtime multi-threading model])
@@ -511,7 +368,7 @@ esac
 
 #
 # Dependency checks for CH4 MT modes
-# Currently, "handoff", "trylock", and "runtime" require the followings:
+# Currently, "handoff" and "runtime" require the followings:
 # - izem linked in (--with-zm-prefix)
 # - enable-thread-cs=per-vci
 #
@@ -526,14 +383,6 @@ fi
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 
-gl_FUNC_RANDOM_R
-if test "$HAVE_RANDOM_R" = "1" -a "$HAVE_STRUCT_RANDOM_DATA" = "1" ; then
-    AC_DEFINE(USE_SYM_HEAP,1,[Define if we can use a symmetric heap])
-    AC_MSG_NOTICE([Using a symmetric heap])
-else
-    AC_MSG_NOTICE([Using a non-symmetric heap])
-fi
-
 AC_CHECK_FUNCS(gethostname)
 if test "$ac_cv_func_gethostname" = "yes" ; then
     # Do we need to declare gethostname?
@@ -547,8 +396,6 @@ AC_CHECK_FUNCS(signal)
 AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
-src/mpid/ch4/include/coll_algo_params.h
-src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 

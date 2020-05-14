@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIDI_CH3_IMPL_H_INCLUDED
@@ -49,36 +48,32 @@ extern struct MPIR_Request *MPIDI_CH3I_shm_active_send;
 int MPIDI_CH3I_Shm_supported(void);
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id);
-int MPIDI_CH3I_Progress_deregister_hook(int id);
-int MPIDI_CH3I_Progress_activate_hook(int id);
-int MPIDI_CH3I_Progress_deactivate_hook(int id);
 int MPIDI_CH3I_Shm_send_progress(void);
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
-                              MPL_IOV *hdr_iov, int n_hdr_iov);
+                              struct iovec *hdr_iov, int n_hdr_iov);
 
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR_Request *req);
-int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie);
-int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie);
-int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie);
+int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec s_cookie);
+int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec r_cookie);
+int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec cookie);
 int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR_Request *req);
-int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie);
-int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie);
-int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie);
+int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec s_cookie);
+int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec r_cookie);
+int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec cookie);
 int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR_Request *req);
-int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie);
-int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie);
-int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie);
+int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec s_cookie);
+int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec r_cookie);
+int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, struct iovec cookie);
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *req);
 int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -14,27 +13,29 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iexscan algorithm
-        auto               - Internal algorithm selection
-        recursive_doubling - Force recursive doubling algorithm
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
+        sched_auto - Internal algorithm selection for sched-based algorithms
+        sched_recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Iexscan will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level iexscan function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Iexscan will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -59,14 +60,55 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef MPI_Iexscan
 #define MPI_Iexscan PMPI_Iexscan
 
-int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+
+int MPIR_Iexscan_allcomm_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__IEXSCAN,
+        .comm_ptr = comm_ptr,
+
+        .u.iexscan.sendbuf = sendbuf,
+        .u.iexscan.recvbuf = recvbuf,
+        .u.iexscan.count = count,
+        .u.iexscan.datatype = datatype,
+        .u.iexscan.op = op,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iexscan_intra_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Iexscan_intra_sched_recursive_doubling:
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Iexscan_intra_sched_auto(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                   MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+        MPIR_Iexscan_intra_sched_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                                     s);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -77,63 +119,33 @@ int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* intracommunicator */
-    switch (MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM) {
-        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_recursive_doubling:
-            mpi_errno =
-                MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
-                                                            comm_ptr, s);
-            break;
-        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_auto:
-            MPL_FALLTHROUGH;
-        default:
-            mpi_errno =
-                MPIR_Iexscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-            break;
-    }
-
-    return mpi_errno;
-}
-
-int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Iexscan_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    }
-
-    return mpi_errno;
-}
-
 int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                       MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag = -1;
-    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
 
-    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Sched_create(&s);
-    MPIR_ERR_CHECK(mpi_errno);
+    switch (MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM) {
+        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_sched_recursive_doubling:
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_recursive_doubling, comm_ptr, request,
+                               sendbuf, recvbuf, count, datatype, op);
+            break;
 
-    mpi_errno = MPIR_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    MPIR_ERR_CHECK(mpi_errno);
+        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_sched_auto:
+            MPII_SCHED_WRAPPER(MPIR_Iexscan_intra_sched_auto, comm_ptr, request, sendbuf, recvbuf,
+                               count, datatype, op);
+            break;
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    MPIR_ERR_CHECK(mpi_errno);
+        case MPIR_CVAR_IEXSCAN_INTRA_ALGORITHM_auto:
+            mpi_errno = MPIR_Iexscan_allcomm_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                  request);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
 
   fn_exit:
     return mpi_errno;
@@ -146,7 +158,9 @@ int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE)) {
         mpi_errno = MPID_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     } else {
         mpi_errno = MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
@@ -188,7 +202,6 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IEXSCAN);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IEXSCAN);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -264,7 +277,6 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IEXSCAN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

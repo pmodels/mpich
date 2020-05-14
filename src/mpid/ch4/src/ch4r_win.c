@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -139,8 +133,8 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_SET_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_SET_INFO);
 
     MPIR_Info *curr_ptr;
     char *value, *token, *savePtr = NULL;
@@ -246,7 +240,7 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_SET_INFO);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_SET_INFO);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -261,7 +255,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIR_Comm *win_comm_ptr;
     MPIDIG_win_info_accu_op_shift_t op_shift;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_INIT);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDIG_WIN_INIT);
 
     MPIR_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
@@ -271,7 +265,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_WIN(win, targets) = targets;
@@ -345,8 +339,8 @@ static int win_finalize(MPIR_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     int all_completed = 0;
     MPIR_Win *win = *win_ptr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_FINALIZE);
 
     /* All local outstanding OPs should have been completed. */
     MPIR_Assert(MPIR_cc_get(MPIDIG_WIN(win, local_cmpl_cnts)) == 0);
@@ -357,7 +351,9 @@ static int win_finalize(MPIR_Win ** win_ptr)
     do {
         int all_local_completed = 0, all_remote_completed = 0;
 
-        MPIDIU_PROGRESS();
+        /* NOTE: MPID_Win_free does not take on locks */
+        mpi_errno = MPID_Progress_test();
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
         MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
@@ -385,20 +381,12 @@ static int win_finalize(MPIR_Win ** win_ptr)
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
         win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* if more than one process on a node, we use shared memory by default */
-        if (win->comm_ptr->node_comm != NULL && MPIDIG_WIN(win, mmap_addr)) {
-            if (MPIDIG_WIN(win, mmap_sz) > 0) {
-                /* destroy shared window memory */
-                mpi_errno = MPIDIU_destroy_shm_segment(MPIDIG_WIN(win, mmap_sz),
-                                                       &MPIDIG_WIN(win, shm_segment_handle),
-                                                       &MPIDIG_WIN(win, mmap_addr));
-                MPIR_ERR_CHECK(mpi_errno);
-            }
+        if (MPIDIG_WIN(win, mmap_addr)) {
+            mpi_errno = MPIDU_shm_free(MPIDIG_WIN(win, mmap_addr));
+            MPIR_ERR_CHECK(mpi_errno);
 
             /* if shared memory allocation fails or zero size window, free the table at allocation. */
             MPL_free(MPIDIG_WIN(win, shared_table));
-        } else if (MPIDIG_WIN(win, mmap_sz) > 0) {
-            /* if single process on the node, we use mmap with symm heap */
-            MPL_munmap(MPIDIG_WIN(win, mmap_addr), MPIDIG_WIN(win, mmap_sz), MPL_MEM_RMA);
         } else
             MPL_free(win->base);
     }
@@ -409,7 +397,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -438,8 +426,8 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
 
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_WIN_SHM_ALLOC_IMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_WIN_SHM_ALLOC_IMPL);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -479,7 +467,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
         for (i = 0; i < shm_comm_ptr->local_size; i++) {
             shm_offsets[i] = (MPI_Aint) total_shm_size;
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                total_shm_size += MPIDIU_get_mapsize(shared_table[i].size, &page_sz);
+                total_shm_size += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
             else
                 total_shm_size += shared_table[i].size;
         }
@@ -489,7 +477,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
             goto fn_no_shm;
 
         /* if my size is not page aligned and noncontig is disabled, skip global symheap. */
-        if (size != MPIDIU_get_mapsize(size, &page_sz) &&
+        if (size != MPIDU_shm_get_mapsize(size, &page_sz) &&
             !MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
             symheap_flag = false;
     } else
@@ -513,13 +501,15 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     /* because MPI_shm follows a create & attach mode, we need to set the
      * size of entire shared memory segment on each node as the size of
      * each process. */
-    mapsize = MPIDIU_get_mapsize(total_shm_size, &page_sz);
+    mapsize = MPIDU_shm_get_mapsize(total_shm_size, &page_sz);
 
     /* first try global symmetric heap segment allocation */
     if (global_symheap_flag) {
+        size_t my_offset = (shm_comm_ptr) ? shm_offsets[shm_comm_ptr->rank] : 0;
         MPIDIG_WIN(win, mmap_sz) = mapsize;
-        mpi_errno = MPIDIU_get_shm_symheap(mapsize, shm_offsets, comm_ptr,
-                                           win, &symheap_mapfail_flag);
+        mpi_errno =
+            MPIDU_shm_alloc_symm_all(comm_ptr, mapsize, my_offset, &MPIDIG_WIN(win, mmap_addr),
+                                     &symheap_mapfail_flag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
@@ -533,9 +523,9 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
     if (!global_symheap_flag || symheap_mapfail_flag) {
         if (shm_comm_ptr != NULL && mapsize) {
             MPIDIG_WIN(win, mmap_sz) = mapsize;
-            mpi_errno = MPIDIU_allocate_shm_segment(shm_comm_ptr, mapsize,
-                                                    &MPIDIG_WIN(win, shm_segment_handle),
-                                                    &MPIDIG_WIN(win, mmap_addr), &shm_mapfail_flag);
+            mpi_errno =
+                MPIDU_shm_alloc(shm_comm_ptr, mapsize, &MPIDIG_WIN(win, mmap_addr),
+                                &shm_mapfail_flag);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
 
@@ -567,7 +557,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
                 shared_table[i].shm_base_addr = NULL;
 
             if (MPIDIG_WIN(win, info_args).alloc_shared_noncontig)
-                cur_base += MPIDIU_get_mapsize(shared_table[i].size, &page_sz);
+                cur_base += MPIDU_shm_get_mapsize(shared_table[i].size, &page_sz);
             else
                 cur_base += shared_table[i].size;
         }
@@ -588,7 +578,7 @@ static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_WIN_SHM_ALLOC_IMPL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_SHM_ALLOC_IMPL);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();

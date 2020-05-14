@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., INEIGHBOR_ALLGATHERV_TSP_LINEAR_ALGOS_H_INCLUDED) is
@@ -32,8 +26,8 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
     MPI_Aint recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
 
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
@@ -62,7 +56,7 @@ int MPIR_TSP_Ineighbor_allgatherv_sched_allcomm_linear(const void *sendbuf, int 
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_INTRA_LINEAR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_INEIGHBOR_ALLGATHERV_SCHED_ALLCOMM_LINEAR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

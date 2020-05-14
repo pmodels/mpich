@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IALLTOALLW_TSP_ALGOS_H_INCLUDED) is
@@ -21,13 +15,13 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendc
                                             const int sdispls[], const MPI_Datatype sendtypes[],
                                             void *recvbuf, const int recvcounts[],
                                             const int rdispls[], const MPI_Datatype recvtypes[],
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t * sched)
+                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
     size_t sendtype_size, recvtype_size;
     int nranks, rank;
-    int i, j, bblock, comm_block, dst;
+    int i, j, comm_block, dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALLW_SCHED_INTRA_BLOCKED);
@@ -37,7 +31,6 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendc
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
-    bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
     if (bblock == 0)
         bblock = nranks;
 
@@ -91,7 +84,7 @@ int MPIR_TSP_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendc
 int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], const MPI_Datatype sendtypes[],
                                       void *recvbuf, const int recvcounts[], const int rdispls[],
-                                      const MPI_Datatype recvtypes[], MPIR_Comm * comm,
+                                      const MPI_Datatype recvtypes[], MPIR_Comm * comm, int bblock,
                                       MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -109,7 +102,8 @@ int MPIR_TSP_Ialltoallw_intra_blocked(const void *sendbuf, const int sendcounts[
 
     mpi_errno =
         MPIR_TSP_Ialltoallw_sched_intra_blocked(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
-                                                recvcounts, rdispls, recvtypes, comm, sched);
+                                                recvcounts, rdispls, recvtypes, comm, bblock,
+                                                sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

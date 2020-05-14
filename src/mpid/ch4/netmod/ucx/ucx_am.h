@@ -1,11 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef UCX_AM_H_INCLUDED
 #define UCX_AM_H_INCLUDED
 
@@ -58,35 +55,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     uint64_t ucx_tag;
     char *send_buf;
     size_t data_sz;
-    MPI_Aint dt_true_lb;
-    MPIR_Datatype *dt_ptr;
-    int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    if (handler_id == MPIDIG_SEND &&
-        am_hdr_sz + sizeof(MPIDI_UCX_am_header_t) + data_sz > MPIDI_UCX_MAX_AM_EAGER_SZ) {
-        MPIDIG_send_long_req_mst_t lreq_hdr;
-
-        MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
-        lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = sreq;
-        MPIDIG_REQUEST(sreq, req->lreq).src_buf = data;
-        MPIDIG_REQUEST(sreq, req->lreq).count = count;
-        MPIR_Datatype_add_ref_if_not_builtin(datatype);
-        MPIDIG_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDIG_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
-        MPIDIG_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
-        MPIDIG_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
-        MPIDIG_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr));
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
-    }
+    MPIDI_Datatype_check_size(datatype, count, data_sz);
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
@@ -95,25 +69,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     ucx_hdr.handler_id = handler_id;
     ucx_hdr.data_sz = data_sz;
 
-    if (dt_contig) {
-        /* just pack and send for now */
-        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
-    } else {
-        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+    send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+    MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
+    MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-        MPI_Aint actual_pack_bytes;
-        mpi_errno =
-            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                              data_sz, &actual_pack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_pack_bytes == data_sz);
-    }
+    MPI_Aint actual_pack_bytes;
+    mpi_errno =
+        MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
+                          data_sz, &actual_pack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == data_sz);
 
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
@@ -158,9 +123,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     uint64_t ucx_tag;
     char *send_buf;
     size_t data_sz;
-    MPI_Aint dt_true_lb;
-    MPIR_Datatype *dt_ptr;
-    int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
 
 
@@ -170,7 +132,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    MPIDI_Datatype_check_size(datatype, count, data_sz);
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
     }
@@ -186,16 +148,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
-    if (dt_contig) {
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
-    } else {
-        MPI_Aint actual_pack_bytes;
-        mpi_errno =
-            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
-                              data_sz, &actual_pack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_pack_bytes == data_sz);
-    }
+    MPI_Aint actual_pack_bytes;
+    mpi_errno =
+        MPIR_Typerep_pack(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
+                          data_sz, &actual_pack_bytes);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Assert(actual_pack_bytes == data_sz);
+
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
@@ -331,6 +290,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
+{
+    return (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
@@ -424,29 +388,5 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
   fn_fail:
     goto fn_exit;
 }
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDIG_send_long_ack_msg_t msg;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
-
-    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = req;
-    MPIR_Assert((void *) msg.sreq_ptr != NULL);
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
-                                           MPIDIG_REQUEST(req, rank), MPIDIG_SEND_LONG_ACK, &msg,
-                                           sizeof(msg));
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 
 #endif /* UCX_AM_H_INCLUDED */

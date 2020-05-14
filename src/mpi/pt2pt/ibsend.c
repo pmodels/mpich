@@ -1,12 +1,9 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
-#include "bsendutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Ibsend */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -21,94 +18,24 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #endif
 /* -- End Profiling Symbol Block */
 
-typedef struct {
-    MPIR_Request *req;
-    int cancelled;
-} ibsend_req_info;
-
-PMPI_LOCAL int MPIR_Ibsend_query(void *extra, MPI_Status * status);
-PMPI_LOCAL int MPIR_Ibsend_free(void *extra);
-PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete);
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Ibsend
 #define MPI_Ibsend PMPI_Ibsend
 
-PMPI_LOCAL int MPIR_Ibsend_query(void *extra, MPI_Status * status)
-{
-    ibsend_req_info *ibsend_info = (ibsend_req_info *) extra;
-    MPIR_STATUS_SET_CANCEL_BIT(*status, ibsend_info->cancelled);
-    return MPI_SUCCESS;
-}
-
-PMPI_LOCAL int MPIR_Ibsend_free(void *extra)
-{
-    ibsend_req_info *ibsend_info = (ibsend_req_info *) extra;
-
-    MPL_free(ibsend_info);
-
-    return MPI_SUCCESS;
-}
-
-PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
-{
-    int mpi_errno = MPI_SUCCESS;
-    ibsend_req_info *ibsend_info = (ibsend_req_info *) extra;
-    MPI_Status status;
-    MPIR_Request *req = ibsend_info->req;
-    MPI_Request req_hdl = req->handle;
-
-    /* FIXME: There should be no unreferenced args! */
-    /* Note that this value should always be 1 because
-     * Grequest_complete is called on this request when it is
-     * created */
-    MPL_UNREFERENCED_ARG(complete);
-
-
-    /* Try to cancel the underlying request */
-    mpi_errno = MPIR_Cancel(req);
-    MPIR_ERR_CHECK(mpi_errno);
-    mpi_errno = MPIR_Wait(&req_hdl, &status);
-    MPIR_ERR_CHECK(mpi_errno);
-    ibsend_info->cancelled = MPIR_STATUS_GET_CANCEL_BIT(status);
-
-    /* If the cancelation is successful, free the memory in the
-     * attached buffer used by the request */
-    if (ibsend_info->cancelled) {
-        mpi_errno = MPIR_Bsend_free_req_seg(ibsend_info->req);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
 
 int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPIR_Comm * comm_ptr, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *request_ptr, *new_request_ptr;
-    ibsend_req_info *ibinfo = 0;
 
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, IBSEND, &request_ptr);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
-
-    /* FIXME: use the memory management macros */
-    ibinfo = (ibsend_req_info *) MPL_malloc(sizeof(ibsend_req_info), MPL_MEM_BUFFER);
-    ibinfo->req = request_ptr;
-    ibinfo->cancelled = 0;
-    mpi_errno = MPIR_Grequest_start(MPIR_Ibsend_query, MPIR_Ibsend_free,
-                                    MPIR_Ibsend_cancel, ibinfo, &new_request_ptr);
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     MPIR_ERR_CHECK(mpi_errno);
-    /* The request is immediately complete because the MPIR_Bsend_isend has
-     * already moved the data out of the user's buffer */
-    MPIR_Grequest_complete(new_request_ptr);
-    MPIR_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
+
+    /* Ibsend is local-complete */
+    MPIR_Request *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    *request = req->handle;
 
   fn_exit:
     return mpi_errno;
@@ -157,7 +84,6 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(MPID_STATE_MPI_IBSEND);
 
     /* Validate handle parameters needing to be converted */
@@ -233,7 +159,6 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
   fn_exit:
     MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_IBSEND);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -256,7 +255,7 @@ static void free_port_name_tag(int tag)
 static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPL_STR_SUCCESS;
+    int str_errno = MPL_SUCCESS;
     int len;
     int port_name_tag = 0; /* this tag is added to the business card,
                               which is then returned as the port name */
@@ -325,7 +324,7 @@ fn_fail:
 int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPL_STR_SUCCESS;
+    int str_errno = MPL_SUCCESS;
 
     str_errno = MPL_str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
                                      port_name_tag);

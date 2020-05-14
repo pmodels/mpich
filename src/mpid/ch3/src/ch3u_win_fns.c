@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -430,7 +429,7 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
                 c += snprintf(buf + c, BUFSIZE - c, "%swaw", (c > 0) ? "," : "");
         }
 
-        MPIR_Info_set_impl(*info_used, "accumulate_ordering", buf);
+        mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ordering", buf);
         MPIR_ERR_CHECK(mpi_errno);
 #undef BUFSIZE
     }

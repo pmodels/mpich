@@ -1,9 +1,8 @@
-C -*- Mode: Fortran; -*-
 C
-C  (C) 2015 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
-C
+
 C  This test tests absolute datatypes and MPI_BOTTOM in mixed
 C  Fortran and C code.  MPI requires MPI_Get_address return
 C  the same value in all languages.

@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -14,26 +8,51 @@
 #include "ch4r_callbacks.h"
 
 static int handle_unexp_cmpl(MPIR_Request * rreq);
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
-                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq);
 static int recv_target_cmpl_cb(MPIR_Request * rreq);
+
+int MPIDIG_do_long_ack(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_send_long_ack_msg_t am_hdr;
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
+    am_hdr.rreq_ptr = rreq;
+    MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
+
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
+#else
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK,
+                                          &am_hdr, sizeof(am_hdr));
+    } else {
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_LONG_ACK, &am_hdr, sizeof(am_hdr));
+    }
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't
  * supposed to finish next, it is appended to a list of requests to be retrieved later. */
-int MPIDIG_check_cmpl_order(MPIR_Request * req, MPIDIG_am_target_cmpl_cb target_cmpl_cb)
+int MPIDIG_check_cmpl_order(MPIR_Request * req)
 {
     int ret = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
 
-    if (MPIDIG_REQUEST(req, req->seq_no) == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
-        OPA_incr_int(&MPIDI_global.exp_seq_no);
+    if (MPIDIG_REQUEST(req, req->seq_no) == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
+        MPL_atomic_fetch_add_uint64(&MPIDI_global.exp_seq_no, 1);
         ret = 1;
         goto fn_exit;
     }
 
-    MPIDIG_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
     MPIDIG_REQUEST(req, req->request) = req;
     /* MPIDI_CS_ENTER(); */
     DL_APPEND(MPIDI_global.cmpl_list, req->dev.ch4.am.req);
@@ -48,30 +67,27 @@ void MPIDIG_progress_compl_list(void)
 {
     MPIR_Request *req;
     MPIDIG_req_ext_t *curr, *tmp;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
     DL_FOREACH_SAFE(MPIDI_global.cmpl_list, curr, tmp) {
-        if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_global.exp_seq_no)) {
+        if (curr->seq_no == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
             DL_DELETE(MPIDI_global.cmpl_list, curr);
             req = (MPIR_Request *) curr->request;
-            target_cmpl_cb = (MPIDIG_am_target_cmpl_cb) curr->target_cmpl_cb;
-            target_cmpl_cb(req);
+            MPIDIG_REQUEST(req, req->target_cmpl_cb) (req);
             goto do_check_again;
         }
     }
     /* MPIDI_CS_EXIT(); */
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_CMPL_LIST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PROGRESS_COMPL_LIST);
 }
 
 static int handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, in_use;
-    MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     size_t nbytes;
     int dt_contig;
@@ -79,12 +95,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPIR_Datatype *dt_ptr;
     size_t dt_sz;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_UNEXP_CMPL);
 
     /* Check if this message has already been claimed by mprobe. */
     /* MPIDI_CS_ENTER(); */
@@ -103,77 +115,23 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     }
     /* MPIDI_CS_EXIT(); */
 
-    root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
-
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (unlikely(match_req && MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req))) {
-            anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req);
-            if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                mpi_errno = MPID_Cancel_recv(anysource_partner);
-                if (mpi_errno != MPI_SUCCESS) {
-                    goto fn_fail;
-                }
-                /* What should we do if the anysource partner request is not canceled? */
-                MPIR_Assertp(MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status));
-            }
-            MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req));
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-        }
+        int is_cancelled;
+        mpi_errno = MPIDI_anysrc_try_cancel_partner(match_req, &is_cancelled);
+        MPIR_ERR_CHECK(mpi_errno);
+        /* `is_cancelled` is assumed to be always true.
+         * In typical config, anysrc partners won't occur if matching unexpected
+         * message already exist.
+         * In workq setup, since we will always progress shm first, when unexpected
+         * message match, the NM partner wouldn't have progressed yet, so the cancel
+         * should always succeed.
+         */
+        MPIR_Assert(is_cancelled);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
-
-    } else {
-        /* If this message hasn't been matched yet, look for it in the posted queue. */
-        /* MPIDI_CS_ENTER(); */
-        if (root_comm) {
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-            match_req =
-                MPIDIG_dequeue_posted(MPIDIG_REQUEST(rreq, rank),
-                                      MPIDIG_REQUEST(rreq, tag),
-                                      MPIDIG_REQUEST(rreq, context_id),
-                                      &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
-            int continue_matching = 1;
-            while (continue_matching) {
-                match_req =
-                    MPIDIG_dequeue_posted(MPIDIG_REQUEST(rreq, rank),
-                                          MPIDIG_REQUEST(rreq, tag),
-                                          MPIDIG_REQUEST(rreq, context_id),
-                                          &MPIDIG_COMM(root_comm, posted_list));
-
-                if (match_req && MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req)) {
-                    anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req);
-
-                    mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                        MPIDI_REQUEST(rreq, is_local) ?
-                                                        MPIDI_SHM : MPIDI_NETMOD,
-                                                        &continue_matching);
-
-                    MPIR_ERR_CHECK(mpi_errno);
-
-                    MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req));
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
-                    MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-                }
-
-                break;
-            }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
-        }
-
-        /* If we found a matching request, remove it from the unexpected queue and clean things up
-         * before we move the data around. */
-        if (match_req) {
-            MPIDIG_delete_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
-            /* Decrement the counter twice, one for posted_list and the other for unexp_list */
-            MPIR_Comm_release(root_comm);
-            MPIR_Comm_release(root_comm);
-        }
-        /* MPIDI_CS_EXIT(); */
     }
 
     /* If we didn't match the request, unmark the busy bit and skip the data movement below. */
@@ -233,10 +191,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (unlikely(anysource_partner)) {
-        anysource_partner->status = match_req->status;
-    }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
+    MPIDI_anysrc_free_partner(match_req);
+#endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
     MPL_free(MPIDIG_REQUEST(rreq, buffer));
@@ -244,67 +200,10 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_HANDLE_UNEXP_CMPL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_UNEXP_CMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-
-static int do_send_target(void **data, size_t * p_data_sz, int *is_contig,
-                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request * rreq)
-{
-    int dt_contig;
-    MPI_Aint dt_true_lb, num_iov;
-    MPIR_Datatype *dt_ptr;
-    size_t data_sz;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-
-    *target_cmpl_cb = recv_target_cmpl_cb;
-    MPIDIG_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_global.nxt_seq_no, 1);
-
-    if (p_data_sz == NULL || 0 == MPIDIG_REQUEST(rreq, count))
-        return MPI_SUCCESS;
-
-    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype), dt_contig,
-                            data_sz, dt_ptr, dt_true_lb);
-    *is_contig = dt_contig;
-
-    if (dt_contig) {
-        *p_data_sz = data_sz;
-        *data = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
-    } else {
-        if (*p_data_sz > data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-            *p_data_sz = data_sz;
-        }
-
-        MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                             MPIDIG_REQUEST(rreq, datatype), 0, data_sz, &num_iov);
-
-        MPIR_Assert(num_iov > 0);
-        MPIDIG_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(num_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
-        MPIR_Assert(MPIDIG_REQUEST(rreq, req->iov));
-
-        int actual_iov_len;
-        MPI_Aint actual_iov_bytes;
-        MPIR_Typerep_to_iov(MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype), 0, MPIDIG_REQUEST(rreq, req->iov),
-                            (int) num_iov, *p_data_sz, &actual_iov_len, &actual_iov_bytes);
-
-        if (actual_iov_bytes != (MPI_Aint) * p_data_sz) {
-            rreq->status.MPI_ERROR = MPI_ERR_TYPE;
-        }
-        *data = MPIDIG_REQUEST(rreq, req->iov);
-        *p_data_sz = actual_iov_len;
-        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RCV_NON_CONTIG;
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_TARGET);
-    return MPI_SUCCESS;
 }
 
 /* This function is called when a receive has completed on the receiver side. The input is the
@@ -313,17 +212,14 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_TARGET_CMPL_CB);
 
     /* Check if this request is supposed to complete next or if it should be delayed. */
-    if (!MPIDIG_check_cmpl_order(rreq, recv_target_cmpl_cb))
+    if (!MPIDIG_check_cmpl_order(rreq))
         return mpi_errno;
 
-    /* If the request contained noncontiguous data, free the iov array that described it. */
-    if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RCV_NON_CONTIG) {
-        MPL_free(MPIDIG_REQUEST(rreq, req->iov));
-    }
+    MPIDIG_recv_finish(rreq);
 
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_UNEXPECTED) {
         mpi_errno = handle_unexp_cmpl(rreq);
@@ -339,37 +235,13 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_ERR_CHECK(mpi_errno);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-        int continue_matching = 1;
-        if (MPIDI_REQUEST(rreq, is_local)) {
-            MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_SHM,
-                                    &continue_matching);
-        } else {
-            MPIDI_anysource_matched(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq),
-                                    MPIDI_NETMOD, &continue_matching);
-        }
-
-        MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq));
-        if (unlikely(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq))) {
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
-            MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-        }
-        /* In case of anysource recieve, a request object generated by
-         * the shmmod is always returned to the user. Thus, the user-level
-         * request cleanup functions (e.g. MPI_Wait) will only free the
-         * request object from shmmod. Therefore, netmod should decrement
-         * its request object by itself, otherwise it will leak.
-         *
-         * This logic follows what the OFI netmod is already doing (see
-         * MPIDI_OFI_recv_event.) */
-        MPIR_Request_free(rreq);
-    }
+    MPIDI_anysrc_free_partner(rreq);
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_LONG_RTS) &&
         MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
-        /* This block is executed only when the receive is enqueued (trylock/handoff) &&
+        /* This block is executed only when the receive is enqueued (handoff) &&
          * receive was matched with an unexpected long RTS message.
          * `rreq` is the unexpected message received and `sigreq` is the message
          * that came from CH4 (e.g. MPIDI_recv_safe) */
@@ -383,7 +255,7 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDIG_progress_compl_list();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_RECV_TARGET_CMPL_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RECV_TARGET_CMPL_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -421,18 +293,13 @@ int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
 }
 
 
-int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                              int is_local, int *is_contig,
-                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                              int is_local, int is_async, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
@@ -440,37 +307,23 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     if (root_comm) {
       root_comm_retry:
         /* MPIDI_CS_ENTER(); */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                     &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
         while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                         &MPIDIG_COMM(root_comm, posted_list));
-
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-                if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                    mpi_errno = MPID_Cancel_recv(anysource_partner);
-                    if (mpi_errno != MPI_SUCCESS) {
-                        goto fn_fail;
-                    }
-                    if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
-                        anysource_partner = NULL;
-                        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
-                        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-                        continue;
-                    }
+                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+                MPIR_ERR_CHECK(mpi_errno);
+                if (!is_cancelled) {
+                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                    continue;
                 }
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
-
-                MPIR_Request_free(anysource_partner);
             }
-
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
             break;
         }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -478,9 +331,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
-        if (p_data_sz) {
-            MPIDIG_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz, MPL_MEM_BUFFER);
-            MPIDIG_REQUEST(rreq, count) = *p_data_sz;
+        if (in_data_sz) {
+            MPIDIG_REQUEST(rreq, buffer) = (char *) MPL_malloc(in_data_sz, MPL_MEM_BUFFER);
+            MPIDIG_REQUEST(rreq, count) = in_data_sz;
         } else {
             MPIDIG_REQUEST(rreq, buffer) = NULL;
             MPIDIG_REQUEST(rreq, count) = 0;
@@ -533,15 +386,17 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     rreq->status.MPI_ERROR = hdr->error_bits;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
-    *req = rreq;
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
 
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
+    MPIDIG_recv_type_init(in_data_sz, rreq);
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (unlikely(anysource_partner)) {
-        anysource_partner->status = rreq->status;
+    if (is_async) {
+        *req = rreq;
+    } else {
+        MPIDIG_recv_copy(data, rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
@@ -550,20 +405,15 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t 
     goto fn_exit;
 }
 
-int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
-                                       MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
+int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-    MPIDIG_send_long_req_mst_t *lreq_hdr = (MPIDIG_send_long_req_mst_t *) am_hdr;
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    MPIR_Request *anysource_partner = NULL;
-#endif
+    MPIDIG_send_long_req_msg_t *lreq_hdr = (MPIDIG_send_long_req_msg_t *) am_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
@@ -572,31 +422,23 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
   root_comm_retry:
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                     &MPIDIG_COMM(root_comm, posted_list));
-#else /* MPIDI_CH4_DIRECT_NETMOD */
-        int continue_matching = 1;
-        while (continue_matching) {
+        while (TRUE) {
             rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
-                                         &MPIDIG_COMM(root_comm, posted_list));
-
-            if (rreq && MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq)) {
-                anysource_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
-
-                mpi_errno = MPIDI_anysource_matched(anysource_partner,
-                                                    MPIDI_REQUEST(rreq, is_local) ?
-                                                    MPIDI_SHM : MPIDI_NETMOD, &continue_matching);
-
+                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
                 MPIR_ERR_CHECK(mpi_errno);
-
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-                MPIDI_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+                if (!is_cancelled) {
+                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                    continue;
+                }
             }
-
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
             break;
         }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -647,8 +489,12 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
         }
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
-        /* Matching receive was posted, tell the netmod */
-        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
+        /* Matching receive was posted */
+        rreq->comm = root_comm;
+        /* NOTE: we are skipping MPIR_Comm_release for taking off posted_list since we are holding
+         * the reference to root_comm in the rreq. We need to hold on to this reference so the comm
+         * may remain valid by the time we send ack (using the comm).
+         */
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_LONG_RTS;
         MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
@@ -659,23 +505,12 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
          * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
 
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_REQUEST(rreq, is_local))
-            mpi_errno = MPIDI_SHM_am_recv(rreq);
-        else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_recv(rreq);
-        }
-
+        mpi_errno = MPIDIG_do_long_ack(rreq);
         MPIR_ERR_CHECK(mpi_errno);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (unlikely(anysource_partner)) {
-            anysource_partner->status = rreq->status;
-        }
-#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
+
+    if (is_async)
+        *req = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
@@ -684,12 +519,11 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void **data
     goto fn_exit;
 }
 
-int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
-                                       MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
+int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIDIG_send_long_lmt_msg_t *lmt_hdr = (MPIDIG_send_long_lmt_msg_t *) am_hdr;
 
@@ -698,17 +532,26 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void **data
 
     rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
     MPIR_Assert(rreq);
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
-    *req = rreq;
+
+    MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+    MPIDIG_REQUEST(rreq, req->seq_no) = MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+
+    MPIDIG_recv_type_init(in_data_sz, rreq);
+
+    if (is_async) {
+        *req = rreq;
+    } else {
+        MPIDIG_recv_copy(data, rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_LMT_TARGET_MSG_CB);
 
     return mpi_errno;
 }
 
-int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                               int is_local, int *is_contig,
-                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                               int is_local, int is_async, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -716,14 +559,22 @@ int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
 
-    mpi_errno =
-        MPIDIG_send_target_msg_cb(handler_id, am_hdr, data, p_data_sz, is_local, is_contig,
-                                  target_cmpl_cb, req);
+    /* receive message as normal send. Set is_async to 1 so we can update status */
+    MPIR_Request *rreq;
+    mpi_errno = MPIDIG_send_target_msg_cb(handler_id, am_hdr, data, in_data_sz, is_local, 1, &rreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Assert(req);
-    MPIDIG_REQUEST(*req, req->rreq.peer_req_ptr) = msg_hdr->sreq_ptr;
-    MPIDIG_REQUEST(*req, req->status) |= MPIDIG_REQ_PEER_SSEND;
+    MPIR_Assert(rreq);
+    MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = msg_hdr->sreq_ptr;
+    MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
+
+    if (is_async) {
+        *req = rreq;
+    } else {
+        MPIDIG_recv_copy(data, rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+    }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
     return mpi_errno;
@@ -731,9 +582,8 @@ int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t
     goto fn_exit;
 }
 
-int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                                   int is_local, int *is_contig,
-                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                   int is_local, int is_async, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -744,18 +594,15 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void **data, si
     sreq = (MPIR_Request *) msg_hdr->sreq_ptr;
     MPID_Request_complete(sreq);
 
-    if (req)
+    if (is_async)
         *req = NULL;
-    if (target_cmpl_cb)
-        *target_cmpl_cb = NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SSEND_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }
 
-int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data,
-                                       size_t * p_data_sz, int is_local, int *is_contig,
-                                       MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
+int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                       MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -793,35 +640,10 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void **data
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (target_cmpl_cb)
-        *target_cmpl_cb = MPIDIG_send_origin_cb;
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_ACK_TARGET_MSG_CB);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIDIG_comm_abort_origin_cb(MPIR_Request * sreq)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_ORIGIN_CB);
-    return MPI_SUCCESS;
-}
-
-int MPIDIG_comm_abort_target_msg_cb(int handler_id, void *am_hdr, void **data, size_t * p_data_sz,
-                                    int is_local, int *is_contig,
-                                    MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
-{
-    MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_COMM_ABORT_TARGET_MSG_CB);
-    MPL_exit(hdr->tag);
-    return MPI_SUCCESS;
 }

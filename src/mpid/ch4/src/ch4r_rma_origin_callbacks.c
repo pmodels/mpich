@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -69,7 +63,9 @@ int MPIDIG_get_ack_origin_cb(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);
 
-    MPL_free(MPIDIG_REQUEST(req, req->greq.dt_iov));
+    MPL_free(MPIDIG_REQUEST(req, req->greq.flattened_dt));
+    if (MPIDIG_REQUEST(req, req->greq.dt))
+        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(req, req->greq.dt));
 
     MPID_Request_complete(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);
@@ -146,33 +142,33 @@ int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-int MPIDIG_put_iov_origin_cb(MPIR_Request * sreq)
+int MPIDIG_put_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PUT_IOV_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PUT_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PUT_DT_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PUT_DT_ORIGIN_CB);
     MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PUT_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PUT_DT_ORIGIN_CB);
     return mpi_errno;
 }
 
-int MPIDIG_acc_iov_origin_cb(MPIR_Request * sreq)
+int MPIDIG_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ACC_IOV_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ACC_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ACC_DT_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ACC_DT_ORIGIN_CB);
     MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACC_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACC_DT_ORIGIN_CB);
     return mpi_errno;
 }
 
-int MPIDIG_get_acc_iov_origin_cb(MPIR_Request * sreq)
+int MPIDIG_get_acc_dt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_IOV_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_DT_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_DT_ORIGIN_CB);
     MPID_Request_complete(sreq);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_IOV_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_DT_ORIGIN_CB);
     return mpi_errno;
 }
 

@@ -440,8 +440,6 @@ if test "$enable_strict_done" != "yes" ; then
     #   -Wno-sign-compare -- read() and write() return bytes read/written
     #       as a signed value, but we often compare this to size_t (or
     #	    msg_sz_t) variables.
-    #   -Wno-format-zero-length -- this warning is irritating and useless, since
-    #                              a zero-length format string is very well defined
     # These were removed to reduce warnings:
     #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
     #	    "char*", e.g., for memcpy.
@@ -513,7 +511,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Winvalid-pch
         -Wno-pointer-sign
         -Wvariadic-macros
-        -Wno-format-zero-length
         -Wtype-limits
         -Werror-implicit-function-declaration
         -Wstack-usage=262144
@@ -545,7 +542,7 @@ if test "$enable_strict_done" != "yes" ; then
 	     stdgnu99)
 	        c_std=gnu99
 		;;
-	     !stdc)
+	     nostdc)
 		c_std=none
 		;;
 	     posix1995)
@@ -557,13 +554,13 @@ if test "$enable_strict_done" != "yes" ; then
 	     posix2008)
 		posix_std=2008
 		;;
-	     !posix)
+	     noposix)
 		posix_std=none
 		;;
 	     opt)
 		enable_opt=yes
 		;;
-	     !opt)
+	     noopt)
 		enable_opt=no
 		;;
 	     all|yes)
@@ -1644,7 +1641,7 @@ AC_DEFUN([PAC_CC_CHECK_TLS], [
     if test -z $pac_cv_tls ; then
         AC_MSG_WARN([Compiler does not support thread local storage])
     else
-        AC_DEFINE_UNQUOTED([TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
+        AC_DEFINE_UNQUOTED([COMPILER_TLS], [$pac_cv_tls], [Defined the keyword for thread-local storage.])
     fi
 ])
 

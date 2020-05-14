@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -76,8 +74,8 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
 
         /* now do the a local gather on this intracommunicator */
         mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
-                                tmp_buf, sendcount * sendtype_sz, MPI_BYTE,
-                                0, newcomm_ptr, errflag);
+                                tmp_buf, sendcount * sendtype_sz, MPI_BYTE, 0, newcomm_ptr,
+                                errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =

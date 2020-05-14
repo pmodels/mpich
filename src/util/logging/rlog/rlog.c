@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "rlog.h"
@@ -21,9 +20,9 @@
 static double RLOG_timestamp(void)
 {
     double d;
-    MPID_Time_t t;
-    MPID_Wtime(&t);
-    MPID_Wtime_todouble(&t, &d);
+    MPL_time_t t;
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &d);
     return d;
 }
 

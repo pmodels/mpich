@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -30,7 +24,7 @@ cvars:
       category    : CH4
       type        : string
       default     : ""
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -40,7 +34,7 @@ cvars:
       category    : CH4
       type        : string
       default     : ""
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -50,7 +44,7 @@ cvars:
       category    : CH4
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -60,7 +54,7 @@ cvars:
       category    : CH4
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -70,37 +64,139 @@ cvars:
       category    : CH4
       type        : string
       default     : ""
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Specifies the CH4 multi-threading model. Possible values are:
         direct (default)
         handoff
-        trylock
 
+    - name        : MPIR_CVAR_CH4_NUM_VCIS
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Sets the number of VCIs that user needs (should be a subset of MPIDI_CH4_MAX_VCIS).
+
+    - name        : MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Defines the location of tuning file.
+
+    - name        : MPIR_CVAR_CH4_IOV_DENSITY_MIN
+      category    : CH4
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Defines the threshold of high-density datatype. The
+        density is calculated by (datatype_size / datatype_max_contig_blocks).
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static void *create_container(struct json_object *obj)
+{
+    MPIDI_Csel_container_s *cnt = MPL_malloc(sizeof(MPIDI_Csel_container_s), MPL_MEM_COLL);
+
+    json_object_object_foreach(obj, key, val) {
+        char *ckey = MPL_strdup_no_spaces(key);
+
+        if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Barrier_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Barrier_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Bcast_intra_composition_gamma"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Bcast_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_beta"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Allreduce_intra_composition_gamma"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allreduce_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_intra_composition_gamma"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_intra_composition_gamma;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoall_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoall_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoallv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Alltoallw_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Alltoallw_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allgather_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgather_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Allgatherv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Allgatherv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Gather_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gather_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Gatherv_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Gatherv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scatter_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatter_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scatterv_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scatterv_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Reduce_scatter_block_intra_composition_alpha"))
+            cnt->id =
+                MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Reduce_scatter_block_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_alpha;
+        else if (!strcmp(ckey, "composition=MPIDI_Scan_intra_composition_beta"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Scan_intra_composition_beta;
+        else if (!strcmp(ckey, "composition=MPIDI_Exscan_intra_composition_alpha"))
+            cnt->id = MPIDI_CSEL_CONTAINER_TYPE__COMPOSITION__MPIDI_Exscan_intra_composition_alpha;
+        else {
+            fprintf(stderr, "unrecognized key %s\n", ckey);
+            MPIR_Assert(0);
+        }
+
+        MPL_free(ckey);
+    }
+
+    return (void *) cnt;
+}
+
 static int choose_netmod(void);
-static const char *get_mt_model_name(int mt);
-static void print_runtime_configurations(void);
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
-static int parse_mt_model(const char *name);
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
-static int set_runtime_configurations(void);
 static int create_init_comm(MPIR_Comm **);
 static void destroy_init_comm(MPIR_Comm **);
 static int init_builtin_comms(void);
 static void finalize_builtin_comms(void);
-static int init_av_table(void);
+static void init_av_table(void);
 static void finalize_av_table(void);
 
 static int choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_NETMOD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHOOSE_NETMOD);
 
     MPIR_Assert(MPIR_CVAR_CH4_NETMOD != NULL);
 
@@ -123,31 +219,27 @@ static int choose_netmod(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s",
                          MPIR_CVAR_CH4_NETMOD);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHOOSE_NETMOD);
     return mpi_errno;
   fn_fail:
 
     goto fn_exit;
 }
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
-#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
-#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
-#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE)
-#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
-#else
-#error "Thread Granularity:  Invalid"
-#endif
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+/* NOTE: MPIDI_CH4_USE_MT_RUNTIME currently are not supported. The key part is
+ * guarded by "#if 0".
+ */
+/* TODO: move them to ch4i_workq_init.c. */
+
+static const char *get_mt_model_name(int mt);
+static void print_runtime_configurations(void);
+static int parse_mt_model(const char *name);
+static int set_runtime_configurations(void);
 
 static const char *mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
     "direct",
     "handoff",
-    "trylock",
 };
 
 static const char *get_mt_model_name(int mt)
@@ -166,7 +258,6 @@ static void print_runtime_configurations(void)
     printf("================================\n");
 }
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
 static int parse_mt_model(const char *name)
 {
     int i;
@@ -180,13 +271,12 @@ static int parse_mt_model(const char *name)
     }
     return -1;
 }
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
 static int set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
     int mt = parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
     if (mt < 0)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -198,13 +288,15 @@ static int set_runtime_configurations(void)
     if (strcmp(MPIR_CVAR_CH4_MT_MODEL, "") != 0)
         printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
-#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+#endif /* MPIDI_CH4_USE_MT_RUNTIME */
 
-#ifdef MPIDI_CH4_USE_MT_RUNTIME
+#if 0   /* defined(MPIDI_CH4_USE_MT_RUNTIME) */
   fn_fail:
 #endif
     return mpi_errno;
 }
+
+#endif /* MPIDI_CH4_USE_WORK_QUEUES */
 
 static int create_init_comm(MPIR_Comm ** comm)
 {
@@ -307,16 +399,13 @@ static int init_builtin_comms(void)
     goto fn_exit;
 }
 
-static int init_av_table(void)
+static void init_av_table(void)
 {
     int i;
-    int avtid = -1;
     int size = MPIR_Process.size;
     int rank = MPIR_Process.rank;
 
     MPIDIU_avt_init();
-    MPIDIU_get_next_avtid(&avtid);
-    MPIR_Assert(avtid == 0);
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
@@ -346,25 +435,54 @@ static int init_av_table(void)
                          MPIDI_global.node_map[0][rank]));
     }
 #endif
-
-    return avtid;
 }
 
-int MPID_Init(int *argc, char ***argv, int requested, int *provided)
+/* This local function is temporary until we decide where the
+ * following init code belongs */
+static int generic_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_global.is_ch4u_initialized = 0;
+    MPIDIG_am_init();
+    MPIDIU_map_create((void **) &(MPIDI_global.win_map), MPL_MEM_RMA);
+    MPIDI_global.csel_root = NULL;
+    MPIDI_global.is_ch4u_initialized = 1;
+    return mpi_errno;
+}
+
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
+#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
+#elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE)
+#define MAX_THREAD_MODE MPI_THREAD_SERIALIZED
+#else
+#error "Thread Granularity:  Invalid"
+#endif
+
+int MPID_Init(int requested, int *provided)
 {
     int mpi_errno = MPI_SUCCESS, rank, size, appnum;
     MPIR_Comm *init_comm = NULL;
-    int n_nm_vcis_provided;
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    int n_shm_vcis_provided;
-#endif
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
-    mpi_errno = set_runtime_configurations();
-    if (mpi_errno != MPI_SUCCESS)
-        return mpi_errno;
+    switch (requested) {
+        case MPI_THREAD_SINGLE:
+        case MPI_THREAD_SERIALIZED:
+        case MPI_THREAD_FUNNELED:
+            *provided = requested;
+            break;
+        case MPI_THREAD_MULTIPLE:
+            *provided = MAX_THREAD_MODE;
+            break;
+    }
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
@@ -379,7 +497,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIDI_global.my_sigusr1_count = 0;
     MPIDI_global.prev_sighandler = signal(SIGUSR1, MPIDI_sigusr1_handler);
     MPIR_ERR_CHKANDJUMP1(MPIDI_global.prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER,
-                         "**signal", "**signal %s", MPIR_Strerror(errno));
+                         "**signal", "**signal %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     if (MPIDI_global.prev_sighandler == SIG_IGN || MPIDI_global.prev_sighandler == SIG_DFL)
         MPIDI_global.prev_sighandler = NULL;
 #endif
@@ -393,22 +512,43 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     size = MPIR_Process.size;
     appnum = MPIR_Process.appnum;
 
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_PROGRESS_HOOK_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_UTIL_MUTEX);
-    MPIR_Add_mutex(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-    MPIR_Add_mutex(&MPIDI_global.vci_lock);
+    int err;
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
-#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#ifdef HAVE_LIBHCOLL
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+#endif
+
+    MPID_Thread_mutex_create(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = set_runtime_configurations();
+    MPIR_ERR_CHECK(mpi_errno);
+
     MPIDI_workq_init(&MPIDI_global.workqueue);
-#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         print_runtime_configurations();
+#endif
 
     init_av_table();
 
-    mpi_errno = MPIDIG_init();
+    mpi_errno = generic_init();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* setup receive queue statistics */
@@ -421,18 +561,29 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = MPIDU_Init_shm_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Initialize multiple VCIs */
+    /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
+    MPIDI_global.n_vcis = 1;
+    if (MPIR_CVAR_CH4_NUM_VCIS > 1)
+        MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
+        /* TODO: lw_req, workq */
+    }
+
     {
         int shm_tag_bits = MPIR_TAG_BITS_DEFAULT, nm_tag_bits = MPIR_TAG_BITS_DEFAULT;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vcis_provided, &shm_tag_bits);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &shm_tag_bits);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
 #endif
 
-        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm,
-                                           &n_nm_vcis_provided);
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_bits, init_comm);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -440,6 +591,16 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
         /* Use the minimum tag_bits from the netmod and shmod */
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
+
+    /* Initialize collective selection */
+    if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
+                                              create_container, &MPIDI_global.csel_root);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE,
+                                               create_container, &MPIDI_global.csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Override split_type */
     MPIDI_global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
@@ -453,21 +614,6 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     mpi_errno = init_builtin_comms();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* -------------------------------- */
-    /* Return MPICH Parameters          */
-    /* -------------------------------- */
-    switch (requested) {
-        case MPI_THREAD_SINGLE:
-        case MPI_THREAD_SERIALIZED:
-        case MPI_THREAD_FUNNELED:
-            *provided = requested;
-            break;
-
-        case MPI_THREAD_MULTIPLE:
-            *provided = MAX_THREAD_MODE;
-            break;
-    }
-
     MPIDI_global.is_initialized = 0;
 
     mpi_errno = MPIDU_Init_shm_finalize();
@@ -480,33 +626,31 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     goto fn_exit;
 }
 
-int MPID_Init_spawn(void)
+int MPID_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
     char parent_port[MPI_MAX_PORT_NAME];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
 
-    mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
-    MPIR_Assert(MPIR_Process.comm_parent != NULL);
-    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPID_InitCompleted(void)
-{
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INITCOMPLETED);
+
+    if (MPIR_Process.has_parent) {
+        mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world, &MPIR_Process.comm_parent);
+        MPIR_Assert(MPIR_Process.comm_parent != NULL);
+        MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+    }
+
     MPIDI_global.is_initialized = 1;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INITCOMPLETED);
+
+  fn_exit:
     return MPI_SUCCESS;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static void finalize_builtin_comms(void)
@@ -530,6 +674,14 @@ static void finalize_av_table(void)
     MPIDIU_avt_destroy();
 }
 
+/* This local function is temporary until we decide where the
+ * following finalize code belongs */
+static void generic_finalize(void)
+{
+    MPIDIG_am_finalize();
+    MPIDI_global.is_ch4u_initialized = 0;
+}
+
 int MPID_Finalize(void)
 {
     int mpi_errno;
@@ -543,12 +695,46 @@ int MPID_Finalize(void)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
+    if (MPIDI_global.csel_root) {
+        mpi_errno = MPIR_Csel_free(MPIDI_global.csel_root);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     finalize_builtin_comms();
-    MPIDIG_finalize();
+    generic_finalize();
 
     finalize_av_table();
 
     MPIR_pmi_finalize();
+
+    int err;
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_PROGRESS_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_UTIL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_SCHED_LIST_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_TSP_QUEUE_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#ifdef HAVE_LIBHCOLL
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_HCOLL_MUTEX, &err);
+    MPIR_Assert(err == 0);
+#endif
+
+    MPID_Thread_mutex_destroy(&MPIDIU_THREAD_DYNPROC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
+        MPIR_Assert(err == 0);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);

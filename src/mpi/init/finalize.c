@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 /* style: allow:fprintf:1 sig:0 */
 
 #include "mpiimpl.h"
@@ -56,8 +56,8 @@ void MPIR_Add_finalize(int (*f) (void *), void *extra_data, int priority)
          * MPIR_Process.mpich_state to decide how to signal the error */
         (void) MPL_internal_error_printf("overflow in finalize stack! "
                                          "Is MAX_FINALIZE_FUNC too small?\n");
-        if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
-            OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT) {
+        if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT &&
+            MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__POST_FINALIZED) {
             MPID_Abort(NULL, MPI_SUCCESS, 13, NULL);
         } else {
             exit(1);
@@ -120,9 +120,6 @@ int MPI_Finalize(void)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
-     * be called at most once in any program) */
-    MPII_finalize_thread_and_enter_cs();
     MPIR_FUNC_TERSE_FINALIZE_ENTER(MPID_STATE_MPI_FINALIZE);
 
     /* ... body of routine ... */
@@ -130,7 +127,14 @@ int MPI_Finalize(void)
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPII_finalize_global();
+    /* Setting isThreaded to 0 to trick any operations used within
+     * MPI_Finalize to think that we are running in a single threaded
+     * environment. */
+#ifdef MPICH_IS_THREADED
+    MPIR_ThreadInfo.isThreaded = 0;
+#endif
+
+    mpi_errno = MPII_finalize_local_proc_attrs();
     MPIR_ERR_CHECK(mpi_errno);
 
     MPII_Timer_finalize();
@@ -172,14 +176,12 @@ int MPI_Finalize(void)
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
 
-    /* destroy fine-grained mutex (including dynamic ones) */
-    MPIR_Thread_CS_Finalize();
-
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();
 
-    MPII_finalize_thread_and_exit_cs();
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
+    MPII_thread_mutex_destroy();
+    MPIR_Typerep_finalize();
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
     /* ... end of body of routine ... */
   fn_exit:
@@ -195,7 +197,6 @@ int MPI_Finalize(void)
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
-    MPII_finalize_thread_failed_exit_cs();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

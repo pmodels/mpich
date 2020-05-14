@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Always enable valgrind macros (if possible) in this file.  If these functions
@@ -977,4 +976,19 @@ void MPL_trcategorydump(FILE * fp)
                 allocation_classes[i].curr_allocated_mem,
                 allocation_classes[i].total_allocated_mem, allocation_classes[i].num_allocations);
     }
+}
+
+
+char *MPL_strdup_no_spaces(const char *str)
+{
+    char *newstr = MPL_malloc(strlen(str) + 1, MPL_MEM_COLL);
+
+    int j = 0;
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] != ' ')
+            newstr[j++] = str[i];
+    }
+    newstr[j] = 0;
+
+    return newstr;
 }

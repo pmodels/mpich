@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 2001 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_ufs.h"
@@ -42,5 +40,10 @@ struct ADIOI_Fns_struct ADIO_UFS_operations = {
     ADIOI_GEN_Feature,  /* Features */
     "UFS: Generic ROMIO driver for all UNIX-like file systems",
     ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
-    ADIOI_GEN_IwriteStridedColl /* IwriteStridedColl */
+    ADIOI_GEN_IwriteStridedColl,        /* IwriteStridedColl */
+#if defined(F_SETLKW64)
+    ADIOI_GEN_SetLock   /* SetLock */
+#else
+    ADIOI_GEN_SetLock64 /* SetLock */
+#endif
 };

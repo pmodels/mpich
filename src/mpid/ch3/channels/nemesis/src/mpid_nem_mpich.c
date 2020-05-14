@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpid_nem_impl.h"
@@ -71,14 +70,14 @@ fn_fail:
     /* --END ERROR HANDLING-- */
 }
 
-int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
+int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, struct iovec *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
     int i;
     int iov_data_copied;
     MPIR_Request *sreq = *sreq_ptr;
-    MPL_IOV *data_iov = &iov[1]; /* iov of just the data, not the header */
+    struct iovec *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_SEND_IOV);
@@ -88,7 +87,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     if (*sreq_ptr == NULL)
     {
 	/* create a request */
-	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
 	MPIR_Assert(sreq != NULL);
 	MPIR_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_KIND__SEND;
@@ -100,7 +99,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         MPIR_Assert(n_iov >= 1 && n_iov <= MPL_IOV_LIMIT);
 
         /* header and remaining iovs */
-        mpi_errno = vc->ch.iSendIov(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, &iov[1], n_iov - 1);
+        mpi_errno = vc->ch.iSendIov(vc, sreq, iov[0].iov_base, iov[0].iov_len, &iov[1], n_iov - 1);
         MPIR_ERR_CHECK(mpi_errno);
 
         *sreq_ptr = sreq;
@@ -109,7 +108,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
 
     data_sz = 0;
     for (i = 0; i < data_n_iov; ++i)
-        data_sz += data_iov[i].MPL_IOV_LEN;
+        data_sz += data_iov[i].iov_len;
 
 
     if (!MPIDI_Request_get_srbuf_flag(sreq))
@@ -131,11 +130,11 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
 
     iov_data_copied = 0;
     for (i = 0; i < data_n_iov; ++i) {
-        MPIR_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].MPL_IOV_BUF, data_iov[i].MPL_IOV_LEN);
-        iov_data_copied += data_iov[i].MPL_IOV_LEN;
+        MPIR_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].iov_base, data_iov[i].iov_len);
+        iov_data_copied += data_iov[i].iov_len;
     }
 
-    mpi_errno = vc->ch.iSendContig(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, sreq->dev.tmpbuf, data_sz);
+    mpi_errno = vc->ch.iSendContig(vc, sreq, iov[0].iov_base, iov[0].iov_len, sreq->dev.tmpbuf, data_sz);
     MPIR_ERR_CHECK(mpi_errno);
 
     *sreq_ptr = sreq;

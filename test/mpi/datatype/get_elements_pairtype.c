@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,6 +50,7 @@ int double_int_test(void)
         double a;
         int b;
         double c;
+        int d;
     } foo;
     struct {
         double a;
@@ -58,9 +59,9 @@ int double_int_test(void)
         int d;
     } bar;
 
-    int blks[3] = { 1, 1, 1 };
-    MPI_Aint disps[3] = { 0, 0, 0 };
-    MPI_Datatype types[3] = { MPI_DOUBLE, MPI_INT, MPI_DOUBLE };
+    int blks[4] = { 1, 1, 1, 1 };
+    MPI_Aint disps[4] = { 0, 0, 0, 0 };
+    MPI_Datatype types[] = { MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT };
     MPI_Datatype stype;
 
     MPI_Status recvstatus;
@@ -68,8 +69,9 @@ int double_int_test(void)
     /* fill in disps[1..2] with appropriate offset */
     disps[1] = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
     disps[2] = (MPI_Aint) ((char *) &foo.c - (char *) &foo.a);
+    disps[3] = (MPI_Aint) ((char *) &foo.d - (char *) &foo.a);
 
-    MPI_Type_create_struct(3, blks, disps, types, &stype);
+    MPI_Type_create_struct(4, blks, disps, types, &stype);
     MPI_Type_commit(&stype);
 
     err = MPI_Sendrecv((const void *) &foo, 1, stype, 0, 0,
@@ -88,7 +90,7 @@ int double_int_test(void)
             fprintf(stderr, "MPI_Get_elements returned error (%d)\n", err);
     }
 
-    if (count != 3) {
+    if (count != 4) {
         errs++;
         if (verbose)
             fprintf(stderr, "MPI_Get_elements returned count of %d, should be 3\n", count);

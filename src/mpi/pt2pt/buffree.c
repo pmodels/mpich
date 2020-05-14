@@ -1,12 +1,9 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
-#include "bsendutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Buffer_detach */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -97,7 +94,6 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_BUFFER_DETACH);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -121,7 +117,6 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_BUFFER_DETACH);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

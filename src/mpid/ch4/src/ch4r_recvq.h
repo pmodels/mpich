@@ -1,18 +1,13 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4R_RECVQ_H_INCLUDED
 #define CH4R_RECVQ_H_INCLUDED
 
 #include <mpidimpl.h>
-#include "mpidig.h"
+#include "mpidig_am.h"
 #include "utlist.h"
 #include "ch4_impl.h"
 
@@ -148,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_find_unexp(int rank, int tag,
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
                                                              MPIR_Context_id_t context_id,
-                                                             MPIDIG_rreq_t ** list)
+                                                             int is_local, MPIDIG_rreq_t ** list)
 {
     MPIR_Request *req = NULL;
     MPIDIG_rreq_t *curr, *tmp;
@@ -158,13 +153,18 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
-        req = curr->request;
-        if (MPIDIG_match_posted(rank, tag, context_id, req)) {
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        /* NOTE: extra negation to force logical comparisons */
+        if (!MPIDI_REQUEST(curr->request, is_local) != !is_local) {
+            continue;
+        }
+#endif
+        if (MPIDIG_match_posted(rank, tag, context_id, curr->request)) {
+            req = curr->request;
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
             break;
         }
-        req = NULL;
     }
     if (!req)
         MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
@@ -305,7 +305,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_find_unexp(int rank, int tag,
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_dequeue_posted(int rank, int tag,
                                                              MPIR_Context_id_t context_id,
-                                                             MPIDIG_rreq_t ** list)
+                                                             int is_local, MPIDIG_rreq_t ** list)
 {
     MPIR_Request *req = NULL;
     MPIDIG_rreq_t *curr, *tmp;

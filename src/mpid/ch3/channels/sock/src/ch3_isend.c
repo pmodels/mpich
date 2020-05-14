@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -13,8 +12,8 @@ static void update_request(MPIR_Request * sreq, void *hdr, intptr_t hdr_sz, size
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_UPDATE_REQUEST);
     MPIR_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) &sreq->dev.pending_pkt + nb);
-    sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz - nb;
+    sreq->dev.iov[0].iov_base = (void *) ((char *) &sreq->dev.pending_pkt + nb);
+    sreq->dev.iov[0].iov_len = hdr_sz - nb;
     sreq->dev.iov_count = 1;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
@@ -96,9 +95,9 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hd
                                      sreq->handle));
                     vcch->conn->send_active = sreq;
                     mpi_errno = MPIDI_CH3I_Sock_post_write(vcch->conn->sock,
-                                                           sreq->dev.iov[0].MPL_IOV_BUF,
-                                                           sreq->dev.iov[0].MPL_IOV_LEN,
-                                                           sreq->dev.iov[0].MPL_IOV_LEN, NULL);
+                                                           sreq->dev.iov[0].iov_base,
+                                                           sreq->dev.iov[0].iov_len,
+                                                           sreq->dev.iov[0].iov_len, NULL);
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
                         mpi_errno =

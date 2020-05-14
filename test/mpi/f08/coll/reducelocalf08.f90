@@ -1,9 +1,9 @@
+!
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
 ! This file created from test/mpi/f77/coll/reducelocalf.f with f77tof90
-! -*- Mode: Fortran; -*-
-!
-!  (C) 2009 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
-!
 !
 ! Test Fortran MPI_Reduce_local with MPI_OP_SUM and with user-defined operation.
 !

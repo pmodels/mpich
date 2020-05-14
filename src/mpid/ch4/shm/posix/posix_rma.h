@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_RMA_H_INCLUDED
 #define POSIX_RMA_H_INCLUDED
 
@@ -367,7 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -472,7 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -521,7 +516,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -632,7 +627,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);

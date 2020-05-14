@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* vim: set ft=c.mpich : */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include  "mpl.h"
@@ -31,13 +29,13 @@ int MPL_shm_hnd_serialize(char *str, MPL_shm_hnd_t hnd, int str_len)
  */
 int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_hnd_len)
 {
-    int rc = MPL_SHM_SUCCESS;
+    int rc = MPL_SUCCESS;
     MPLI_shm_hnd_reset_val(hnd);
     rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
-    if (rc != MPL_SHM_SUCCESS)
+    if (rc != MPL_SUCCESS)
         return rc;
     rc = MPLI_shm_ghnd_set_by_val(hnd, "%s", str_hnd);
-    if (rc != MPL_SHM_SUCCESS)
+    if (rc != MPL_SUCCESS)
         return rc;
     rc = MPL_shm_seg_open(hnd, 0);
     return rc;
@@ -56,7 +54,7 @@ int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_h
 int MPL_shm_hnd_get_serialized_by_ref(MPL_shm_hnd_t hnd, char **str_ptr)
 {
     *str_ptr = (char *) MPLI_shm_ghnd_get_by_ref(hnd);
-    return MPL_SHM_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 /* Deserialize a handle by reference.
@@ -86,7 +84,7 @@ int MPL_shm_hnd_init(MPL_shm_hnd_t * hnd_ptr)
 
     rc = MPLI_shm_hnd_alloc(hnd_ptr, MPL_MEM_SHM);
 
-    if (MPL_SHM_SUCCESS != rc)
+    if (MPL_SUCCESS != rc)
         return rc;
 
     MPLI_shm_hnd_reset_val(*hnd_ptr);

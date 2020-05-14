@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2009 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -81,7 +79,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -145,7 +142,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, NULL, &comm_dist_graph_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Create the topology structure */
@@ -186,7 +183,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

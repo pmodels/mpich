@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef BUILD_NODEMAP_H_INCLUDED
@@ -70,13 +69,15 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     int key_max_sz;
     char *kvs_name;
     char hostname[MAX_HOSTNAME_LEN];
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_CHKLMEM_DECL(2);
 
     /* set hostname */
 
     ret = gethostname(hostname, MAX_HOSTNAME_LEN);
     MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost",
-                         "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
+                         "**sock_gethost %s %d",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
     hostname[MAX_HOSTNAME_LEN - 1] = '\0';
 
     /* Allocate space for pmi key */
@@ -341,6 +342,7 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
     char *key = MPL_malloc(key_max_sz, MPL_MEM_OTHER);
     char **node_names = MPL_malloc(sz * sizeof(char *), MPL_MEM_OTHER);
     char *node_name_buf = MPL_malloc(sz * key_max_sz, MPL_MEM_OTHER);
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
     for (int i = 0; i < sz; ++i) {
         node_names[i] = &node_name_buf[i * key_max_sz];
@@ -360,7 +362,8 @@ static inline int MPIR_NODEMAP_build_nodemap_fallback(int sz, int myrank, int *o
             char *hostname = (char *) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN, MPL_MEM_ADDRESS);
             ret = gethostname(hostname, MAX_HOSTNAME_LEN);
             MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost",
-                                 "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
+                                 "**sock_gethost %s %d",
+                                 MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE), errno);
             hostname[MAX_HOSTNAME_LEN - 1] = '\0';
             MPL_snprintf(node_names[max_node_id + 1], key_max_sz, "%s", hostname);
             MPL_free(hostname);

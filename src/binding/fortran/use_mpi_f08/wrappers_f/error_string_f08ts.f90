@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Error_string_f08(errorcode, string, resultlen, ierror)
     use, intrinsic :: iso_c_binding, only : c_int, c_char
     use :: mpi_f08, only : MPI_MAX_ERROR_STRING

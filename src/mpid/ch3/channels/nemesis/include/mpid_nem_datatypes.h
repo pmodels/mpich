@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_NEM_DATATYPES_H_INCLUDED
@@ -35,12 +34,8 @@
    not really a fair comparison for studying the impact of atomic instructions.
    [goodell@ 2009-01-16] */
 
-#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
- #include "mpid_thread.h" 
-#endif
-
 #define MPID_NEM_OFFSETOF(struc, field) ((int)(&((struc *)0)->field))
-#define MPID_NEM_CACHE_LINE_LEN 64
+#define MPID_NEM_CACHE_LINE_LEN MPL_CACHELINE_SIZE
 #define MPID_NEM_NUM_CELLS      64
 #define MPID_NEM_CELL_LEN       (64*1024)
 
@@ -64,8 +59,8 @@
    and the cell length to be a multiple of cacheline size.  This will
    avoid false sharing.  We also want payload to start at an 8-byte
    boundary to to optimize memcpys and datatype operations on the
-   payload.  To ensure payload is 8-byte aligned, we add padding after
-   the next pointer so the packet starts at the 8-byte boundary.
+   payload.  To ensure payload is 8-byte aligned, we add aligned attribute
+   to the pkt field.
 
    Forgive the misnomers of the macros.
 
@@ -89,42 +84,9 @@
    MPID_NEM_CALC_CELL_LEN is the amount of data plus headers in the
        cell.  I.e., how much of a cell would need to be sent over a
        network.
-
-   FIXME: Simplify this maddness!  Maybe something like this:
-
-       typedef struct mpich_pkt {
-           header_field1;
-           header_field2;
-           payload[1];
-       } mpich_pkt_t;
-   
-       typedef struct cell {
-           *next;
-           padding;
-           pkt;
-       } cell_t;
-
-       typedef union cell_container {
-           cell_t cell;
-           char padding[MPID_NEM_CELL_LEN];
-       } cell_container_t;
-
-       #define MPID_NEM_MPICH_DATA_LEN (sizeof(cell_container_t) - sizeof(cell_t) + 1)
-
-   The packet payload can overflow the array in the packet struct up
-   to MPID_NEM_MPICH_DATA_LEN bytes.
-   
 */
 
-#if (SIZEOF_VOID_P > 8)
-#  if (SIZEOF_VOID_P > 16)
-#    error unexpected size for OPA_ptr_t
-#  endif
-#  define MPID_NEM_CELL_HEAD_LEN  16 /* We use this to keep elements 64-bit aligned */
-#else /* (SIZEOF_VOID_P <= 8) */
-#  define MPID_NEM_CELL_HEAD_LEN  8 /* We use this to keep elements 64-bit aligned */
-#endif
-
+#define MPID_NEM_CELL_HEAD_LEN    offsetof(MPID_nem_cell_t, pkt)
 #define MPID_NEM_CELL_PAYLOAD_LEN (MPID_NEM_CELL_LEN - MPID_NEM_CELL_HEAD_LEN)
 
 #define MPID_NEM_CALC_CELL_LEN(cellp) (MPID_NEM_CELL_HEAD_LEN + MPID_NEM_MPICH_HEAD_LEN + MPID_NEM_CELL_DLEN (cell))
@@ -158,10 +120,7 @@ typedef struct MPID_nem_pkt_header
 typedef struct MPID_nem_pkt
 {
     MPID_nem_pkt_header_t header;
-    union {
-        char payload[MPID_NEM_MPICH_DATA_LEN];
-        double dummy; /* align paylod to double */
-    } p;
+    char payload[] MPL_ATTR_ALIGNED(8);   /* C99 flexible array member with 8-byte alignment */
 } MPID_nem_pkt_t;
 
 /* Nemesis cells which are to be used in shared memory need to use
@@ -175,41 +134,27 @@ typedef struct MPID_nem_pkt
 /* This should always be exactly the size of a pointer */
 typedef struct MPID_nem_cell_rel_ptr
 {
-    OPA_ptr_t p;
+    MPL_atomic_ptr_t p;
 }
 MPID_nem_cell_rel_ptr_t;
 
-/* MPID_nem_cell and MPID_nem_abs_cell must be kept in sync so that we
- * can cast between them.  MPID_nem_abs_cell should only be used when
- * a cell is enqueued on a queue local to a single process (e.g., a
- * queue in a network module) where relative pointers are not
- * needed. */
+/* NOTE: for a queue local to a single process (e.g. a queue in a network module),
+ * relative pointers are not needed, and we could use a direct pointer. This
+ * optimization is left as todo when needed.
+ */
 
 typedef struct MPID_nem_cell
 {
     MPID_nem_cell_rel_ptr_t next;
-#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_VOID_P)
-    char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
-    volatile MPID_nem_pkt_t pkt;
+    volatile MPID_nem_pkt_t pkt MPL_ATTR_ALIGNED(8);
 } MPID_nem_cell_t;
 typedef MPID_nem_cell_t *MPID_nem_cell_ptr_t;
-
-typedef struct MPID_nem_abs_cell
-{
-    struct MPID_nem_abs_cell *next;
-#if (MPID_NEM_CELL_HEAD_LEN > SIZEOF_VOID_P)
-    char padding[MPID_NEM_CELL_HEAD_LEN - sizeof(struct MPID_nem_abs_cell*)];
-#endif
-    volatile MPID_nem_pkt_t pkt;
-} MPID_nem_abs_cell_t;
-typedef MPID_nem_abs_cell_t *MPID_nem_abs_cell_ptr_t;
 
 #define MPID_NEM_CELL_TO_PACKET(cellp) (&(cellp)->pkt)
 #define MPID_NEM_PACKET_TO_CELL(packetp) \
     ((MPID_nem_cell_ptr_t) ((char*)(packetp) - (char *)MPID_NEM_CELL_TO_PACKET((MPID_nem_cell_ptr_t)0)))
 #define MPID_NEM_MIN_PACKET_LEN (sizeof (MPID_nem_pkt_header_t))
-#define MPID_NEM_MAX_PACKET_LEN (sizeof (MPID_nem_pkt_t))
+#define MPID_NEM_MAX_PACKET_LEN (MPID_NEM_CELL_PAYLOAD_LEN)
 #define MPID_NEM_PACKET_LEN(pkt) ((pkt)->header.datalen + MPID_NEM_MPICH_HEAD_LEN)
 
 #define MPID_NEM_OPT_LOAD     16 
@@ -219,31 +164,19 @@ typedef MPID_nem_abs_cell_t *MPID_nem_abs_cell_ptr_t;
 #define MPID_NEM_PACKET_OPT_LEN(pkt) \
     (((pkt)->header.datalen < MPID_NEM_OPT_SIZE) ? (MPID_NEM_OPT_HEAD_LEN) : (MPID_NEM_PACKET_LEN(pkt)))
 
-#define MPID_NEM_PACKET_PAYLOAD(pkt) ((pkt)->header.payload)
-
 typedef struct MPID_nem_queue
 {
     MPID_nem_cell_rel_ptr_t head;
     MPID_nem_cell_rel_ptr_t tail;
-#if (MPID_NEM_CACHE_LINE_LEN > (2 * SIZEOF_VOID_P))
     char padding1[MPID_NEM_CACHE_LINE_LEN - 2 * sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
     MPID_nem_cell_rel_ptr_t my_head;
-#if (MPID_NEM_CACHE_LINE_LEN > SIZEOF_VOID_P)
     char padding2[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_nem_cell_rel_ptr_t)];
-#endif
-#if !defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
-    /* see FIXME in mpid_nem_queue.h */
-#define MPID_nem_queue_mutex_t MPID_Thread_mutex_t
-    MPID_nem_queue_mutex_t lock;
-    char padding3[MPID_NEM_CACHE_LINE_LEN - sizeof(MPID_Thread_mutex_t)];
-#endif
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 
 /* Fast Boxes*/ 
 typedef union
 {
-    OPA_int_t value;
+    MPL_atomic_int_t value;
 #if MPID_NEM_CACHE_LINE_LEN != 0
     char padding[MPID_NEM_CACHE_LINE_LEN];
 #endif
@@ -261,6 +194,7 @@ typedef struct MPID_nem_fbox_mpich
     MPID_nem_cell_t cell;
 } MPID_nem_fbox_mpich_t;
 
+#define MPID_NEM_FBOX_LEN     (MPID_NEM_CELL_LEN + offsetof(MPID_nem_fbox_mpich_t, cell))
 #define MPID_NEM_FBOX_DATALEN MPID_NEM_MPICH_DATA_LEN
 
 typedef union 

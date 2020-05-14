@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_ATOMIC_NT_INTRINSICS_H_INCLUDED
@@ -11,19 +10,19 @@
 #include <windows.h>
 #include <intrin.h>
 
-#define MPL_ATOMIC_INITIALIZER(val_) { (val_) }
+#define MPLI_ATOMIC_INITIALIZER(val_) { (val_) }
 
-#define MPL_ATOMIC_INT_T_INITIALIZER(val_)    MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_INT32_T_INITIALIZER(val_)  MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_UINT32_T_INITIALIZER(val_) MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_INT64_T_INITIALIZER(val_)  MPL_ATOMIC_INITIALIZER(val_)
-#define MPL_ATOMIC_UINT64_T_INITIALIZER(val_) MPL_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT_T_INITIALIZER(val_)    MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT32_T_INITIALIZER(val_)  MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_UINT32_T_INITIALIZER(val_) MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_INT64_T_INITIALIZER(val_)  MPLI_ATOMIC_INITIALIZER(val_)
+#define MPL_ATOMIC_UINT64_T_INITIALIZER(val_) MPLI_ATOMIC_INITIALIZER(val_)
 #if MPL_SIZEOF_VOID_P == 4
 #define MPL_ATOMIC_PTR_T_INITIALIZER(val_) \
-        MPL_ATOMIC_INITIALIZER((long)(val_))
+        MPLI_ATOMIC_INITIALIZER((long)(val_))
 #elif MPL_SIZEOF_VOID_P == 8
 #define MPL_ATOMIC_PTR_T_INITIALIZER(val_) \
-        MPL_ATOMIC_INITIALIZER((__int64)(val_))
+        MPLI_ATOMIC_INITIALIZER((__int64)(val_))
 #else
 #error "MPL_SIZEOF_VOID_P not valid"
 #endif
@@ -40,8 +39,8 @@
  * Someone with more Windows expertise should feel free to improve these.
  */
 
-#define MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC, \
-                                    CAST_TO_ATOMIC, SUFFIX)                    \
+#define MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC,\
+                                     CAST_TO_ATOMIC, SUFFIX)                   \
 struct MPL_atomic_ ## NAME ## _t {                                             \
     ATOMIC_TYPE volatile v;                                                    \
 };                                                                             \
@@ -83,7 +82,7 @@ static inline TYPE MPL_atomic_swap_ ## NAME                                    \
                              CAST_TO_ATOMIC(val)));                            \
 }
 
-#define MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC,    \
+#define MPLI_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, CAST_FROM_ATOMIC,   \
                                  CAST_TO_ATOMIC, SUFFIX)                       \
 static inline TYPE MPL_atomic_fetch_add_ ## NAME                               \
                             (struct MPL_atomic_ ## NAME ## _t * ptr, TYPE val) \
@@ -98,45 +97,50 @@ static inline TYPE MPL_atomic_fetch_sub_ ## NAME                               \
                              (&ptr->v, -CAST_TO_ATOMIC(val)));                 \
 }
 
-#define MPL_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE)      (TYPE)
-#define MPL_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE) (ATOMIC_TYPE)
-#define MPL_ATOMIC_CAST_FROM_ATOMIC_PTR(TYPE)      (TYPE)(LONG_PTR)
-#define MPL_ATOMIC_CAST_TO_ATOMIC_PTR(ATOMIC_TYPE) (ATOMIC_TYPE)(LONG_PTR)
+#define MPLI_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE)      (TYPE)
+#define MPLI_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE) (ATOMIC_TYPE)
+#define MPLI_ATOMIC_CAST_FROM_ATOMIC_PTR(TYPE)      (TYPE)(LONG_PTR)
+#define MPLI_ATOMIC_CAST_TO_ATOMIC_PTR(ATOMIC_TYPE) (ATOMIC_TYPE)(LONG_PTR)
 
-#define MPL_ATOMIC_DECL_FUNC_VAL(TYPE, NAME, ATOMIC_TYPE, SUFFIX) \
-        MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, \
-                                    MPL_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE), \
-                                    MPL_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE),\
-                                    SUFFIX) \
-        MPL_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, \
-                                 MPL_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE), \
-                                 MPL_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE), \
-                                 SUFFIX) \
+#define MPLI_ATOMIC_DECL_FUNC_VAL(TYPE, NAME, ATOMIC_TYPE, SUFFIX) \
+        MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, \
+            MPLI_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE), \
+            MPLI_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE), SUFFIX) \
+        MPLI_ATOMIC_DECL_FUNC_FAA(TYPE, NAME, ATOMIC_TYPE, \
+            MPLI_ATOMIC_CAST_FROM_ATOMIC_VAL(TYPE), \
+            MPLI_ATOMIC_CAST_TO_ATOMIC_VAL(ATOMIC_TYPE), SUFFIX)
 
-#define MPL_ATOMIC_DECL_FUNC_PTR(TYPE, NAME, ATOMIC_TYPE, SUFFIX) \
-        MPL_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, \
-                                    MPL_ATOMIC_CAST_FROM_ATOMIC_PTR(TYPE), \
-                                    MPL_ATOMIC_CAST_TO_ATOMIC_PTR(ATOMIC_TYPE),\
-                                    SUFFIX)
+#define MPLI_ATOMIC_DECL_FUNC_PTR(TYPE, NAME, ATOMIC_TYPE, SUFFIX) \
+        MPLI_ATOMIC_DECL_FUNC_COMMON(TYPE, NAME, ATOMIC_TYPE, \
+            MPLI_ATOMIC_CAST_FROM_ATOMIC_PTR(TYPE), \
+            MPLI_ATOMIC_CAST_TO_ATOMIC_PTR(ATOMIC_TYPE), SUFFIX)
 
 /* int */
-MPL_ATOMIC_DECL_FUNC_VAL(int, int, long, /*empty */)
+MPLI_ATOMIC_DECL_FUNC_VAL(int, int, long, /* empty */)
 /* int32_t */
-MPL_ATOMIC_DECL_FUNC_VAL(int32_t, int32, long, /*empty */)
+MPLI_ATOMIC_DECL_FUNC_VAL(int32_t, int32, long, /* empty */)
 /* uint32_t */
-MPL_ATOMIC_DECL_FUNC_VAL(uint32_t, uint32, long, /*empty */)
+MPLI_ATOMIC_DECL_FUNC_VAL(uint32_t, uint32, long, /* empty */)
 /* int64_t */
-MPL_ATOMIC_DECL_FUNC_VAL(int64_t, int64, __int64, 64)
+MPLI_ATOMIC_DECL_FUNC_VAL(int64_t, int64, __int64, 64)
 /* uint64_t */
-MPL_ATOMIC_DECL_FUNC_VAL(uint64_t, uint64, __int64, 64)
+MPLI_ATOMIC_DECL_FUNC_VAL(uint64_t, uint64, __int64, 64)
 /* void * */
 #if MPL_SIZEOF_VOID_P == 4
-MPL_ATOMIC_DECL_FUNC_PTR(void *, ptr, long, /* empty */)
+MPLI_ATOMIC_DECL_FUNC_PTR(void *, ptr, long, /* empty */)
 #elif MPL_SIZEOF_VOID_P == 8
-MPL_ATOMIC_DECL_FUNC_PTR(void *, ptr, __int64, 64)
+MPLI_ATOMIC_DECL_FUNC_PTR(void *, ptr, __int64, 64)
 #else
 #error "MPL_SIZEOF_VOID_P not valid"
 #endif
+#undef MPLI_ATOMIC_DECL_FUNC_COMMON
+#undef MPLI_ATOMIC_DECL_FUNC_FAA
+#undef MPLI_ATOMIC_CAST_FROM_ATOMIC_VAL
+#undef MPLI_ATOMIC_CAST_TO_ATOMIC_VAL
+#undef MPLI_ATOMIC_CAST_FROM_ATOMIC_PTR
+#undef MPLI_ATOMIC_CAST_TO_ATOMIC_PTR
+#undef MPLI_ATOMIC_DECL_FUNC_VAL
+#undef MPLI_ATOMIC_DECL_FUNC_PTR
 /* Barriers */
 static inline void MPL_atomic_write_barrier(void)
 {

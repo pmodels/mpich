@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2005 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_DBG_H_INCLUDED
@@ -107,10 +106,6 @@
 #define MPL_DBG_OUT_FMT(_class,_fmtargs)
 #endif
 
-#define MPL_DBG_SUCCESS       0
-#define MPL_DBG_ERR_INTERN    1
-#define MPL_DBG_ERR_OTHER     2
-
 typedef unsigned int MPL_dbg_class;
 
 /* Special constants */
@@ -145,7 +140,7 @@ void MPL_dbg_class_register(MPL_dbg_class cls, const char *ucname, const char *l
 int MPL_dbg_outevent(const char *, int, int, int, const char *, ...) ATTRIBUTE((format(printf, 5, 6)));
 /* *INDENT-ON* */
 
-int MPL_dbg_init(int *, char ***, int, int, int, int, int);
-int MPL_dbg_pre_init(int *, char ***, int);
+int MPL_dbg_pre_init(int *, char ***);
+int MPL_dbg_init(int, int);
 
 #endif /* MPL_DBG_H_INCLUDED */

@@ -1,16 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- * Portions of this code were written by Microsoft. Those portions are
- * Copyright (c) 2007 Microsoft Corporation. Microsoft grants
- * permission to use, reproduce, prepare derivative works, and to
- * redistribute to others. The code is licensed "as is." The User
- * bears the risk of using it. Microsoft gives no express warranties,
- * guarantees or conditions. To the extent permitted by law, Microsoft
- * excludes the implied warranties of merchantability, fitness for a
- * particular purpose and non-infringement.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -86,11 +76,16 @@ int MPIR_Call_attr_delete(int handle, MPIR_Attribute * attr_p)
     if (kv->delfn.user_function == NULL)
         goto fn_exit;
 
+    /* user functions, as well as binding proxies, might call other MPI
+     * functions, so we need to release the lock here. This is safe to do
+     * as GLOBAL is not at all recursive in our implementation. */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = kv->delfn.proxy(kv->delfn.user_function,
                          handle,
                          attr_p->keyval->handle,
                          attr_p->attrType,
                          (void *) (intptr_t) attr_p->value, attr_p->keyval->extra_state);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
 #if MPICH_ERROR_MSG_LEVEL < MPICH_ERROR_MSG__ALL
@@ -138,11 +133,16 @@ int MPIR_Call_attr_copy(int handle, MPIR_Attribute * attr_p, void **value_copy, 
     if (kv->copyfn.user_function == NULL)
         goto fn_exit;
 
+    /* user functions might call other MPI functions, so we need to
+     * release the lock here. This is safe to do as GLOBAL is not at
+     * all recursive in our implementation. */
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = kv->copyfn.proxy(kv->copyfn.user_function,
                           handle,
                           attr_p->keyval->handle,
                           attr_p->keyval->extra_state,
                           attr_p->attrType, (void *) (intptr_t) attr_p->value, value_copy, flag);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* --BEGIN ERROR HANDLING-- */
     if (rc != 0) {
@@ -280,6 +280,10 @@ int MPIR_Attr_delete_list(int handle, MPIR_Attribute ** attr)
     return mpi_errno;
 }
 
+/* Note: proxy functions assumed to be outside critical section. This allows them
+ * to call MPI functions directly. E.g. CXX bindings.
+ */
+
 int
 MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
                        int handle,
@@ -297,14 +301,7 @@ MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
         attrib_val = attrib;
     }
 
-    /* user functions might call other MPI functions, so we need to
-     * release the lock here. This is safe to do as GLOBAL is not at
-     * all recursive in our implementation. */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return ret;
 }
@@ -324,14 +321,7 @@ MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
     else
         attrib_val = attrib;
 
-    /* user functions might call other MPI functions, so we need to
-     * release the lock here. This is safe to do as GLOBAL is not at
-     * all recursive in our implementation. */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     ret = user_function(handle, keyval, attrib_val, extra_state);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return ret;
 }

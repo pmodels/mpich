@@ -1,3 +1,8 @@
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 dnl Process this file with autoconf to produce a configure script.
 dnl
 dnl The file name here refers to a file in the source being configured
@@ -5,10 +10,9 @@ AC_INIT(rlog.c)
 
 dnl Definitions will be placed in this file rather than in the DEFS variable
 AC_CONFIG_HEADER(rlogconf.h)
-AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+AH_TOP([/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 #ifndef FORKERCONF_H_INCLUDED
 #define FORKERCONF_H_INCLUDED

@@ -1,12 +1,8 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_AM_H_INCLUDED
 #define POSIX_AM_H_INCLUDED
 
@@ -27,8 +23,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ENQUEUE_REQUEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ENQUEUE_REQUEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
 
     /* Check to see if we need to create storage for the data to be sent. We did this above only if
      * we were sending a noncontiguous message, but we need it for all situations now. */
@@ -75,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     DL_APPEND(MPIDI_POSIX_global.postponed_queue, curr_sreq_hdr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ENQUEUE_REQUEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -109,8 +105,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     static int seq_num = 0;
 #endif /* POSIX_AM_DEBUG */
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
 
 #ifdef POSIX_AM_DEBUG
     msg_hdr.seq_num = seq_num++;
@@ -213,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -235,8 +231,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     int i;
     uint8_t *am_hdr_buf = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_SEND_AMV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_SEND_AMV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
@@ -266,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     else
         MPIDIU_release_buf(am_hdr_buf);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AMV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
     return mpi_errno;
 }
@@ -282,13 +278,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ISEND_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
     mpi_errno = MPIDI_POSIX_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id), kind,
                                      handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
     return mpi_errno;
 }
@@ -306,6 +302,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     return MPL_MIN(max_shortsend, max_representable);
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
+{
+    return MPIDI_POSIX_DEFAULT_SHORT_SEND_SIZE - (sizeof(MPIDI_POSIX_am_header_t));
+}
+
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
@@ -316,8 +317,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_ENQUEUE_REQ_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_ENQUEUE_REQ_HDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
 
     /* Prepare private storage */
     mpi_errno = MPIDI_POSIX_am_init_req_hdr(am_hdr, am_hdr_sz, &curr_sreq_hdr, NULL);
@@ -340,7 +341,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, 
     DL_APPEND(MPIDI_POSIX_global.postponed_queue, curr_sreq_hdr);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ENQUEUE_REQ_HDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQ_HDR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -361,8 +362,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     size_t iov_num_left = 1;
     const int grank = MPIDIU_rank_to_lpid(rank, comm);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
 
     iov_left[0].iov_base = (void *) am_hdr;
     iov_left[0].iov_len = am_hdr_sz;
@@ -397,7 +398,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -411,42 +412,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
 
     mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank,
                                         MPIDIG_context_id_to_comm(context_id),
                                         kind, handler_id, am_hdr, am_hdr_sz);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
 
     return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_RECV);
-
-    MPIDIG_send_long_ack_msg_t msg;
-
-    msg.sreq_ptr = (MPIDIG_REQUEST(req, req->rreq.peer_req_ptr));
-    msg.rreq_ptr = req;
-    MPIR_Assert((void *) msg.sreq_ptr != NULL);
-
-    mpi_errno =
-        MPIDI_POSIX_am_send_hdr_reply(MPIDIG_REQUEST(req, context_id),
-                                      MPIDIG_REQUEST(req, rank), MPIDI_POSIX_AM_HDR_CH4,
-                                      MPIDIG_SEND_LONG_ACK, &msg, sizeof(msg));
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* POSIX_AM_H_INCLUDED */

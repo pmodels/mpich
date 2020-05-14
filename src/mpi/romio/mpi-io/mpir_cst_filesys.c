@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 UChicago/Argonne LLC
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpioimpl.h"
@@ -253,7 +252,3 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
     }
     return mpi_errno;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

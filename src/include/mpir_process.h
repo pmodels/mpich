@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIR_PROCESS_H_INCLUDED
@@ -20,8 +18,8 @@ typedef struct PreDefined_attrs {
 } PreDefined_attrs;
 
 typedef struct MPIR_Process_t {
-    OPA_int_t mpich_state;      /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
-                                 * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
+    MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
+                                         * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
 
     /* Fields to be initialized by MPIR_pmi_init() */
     int has_parent;

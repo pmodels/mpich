@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_RMA_H_INCLUDED
 #define OFI_RMA_H_INCLUDED
 
@@ -36,8 +31,7 @@
     do {                                                                \
         if (sigreq)                                                     \
         {                                                               \
-            MPIDI_OFI_REQUEST_CREATE((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
-            MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
             *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
         }                                                               \
         else {                                                          \
@@ -170,6 +164,18 @@ static inline void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt, int query
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_ACC_ATOMIC_SUPPORT);
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+{
+    if (sigreq) {
+        /* If sigreq is not NULL, *sigreq should be a valid object after
+         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
+         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
+         * depending on MPIDI_CH4_MT_MODEL. */
+        MPIR_Assert(*sigreq != NULL);
+        MPID_Request_complete(*sigreq);
+    }
+}
+
 /* _count: count of data elements of certain datatype
  * _datatype: the datatype
  * _bytes: total byte size
@@ -202,24 +208,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
                            target_datatype, MPI_DATATYPE_NULL, origin_bytes, target_bytes, 0,
                            max_pipe, &alloc_iovs);
 
-    alloc_iov_size = MPIDI_OFI_align_iov_len(alloc_iovs * o_size)
-        + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
-        + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
+    alloc_iov_size = alloc_iovs * o_size + alloc_iovs * t_size;
 
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
-                                                 MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+    req->noncontig.iov_store = (char *) MPL_malloc(alloc_iov_size, MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig.iov_store) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
                         "**nomem");
     *winreq = req;
 
-    req->noncontig->iov.put_get.originv =
-        (struct iovec *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
-    req->noncontig->iov.put_get.targetv =
-        (struct fi_rma_iov *) ((char *) req->noncontig->iov.put_get.originv
-                               + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
+    req->noncontig.iov.put_get.originv = (struct iovec *) req->noncontig.iov_store;
+    req->noncontig.iov.put_get.targetv =
+        (struct fi_rma_iov *) (req->noncontig.iov_store + o_size * alloc_iovs);
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
@@ -265,24 +265,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
                            target_datatype, MPI_DATATYPE_NULL, origin_bytes, target_bytes, 0,
                            max_pipe, &alloc_iovs);
 
-    alloc_iov_size = MPIDI_OFI_align_iov_len(alloc_iovs * o_size)
-        + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
-        + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
+    alloc_iov_size = alloc_iovs * o_size + alloc_iovs * t_size;
 
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
-                                                 MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+    req->noncontig.iov_store = (char *) MPL_malloc(alloc_iov_size, MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig.iov_store) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
                         "**nomem");
     *winreq = req;
 
-    req->noncontig->iov.accumulate.originv =
-        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
-    req->noncontig->iov.accumulate.targetv =
-        (struct fi_rma_ioc *) ((char *) req->noncontig->iov.accumulate.originv
-                               + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
+    req->noncontig.iov.accumulate.originv = (struct fi_ioc *) req->noncontig.iov_store;
+    req->noncontig.iov.accumulate.targetv =
+        (struct fi_rma_ioc *) (req->noncontig.iov_store + o_size * alloc_iovs);
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
@@ -319,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
                                                                            MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t o_size, t_size, r_size, alloc_iovs, alloc_rma_iovs, alloc_iov_size;
+    size_t o_size, t_size, r_size, alloc_iovs, alloc_iov_size;
     MPIDI_OFI_win_request_t *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
@@ -333,30 +327,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     MPIDI_OFI_count_iovecs(origin_count, target_count, result_count, origin_datatype,
                            target_datatype, result_datatype, origin_bytes, target_bytes,
                            result_bytes, max_pipe, &alloc_iovs);
-    alloc_rma_iovs = alloc_iovs;
+    alloc_iov_size = alloc_iovs * (o_size + t_size + r_size);
 
-    alloc_iov_size = MPIDI_OFI_align_iov_len(alloc_iovs * o_size)
-        + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
-        + MPIDI_OFI_align_iov_len(alloc_iovs * r_size)
-        + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
-
-    req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_malloc((alloc_iov_size) + sizeof(*(req->noncontig)),
-                                                 MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDSTMT((req->noncontig) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+    req->noncontig.iov_store = (char *) MPL_malloc(alloc_iov_size, MPL_MEM_BUFFER);
+    MPIR_ERR_CHKANDSTMT((req->noncontig.iov_store) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
                         "**nomem");
     *winreq = req;
 
-    req->noncontig->iov.get_accumulate.originv =
-        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
-    req->noncontig->iov.get_accumulate.targetv =
-        (struct fi_rma_ioc *) ((char *) req->noncontig->iov.get_accumulate.originv
-                               + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
-    req->noncontig->iov.get_accumulate.resultv =
-        (struct fi_ioc *) ((char *) req->noncontig->iov.get_accumulate.targetv
-                           + MPIDI_OFI_align_iov_len(t_size * alloc_rma_iovs));
+    req->noncontig.iov.get_accumulate.originv = (struct fi_ioc *) req->noncontig.iov_store;
+    req->noncontig.iov.get_accumulate.targetv =
+        (struct fi_rma_ioc *) (req->noncontig.iov_store + o_size * alloc_iovs);
+    req->noncontig.iov.get_accumulate.resultv =
+        (struct fi_ioc *) (req->noncontig.iov_store + (o_size + t_size) * alloc_iovs);
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
@@ -409,9 +393,11 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
+    /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
 
+    /* self messages */
     if (target_rank == win->comm_ptr->rank) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy(origin_addr,
@@ -421,6 +407,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
+    /* small contiguous messages */
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_win_cntr_incr(win);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
@@ -433,7 +420,10 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                                       target_rank)),
                              rdma_inject_write, FALSE);
         goto null_op_exit;
-    } else if (origin_contig && target_contig) {
+    }
+
+    /* large contiguous messages */
+    if (origin_contig && target_contig) {
         MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         msg.desc = NULL;
@@ -451,9 +441,12 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
+    /* noncontiguous messages */
     mpi_errno =
         MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
                                                origin_datatype, target_datatype, origin_bytes,
@@ -482,8 +475,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->iov.put_get.originv[cur_o];
-        targetv = &req->noncontig->iov.put_get.targetv[cur_t];
+        originv = &req->noncontig.iov.put_get.originv[cur_o];
+        targetv = &req->noncontig.iov.put_get.targetv[cur_t];
         omax = MPIDI_OFI_global.rma_iov_limit;
         tmax = MPIDI_OFI_global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, originv, omax, targetv, tmax, &oout, &tout);
@@ -496,7 +489,6 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         for (i = 0; i < tout; i++)
             targetv[i].key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIR_Assert(rc != MPIDI_OFI_SEG_ERROR);
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
         msg.msg_iov = originv;
         msg.iov_count = oout;
         msg.rma_iov = targetv;
@@ -511,6 +503,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -592,9 +586,11 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
+    /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
 
+    /* self messages */
     if (target_rank == win->comm_ptr->rank) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
@@ -603,6 +599,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         goto null_op_exit;
     }
 
+    /* contiguous messages */
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         if (sigreq) {
@@ -625,9 +622,12 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
     }
 
+    /* noncontiguous messages */
     mpi_errno =
         MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
                                                origin_datatype, target_datatype, origin_bytes,
@@ -655,8 +655,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->iov.put_get.originv[cur_o];
-        targetv = &req->noncontig->iov.put_get.targetv[cur_t];
+        originv = &req->noncontig.iov.put_get.originv[cur_o];
+        targetv = &req->noncontig.iov.put_get.targetv[cur_t];
         omax = MPIDI_OFI_global.rma_iov_limit;
         tmax = MPIDI_OFI_global.rma_iov_limit;
 
@@ -672,7 +672,6 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         for (i = 0; i < tout; i++)
             targetv[i].key = MPIDI_OFI_winfo_mr_key(win, target_rank);
 
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
         msg.msg_iov = originv;
         msg.iov_count = oout;
         msg.rma_iov = targetv;
@@ -687,6 +686,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     }
 
     MPIDI_OFI_finalize_seg_state(p);
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
@@ -774,9 +775,9 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     size_t offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb;
     void *buffer, *tbuffer, *rbuffer;
-    struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-    struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-    struct fi_ioc comparev MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_ioc originv;
+    struct fi_ioc resultv;
+    struct fi_ioc comparev;
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
@@ -835,7 +836,6 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);;
 
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&originv);
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
@@ -846,8 +846,6 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.op = fi_op;
     msg.context = NULL;
     msg.data = 0;
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&comparev);
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&resultv);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
                                               &comparev, NULL, 1, &resultv, NULL, 1, 0), atomicto,
@@ -916,8 +914,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
-     * TODO: we assume all processes should use the same max_size and dt_size, true ? */
+    /* It's impossible to chunk data if buffer size is smaller than
+     * basic datatype size */
     if (max_size < dt_size)
         goto am_fallback;
     /* Accumulate is WRITE. */
@@ -950,8 +948,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->iov.accumulate.originv[cur_o];
-        targetv = &req->noncontig->iov.accumulate.targetv[cur_t];
+        originv = &req->noncontig.iov.accumulate.originv[cur_o];
+        targetv = &req->noncontig.iov.accumulate.targetv[cur_t];
         omax = MPIDI_OFI_global.rma_iov_limit;
         tmax = MPIDI_OFI_global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, (struct iovec *) originv, omax,
@@ -973,7 +971,6 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
         for (i = 0; i < tout; i++)
             targetv[i].count /= dt_size;
 
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
         msg.msg_iov = originv;
         msg.iov_count = oout;
         msg.rma_iov = targetv;
@@ -986,6 +983,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     MPIDI_OFI_finalize_seg_state(p);
 
@@ -1064,8 +1063,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
     /* round down to multiple of dt_size */
     max_size = max_size / dt_size * dt_size;
-    /* It's impossible to chunk data if buffer size is smaller than basic datatype size.
-     * TODO: we assume all processes should use the same max_size and dt_size, true ?*/
+    /* It's impossible to chunk data if buffer size is smaller than
+     * basic datatype size */
     if (max_size < dt_size)
         goto am_fallback;
     if (unlikely(op == MPI_NO_OP)) {
@@ -1116,9 +1115,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0, cur_r = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->iov.get_accumulate.originv[cur_o];
-        targetv = &req->noncontig->iov.get_accumulate.targetv[cur_t];
-        resultv = &req->noncontig->iov.get_accumulate.resultv[cur_r];
+        originv = &req->noncontig.iov.get_accumulate.originv[cur_o];
+        targetv = &req->noncontig.iov.get_accumulate.targetv[cur_t];
+        resultv = &req->noncontig.iov.get_accumulate.resultv[cur_r];
         omax = rmax =
             MPIDI_OFI_FETCH_ATOMIC_IOVECS <
             0 ? MPIDI_OFI_global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
@@ -1155,12 +1154,10 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
             targetv[i].key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         }
 
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
         msg.msg_iov = originv;
         msg.iov_count = oout;
         msg.rma_iov = targetv;
         msg.rma_iov_count = tout;
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(resultv);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(ep, &msg, resultv,
                                                 NULL, rout, flags), rdma_readfrom, FALSE);
@@ -1169,6 +1166,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
          * progress helps improve the performance. */
         MPIDI_OFI_win_trigger_rma_progress(win);
     }
+    /* Complete signal request to inform completion to user. */
+    MPIDI_OFI_sigreq_complete(sigreq);
 
     if (op != MPI_NO_OP)
         MPIDI_OFI_finalize_seg_state2(p);
@@ -1199,7 +1198,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
@@ -1308,8 +1307,8 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     size_t offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb ATTRIBUTE((unused));
     void *buffer, *tbuffer, *rbuffer;
-    struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-    struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_ioc originv;
+    struct fi_ioc resultv;
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
@@ -1369,7 +1368,6 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     targetv.count = 1;
     targetv.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
 
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&originv);
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
@@ -1380,7 +1378,6 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     msg.op = fi_op;
     msg.context = NULL;
     msg.data = 0;
-    MPIDI_OFI_ASSERT_IOVEC_ALIGN(&resultv);
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
                                             NULL, 1, 0), rdma_readfrom, FALSE);
@@ -1451,8 +1448,8 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * av)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
 
     if (
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1477,7 +1474,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                             target_datatype, op, win, av, NULL);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET_ACCUMULATE);
     return mpi_errno;
 }
 

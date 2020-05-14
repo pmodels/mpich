@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -45,13 +44,15 @@ extern MPIR_Request ** const MPID_Recvq_posted_tail_ptr;
 extern MPIR_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
-OPA_int_t MPIDI_CH3I_progress_completion_count = OPA_INT_T_INITIALIZER(0);
+MPL_atomic_int_t MPIDI_CH3I_progress_completion_count = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 /* NEMESIS MULTITHREADING: Extra Data Structures Added */
 #ifdef MPICH_IS_THREADED
 volatile int MPIDI_CH3I_progress_blocked = FALSE;
 volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 static MPID_Thread_cond_t MPIDI_CH3I_progress_completion_cond;
+#endif
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count);
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count);
 #endif /* MPICH_IS_THREADED */
@@ -83,16 +84,6 @@ typedef struct qn_ent
 } qn_ent_t;
 
 static qn_ent_t *qn_head = NULL;
-
-#define MAX_PROGRESS_HOOKS 4
-typedef int (*progress_func_ptr_t) (int* made_progress);
-
-typedef struct progress_hook_slot {
-    progress_func_ptr_t func_ptr;
-    int active;
-} progress_hook_slot_t;
-
-static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
 
 #ifdef HAVE_SIGNAL
 static void sigusr1_handler(int sig)
@@ -135,7 +126,7 @@ static int check_terminating_vcs(void)
 int MPIDI_CH3I_Shm_send_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPL_IOV *iov;
+    struct iovec *iov;
     int n_iov;
     MPIR_Request *sreq;
     int again = 0;
@@ -150,7 +141,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     {
         if (!sreq->ch.noncontig)
         {
-            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].MPL_IOV_LEN > 0);
+            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].iov_len > 0);
 
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
@@ -192,7 +183,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
 
         if (!sreq->ch.noncontig)
         {
-            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].MPL_IOV_LEN > 0);
+            MPIR_Assert(sreq->dev.iov_count > 0 && sreq->dev.iov[sreq->dev.iov_offset].iov_len > 0);
 
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
@@ -283,106 +274,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
     goto fn_exit;
 }
 
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i].func_ptr == NULL) {
-            progress_hooks[i].func_ptr = progress_fn;
-            progress_hooks[i].active = FALSE;
-            break;
-        }
-    }
-
-    if (i >= MAX_PROGRESS_HOOKS) {
-        return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-				     "MPIDI_CH3I_Progress_register_hook", __LINE__,
-				     MPI_ERR_INTERN, "**progresshookstoomany", 0 );
-    }
-
-    (*id) = i;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDI_CH3I_Progress_deregister_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
-
-    progress_hooks[id].func_ptr = NULL;
-    progress_hooks[id].active = FALSE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-int MPIDI_CH3I_Progress_activate_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
-                progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
-    progress_hooks[id].active = TRUE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-int MPIDI_CH3I_Progress_deactivate_hook(int id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
-                progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
-    progress_hooks[id].active = FALSE;
-
-  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 /* NOTE: it appears that this function is sometimes (inadvertently?) recursive.
  * Some packet handlers, such as MPIDI_CH3_PktHandler_Close, call iStartMsg,
  * which calls MPID_Progress_test. */
@@ -441,14 +332,14 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
              * work is done and coming back in again if it's not done.
              * We might as well wait for the other thread to be done
              * before doing that. */
-            if (progress_state->ch.completion_count == OPA_load_int(&MPIDI_CH3I_progress_completion_count))
+            if (progress_state->ch.completion_count == MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count))
                 MPIDI_CH3I_Progress_delay(progress_state->ch.completion_count);
             else {
                 /* if the completion count of our progress state is
                  * different from the current completion count, some
                  * progress happened.  We reset the value for the next
                  * iteration and return from the progress engine. */
-                progress_state->ch.completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
+                progress_state->ch.completion_count = MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count);
                 goto fn_exit;
             }
         }
@@ -462,17 +353,12 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 	MPID_nem_cell_ptr_t  cell;
 	int                  in_fbox = 0;
 	MPIDI_VC_t          *vc;
-	int i;
 
         do /* receive progress */
         {
             /* make progress receiving */
             /* check queue */
-            if (MPID_nem_safe_to_block_recv() && is_blocking
-#ifdef MPICH_IS_THREADED
-                && !MPIR_ThreadInfo.isThreaded
-#endif
-                )
+            if (MPID_nem_safe_to_block_recv() && is_blocking && !MPIR_IS_THREADED)
             {
                 mpi_errno = MPID_nem_mpich_blocking_recv(&cell, &in_fbox, progress_state->ch.completion_count);
             }
@@ -484,7 +370,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             if (cell)
             {
-                char            *cell_buf    = (char *)cell->pkt.p.payload;
+                char            *cell_buf    = (char *)cell->pkt.payload;
                 intptr_t   payload_len = cell->pkt.header.datalen;
                 MPIDI_CH3_Pkt_t *pkt         = (MPIDI_CH3_Pkt_t *)cell_buf;
 
@@ -569,23 +455,19 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             MPIR_ERR_CHECK(mpi_errno);
         }
 
-        for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-            if (progress_hooks[i].active == TRUE) {
-                MPIR_Assert(progress_hooks[i].func_ptr != NULL);
-                mpi_errno = progress_hooks[i].func_ptr(&made_progress);
-                MPIR_ERR_CHECK(mpi_errno);
-                if (made_progress)
-                    MPIDI_CH3_Progress_signal_completion();
-            }
-        }
+        mpi_errno = MPIR_Progress_hook_exec_all(&made_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (made_progress)
+            MPIDI_CH3_Progress_signal_completion();
 
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
-            int completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
+            int completion_count = MPL_atomic_relaxed_load_int(&MPIDI_CH3I_progress_completion_count);
             if (progress_state->ch.completion_count != completion_count) {
                 /* Read barrier to make sure no reads get values before the
                    completion counter was incremented  */
-                OPA_read_barrier();
+                MPL_atomic_read_barrier();
                 /* reset for the next iteration */
                 progress_state->ch.completion_count = completion_count;
                 break;
@@ -807,7 +689,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
         /* copy data into user buffer described by iov in rreq */
         MPIR_Assert(rreq);
-        MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
+        MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].iov_len > 0);
         MPIR_Assert(buflen >= 0);
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    copying into user buffer from IOV");
@@ -822,18 +704,18 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
         while (buflen && !complete)
         {
-            MPL_IOV *iov;
+            struct iovec *iov;
             int n_iov;
 
             iov = &rreq->dev.iov[rreq->dev.iov_offset];
             n_iov = rreq->dev.iov_count;
 		
-            while (n_iov && buflen >= iov->MPL_IOV_LEN)
+            while (n_iov && buflen >= iov->iov_len)
             {
-                size_t iov_len = iov->MPL_IOV_LEN;
+                size_t iov_len = iov->iov_len;
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %d", (int)iov_len);
                 if (rreq->dev.drop_data == FALSE) {
-                    MPIR_Memcpy (iov->MPL_IOV_BUF, buf, iov_len);
+                    MPIR_Memcpy (iov->iov_base, buf, iov_len);
                 }
 
                 buflen -= iov_len;
@@ -848,17 +730,17 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 {
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %" PRIdPTR, buflen);
                     if (rreq->dev.drop_data == FALSE) {
-                        MPIR_Memcpy (iov->MPL_IOV_BUF, buf, buflen);
+                        MPIR_Memcpy (iov->iov_base, buf, buflen);
                     }
-                    iov->MPL_IOV_BUF = (void *)((char *)iov->MPL_IOV_BUF + buflen);
-                    iov->MPL_IOV_LEN -= buflen;
+                    iov->iov_base = (void *)((char *)iov->iov_base + buflen);
+                    iov->iov_len -= buflen;
                     buflen = 0;
                 }
 
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 rreq->dev.iov_count = n_iov;
                 vc_ch->recv_active = rreq;
-		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: %" PRIdPTR " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: %" PRIdPTR " bytes + %d iov entries", iov->iov_len, n_iov));
             }
             else
             {
@@ -885,7 +767,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 if (!complete)
                 {
                     rreq->dev.iov_offset = 0;
-                    MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
+                    MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].iov_len > 0);
                     vc_ch->recv_active = rreq;
                     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...not complete");
                 }
@@ -920,8 +802,8 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
 int MPIDI_CH3I_Progress_init(void)
 {
-    int i;
     int mpi_errno = MPI_SUCCESS;
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
@@ -964,16 +846,11 @@ int MPIDI_CH3I_Progress_init(void)
 #ifdef HAVE_SIGNAL
     /* install signal handler for process failure notifications from hydra */
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
-    MPIR_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s", MPIR_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER, "**signal", "**signal %s",
+                         MPIR_Strerror(errno, strerrbuf, MPIR_STRERROR_BUF_SIZE));
     if (prev_sighandler == SIG_IGN || prev_sighandler == SIG_DFL)
         prev_sighandler = NULL;
 #endif
-
-    /* Initialize progress hook slots */
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        progress_hooks[i].func_ptr = NULL;
-        progress_hooks[i].active = FALSE;
-    }
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);

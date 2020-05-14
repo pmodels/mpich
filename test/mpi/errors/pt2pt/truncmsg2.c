@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 /*
  * This program was sent in as an example that did not perform as expected.
  * The program has a bug in that it is sending 3 characters but receiving
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     int contig_indexed_count = 3;
     int contig_indexed_blocklens[] = { 1, 2, 1 };
     int contig_indexed_indices[] = { 4, 8, 16 };
-    int contig_indexed_inner_type = MPI_INT;
-    int contig_indexed_type;
+    MPI_Datatype contig_indexed_inner_type = MPI_INT;
+    MPI_Datatype contig_indexed_type;
 
     MTest_Init(&argc, &argv);
     ret = MPI_Comm_rank(MPI_COMM_WORLD, &myrank);

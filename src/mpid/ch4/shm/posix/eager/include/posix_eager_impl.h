@@ -1,27 +1,13 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_EAGER_IMPL_H_INCLUDED
 #define POSIX_EAGER_IMPL_H_INCLUDED
 
 #ifndef POSIX_EAGER_INLINE
 #ifndef POSIX_EAGER_DISABLE_INLINES
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
-{
-    return MPIDI_POSIX_eager_func->init(rank, size);
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
-{
-    return MPIDI_POSIX_eager_func->finalize();
-}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
@@ -65,11 +51,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 
 #define __posix_eager_inline_stub__  0
 #define __posix_eager_inline_fbox__  1
+#define __posix_eager_inline_iqueue__  2
 
 #if POSIX_EAGER_INLINE==__posix_eager_inline_stub__
 #include "../stub/posix_eager_inline.h"
 #elif POSIX_EAGER_INLINE==__posix_eager_inline_fbox__
 #include "../fbox/posix_eager_inline.h"
+#elif POSIX_EAGER_INLINE==__posix_eager_inline_iqueue__
+#include "../iqueue/posix_eager_inline.h"
 #else
 #error "No direct posix eager included"
 #endif

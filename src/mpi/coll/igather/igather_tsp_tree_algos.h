@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IGATHER_TSP_TREE_ALGOS_H_INCLUDED) is
@@ -138,8 +132,8 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
     /* Leaf nodes send to parent */
     if (num_children == 0) {
-        MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent,
-                             tag, comm, sched, 0, NULL);
+        MPIR_TSP_sched_isend(tmp_buf, sendcount, sendtype, my_tree.parent, tag, comm, sched, 0,
+                             NULL);
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv\n", rank));
     } else {
         num_dependencies = 0;
@@ -216,8 +210,8 @@ int MPIR_TSP_Igather_intra_tree(const void *sendbuf, int sendcount,
 
     /* schedule tree algo */
     mpi_errno = MPIR_TSP_Igather_sched_intra_tree(sendbuf, sendcount, sendtype,
-                                                  recvbuf, recvcount, recvtype,
-                                                  root, comm, k, sched);
+                                                  recvbuf, recvcount, recvtype, root, comm, k,
+                                                  sched);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* start and register the schedule */

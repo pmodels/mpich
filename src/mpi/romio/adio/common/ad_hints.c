@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -28,7 +26,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* if we've already set up default hints and the user has not asked us to
      * process any hints (MPI_INFO_NULL), then we can short-circuit hint
      * processing */
-    if (fd->hints->initialized && fd->info == MPI_INFO_NULL) {
+    if (fd->hints->initialized && users_info == MPI_INFO_NULL) {
         *error_code = MPI_SUCCESS;
         return;
     }

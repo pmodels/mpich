@@ -1,12 +1,6 @@
 /*
-    src/mpi/coll/transports/gentran/tsp_gentran_types.h \
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /*
@@ -17,7 +11,7 @@ cvars:
       category    : COLLECTIVE
       type        : int
       default     : 8
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
@@ -32,7 +26,7 @@ cvars:
 #include "tsp_gentran.h"
 #include "gentran_utils.h"
 
-MPII_Coll_queue_t coll_queue = { NULL };
+MPII_Coll_queue_t MPII_coll_queue = { NULL };
 
 int MPII_Genutil_progress_hook_id = 0;
 
@@ -41,7 +35,7 @@ int MPII_Gentran_init(void)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPID_Progress_register_hook(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
+        MPIR_Progress_hook_register(MPII_Genutil_progress_hook, &MPII_Genutil_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -72,7 +66,7 @@ int MPII_Gentran_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Progress_deregister_hook(MPII_Genutil_progress_hook_id);
+    MPIR_Progress_hook_deregister(MPII_Genutil_progress_hook_id);
 
     return mpi_errno;
 }
@@ -80,5 +74,9 @@ int MPII_Gentran_finalize(void)
 
 int MPII_Gentran_scheds_are_pending(void)
 {
-    return coll_queue.head != NULL;
+    /* this function is only called within a critical section to decide whether
+     * yield is necessary. (ref: .../ch3/.../mpid_nem_inline.h)
+     * therefore, there is no need for additional lock protection.
+     */
+    return MPII_coll_queue.head != NULL;
 }

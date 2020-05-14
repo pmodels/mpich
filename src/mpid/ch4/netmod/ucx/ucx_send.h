@@ -1,11 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2016 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Mellanox Technologies Ltd.
- *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef UCX_SEND_H_INCLUDED
 #define UCX_SEND_H_INCLUDED
 #include <ucp/api/ucp.h>
@@ -88,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
 
     if (ucp_request) {
         if (req == NULL)
-            req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+            req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
         MPIR_Request_add_ref(req);
         ucp_request->req = req;
         MPIDI_UCX_REQ(req).ucp_request = ucp_request;

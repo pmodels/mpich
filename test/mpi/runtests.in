@@ -1,6 +1,9 @@
 #! @PERL@
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # This script is the beginnings of a script to run a sequence of test 
 # programs.  See the MPICH document for a description of the test
 # strategy and requirements.
@@ -1029,7 +1032,7 @@ sub BuildMPIProgram {
     } else {
         $test_opt->{need_remove} = 0;
     }
-    my $output = `make $programname 2>&1`;
+    my $output = `make $programname@EXEEXT@ 2>&1`;
     $rc = $?;
     if ($rc > 255) { $rc >>= 8; }
     if (! -x $programname) {

@@ -1,6 +1,9 @@
 #! /usr/bin/env perl
-# -*- Mode: perl; -*-
-#
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
+
 # Set Defaults
 $debug = 0;
 $debugDir = 0;
@@ -64,6 +67,7 @@ $rootSrcDir = "";
 	      "Making upshot", "\\s*\$",
               "ld: warning: directory not found for option '-L\\S*src/mpl'",
               "ld: warning: directory not found for option '-L\\S*src/openpa/src'",
+	      "copying selected object files to avoid basename conflicts...",
 );
 
 # OtherNoise is an array of patterns that describe blocks of

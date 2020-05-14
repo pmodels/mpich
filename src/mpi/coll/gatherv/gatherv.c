@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -15,12 +13,12 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto   - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -28,12 +26,12 @@ cvars:
       category    : COLLECTIVE
       type        : enum
       default     : auto
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto   - Internal algorithm selection
+        auto - Internal algorithm selection (can be overridden with MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE)
         linear - Force linear algorithm
         nb     - Force nonblocking algorithm
 
@@ -41,15 +39,16 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : true
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI_Gatherv will allow the device to override the
-        MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.
-        If set to false, the device-level gatherv function will not be
-        called.
+        This CVAR is only used when MPIR_CVAR_DEVICE_COLLECTIVES
+        is set to "percoll".  If set to true, MPI_Gatherv will
+        allow the device to override the MPIR-level collective
+        algorithms.  The device might still call the MPIR-level
+        algorithms manually.  If set to false, the device-override
+        will be disabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -75,46 +74,48 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Gatherv
 #define MPI_Gatherv PMPI_Gatherv
 
-int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                            void *recvbuf, const int *recvcounts, const int *displs,
-                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                            MPIR_Errflag_t * errflag)
+int MPIR_Gatherv_allcomm_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                              void *recvbuf, const int *recvcounts, const int *displs,
+                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                              MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno =
-        MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                    recvtype, root, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Csel_coll_sig_s coll_sig = {
+        .coll_type = MPIR_CSEL_COLL_TYPE__GATHERV,
+        .comm_ptr = comm_ptr,
 
-  fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+        .u.gatherv.sendbuf = sendbuf,
+        .u.gatherv.sendcount = sendcount,
+        .u.gatherv.sendtype = sendtype,
+        .u.gatherv.recvbuf = recvbuf,
+        .u.gatherv.recvcounts = recvcounts,
+        .u.gatherv.displs = displs,
+        .u.gatherv.recvtype = recvtype,
+        .u.gatherv.root = root,
+    };
+
+    MPII_Csel_container_s *cnt = MPIR_Csel_search(comm_ptr->csel_comm, coll_sig);
+    MPIR_Assert(cnt);
+
+    switch (cnt->id) {
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Gatherv_allcomm_linear:
+            mpi_errno =
+                MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                            displs, recvtype, root, comm_ptr, errflag);
+            break;
+
+        case MPII_CSEL_CONTAINER_TYPE__ALGORITHM__MPIR_Gatherv_allcomm_nb:
+            mpi_errno =
+                MPIR_Gatherv_allcomm_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                        recvtype, root, comm_ptr, errflag);
+            break;
+
+        default:
+            MPIR_Assert(0);
+    }
+
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                            void *recvbuf, const int *recvcounts, const int *displs,
-                            MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                            MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                    recvtype, root, comm_ptr, errflag);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
@@ -138,12 +139,12 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_GATHERV_INTRA_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
-                    MPIR_Gatherv_intra_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                            displs, recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                              displs, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     } else {
         switch (MPIR_CVAR_GATHERV_INTER_ALGORITHM) {
@@ -158,12 +159,12 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                                             displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_CVAR_GATHERV_INTER_ALGORITHM_auto:
-                MPL_FALLTHROUGH;
-            default:
                 mpi_errno =
-                    MPIR_Gatherv_inter_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                            displs, recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                              displs, recvtype, root, comm_ptr, errflag);
                 break;
+            default:
+                MPIR_Assert(0);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -183,9 +184,12 @@ int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                 recvtype, root, comm_ptr, errflag);
+    if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
+        ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
+         MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE)) {
+        mpi_errno =
+            MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root,
+                         comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                       recvtype, root, comm_ptr, errflag);
@@ -241,7 +245,6 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_GATHERV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -384,7 +387,6 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
   fn_exit:
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_GATHERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

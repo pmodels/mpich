@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -13,7 +12,7 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
         return NULL;
@@ -22,8 +21,8 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
     sreq->kind = MPIR_REQUEST_KIND__SEND;
     MPIR_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) &sreq->dev.pending_pkt + nb);
-    sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz - nb;
+    sreq->dev.iov[0].iov_base = (void *) ((char *) &sreq->dev.pending_pkt + nb);
+    sreq->dev.iov[0].iov_len = hdr_sz - nb;
     sreq->dev.iov_count = 1;
     sreq->dev.OnDataAvail = 0;
 
@@ -92,9 +91,9 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
                                      sreq->handle));
                     vcch->conn->send_active = sreq;
                     mpi_errno =
-                        MPIDI_CH3I_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPL_IOV_BUF,
-                                                   sreq->dev.iov[0].MPL_IOV_LEN,
-                                                   sreq->dev.iov[0].MPL_IOV_LEN, NULL);
+                        MPIDI_CH3I_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].iov_base,
+                                                   sreq->dev.iov[0].iov_len,
+                                                   sreq->dev.iov[0].iov_len, NULL);
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
                         mpi_errno =
@@ -111,7 +110,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
             else {
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, TYPICAL,
                               "ERROR - MPIDI_CH3I_Sock_write failed, rc=%d", rc);
-                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
                 if (!sreq) {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                 }
@@ -168,7 +167,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     else {
         /* Connection failed, so allocate a request and return an error. */
         MPL_DBG_VCUSE(vc, "ERROR - connection failed");
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         if (!sreq) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         }

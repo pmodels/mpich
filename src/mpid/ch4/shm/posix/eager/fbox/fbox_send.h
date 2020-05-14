@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef POSIX_EAGER_FBOX_SEND_H_INCLUDED
 #define POSIX_EAGER_FBOX_SEND_H_INCLUDED
 
@@ -44,7 +39,7 @@ MPIDI_POSIX_eager_send(int grank,
 
     /* Check if the fastbox is already full and if so, return to the caller, which will cause this
      * message to be queued. */
-    if (fbox_out->data_ready) {
+    if (MPL_atomic_load_int(&fbox_out->data_ready)) {
         ret = MPIDI_POSIX_NOK;
         goto fn_exit;
     }
@@ -108,10 +103,8 @@ MPIDI_POSIX_eager_send(int grank,
     }
 #endif /* POSIX_FBOX_DEBUG */
 
-    OPA_compiler_barrier();
-
     /* Update the data ready flag to indicate that there is data in the box for the receiver. */
-    fbox_out->data_ready = 1;
+    MPL_atomic_store_int(&fbox_out->data_ready, 1);
 
     /* Update the number of iovecs left and the pointer to the next one. */
     *iov_num -= iov_done;

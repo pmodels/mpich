@@ -1,11 +1,6 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -35,8 +30,8 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 {
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_ISSUE_VTX);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_ISSUE_VTX);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_VTX_ISSUE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_VTX_ISSUE);
 
     /* Check if the vertex has not already been issued and its
      * incoming dependencies have completed */
@@ -193,7 +188,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 #endif
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_ISSUE_VTX);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_VTX_ISSUE);
 }
 
 
@@ -240,12 +235,25 @@ int MPII_Genutil_progress_hook(int *made_progress)
     int mpi_errno = MPI_SUCCESS;
     MPII_Coll_req_t *coll_req, *coll_req_tmp;
 
+    /* gentran progress may issue operations (e.g. MPIC_Isend) that will call into progress
+     * again (ref: MPIDI_OFI_retry_progress). Similar to MPIDU_Sched_progress, we should skip
+     * to avoid recursive entering.
+     */
+    static int in_genutil_progress = 0;
+
+    if (in_genutil_progress) {
+        return MPI_SUCCESS;
+    }
+
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
+    in_genutil_progress = 1;
+
     if (made_progress)
         *made_progress = FALSE;
 
     /* Go over up to MPIR_COLL_PROGRESS_MAX_COLLS collecives in the
      * queue and make progress on them */
-    DL_FOREACH_SAFE(coll_queue.head, coll_req, coll_req_tmp) {
+    DL_FOREACH_SAFE(MPII_coll_queue.head, coll_req, coll_req_tmp) {
         /* make progress on the collective operation */
         int done;
         MPII_Genutil_sched_t *sched = (MPII_Genutil_sched_t *) (coll_req->sched);
@@ -259,15 +267,18 @@ int MPII_Genutil_progress_hook(int *made_progress)
             coll_req->sched = NULL;
 
             req = MPL_container_of(coll_req, MPIR_Request, u.nbc.coll);
-            DL_DELETE(coll_queue.head, coll_req);
+            DL_DELETE(MPII_coll_queue.head, coll_req);
             MPID_Request_complete(req);
         }
         if (++count >= MPIR_CVAR_PROGRESS_MAX_COLLS)
             break;
     }
 
-    if (coll_queue.head == NULL)
-        MPID_Progress_deactivate_hook(MPII_Genutil_progress_hook_id);
+    if (MPII_coll_queue.head == NULL)
+        MPIR_Progress_hook_deactivate(MPII_Genutil_progress_hook_id);
+
+    in_genutil_progress = 0;
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_TSP_QUEUE_MUTEX);
 
     return mpi_errno;
 }

@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 
@@ -225,6 +223,8 @@ struct ADIOI_Fns_struct {
                                          MPI_Datatype datatype, int file_ptr_type,
                                          ADIO_Offset offset, ADIO_Request * request,
                                          int *error_code);
+    int (*ADIOI_xxx_SetLock) (ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                              ADIO_Offset len);
 };
 
 /* optypes for ADIO_RequestD */
@@ -814,43 +814,51 @@ int MPIOI_File_iread_all(MPI_File fh,
 
 #if defined(F_SETLKW64)
 
-#define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
-     ADIOI_Set_lock64((fd)->fd_sys, F_SETLKW64, F_WRLCK, offset, whence, len)
-#define ADIOI_READ_LOCK(fd, offset, whence, len) \
-     ADIOI_Set_lock64((fd)->fd_sys, F_SETLKW64, F_RDLCK, offset, whence, len)
-#define ADIOI_UNLOCK(fd, offset, whence, len) \
-     ADIOI_Set_lock64((fd)->fd_sys, F_SETLK64, F_UNLCK, offset, whence, len)
+#define ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW64, F_WRLCK, offset, whence, len)
+#define ADIOI_READ_LOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW64, F_RDLCK, offset, whence, len)
+#define ADIOI_UNLOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLK64, F_UNLCK, offset, whence, len)
 
 #else
+
+#define ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW, F_WRLCK, offset, whence, len)
+#define ADIOI_READ_LOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW, F_RDLCK, offset, whence, len)
+#define ADIOI_UNLOCK_FUNC(fd, offset, whence, len) \
+        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLK, F_UNLCK, offset, whence, len)
+
+#endif
+
 
 #ifdef ADIOI_MPE_LOGGING
 #define ADIOI_WRITE_LOCK(fd, offset, whence, len) do { \
         MPE_Log_event(ADIOI_MPE_writelock_a, 0, NULL); \
-        ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_WRLCK, offset, whence, len); \
+        ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_writelock_b, 0, NULL); } while (0)
 #define ADIOI_READ_LOCK(fd, offset, whence, len) \
         MPE_Log_event(ADIOI_MPE_readlock_a, 0, NULL); do { \
-        ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_RDLCK, offset, whence, len); \
+        ADIOI_READ_LOCK_FUNC(fd, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_readlock_b, 0, NULL); } while (0)
 #define ADIOI_UNLOCK(fd, offset, whence, len) do { \
         MPE_Log_event(ADIOI_MPE_unlock_a, 0, NULL); \
-        ADIOI_Set_lock((fd)->fd_sys, F_SETLK, F_UNLCK, offset, whence, len); \
+        ADIOI_UNLOCK_FUNC(fd, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_unlock_b, 0, NULL); } while (0)
 #else
 #define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_WRLCK, offset, whence, len)
+        ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len)
 #define ADIOI_READ_LOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_RDLCK, offset, whence, len)
+        ADIOI_READ_LOCK_FUNC(fd, offset, whence, len)
 #define ADIOI_UNLOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, F_SETLK, F_UNLCK, offset, whence, len)
+        ADIOI_UNLOCK_FUNC(fd, offset, whence, len)
 #endif
 
-#endif
-
-int ADIOI_Set_lock(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int whence,
-                   ADIO_Offset len);
-int ADIOI_Set_lock64(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int whence,
-                     ADIO_Offset len);
+int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                      ADIO_Offset len);
+int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
+                        ADIO_Offset len);
 
 #define ADIOI_Malloc(a) ADIOI_Malloc_fn(a,__LINE__,__FILE__)
 #define ADIOI_Calloc(a,b) ADIOI_Calloc_fn(a,b,__LINE__,__FILE__)

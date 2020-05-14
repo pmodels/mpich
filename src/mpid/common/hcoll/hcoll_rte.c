@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2014 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -268,7 +267,7 @@ static int group_id(rte_grp_handle_t group)
 static void *get_coll_handle(void)
 {
     MPIR_Request *req;
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
     MPIR_Request_add_ref(req);
     return (void *) req;
 }
@@ -356,7 +355,7 @@ static int get_mpi_type_envelope(void *mpi_type, int *num_integers,
                                  hcoll_mpi_type_combiner_t * combiner)
 {
     int mpi_combiner;
-    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+    MPI_Datatype dt_handle = (MPI_Datatype) (intptr_t) mpi_type;
 
     MPIR_Type_get_envelope(dt_handle, num_integers, num_addresses, num_datatypes, &mpi_combiner);
 
@@ -370,7 +369,7 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
                                  void *array_of_addresses, void *array_of_datatypes)
 {
     int ret;
-    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+    MPI_Datatype dt_handle = (MPI_Datatype) (intptr_t) mpi_type;
 
     ret = MPIR_Type_get_contents(dt_handle,
                                  max_integers, max_addresses, max_datatypes,
@@ -383,7 +382,7 @@ static int get_mpi_type_contents(void *mpi_type, int max_integers, int max_addre
 
 static int get_hcoll_type(void *mpi_type, dte_data_representation_t * hcoll_type)
 {
-    MPI_Datatype dt_handle = (MPI_Datatype) mpi_type;
+    MPI_Datatype dt_handle = (MPI_Datatype) (intptr_t) mpi_type;
     MPIR_Datatype *dt_ptr;
 
     *hcoll_type = mpi_dtype_2_hcoll_dtype(dt_handle, -1, TRY_FIND_DERIVED);

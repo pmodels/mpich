@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef POSIX_PRE_H_INCLUDED
@@ -38,10 +32,17 @@ typedef enum {
 
 struct MPIR_Request;
 
+typedef struct {
+    void *csel_root;
+} MPIDI_POSIX_Global_t;
+
+extern char MPIDI_POSIX_coll_generic_json[];
+
 /* These structs are populated with dummy variables because empty structs are not supported in all
  * compilers: https://stackoverflow.com/a/755339/491687 */
 typedef struct {
-    MPIDI_POSIX_release_gather_comm_t *release_gather;
+    MPIDI_POSIX_release_gather_comm_t release_gather;
+    void *csel_comm;
 } MPIDI_POSIX_comm_t;
 
 typedef struct {
@@ -78,8 +79,6 @@ typedef struct MPIDI_POSIX_am_request_header {
     MPIDI_POSIX_am_header_t msg_hdr_buf;
 
     uint8_t am_hdr_buf[MPIDI_POSIX_MAX_AM_HDR_SIZE];
-
-    int (*cmpl_handler_fn) (MPIR_Request * req);
 
     int handler_id;
     int dst_grank;
@@ -138,7 +137,6 @@ do { \
 
 typedef struct {
     MPL_proc_mutex_t *shm_mutex_ptr;    /* interprocess mutex for shm atomic RMA */
-    MPL_shm_hnd_t shm_mutex_segment_handle;
 } MPIDI_POSIX_win_t;
 
 /*
@@ -146,37 +144,35 @@ typedef struct {
  * Called by both POSIX RMA and fallback AM handlers through CS hooks.
  */
 #define MPIDI_POSIX_RMA_MUTEX_INIT(mutex_ptr) do {                                  \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_create(mutex_ptr, &pt_err);                                      \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_create");            \
 } while (0);
 
 #define MPIDI_POSIX_RMA_MUTEX_DESTROY(mutex_ptr)  do {                              \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_destroy(mutex_ptr, &pt_err);                                     \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_destroy");           \
 } while (0);
 
 #define MPIDI_POSIX_RMA_MUTEX_LOCK(mutex_ptr) do {                                  \
-    int pt_err = MPL_PROC_MUTEX_SUCCESS;                                            \
+    int pt_err = MPL_SUCCESS;                                            \
     MPL_proc_mutex_lock(mutex_ptr, &pt_err);                                        \
-    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,               \
+    MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,               \
                          MPI_ERR_OTHER, "**windows_mutex",                          \
                          "**windows_mutex %s", "MPL_proc_mutex_lock");              \
 } while (0)
 
 #define MPIDI_POSIX_RMA_MUTEX_UNLOCK(mutex_ptr) do {                                \
-        int pt_err = MPL_PROC_MUTEX_SUCCESS;                                        \
+        int pt_err = MPL_SUCCESS;                                        \
         MPL_proc_mutex_unlock(mutex_ptr, &pt_err);                                  \
-        MPIR_ERR_CHKANDJUMP1(pt_err != MPL_PROC_MUTEX_SUCCESS, mpi_errno,           \
+        MPIR_ERR_CHKANDJUMP1(pt_err != MPL_SUCCESS, mpi_errno,           \
                              MPI_ERR_OTHER, "**windows_mutex",                      \
                              "**windows_mutex %s", "MPL_proc_mutex_unlock");        \
 } while (0)
 
-#include "posix_coll_params.h"
-#include "posix_coll_containers.h"
 #endif /* POSIX_PRE_H_INCLUDED */

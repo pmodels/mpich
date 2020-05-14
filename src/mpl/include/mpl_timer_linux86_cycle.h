@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPL_TIMER_LINUX86_CYCLE_H_INCLUDED
@@ -36,7 +35,7 @@ static inline int MPL_wtime(MPL_time_t * timeval)
 #error Dont know which Linux timer to use
 #endif
 
-    return MPL_TIMER_SUCCESS;
+    return MPL_SUCCESS;
 }
 
 #endif /* MPL_TIMER_LINUX86_CYCLE_H_INCLUDED */

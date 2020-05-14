@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2015 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 
@@ -153,7 +152,3 @@ static void usage(const char *prog)
     printf("\n<OPTIONS> is one or more of\n");
     printf(" -h       print this help\n");
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2014 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -15,7 +14,7 @@ cvars:
       category    : COLLECTIVE
       type        : boolean
       default     : false
-      class       : device
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
@@ -53,8 +52,8 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
 {
     if (1 == hcoll_initialized) {
         hcoll_finalize();
-        MPID_Progress_deactivate_hook(hcoll_progress_hook_id);
-        MPID_Progress_deregister_hook(hcoll_progress_hook_id);
+        MPIR_Progress_hook_deactivate(hcoll_progress_hook_id);
+        MPIR_Progress_hook_deregister(hcoll_progress_hook_id);
     }
     hcoll_initialized = 0;
     return 0;
@@ -77,7 +76,7 @@ int hcoll_initialize(void)
     mpi_errno = MPI_SUCCESS;
 
     hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
-        !MPIR_ThreadInfo.isThreaded;
+        MPIR_ThreadInfo.thread_provided != MPI_THREAD_MULTIPLE;
     if (0 >= hcoll_enable) {
         goto fn_exit;
     }
@@ -91,21 +90,17 @@ int hcoll_initialize(void)
     init_opts->base_tag = MPIR_FIRST_HCOLL_TAG;
     init_opts->max_tag = MPIR_LAST_HCOLL_TAG;
 
-#if defined MPICH_IS_THREADED
-    init_opts->enable_thread_support = MPIR_ThreadInfo.isThreaded;
-#else
-    init_opts->enable_thread_support = 0;
-#endif
+    init_opts->enable_thread_support = MPIR_IS_THREADED;
 
     mpi_errno = hcoll_init_with_opts(&init_opts);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!hcoll_initialized) {
         hcoll_initialized = 1;
-        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress, &hcoll_progress_hook_id);
+        mpi_errno = MPIR_Progress_hook_register(hcoll_do_progress, &hcoll_progress_hook_id);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPID_Progress_activate_hook(hcoll_progress_hook_id);
+        MPIR_Progress_hook_activate(hcoll_progress_hook_id);
     }
     MPIR_Add_finalize(hcoll_destroy, 0, 0);
 
@@ -158,6 +153,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
+
     comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
     if (NULL == comm_ptr->hcoll_priv.hcoll_context) {
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
@@ -198,7 +194,12 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 int hcoll_do_progress(int *made_progress)
 {
     *made_progress = 1;
-    hcoll_progress_fn();
 
+    /* hcoll_progress_fn() has been deprecated since v4.0. */
+#if HCOLL_API < HCOLL_VERSION(4,0)
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+    hcoll_progress_fn();
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_HCOLL_MUTEX);
+#endif
     return MPI_SUCCESS;
 }

@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* Header protection (i.e., IALLTOALLV_TSP_ALGOS_PROTOTYPES_H_INCLUDED) is
@@ -24,9 +18,10 @@ int MPIR_TSP_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendc
                                             const int sdispls[], MPI_Datatype sendtype,
                                             void *recvbuf, const int recvcounts[],
                                             const int rdispls[], MPI_Datatype recvtype,
-                                            MPIR_Comm * comm, MPIR_TSP_sched_t * s);
+                                            MPIR_Comm * comm, int bblock, MPIR_TSP_sched_t * s);
 
 int MPIR_TSP_Ialltoallv_intra_blocked(const void *sendbuf, const int sendcounts[],
                                       const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
                                       const int recvcounts[], const int rdispls[],
-                                      MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request ** req);
+                                      MPI_Datatype recvtype, MPIR_Comm * comm, int bblock,
+                                      MPIR_Request ** req);

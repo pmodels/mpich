@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidimpl.h"
@@ -30,10 +29,9 @@ char *MPIDI_DBG_parent_str = "?";
 
 #include "datatype.h"
 
-static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
+static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p);
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
-static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state);
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
@@ -64,29 +62,7 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
-static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    char *endptr;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-
-    comm_ptr->dev.eager_max_msg_sz = strtol(info->value, &endptr, 0);
-
-    MPIR_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
-                         "**infohintparse", "**infohintparse %s",
-                         info->key);
-
- fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-
-int MPID_Init(int *argc, char ***argv, int requested, int *provided)
+int MPID_Init(int requested, int *provided)
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -100,6 +76,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    if (MPICH_THREAD_LEVEL >= requested)
+        *provided = requested;
+    else
+        *provided = MPICH_THREAD_LEVEL;
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
@@ -133,7 +114,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = init_pg(argc, argv, &has_parent, &pg_rank, &pg);
+    mpi_errno = init_pg(&has_parent, &pg_rank, &pg);
     if (mpi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
     }
@@ -256,21 +237,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
 
     MPIR_Process.has_parent = has_parent;
 
-    /*
-     * Set provided thread level
-     */
-    if (provided != NULL)
-    {
-	/* This must be min(requested,MPICH_THREAD_LEVEL) if runtime
-	   control of thread level is available */
-	*provided = (MPICH_THREAD_LEVEL < requested) ? 
-	    MPICH_THREAD_LEVEL : requested;
-    }
-
-    mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
-                                        set_eager_threshold,
-                                        NULL);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_Comm_register_hint(MPIR_COMM_HINT_EAGER_THRESH, "eager_rendezvous_threshold",
+                            NULL, MPIR_COMM_HINT_TYPE_INT, 0);
 
     mpi_errno = MPIDI_RMA_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -285,13 +253,76 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided)
     /* --END ERROR HANDLING-- */
 }
 
+static int init_spawn(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char * parent_port;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT_SPAWN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT_SPAWN);
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+
+    /* FIXME: To allow just the "root" process to
+       request the port and then use MPIR_Bcast_allcomm_auto to
+       distribute it to the rest of the processes,
+       we need to perform the Bcast after MPI is
+       otherwise initialized.  We could do this
+       by adding another MPID call that the MPI_Init(_thread)
+       routine would make after the rest of MPI is
+       initialized, but before MPI_Init returns.
+       In fact, such a routine could be used to
+       perform various checks, including parameter
+       consistency value (e.g., all processes have the
+       same environment variable values). Alternately,
+       we could allow a few routines to operate with
+       predefined parameter choices (e.g., bcast, allreduce)
+       for the purposes of initialization. */
+    mpi_errno = MPIDI_CH3_GetParentPort(&parent_port);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
+                            "**ch3|get_parent_port");
+    }
+    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Parent port is %s", parent_port);
+
+    mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, MPIR_Process.comm_world,
+                                  &MPIR_Process.comm_parent);
+    MPIR_ERR_CHKANDJUMP1(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                         "**ch3|conn_parent",
+                         "**ch3|conn_parent %s", parent_port);
+
+    MPIR_Assert(MPIR_Process.comm_parent != NULL);
+    MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+
+    /* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
+       if not already freed.  */
+#endif
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT_SPAWN);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* This allows each channel to perform final initialization after the
  rest of MPI_Init completes.  */
 int MPID_InitCompleted( void )
 {
     int mpi_errno;
+
+    if (MPIR_Process.has_parent) {
+        mpi_errno = init_spawn();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     mpi_errno = MPIDI_CH3_InitCompleted();
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 /*
@@ -300,7 +331,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
+static int init_pg(int *has_parent, int *pg_rank_p, MPIDI_PG_t **pg_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int pg_rank, pg_size, appnum;
@@ -361,8 +392,7 @@ static int init_pg(int *argc, char ***argv, int *has_parent, int *pg_rank_p, MPI
     /*
      * Initialize the process group tracking subsystem
      */
-    mpi_errno = MPIDI_PG_Init(argc, argv, 
-			     pg_compare_ids, pg_destroy);
+    mpi_errno = MPIDI_PG_Init(pg_compare_ids, pg_destroy);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**dev|pg_init");
     }

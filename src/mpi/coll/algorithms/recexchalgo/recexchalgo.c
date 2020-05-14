@@ -1,11 +1,6 @@
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2018 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -198,12 +193,12 @@ int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
 {
     int step2rank;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
 
     step2rank = (rank < T) ? rank / k : rank - rem;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_ORIGRANK_TO_STEP2RANK);
 
     return step2rank;
 }
@@ -213,12 +208,12 @@ int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
 {
     int orig_rank;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
 
     orig_rank = (rank < rem / (k - 1)) ? (rank * k) + (k - 1) : rank + rem;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORIGRANK);
 
     return orig_rank;
 }
@@ -284,13 +279,14 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(2);
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
 
     while (pofk <= comm_size) {
         pofk *= k;
         log_pofk++;
     }
+    MPIR_Assert(log_pofk > 0);
     pofk /= k;
     log_pofk--;
 
@@ -334,7 +330,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "reverse_rank is %d", step2_reverse_rank));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();

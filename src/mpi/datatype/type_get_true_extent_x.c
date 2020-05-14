@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2011 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -68,7 +67,6 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * true_lb, MPI_C
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -118,7 +116,6 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * true_lb, MPI_C
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 #ifdef HAVE_ERROR_CHECKING

@@ -1,14 +1,6 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2018-2020 by Intel Corporation
-##
-## GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
-## The Government's rights to use, modify, reproduce, release, perform, display,
-## or disclose this software are subject to the terms of the Apache License as
-## provided in Contract No. 8F-30005.
-## Any reproduction of computer software, computer software documentation, or
-## portions thereof marked with this legend must also reproduce the markings.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 if BUILD_AD_DAOS

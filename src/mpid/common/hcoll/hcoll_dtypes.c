@@ -1,5 +1,10 @@
-#include "hcoll/api/hcoll_dte.h"
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
+
 #include "mpiimpl.h"
+#include "hcoll/api/hcoll_dte.h"
 #include "hcoll_dtypes.h"
 
 extern int hcoll_initialized;

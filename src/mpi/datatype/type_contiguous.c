@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2002 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -55,6 +54,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     new_dtp->attributes = NULL;
     new_dtp->name[0] = 0;
     new_dtp->contents = NULL;
+    new_dtp->flattened = NULL;
 
     new_dtp->typerep = NULL;
 
@@ -115,11 +115,17 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
             new_dtp->max_contig_blocks = count * old_dtp->max_contig_blocks;
     }
 
+    mpi_errno = MPIR_Typerep_create_contig(count, oldtype, &new_dtp->typerep);
+    MPIR_ERR_CHECK(mpi_errno);
+
     *newtype = new_dtp->handle;
 
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "contig type %x created.", new_dtp->handle);
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -226,7 +232,6 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CONTIGUOUS);
 
 #ifdef HAVE_ERROR_CHECKING
@@ -260,7 +265,6 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CONTIGUOUS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

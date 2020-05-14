@@ -1,10 +1,8 @@
 !
-! -*- Mode: Fortran; -*- 
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
-!  (C) 2012 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
-!
-!
+
 ! In MPI 2.2, the behavior of attributes set in one language and retrieved
 ! from another was defined.  There are three types of attribute values:
 !  1. pointer (void *): "The C type"

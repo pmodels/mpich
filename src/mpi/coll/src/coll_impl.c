@@ -1,12 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -18,16 +12,42 @@
 cvars:
     - name        : MPIR_CVAR_DEVICE_COLLECTIVES
       category    : COLLECTIVE
-      type        : boolean
-      default     : true
-      class       : device
+      type        : enum
+      default     : percoll
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select whether the device can override the
+        MPIR-level collective algorithms.
+        all     - Always prefer the device collectives
+        none    - Never pick the device collectives
+        percoll - Use the per-collective CVARs to decide
+
+    - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
+      category    : COLLECTIVE
+      type        : enum
+      default     : error
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to control what the MPI library should do if the
+        user-specified collective algorithm does not work for the
+        arguments passed in by the user.
+        error   - throw an error
+        print   - print an error message and fallback to the internally selected algorithm
+        silent  - silently fallback to the internally selected algorithm
+
+    - name        : MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE
+      category    : COLLECTIVE
+      type        : string
+      default     : ""
+      class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If set to true, MPI collectives will allow the device to override
-        the MPIR-level collective algorithms. The device still has the
-        option to call the MPIR-level algorithms manually.  If set to false,
-        the device-level collective function will not be called.
+        Defines the location of tuning file.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -37,6 +57,8 @@ int MPIR_Nbc_progress_hook_id = 0;
 MPIR_Tree_type_t MPIR_Iallreduce_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ibcast_tree_type = MPIR_TREE_TYPE_KARY;
 MPIR_Tree_type_t MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
+
+void *MPIR_Csel_root = NULL;
 
 int MPII_Coll_init(void)
 {
@@ -71,7 +93,7 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_tree_type = MPIR_TREE_TYPE_KARY;
 
     /* register non blocking collectives progress hook */
-    mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
+    mpi_errno = MPIR_Progress_hook_register(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* initialize transports */
@@ -88,6 +110,16 @@ int MPII_Coll_init(void)
     mpi_errno = MPII_Recexchalgo_init();
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* initialize selection tree */
+    if (!strcmp(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE, "")) {
+        mpi_errno = MPIR_Csel_create_from_buf(MPII_coll_generic_json,
+                                              MPII_Create_container, &MPIR_Csel_root);
+    } else {
+        mpi_errno = MPIR_Csel_create_from_file(MPIR_CVAR_COLL_SELECTION_TUNING_JSON_FILE,
+                                               MPII_Create_container, &MPIR_Csel_root);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -99,11 +131,14 @@ int MPII_Coll_finalize(void)
     int mpi_errno = MPI_SUCCESS;
 
     /* deregister non blocking collectives progress hook */
-    MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
+    MPIR_Progress_hook_deregister(MPIR_Nbc_progress_hook_id);
 
     mpi_errno = MPII_Gentran_finalize();
     MPIR_ERR_CHECK(mpi_errno);
     mpi_errno = MPII_Stubtran_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = MPIR_Csel_free(MPIR_Csel_root);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -139,6 +174,9 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
     mpi_errno = MPII_Gentran_comm_init(comm);
     MPIR_ERR_CHECK(mpi_errno);
 
+    mpi_errno = MPIR_Csel_prune(MPIR_Csel_root, comm, &comm->csel_comm);
+    MPIR_ERR_CHECK(mpi_errno);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -149,6 +187,9 @@ int MPIR_Coll_comm_init(MPIR_Comm * comm)
 int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Csel_free(comm->csel_comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* cleanup all collective communicators */
     mpi_errno = MPII_Stubalgo_comm_cleanup(comm);

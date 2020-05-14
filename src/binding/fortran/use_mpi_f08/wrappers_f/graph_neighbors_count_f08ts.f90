@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Graph_neighbors_count_f08(comm, rank, nneighbors, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Comm

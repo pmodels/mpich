@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2019 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef XPMEM_PRE_H_INCLUDED
@@ -12,6 +11,10 @@
 #define MPIDI_XPMEM_PERMIT_VALUE ((void *)0600)
 #define MPIDI_XPMEM_SEG_PREALLOC 8      /* Number of segments to preallocate in the "direct" block */
 #define MPIDI_XPMEM_CNT_PREALLOC 64     /* Number of shm counter to preallocate in the "direct" block */
+
+typedef struct {
+    int dummy;
+} MPIDI_XPMEM_Global_t;
 
 /* Variables used to indicate coop copy completion cases.
  *  See more explanation in xpmem_recv.h and xpmem_control.c */
@@ -44,7 +47,7 @@ typedef union MPIDI_XPMEM_cnt {
     MPIR_Handle_common common;  /* ensure sufficient bytes required for MPIR_Handle_common */
     struct {
         MPIR_OBJECT_HEADER;
-        OPA_int_t counter;
+        MPL_atomic_int_t counter;
     } obj;
 } MPIDI_XPMEM_cnt_t;
 

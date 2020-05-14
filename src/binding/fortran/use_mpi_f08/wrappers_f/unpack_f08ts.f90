@@ -1,8 +1,8 @@
-!   -*- Mode: Fortran; -*-
 !
-!   (C) 2014 by Argonne National Laboratory.
-!   See COPYRIGHT in top-level directory.
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
 !
+
 subroutine MPI_Unpack_f08ts(inbuf, insize, position, outbuf, outcount, datatype, comm, &
     ierror)
     use, intrinsic :: iso_c_binding, only : c_int

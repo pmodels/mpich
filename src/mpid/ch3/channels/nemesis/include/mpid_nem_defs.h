@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_NEM_DEFS_H_INCLUDED
@@ -34,22 +33,22 @@ typedef MPI_Aint MPID_nem_addr_t;
 extern  char *MPID_nem_asymm_base_addr;
 
 #define MPID_NEM_REL_NULL (0x0)
-#define MPID_NEM_IS_REL_NULL(rel_ptr) (OPA_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
-#define MPID_NEM_SET_REL_NULL(rel_ptr) (OPA_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
+#define MPID_NEM_IS_REL_NULL(rel_ptr) (MPL_atomic_relaxed_load_ptr(&(rel_ptr).p) == MPID_NEM_REL_NULL)
+#define MPID_NEM_SET_REL_NULL(rel_ptr) (MPL_atomic_relaxed_store_ptr(&((rel_ptr).p), MPID_NEM_REL_NULL))
 #define MPID_NEM_REL_ARE_EQUAL(rel_ptr1, rel_ptr2) \
-    (OPA_load_ptr(&(rel_ptr1).p) == OPA_load_ptr(&(rel_ptr2).p))
+    (MPL_atomic_relaxed_load_ptr(&(rel_ptr1).p) == MPL_atomic_relaxed_load_ptr(&(rel_ptr2).p))
 
 #ifndef MPID_NEM_SYMMETRIC_QUEUES
 
 static inline MPID_nem_cell_ptr_t MPID_NEM_REL_TO_ABS (MPID_nem_cell_rel_ptr_t r)
 {
-    return (MPID_nem_cell_ptr_t)((char*)OPA_load_ptr(&r.p) + (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    return (MPID_nem_cell_ptr_t)((char*)MPL_atomic_relaxed_load_ptr(&r.p) + (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
 }
 
 static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a)
 {
     MPID_nem_cell_rel_ptr_t ret;
-    OPA_store_ptr(&ret.p, (char *)a - (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
+    MPL_atomic_relaxed_store_ptr(&ret.p, (char *)a - (MPID_nem_addr_t)MPID_nem_asymm_base_addr);
     return ret;
 }
 

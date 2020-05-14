@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2012 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -35,6 +33,8 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
     mpi_errno = MPIR_Info_alloc(info_p_p);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
+
+    MPII_Comm_get_hints(comm_ptr, *info_p_p);
 
   fn_exit:
     return mpi_errno;
@@ -78,7 +78,6 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_GET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -123,7 +122,6 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_GET_INFO);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

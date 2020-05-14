@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2015 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpl.h"
@@ -20,7 +19,7 @@ void MPL_backtrace_show(FILE * output)
     for (_mpl_backtrace_size_t i = 0; i < frames; i++)
         fprintf(output, "%s\n", strs[i]);
 
-    MPL_free(strs);
+    MPL_external_free(strs);
 }
 #else
 void MPL_backtrace_show(FILE * output)

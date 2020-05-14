@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2017 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -17,8 +16,8 @@ int MPIR_Neighbor_allgatherv_allcomm_nb(const void *sendbuf, int sendcount, MPI_
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                          recvbuf, recvcounts, displs, recvtype,
-                                          comm_ptr, &req_ptr);
+                                          recvbuf, recvcounts, displs, recvtype, comm_ptr,
+                                          &req_ptr);
     MPIR_ERR_CHECK(mpi_errno);
     if (req_ptr)
         req = req_ptr->handle;

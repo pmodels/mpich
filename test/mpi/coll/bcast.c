@@ -1,9 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2003 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,10 +113,12 @@ int main(int argc, char *argv[])
                 if (err != DTP_SUCCESS) {
                     errs++;
                     if (errs < 10) {
+                        char *desc;
+                        DTP_obj_get_description(obj, &desc);
                         fprintf(stderr,
-                                "Data received with type %s does not match data sent\n",
-                                obj.DTP_description);
+                                "Data received with type %s does not match data sent\n", desc);
                         fflush(stderr);
+                        free(desc);
                     }
                 }
 

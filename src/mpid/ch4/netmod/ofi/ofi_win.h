@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef OFI_WIN_H_INCLUDED
 #define OFI_WIN_H_INCLUDED
 
@@ -38,9 +33,7 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
 
     while (tcount > donecount) {
         MPIR_Assert(donecount <= tcount);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_global.vci_lock);
         MPIDI_OFI_PROGRESS();
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_global.vci_lock);
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
         itercount++;
 

@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2009 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIEXEC_H_INCLUDED
@@ -11,7 +10,6 @@
 
 struct HYD_ui_mpich_info_s {
     int ppn;
-    int ckpoint_int;
     int print_all_exitcodes;
 
     enum HYD_sort_order {

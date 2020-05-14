@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_pvfs2.h"
@@ -48,7 +46,3 @@ void ADIOI_PVFS2_Flush(ADIO_File fd, int *error_code)
     }
     /* --END ERROR HANDLING-- */
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

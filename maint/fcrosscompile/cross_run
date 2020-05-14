@@ -1,4 +1,8 @@
-#!/bin/sh
+#! /bin/sh
+##
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
+##
 
 # This script takes one argument, $pgm, and run it on $BACKEND.
 BACKEND=mic0

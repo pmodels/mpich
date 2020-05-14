@@ -1,9 +1,11 @@
-!**********************************************************************
-!   pi3f90.f - compute pi by integrating f(x) = 4/(1 + x**2)     
 !
-!  (C) 2001 by Argonne National Laboratory.
-!      See COPYRIGHT in top-level directory.
-!     
+! Copyright (C) by Argonne National Laboratory
+!     See COPYRIGHT in top-level directory
+!
+
+!**********************************************************************
+!   pi3f90.f - compute pi by integrating f(x) = 4/(1 + x**2)
+!
 !   Each node: 
 !    1) receives the number of rectangles used in the approximation.
 !    2) calculates the areas of it's rectangles.

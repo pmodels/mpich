@@ -1,8 +1,6 @@
-## -*- Mode: Makefile; -*-
-## vim: set ft=automake :
 ##
-## (C) 2016 by Argonne National Laboratory.
-##     See COPYRIGHT in top-level directory.
+## Copyright (C) by Argonne National Laboratory
+##     See COPYRIGHT in top-level directory
 ##
 
 noinst_HEADERS += src/timer/mpl_timer_common.h
@@ -14,7 +12,4 @@ lib@MPLLIBNAME@_la_SOURCES += \
     src/timer/mpl_timer_gettimeofday.c \
     src/timer/mpl_timer_linux86_cycle.c \
     src/timer/mpl_timer_ppc64_cycle.c \
-    src/timer/mpl_timer_mach_absolute_time.c \
-    src/timer/mpl_timer_query_performance_counter.c \
-    src/timer/mpl_timer_win86_cycle.c \
-    src/timer/mpl_timer_device.c
+    src/timer/mpl_timer_mach_absolute_time.c

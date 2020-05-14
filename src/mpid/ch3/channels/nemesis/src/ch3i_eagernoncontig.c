@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpidi_ch3_impl.h"
@@ -15,7 +14,7 @@
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as msg_offset and msgsize. */
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz,
-                              MPL_IOV *hdr_iov, int n_hdr_iov)
+                              struct iovec *hdr_iov, int n_hdr_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;

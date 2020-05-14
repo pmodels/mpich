@@ -1,14 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- * Copyright (C) 2018-2020 Intel Corporation
- *
- * GOVERNMENT LICENSE RIGHTS-OPEN SOURCE SOFTWARE
- * The Government's rights to use, modify, reproduce, release, perform, display,
- * or disclose this software are subject to the terms of the Apache License as
- * provided in Contract No. 8F-30005.
- * Any reproduction of computer software, computer software documentation, or
- * portions thereof marked with this legend must also reproduce the markings.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "ad_daos.h"
@@ -249,10 +241,9 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
     return rc;
 }
 
+
 static int cache_handles(struct ADIO_DAOS_cont *cont)
 {
-    char *uuid_str;
-    static char myname[] = "ADIOI_DAOS_OPEN";
     int rc;
 
     cont->c = adio_daos_coh_lookup(cont->cuuid);
@@ -261,7 +252,7 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
         rc = adio_daos_coh_insert(cont->cuuid, cont->coh, &cont->c);
     } else {
         /** g2l handle not needed, already cached */
-        daos_cont_close(cont->coh, NULL);
+        rc = daos_cont_close(cont->coh, NULL);
         cont->coh = cont->c->open_hdl;
     }
     if (rc)
@@ -532,7 +523,7 @@ handle_share(daos_handle_t * poh, daos_handle_t * coh, dfs_t ** dfs,
     return rc;
 }
 
-int
+static int
 get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
                     daos_oclass_id_t * oclass, daos_size_t * chunk_size)
 {
@@ -548,7 +539,7 @@ get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
          * parent dir. we still don't support nested dirs in the UNS. */
         rc = duns_resolve_path(path, &attr);
         if (rc) {
-            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s\n", path, rc);
+            PRINT_MSG(stderr, "duns_resolve_path() failed on path %s (%d)\n", path, rc);
             return -DER_INVAL;
         }
 
@@ -561,6 +552,8 @@ get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
         uuid_copy(*cuuid, attr.da_cuuid);
         *oclass = (attr.da_oclass_id == OC_UNKNOWN) ? OC_SX : attr.da_oclass_id;
         *chunk_size = attr.da_chunk_size;
+
+        return 0;
     }
 
     /* use the env variables to retrieve the pool and container */
@@ -790,50 +783,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
                                                __LINE__, rc, "File Open error", 0);
             goto err_free;
         }
-#if 0
-        share_uuid_info(cont, rank, comm);
-        rc = handle_share(&cont->poh, NULL, NULL, NULL, HANDLE_POOL, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-        rc = handle_share(&cont->poh, &cont->coh, NULL, NULL, HANDLE_CO, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-
-        if (rank != 0) {
-            rc = cache_handles(cont, error_code);
-            if (rc)
-                goto err_free;
-        }
-
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, NULL, HANDLE_DFS, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-
-        if (rank != 0) {
-            if (cont->c->dfs == NULL) {
-                cont->c->dfs = cont->dfs;
-            } else {
-                dfs_umount(cont->dfs);
-                cont->dfs = cont->c->dfs;
-            }
-        }
-
-        rc = handle_share(&cont->poh, &cont->coh, &cont->dfs, &cont->obj, HANDLE_OBJ, rank, comm);
-        if (rc) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname,
-                                               __LINE__, rc, "File Open error", 0);
-            goto err_free;
-        }
-#endif
     }
 
     fd->is_open = 1;
@@ -875,7 +824,7 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     if (*error_code != MPI_SUCCESS)
         return;
 
-    parse_filename(filename, &obj_name, &cont_name);
+    rc = parse_filename(filename, &obj_name, &cont_name);
     if (rc) {
         *error_code = MPI_ERR_NO_MEM;
         return;

@@ -1,8 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2014 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
     int required, provided;
     int num_cvar;
     char name[MAX_VAR_NAME_LEN];
-    int namelen, verbosity, datatype, desclen, binding, scope, count;
+    int namelen, verbosity, desclen, binding, scope, count;
+    MPI_Datatype datatype;
     MPI_T_enum enumtype = MPI_T_ENUM_NULL;
     int iin, iout, iold;
     unsigned uin, uout, uold;

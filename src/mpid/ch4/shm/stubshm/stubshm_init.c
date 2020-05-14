@@ -1,17 +1,11 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "stubshm_impl.h"
 
-int MPIDI_STUBSHM_mpi_init_hook(int rank, int size, int *n_vcis_provided)
+int MPIDI_STUBSHM_mpi_init_hook(int rank, int size)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_INIT_HOOK);
@@ -26,12 +20,12 @@ int MPIDI_STUBSHM_get_vci_attr(int vci)
 {
     int ret = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_VCI_ATTR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_VCI_ATTR);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_QUERY_VCI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_GET_VCI_ATTR);
     return ret;
 }
 
@@ -127,10 +121,10 @@ int MPIDI_STUBSHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size,
 int MPIDI_STUBSHM_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_COMMIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_COMMIT_HOOK);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_TYPE_COMMIT_HOOK);
     return mpi_errno;
 }
 
@@ -147,10 +141,10 @@ int MPIDI_STUBSHM_mpi_type_free_hook(MPIR_Datatype * type)
 int MPIDI_STUBSHM_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_OP_CREATE_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_OP_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_OP_COMMIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_OP_COMMIT_HOOK);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_OP_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_OP_COMMIT_HOOK);
     return mpi_errno;
 }
 

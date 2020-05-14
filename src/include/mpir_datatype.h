@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPIR_DATATYPE_H_INCLUDED
@@ -134,6 +132,10 @@ struct MPIR_Datatype {
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
 
+    /* flattened representation */
+    void *flattened;
+    int flattened_sz;
+
     /* internal type representation */
     void *typerep;              /* might be optimized for homogenous */
 
@@ -148,6 +150,7 @@ extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
+void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
 
 #define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
@@ -443,6 +446,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
         MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
     }
     new_dtp->contents = cp;
+    new_dtp->flattened = NULL;
 
     /* increment reference counts on all the derived types used here */
     for (i = 0; i < nr_types; i++) {
@@ -538,10 +542,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
 char *MPIR_Datatype_combiner_to_string(int combiner);
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct);
-
-MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type);
-
-MPI_Aint MPII_Datatype_get_basic_size_external32(MPI_Datatype el_type);
 
 MPI_Aint MPII_Datatype_indexed_count_contig(MPI_Aint count,
                                             const MPI_Aint * blocklength_array,

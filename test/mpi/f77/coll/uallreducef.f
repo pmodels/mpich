@@ -1,9 +1,8 @@
-C -*- Mode: Fortran; -*- 
 C
-C  (C) 2003 by Argonne National Laboratory.
-C      See COPYRIGHT in top-level directory.
+C Copyright (C) by Argonne National Laboratory
+C     See COPYRIGHT in top-level directory
 C
-C
+
 C Test user-defined operations.  This tests a simple commutative operation
 C
       subroutine uop( cin, cout, count, datatype )

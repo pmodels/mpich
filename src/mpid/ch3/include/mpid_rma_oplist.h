@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef MPID_RMA_OPLIST_H_INCLUDED
@@ -118,7 +117,7 @@ static inline int MPIDI_CH3I_Win_set_active(MPIR_Win * win_ptr)
 
         if (MPIDI_RMA_Win_active_list_head == NULL) {
             /* This is the first active window, activate RMA progress */
-            MPID_Progress_activate_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+            MPIR_Progress_hook_activate(MPIDI_CH3I_RMA_Progress_hook_id);
         }
 
         DL_DELETE(MPIDI_RMA_Win_inactive_list_head, win_ptr);
@@ -143,7 +142,7 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPIR_Win * win_ptr)
 
         if (MPIDI_RMA_Win_active_list_head == NULL) {
             /* This is the last active window, de-activate RMA progress */
-            MPID_Progress_deactivate_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+            MPIR_Progress_hook_deactivate(MPIDI_CH3I_RMA_Progress_hook_id);
         }
     }
 

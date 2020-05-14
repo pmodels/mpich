@@ -1,9 +1,8 @@
-/* -*- Mode: C++; c-basic-offset:4 ; -*- */
 /*
- *
- *  (C) 2008 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 /* Include stdio.h first to see if the MPI implementation can handle the
    conflicting definitions in stdio.h for the SEEK_SET, SEEK_CUR, and
    SEEK_END */

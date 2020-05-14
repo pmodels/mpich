@@ -1,13 +1,8 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
+
 #ifndef CH4_TYPES_H_INCLUDED
 #define CH4_TYPES_H_INCLUDED
 
@@ -19,8 +14,6 @@
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
 
-#define MAX_PROGRESS_HOOKS 4
-
 /* VCI attributes */
 enum {
     MPIDI_VCI_TX = 0x1,         /* Can send */
@@ -29,12 +22,6 @@ enum {
 
 #define MPIDIU_BUF_POOL_NUM (1024)
 #define MPIDIU_BUF_POOL_SZ (256)
-
-typedef int (*progress_func_ptr_t) (int *made_progress);
-typedef struct progress_hook_slot {
-    progress_func_ptr_t func_ptr;
-    int active;
-} progress_hook_slot_t;
 
 /* Flags for MPIDI_Progress_test
  *
@@ -50,55 +37,6 @@ typedef struct progress_hook_slot {
 #define MPIDI_PROGRESS_SHM    (1<<2)
 
 #define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
-
-enum {
-    MPIDIG_SEND = 0,            /* Eager send */
-
-    MPIDIG_SEND_LONG_REQ,       /* Rendezvous send RTS (request to send) */
-    MPIDIG_SEND_LONG_ACK,       /* Rendezvous send CTS (clear to send) */
-    MPIDIG_SEND_LONG_LMT,       /* Rendezvous send LMT */
-
-    MPIDIG_SSEND_REQ,
-    MPIDIG_SSEND_ACK,
-
-    MPIDIG_PUT_REQ,
-    MPIDIG_PUT_ACK,
-    MPIDIG_PUT_IOV_REQ,
-    MPIDIG_PUT_DAT_REQ,
-    MPIDIG_PUT_IOV_ACK,
-
-    MPIDIG_GET_REQ,
-    MPIDIG_GET_ACK,
-
-    MPIDIG_ACC_REQ,
-    MPIDIG_ACC_ACK,
-    MPIDIG_ACC_IOV_REQ,
-    MPIDIG_ACC_DAT_REQ,
-    MPIDIG_ACC_IOV_ACK,
-
-    MPIDIG_GET_ACC_REQ,
-    MPIDIG_GET_ACC_ACK,
-    MPIDIG_GET_ACC_IOV_REQ,
-    MPIDIG_GET_ACC_DAT_REQ,
-    MPIDIG_GET_ACC_IOV_ACK,
-
-    MPIDIG_CSWAP_REQ,
-    MPIDIG_CSWAP_ACK,
-    MPIDIG_FETCH_OP,
-
-    MPIDIG_WIN_COMPLETE,
-    MPIDIG_WIN_POST,
-    MPIDIG_WIN_LOCK,
-    MPIDIG_WIN_LOCK_ACK,
-    MPIDIG_WIN_UNLOCK,
-    MPIDIG_WIN_UNLOCK_ACK,
-    MPIDIG_WIN_LOCKALL,
-    MPIDIG_WIN_LOCKALL_ACK,
-    MPIDIG_WIN_UNLOCKALL,
-    MPIDIG_WIN_UNLOCKALL_ACK,
-
-    MPIDIG_COMM_ABORT
-};
 
 enum {
     MPIDIG_EPOTYPE_NONE = 0,          /**< No epoch in affect */
@@ -129,11 +67,11 @@ typedef struct MPIDIG_hdr_t {
     int error_bits;
 } MPIDIG_hdr_t;
 
-typedef struct MPIDIG_send_long_req_mst_t {
+typedef struct MPIDIG_send_long_req_msg_t {
     MPIDIG_hdr_t hdr;
     size_t data_sz;             /* Message size in bytes */
     MPIR_Request *sreq_ptr;     /* Pointer value of the request object at the sender side */
-} MPIDIG_send_long_req_mst_t;
+} MPIDIG_send_long_req_msg_t;
 
 typedef struct MPIDIG_send_long_ack_msg_t {
     MPIR_Request *sreq_ptr;
@@ -164,18 +102,17 @@ typedef struct MPIDIG_put_msg_t {
     uint64_t win_id;
     MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_put_msg_t;
 
-typedef struct MPIDIG_put_iov_ack_msg_t {
+typedef struct MPIDIG_put_dt_ack_msg_t {
     int src_rank;
     MPIR_Request *target_preq_ptr;
     MPIR_Request *origin_preq_ptr;
-} MPIDIG_put_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_acc_iov_ack_msg_t;
-typedef MPIDIG_put_iov_ack_msg_t MPIDIG_get_acc_iov_ack_msg_t;
+} MPIDIG_put_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_acc_dt_ack_msg_t;
+typedef MPIDIG_put_dt_ack_msg_t MPIDIG_get_acc_dt_ack_msg_t;
 
 typedef struct MPIDIG_put_dat_msg_t {
     MPIR_Request *preq_ptr;
@@ -192,9 +129,8 @@ typedef struct MPIDIG_get_msg_t {
     uint64_t win_id;
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
-    uint64_t count;
-    MPI_Datatype datatype;
-    int n_iov;
+    MPI_Aint data_sz;
+    int flattened_sz;
 } MPIDIG_get_msg_t;
 
 typedef struct MPIDIG_get_ack_msg_t {
@@ -225,6 +161,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     MPI_Aint target_disp;
     uint64_t result_data_sz;
     int n_iov;
+    int flattened_sz;
 } MPIDIG_acc_req_msg_t;
 
 typedef struct MPIDIG_acc_req_msg_t MPIDIG_get_acc_req_msg_t;
@@ -277,12 +214,35 @@ typedef struct {
     unsigned mt_model;
 } MPIDI_CH4_configurations_t;
 
-#define MPIDIU_THREAD_PROGRESS_MUTEX MPIDI_global.m[0]
-#define MPIDIU_THREAD_PROGRESS_HOOK_MUTEX MPIDI_global.m[1]
-#define MPIDIU_THREAD_UTIL_MUTEX MPIDI_global.m[2]
+/* Defining them in the global struct avoids duplicate of declarations and
+ * definitions; However, it makes debugging a bit cryptic */
+#define MPIDIU_THREAD_PROGRESS_MUTEX      MPIDI_global.m[0]
+#define MPIDIU_THREAD_UTIL_MUTEX          MPIDI_global.m[1]
+
 /* Protects MPIDIG global structures (e.g. global unexpected message queue) */
-#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[3]
-#define MAX_CH4_MUTEXES 4
+#define MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX MPIDI_global.m[2]
+
+#define MPIDIU_THREAD_SCHED_LIST_MUTEX    MPIDI_global.m[3]
+#define MPIDIU_THREAD_TSP_QUEUE_MUTEX     MPIDI_global.m[4]
+#ifdef HAVE_LIBHCOLL
+#define MPIDIU_THREAD_HCOLL_MUTEX         MPIDI_global.m[5]
+#endif
+
+/* Protects dynamic process tag, connection_id, avtable etc. */
+#define MPIDIU_THREAD_DYNPROC_MUTEX       MPIDI_global.m[6]
+
+#define MAX_CH4_MUTEXES 7
+
+/* per-VCI structure -- using union to force minimum size */
+typedef union MPIDI_vci {
+    struct {
+        int attr;
+        MPID_Thread_mutex_t lock;
+    } vci;
+    char pad[MPL_CACHELINE_SIZE];
+} MPIDI_vci_t;
+
+#define MPIDI_VCI(i) MPIDI_global.vci[i].vci
 
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
@@ -296,9 +256,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_ch4u_initialized;
     int **node_map, max_node_id;
     MPIDIG_comm_req_list_t *comm_req_lists;
-    int registered_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
-    progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[MAX_CH4_MUTEXES];
     MPIDIU_map_t *win_map;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
@@ -306,23 +264,32 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_rreq_t *unexp_list;
 #endif
     MPIDIG_req_ext_t *cmpl_list;
-    OPA_int_t exp_seq_no;
-    OPA_int_t nxt_seq_no;
+    MPL_atomic_uint64_t exp_seq_no;
+    MPL_atomic_uint64_t nxt_seq_no;
     MPIDIU_buf_pool_t *buf_pool;
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    OPA_int_t progress_count;
+    MPL_atomic_int_t progress_count;
 
-    MPID_Thread_mutex_t vci_lock;
+    int n_vcis;
+    MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    /* TODO: move into MPIDI_vci to have per-vci workqueue */
     MPIDI_workq_t workqueue;
 #endif
     MPIDI_CH4_configurations_t settings;
+    void *csel_root;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIDI_SHM_Global_t shm;
+#endif
+    MPIDI_NM_Global_t nm;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_global;
+extern char MPIDI_coll_generic_json[];
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;

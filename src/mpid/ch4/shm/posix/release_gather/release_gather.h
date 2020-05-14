@@ -1,11 +1,6 @@
 /*
- *  (C) 2018 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- *
- *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
- *  to Argonne National Laboratory subject to Software Grant and Corporate
- *  Contributor License Agreement dated February 8, 2012.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #ifndef RELEASE_GATHER_H_INCLUDED
@@ -72,8 +67,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
                                                                     MPIDI_POSIX_release_gather_opcode_t
                                                                     operation)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_RELEASE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_RELEASE);
 
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -89,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
          MPIDI_POSIX_RELEASE_GATHER_OPCODE_REDUCE) ? MPIR_CVAR_REDUCE_INTRANODE_NUM_CELLS - 1 : 0;
 
     rank = MPIR_Comm_rank(comm_ptr);
-    release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr)->release_gather;
+    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     release_gather_info_ptr->release_state++;
 
     if (operation == MPIDI_POSIX_RELEASE_GATHER_OPCODE_BCAST) {
@@ -261,7 +256,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_release(void *local_
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_RELEASE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_RELEASE);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;
@@ -280,8 +275,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
                                                                    MPIDI_POSIX_release_gather_opcode_t
                                                                    operation)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_GATHER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_GATHER);
 
     MPIDI_POSIX_release_gather_comm_t *release_gather_info_ptr;
     int segment, rank, num_children;
@@ -299,7 +294,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     uint64_t min_gather, child_gather_flag;
     UT_array *children;
 
-    release_gather_info_ptr = MPIDI_POSIX_COMM(comm_ptr)->release_gather;
+    release_gather_info_ptr = &MPIDI_POSIX_COMM(comm_ptr, release_gather);
     children = release_gather_info_ptr->bcast_tree.children;
     num_children = release_gather_info_ptr->bcast_tree.num_children;
     rank = MPIR_Comm_rank(comm_ptr);
@@ -417,7 +412,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_release_gather_gather(const void *i
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_MPI_RELEASE_GATHER_GATHER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RELEASE_GATHER_GATHER);
     return mpi_errno_ret;
   fn_fail:
     goto fn_exit;

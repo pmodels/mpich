@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *  (C) 2001 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "mpiimpl.h"
@@ -95,7 +93,7 @@ int MPI_Pack_external_size(const char datarep[],
 
     /* ... body of routine ... */
 
-    *size = (MPI_Aint) incount *(MPI_Aint) MPIR_Datatype_size_external32(datatype);
+    *size = (MPI_Aint) incount *(MPI_Aint) MPIR_Typerep_size_external32(datatype);
 
     /* ... end of body of routine ... */
 
