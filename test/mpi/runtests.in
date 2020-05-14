@@ -914,7 +914,7 @@ sub RunMPIProgram {
 
     # release lock if needed
     if ($got_lock) {
-        relese_lock($lockfile);
+        release_lock($lockfile);
     }
 
     if ($found_error) {
@@ -1427,7 +1427,7 @@ sub get_lock {
     }
 }
 
-sub relese_lock {
+sub release_lock {
     my ($lockfile) = @_;
     if ($verbose) {
         print "Releasing lock [$lockfile]\n";
