@@ -277,7 +277,8 @@ find %{buildroot} -name "*.a" -delete
 rm -rf %{buildroot}/*
 
 %check
-make testing
+# disabled due to https://github.com/pmodels/mpich/issues/4534
+#make testing
 
 %else
 
@@ -439,6 +440,14 @@ fi
 - Update to 3.4a2
 - Reduce "folavor"s down to just "ofi"
 - Add a couple of more pkgconfig/ files
+- Disabled %check due to https://github.com/pmodels/mpich/issues/4534
+- Added switches to configure:
+    --disable-checkerrors \
+    --disable-perftest \
+    --disable-large-tests \
+    --disable-ft-tests \
+    --disable-comm-overlap-tests \
+    --enable-threads=single \
 
 * Wed Dec 18 2019 Brian J. Murrell <brian.murrell@intel.com> - 3.3-5
 - Rebuild with CaRT SO version 4
