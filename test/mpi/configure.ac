@@ -195,8 +195,8 @@ AC_ARG_ENABLE(large-tests,
 
 AC_ARG_ENABLE(ft-tests,
 	[AC_HELP_STRING([--enable-ft-tests],
-		[Include tests for fault tolerance (default)])],,
-	[enable_ft_tests=yes])
+		[Include tests for fault tolerance (default no)])],,
+	[enable_ft_tests=no])
 
 AC_ARG_ENABLE(comm-overlap-tests,
 	[AC_HELP_STRING([--enable-comm-overlap-tests],
