@@ -46,6 +46,9 @@ use File::Copy qw(move);
 # Use high resolution timers
 use Time::HiRes qw(gettimeofday tv_interval);
 
+# Import flock constants
+use Fcntl qw(:flock);
+
 # Global variables
 our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
 $g_opt->{memory_total} = 20;      # Total memory in GB
@@ -798,15 +801,14 @@ sub RunMPIProgram {
 
     # acquire lock if requested
     my ($lockfile, $got_lock);
-    my ($lock_sh, $lock_ex) = (1, 2);
     if ($test_opt->{lock}) {
         # explict lock by setting "lock=[shared|name]" on testline directly
         my $name = $test_opt->{lock};
         $lockfile = "/tmp/runtests-$name.lock";
         if ($name eq "shared") {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         } else {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         }
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
@@ -815,9 +817,9 @@ sub RunMPIProgram {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
         } elsif ($test_opt->{mem} * $g_opt->{memory_multiplier} > $g_opt->{memory_total} ) {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         } else {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         }
     }
 
@@ -1406,8 +1408,8 @@ sub InitQuickTimeout {
 # ----------------------------------------------------------------------------
 # util routines
 
-# file locking using flock: the lock is acquired while the file is open and
-#     released when file is closed (or process is terminated and OS closes the file)
+# file locking to control concurrent jobs.
+
 sub get_lock {
     my ($lockfile, $lock_type) = @_;
     if ($verbose) {
@@ -1416,15 +1418,14 @@ sub get_lock {
     if (! -e $lockfile) {
         system "touch $lockfile";
     }
-    if(open LOCK, "$lockfile"){
-        # flock blocks until the lock is taken
-        flock(LOCK, $lock_type);
-        return 1;
+    while (1) {
+        my $ret = update_lockfile($lockfile, $lock_type);
+        if ($ret) {
+            last;
+        }
+        sleep 1;
     }
-    else{
-        warn "failed to open lockfile $lockfile\n";
-        return 0;
-    }
+    return 1;
 }
 
 sub release_lock {
@@ -1432,5 +1433,60 @@ sub release_lock {
     if ($verbose) {
         print "Releasing lock [$lockfile]\n";
     }
-    close(LOCK);
+    update_lockfile($lockfile, LOCK_UN);
+}
+
+sub update_lockfile {
+    my ($lockfile, $lock_type) = @_;
+    my $exclusive_count = 100;
+
+    my $got_it;
+    if (open LOCK, '+<', $lockfile) {
+        flock(LOCK, LOCK_EX) or die "Cannot obtain lock on $lockfile\n";
+        my $count = 0;
+        my %pids;
+        while(<LOCK>){
+            if (/^(\d+)\s+(\d+)/) {
+                my ($pid, $cnt) = ($1, $2);
+                my $is_running = kill(0, $pid);
+                if ($is_running) {
+                    $count += $cnt;
+                    $pids{$pid} = $cnt;
+                }
+            }
+        }
+        if ($lock_type == LOCK_SH and $count < $exclusive_count) {
+            $got_it = 1;
+        } elsif ($lock_type == LOCK_EX && !$count) {
+            $got_it = 1;
+        } elsif ($lock_type == LOCK_UN) {
+            $got_it = 1;
+        } else {
+            $got_it = 0;
+        }
+
+        if ($got_it) {
+            seek LOCK, 0, 0;
+            truncate LOCK, 0;
+            if ($lock_type == LOCK_EX) {
+                $pids{$$} = $exclusive_count;
+            }
+            elsif ($lock_type == LOCK_SH) {
+                $pids{$$} = 1;
+            }
+            elsif ($lock_type == LOCK_UN) {
+                delete $pids{$$};
+            }
+
+            while (my ($k, $v) = each %pids) {
+                print LOCK "$k $v\n";
+            }
+        }
+        close LOCK;
+    } else {
+        warn "failed to open lockfile $lockfile\n";
+        return 1;  # so dont' block, effectively without locking
+    }
+
+    return $got_it;
 }
