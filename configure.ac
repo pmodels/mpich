@@ -708,9 +708,11 @@ dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 # with "--disable-LANG".  Libtool understands this as a request to disable
 # support for this language. This should save a bit of configure time and also
 # prevent user complaints like ticket #1570.
+#
+# NOTE: we are skipping overiding CXX as some modules (e.g. ucx) may depend on CXX
+#
 AS_IF([test "x$enable_f77" = "xno"],[F77=no])
 AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
-AS_IF([test "x$enable_cxx" = "xno"],[CXX=no])
 
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
