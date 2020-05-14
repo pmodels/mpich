@@ -62,9 +62,6 @@ typedef struct MPIDI_POSIX_am_header {
     uint32_t handler_id:MPIDI_POSIX_AM_HANDLER_ID_BITS;
     uint64_t am_hdr_sz:MPIDI_POSIX_AM_HDR_SZ_BITS;
     uint64_t data_sz:MPIDI_POSIX_AM_DATA_SZ_BITS;
-#ifdef POSIX_AM_DEBUG
-    int seq_num;
-#endif                          /* POSIX_AM_DEBUG */
 } MPIDI_POSIX_am_header_t;
 
 typedef struct MPIDI_POSIX_am_request_header {

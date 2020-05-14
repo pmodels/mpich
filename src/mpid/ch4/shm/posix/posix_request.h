@@ -15,8 +15,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_init(MPIR_Request * req)
     MPIDI_POSIX_AMREQUEST(req, req_hdr) = NULL;
 
     MPIDI_POSIX_EAGER_RECV_INITIALIZE_HOOK(req);
-
-    POSIX_TRACE("Created request %d\n", req->kind);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_finalize(MPIR_Request * req)
@@ -31,8 +29,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_finalize(MPIR_Request * req
 
     if (!req_hdr)
         goto fn_exit;
-
-    POSIX_TRACE("Completed request %d (%d)\n", req->kind, req_hdr->dst_grank);
 
     MPIDI_POSIX_am_release_req_hdr(&req_hdr);
     MPIDI_POSIX_AMREQUEST(req, req_hdr) = NULL;

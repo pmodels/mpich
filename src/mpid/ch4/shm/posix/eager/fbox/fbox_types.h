@@ -48,11 +48,4 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
 
 extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
 
-#ifdef MPL_USE_DBG_LOGGING
-extern MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
-#endif
-
-#define POSIX_FBOX_TRACE(...) \
-    MPL_DBG_MSG_FMT(MPIDI_CH4_SHM_POSIX_FBOX_GENERAL,VERBOSE,(MPL_DBG_FDEST, __VA_ARGS__))
-
 #endif /* POSIX_EAGER_FBOX_TYPES_H_INCLUDED */
