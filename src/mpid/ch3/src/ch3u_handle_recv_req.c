@@ -626,10 +626,11 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rreq->dev.msg_offset = 0;
     rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-    MPI_Aint actual_iov_bytes;
+    MPI_Aint actual_iov_bytes, actual_iov_len;
     MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                      0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
-                     &rreq->dev.iov_count, &actual_iov_bytes);
+                     &actual_iov_len, &actual_iov_bytes);
+    rreq->dev.iov_count = (int) actual_iov_len;
     rreq->dev.iov_offset = 0;
 
     rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
@@ -737,10 +738,11 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         rreq->dev.msg_offset = 0;
         rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-        MPI_Aint actual_iov_bytes;
+        MPI_Aint actual_iov_bytes, actual_iov_len;
         MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                          0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
-                         &rreq->dev.iov_count, &actual_iov_bytes);
+                         &actual_iov_len, &actual_iov_bytes);
+        rreq->dev.iov_count = actual_iov_len;
         rreq->dev.iov_offset = 0;
 
         rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;

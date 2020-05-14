@@ -869,8 +869,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     else {
         /* derived datatype */
         struct iovec *typerep_vec;
-        int vec_len, i, count;
-        MPI_Aint type_extent, type_size, src_type_stride;
+        int i, count;
+        MPI_Aint vec_len, type_extent, type_size, src_type_stride;
         MPI_Datatype type;
         MPIR_Datatype*dtp;
         MPI_Aint curr_len;
@@ -892,7 +892,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         }
         /* --END ERROR HANDLING-- */
 
-        int max_iov_len = vec_len;
+        MPI_Aint max_iov_len = vec_len;
         MPI_Aint actual_iov_bytes;
         MPIR_Typerep_to_iov(NULL, target_count, target_dtp, stream_offset, typerep_vec, max_iov_len,
                          source_count * source_dtp_size, &vec_len, &actual_iov_bytes);

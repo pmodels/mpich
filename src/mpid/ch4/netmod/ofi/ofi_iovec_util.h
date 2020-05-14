@@ -117,7 +117,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
     struct iovec typerep_vec;
     MPI_Aint last;
     size_t *cursor;
-    int num_contig = 1;
+    MPI_Aint num_contig = 1;
     const void *buf;
     size_t count;
     MPI_Datatype type;
