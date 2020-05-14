@@ -274,6 +274,7 @@ typedef struct {
     unsigned enable_rma:1;
     unsigned enable_atomics:1;
     unsigned enable_pt2pt_nopack:1;
+    unsigned enable_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
 

@@ -109,6 +109,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
+    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, -1 };
+    bool alloc_stage_buf = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -133,6 +135,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     recv_buf = (char *) buf + dt_true_lb;
+    MPL_gpu_query_pointer_attr(recv_buf, &attr);
+    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
+        if (!MPIDI_OFI_ENABLE_HMEM) {
+            /* FIXME: at this point, GPU data takes host-buffer staging
+             * path for the whole chunk. For large memory size, pipeline
+             * transfer should be applied. */
+            /* Allocate host buf to receive data. Move data from host
+             * buf to gpu buf when receive completes. */
+            void *host_buf = NULL;
+            MPL_gpu_malloc_host(&host_buf, data_sz);
+            alloc_stage_buf = true;
+            /* Remember host_buf, device_buf, count and datatype in request. */
+            MPIDIG_GPU_REQUEST(*request, host_buf) = host_buf;
+            MPIDIG_GPU_REQUEST(*request, device_buf) = buf;
+            MPIDIG_GPU_REQUEST(*request, count) = count;
+            MPIDIG_GPU_REQUEST(*request, datatype) = datatype;
+            recv_buf = host_buf;
+            dt_contig = 1;
+        }
+    }
 
     if (!dt_contig && data_sz) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
@@ -205,6 +227,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_IRECV);
     return mpi_errno;
   fn_fail:
+    if (alloc_stage_buf) {
+        /* Free host buf (asigned to recv_buf already) */
+        MPL_gpu_free_host(recv_buf);
+    }
     goto fn_exit;
 }
 
