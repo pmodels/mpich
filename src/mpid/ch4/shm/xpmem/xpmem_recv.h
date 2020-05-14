@@ -145,13 +145,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
         slmt_cts_hdr->coop_counter_offset = (uint64_t) MPIDI_XPMEM_REQUEST(rreq, counter_ptr);
     }
 
-    XPMEM_TRACE("handle_lmt_coop_recv: shm ctrl_id %d, buf_offset 0x%lx, data_sz 0x%lx, "
-                "sreq_ptr 0x%lx, rreq_ptr 0x%lx, coop_counter_offset 0x%lx, "
-                " local_rank %d, dest %d\n",
-                MPIDI_SHM_XPMEM_SEND_LMT_CTS, slmt_cts_hdr->dest_offset, slmt_cts_hdr->data_sz,
-                slmt_cts_hdr->sreq_ptr, slmt_cts_hdr->rreq_ptr, slmt_cts_hdr->coop_counter_offset,
-                slmt_cts_hdr->dest_lrank, MPIDIG_REQUEST(rreq, rank));
-
     /* Receiver sends CTS packet to sender */
     mpi_errno =
         MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm, MPIDI_SHM_XPMEM_SEND_LMT_CTS,
@@ -169,10 +162,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_coop_recv(uint64_t src_offse
                                &MPIDI_XPMEM_global.segmaps[src_lrank].segcache_ubuf);
     MPIR_ERR_CHECK(mpi_errno);
 
-    XPMEM_TRACE("handle_lmt_coop_recv: handle matched rreq %p [source %d, tag %d, context_id 0x%x],"
-                " copy dst %p, src %lx, bytes %ld\n", rreq, MPIDIG_REQUEST(rreq, rank),
-                MPIDIG_REQUEST(rreq, tag), MPIDIG_REQUEST(rreq, context_id),
-                (char *) MPIDIG_REQUEST(rreq, buffer), src_offset, recv_data_sz);
     /* sender and receiver datatypes are both continuous, perform cooperative copy. */
     mpi_errno =
         MPIDI_XPMEM_do_lmt_coop_copy(src_buf, recv_data_sz,
@@ -257,12 +246,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_handle_lmt_single_recv(uint64_t src_off
         MPIDI_XPMEM_seg_regist(src_lrank, src_data_sz, (void *) src_offset, &seg_ptr, &src_buf,
                                &MPIDI_XPMEM_global.segmaps[src_lrank].segcache_ubuf);
     MPIR_ERR_CHECK(mpi_errno);
-
-    XPMEM_TRACE("handle_lmt_single_recv: handle matched rreq %p [source %d, tag %d, "
-                " context_id 0x%x], copy dst %p, src %lx, bytes %ld\n", rreq,
-                MPIDIG_REQUEST(rreq, rank), MPIDIG_REQUEST(rreq, tag),
-                MPIDIG_REQUEST(rreq, context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
-                src_offset, recv_data_sz);
 
     /* Copy data to receive buffer */
     mpi_errno = MPIR_Localcopy(src_buf, recv_data_sz, MPI_BYTE,

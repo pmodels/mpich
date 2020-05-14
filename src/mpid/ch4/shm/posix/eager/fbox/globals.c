@@ -10,7 +10,3 @@
    during linking. This is manifested by static linking on mac osx.
 */
 MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { 0 };
-
-#ifdef MPL_USE_DBG_LOGGING
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
-#endif

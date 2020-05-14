@@ -88,25 +88,6 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
             /* Initialize private transaction part */
             transaction->transport.fbox.fbox_ptr = fbox_in;
 
-#ifdef POSIX_FBOX_DEBUG
-            {
-                int i;
-
-                POSIX_FBOX_TRACE("FBOX_IN  (%s) [", fbox_in->is_header ? "H" : "F");
-
-                for (i = 0; i < fbox_in->payload_sz; i++) {
-                    POSIX_FBOX_TRACE("%02X", ((uint8_t *) (fbox_in->payload))[i]);
-
-                    if (i == 255) {
-                        POSIX_FBOX_TRACE("...");
-                        break;
-                    }
-                }
-
-                POSIX_FBOX_TRACE("]@%d from %d\n", fbox_in->payload_sz, grank);
-            }
-#endif /* POSIX_FBOX_DEBUG */
-
             /* We found a message so return success and stop. */
             mpi_errno = MPIDI_POSIX_OK;
             goto fn_exit;

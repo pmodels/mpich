@@ -34,10 +34,6 @@ int MPIDI_POSIX_fbox_init(int rank, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FBOX_INIT);
 
-#ifdef MPL_USE_DBG_LOGGING
-    MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
-#endif /* MPL_USE_DBG_LOGGING */
-
     MPIR_CHKPMEM_DECL(3);
 
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.first_poll_local_ranks,
