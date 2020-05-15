@@ -24,33 +24,42 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_try_matched_recv(void *buf,
                                                         MPIR_Request * message, bool * recvd_flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MMODS_TRY_MATCHED_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MMODS_TRY_MATCHED_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_TRY_MATCHED_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_TRY_MATCHED_RECV);
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-    /* XPMEM special receive */
+    /* IPC special receive */
     if (MPIDI_SHM_REQUEST(message, status) & MPIDI_SHM_REQ_IPC_SEND_LMT) {
         MPIR_Comm *root_comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(message, context_id));
 
-        /* Matching XPMEM LMT receive is now posted */
+        /* Matching IPC LMT receive is now posted */
         MPIR_Datatype_add_ref_if_not_builtin(datatype); /* will -1 once completed in handle_lmt_recv */
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
 
-        MPIDI_IPC_xpmem_am_unexp_rreq_t *unexp_rreq = &MPIDI_IPC_XPMEM_REQUEST(message, unexp_rreq);
-        mpi_errno = MPIDI_IPC_xpmem_handle_lmt_recv(unexp_rreq->src_offset,
-                                                    unexp_rreq->data_sz, unexp_rreq->sreq_ptr,
-                                                    unexp_rreq->src_lrank, root_comm, message);
-        MPIR_ERR_CHECK(mpi_errno);
-
+        MPIDI_IPC_am_unexp_rreq_t *unexp_rreq = &MPIDI_IPC_REQUEST(message, unexp_rreq);
+        switch (MPIDI_IPC_REQUEST(message, ipc_type)) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+            case MPIDI_SHM_IPC_TYPE__XPMEM:
+                mpi_errno = MPIDI_IPC_xpmem_handle_lmt_recv(unexp_rreq->mem_handle,
+                                                            unexp_rreq->data_sz,
+                                                            unexp_rreq->sreq_ptr,
+                                                            unexp_rreq->src_lrank, root_comm,
+                                                            message);
+                MPIR_ERR_CHECK(mpi_errno);
+                break;
+#endif /* MPIDI_CH4_SHM_ENABLE_XPMEM */
+            default:
+                /* Unknown IPC type */
+                MPIR_Assert(0);
+                break;
+        }
         *recvd_flag = true;
     }
 
   fn_fail:
     goto fn_exit;
   fn_exit:
-#endif /* MPIDI_CH4_SHM_ENABLE_XPMEM */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MMODS_TRY_MATCHED_RECV);
     return mpi_errno;
 }

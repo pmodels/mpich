@@ -14,8 +14,8 @@ int MPIDI_IPC_send_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->ipc_slmt_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RECV_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RECV_FIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_SEND_LMT_FIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_SEND_LMT_FIN_CB);
 
     IPC_TRACE("send_lmt_recv_fin_cb: complete sreq %p\n", sreq);
 
@@ -23,7 +23,7 @@ int MPIDI_IPC_send_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPID_Request_complete(sreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RECV_FIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_SEND_LMT_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -35,12 +35,12 @@ int MPIDI_IPC_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     MPIDI_SHM_ctrl_ipc_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RTS_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_SEND_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_SEND_LMT_RTS_CB);
 
-    IPC_TRACE("send_lmt_rts_cb: received src_offset 0x%lx, data_sz 0x%lx, sreq_ptr 0x%lx, "
+    IPC_TRACE("send_lmt_rts_cb: received data_sz 0x%lx, sreq_ptr 0x%lx, "
               "src_lrank %d, match info[src_rank %d, tag %d, context_id 0x%x]\n",
-              slmt_rts_hdr->src_offset, slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr,
+              slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr,
               slmt_rts_hdr->src_lrank, slmt_rts_hdr->src_rank, slmt_rts_hdr->tag,
               slmt_rts_hdr->context_id);
 
@@ -78,12 +78,23 @@ int MPIDI_IPC_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
         MPIDIG_REQUEST(rreq, tag) = slmt_rts_hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = slmt_rts_hdr->context_id;
 
-        /* Complete IPC receive
-         * TODO: move XPMEM specific code into submodule */
-        mpi_errno = MPIDI_IPC_xpmem_handle_lmt_recv(slmt_rts_hdr->src_offset, slmt_rts_hdr->data_sz,
-                                                    slmt_rts_hdr->sreq_ptr, slmt_rts_hdr->src_lrank,
-                                                    root_comm, rreq);
-        MPIR_ERR_CHECK(mpi_errno);
+        /* Complete IPC receive */
+        switch (slmt_rts_hdr->ipc_type) {
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+            case MPIDI_SHM_IPC_TYPE__XPMEM:
+                mpi_errno = MPIDI_IPC_xpmem_handle_lmt_recv(slmt_rts_hdr->mem_handle,
+                                                            slmt_rts_hdr->data_sz,
+                                                            slmt_rts_hdr->sreq_ptr,
+                                                            slmt_rts_hdr->src_lrank, root_comm,
+                                                            rreq);
+                MPIR_ERR_CHECK(mpi_errno);
+                break;
+#endif /* MPIDI_CH4_SHM_ENABLE_XPMEM */
+            default:
+                /* Unknown IPC type */
+                MPIR_Assert(0);
+                break;
+        }
     } else {
         /* Enqueue unexpected receive request */
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
@@ -101,13 +112,10 @@ int MPIDI_IPC_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
         /* store IPC internal info */
         MPIDI_SHM_REQUEST(rreq, status) |= MPIDI_SHM_REQ_IPC_SEND_LMT;
         MPIDI_IPC_REQUEST(rreq, ipc_type) = slmt_rts_hdr->ipc_type;
-
-        /* store XPMEM internal info
-         * TODO: move XPMEM specific code into submodule */
-        MPIDI_IPC_XPMEM_REQUEST(rreq, unexp_rreq).src_offset = slmt_rts_hdr->src_offset;
-        MPIDI_IPC_XPMEM_REQUEST(rreq, unexp_rreq).data_sz = slmt_rts_hdr->data_sz;
-        MPIDI_IPC_XPMEM_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
-        MPIDI_IPC_XPMEM_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
+        MPIDI_IPC_REQUEST(rreq, unexp_rreq).mem_handle = slmt_rts_hdr->mem_handle;
+        MPIDI_IPC_REQUEST(rreq, unexp_rreq).data_sz = slmt_rts_hdr->data_sz;
+        MPIDI_IPC_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
+        MPIDI_IPC_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
 
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);       /* +1 for unexp_list */
@@ -121,7 +129,7 @@ int MPIDI_IPC_send_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_CTRL_SEND_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_SEND_LMT_RTS_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

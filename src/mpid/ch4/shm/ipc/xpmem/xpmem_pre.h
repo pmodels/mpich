@@ -76,16 +76,18 @@ typedef struct {
                                                  * for all local processes in the window. */
 } MPIDI_IPC_xpmem_win_t;
 
+/* memory handle definition */
 typedef struct {
     uint64_t src_offset;
-    uint64_t data_sz;
-    uint64_t sreq_ptr;
-    int src_lrank;
-} MPIDI_IPC_xpmem_am_unexp_rreq_t;
+} MPIDI_IPC_xpmem_mem_handle_t;
 
 typedef struct {
+    MPIDI_IPC_xpmem_seg_t *seg_ptr;
+} MPIDI_IPC_xpmem_mem_seg_t;
+
+/* request extension definition */
+typedef struct {
     MPIDI_IPC_xpmem_cnt_t *counter_ptr;
-    MPIDI_IPC_xpmem_am_unexp_rreq_t unexp_rreq;
 } MPIDI_IPC_xpmem_am_request_t;
 
 /* ctrl packet header types */

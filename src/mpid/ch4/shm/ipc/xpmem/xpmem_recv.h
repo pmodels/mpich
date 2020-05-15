@@ -11,6 +11,7 @@
 #include "xpmem_pre.h"
 #include "xpmem_seg.h"
 #include "xpmem_impl.h"
+#include "ipcg_p2p.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -42,7 +43,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_XPMEM_lmt_coop_copy(const void *src_buf,
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_lmt_coop_copy(const void *src_buf,
                                                            size_t data_sz, void *dest_buf,
                                                            MPL_atomic_int_t * counter_ptr,
                                                            uint64_t req_ptr,
@@ -54,8 +55,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_XPMEM_lmt_coop_copy(const void *src_buf,
     int cur_chunk = 0, total_chunk = 0, num_local_copy = 0;
     uint64_t cur_offset;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_DO_LMT_COOP_COPY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_DO_LMT_COOP_COPY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_xpmem_lmt_coop_copy);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_xpmem_lmt_coop_copy);
 
     total_chunk =
         data_sz / MPIR_CVAR_CH4_XPMEM_COOP_COPY_CHUNK_SIZE +
@@ -90,13 +91,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_XPMEM_lmt_coop_copy(const void *src_buf,
         *copy_type = MPIDI_IPC_XPMEM_COPY_MIX;  /* both processes copy a part of chunks */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_DO_LMT_COOP_COPY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_xpmem_lmt_coop_copy);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(uint64_t src_offset,
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(MPIDI_IPC_mem_handle_t mem_handle,
                                                                   size_t src_data_sz,
                                                                   uint64_t sreq_ptr, int src_lrank,
                                                                   MPIR_Comm * comm,
@@ -111,6 +112,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(uint64_t src_o
     int fin_type, copy_type;
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
     MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.ipc_xpmem_slmt_cts;
+    uint64_t src_offset = mem_handle.xpmem.src_offset;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_COOP_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_COOP_RECV);
@@ -166,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(uint64_t src_o
 
     /* sender and receiver datatypes are both continuous, perform cooperative copy. */
     mpi_errno =
-        MPIDI_IPC_XPMEM_lmt_coop_copy(src_buf, recv_data_sz,
+        MPIDI_IPC_xpmem_lmt_coop_copy(src_buf, recv_data_sz,
                                       (char *) dest_buf + dt_true_lb,
                                       &MPIDI_IPC_XPMEM_REQUEST(rreq, counter_ptr)->obj.counter,
                                       sreq_ptr, rreq, &fin_type, &copy_type);
@@ -218,68 +220,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(uint64_t src_o
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_single_recv(uint64_t src_offset,
-                                                                    size_t src_data_sz,
-                                                                    uint64_t sreq_ptr,
-                                                                    int src_lrank,
-                                                                    MPIR_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPC_xpmem_seg_t *seg_ptr = NULL;
-    void *src_buf = NULL;
-    size_t data_sz, recv_data_sz;
-    MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_SINGLE_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_SINGLE_RECV);
-
-    MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
-
-    /* Data truncation checking */
-    recv_data_sz = MPL_MIN(src_data_sz, data_sz);
-    if (src_data_sz > data_sz)
-        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-
-    /* Set receive status */
-    MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
-    rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
-    MPIDI_IPC_XPMEM_REQUEST(rreq, counter_ptr) = NULL;
-
-    mpi_errno =
-        MPIDI_IPC_xpmem_seg_regist(src_lrank, src_data_sz, (void *) src_offset, &seg_ptr, &src_buf,
-                                   &MPIDI_IPC_xpmem_global.segmaps[src_lrank].segcache_ubuf);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Copy data to receive buffer */
-    mpi_errno = MPIR_Localcopy(src_buf, recv_data_sz, MPI_BYTE,
-                               MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                               MPIDIG_REQUEST(rreq, datatype));
-    MPIR_ERR_CHECK(mpi_errno);
-
-    ack_ctrl_hdr.ipc_xpmem_slmt_send_fin.req_ptr = sreq_ptr;
-    mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
-                                       MPIDIG_context_id_to_comm(MPIDIG_REQUEST
-                                                                 (rreq, context_id)),
-                                       MPIDI_SHM_IPC_XPMEM_SEND_LMT_RECV_FIN, &ack_ctrl_hdr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
-    MPID_Request_complete(rreq);
-
-    mpi_errno = MPIDI_IPC_xpmem_seg_deregist(seg_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_SINGLE_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_recv(uint64_t src_offset, size_t data_sz,
-                                                             uint64_t sreq_ptr, int src_lrank,
-                                                             MPIR_Comm * comm, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_recv(MPIDI_IPC_mem_handle_t mem_handle,
+                                                             size_t data_sz, uint64_t sreq_ptr,
+                                                             int src_lrank, MPIR_Comm * comm,
+                                                             MPIR_Request * rreq)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -292,12 +236,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_recv(uint64_t src_offset
     if (recvtype_iscontig && data_sz > MPIR_CVAR_CH4_XPMEM_COOP_COPY_THRESHOLD) {
         /* Cooperative XPMEM copy */
         mpi_errno =
-            MPIDI_IPC_xpmem_handle_lmt_coop_recv(src_offset, data_sz, sreq_ptr, src_lrank, comm,
+            MPIDI_IPC_xpmem_handle_lmt_coop_recv(mem_handle, data_sz, sreq_ptr, src_lrank, comm,
                                                  rreq);
     } else {
         mpi_errno =
-            MPIDI_IPC_xpmem_handle_lmt_single_recv(src_offset, data_sz, sreq_ptr, src_lrank, rreq);
+            MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_TYPE__XPMEM, mem_handle, data_sz,
+                                              sreq_ptr, src_lrank, rreq);
     }
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_RECV);
     return mpi_errno;
