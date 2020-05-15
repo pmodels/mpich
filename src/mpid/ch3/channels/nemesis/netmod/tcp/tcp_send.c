@@ -13,7 +13,6 @@ typedef struct MPID_nem_tcp_send_q_element {
     size_t len;                 /* number of bytes left to send */
     char *start;                /* pointer to next byte to send */
     MPID_nem_cell_ptr_t cell;
-    /*     char buf[MPID_NEM_MAX_PACKET_LEN]; *//* data to be sent */
 } MPID_nem_tcp_send_q_element_t;
 
 static struct {

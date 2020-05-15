@@ -13,11 +13,11 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 
-    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  src = %6d", cell->pkt.header.source);
-    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  dst = %6d", cell->pkt.header.dest);
-    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  len = %6d", (int)cell->pkt.header.datalen);
-    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  sqn = %6d", cell->pkt.header.seqno);
-    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  typ = %6d", cell->pkt.header.type);
+    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  src = %6d", cell->header.source);
+    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  dst = %6d", cell->header.dest);
+    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  len = %6d", (int)cell->header.datalen);
+    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  sqn = %6d", cell->header.seqno);
+    MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  typ = %6d", cell->header.type);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 }

@@ -34,7 +34,7 @@ int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPIR_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                               \
     do {                                                                \
-        MPL_atomic_release_store_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.header.source]->mpich.flag.value, 0); \
+        MPL_atomic_release_store_int(&MPID_nem_mem_region.mailboxes.in[(cell)->header.source]->mpich.flag.value, 0); \
     } while (0)
 
 /* assumes value!=0 means the fbox is full.  Contains acquire barrier to
