@@ -810,7 +810,7 @@ sub RunMPIProgram {
         }
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
-        $lockfile="/tmp/runtests-mem.lock";
+        $lockfile="/tmp/runtests-memory.lock";
         if ($test_opt->{mem} > $g_opt->{memory_total}) {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
