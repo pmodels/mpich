@@ -132,35 +132,17 @@ typedef struct MPID_nem_queue
 } MPID_nem_queue_t, *MPID_nem_queue_ptr_t;
 
 /* Fast Boxes*/ 
-typedef union
+typedef struct MPID_nem_fastbox_t
 {
-    MPL_atomic_int_t value;
-#if MPID_NEM_CACHE_LINE_LEN != 0
-    char padding[MPID_NEM_CACHE_LINE_LEN];
-#endif
-}
-MPID_nem_opt_volint_t;
-
-typedef struct MPID_nem_fbox_common
-{
-    MPID_nem_opt_volint_t  flag;
-} MPID_nem_fbox_common_t, *MPID_nem_fbox_common_ptr_t;
-
-typedef struct MPID_nem_fbox_mpich
-{
-    MPID_nem_opt_volint_t flag;
-    MPID_nem_cell_t cell;
-} MPID_nem_fbox_mpich_t;
-
-#define MPID_NEM_FBOX_LEN     (MPID_NEM_CELL_LEN + offsetof(MPID_nem_fbox_mpich_t, cell))
-#define MPID_NEM_FBOX_DATALEN MPID_NEM_MPICH_DATA_LEN
-
-typedef union 
-{
-    MPID_nem_fbox_common_t common;
-    MPID_nem_fbox_mpich_t mpich;
+    MPL_atomic_int_t flag;
+    char content[];  /* content is a placeholder for cacheline padding and MPID_nem_cell_t */
 } MPID_nem_fastbox_t;
 
+#define MPID_NEM_FBOX_TO_CELL(fbox_ptr_) \
+    ((MPID_nem_cell_t *)((char *)(fbox_ptr_) + MPID_NEM_CACHE_LINE_LEN))
+
+#define MPID_NEM_FBOX_LEN     (MPID_NEM_CELL_LEN + MPID_NEM_CACHE_LINE_LEN)
+#define MPID_NEM_FBOX_DATALEN MPID_NEM_MPICH_DATA_LEN
 
 typedef struct MPID_nem_fbox_arrays
 {
