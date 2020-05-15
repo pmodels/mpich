@@ -325,6 +325,14 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
             }
             mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, topotree_fail, 2, MPI_INT,
                                             MPI_MAX, comm_ptr, &errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
+                MPIR_ERR_SET(mpi_errno, errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         } else {
             topotree_fail[0] = -1;
             topotree_fail[1] = -1;
