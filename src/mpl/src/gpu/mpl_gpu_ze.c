@@ -104,18 +104,42 @@ int MPL_gpu_finalize()
 
 int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
 {
+    ze_result_t ret;
+    ret = zeDriverGetMemIpcHandle(global_ze_driver_handle, ptr, h_mem);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
     return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
                                 MPL_gpu_device_handle_t h_device)
 {
+    ze_result_t ret;
+    ze_device_handle_t device;
+    ret =
+        zeDriverOpenMemIpcHandle(global_ze_driver_handle, h_device, h_mem,
+                                 ZE_IPC_MEMORY_FLAG_NONE, ptr);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
     return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 int MPL_gpu_ipc_close_mem_handle(void *ptr)
 {
+    ze_result_t ret;
+    ret = zeDriverCloseMemIpcHandle(global_ze_driver_handle, ptr);
+    ZE_ERR_CHECK(ret);
+
+  fn_exit:
     return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
 }
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
