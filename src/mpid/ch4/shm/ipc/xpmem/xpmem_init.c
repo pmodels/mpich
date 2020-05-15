@@ -7,6 +7,18 @@
 #include "xpmem_noinline.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
+#include "shm_control.h"
+
+static void regist_shm_ctrl_cb(void)
+{
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_CTS, MPIDI_IPC_xpmem_send_lmt_cts_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_SEND_FIN,
+                          MPIDI_IPC_xpmem_send_lmt_send_fin_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_RECV_FIN,
+                          MPIDI_IPC_xpmem_send_lmt_recv_fin_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_CNT_FREE,
+                          MPIDI_IPC_xpmem_send_lmt_cnt_free_cb);
+}
 
 int MPIDI_IPC_xpmem_mpi_init_hook(int rank, int size, int *tag_bits)
 {
@@ -97,6 +109,8 @@ int MPIDI_IPC_xpmem_mpi_init_hook(int rank, int size, int *tag_bits)
         }
     }
     MPIDU_Init_shm_barrier();
+
+    regist_shm_ctrl_cb();
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_XPMEM_MPI_INIT_HOOK);

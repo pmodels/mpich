@@ -5,37 +5,29 @@
 
 #include "mpidimpl.h"
 #include "shm_control.h"
-#include "../ipc/src/ipc_control.h"
+
+void MPIDI_SHM_ctrl_reg_cb(int ctrl_id, MPIDI_SHM_ctrl_cb cb)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_CTRL_REG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_CTRL_REG_CB);
+
+    MPIDI_global.shm.ctrl_cbs[ctrl_id] = cb;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_CTRL_REG_CB);
+}
 
 int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    switch (ctrl_id) {
-        case MPIDI_SHM_IPC_SEND_LMT_RTS:
-            mpi_errno = MPIDI_IPC_send_lmt_rts_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-        case MPIDI_SHM_IPC_SEND_LMT_FIN:
-            mpi_errno = MPIDI_IPC_send_lmt_fin_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-        case MPIDI_SHM_IPC_XPMEM_SEND_LMT_CTS:
-            mpi_errno = MPIDI_IPC_xpmem_send_lmt_cts_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-        case MPIDI_SHM_IPC_XPMEM_SEND_LMT_SEND_FIN:
-            mpi_errno = MPIDI_IPC_xpmem_send_lmt_send_fin_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-        case MPIDI_SHM_IPC_XPMEM_SEND_LMT_RECV_FIN:
-            mpi_errno = MPIDI_IPC_xpmem_send_lmt_recv_fin_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-        case MPIDI_SHM_IPC_XPMEM_SEND_LMT_CNT_FREE:
-            mpi_errno = MPIDI_IPC_xpmem_send_lmt_cnt_free_cb((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
-            break;
-#endif
-        default:
-            /* Unknown SHM control header */
-            MPIR_Assert(0);
-    }
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_CTRL_DISPATCH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_CTRL_DISPATCH);
+
+    MPIR_Assert(ctrl_id >= 0 && ctrl_id < MPIDI_SHM_CTRL_IDS_MAX);
+
+    mpi_errno = MPIDI_global.shm.ctrl_cbs[ctrl_id] ((MPIDI_SHM_ctrl_hdr_t *) ctrl_hdr);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_CTRL_DISPATCH);
 
     return mpi_errno;
 }

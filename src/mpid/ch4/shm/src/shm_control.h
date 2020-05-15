@@ -24,6 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_do_ctrl_send(int rank, MPIR_Comm * comm,
     return ret;
 }
 
+void MPIDI_SHM_ctrl_reg_cb(int ctrl_id, MPIDI_SHM_ctrl_cb cb);
 int MPIDI_SHM_ctrl_dispatch(int ctrl_id, void *ctrl_hdr);
 
 #endif /* SHM_CONTROL_H_INCLUDED */

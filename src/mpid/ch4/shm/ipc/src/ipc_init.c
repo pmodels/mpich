@@ -8,6 +8,13 @@
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "../xpmem/xpmem_noinline.h"
 #endif
+#include "shm_control.h"
+
+static void regist_shm_ctrl_cb(void)
+{
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_LMT_RTS, MPIDI_IPC_send_lmt_rts_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_LMT_FIN, MPIDI_IPC_send_lmt_fin_cb);
+}
 
 int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits)
 {
@@ -18,6 +25,8 @@ int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits)
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_IPC_GENERAL = MPL_dbg_class_alloc("SHM_IPC", "shm_ipc");
 #endif
+
+    regist_shm_ctrl_cb();
 
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     if (MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE != -1) {
