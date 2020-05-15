@@ -88,6 +88,30 @@ typedef struct {
     MPIDI_IPC_xpmem_am_unexp_rreq_t unexp_rreq;
 } MPIDI_IPC_xpmem_am_request_t;
 
+/* ctrl packet header types */
+typedef struct MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts {
+    uint64_t dest_offset;       /* receiver buffer starting address (buffer + true_lb) */
+    uint64_t data_sz;           /* receiver buffer size in bytes */
+    uint64_t sreq_ptr;          /* send request pointer */
+    uint64_t rreq_ptr;          /* recv request pointer */
+    int dest_lrank;             /* receiver rank on local node */
+
+    /* counter info */
+    int coop_counter_direct_flag;
+    uint64_t coop_counter_offset;
+} MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts_t;
+
+typedef struct MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_send_fin {
+    uint64_t req_ptr;
+} MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_send_fin_t;
+
+typedef struct MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cnt_free {
+    int coop_counter_direct_flag;
+    uint64_t coop_counter_offset;
+} MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cnt_free_t;
+
+typedef MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_send_fin_t MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_recv_fin_t;
+
 extern MPIDI_IPC_xpmem_global_t MPIDI_IPC_xpmem_global;
 extern MPIR_Object_alloc_t MPIDI_IPC_xpmem_seg_mem;
 

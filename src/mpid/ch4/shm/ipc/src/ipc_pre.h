@@ -29,6 +29,25 @@ typedef struct {
     } u;
 } MPIDI_IPC_am_request_t;
 
+/* ctrl packet header types */
+typedef struct MPIDI_SHM_ctrl_ipc_send_lmt_rts {
+    MPIDI_SHM_IPC_type_t ipc_type;
+    uint64_t src_offset;        /* send data starting address (buffer + true_lb) */
+    uint64_t data_sz;           /* data size in bytes */
+    uint64_t sreq_ptr;          /* send request pointer */
+    int src_lrank;              /* sender rank on local node */
+
+    /* matching info */
+    int src_rank;
+    int tag;
+    MPIR_Context_id_t context_id;
+} MPIDI_SHM_ctrl_ipc_send_lmt_rts_t;
+
+typedef struct MPIDI_SHM_ctrl_ipc_send_lmt_fin {
+    MPIDI_SHM_IPC_type_t ipc_type;
+    uint64_t req_ptr;
+} MPIDI_SHM_ctrl_ipc_send_lmt_fin_t;
+
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_SHM_IPC_GENERAL;
 #endif
