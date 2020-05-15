@@ -139,7 +139,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIR_Assert(sizeof(MPID_nem_cell_rel_ptr_t) == sizeof(MPL_atomic_ptr_t));
 
     /* Make sure payload is aligned on 8-byte boundary */
-    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.payload[0], 8));
+    MPIR_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->payload[0], 8));
     /* Make sure the padding to cacheline size in MPID_nem_queue_t works */
     MPIR_Assert(MPID_NEM_CACHE_LINE_LEN > 2 * sizeof(MPID_nem_cell_rel_ptr_t));
 

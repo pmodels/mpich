@@ -39,7 +39,7 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
 
     MPID_NEM_SET_REL_NULL(cell->next);
-    memset((void *)&cell->pkt, 0, sizeof(MPID_nem_pkt_header_t));
+    memset((void *)&cell->header, 0, sizeof(MPID_nem_pkt_header_t));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
 }
