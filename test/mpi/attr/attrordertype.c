@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
         type = MPI_INT;
         /* Create key values */
         for (i = 0; i < 3; i++) {
-            MPI_Type_create_keyval(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN, &key[i], (void *) 0);
+            MPI_Type_create_keyval(MPI_TYPE_NULL_COPY_FN, MPI_TYPE_NULL_DELETE_FN, &key[i],
+                                   (void *) 0);
             attrval[i] = 1024 * i;
         }
 

@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     MPI_Type_dup(MPI_INT, &type);
     MPI_Type_dup(MPI_INT, &type_dup);
 
-    MPI_Type_create_keyval(MPI_NULL_COPY_FN, delete_fn, &keyval, NULL);
+    MPI_Type_create_keyval(MPI_TYPE_NULL_COPY_FN, delete_fn, &keyval, NULL);
     keyval_copy = keyval;
     MPI_Type_set_attr(type, keyval, NULL);
     MPI_Type_set_attr(type_dup, keyval, NULL);
