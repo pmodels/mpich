@@ -46,19 +46,19 @@
 #define MPL_STATIC_INLINE_SUFFIX ATTRIBUTE((always_inline))
 
 #ifdef MPL_HAVE_FUNC_ATTRIBUTE_FALLTHROUGH
-#define MPL_FALLTHROUGH ATTRIBUTE((fallthrough))
+#define MPL_FALLTHROUGH __attribute__((fallthrough))
 #else
 #define MPL_FALLTHROUGH
 #endif
 
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_ALIGNED
-#define MPL_ATTR_ALIGNED(x) ATTRIBUTE((aligned(x)))
+#define MPL_ATTR_ALIGNED(x) __attribute__((aligned(x)))
 #else
 #define MPL_ATTR_ALIGNED(x)
 #endif
 
 #ifdef MPL_HAVE_VAR_ATTRIBUTE_USED
-#define MPL_USED ATTRIBUTE((used))
+#define MPL_USED __attribute__((used))
 #else
 #define MPL_USED
 #endif
