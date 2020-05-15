@@ -112,24 +112,25 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 
 #ifdef USE_FASTBOX
     {
-	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
+	MPID_nem_fastbox_t *pbox = vc_ch->fbox_out;
+        MPID_nem_cell_t *cell_ptr = MPID_NEM_FBOX_TO_CELL(pbox);
 
         /* _is_full contains acquire barrier */
-        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+        if (MPID_nem_fbox_is_full(pbox))
             goto usequeue_l;
 
-        pbox->cell.header.source  = MPID_nem_mem_region.local_rank;
-        pbox->cell.header.datalen = size;
-        pbox->cell.header.seqno   = vc_ch->send_seqno++;
+        cell_ptr->header.source  = MPID_nem_mem_region.local_rank;
+        cell_ptr->header.datalen = size;
+        cell_ptr->header.seqno   = vc_ch->send_seqno++;
         
-        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.header.type = MPID_NEM_PKT_MPICH_HEAD);
+        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, cell_ptr->header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIR_Memcpy((void *)pbox->cell.payload, buf, size);
+        MPIR_Memcpy((void *)cell_ptr->payload, buf, size);
 
-        MPL_atomic_release_store_int(&pbox->flag.value, 1);
+        MPL_atomic_release_store_int(&pbox->flag, 1);
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
-        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
+        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (cell_ptr));
         
         goto return_success;
     }
@@ -338,24 +339,25 @@ MPID_nem_mpich_sendv_header (struct iovec **iov, int *n_iov, MPIDI_VC_t *vc, int
 #ifdef USE_FASTBOX
     if (*n_iov == 2 && (*iov)[1].iov_len + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
     {
-	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
+	MPID_nem_fastbox_t *pbox = vc_ch->fbox_out;
+        MPID_nem_cell_t *cell_ptr = MPID_NEM_FBOX_TO_CELL(pbox);
 
-        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+        if (MPID_nem_fbox_is_full(pbox))
             goto usequeue_l;
 
-        pbox->cell.header.source  = MPID_nem_mem_region.local_rank;
-        pbox->cell.header.datalen = (*iov)[1].iov_len + sizeof(MPIDI_CH3_Pkt_t);
-        pbox->cell.header.seqno   = vc_ch->send_seqno++;
-        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.header.type = MPID_NEM_PKT_MPICH_HEAD);
+        cell_ptr->header.source  = MPID_nem_mem_region.local_rank;
+        cell_ptr->header.datalen = (*iov)[1].iov_len + sizeof(MPIDI_CH3_Pkt_t);
+        cell_ptr->header.seqno   = vc_ch->send_seqno++;
+        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, cell_ptr->header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIR_Memcpy((void *)pbox->cell.payload, (*iov)[0].iov_base, (*iov)[0].iov_len);
-        MPIR_Memcpy ((char *)pbox->cell.payload + (*iov)[0].iov_len, (*iov)[1].iov_base, (*iov)[1].iov_len);
+        MPIR_Memcpy((void *)cell_ptr->payload, (*iov)[0].iov_base, (*iov)[0].iov_len);
+        MPIR_Memcpy ((char *)cell_ptr->payload + (*iov)[0].iov_len, (*iov)[1].iov_base, (*iov)[1].iov_len);
         
-        MPL_atomic_release_store_int(&pbox->flag.value, 1);
+        MPL_atomic_release_store_int(&pbox->flag, 1);
         *n_iov = 0;
 
         MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
-        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
+        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (cell_ptr));
         
         goto return_success;
     }
@@ -484,7 +486,8 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
 #ifdef USE_FASTBOX
     if (sizeof(MPIDI_CH3_Pkt_t) + msgsize <= MPID_NEM_FBOX_DATALEN)
     {
-	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
+	MPID_nem_fastbox_t *pbox = vc_ch->fbox_out;
+        MPID_nem_cell_t *cell_ptr = MPID_NEM_FBOX_TO_CELL(pbox);
 
         /* Add a compiler time check on streaming unit size and FASTBOX size */
         MPIR_Static_assert((MPIDI_CH3U_Acc_stream_size > MPID_NEM_FBOX_DATALEN),
@@ -496,31 +499,31 @@ MPID_nem_mpich_send_seg_header (void *buf, MPI_Aint count, MPI_Datatype datatype
          * is the data size */
         MPIR_Assert(*msg_offset == 0);
 
-        if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
+        if (MPID_nem_fbox_is_full(pbox))
             goto usequeue_l;
 
 	{
-	    pbox->cell.header.source  = MPID_nem_mem_region.local_rank;
-	    pbox->cell.header.datalen = sizeof(MPIDI_CH3_Pkt_t) + msgsize;
-	    pbox->cell.header.seqno   = vc_ch->send_seqno++;
-            MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.header.type = MPID_NEM_PKT_MPICH_HEAD);
+	    cell_ptr->header.source  = MPID_nem_mem_region.local_rank;
+	    cell_ptr->header.datalen = sizeof(MPIDI_CH3_Pkt_t) + msgsize;
+	    cell_ptr->header.seqno   = vc_ch->send_seqno++;
+            MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, cell_ptr->header.type = MPID_NEM_PKT_MPICH_HEAD);
 
             /* copy header */
-            MPIR_Memcpy((void *)pbox->cell.payload, header, header_sz);
+            MPIR_Memcpy((void *)cell_ptr->payload, header, header_sz);
             
             /* copy data */
             MPI_Aint actual_pack_bytes;
             MPIR_Typerep_pack(buf, count, datatype, *msg_offset,
-                           (char *)pbox->cell.payload + sizeof(MPIDI_CH3_Pkt_t),
+                           (char *)cell_ptr->payload + sizeof(MPIDI_CH3_Pkt_t),
                            msgsize - *msg_offset, &actual_pack_bytes);
             MPIR_Assert(actual_pack_bytes == msgsize - *msg_offset);
 
-            MPL_atomic_release_store_int(&pbox->flag.value, 1);
+            MPL_atomic_release_store_int(&pbox->flag, 1);
 
             *msg_offset += actual_pack_bytes;;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent fbox ");
-	    MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (&pbox->cell));
+	    MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, MPID_nem_dbg_dump_cell (cell_ptr));
 
             goto return_success;
 	}

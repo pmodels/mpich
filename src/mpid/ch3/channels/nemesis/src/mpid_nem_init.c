@@ -371,8 +371,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 	{
 	    MPID_nem_mem_region.mailboxes.in [i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(i, local_rank)) * MPID_NEM_FBOX_LEN);
 	    MPID_nem_mem_region.mailboxes.out[i] = (void *) ((char *) fastboxes_p + (MAILBOX_INDEX(local_rank, i)) * MPID_NEM_FBOX_LEN);
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->common.flag.value, 0);
-	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->common.flag.value, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.in [i]->flag, 0);
+	    MPL_atomic_relaxed_store_int(&MPID_nem_mem_region.mailboxes.out[i]->flag, 0);
 	}
     }
 #undef MAILBOX_INDEX
@@ -481,8 +481,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     {
         MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
         
-	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
-	vc_ch->fbox_in = &MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
+	vc_ch->fbox_out = MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]];
+	vc_ch->fbox_in = MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]];
 	vc_ch->recv_queue = MPID_nem_mem_region.RecvQ[vc->lpid];
 
         /* override nocontig send function */
