@@ -43,14 +43,7 @@ static int create_template_tree(MPIDI_SHM_topotree_t * template_tree, int k_val,
     int i, j, child_id, child_idx;
 
     mpi_errno = MPIDI_SHM_topotree_allocate(template_tree, max_ranks, k_val);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     for (i = 0; i < max_ranks; ++i) {
         MPIDI_SHM_TOPOTREE_PARENT(template_tree, i) = ceilf(i / (float) (k_val)) - 1;
@@ -259,24 +252,10 @@ static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
     MPIR_CHKPMEM_DECL(1);
 
     mpi_errno = MPIDI_SHM_topotree_allocate(&tree, num_ranks, k_val);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     mpi_errno = MPIDI_SHM_topotree_allocate(&package_tree, package_tree_sz, k_val);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     MPIR_CHKPMEM_CALLOC(package_leaders, int *, num_packages * sizeof(int), mpi_errno,
                         "intra_node_package_leaders", MPL_MEM_OTHER);
@@ -295,14 +274,7 @@ static int gen_tree(int k_val, int *shared_region, int *max_entries_per_level,
     /* STEP 5. Create a template tree for the ranks */
     mpi_errno = create_template_tree(&template_tree, k_val, right_skewed,
                                      max_ranks_per_package, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* use the template tree to generate the tree for each rank */
     for (p = 0; p < max_entries_per_level[package_level]; ++p) {
@@ -372,14 +344,10 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
 
     /* STEP 1. Create shared memory region for exchanging topology information (root only) */
     mpi_errno = MPIDU_shm_alloc(comm_ptr, shm_size, (void **) &shared_region, &mapfail_flag);
-    if (mpi_errno || mapfail_flag) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    if (mapfail_flag) {
+        MPIR_ERR_ADD(mpi_errno_ret, MPI_ERR_OTHER);
     }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* STEP 2. Every process fills affinity information in shared_region */
     int (*shared_region_ptr)[topo_depth] = (int (*)[topo_depth]) shared_region;
@@ -389,14 +357,7 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
         gid = MPIR_hwtopo_get_ancestor(gid, topo_depth - depth - 1);
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* STEP 3. Root has all the bind_map information, now build tree */
     if (rank == root) {
         bind_map = (int **) MPL_malloc(num_ranks * sizeof(int *), MPL_MEM_OTHER);
@@ -446,38 +407,17 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
                              ranks_per_package, max_ranks_per_package, package_ctr,
                              package_level, num_ranks, 1 /*package_leaders_first */ ,
                              0 /*left_skewed */ , errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     }
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
 
     /* Every rank copies their tree out from shared memory */
     copy_tree(shared_region, num_ranks, rank, bcast_tree, bcast_topotree_fail);
 
     /* Wait until shared memory is available */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* Generate the reduce tree */
     /* For Reduce, package leaders are added after the package local ranks, and the per_package
      * tree is right_skewed (children are added in the reverse order */
@@ -487,38 +427,17 @@ int MPIDI_SHM_topology_tree_init(MPIR_Comm * comm_ptr, int root, int bcast_k,
                              ranks_per_package, max_ranks_per_package, package_ctr,
                              package_level, num_ranks, 0 /*package_leaders_last */ ,
                              1 /*right_skewed */ , errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag =
-                MPIX_ERR_PROC_FAILED ==
-                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+        MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     }
 
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* each rank copy the reduce tree out */
     copy_tree(shared_region, num_ranks, rank, reduce_tree, reduce_topotree_fail);
 
     /* Wait for all ranks to copy out the tree */
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
-    if (mpi_errno) {
-        /* for communication errors, just record the error but continue */
-        *errflag =
-            MPIX_ERR_PROC_FAILED ==
-            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
-        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-    }
+    MPIR_ERR_COLL_CHECKANDCONT(mpi_errno, *errflag);
     /* Cleanup */
     if (rank == root) {
         for (i = 0; i < max_entries_per_level[package_level]; ++i) {
