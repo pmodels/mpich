@@ -899,7 +899,7 @@ static int build_nodemap(int *nodemap, int sz, int *p_max_node_id)
 static int get_option_no_local(void)
 {
     /* Used for debugging only.  This disables communication over shared memory */
-#ifdef ENABLED_NO_LOCAL
+#ifdef ENABLE_NO_LOCAL
     return 1;
 #else
     return MPIR_CVAR_NOLOCAL;
