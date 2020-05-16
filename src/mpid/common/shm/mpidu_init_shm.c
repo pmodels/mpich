@@ -10,6 +10,44 @@
 #include "mpir_pmi.h"
 #include "mpidu_shm_seg.h"
 
+#ifdef ENABLE_NO_LOCAL
+/* shared memory disabled, just stubs */
+
+int MPIDU_Init_shm_init(void)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_finalize(void)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_barrier(void)
+{
+    return MPI_SUCCESS;
+}
+
+/* proper code should never call following under NO_LOCAL */
+int MPIDU_Init_shm_put(void *orig, size_t len)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_get(int local_rank, size_t len, void *target)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_query(int local_rank, void **target_addr)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+#else /* ENABLE_NO_LOCAL */
 typedef struct Init_shm_barrier {
     OPA_int_t val;
     OPA_int_t wait;
@@ -309,3 +347,5 @@ int MPIDU_Init_shm_query(int local_rank, void **target_addr)
 
     return mpi_errno;
 }
+
+#endif /* ENABLE_NO_LOCAL */
