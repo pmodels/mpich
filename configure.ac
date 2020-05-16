@@ -635,7 +635,7 @@ AC_ARG_WITH(name-publisher,
     with_namepublisher=$with_name_publisher,)
 
 AC_ARG_ENABLE(nolocal, AC_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
-    AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication]))
+    AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
 
 AC_CANONICAL_TARGET
 
