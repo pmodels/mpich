@@ -26,23 +26,23 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_re
                                                             transaction, void *dst, const void *src,
                                                             size_t size)
 {
-    return MPIDI_POSIX_eager_func->recv_memcpy(transaction, dst, src, size);
+    MPIDI_POSIX_eager_func->recv_memcpy(transaction, dst, src, size);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t *
                                                             transaction)
 {
-    return MPIDI_POSIX_eager_func->recv_commit(transaction);
+    MPIDI_POSIX_eager_func->recv_commit(transaction);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_posted_hook(int grank)
 {
-    return MPIDI_POSIX_eager_func->recv_posted_hook(grank);
+    MPIDI_POSIX_eager_func->recv_posted_hook(grank);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 {
-    return MPIDI_POSIX_eager_func->recv_completed_hook(grank);
+    MPIDI_POSIX_eager_func->recv_completed_hook(grank);
 }
 
 #endif /* POSIX_EAGER_DISABLE_INLINES  */
