@@ -12,7 +12,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_gpu_stage_copy_d2h(const void *sbuf, void *
     size_t size;
     MPIR_Datatype_get_size_macro(datatype, size);
 
-    uintptr_t actual_pack_bytes;
+    MPI_Aint actual_pack_bytes;
     MPIR_Typerep_pack(sbuf, count, datatype, 0, dbuf, count * size, &actual_pack_bytes);
     MPIR_Assert(actual_pack_bytes == count * size);
 }
