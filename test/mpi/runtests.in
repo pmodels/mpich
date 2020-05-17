@@ -1385,7 +1385,14 @@ sub get_lock {
     if (! -e $lockfile) {
         system "touch $lockfile";
     }
-    if(open LOCK, "$lockfile"){
+
+    my $lock = $lockfile;
+    if ($lock_type == LOCK_EX) {
+        # To obtain exclusive lock, some platform require open the file for writing
+        $lock = "> $lockfile"
+    }
+
+    if(open LOCK, $lock){
         # flock blocks until the lock is taken
         flock(LOCK, $lock_type);
         return 1;
