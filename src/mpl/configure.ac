@@ -868,7 +868,9 @@ if test "$with_mpl_atomic_primitives" = "auto" \
 fi
 PAC_POP_FLAG([CFLAGS])
 
-if test "$with_mpl_atomic_primitives" = "auto" \
+if test "$mpl_atomic_primitives_set" = "true" ; then
+    : # got native atomic support already
+elif test "$with_mpl_atomic_primitives" = "auto" \
         -o "$with_mpl_atomic_primitives" = "lock" ; then
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
              [Define to 1 if mutex-based synchronization is used])
