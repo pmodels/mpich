@@ -46,6 +46,9 @@ use File::Copy qw(move);
 # Use high resolution timers
 use Time::HiRes qw(gettimeofday tv_interval);
 
+# Import flock constants
+use Fcntl qw(:flock);
+
 # Global variables
 our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
 $g_opt->{memory_total} = 20;      # Total memory in GB
@@ -765,15 +768,14 @@ sub RunMPIProgram {
 
     # acquire lock if requested
     my ($lockfile, $got_lock);
-    my ($lock_sh, $lock_ex) = (1, 2);
     if ($test_opt->{lock}) {
         # explict lock by setting "lock=[shared|name]" on testline directly
         my $name = $test_opt->{lock};
         $lockfile = "/tmp/runtests-$name.lock";
         if ($name eq "shared") {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         } else {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         }
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
@@ -782,9 +784,9 @@ sub RunMPIProgram {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
         } elsif ($test_opt->{mem} * $g_opt->{memory_multiplier} > $g_opt->{memory_total} ) {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         } else {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         }
     }
 
