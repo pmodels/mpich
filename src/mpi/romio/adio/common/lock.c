@@ -4,49 +4,7 @@
  */
 
 #include "adio.h"
-
-static const char *flock_cmd_to_string(int cmd)
-{
-    switch (cmd) {
-#ifdef F_GETLK64
-        case F_GETLK64:
-            return "F_GETLK64";
-#else
-        case F_GETLK:
-            return "F_GETLK";
-#endif
-#ifdef F_SETLK64
-        case F_SETLK64:
-            return "F_SETLK64";
-#else
-        case F_SETLK:
-            return "F_SETLK";
-#endif
-#ifdef F_SETLKW64
-        case F_SETLKW64:
-            return "F_SETLKW64";
-#else
-        case F_SETLKW:
-            return "F_SETLKW";
-#endif
-        default:
-            return "UNEXPECTED";
-    }
-}
-
-static const char *flock_type_to_string(int type)
-{
-    switch (type) {
-        case F_RDLCK:
-            return "F_RDLCK";
-        case F_WRLCK:
-            return "F_WRLCK";
-        case F_UNLCK:
-            return "F_UNLOCK";
-        default:
-            return "UNEXPECTED";
-    }
-}
+#include "lock_internal.h"
 
 #ifdef ROMIO_NTFS
 /* This assumes that lock will always remain in the common directory and
@@ -165,8 +123,9 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
                 if ((err_count < 5) || (err_count > 9995)) {
                     fprintf(stderr,
                             "File locking failed in ADIOI_GEN_SetLock(fd %#X,cmd %s/%#X,type %s/%#X,whence %#X) with return value %#X and errno %#X.  Retry (%d).\n",
-                            fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type,
-                            whence, err, errno, err_count);
+                            fd_sys, ADIOI_GEN_flock_cmd_to_string(cmd), cmd,
+                            ADIOI_GEN_flock_type_to_string(type), type, whence, err, errno,
+                            err_count);
                     perror("ADIOI_GEN_SetLock:");
                     fprintf(stderr, "ADIOI_GEN_SetLock:offset %#llx, length %#llx\n",
                             (unsigned long long) offset, (unsigned long long) len);
@@ -183,8 +142,8 @@ int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int w
                 "This requires fcntl(2) to be implemented. As of 8/25/2011 it is not. Generic MPICH Message: File locking failed in ADIOI_GEN_SetLock(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
                 "- If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n"
                 "- If the file system is LUSTRE, ensure that the directory is mounted with the 'flock' option.\n",
-                fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence,
-                err, errno);
+                fd_sys, ADIOI_GEN_flock_cmd_to_string(cmd), cmd,
+                ADIOI_GEN_flock_type_to_string(type), type, whence, err, errno);
         perror("ADIOI_GEN_SetLock:");
         FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
@@ -226,8 +185,8 @@ int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int
         FPRINTF(stderr,
                 "File locking failed in ADIOI_GEN_SetLock64(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
                 "If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n",
-                fd_sys, flock_cmd_to_string(cmd), cmd, flock_type_to_string(type), type, whence,
-                err, errno);
+                fd_sys, ADIOI_GEN_flock_cmd_to_string(cmd), cmd,
+                ADIOI_GEN_flock_type_to_string(type), type, whence, err, errno);
         perror("ADIOI_GEN_SetLock64:");
         FPRINTF(stderr, "ADIOI_GEN_SetLock:offset %llu, length %llu\n", (unsigned long long) offset,
                 (unsigned long long) len);
