@@ -61,6 +61,7 @@ romio_other_sources +=                  \
     adio/common/heap_sort.c             \
     adio/common/iscontig.c              \
     adio/common/lock.c                  \
+    adio/common/lock_internal.c         \
     adio/common/malloc.c                \
     adio/common/shfp_fname.c            \
     adio/common/status_setb.c           \
