@@ -7,6 +7,7 @@
 #define IPC_PRE_H_INCLUDED
 
 #include "../xpmem/xpmem_pre.h"
+#include "../gpu/gpu_pre.h"
 #include "ipc_types.h"
 
 /* request extension */
