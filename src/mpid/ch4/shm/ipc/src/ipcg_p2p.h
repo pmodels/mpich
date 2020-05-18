@@ -14,20 +14,20 @@
 
 /* Generic IPC protocols for P2P. */
 
-/* Generic pack-based sender-initialized LMT routine.
+/* Generic sender-initialized LMT routine with contig send buffer.
  *
- * If the send buffer is noncontiguous, the sender will pack the data into a temporary
- * buffer before initializing handshake. The receiver will open the remote
- * memory handle and perform direct data transfer from either the send buffer or the
- * temporary buffer.
- *
- * TODO: support noncontig pack */
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_pack_send_lmt(const void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPIR_Request ** request,
-                                                      MPIDI_SHM_IPC_type_t ipc_type)
+ * If the send buffer is noncontiguous the submodule can first pack the
+ * data into a temporary buffer and use the temporary buffer as the send
+ * buffer with this call. The sender gets the memory handle of the specified
+ * buffer, and sends to the receiver. The receiver will then open the remote
+ * memory handle and perform direct data transfer.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_send_contig_lmt(const void *buf, MPI_Aint count,
+                                                        MPI_Datatype datatype, int rank, int tag,
+                                                        MPIR_Comm * comm, int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPIDI_SHM_IPC_type_t ipc_type,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -37,8 +37,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_pack_send_lmt(const void *buf, MPI_Aint 
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
     MPIDI_SHM_ctrl_ipc_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.ipc_slmt_rts;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCG_PACK_SEND_LMT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCG_PACK_SEND_LMT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCG_SEND_CONTIG_LMT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCG_SEND_CONTIG_LMT);
 
     /* Create send request */
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -68,17 +68,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_pack_send_lmt(const void *buf, MPI_Aint 
     slmt_req_hdr->tag = tag;
     slmt_req_hdr->context_id = comm->context_id + context_offset;
 
-    IPC_TRACE("pack_send_lmt: shm ctrl_id %d, data_sz 0x%lx, sreq_ptr 0x%lx, "
+    IPC_TRACE("send_contig_lmt: shm ctrl_id %d, data_sz 0x%lx, sreq_ptr 0x%lx, "
               "src_lrank %d, match info[dest %d, src_rank %d, tag %d, context_id 0x%x]\n",
-              MPIDI_SHM_IPC_SEND_LMT_RTS, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,
+              MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,
               slmt_req_hdr->src_lrank, rank, slmt_req_hdr->src_rank, slmt_req_hdr->tag,
               slmt_req_hdr->context_id);
 
-    mpi_errno = MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_IPC_SEND_LMT_RTS, &ctrl_hdr);
+    mpi_errno = MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS, &ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCG_PACK_SEND_LMT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCG_SEND_CONTIG_LMT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -136,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_typ
     mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
                                        MPIDIG_context_id_to_comm(MPIDIG_REQUEST
                                                                  (rreq, context_id)),
-                                       MPIDI_SHM_IPC_SEND_LMT_FIN, &ack_ctrl_hdr);
+                                       MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS, &ack_ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));

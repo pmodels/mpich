@@ -9,8 +9,8 @@
 #include "../ipc/src/ipc_pre.h"
 
 typedef enum {
-    MPIDI_SHM_IPC_SEND_LMT_RTS, /* issued by sender to initialize single-copy based IPC with sbuf info */
-    MPIDI_SHM_IPC_SEND_LMT_FIN, /* issued by receiver to notify completion of sender-initialized single-copy based IPC */
+    MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS,  /* issued by sender to initialize IPC with contig sbuf */
+    MPIDI_SHM_IPC_SEND_CONTIG_LMT_FIN,  /* issued by receiver to notify completion of sender-initialized contig IPC */
 
     /* submodule specific protocols.
      * TODO: can these protocols be generalized for all IPC modules? */
