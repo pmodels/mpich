@@ -8,6 +8,20 @@
    -D_POSIX_C_SOURCE=199506L, -std=c89 and -std=c99,
    that disallow pthread_barrier_t and friends.
 */
+
+#if THREAD_PACKAGE_NAME == THREAD_PACKAGE_NONE
+
+/* Only empty initialization and finalization functions are supported. */
+void MTest_init_thread_pkg(void)
+{
+}
+
+void MTest_finalize_thread_pkg(void)
+{
+}
+
+#else /* THREAD_PACKAGE_NAME != THREAD_PACKAGE_NONE */
+
 #if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE < 200112L
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
@@ -133,4 +147,7 @@ void MTest_init_thread_pkg(void)
 void MTest_finalize_thread_pkg(void)
 {
 }
+
+#endif /* THREAD_PACKAGE_NAME != THREAD_PACKAGE_NONE */
+
 #endif /* Default MTest_init_thread_pkg */
