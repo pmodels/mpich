@@ -12,7 +12,7 @@
 int MPIDI_IPC_send_contig_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->ipc_slmt_fin.req_ptr;
+    MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->ipc_slmt_contig_fin.req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_SEND_CONTIG_LMT_FIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_SEND_CONTIG_LMT_FIN_CB);
@@ -32,7 +32,7 @@ int MPIDI_IPC_send_contig_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 int MPIDI_IPC_send_contig_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_SHM_ctrl_ipc_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_slmt_rts;
+    MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_slmt_contig_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_SEND_CONTIG_LMT_RTS_CB);
@@ -133,4 +133,14 @@ int MPIDI_IPC_send_contig_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIDI_IPC_send_flatten_dtype_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDI_IPC_send_flatten_dtype_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+{
+    return MPI_SUCCESS;
 }

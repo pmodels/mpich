@@ -14,6 +14,10 @@ static void regist_shm_ctrl_cb(void)
 {
     MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS, MPIDI_IPC_send_contig_lmt_rts_cb);
     MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS, MPIDI_IPC_send_contig_lmt_fin_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_FLATTEN_DTYPE_LMT_RTS,
+                          MPIDI_IPC_send_flatten_dtype_lmt_rts_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_SEND_FLATTEN_DTYPE_LMT_RTS,
+                          MPIDI_IPC_send_flatten_dtype_lmt_fin_cb);
 }
 
 int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits)

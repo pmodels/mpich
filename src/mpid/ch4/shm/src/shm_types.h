@@ -11,6 +11,9 @@
 typedef enum {
     MPIDI_SHM_IPC_SEND_CONTIG_LMT_RTS,  /* issued by sender to initialize IPC with contig sbuf */
     MPIDI_SHM_IPC_SEND_CONTIG_LMT_FIN,  /* issued by receiver to notify completion of sender-initialized contig IPC */
+    MPIDI_SHM_IPC_SEND_FLATTEN_DTYPE_LMT_RTS,   /* issued by sender to initialize IPC with noncontig sbuf and flatten datatype */
+    MPIDI_SHM_IPC_SEND_FLATTEN_DTYPE_LMT_FIN,   /* issued by receiver to notify completion of sender-initialized
+                                                 * flatten dataype-based IPC */
 
     /* submodule specific protocols.
      * TODO: can these protocols be generalized for all IPC modules? */
@@ -24,8 +27,10 @@ typedef enum {
 } MPIDI_SHM_ctrl_id_t;
 
 typedef union {
-    MPIDI_SHM_ctrl_ipc_send_lmt_rts_t ipc_slmt_rts;
-    MPIDI_SHM_ctrl_ipc_send_lmt_fin_t ipc_slmt_fin;
+    MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t ipc_slmt_contig_rts;
+    MPIDI_SHM_ctrl_ipc_send_contig_lmt_fin_t ipc_slmt_contig_fin;
+    MPIDI_SHM_ctrl_ipc_send_flatten_dtype_lmt_rts_t ipc_slmt_flatten_rts;
+    MPIDI_SHM_ctrl_ipc_send_flatten_dtype_lmt_fin_t ipc_slmt_flatten_fin;
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts_t ipc_xpmem_slmt_cts;
     MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_send_fin_t ipc_xpmem_slmt_send_fin;

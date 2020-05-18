@@ -13,5 +13,7 @@
 
 int MPIDI_IPC_send_contig_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
 int MPIDI_IPC_send_contig_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_IPC_send_flatten_dtype_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
+int MPIDI_IPC_send_flatten_dtype_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr);
 
 #endif /* IPC_CONTROL_H_INCLUDED */

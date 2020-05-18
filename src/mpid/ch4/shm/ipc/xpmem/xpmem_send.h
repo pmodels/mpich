@@ -23,6 +23,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_mpi_isend(const void *buf, MPI_Aint
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_MPI_ISEND);
 
+    /* TODO: use flatten dtype protocol for noncontig send. */
+
     mpi_errno = MPIDI_IPCG_send_contig_lmt(buf, count, datatype, rank, tag, comm,
                                            context_offset, addr, MPIDI_SHM_IPC_TYPE__XPMEM,
                                            request);
