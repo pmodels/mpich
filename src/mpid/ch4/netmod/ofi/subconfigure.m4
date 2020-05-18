@@ -251,19 +251,19 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
+        PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
         PAC_POP_ALL_FLAGS()
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/modules/libfabric/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/include], [CPPFLAGS])
 
         if test "x$ofi_direct_provider" != "x" ; then
-            PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
-            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${master_top_builddir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
 
-        ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
-        ofilib="src/mpid/ch4/netmod/ofi/libfabric/src/libfabric.la"
+        ofisrcdir="${master_top_builddir}/modules/libfabric"
+        ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
         PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
@@ -272,7 +272,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     # check for libfabric depedence libs
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
-        pcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
+        pcdir="${master_top_builddir}/modules/libfabric"
     elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
