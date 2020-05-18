@@ -301,6 +301,17 @@ cvars:
         enabled. It the underlying OFI provider supports auto data progress, this value is ignored.
         If the value is -1, this optimization will be turned off.
 
+    - name        : MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX
+      category    : CH4_OFI
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the maximum number of iovecs to allocate for RMA operations
+        to/from noncontiguous buffers.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

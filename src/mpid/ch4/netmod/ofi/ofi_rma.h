@@ -176,60 +176,126 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
     }
 }
 
-/* _count: count of data elements of certain datatype
- * _datatype: the datatype
- * _bytes: total byte size
- * Note: _bytes is calculated based on _count & _datatype and passed in here for reusing. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
-                                                                    int origin_count,
-                                                                    int target_count,
-                                                                    int target_rank,
-                                                                    MPI_Datatype origin_datatype,
-                                                                    MPI_Datatype target_datatype,
-                                                                    size_t origin_bytes,
-                                                                    size_t target_bytes,
-                                                                    size_t max_pipe,
-                                                                    MPIDI_OFI_win_request_t **
-                                                                    winreq, uint64_t * flags,
-                                                                    struct fid_ep **ep,
-                                                                    MPIR_Request ** sigreq)
+enum {
+    MPIDI_OFI_PUT,
+    MPIDI_OFI_GET,
+};
+
+static inline void MPIDI_OFI_load_iov(const void *buffer, int count, MPI_Datatype datatype,
+                                      MPI_Aint max_len,
+                                      MPI_Aint * loaded_iov_offset, struct iovec *iov)
+{
+    MPI_Aint outlen;
+    MPIR_Typerep_to_iov_offset(buffer, count, datatype, *loaded_iov_offset, iov, max_len, &outlen);
+    *loaded_iov_offset += outlen;
+}
+
+static inline int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
+                                          MPI_Datatype origin_datatype, int target_rank,
+                                          MPI_Aint target_disp, int target_count,
+                                          MPI_Datatype target_datatype, MPIR_Win * win,
+                                          MPIDI_av_entry_t * addr, int rma_type,
+                                          MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t o_size, t_size, alloc_iovs, alloc_iov_size;
-    MPIDI_OFI_win_request_t *req = NULL;
+    uint64_t flags;
+    struct fi_msg_rma msg;
+    struct fi_rma_iov riov;
+    struct iovec iov;
+    size_t target_bytes, origin_bytes;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
+    MPIR_Datatype_get_size_macro(origin_datatype, origin_bytes);
+    origin_bytes *= origin_count;
+    MPIR_Datatype_get_size_macro(target_datatype, target_bytes);
+    target_bytes *= target_count;
 
-    o_size = sizeof(struct iovec);
-    t_size = sizeof(struct fi_rma_iov);
-    /* An upper bound on the iov limit */
-    MPIDI_OFI_count_iovecs(origin_count, target_count, 0, origin_datatype,
-                           target_datatype, MPI_DATATYPE_NULL, origin_bytes, target_bytes, 0,
-                           max_pipe, &alloc_iovs);
-
-    alloc_iov_size = alloc_iovs * o_size + alloc_iovs * t_size;
-
-    req = MPIDI_OFI_win_request_create();
+    /* allocate request */
+    MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->noncontig.iov_store = (char *) MPL_malloc(alloc_iov_size, MPL_MEM_BUFFER);
-    MPIR_ERR_CHKANDSTMT((req->noncontig.iov_store) == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
-                        "**nomem");
-    *winreq = req;
+    req->event_id = MPIDI_OFI_EVENT_ABORT;
+    req->next = MPIDI_OFI_WIN(win).syncQ;
+    MPIDI_OFI_WIN(win).syncQ = req;
 
-    req->noncontig.iov.put_get.originv = (struct iovec *) req->noncontig.iov_store;
-    req->noncontig.iov.put_get.targetv =
-        (struct fi_rma_iov *) (req->noncontig.iov_store + o_size * alloc_iovs);
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
-    *ep = MPIDI_OFI_WIN(win).ep;
-    req->target_rank = target_rank;
+    /* allocate target iovecs */
+    struct iovec *target_iov;
+    void *target_base;
+    MPI_Aint total_target_iov_len;
+    MPI_Aint target_len;
+    MPI_Aint target_iov_offset = 0;
+    MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
+    target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
+    target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
+    target_base =
+        (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                  (target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+
+    /* allocate origin iovecs */
+    struct iovec *origin_iov;
+    MPI_Aint total_origin_iov_len;
+    MPI_Aint origin_len;
+    MPI_Aint origin_iov_offset = 0;
+    MPIR_Typerep_iov_len(origin_count, origin_datatype, origin_bytes, &total_origin_iov_len);
+    origin_len = MPL_MIN(total_origin_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
+    origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
+
+    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+    int i = 0, j = 0;
+    size_t msg_len;
+    while (i < total_origin_iov_len && j < total_target_iov_len) {
+        MPI_Aint origin_cur = i % origin_len;
+        MPI_Aint target_cur = j % target_len;
+        if (i == origin_iov_offset)
+            MPIDI_OFI_load_iov(origin_addr, origin_count, origin_datatype, origin_len,
+                               &origin_iov_offset, origin_iov);
+        if (j == target_iov_offset)
+            MPIDI_OFI_load_iov(target_base, target_count, target_datatype, target_len,
+                               &target_iov_offset, target_iov);
+
+        msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
+
+        msg.desc = NULL;
+        msg.addr = MPIDI_OFI_av_to_phys(addr);
+        msg.context = NULL;
+        msg.data = 0;
+        msg.msg_iov = &iov;
+        msg.iov_count = 1;
+        msg.rma_iov = &riov;
+        msg.rma_iov_count = 1;
+        iov.iov_base = origin_iov[origin_cur].iov_base;
+        iov.iov_len = msg_len;
+        riov.addr = (uint64_t) target_iov[target_cur].iov_base;
+        riov.len = msg_len;
+        riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        if (rma_type == MPIDI_OFI_PUT)
+            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write,
+                                 FALSE);
+        else    /* MPIDI_OFI_GET */
+            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+
+        if (msg_len < origin_iov[origin_cur].iov_len) {
+            origin_iov[origin_cur].iov_base = (char *) origin_iov[origin_cur].iov_base + msg_len;
+            origin_iov[origin_cur].iov_len -= msg_len;
+        } else {
+            i++;
+        }
+
+        if (msg_len < target_iov[target_cur].iov_len) {
+            target_iov[target_cur].iov_base = (char *) target_iov[target_cur].iov_base + msg_len;
+            target_iov[target_cur].iov_len -= msg_len;
+        } else {
+            j++;
+        }
+    }
+    MPIR_Assert(i == total_origin_iov_len);
+    MPIR_Assert(j == total_target_iov_len);
+    MPIDI_OFI_sigreq_complete(sigreq);
+    MPL_free(origin_iov);
+    MPL_free(target_iov);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     return mpi_errno;
   fn_fail:
-    MPL_free(req);
-    req = NULL;
     goto fn_exit;
 }
 
@@ -364,16 +430,10 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    MPI_Datatype target_datatype,
                                    MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
-    int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req = NULL;
-    size_t offset, omax, tmax, tout, oout;
+    int mpi_errno = MPI_SUCCESS;
+    size_t offset;
     uint64_t flags;
-    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
-    unsigned i;
-    struct iovec *originv;
-    struct fi_rma_iov *targetv;
-    MPIDI_OFI_seg_state_t p;
     int target_contig, origin_contig;
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
@@ -447,64 +507,27 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
     /* noncontiguous messages */
-    mpi_errno =
-        MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
-                                               origin_datatype, target_datatype, origin_bytes,
-                                               target_bytes, MPIDI_OFI_global.max_msg_size, &req,
-                                               &flags, &ep, sigreq);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPI_Aint origin_density, target_density;
+    MPIR_Datatype_get_density(origin_datatype, origin_density);
+    MPIR_Datatype_get_density(target_datatype, target_density);
 
-    offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-
-    req->event_id = MPIDI_OFI_EVENT_ABORT;
-    msg.desc = NULL;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
-    msg.context = NULL;
-    msg.data = 0;
-    req->next = MPIDI_OFI_WIN(win).syncQ;
-    MPIDI_OFI_WIN(win).syncQ = req;
-    MPIDI_OFI_init_seg_state(&p,
-                             origin_addr,
-                             MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
-                             origin_count,
-                             target_count,
-                             origin_bytes,
-                             target_bytes,
-                             MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
-    rc = MPIDI_OFI_SEG_EAGAIN;
-
-    size_t cur_o = 0, cur_t = 0;
-    while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig.iov.put_get.originv[cur_o];
-        targetv = &req->noncontig.iov.put_get.targetv[cur_t];
-        omax = MPIDI_OFI_global.rma_iov_limit;
-        tmax = MPIDI_OFI_global.rma_iov_limit;
-        rc = MPIDI_OFI_merge_segment(&p, originv, omax, targetv, tmax, &oout, &tout);
-
-        if (rc == MPIDI_OFI_SEG_DONE)
-            break;
-
-        cur_o += oout;
-        cur_t += tout;
-        for (i = 0; i < tout; i++)
-            targetv[i].key = MPIDI_OFI_winfo_mr_key(win, target_rank);
-        MPIR_Assert(rc != MPIDI_OFI_SEG_ERROR);
-        msg.msg_iov = originv;
-        msg.iov_count = oout;
-        msg.rma_iov = targetv;
-        msg.rma_iov_count = tout;
-        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(ep, &msg, flags), rdma_write, FALSE);
-
-        /* By default, progress is called only during fence, which significantly
-         * slows down the RMA operations for large non-contiguous data. Adding manual
-         * progress helps improve the performance. */
-        MPIDI_OFI_win_trigger_rma_progress(win);
+    if (origin_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+        target_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+        mpi_errno =
+            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, addr,
+                                    MPIDI_OFI_PUT, sigreq);
+        goto fn_exit;
     }
 
-    MPIDI_OFI_finalize_seg_state(p);
-    /* Complete signal request to inform completion to user. */
-    MPIDI_OFI_sigreq_complete(sigreq);
+    if (sigreq)
+        mpi_errno =
+            MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
+                            target_count, target_datatype, win, sigreq);
+    else
+        mpi_errno =
+            MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
+                           target_count, target_datatype, win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -557,16 +580,10 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    MPI_Datatype target_datatype,
                                    MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
-    int rc, mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_win_request_t *req = NULL;
-    size_t offset, omax, tmax, tout, oout;
+    int mpi_errno = MPI_SUCCESS;
+    size_t offset;
     uint64_t flags;
-    struct fid_ep *ep = NULL;
     struct fi_msg_rma msg;
-    struct iovec *originv;
-    struct fi_rma_iov *targetv;
-    unsigned i;
-    MPIDI_OFI_seg_state_t p;
     int origin_contig, target_contig;
     MPI_Aint origin_true_lb, target_true_lb;
     size_t origin_bytes, target_bytes;
@@ -628,66 +645,27 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     }
 
     /* noncontiguous messages */
-    mpi_errno =
-        MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count, target_rank,
-                                               origin_datatype, target_datatype, origin_bytes,
-                                               target_bytes, MPIDI_OFI_global.max_msg_size, &req,
-                                               &flags, &ep, sigreq);
-    MPIR_ERR_CHECK(mpi_errno);
+    MPI_Aint origin_density, target_density;
+    MPIR_Datatype_get_density(origin_datatype, origin_density);
+    MPIR_Datatype_get_density(target_datatype, target_density);
 
-    offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-    req->event_id = MPIDI_OFI_EVENT_ABORT;
-    msg.desc = NULL;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
-    msg.context = NULL;
-    msg.data = 0;
-    req->next = MPIDI_OFI_WIN(win).syncQ;
-    MPIDI_OFI_WIN(win).syncQ = req;
-    MPIDI_OFI_init_seg_state(&p,
-                             origin_addr,
-                             MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
-                             origin_count,
-                             target_count,
-                             origin_bytes,
-                             target_bytes,
-                             MPIDI_OFI_global.max_msg_size, origin_datatype, target_datatype);
-    rc = MPIDI_OFI_SEG_EAGAIN;
-
-    size_t cur_o = 0, cur_t = 0;
-    while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig.iov.put_get.originv[cur_o];
-        targetv = &req->noncontig.iov.put_get.targetv[cur_t];
-        omax = MPIDI_OFI_global.rma_iov_limit;
-        tmax = MPIDI_OFI_global.rma_iov_limit;
-
-        rc = MPIDI_OFI_merge_segment(&p, originv, omax, targetv, tmax, &oout, &tout);
-
-        if (rc == MPIDI_OFI_SEG_DONE)
-            break;
-
-        cur_o += oout;
-        cur_t += tout;
-        MPIR_Assert(rc != MPIDI_OFI_SEG_ERROR);
-
-        for (i = 0; i < tout; i++)
-            targetv[i].key = MPIDI_OFI_winfo_mr_key(win, target_rank);
-
-        msg.msg_iov = originv;
-        msg.iov_count = oout;
-        msg.rma_iov = targetv;
-        msg.rma_iov_count = tout;
-        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(ep, &msg, flags), rdma_write, FALSE);
-
-        /* By default, progress is called only during fence, which significantly
-         * slows down the RMA operations for large non-contiguous data. Adding manual
-         * progress helps improve the performance. */
-        MPIDI_OFI_win_trigger_rma_progress(win);
+    if (origin_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+        target_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+        mpi_errno =
+            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, win, addr,
+                                    MPIDI_OFI_GET, sigreq);
+        goto fn_exit;
     }
 
-    MPIDI_OFI_finalize_seg_state(p);
-    /* Complete signal request to inform completion to user. */
-    MPIDI_OFI_sigreq_complete(sigreq);
+    if (sigreq)
+        mpi_errno =
+            MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
+                            target_count, target_datatype, win, sigreq);
+    else
+        mpi_errno =
+            MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
+                           target_count, target_datatype, win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
