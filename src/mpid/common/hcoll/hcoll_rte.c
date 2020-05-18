@@ -50,7 +50,8 @@ static void progress(void)
     int made_progress;
 
     if (0 == world_comm_destroying) {
-        MPID_Progress_test(NULL);
+        ret = MPID_Progress_test(NULL);
+        MPIR_Assert(ret == MPI_SUCCESS);
     } else {
         /* FIXME: The hcoll library needs to be updated to return
          * error codes.  The progress function pointer right now

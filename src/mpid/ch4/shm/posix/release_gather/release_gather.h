@@ -19,7 +19,8 @@ extern MPIDI_POSIX_release_gather_tree_type_t MPIDI_POSIX_Bcast_tree_type,
         while (MPL_atomic_acquire_load_uint64(ptr) < (value))    { \
             if (++spin_count >= 10000) {                           \
                 /* Call progress only after waiting for a while */ \
-                MPID_Progress_test(NULL);                              \
+                int err_ = MPID_Progress_test(NULL);               \
+                MPIR_Assert(err_ == MPI_SUCCESS);                  \
                 spin_count = 0;                                    \
             }                                                      \
         }                                                          \
