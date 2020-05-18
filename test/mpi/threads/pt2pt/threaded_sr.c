@@ -118,7 +118,8 @@ int main(int argc, char *argv[])
     }
 
     /* Loop until the send flag is set */
-    while (sendok == -1);
+    while (sendok == -1)
+        MTest_thread_yield();
     if (!sendok) {
         errs++;
     }
