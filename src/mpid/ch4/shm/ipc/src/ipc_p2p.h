@@ -113,7 +113,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, src_data_sz,
+    MPL_pointer_attr_t attr;
+    MPL_gpu_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+
+    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, attr.device, src_data_sz,
                                       &mem_seg, &src_buf);
     MPIR_ERR_CHECK(mpi_errno);
 

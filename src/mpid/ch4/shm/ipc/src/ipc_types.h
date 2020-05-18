@@ -11,6 +11,7 @@
 typedef enum MPIDI_IPCI_type {
     MPIDI_IPCI_TYPE__NONE,      /* avoid empty enum */
     MPIDI_IPCI_TYPE__XPMEM,
+    MPIDI_IPCI_TYPE__GPU
 } MPIDI_IPCI_type_t;
 
 typedef struct {
@@ -24,6 +25,7 @@ typedef struct {
  * MPIDI_IPCI_mem_seg_t: mapped segment with remote memory handle */
 typedef union MPIDI_IPCI_mem_handle {
     MPIDI_XPMEM_mem_handle_t xpmem;
+    MPIDI_GPU_mem_handle_t gpu;
 } MPIDI_IPCI_mem_handle_t;
 
 typedef struct MPIDI_IPCI_mem_attr {
@@ -38,6 +40,7 @@ typedef struct MPIDI_IPCI_mem_seg {
     MPIDI_IPCI_type_t ipc_type;
     union {
         MPIDI_XPMEM_mem_seg_t xpmem;
+        MPIDI_GPU_mem_seg_t gpu;
     } u;
 } MPIDI_IPCI_mem_seg_t;
 
