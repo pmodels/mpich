@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
     flag = 0;
     while (!flag) {
         MPI_Test(&request, &flag, &status);
+        MTest_thread_yield();
     }
     MTest_Join_threads();
 
@@ -102,6 +103,7 @@ int main(int argc, char *argv[])
     outcount = 0;
     while (!outcount) {
         MPI_Testsome(1, &request, &outcount, indices, &status);
+        MTest_thread_yield();
     }
     MTest_Join_threads();
 
@@ -112,6 +114,7 @@ int main(int argc, char *argv[])
     flag = 0;
     while (!flag) {
         MPI_Testall(1, &request, &flag, &status);
+        MTest_thread_yield();
     }
     MTest_Join_threads();
 
