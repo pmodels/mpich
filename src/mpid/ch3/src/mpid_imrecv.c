@@ -17,8 +17,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
      * upper level */
     if (message == NULL)
     {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
-        *rreqp = rreq;
+        *rreqp = MPIR_Request_create_null_recv();
         goto fn_exit;
     }
 
