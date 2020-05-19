@@ -157,7 +157,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.count),
                             MPIDI_OFI_REQUEST(rreq, noncontig.pack.datatype), 0,
                             &actual_unpack_bytes);
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
+        MPL_gpu_free_host(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer));
         if (actual_unpack_bytes != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS,
@@ -305,17 +305,10 @@ int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq, int
     if (c == 0) {
         if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) &&
             (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer))) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
+            MPL_gpu_free_host(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         } else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
-        /* host buf != NULL means this request falls back to host-buffer staging
-         * for GPU data. */
-        if (MPIDIG_GPU_REQUEST(sreq, host_buf)) {
-            /* Free host buf */
-            MPL_gpu_free_host(MPIDIG_GPU_REQUEST(sreq, host_buf));
-            MPIDIG_GPU_REQUEST(sreq, host_buf) = NULL;
-        }
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
@@ -359,15 +352,7 @@ static int send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
         MPIDI_OFI_CALL(fi_close(&huge_send_mr->fid), mr_unreg);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer)) {
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
-        }
-
-        /* host buf != NULL means this request falls back to host-buffer staging
-         * for GPU data. */
-        if (MPIDIG_GPU_REQUEST(sreq, host_buf)) {
-            /* Free host buf */
-            MPL_gpu_free_host(MPIDIG_GPU_REQUEST(sreq, host_buf));
-            MPIDIG_GPU_REQUEST(sreq, host_buf) = NULL;
+            MPL_gpu_free_host(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer));
         }
 
         MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
