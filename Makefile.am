@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-ACLOCAL_AMFLAGS = -I confdb -I src/hwloc/config
+ACLOCAL_AMFLAGS = -I confdb -I modules/hwloc/config
 
 # automake requires that we initialize variables to something, even just empty,
 # before appending to them with "+="

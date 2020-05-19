@@ -483,6 +483,7 @@
 /errors/pt2pt/proberank
 /errors/pt2pt/truncmsg1
 /errors/pt2pt/truncmsg2
+/errors/pt2pt/truncmsg_mrecv
 /errors/rma/cas_type_check
 /errors/rma/win_sync_complete
 /errors/rma/win_sync_free_at
@@ -1143,6 +1144,8 @@
 /pt2pt/mprobe
 /pt2pt/multi_psend_derived
 /pt2pt/pingping
+/pt2pt/precv_anysrc
+/pt2pt/precv_anysrc_exp
 /pt2pt/probe_unexp
 /pt2pt/probenull
 /pt2pt/pscancel

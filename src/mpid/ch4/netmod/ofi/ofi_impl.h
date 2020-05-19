@@ -293,6 +293,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 {
     MPIDI_OFI_win_request_t *winreq;
     winreq = MPL_malloc(sizeof(*winreq), MPL_MEM_OTHER);
+    winreq->noncontig.iov_store = NULL; /* not used by put/get opreations */
     return winreq;
 }
 
