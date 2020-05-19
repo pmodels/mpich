@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-static int MPIDI_Progress_made(MPID_Progress_state * state)
+static int progress_made(MPID_Progress_state * state)
 {
     if (state->progress_count != state->progress_start) {
         return TRUE;
@@ -14,7 +14,7 @@ static int MPIDI_Progress_made(MPID_Progress_state * state)
     return (state->progress_count != state->progress_start);
 }
 
-static int MPIDI_Progress_test(MPID_Progress_state * state)
+static int progress_test(MPID_Progress_state * state)
 {
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
@@ -42,7 +42,7 @@ static int MPIDI_Progress_test(MPID_Progress_state * state)
 #endif
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    if (!MPIDI_Progress_made(state)) {
+    if (!progress_made(state)) {
         if (state->flag & MPIDI_PROGRESS_NM) {
             mpi_errno = MPIDI_NM_progress(0, 0);
         }
@@ -59,6 +59,14 @@ static int MPIDI_Progress_test(MPID_Progress_state * state)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIDI_Progress_test(int flags)
+{
+    MPID_Progress_state state;
+    MPID_Progress_start(&state);
+    state.flag = flags;
+    return progress_test(&state);
 }
 
 void MPID_Progress_start(MPID_Progress_state * state)
@@ -87,7 +95,7 @@ int MPID_Progress_test(void)
 {
     MPID_Progress_state state;
     MPID_Progress_start(&state);
-    return MPIDI_Progress_test(&state);
+    return progress_test(&state);
 }
 
 int MPID_Progress_poke(void)
@@ -125,9 +133,9 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     /* track progress from last time left off */
     state->progress_start = state->progress_count;
     while (1) {
-        mpi_errno = MPIDI_Progress_test(state);
+        mpi_errno = progress_test(state);
         MPIR_ERR_CHECK(mpi_errno);
-        if (MPIDI_Progress_made(state)) {
+        if (progress_made(state)) {
             break;
         }
         MPIDI_PROGRESS_YIELD();
