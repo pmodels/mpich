@@ -9,7 +9,6 @@
 #include "ch4_types.h"
 #include "mpidig_am.h"
 #include "mpidu_shm.h"
-#include "mpidig_gpu_utils.h"
 
 int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
