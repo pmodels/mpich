@@ -412,6 +412,11 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 {
     int inuse;
 
+    if (HANDLE_IS_BUILTIN(req->handle)) {
+        /* do not free builtin request objects */
+        return;
+    }
+
     MPIR_Request_release_ref(req, &inuse);
 
     /* inform the device that we are decrementing the ref-count on
