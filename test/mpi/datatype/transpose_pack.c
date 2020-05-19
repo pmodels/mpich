@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     /* Variable declarations */
     int a[100][100], b[100][100];
     MPI_Datatype row, xpose;
-    MPI_Aint sizeofint;
+    MPI_Aint sizeofint, tmp_lb;
 
     int err, errs = 0;
     int bufsize, position = 0;
@@ -43,11 +43,11 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
-    MPI_Type_extent(MPI_INT, &sizeofint);
+    MPI_Type_get_extent(MPI_INT, &tmp_lb, &sizeofint);
 
     /* Create datatypes. */
     MPI_Type_vector(100, 1, 100, MPI_INT, &row);
-    MPI_Type_hvector(100, 1, sizeofint, row, &xpose);
+    MPI_Type_create_hvector(100, 1, sizeofint, row, &xpose);
     MPI_Type_commit(&xpose);
 
     /* Pack it. */

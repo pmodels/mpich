@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     disp[1] = BIGDT;
 
     /* combine both types */
-    MPI_Type_struct(2, block_len, disp, type, &mem_type);
+    MPI_Type_create_struct(2, block_len, disp, type, &mem_type);
 
     MPI_Type_commit(&mem_type);
     MPI_Type_free(&rem_type);

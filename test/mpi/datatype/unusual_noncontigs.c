@@ -87,11 +87,11 @@ int struct_negdisp_test(void)
     int blks[2] = { 1, 1, };
     MPI_Datatype types[2] = { MPI_INT, MPI_INT };
 
-    err = MPI_Type_struct(2, blks, disps, types, &mystruct);
+    err = MPI_Type_create_struct(2, blks, disps, types, &mystruct);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
-            fprintf(stderr, "MPI_Type_struct returned error\n");
+            fprintf(stderr, "MPI_Type_create_struct returned error\n");
         }
     }
 
@@ -484,30 +484,19 @@ int struct_struct_test(void)
  */
 int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend, MPI_Datatype * datatype)
 {
-#define COUNT (3)
     int err, errs = 0;
-    MPI_Aint displ[COUNT];
-    int blens[COUNT];
-    MPI_Datatype types[COUNT];
+    MPI_Aint displ;
+    int blen;
+    MPI_Datatype type, tmptype;
 
     *datatype = MPI_DATATYPE_NULL;
 
-    /* lower bound marker */
-    types[0] = MPI_LB;
-    displ[0] = 0;
-    blens[0] = 1;
-
     /* subsection starting at astart */
-    displ[1] = astart * sizeof(int);
-    types[1] = MPI_INT;
-    blens[1] = aend - astart + 1;
+    displ = astart * sizeof(int);
+    type = MPI_INT;
+    blen = aend - astart + 1;
 
-    /* upper bound marker */
-    types[2] = MPI_UB;
-    displ[2] = aext * sizeof(int);
-    blens[2] = 1;
-
-    err = MPI_Type_create_struct(COUNT, blens, displ, types, datatype);
+    err = MPI_Type_create_struct(1, &blen, &displ, &type, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
@@ -515,8 +504,16 @@ int build_array_section_type(MPI_Aint aext, MPI_Aint astart, MPI_Aint aend, MPI_
         }
     }
 
+    err = MPI_Type_create_resized(tmptype, 0, aext * sizeof(int), datatype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose) {
+            fprintf(stderr, "MPI_Type_create_struct failed, err=%d\n", err);
+        }
+    }
+    MPI_Type_free(&tmptype);
+
     return errs;
-#undef COUNT
 }
 
 /* start_idx is the "zero" point for the unpack */

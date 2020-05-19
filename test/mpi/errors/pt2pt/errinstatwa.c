@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     src = 1;
     dest = 0;
     if (rank == dest) {
-        MPI_Errhandler_set(comm, MPI_ERRORS_RETURN);
+        MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
         errval = MPI_Irecv(b1, 10, MPI_INT, src, 0, comm, &r[0]);
         if (errval) {
             errs++;

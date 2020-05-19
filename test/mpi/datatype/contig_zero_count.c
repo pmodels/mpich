@@ -55,7 +55,7 @@ int contig_test(void)
     MPI_Datatype newtype;
 
     int size;
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
 
     err = MPI_Type_contiguous(count, MPI_INT, &newtype);
     if (err != MPI_SUCCESS) {
@@ -80,7 +80,7 @@ int contig_test(void)
         errs++;
     }
 
-    err = MPI_Type_extent(newtype, &extent);
+    err = MPI_Type_get_extent(newtype, &tmp_lb, &extent);
     if (err != MPI_SUCCESS) {
         if (verbose) {
             fprintf(stderr, "error obtaining type extent in contig_test()\n");

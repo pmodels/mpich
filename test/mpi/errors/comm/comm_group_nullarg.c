@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     MPI_Comm_dup(MPI_COMM_WORLD, &dup_comm);
     MPI_Comm_group(dup_comm, &group);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /*test comm_group for NULL variable */
     mpi_errno = MPI_Comm_group(dup_comm, NULL);
