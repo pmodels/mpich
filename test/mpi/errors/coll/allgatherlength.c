@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
     recvbuf = (int *) (malloc(sizeof(int) * 10 * num_ranks));
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     free(recvbuf);
 
     MTest_Finalize(errs);

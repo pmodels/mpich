@@ -59,11 +59,11 @@ int hindexed_zerotype_test(void)
     int blks[] = { 0, 0, 0 };
     MPI_Aint disps[] = { 0, 4, 16 };
 
-    err = MPI_Type_hindexed(3, blks, disps, MPI_INT, &mytype);
+    err = MPI_Type_create_hindexed(3, blks, disps, MPI_INT, &mytype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
-            fprintf(stderr, "MPI_Type_hindexed returned error\n");
+            fprintf(stderr, "MPI_Type_create_hindexed returned error\n");
         }
     }
 
@@ -148,11 +148,11 @@ int hindexed_sparsetype_test(void)
     int blks[] = { 1, 0, 2, 1 };
     MPI_Aint disps[] = { 0, 1 * sizeof(int), 4 * sizeof(int), 2 * sizeof(int) };
 
-    err = MPI_Type_hindexed(4, blks, disps, MPI_INT, &mytype);
+    err = MPI_Type_create_hindexed(4, blks, disps, MPI_INT, &mytype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
-            fprintf(stderr, "MPI_Type_hindexed returned error\n");
+            fprintf(stderr, "MPI_Type_create_hindexed returned error\n");
         }
     }
 

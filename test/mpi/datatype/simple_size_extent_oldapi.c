@@ -3,7 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* Tests that Type_get_extent of a couple of basic types succeeds. */
+/* This test is almost the same as simple_size_extent.c but uses an old MPI
+ * function: MPI_Type_ub(). */
 
 #include "mpi.h"
 #include <stdio.h>
@@ -74,6 +75,20 @@ int main(int argc, char **argv)
         }
         errs++;
     }
+    mpi_err = MPI_Type_ub(type, &ub);
+    if (mpi_err != MPI_SUCCESS) {
+        if (verbose) {
+            fprintf(stderr, "MPI_Type_ub of MPI_INT failed.\n");
+        }
+        errs++;
+    }
+    if (ub != extent - lb) {
+        if (verbose) {
+            fprintf(stderr, "MPI_Type_ub of MPI_INT returned incorrect ub (%d); should be %d.\n",
+                    (int) ub, (int) (extent - lb));
+        }
+        errs++;
+    }
 
     type = MPI_FLOAT_INT;
     mpi_err = MPI_Type_size(type, &size);
@@ -112,6 +127,21 @@ int main(int argc, char **argv)
             fprintf(stderr,
                     "MPI_Type_get_extent of MPI_FLOAT_INT returned incorrect lb (%d); should be 0.\n",
                     (int) lb);
+        }
+        errs++;
+    }
+    mpi_err = MPI_Type_ub(type, &ub);
+    if (mpi_err != MPI_SUCCESS) {
+        if (verbose) {
+            fprintf(stderr, "MPI_Type_ub of MPI_FLOAT_INT failed.\n");
+        }
+        errs++;
+    }
+    if (ub != extent - lb) {
+        if (verbose) {
+            fprintf(stderr,
+                    "MPI_Type_ub of MPI_FLOAT_INT returned incorrect ub (%d); should be %d.\n",
+                    (int) ub, (int) (extent - lb));
         }
         errs++;
     }

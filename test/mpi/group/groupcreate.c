@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     for (i = 0; i < size; i++)
         ranks[i] = i;
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     for (i = 0; i < n; i++) {
         rc = MPI_Group_incl(world_group, n_ranks, ranks, group_array + i);
         if (rc) {
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MPI_Group_free(&world_group);
 
     MPI_Reduce(&n, &n_all, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);

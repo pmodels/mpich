@@ -3,10 +3,10 @@ exscanf 5
 alltoallwf 7
 alltoallvf 7
 inplacef 4
-reducelocalf 2 mpiversion=2.2
+reducelocalf 2
 redscatf 4
-split_typef 4 mpiversion=3.0
-nonblockingf 4 mpiversion=3.0
-vw_inplacef 4 mpiversion=2.2
-red_scat_blockf 4 mpiversion=2.2
-nonblocking_inpf 4 mpiversion=3.0
+split_typef 4
+nonblockingf 4
+vw_inplacef 4
+red_scat_blockf 4
+nonblocking_inpf 4

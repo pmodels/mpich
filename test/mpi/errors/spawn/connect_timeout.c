@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
     /* Separate all processes into a server group and a client group.
      * Processes in client group connect to server group. */
     MPI_Comm_split(MPI_COMM_WORLD, rank % 2, rank, &intra_comm);
-    MPI_Errhandler_set(intra_comm, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(intra_comm, MPI_ERRORS_RETURN);
 
     errs = RUN_TEST(intra_comm, rank % 2);
 

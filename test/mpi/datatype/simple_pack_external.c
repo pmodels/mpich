@@ -302,7 +302,7 @@ int struct_of_basics_test(void)
     }
 
     /* set up type */
-    err = MPI_Type_struct(10, blocks, indices, types, &parent_type);
+    err = MPI_Type_create_struct(10, blocks, indices, types, &parent_type);
 
     MPI_Type_commit(&parent_type);
 

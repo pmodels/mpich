@@ -18,5 +18,5 @@ miscfilef90 4
 setviewcurf90 4
 c2f2ciof90 1
 c2f90multio 1
-i_fcoll_test 4 mpiversion=3.1
-iwriteatallf90 4 mpiversion=3.1
+i_fcoll_test 4
+iwriteatallf90 4

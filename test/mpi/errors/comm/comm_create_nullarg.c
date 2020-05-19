@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
     MPI_Comm_group(comm, &group);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /*test comm_create for NULL variable */
     mpi_errno = MPI_Comm_create(comm, group, NULL);

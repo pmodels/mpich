@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
      * If it returns MPI_UNDEFINED as the count, that will often be
      * acceptable.
      */
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     err = MPI_Get_elements(&recvstatus, type_ia, &count);
     if (err == MPI_SUCCESS && count != MPI_UNDEFINED) {
         errs++;

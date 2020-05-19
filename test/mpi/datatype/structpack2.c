@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int j;
     int errs = 0, toterrs;
     int rank, size, tsize;
-    MPI_Aint text;
+    MPI_Aint text, tmp_lb;
     int blens[2];
     MPI_Aint disps[2];
     MPI_Datatype bases[2];
@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
     disps[1] = sizeof(int);
     bases[0] = MPI_INT;
     bases[1] = MPI_CHAR;
-    MPI_Type_struct(2, blens, disps, bases, &str);
+    MPI_Type_create_struct(2, blens, disps, bases, &str);
     MPI_Type_commit(&str);
     MPI_Type_contiguous(10, str, &con);
     MPI_Type_commit(&con);
     MPI_Type_size(con, &tsize);
-    MPI_Type_extent(con, &text);
+    MPI_Type_get_extent(con, &tmp_lb, &text);
 
 #ifdef DEBUG
     printf("Size of MPI array is %d, extent is %d\n", tsize, text);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
                s, &(s[9].c), (char *) p2 - (char *) p1);
     }
 #endif
-    MPI_Type_extent(str, &text);
+    MPI_Type_get_extent(str, &tmp_lb, &text);
 #ifdef DEBUG
     MPI_Type_size(str, &tsize);
     printf("Size of MPI struct is %d, extent is %d\n", tsize, (int) text);
