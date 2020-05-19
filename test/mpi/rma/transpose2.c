@@ -17,11 +17,10 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, nprocs, A[NROWS][NCOLS], i, j, blocklen[2];
+    int rank, nprocs, A[NROWS][NCOLS], i, j;
     MPI_Comm CommDeuce;
-    MPI_Aint disp[2];
     MPI_Win win;
-    MPI_Datatype column, column1, type[2];
+    MPI_Datatype column, column1;
     int errs = 0;
 
     MTest_Init(&argc, &argv);
@@ -45,14 +44,8 @@ int main(int argc, char *argv[])
             MPI_Type_vector(NROWS, 1, NCOLS, MPI_INT, &column);
 
             /* create datatype for one column, with the extent of one
-             * integer. we could use type_create_resized instead. */
-            disp[0] = 0;
-            disp[1] = sizeof(int);
-            type[0] = column;
-            type[1] = MPI_UB;
-            blocklen[0] = 1;
-            blocklen[1] = 1;
-            MPI_Type_struct(2, blocklen, disp, type, &column1);
+             * integer. */
+            MPI_Type_create_resized(column, 0, sizeof(int), &column1);
             MPI_Type_commit(&column1);
 
             MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);

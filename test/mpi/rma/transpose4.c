@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
             /* create datatype for one column */
             MPI_Type_vector(NROWS, 1, NCOLS, MPI_INT, &column);
             /* create datatype for matrix in column-major order */
-            MPI_Type_hvector(NCOLS, 1, sizeof(int), column, &xpose);
+            MPI_Type_create_hvector(NCOLS, 1, sizeof(int), column, &xpose);
             MPI_Type_commit(&xpose);
 
             MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);

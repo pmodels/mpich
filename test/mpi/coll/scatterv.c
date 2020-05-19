@@ -83,10 +83,8 @@ int main(int argc, char **argv)
 {
     int rank, size, myrow, mycol, nx, ny, stride, cnt, i, j, errs, errs_in_place;
     double *sendbuf, *recvbuf;
-    MPI_Datatype vec, block, types[2];
-    MPI_Aint displs[2];
+    MPI_Datatype vec, block;
     int *scdispls;
-    int blens[2];
     MPI_Comm comm2d;
     int dims[2], periods[2], coords[2], lcoords[2];
     int *sendcounts;
@@ -131,14 +129,7 @@ int main(int argc, char **argv)
     scdispls = (int *) malloc(size * sizeof(int));
 
     MPI_Type_vector(ny, nx, stride, MPI_DOUBLE, &vec);
-    blens[0] = 1;
-    blens[1] = 1;
-    types[0] = vec;
-    types[1] = MPI_UB;
-    displs[0] = 0;
-    displs[1] = nx * sizeof(double);
-
-    MPI_Type_struct(2, blens, displs, types, &block);
+    MPI_Type_create_resized(vec, 0, nx * sizeof(double), &block);
     MPI_Type_free(&vec);
     MPI_Type_commit(&block);
 

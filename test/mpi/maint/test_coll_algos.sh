@@ -255,14 +255,14 @@ for algo_name in ${algo_names}; do
         env="${testing_env} env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM=${algo_name}"
         env="${env} env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL=${kval}"
 
-        echo "red_scat_block 4 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block 5 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block 8 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 4 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 5 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 10 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "redscatblk3 8 mpiversion=2.2 ${env}" >> ${testlist_cvar}
-        echo "redscatblk3 10 mpiversion=2.2 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block 4 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block 5 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block 8 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block2 4 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block2 5 ${env}" >> ${testlist_cvar}
+        echo "red_scat_block2 10 ${env}" >> ${testlist_cvar}
+        echo "redscatblk3 8 ${env}" >> ${testlist_cvar}
+        echo "redscatblk3 10 ${env}" >> ${testlist_cvar}
         env=""
     done
 done
@@ -438,7 +438,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLW_INTRA_ALGORITHM=${algo_name}"
 
-    echo "neighb_alltoallw 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    echo "neighb_alltoallw 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -499,7 +499,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHER_INTRA_ALGORITHM=${algo_name}"
 
-    echo "neighb_allgather 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    echo "neighb_allgather 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -520,7 +520,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLGATHERV_INTRA_ALGORITHM=${algo_name}"
 
-    echo "neighb_allgatherv 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    echo "neighb_allgatherv 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -541,7 +541,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALL_INTRA_ALGORITHM=${algo_name}"
 
-    echo "neighb_alltoall 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    echo "neighb_alltoall 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
@@ -562,7 +562,7 @@ for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_INEIGHBOR_ALLTOALLV_INTRA_ALGORITHM=${algo_name}"
 
-    echo "neighb_alltoallv 4 mpiversion=3.0 ${env}" >> ${testlist_cvar}
+    echo "neighb_alltoallv 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 

@@ -1,2 +1,2 @@
 @comm_overlap@ allred 2
-@comm_overlap@ iallred 2 mpiversion=3.0
+@comm_overlap@ iallred 2

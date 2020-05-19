@@ -75,7 +75,7 @@ int hindexed_block_contig_test(void)
     MPI_Datatype newtype;
 
     int size, int_size;
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
 
     err = MPI_Type_create_hindexed_block(count, 1, &disp, MPI_INT, &newtype);
     if (err != MPI_SUCCESS) {
@@ -102,7 +102,7 @@ int hindexed_block_contig_test(void)
         errs++;
     }
 
-    err = MPI_Type_extent(newtype, &extent);
+    err = MPI_Type_get_extent(newtype, &tmp_lb, &extent);
     if (err != MPI_SUCCESS) {
         if (verbose) {
             fprintf(stderr, "error obtaining type extent in hindexed_block_contig_test()\n");
@@ -183,7 +183,7 @@ int hindexed_block_vector_test(void)
     MPI_Datatype vectype, newtype;
 
     int size, int_size;
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
 
     /* create a vector type of 2 ints, skipping one in between */
     err = MPI_Type_vector(2, 1, 2, MPI_INT, &vectype);
@@ -196,7 +196,7 @@ int hindexed_block_vector_test(void)
 
     MPI_Type_commit(&vectype);
 
-    MPI_Type_extent(vectype, &extent);
+    MPI_Type_get_extent(vectype, &tmp_lb, &extent);
     for (i = 0; i < count; i++)
         disp[i] *= extent;
 
@@ -227,7 +227,7 @@ int hindexed_block_vector_test(void)
         errs++;
     }
 
-    MPI_Type_extent(newtype, &extent);
+    MPI_Type_get_extent(newtype, &tmp_lb, &extent);
 
     err = pack_and_unpack((char *) buf, 1, newtype, NELT * sizeof(int));
     if (err != 0) {

@@ -39,8 +39,6 @@ static mpi_names_t mpi_names[] = {
 #endif
 
     {MPI_PACKED, "MPI_PACKED"},
-    {MPI_LB, "MPI_LB"},
-    {MPI_UB, "MPI_UB"},
     {MPI_FLOAT_INT, "MPI_FLOAT_INT"},
     {MPI_DOUBLE_INT, "MPI_DOUBLE_INT"},
     {MPI_LONG_INT, "MPI_LONG_INT"},

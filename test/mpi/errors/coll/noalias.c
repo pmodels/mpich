@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     char msg[MPI_MAX_ERROR_STRING];
 
     MTest_Init(&argc, &argv);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);

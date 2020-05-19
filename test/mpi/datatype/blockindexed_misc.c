@@ -65,7 +65,7 @@ int blockindexed_contig_test(void)
     MPI_Datatype newtype;
 
     int size, int_size;
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
 
     err = MPI_Type_create_indexed_block(count, 1, &disp, MPI_INT, &newtype);
     if (err != MPI_SUCCESS) {
@@ -92,7 +92,7 @@ int blockindexed_contig_test(void)
         errs++;
     }
 
-    err = MPI_Type_extent(newtype, &extent);
+    err = MPI_Type_get_extent(newtype, &tmp_lb, &extent);
     if (err != MPI_SUCCESS) {
         if (verbose) {
             fprintf(stderr, "error obtaining type extent in blockindexed_contig_test()\n");

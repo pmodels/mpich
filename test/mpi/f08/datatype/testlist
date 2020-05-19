@@ -1,5 +1,5 @@
 typenamef08 1
-typename3f08 1 mpiversion=3.0
+typename3f08 1
 typesnamef08 1
 typecntsf08 1
 typem2f08 1
@@ -8,11 +8,11 @@ packef08 1
 gaddressf08 1
 allctypesf08 1
 hindex1f08 1
-hindexed_blockf08 1 mpiversion=3.0
+hindexed_blockf08 1
 structf 2
 indtype 2
 createf08 1
 sizeof 1
-kinds 2 mpiversion=2.2
+kinds 2
 trf08 1
 get_elem_u 2
