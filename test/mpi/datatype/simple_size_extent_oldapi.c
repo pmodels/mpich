@@ -3,7 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/* Tests that Type_get_extent of a couple of basic types succeeds. */
+/* This test is almost the same as simple_size_extent.c but uses an old MPI
+ * function: MPI_Type_ub(). */
 
 #include "mpi.h"
 #include <stdio.h>

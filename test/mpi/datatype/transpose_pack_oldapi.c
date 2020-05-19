@@ -3,6 +3,9 @@
  *     See COPYRIGHT in top-level directory
  */
 
+/* This test is almost the same as transpose_pack.c but uses an old MPI
+ * function: MPI_Type_extent() and MPI_Type_hvector(). */
+
 #include "mpi.h"
 #include <math.h>
 #include <stdio.h>

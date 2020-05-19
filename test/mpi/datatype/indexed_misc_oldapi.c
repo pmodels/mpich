@@ -3,6 +3,9 @@
  *     See COPYRIGHT in top-level directory
  */
 
+/* This test is almost the same as indexed_misc.c but uses old MPI functions
+ * such as MPI_Type_hindexed() and MPI_Type_lb(). */
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
