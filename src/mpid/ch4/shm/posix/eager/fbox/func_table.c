@@ -3,7 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef POSIX_EAGER_INLINE
+#ifdef POSIX_EAGER_INLINE
+/* this file is empty */
+#else
+
 #define POSIX_EAGER_DISABLE_INLINES
 
 #include <mpidimpl.h>
