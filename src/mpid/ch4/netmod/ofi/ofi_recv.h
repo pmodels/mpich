@@ -110,7 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     struct fi_msg_tagged msg;
     char *recv_buf;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, -1 };
-    bool alloc_stage_buf = false;
+    bool force_gpu_pack = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -141,23 +141,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             /* FIXME: at this point, GPU data takes host-buffer staging
              * path for the whole chunk. For large memory size, pipeline
              * transfer should be applied. */
-            /* Allocate host buf to receive data. Move data from host
-             * buf to gpu buf when receive completes. */
-            void *host_buf = NULL;
-            MPL_gpu_malloc_host(&host_buf, data_sz);
-            alloc_stage_buf = true;
-            /* Remember host_buf, device_buf, count and datatype in request. */
-            MPIDIG_GPU_REQUEST(*request, host_buf) = host_buf;
-            MPIDIG_GPU_REQUEST(*request, device_buf) = buf;
-            MPIDIG_GPU_REQUEST(*request, count) = count;
-            MPIDIG_GPU_REQUEST(*request, datatype) = datatype;
-            recv_buf = host_buf;
-            dt_contig = 1;
+            force_gpu_pack = true;
+            dt_contig = 0;
         }
     }
 
     if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size &&
+            !force_gpu_pack) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
                                    context_id, addr, rreq, dt_ptr, flags);
@@ -173,10 +164,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         }
         /* Unpack */
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
-        MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_BUFFER);
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL,
-                             mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "Recv Pack Buffer alloc");
+        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
+         * However, once the new buffer pool infrastructure is setup, we would simply be
+         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
+         * registered buffer should be equivalent with respect to performance. */
+        MPL_gpu_malloc_host((void **) &MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer),
+                            data_sz);
+        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack.pack_buffer);
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.buf) = buf;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack.count) = count;
@@ -227,10 +222,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_IRECV);
     return mpi_errno;
   fn_fail:
-    if (alloc_stage_buf) {
-        /* Free host buf (asigned to recv_buf already) */
-        MPL_gpu_free_host(recv_buf);
-    }
     goto fn_exit;
 }
 
