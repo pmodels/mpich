@@ -12,13 +12,13 @@ EXTRA_DIST = testlist
 ## correctly
 ## We must not list the EXTRA_PROGRAMS in the noinst_PROGRAMS list because
 ## doing so will include them in the default targets
-noinst_PROGRAMS = \
-    adderr        \
-    commcall      \
+noinst_PROGRAMS =   \
+    adderr          \
+    commcall        \
     commcall_oldapi \
-    errfatal      \
-    predef_eh     \
-    errstring2    \
+    errfatal        \
+    predef_eh       \
+    errstring2      \
     dynamic_errcode_predefined_errclass
 
 EXTRA_PROGRAMS = errcode errring errstring
