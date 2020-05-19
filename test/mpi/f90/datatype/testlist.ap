@@ -2,6 +2,6 @@ structf 2
 indtype 2
 createf90 1
 sizeof 1
-kinds 2 mpiversion=2.2
+kinds 2
 trf90 1
 get_elem_u 2

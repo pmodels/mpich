@@ -18,5 +18,5 @@ miscfilef 4
 setviewcurf 4
 c2f2ciof 1
 c2fmultio 1
-i_setviewcurf 4 mpiversion=3.1
-iwriteatallf 4 mpiversion=3.1
+i_setviewcurf 4
+iwriteatallf 4

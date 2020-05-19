@@ -1,23 +1,23 @@
 noalias 2
-nb_noalias 2 mpiversion=3.0
-noalias2 4 mpiversion=2.2
-noalias3 4 mpiversion=3.0
+nb_noalias 2
+noalias2 4
+noalias3 4
 rerr 2
-nb_rerr 2  mpiversion=3.0
+nb_rerr 2
 reduce_local 1
 bcastlength 4
-ibcastlength 4 mpiversion=3.0
+ibcastlength 4
 reducelength 4
-ireducelength 4 mpiversion=3.0
+ireducelength 4
 allreducelength 4
-iallreducelength 4 mpiversion=3.0
+iallreducelength 4
 reduceop 4
-ireduceop 4 mpiversion=3.0
+ireduceop 4
 gatherlength 4
-igatherlength 4 mpiversion=3.0
+igatherlength 4
 scatterlength 4
-iscatterlength 4 mpiversion=3.0
+iscatterlength 4
 allgatherlength 4
-iallgatherlength 4 mpiversion=3.0
+iallgatherlength 4
 alltoalllength 4
 
