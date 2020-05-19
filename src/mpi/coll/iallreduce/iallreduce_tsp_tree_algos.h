@@ -35,6 +35,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     int nvtcs;
     int tag;
     int root = 0;
+    MPIR_CHKLMEM_DECL(3);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_TREE);
@@ -104,9 +105,12 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
 
     /* initialize arrays to store graph vertex indices */
-    vtcs = MPL_malloc(sizeof(int) * (num_children + 1), MPL_MEM_COLL);
-    reduce_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
-    recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
+                        mpi_errno, "vtcs buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
+                        mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
+                        mpi_errno, "recv_id buffer", MPL_MEM_COLL);
 
     /* do pipelined allreduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -210,9 +214,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
     MPIR_Treealgo_tree_free(&my_tree);
 
   fn_exit:
-    MPL_free(vtcs);
-    MPL_free(reduce_id);
-    MPL_free(recv_id);
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLREDUCE_SCHED_INTRA_TREE);
     return mpi_errno;
   fn_fail:
