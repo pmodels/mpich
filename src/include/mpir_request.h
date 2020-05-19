@@ -247,8 +247,12 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
         pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
         switch (HANDLE_GET_KIND(a)) { \
         case HANDLE_KIND_BUILTIN: \
-            MPIR_Assert(HANDLE_INDEX(a) < MPIR_REQUEST_BUILTIN_COUNT); \
-            ptr = MPIR_Request_builtins + HANDLE_INDEX(a); \
+            if (a == MPI_MESSAGE_NO_PROC) { \
+                ptr = NULL; \
+            } else { \
+                MPIR_Assert(HANDLE_INDEX(a) < MPIR_REQUEST_BUILTIN_COUNT); \
+                ptr = MPIR_Request_builtins + HANDLE_INDEX(a); \
+            } \
             break; \
         case HANDLE_KIND_DIRECT: \
             MPIR_Assert(pool == 0); \
