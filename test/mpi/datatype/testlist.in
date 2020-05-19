@@ -55,16 +55,16 @@ zeroblks 1
 struct_derived_zeros 1
 struct_verydeep 1
 get_elements 1
-hindexed_block 1 mpiversion=3.0
-hindexed_block_contents 1 mpiversion=3.0
+hindexed_block 1
+hindexed_block_contents 1
 vecblklen 1
 hvecblklen 1
 longdouble 1
 dataalign 2
-@largetest@large_count 1 mpiversion=3.0
-cxx_types 1 mpiversion=3.0
-@largetest@large_type 1 mpiversion=3.0
-@largetest@large_type_sendrec 2 arg=31 mpiversion=3.0 mem=4.3
-@largetest@large_type_sendrec 2 arg=32 mpiversion=3.0 timeLimit=360 mem=8.6
-@largetest@large_type_sendrec 2 arg=33 mpiversion=3.0 timeLimit=360 mem=17.2
-@largetest@large_vec 3 mpiversion=3.0 mem=9.8
+@largetest@large_count 1
+cxx_types 1
+@largetest@large_type 1
+@largetest@large_type_sendrec 2 arg=31 mem=4.3
+@largetest@large_type_sendrec 2 arg=32 timeLimit=360 mem=8.6
+@largetest@large_type_sendrec 2 arg=33 timeLimit=360 mem=17.2
+@largetest@large_vec 3 mem=9.8
