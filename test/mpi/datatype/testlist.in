@@ -41,7 +41,7 @@ pairtype_size_extent 1
 simple_commit 1
 simple_size_extent 1
 simple_size_extent_oldapi 1 strict=FALSE
-struct_no_real_types 1
+struct_no_real_types 1 strict=FALSE
 struct_empty_el 1
 contig_zero_count 1
 simple_resized 1
