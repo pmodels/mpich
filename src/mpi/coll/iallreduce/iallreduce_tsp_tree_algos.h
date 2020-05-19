@@ -105,12 +105,12 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
         MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
 
     /* initialize arrays to store graph vertex indices */
-    MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
-                        mpi_errno, "vtcs buffer", MPL_MEM_COLL);
     MPIR_CHKLMEM_MALLOC(reduce_id, int *, sizeof(int) * num_children,
                         mpi_errno, "reduce_id buffer", MPL_MEM_COLL);
     MPIR_CHKLMEM_MALLOC(recv_id, int *, sizeof(int) * num_children,
                         mpi_errno, "recv_id buffer", MPL_MEM_COLL);
+    MPIR_CHKLMEM_MALLOC(vtcs, int *, sizeof(int) * (num_children + 1),
+                        mpi_errno, "vtcs buffer", MPL_MEM_COLL);
 
     /* do pipelined allreduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
