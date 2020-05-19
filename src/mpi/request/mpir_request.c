@@ -10,6 +10,20 @@
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 
+void MPII_init_request(void)
+{
+    MPID_Thread_mutex_t *lock_ptr = NULL;
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
+#endif
+    /* *INDENT-OFF* */
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
+    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
+    }
+    /* *INDENT-ON* */
+}
+
 /* Complete a request, saving the status data if necessary.
    If debugger information is being provided for pending (user-initiated)
    send operations, the macros MPII_SENDQ_FORGET will be defined to
