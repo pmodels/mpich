@@ -414,7 +414,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
 
     *rreq = NULL;
 
-    if (message == NULL) {
+    if (message == NULL || message->handle == MPIR_REQUEST_NULL_RECV) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
         MPIR_Status_set_procnull(status);
         mpi_errno = MPI_SUCCESS;
@@ -444,7 +444,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMRECV);
 
     if (message == NULL) {
-        MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
+        *rreqp = MPIR_Request_create_null_recv();
         goto fn_exit;
     }
 
