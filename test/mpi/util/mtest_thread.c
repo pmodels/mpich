@@ -9,6 +9,10 @@
    that disallow pthread_barrier_t and friends.
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "mpitest.h"
+
 #if THREAD_PACKAGE_NAME == THREAD_PACKAGE_NONE
 
 /* Only empty initialization and finalization functions are supported. */
@@ -26,10 +30,6 @@ void MTest_finalize_thread_pkg(void)
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include "mpitest.h"
 
 /* This file provides a portability layer for using threads.  Currently,
    it supports POSIX threads (pthreads) and Windows threads.  Testing has
