@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 
     /* Set errors return so that we can provide better information
      * should a routine reject one of the attribute values */
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     rc = MPI_Attr_get(MPI_COMM_WORLD, MPI_TAG_UB, &v, &flag);
     if (rc) {
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
     MTest_Finalize(errs);
 

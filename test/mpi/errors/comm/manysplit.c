@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     maxcomm = -1;
     for (i = 0; i < MAX_COMMS; i++) {

@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         blklens[1] = 4 * sizeof(int);
         offsets[0] = 0;
         offsets[1] = sizeof(int);
-        MPI_Type_struct(2, blklens, offsets, oldtypes, &outtype);
+        MPI_Type_create_struct(2, blklens, offsets, oldtypes, &outtype);
         MPI_Type_commit(&outtype);
 
         buf[0] = 4 * sizeof(int);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         blklens[1] = 4 * sizeof(int) + 1;
         offsets[0] = 0;
         offsets[1] = sizeof(int);
-        MPI_Type_struct(2, blklens, offsets, oldtypes, &outtype);
+        MPI_Type_create_struct(2, blklens, offsets, oldtypes, &outtype);
         MPI_Type_commit(&outtype);
 
         buf[0] = 4 * sizeof(int) + 1;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         blklens[1] = 256;
         offsets[0] = 0;
         offsets[1] = sizeof(int);
-        MPI_Type_struct(2, blklens, offsets, oldtypes, &outtype);
+        MPI_Type_create_struct(2, blklens, offsets, oldtypes, &outtype);
         MPI_Type_commit(&outtype);
 
         for (i = 0; i < 3; i++) {

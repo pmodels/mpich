@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         }
 
 #ifdef ABSOLUTE
-        MPI_Type_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_DOUBLE, &src_type);
+        MPI_Type_create_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_DOUBLE, &src_type);
 #else
         MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &src_type);
 #endif

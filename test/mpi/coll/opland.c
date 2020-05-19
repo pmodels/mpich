@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     comm = MPI_COMM_WORLD;
     /* Set errors return so that we can provide better information
      * should a routine reject one of the operand/datatype pairs */
-    MPI_Errhandler_set(comm, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    MPI_Errhandler_set(comm, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(comm, MPI_ERRORS_ARE_FATAL);
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

@@ -59,7 +59,7 @@ int no_real_types_test(void)
 
     int count = 1;
     int len = 1;
-    MPI_Aint disp = 10;
+    MPI_Aint disp = 10, tmp_lb;
     MPI_Datatype type = MPI_LB;
     MPI_Datatype newtype;
 
@@ -91,7 +91,7 @@ int no_real_types_test(void)
         errs++;
     }
 
-    err = MPI_Type_extent(newtype, &extent);
+    err = MPI_Type_get_extent(newtype, &tmp_lb, &extent);
     if (err != MPI_SUCCESS) {
         if (verbose) {
             fprintf(stderr, "error obtaining type extent in no_real_types_test()\n");

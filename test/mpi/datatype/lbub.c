@@ -124,17 +124,23 @@ int int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
 
-    MPI_Datatype eviltype;
+    MPI_Datatype tmptype, eviltype;
 
-    err = MPI_Type_struct(3, blocks, disps, types, &eviltype);
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct failed.\n");
+            fprintf(stderr, "  MPI_Type_contiguous failed.\n");
+        if (verbose)
+            MTestPrintError(err);
+    }
+
+    err = MPI_Type_create_resized(tmptype, -3, 9, &eviltype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized failed.\n");
         if (verbose)
             MTestPrintError(err);
     }
@@ -152,36 +158,6 @@ int int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 4);
-    }
-
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 9) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %ld; should be %d\n", (long) aval, 9);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -3);
     }
 
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
@@ -205,21 +181,6 @@ int int_with_lb_ub_test(void)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 9);
     }
 
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 6) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, 6);
-    }
-
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -241,6 +202,7 @@ int int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 4);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&eviltype);
 
     return errs;
@@ -250,20 +212,29 @@ int contig_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
     char *typemapstring = 0;
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = (char *) "{ (LB,-3),4*(BYTE,0),(UB,6) }";
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    typemapstring = (char *) "{ 4*(BYTE,0) }";
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct of %s failed.\n", typemapstring);
+            fprintf(stderr, "  MPI_Type_contiguous of %s failed.\n", typemapstring);
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
+        return errs;
+    }
+
+    typemapstring = (char *) "{ (LB,-3),4*(BYTE,0),(UB,6) }";
+    err = MPI_Type_create_resized(tmptype, -3, 9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized of %s failed.\n", typemapstring);
         if (verbose)
             MTestPrintError(err);
         /* no point in continuing */
@@ -298,39 +269,6 @@ int contig_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 12);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 27) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 27);
-        if (verbose)
-            fprintf(stderr, " for type %s\n", typemapstring);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d from Type_lb; should be %d in %s\n", (int) aval, -3,
-                    typemapstring);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -352,22 +290,6 @@ int contig_of_int_with_lb_ub_test(void)
         if (verbose)
             fprintf(stderr, "  extent of type = %d from Type_get_extent; should be %d in %s\n",
                     (int) extent, 27, typemapstring);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 24) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d in Type_ub; should be %din %s\n", (int) aval, 24,
-                    typemapstring);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -393,6 +315,7 @@ int contig_of_int_with_lb_ub_test(void)
                     typemapstring);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -403,23 +326,32 @@ int contig_negextent_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { 6, 0, -3 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
     char *typemapstring = 0;
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    typemapstring = (char *) "{ 4*(BYTE,0) }";
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct of %s failed.\n", typemapstring);
+            fprintf(stderr, "  MPI_Type_contiguous of %s failed.\n", typemapstring);
         if (verbose)
             MTestPrintError(err);
-        /* No point in continuing */
+        /* no point in continuing */
+        return errs;
+    }
+
+    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    err = MPI_Type_create_resized(tmptype, 6, -9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized of %s failed.\n", typemapstring);
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
         return errs;
     }
 
@@ -451,36 +383,6 @@ int contig_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 12);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 9) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 9);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -12) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -12);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -500,21 +402,6 @@ int contig_negextent_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 9);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, -3);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -538,6 +425,7 @@ int contig_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 22);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -548,18 +436,26 @@ int vector_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct failed.\n");
+            fprintf(stderr, "  MPI_Type_contiguous failed.\n");
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
+        return errs;
+    }
+
+    err = MPI_Type_create_resized(tmptype, -3, 9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized failed.\n");
         if (verbose)
             MTestPrintError(err);
         /* no point in continuing */
@@ -592,36 +488,6 @@ int vector_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 12);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 27) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 27);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -3);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -641,21 +507,6 @@ int vector_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 27);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 24) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, 24);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -679,6 +530,7 @@ int vector_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 22);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -692,18 +544,26 @@ int vector_blklen_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct failed.\n");
+            fprintf(stderr, "  MPI_Type_contiguous failed.\n");
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
+        return errs;
+    }
+
+    err = MPI_Type_create_resized(tmptype, -3, 9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized failed.\n");
         if (verbose)
             MTestPrintError(err);
         /* no point in continuing */
@@ -736,38 +596,6 @@ int vector_blklen_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 48);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 54) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 54);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -3);
-        if (verbose)
-            MTestPrintError(err);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -787,21 +615,6 @@ int vector_blklen_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 54);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 51) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, 51);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -825,6 +638,7 @@ int vector_blklen_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 49);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -835,23 +649,32 @@ int vector_blklen_stride_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
     char *typemapstring = 0;
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = (char *) "{ (LB,-3),4*(BYTE,0),(UB,6) }";
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    typemapstring = (char *) "{ 4*(BYTE,0) }";
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct of %s failed.\n", typemapstring);
+            fprintf(stderr, "  MPI_Type_contiguous of %s failed.\n", typemapstring);
         if (verbose)
             MTestPrintError(err);
-        /* No point in continuing */
+        /* no point in continuing */
+        return errs;
+    }
+
+    typemapstring = (char *) "{ (LB,-3),4*(BYTE,0),(UB,6) }";
+    err = MPI_Type_create_resized(tmptype, -3, 9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized of %s failed.\n", typemapstring);
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
         return errs;
     }
 
@@ -879,36 +702,6 @@ int vector_blklen_stride_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 48);
-    }
-
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 126) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 126);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -3);
     }
 
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
@@ -932,21 +725,6 @@ int vector_blklen_stride_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 126);
     }
 
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 123) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, 123);
-    }
-
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -968,6 +746,7 @@ int vector_blklen_stride_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 121);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -978,18 +757,26 @@ int vector_blklen_negstride_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { -3, 0, 6 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct failed.\n");
+            fprintf(stderr, "  MPI_Type_contiguous failed.\n");
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
+        return errs;
+    }
+
+    err = MPI_Type_create_resized(tmptype, -3, 9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized failed.\n");
         if (verbose)
             MTestPrintError(err);
         /* no point in continuing */
@@ -1022,36 +809,6 @@ int vector_blklen_negstride_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 48);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 126) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 126);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -93) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -93);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -1071,21 +828,6 @@ int vector_blklen_negstride_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 126);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 33) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, 33);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -1109,6 +851,7 @@ int vector_blklen_negstride_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 121);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -1119,22 +862,31 @@ int int_with_negextent_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { 6, 0, -3 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
     char *typemapstring = 0;
 
-    MPI_Datatype eviltype;
+    MPI_Datatype tmptype, eviltype;
 
-    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
-    err = MPI_Type_struct(3, blocks, disps, types, &eviltype);
+    typemapstring = (char *) "{ 4*(BYTE,0) }";
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct of %s failed.\n", typemapstring);
+            fprintf(stderr, "  MPI_Type_contiguous of %s failed.\n", typemapstring);
         if (verbose)
             MTestPrintError(err);
-        /* No point in contiuing */
+        /* no point in continuing */
+        return errs;
+    }
+
+    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    err = MPI_Type_create_resized(tmptype, 6, -9, &eviltype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized of %s failed.\n", typemapstring);
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
         return errs;
     }
 
@@ -1151,36 +903,6 @@ int int_with_negextent_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 4);
-    }
-
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -9) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, -9);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 6) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, 6);
     }
 
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
@@ -1204,21 +926,6 @@ int int_with_negextent_test(void)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, -9);
     }
 
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, -3);
-    }
-
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -1240,6 +947,7 @@ int int_with_negextent_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 4);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&eviltype);
 
     return errs;
@@ -1249,22 +957,31 @@ int vector_blklen_stride_negextent_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint lb, extent, true_lb, aval;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { 6, 0, -3 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
     char *typemapstring = 0;
 
     /* build same type as in int_with_lb_ub_test() */
-    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    typemapstring = (char *) "{ 4*(BYTE,0) }";
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct of %s failed.\n", typemapstring);
+            fprintf(stderr, "  MPI_Type_contiguous of %s failed.\n", typemapstring);
         if (verbose)
             MTestPrintError(err);
-        /* No point in continuing */
+        /* no point in continuing */
+        return errs;
+    }
+
+    typemapstring = (char *) "{ (LB,6),4*(BYTE,0),(UB,-3) }";
+    err = MPI_Type_create_resized(tmptype, 6, -9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized of %s failed.\n", typemapstring);
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
         return errs;
     }
 
@@ -1294,36 +1011,6 @@ int vector_blklen_stride_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 48);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 108) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %d; should be %d\n", (int) aval, 108);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -111) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %d; should be %d\n", (int) aval, -111);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -1343,21 +1030,6 @@ int vector_blklen_stride_negextent_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %d; should be %d\n", (int) extent, 108);
-    }
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -3) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %d; should be %d\n", (int) aval, -3);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -1381,6 +1053,7 @@ int vector_blklen_stride_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %d; should be %d\n", (int) aval, 121);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
@@ -1391,18 +1064,26 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
 {
     int err, errs = 0, val;
     MPI_Aint extent, lb, aval, true_lb;
-    int blocks[3] = { 1, 4, 1 };
-    MPI_Aint disps[3] = { 6, 0, -3 };
-    MPI_Datatype types[3] = { MPI_LB, MPI_BYTE, MPI_UB };
 
-    MPI_Datatype inttype, eviltype;
+    MPI_Datatype tmptype, inttype, eviltype;
 
     /* build same type as in int_with_lb_ub_test() */
-    err = MPI_Type_struct(3, blocks, disps, types, &inttype);
+    err = MPI_Type_contiguous(4, MPI_BYTE, &tmptype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose)
-            fprintf(stderr, "  MPI_Type_struct failed.\n");
+            fprintf(stderr, "  MPI_Type_contiguous failed.\n");
+        if (verbose)
+            MTestPrintError(err);
+        /* no point in continuing */
+        return errs;
+    }
+
+    err = MPI_Type_create_resized(tmptype, 6, -9, &inttype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose)
+            fprintf(stderr, "  MPI_Type_create_resized failed.\n");
         if (verbose)
             MTestPrintError(err);
         /* no point in continuing */
@@ -1435,36 +1116,6 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  size of type = %d; should be %d\n", val, 48);
     }
 
-    err = MPI_Type_extent(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_extent failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 108) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  extent of type = %ld; should be %d\n", (long) aval, 108);
-    }
-
-    err = MPI_Type_lb(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_lb failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != -21) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  lb of type = %ld; should be %d\n", (long) aval, -21);
-    }
-
     err = MPI_Type_get_extent(eviltype, &lb, &extent);
     if (err != MPI_SUCCESS) {
         errs++;
@@ -1484,22 +1135,6 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
         errs++;
         if (verbose)
             fprintf(stderr, "  extent of type = %ld; should be %d\n", (long) extent, 108);
-    }
-
-
-    err = MPI_Type_ub(eviltype, &aval);
-    if (err != MPI_SUCCESS) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  MPI_Type_ub failed.\n");
-        if (verbose)
-            MTestPrintError(err);
-    }
-
-    if (aval != 87) {
-        errs++;
-        if (verbose)
-            fprintf(stderr, "  ub of type = %ld; should be %d\n", (long) aval, 87);
     }
 
     err = MPI_Type_get_true_extent(eviltype, &true_lb, &aval);
@@ -1523,6 +1158,7 @@ int vector_blklen_negstride_negextent_of_int_with_lb_ub_test(void)
             fprintf(stderr, "  true extent of type = %ld; should be %d\n", (long) aval, 121);
     }
 
+    MPI_Type_free(&tmptype);
     MPI_Type_free(&inttype);
     MPI_Type_free(&eviltype);
 
