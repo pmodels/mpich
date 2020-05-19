@@ -321,11 +321,13 @@
 /datatype/hindexed_block_contents
 /datatype/hvecblklen
 /datatype/indexed_misc
+/datatype/indexed_misc_oldapi
 /datatype/large_count
 /datatype/large_type
 /datatype/large_type_sendrec
 /datatype/large_vec
 /datatype/lbub
+/datatype/lbub_oldapi
 /datatype/localpack
 /datatype/longdouble
 /datatype/lots_of_types
@@ -340,6 +342,7 @@
 /datatype/simple_pack_external2
 /datatype/simple_resized
 /datatype/simple_size_extent
+/datatype/simple_size_extent_oldapi
 /datatype/sizedtypes
 /datatype/slice_pack
 /datatype/slice_pack_external
@@ -357,6 +360,7 @@
 /datatype/tfree
 /datatype/tmatchsize
 /datatype/transpose_pack
+/datatype/transpose_pack_oldapi
 /datatype/tresized
 /datatype/tresized2
 /datatype/triangular_pack
@@ -364,6 +368,7 @@
 /datatype/typefree
 /datatype/typelb
 /datatype/typename
+/datatype/typename_oldapi
 /datatype/unpack
 /datatype/unusual_noncontigs
 /datatype/vecblklen
