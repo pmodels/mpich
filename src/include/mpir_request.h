@@ -247,19 +247,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
         } \
     } while (0)
 
-static inline void MPII_init_request(void)
-{
-    MPID_Thread_mutex_t *lock_ptr = NULL;
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
-#endif
-    /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
-    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
-    }
-    /* *INDENT-ON* */
-}
+void MPII_init_request(void);
 
 /* To get the benefit of multiple request pool, device layer need register their per-vci lock
  * with each pool that they are going to use, typically a 1-1 vci-pool mapping.
