@@ -1,16 +1,19 @@
 contents 1
 gaddress 1
 lbub 1
+lbub_oldapi 1 strict=FALSE
 localpack 1
 simple_pack 1
 simple_pack_external 1
 simple_pack_external2 1
 transpose_pack 1
+transpose_pack_oldapi 1 strict=FALSE
 slice_pack 1
 struct_pack 1
 structpack2 1
 typecommit 1
 typename 1
+typename_oldapi 1 strict=FALSE
 typefree 1
 zeroparms 1
 concurrent_irecv 3
@@ -27,6 +30,7 @@ struct_zero_count 1
 blockindexed_zero_count 1
 blockindexed_misc 1
 indexed_misc 1
+indexed_misc_oldapi 1 strict=FALSE
 subarray_pack 1
 subarray 2
 darray_pack 1
@@ -36,6 +40,7 @@ darray_cyclic 12
 pairtype_size_extent 1
 simple_commit 1
 simple_size_extent 1
+simple_size_extent_oldapi 1 strict=FALSE
 struct_no_real_types 1
 struct_empty_el 1
 contig_zero_count 1

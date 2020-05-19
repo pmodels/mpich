@@ -15,6 +15,7 @@ EXTRA_DIST = testlist
 noinst_PROGRAMS = \
     adderr        \
     commcall      \
+    commcall_oldapi \
     errfatal      \
     predef_eh     \
     errstring2    \

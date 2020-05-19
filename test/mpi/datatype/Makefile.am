@@ -30,11 +30,13 @@ noinst_PROGRAMS =           \
     hindexed_block_contents \
     hvecblklen              \
     indexed_misc            \
+    indexed_misc_oldapi     \
     large_count             \
     large_type              \
     large_type_sendrec      \
     large_vec	            \
     lbub                    \
+    lbub_oldapi             \
     localpack               \
     longdouble              \
     lots_of_types           \
@@ -48,6 +50,7 @@ noinst_PROGRAMS =           \
     simple_pack_external2   \
     simple_resized          \
     simple_size_extent      \
+    simple_size_extent_oldapi \
     sizedtypes              \
     slice_pack              \
     slice_pack_external     \
@@ -64,6 +67,7 @@ noinst_PROGRAMS =           \
     tfree                   \
     tmatchsize              \
     transpose_pack          \
+    transpose_pack_oldapi   \
     tresized                \
     tresized2               \
     triangular_pack         \
@@ -71,6 +75,7 @@ noinst_PROGRAMS =           \
     typefree                \
     typelb                  \
     typename                \
+    typename_oldapi         \
     unpack                  \
     unusual_noncontigs      \
     vecblklen               \
