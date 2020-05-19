@@ -3,6 +3,9 @@
  *     See COPYRIGHT in top-level directory
  */
 
+/* This test is almost the same as commcall.c but uses old MPI functions:
+ * MPI_Errhandler_create() and MPI_Errhandler_set(). */
+
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
@@ -41,9 +44,10 @@ int main(int argc, char *argv[])
     comm = MPI_COMM_WORLD;
     mycomm = comm;
 
-    MPI_Comm_create_errhandler(eh, &newerr);
+    MPI_Errhandler_create(eh, &newerr);
 
-    MPI_Comm_set_errhandler(comm, newerr);
+    MPI_Errhandler_set(comm, newerr);
+    /* There is no corresponding old function. */
     MPI_Comm_call_errhandler(comm, MPI_ERR_OTHER);
     MPI_Errhandler_free(&newerr);
     if (calls != 1) {
@@ -58,9 +62,9 @@ int main(int argc, char *argv[])
             calls = 0;
             MPI_Comm_dup(MPI_COMM_WORLD, &comm);
             mycomm = comm;
-            MPI_Comm_create_errhandler(eh, &newerr);
+            MPI_Errhandler_create(eh, &newerr);
 
-            MPI_Comm_set_errhandler(comm, newerr);
+            MPI_Errhandler_set(comm, newerr);
             MPI_Comm_call_errhandler(comm, MPI_ERR_OTHER);
             if (calls != 1) {
                 errs++;
@@ -78,7 +82,7 @@ int main(int argc, char *argv[])
 
             if (reset_handler) {
                 /* extra checking of the reference count handling */
-                MPI_Comm_set_errhandler(comm, MPI_ERRORS_ARE_FATAL);
+                MPI_Errhandler_set(comm, MPI_ERRORS_ARE_FATAL);
             }
             MPI_Errhandler_free(&newerr);
 
