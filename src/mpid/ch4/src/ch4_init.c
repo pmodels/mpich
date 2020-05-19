@@ -579,7 +579,7 @@ int MPID_Init(int requested, int *provided)
         /* NOTE: 1-1 vci-pool mapping */
         MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
 
-        /* TODO: lw_req, workq */
+        /* TODO: workq */
     }
 
     {
