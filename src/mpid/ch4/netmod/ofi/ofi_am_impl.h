@@ -348,9 +348,24 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!dt_contig) {
-        send_buf = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
+    MPL_pointer_attr_t attr;
+    MPL_gpu_query_pointer_attr(buf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+        /* Force packing of GPU buffer in host memory */
+        dt_contig = 0;
+    }
 
+    if (!dt_contig) {
+        /* FIXME: currently we always do packing, also for high density types. However,
+         * we should not do packing unless needed. Also, for large low-density types
+         * we should not allocate the entire buffer and do the packing at once. */
+        /* TODO: (1) Skip packing for high-density datatypes;
+         *       (2) Pipeline allocation for low-density datatypes; */
+        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
+         * However, once the new buffer pool infrastructure is setup, we would simply be
+         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
+         * registered buffer should be equivalent with respect to performance. */
+        MPL_gpu_malloc_host((void **) &send_buf, data_sz);
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
         MPIR_ERR_CHECK(mpi_errno);
 
