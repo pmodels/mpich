@@ -117,3 +117,12 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
   fn_fail:
     goto fn_exit;
 }
+
+int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+
+    return mpi_errno;
+}
