@@ -272,7 +272,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
 
-    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+    MPL_gpu_free_host(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
