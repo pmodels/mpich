@@ -3164,6 +3164,8 @@ AC_CHECK_SIZEOF(wchar_t, 0, [
 #endif
 ])
 
+AC_CHECK_SIZEOF(__float128, 0)
+
 AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
 AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
 AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
@@ -3469,7 +3471,11 @@ if test "$ac_cv_sizeof_double" = "8" ; then
     MPI_COMPLEX16="0x4c00102a"
     MPIR_REAL8_CTYPE=double
 fi
-if test "$ac_cv_sizeof_long_double" = "16" -a "$MPID_NO_LONG_DOUBLE" != yes ; then
+if test "$ac_cv_sizeof___float128" = "16" ; then
+    MPI_REAL16="0x4c00102b"
+    MPI_COMPLEX32="0x4c00202c"
+    MPIR_REAL16_CTYPE="__float128"
+elif test "$ac_cv_sizeof_long_double" = "16" -a "$MPID_NO_LONG_DOUBLE" != yes ; then
     MPI_REAL16="0x4c00102b"
     MPI_COMPLEX32="0x4c00202c"
     MPIR_REAL16_CTYPE="long double"
