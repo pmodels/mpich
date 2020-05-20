@@ -74,3 +74,8 @@ int MPL_gpu_finalize()
 {
     return MPL_SUCCESS;
 }
+
+int MPL_gpu_get_device_handle(const void *buf, MPL_gpu_device_handle_t * h_device)
+{
+    return MPL_ERR_GPU_INTERNAL;
+}
