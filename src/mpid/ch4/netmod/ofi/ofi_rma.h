@@ -1060,7 +1060,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                                       max_size, &req, &flags, &ep, sigreq);
     MPIR_ERR_CHECK(mpi_errno);
 
-    req->event_id = MPIDI_OFI_EVENT_RMA_DONE;
+    req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
 

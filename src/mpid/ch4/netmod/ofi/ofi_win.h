@@ -57,7 +57,7 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
     if (do_free) {
         while (r) {
             MPIDI_OFI_win_request_t *next = r->next;
-            MPIDI_OFI_rma_done_event(NULL, (MPIR_Request *) r);
+            MPIDI_OFI_win_request_complete(r);
             r = next;
         }
 
