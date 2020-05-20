@@ -28,8 +28,8 @@ static void IME_IOContig(ADIO_File fd,
     static char myname[] = "ADIOI_IME_IOCONTIG";
 
     if (count == 0) {
-        *error_code = MPI_SUCCESS;
-        return;
+        ret = 0;
+        goto fn_exit;
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
@@ -64,8 +64,10 @@ static void IME_IOContig(ADIO_File fd,
         fd->fp_ind += ret;
     fd->fp_sys_posn = file_offset + ret;
 
+  fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
-    MPIR_Status_set_bytes(status, datatype, ret);
+    if (status)
+        MPIR_Status_set_bytes(status, datatype, ret);
 #endif
 
     *error_code = MPI_SUCCESS;

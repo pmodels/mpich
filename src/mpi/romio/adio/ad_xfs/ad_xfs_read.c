@@ -23,8 +23,8 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
     static char myname[] = "ADIOI_XFS_READCONTIG";
 
     if (count == 0) {
-        *error_code = MPI_SUCCESS;
-        return;
+        err = 0;
+        goto fn_exit;
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
@@ -92,8 +92,9 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL)
         fd->fp_ind += err;
 
+  fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
-    if (err != -1)
+    if (status && err != -1)
         MPIR_Status_set_bytes(status, datatype, err);
 #endif
 
