@@ -144,6 +144,9 @@ typedef struct ADIOI_Fl_node {
 #ifdef ROMIO_PVFS2
 #include <pvfs2.h>
 #endif
+#ifdef ROMIO_QUOBYTEFS
+#include "quobyte.h"
+#endif
 #ifdef ROMIO_DAOS
 #include <daos_types.h>
 #endif
@@ -156,6 +159,9 @@ typedef struct ADIOI_AIO_req_str {
     /* should probably make this a union */
 #ifdef ROMIO_HAVE_WORKING_AIO
     struct aiocb *aiocbp;
+#endif
+#ifdef ROMIO_QUOBYTEFS
+    struct quobyte_io_event *qaiocbp;
 #endif
 #ifdef ROMIO_PVFS2
     PVFS_sys_op_id op_id;
