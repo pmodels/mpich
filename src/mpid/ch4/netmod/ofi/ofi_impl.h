@@ -327,6 +327,7 @@ static inline void MPIDI_OFI_load_iov(const void *buffer, int count, MPI_Datatyp
     *loaded_iov_offset += outlen;
 }
 
+int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win);
 int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
                             MPI_Aint target_disp, int target_count,

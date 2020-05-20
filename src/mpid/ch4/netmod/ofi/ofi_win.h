@@ -22,26 +22,36 @@ static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
 
-    tcount = *MPIDI_OFI_WIN(win).issued_cntr;
-    donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
-
-    MPIR_Assert(donecount <= tcount);
-
-    while (tcount > donecount) {
-        MPIR_Assert(donecount <= tcount);
-        MPIDI_OFI_PROGRESS();
+    while (1) {
+        tcount = *MPIDI_OFI_WIN(win).issued_cntr;
         donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
-        itercount++;
 
-        if (itercount == 1000) {
-            ret = fi_cntr_wait(MPIDI_OFI_WIN(win).cmpl_cntr, tcount, 0);
-            MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
-                          mpi_errno,
-                          MPI_ERR_RMA_RANGE,
-                          "**ofid_cntr_wait",
-                          "**ofid_cntr_wait %s %d %s %s",
-                          __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
-            itercount = 0;
+        MPIR_Assert(donecount <= tcount);
+
+        while (tcount > donecount) {
+            MPIR_Assert(donecount <= tcount);
+            MPIDI_OFI_PROGRESS();
+            donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
+            itercount++;
+
+            if (itercount == 1000) {
+                ret = fi_cntr_wait(MPIDI_OFI_WIN(win).cmpl_cntr, tcount, 0);
+                MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
+                              mpi_errno,
+                              MPI_ERR_RMA_RANGE,
+                              "**ofid_cntr_wait",
+                              "**ofid_cntr_wait %s %d %s %s",
+                              __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
+                itercount = 0;
+            }
+        }
+
+        if (MPIDI_OFI_WIN(win).deferredQ) {
+            MPIDI_OFI_issue_deferred_rma(win);
+            continue;
+        } else {
+            /* any/all deferred operations are complete */
+            break;
         }
     }
 
