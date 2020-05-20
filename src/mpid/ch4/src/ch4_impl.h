@@ -9,7 +9,6 @@
 #include "ch4_types.h"
 #include "mpidig_am.h"
 #include "mpidu_shm.h"
-#include "mpidig_gpu_utils.h"
 
 int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
@@ -109,25 +108,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
-        /* host buf != NULL means this request falls back to host-buffer staging
-         * for GPU data. */
-        if (MPIDIG_GPU_REQUEST(req, host_buf)) {
-            if (req->kind == MPIR_REQUEST_KIND__SEND) {
-                /* Free host buf */
-                MPL_gpu_free_host(MPIDIG_GPU_REQUEST(req, host_buf));
-                MPIDIG_GPU_REQUEST(req, host_buf) = NULL;
-            } else if (req->kind == MPIR_REQUEST_KIND__RECV) {
-                /* Move data from host buf into device buf. */
-                MPIDIG_gpu_stage_copy_h2d(MPIDIG_GPU_REQUEST(req, host_buf),
-                                          MPIDIG_GPU_REQUEST(req, device_buf),
-                                          MPIDIG_GPU_REQUEST(req, count),
-                                          MPIDIG_GPU_REQUEST(req, datatype));
-                /* Free host buf */
-                MPL_gpu_free_host(MPIDIG_GPU_REQUEST(req, host_buf));
-                MPIDIG_GPU_REQUEST(req, host_buf) = NULL;
-                MPIDIG_GPU_REQUEST(req, device_buf) = NULL;
-            }
-        }
         MPIR_Request_free(req);
     }
 
