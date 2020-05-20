@@ -484,18 +484,6 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
     return MPI_SUCCESS;
 }
 
-int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RMA_DONE_EVENT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RMA_DONE_EVENT);
-
-    MPIDI_OFI_win_request_t *req = (MPIDI_OFI_win_request_t *) in_req;
-    MPIDI_OFI_win_request_complete(req);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RMA_DONE_EVENT);
-    return MPI_SUCCESS;
-}
-
 static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ACCEPT_PROBE_EVENT);
@@ -703,9 +691,6 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         /* Passing the event_id as a parameter; do not need to load it from the
          * request object each time the send_event handler is invoked */
         mpi_errno = recv_event(wc, req, MPIDI_OFI_EVENT_RECV);
-        goto fn_exit;
-    } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RMA_DONE)) {
-        mpi_errno = MPIDI_OFI_rma_done_event(wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
         mpi_errno = am_isend_event(wc, req);
