@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "ipc_noinline.h"
+#include "ipc_control.h"
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "../xpmem/xpmem_noinline.h"
 #endif

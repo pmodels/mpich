@@ -8,6 +8,7 @@
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 #include "shm_control.h"
+#include "xpmem_control.h"
 
 static void regist_shm_ctrl_cb(void)
 {

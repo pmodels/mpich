@@ -6,7 +6,6 @@
 #ifndef SHM_IPC_INLINE_H_INCLUDED
 #define SHM_IPC_INLINE_H_INCLUDED
 
-#include "ipc_control.h"
 #include "ipc_send.h"
 #include "ipc_recv.h"
 
