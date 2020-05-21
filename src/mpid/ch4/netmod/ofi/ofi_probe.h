@@ -33,7 +33,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_av_to_phys(addr);
 
     if (message) {
-        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE, 0);
+        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = &r;
