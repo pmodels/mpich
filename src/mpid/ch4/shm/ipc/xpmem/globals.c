@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "xpmem_pre.h"
-#include "xpmem_impl.h"
 
 MPIDI_IPC_xpmem_global_t MPIDI_IPC_xpmem_global;
 

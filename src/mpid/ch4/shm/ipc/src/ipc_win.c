@@ -3,7 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "ipc_impl.h"
+#include "mpidimpl.h"
 #include "ipc_noinline.h"
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
 #include "../xpmem/xpmem_noinline.h"

@@ -5,7 +5,6 @@
 
 #include "mpidimpl.h"
 #include "ipc_pre.h"
-#include "ipc_impl.h"
 #include "ipc_recv.h"
 #include "ipc_control.h"
 

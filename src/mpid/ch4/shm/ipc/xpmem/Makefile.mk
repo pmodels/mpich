@@ -6,7 +6,6 @@
 if BUILD_SHM_IPC_XPMEM
 
 noinst_HEADERS += src/mpid/ch4/shm/ipc/xpmem/xpmem_noinline.h  \
-                  src/mpid/ch4/shm/ipc/xpmem/xpmem_impl.h      \
                   src/mpid/ch4/shm/ipc/xpmem/xpmem_seg.h       \
                   src/mpid/ch4/shm/ipc/xpmem/xpmem_send.h      \
                   src/mpid/ch4/shm/ipc/xpmem/xpmem_recv.h      \

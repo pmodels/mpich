@@ -6,7 +6,7 @@
 #ifndef IPC_NOINLINE_H_INCLUDED
 #define IPC_NOINLINE_H_INCLUDED
 
-#include "ipc_impl.h"
+#include "mpidimpl.h"
 
 int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_IPC_mpi_finalize_hook(void);

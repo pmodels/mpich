@@ -3,7 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#include "xpmem_impl.h"
+#include "mpidimpl.h"
 #include "xpmem_noinline.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
