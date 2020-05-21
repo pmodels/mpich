@@ -575,6 +575,10 @@ int MPID_Init(int requested, int *provided)
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
+
+        /* NOTE: 1-1 vci-pool mapping */
+        MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
+
         /* TODO: lw_req, workq */
     }
 
