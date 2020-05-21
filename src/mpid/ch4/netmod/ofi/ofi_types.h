@@ -417,6 +417,8 @@ typedef struct MPIDI_OFI_win_acc_hint {
 enum {
     MPIDI_OFI_PUT,
     MPIDI_OFI_GET,
+    MPIDI_OFI_ACC,
+    MPIDI_OFI_GET_ACC,
 };
 
 typedef struct MPIDI_OFI_win_request {
@@ -425,6 +427,7 @@ typedef struct MPIDI_OFI_win_request {
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int target_rank;
+    int rma_type;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
