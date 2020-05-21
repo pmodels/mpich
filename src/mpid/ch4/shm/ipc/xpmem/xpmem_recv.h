@@ -230,12 +230,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_recv(MPIDI_IPC_mem_handl
 
     int mpi_errno = MPI_SUCCESS;
     int recvtype_iscontig;
+    size_t recv_data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_RECV);
     /* TODO: need to support cooperative copy on non-contig datatype on receiver side. */
-    MPIR_Datatype_is_contig(MPIDIG_REQUEST(rreq, datatype), &recvtype_iscontig);
-    if (recvtype_iscontig && data_sz > MPIR_CVAR_CH4_XPMEM_COOP_COPY_THRESHOLD) {
+    MPIDI_Datatype_check_contig_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count),
+                                     recvtype_iscontig, recv_data_sz);
+    if (recvtype_iscontig && recv_data_sz > MPIR_CVAR_CH4_XPMEM_COOP_COPY_THRESHOLD) {
         /* Cooperative XPMEM copy */
         mpi_errno =
             MPIDI_IPC_xpmem_handle_lmt_coop_recv(mem_handle, data_sz, sreq_ptr, src_lrank, comm,
