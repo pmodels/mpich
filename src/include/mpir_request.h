@@ -301,6 +301,9 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
 {
     MPIR_Request *req;
 
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+#endif
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
                                        REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
     if (req != NULL) {
@@ -446,6 +449,9 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
             MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
         } else {
+#ifdef MPICH_DEBUG_MUTEX
+            MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+#endif
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
         }
     }
