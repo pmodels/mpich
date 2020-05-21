@@ -218,6 +218,9 @@ struct MPIR_Request {
 #define REQUEST_OBJECT_SHIFT 0
 #define REQUEST_OBJECT_MAX   4096
 
+#define REQUEST_NUM_BLOCKS   256
+#define REQUEST_NUM_INDICES  1024
+
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
@@ -283,17 +286,16 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
 {
     MPIR_Request *req;
 
-    /* NOTE: observes HANDLE_NUM_BLOCKS and HANDLE_NUM_INDICES */
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem[pool]);
+    /* TODO: move the VCI lock to caller */
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
+                                       REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     if (req != NULL) {
-        /* Patch the handle.
-         * Or, we could use a custom "Request_obj_alloc" to save some cycles */
-        if (HANDLE_BLOCK(req->handle) >= REQUEST_BLOCK_MAX) {
-            /* FIXME: free the request */
-            req = NULL;
-        } else {
-            req->handle |= (pool << REQUEST_POOL_SHIFT);
-        }
+        /* Patch the handle for pool index. */
+        req->handle |= (pool << REQUEST_POOL_SHIFT);
     }
 
     if (req != NULL) {
@@ -420,7 +422,11 @@ static inline void MPIR_Request_free(MPIR_Request * req)
         MPID_Request_destroy_hook(req);
 
         int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
-        MPIR_Handle_obj_free(&MPIR_Request_mem[pool], req);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+        MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     }
 }
 
