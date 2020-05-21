@@ -11,7 +11,7 @@
 int MPIDI_IPC_xpmem_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->ipc_xpmem_slmt_recv_fin.req_ptr;
+    MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_coop_recv_fin.req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_RECV_FIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_RECV_FIN_CB);
@@ -29,7 +29,7 @@ int MPIDI_IPC_xpmem_send_lmt_recv_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 int MPIDI_IPC_xpmem_send_lmt_send_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->ipc_xpmem_slmt_send_fin.req_ptr;
+    MPIR_Request *rreq = (MPIR_Request *) ctrl_hdr->xpmem_slmt_coop_send_fin.req_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_SEND_FIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_SEND_FIN_CB);
@@ -51,7 +51,7 @@ int MPIDI_IPC_xpmem_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
-    MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr->ipc_xpmem_slmt_cts;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_coop_cts_t *slmt_cts_hdr = &ctrl_hdr->xpmem_slmt_coop_cts;
     MPIDI_IPC_xpmem_seg_t *seg_ptr = NULL;
     MPIDI_IPC_xpmem_seg_t *counter_seg_ptr = NULL;
     void *dest_buf = NULL;
@@ -122,14 +122,14 @@ int MPIDI_IPC_xpmem_send_lmt_cts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
             MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
 
             if (copy_type == MPIDI_IPC_XPMEM_COPY_ZERO) {
-                ack_ctrl_hdr.ipc_xpmem_slmt_cnt_free.coop_counter_direct_flag =
+                ack_ctrl_hdr.xpmem_slmt_coop_cnt_free.coop_counter_direct_flag =
                     slmt_cts_hdr->coop_counter_direct_flag;
-                ack_ctrl_hdr.ipc_xpmem_slmt_cnt_free.coop_counter_offset =
+                ack_ctrl_hdr.xpmem_slmt_coop_cnt_free.coop_counter_offset =
                     slmt_cts_hdr->coop_counter_offset;
-                ctrl_id = MPIDI_SHM_IPC_XPMEM_SEND_LMT_CNT_FREE;
+                ctrl_id = MPIDI_SHM_XPMEM_SEND_LMT_COOP_CNT_FREE;
             } else {
-                ack_ctrl_hdr.ipc_xpmem_slmt_send_fin.req_ptr = slmt_cts_hdr->rreq_ptr;
-                ctrl_id = MPIDI_SHM_IPC_XPMEM_SEND_LMT_SEND_FIN;
+                ack_ctrl_hdr.xpmem_slmt_coop_send_fin.req_ptr = slmt_cts_hdr->rreq_ptr;
+                ctrl_id = MPIDI_SHM_XPMEM_SEND_LMT_COOP_SEND_FIN;
             }
 
             mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(sreq, rank),
@@ -161,8 +161,8 @@ int MPIDI_IPC_xpmem_send_lmt_cnt_free_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_IPC_xpmem_cnt_t *counter_ptr;
-    MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cnt_free_t *xpmem_slmt_cnt_free =
-        &ctrl_hdr->ipc_xpmem_slmt_cnt_free;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_coop_cnt_free_t *xpmem_slmt_cnt_free =
+        &ctrl_hdr->xpmem_slmt_coop_cnt_free;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_CNT_FREE_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_XPMEM_SEND_LMT_CNT_FREE_CB);

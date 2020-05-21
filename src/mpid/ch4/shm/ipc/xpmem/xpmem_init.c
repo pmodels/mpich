@@ -11,12 +11,12 @@
 
 static void regist_shm_ctrl_cb(void)
 {
-    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_CTS, &MPIDI_IPC_xpmem_send_lmt_cts_cb);
-    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_SEND_FIN,
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_COOP_CTS, &MPIDI_IPC_xpmem_send_lmt_cts_cb);
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_COOP_SEND_FIN,
                           &MPIDI_IPC_xpmem_send_lmt_send_fin_cb);
-    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_RECV_FIN,
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_COOP_RECV_FIN,
                           &MPIDI_IPC_xpmem_send_lmt_recv_fin_cb);
-    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_IPC_XPMEM_SEND_LMT_CNT_FREE,
+    MPIDI_SHM_ctrl_reg_cb(MPIDI_SHM_XPMEM_SEND_LMT_COOP_CNT_FREE,
                           &MPIDI_IPC_xpmem_send_lmt_cnt_free_cb);
 }
 

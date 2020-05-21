@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_send_contig_lmt(const void *buf, MPI_Ain
     bool is_contig ATTRIBUTE((unused)) = 0;
     MPIR_Request *sreq = NULL;
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
-    MPIDI_SHM_ctrl_ipc_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.ipc_slmt_rts;
+    MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.ipc_contig_slmt_rts;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCG_SEND_CONTIG_LMT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCG_SEND_CONTIG_LMT);
@@ -138,8 +138,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_recv(MPIDI_SHM_IPC_type_t ipc
     mpi_errno = MPIDI_IPC_close_mem(mem_seg, src_buf);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ack_ctrl_hdr.ipc_slmt_fin.ipc_type = ipc_type;
-    ack_ctrl_hdr.ipc_slmt_fin.req_ptr = sreq_ptr;
+    ack_ctrl_hdr.ipc_contig_slmt_fin.ipc_type = ipc_type;
+    ack_ctrl_hdr.ipc_contig_slmt_fin.req_ptr = sreq_ptr;
     mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
                                        MPIDIG_context_id_to_comm(MPIDIG_REQUEST
                                                                  (rreq, context_id)),

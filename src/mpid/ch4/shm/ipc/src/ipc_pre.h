@@ -59,7 +59,7 @@ typedef struct {
 } MPIDI_IPC_am_request_t;
 
 /* ctrl packet header types */
-typedef struct MPIDI_SHM_ctrl_ipc_send_lmt_rts {
+typedef struct MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts {
     MPIDI_SHM_IPC_type_t ipc_type;
     MPIDI_IPC_mem_handle_t mem_handle;
     uint64_t data_sz;           /* data size in bytes */
@@ -70,12 +70,12 @@ typedef struct MPIDI_SHM_ctrl_ipc_send_lmt_rts {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
-} MPIDI_SHM_ctrl_ipc_send_lmt_rts_t;
+} MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t;
 
-typedef struct MPIDI_SHM_ctrl_ipc_send_lmt_fin {
+typedef struct MPIDI_SHM_ctrl_ipc_send_contig_lmt_fin {
     MPIDI_SHM_IPC_type_t ipc_type;
     uint64_t req_ptr;
-} MPIDI_SHM_ctrl_ipc_send_lmt_fin_t;
+} MPIDI_SHM_ctrl_ipc_send_contig_lmt_fin_t;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_SHM_IPC_GENERAL;

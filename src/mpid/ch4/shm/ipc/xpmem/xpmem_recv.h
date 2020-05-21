@@ -113,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(MPIDI_IPC_mem_
     MPIDI_IPC_xpmem_fin_type_t fin_type = MPIDI_IPC_XPMEM_LOCAL_FIN;
     MPIDI_IPC_xpmem_copy_type_t copy_type = MPIDI_IPC_XPMEM_COPY_ALL;
     MPIDI_SHM_ctrl_hdr_t ctrl_hdr;
-    MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_cts_t *slmt_cts_hdr = &ctrl_hdr.ipc_xpmem_slmt_cts;
+    MPIDI_SHM_ctrl_xpmem_send_lmt_coop_cts_t *slmt_cts_hdr = &ctrl_hdr.xpmem_slmt_coop_cts;
     uint64_t src_offset = mem_handle.xpmem.src_offset;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_XPMEM_HANDLE_LMT_COOP_RECV);
@@ -153,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(MPIDI_IPC_mem_
 
     /* Receiver sends CTS packet to sender */
     mpi_errno =
-        MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm, MPIDI_SHM_IPC_XPMEM_SEND_LMT_CTS,
+        MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank), comm, MPIDI_SHM_XPMEM_SEND_LMT_COOP_CTS,
                                &ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -192,13 +192,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_coop_recv(MPIDI_IPC_mem_
         if (fin_type == MPIDI_IPC_XPMEM_BOTH_FIN) {
             if (copy_type != MPIDI_IPC_XPMEM_COPY_ZERO) {
                 MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
-                MPIDI_SHM_ctrl_ipc_xpmem_send_lmt_recv_fin_t *slmt_fin_hdr =
-                    &ack_ctrl_hdr.ipc_xpmem_slmt_recv_fin;
+                MPIDI_SHM_ctrl_xpmem_send_lmt_coop_recv_fin_t *slmt_fin_hdr =
+                    &ack_ctrl_hdr.xpmem_slmt_coop_recv_fin;
                 slmt_fin_hdr->req_ptr = sreq_ptr;
                 mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
                                                    MPIDIG_context_id_to_comm(MPIDIG_REQUEST
                                                                              (rreq, context_id)),
-                                                   MPIDI_SHM_IPC_XPMEM_SEND_LMT_RECV_FIN,
+                                                   MPIDI_SHM_XPMEM_SEND_LMT_COOP_RECV_FIN,
                                                    &ack_ctrl_hdr);
                 MPIR_ERR_CHECK(mpi_errno);
             }
