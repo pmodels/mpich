@@ -14,8 +14,8 @@
 #define confirm_extent(type, extent)                                    \
     do {                                                                \
         MPI_Aint type_extent;                                           \
-        MPI_Aint tmp_lb;                                                \
-        MPI_Type_get_extent(type, &tmp_lb, &type_extent);               \
+        MPI_Aint tmp_lb_;                                               \
+        MPI_Type_get_extent(type, &tmp_lb_, &type_extent);              \
         if (type_extent != extent) {                                    \
             fprintf(stderr, "expected extent of %" PRIu64 ", but got %zd\n", extent, type_extent); \
             fflush(stderr);                                             \
