@@ -193,7 +193,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
 
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
-        (req) = MPIR_Request_create(kind);  \
+        (req) = MPIR_Request_create_from_pool(kind, 0);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
@@ -216,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request 
           if (MPIDI_OFI_need_request_creation(req)) {                   \
               MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
                           (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind);                        \
+              (req) = MPIR_Request_create_from_pool(kind, 0);           \
               MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                   "**nomemreq");                        \
           }                                                             \
