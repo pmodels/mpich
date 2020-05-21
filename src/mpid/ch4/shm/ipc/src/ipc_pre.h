@@ -11,6 +11,7 @@
 #endif
 
 typedef enum {
+    MPIDI_SHM_IPC_TYPE__NONE,   /* avoid empty enum */
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     MPIDI_SHM_IPC_TYPE__XPMEM,
 #endif
