@@ -564,12 +564,21 @@ int MPID_Init(int requested, int *provided)
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
     MPIDI_global.n_vcis = 1;
-    if (MPIR_CVAR_CH4_NUM_VCIS > 1)
+    if (MPIR_CVAR_CH4_NUM_VCIS > 1) {
         MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+        /* There are configured maxes that we need observe. */
+        /* TODO: check them at configure time to avoid discrepancy */
+        MPIR_Assert(MPIDI_global.n_vcis <= MPIDI_CH4_MAX_VCIS);
+        MPIR_Assert(MPIDI_global.n_vcis <= MPIR_REQUEST_NUM_POOLS);
+    }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
+
+        /* NOTE: 1-1 vci-pool mapping */
+        MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
+
         /* TODO: lw_req, workq */
     }
 

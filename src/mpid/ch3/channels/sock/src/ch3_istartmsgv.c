@@ -13,7 +13,7 @@ static MPIR_Request *create_request(struct iovec * iov, int iov_count, int iov_o
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
         return NULL;
@@ -138,7 +138,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int n_iov, MPIR_Re
             else {
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, TYPICAL,
                               "ERROR - MPIDI_CH3I_Sock_writev failed, rc=%d", rc);
-                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
+                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
                 if (sreq == NULL) {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                 }
@@ -194,7 +194,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, struct iovec * iov, int n_iov, MPIR_Re
     else {
         /* Connection failed, so allocate a request and return an error. */
         MPL_DBG_VCUSE(vc, "ERROR - connection failed");
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         if (sreq == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         }
