@@ -134,7 +134,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         } else {
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
             MPIR_cc_set(&req->cc, 0);
-            MPIR_Request_free((MPIR_Request *) ucp_request->req);
+            MPIR_Request_free_unsafe((MPIR_Request *) ucp_request->req);
         }
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);

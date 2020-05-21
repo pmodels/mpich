@@ -392,7 +392,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     return req;
 }
 
-static inline void MPIR_Request_free(MPIR_Request * req)
+static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int inuse;
 
@@ -439,12 +439,32 @@ static inline void MPIR_Request_free(MPIR_Request * req)
         MPID_Request_destroy_hook(req);
 
         int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-        MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
-        MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-        MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+        if (need_safety) {
+            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+            MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
+            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+            MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+        } else {
+            MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
+        }
     }
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_free_safe(MPIR_Request * req)
+{
+    MPIR_Request_free_with_safety(req, 1);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_free_unsafe(MPIR_Request * req)
+{
+    MPIR_Request_free_with_safety(req, 0);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_free(MPIR_Request * req)
+{
+    /* The default is to assume we need safety unless it's global thread granularity */
+    MPIR_Request_free_with_safety(req, 1);
 }
 
 /* Requests that are not created inside device (general requests, nonblocking collective

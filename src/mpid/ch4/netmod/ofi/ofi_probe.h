@@ -59,7 +59,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
-            MPIR_Request_free(rreq);
+            MPIR_Request_free_unsafe(rreq);
         goto fn_exit;
     }
 
@@ -71,7 +71,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
             *flag = 0;
 
             if (message)
-                MPIR_Request_free(rreq);
+                MPIR_Request_free_unsafe(rreq);
 
             goto fn_exit;
             break;

@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_request_complete(MPIR_Request * req)
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete) {
-        MPIR_Request_free(req);
+        MPIR_Request_free_unsafe(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_REQUEST_COMPLETE);

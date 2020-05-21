@@ -48,7 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_unsafe(void *buf,
                 if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
                     (*request)->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)->status;
                 }
-                MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
+                MPIR_Request_free_unsafe(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
                 goto fn_exit;
             }
 
@@ -118,7 +118,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_unsafe(void *buf,
                 if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
                     (*request)->status = MPIDI_REQUEST_ANYSOURCE_PARTNER(*request)->status;
                 }
-                MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
+                MPIR_Request_free_unsafe(MPIDI_REQUEST_ANYSOURCE_PARTNER(*request));
                 goto fn_exit;
             }
 
@@ -185,7 +185,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_unsafe(MPIR_Request * rreq)
             /* Canceling MPI_ANY_SOURCE receive -- first cancel NM recv, then SHM */
             mpi_errno = MPIDI_NM_mpi_cancel_recv(partner_rreq);
             MPIR_ERR_CHECK(mpi_errno);
-            MPIR_Request_free(partner_rreq);
+            MPIR_Request_free_unsafe(partner_rreq);
         }
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
     } else {
