@@ -21,7 +21,7 @@ struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 
 MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
     0, 0, 0, 0, MPIR_INTERNAL, sizeof(struct MPIDI_workq_elemt), MPIDI_workq_elemt_direct,
-    MPIDI_WORKQ_ELEMT_PREALLOC
+    MPIDI_WORKQ_ELEMT_PREALLOC, NULL
 };
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 

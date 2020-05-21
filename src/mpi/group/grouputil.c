@@ -16,7 +16,8 @@ MPIR_Group MPIR_Group_direct[MPID_GROUP_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPIR_GROUP,
     sizeof(MPIR_Group), MPIR_Group_direct,
-    MPID_GROUP_PREALLOC
+    MPID_GROUP_PREALLOC,
+    NULL
 };
 
 MPIR_Group *const MPIR_Group_empty = &MPIR_Group_builtin[0];

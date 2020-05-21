@@ -39,6 +39,7 @@ MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, MPIR_GREQ_CLASS,
     sizeof(MPIR_Grequest_class),
     MPIR_Grequest_class_direct,
     MPIR_GREQ_CLASS_PREALLOC,
+    NULL
 };
 
 /* We jump through some minor hoops to manage the list of classes ourselves and
