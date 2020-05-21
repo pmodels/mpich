@@ -249,12 +249,25 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
 static inline void MPII_init_request(void)
 {
+    MPID_Thread_mutex_t *lock_ptr = NULL;
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
+#endif
     /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC };
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
     for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0 };
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
     }
     /* *INDENT-ON* */
+}
+
+/* To get the benefit of multiple request pool, device layer need register their per-vci lock
+ * with each pool that they are going to use, typically a 1-1 vci-pool mapping.
+ * NOTE: currently, only per-vci thread granularity utilizes multiple request pool.
+ */
+static inline void MPIR_Request_register_pool_lock(int pool, MPID_Thread_mutex_t * lock)
+{
+    MPIR_Request_mem[pool].lock = lock;
 }
 
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
@@ -282,18 +295,14 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
-/* NOTE: in ch4 per-vci thread granularity, this function (and MPIR_Request_free)
- * are unsafe by themself. It requires the callers to be always under consistent
- * critical section per-pool.
+/* NOTE: Pool-specific request creation is unsafe unless under global thread granularity.
  */
 static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool)
 {
     MPIR_Request *req;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
                                        REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     if (req != NULL) {
         /* Patch the handle for pool index. */
         req->handle |= (pool << REQUEST_POOL_SHIFT);
@@ -350,9 +359,16 @@ static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t ki
     return req;
 }
 
+/* NOTE: safe under per-vci, per-obj, or global thread granularity */
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
-    return MPIR_Request_create_from_pool(kind, 0);
+    MPIR_Request *req;
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
+    req = MPIR_Request_create_from_pool(kind, 0);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[0].lock));
+    return req;
 }
 
 #define MPIR_Request_add_ref(req_p_) \
@@ -424,8 +440,10 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+        MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
         MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+        MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
     }
 }
 

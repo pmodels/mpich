@@ -421,6 +421,12 @@ typedef struct MPIR_Object_alloc_t {
     void *direct;               /* Pointer to direct block, used
                                  * for allocation */
     int direct_size;            /* Size of direct block */
+    void *lock;                 /* lower-layer may register a lock to use. This is
+                                 * mostly for multipool requests. For other objects
+                                 * or not per-vci thread granularity, this lock
+                                 * pointer is ignored. Ref. mpir_request.h.
+                                 * NOTE: it is `void *` because mutex type not defined yet.
+                                 */
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *,

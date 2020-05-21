@@ -30,7 +30,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr);
    define MPID_<OBJ>_PREALLOC 256
    MPIR_Object_alloc_t MPID_<obj>_mem = { 0, 0, 0, 0, MPID_<obj>,
                                           sizeof(MPID_<obj>), MPID_<obj>_direct,
-                                          MPID_<OBJ>_PREALLOC, };
+                                          MPID_<OBJ>_PREALLOC, NULL};
 
    // Preallocated objects
    MPID_<obj> MPID_<obj>_direct[MPID_<OBJ>_PREALLOC];
