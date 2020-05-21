@@ -80,7 +80,7 @@ int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
 
     /* MT FIXME this routine is not thread-safe in the non-global case */
 
-    *request_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__GREQUEST, 0);
+    *request_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__GREQUEST);
     MPIR_ERR_CHKANDJUMP1(*request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "generalized request");
 

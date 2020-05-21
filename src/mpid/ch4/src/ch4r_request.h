@@ -17,7 +17,7 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
 
-    req = MPIR_Request_create(kind, 0);
+    req = MPIR_Request_create(kind);
     if (req == NULL)
         goto fn_fail;
 

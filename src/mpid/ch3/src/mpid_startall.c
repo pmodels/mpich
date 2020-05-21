@@ -17,7 +17,7 @@
 /* This macro initializes all of the fields in a persistent request */
 #define MPIDI_Request_create_psreq(sreq_, mpi_errno_, FAIL_)		\
 {									\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 0);                  \
+    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_SEND);                  \
     if ((sreq_) == NULL)						\
     {									\
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"send request allocation failed");\
@@ -275,7 +275,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
     
-    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 0);
+    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
     if (rreq == NULL)
     {
 	/* --BEGIN ERROR HANDLING-- */

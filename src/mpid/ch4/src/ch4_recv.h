@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(RECV, NULL /*send_buf */ , buf, count, datatype,
@@ -252,7 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    *(req) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
     MPIR_ERR_CHKANDSTMT((*req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(IRECV, NULL /*send_buf */ , buf, count, datatype,
@@ -283,7 +283,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMRECV_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+    MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
     MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
@@ -367,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
-    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 0);
+    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
     MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = rreq;

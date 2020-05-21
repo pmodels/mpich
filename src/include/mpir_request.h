@@ -204,7 +204,8 @@ struct MPIR_Request {
  * are extended here for request objects. It is separate from the other objects, and the
  * bit patterns for POOL and BLOCK sizes can be adjusted if necessary.
  *
- * NOTE: MPIR_Request_create/free are patched to work with pools.
+ * MPIR_Request_create_from_pool is used to create request objects from a specific pool.
+ * MPIR_Request_create is a wrapper to create request from pool 0.
  */
 /* Handle Bits - 2+4+6+8+12 - Type, Kind, Pool_idx, Block_idx, Object_idx */
 #define REQUEST_POOL_MASK    0x03f00000
@@ -278,7 +279,7 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
-static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int pool)
+static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool)
 {
     MPIR_Request *req;
 
@@ -346,6 +347,11 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int po
     return req;
 }
 
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+{
+    return MPIR_Request_create_from_pool(kind, 0);
+}
+
 #define MPIR_Request_add_ref(req_p_) \
     do { MPIR_Object_add_ref(req_p_); } while (0)
 
@@ -357,7 +363,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     MPIR_Request *req;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind, 0);
+    req = MPIR_Request_create(kind);
     MPIR_cc_set(&req->cc, 0);
 #else
     req = MPIR_Process.lw_req;
