@@ -242,8 +242,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_xpmem_handle_lmt_recv(MPIDI_IPC_mem_handl
                                                  rreq);
     } else {
         mpi_errno =
-            MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_TYPE__XPMEM, mem_handle, data_sz,
-                                              sreq_ptr, src_lrank, rreq);
+            MPIDI_IPCG_handle_lmt_recv(MPIDI_SHM_IPC_TYPE__XPMEM, mem_handle, data_sz,
+                                       sreq_ptr, src_lrank, rreq);
     }
 
   fn_exit:

@@ -84,11 +84,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_send_contig_lmt(const void *buf, MPI_Ain
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_type_t ipc_type,
-                                                               MPIDI_IPC_mem_handle_t mem_handle,
-                                                               size_t src_data_sz,
-                                                               uint64_t sreq_ptr,
-                                                               int src_lrank, MPIR_Request * rreq)
+/* Generic receiver side handler for sender-initialized LMT with contig send buffer.
+ *
+ * The receiver opens the memory handle issued by sender and then performs unpack
+ * to its recv buffer. It closes the memory handle after unpack and finally issues
+ * LMT_FIN ack to the sender.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_recv(MPIDI_SHM_IPC_type_t ipc_type,
+                                                        MPIDI_IPC_mem_handle_t mem_handle,
+                                                        size_t src_data_sz,
+                                                        uint64_t sreq_ptr,
+                                                        int src_lrank, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_IPC_mem_seg_t mem_seg;
@@ -96,8 +102,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_typ
     size_t data_sz, recv_data_sz;
     MPIDI_SHM_ctrl_hdr_t ack_ctrl_hdr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCG_HANDLE_SEND_LMT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCG_HANDLE_SEND_LMT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCG_HANDLE_LMT_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCG_HANDLE_LMT_RECV);
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
     memset(&mem_seg, 0, sizeof(mem_seg));
@@ -116,7 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_typ
                                      &mem_seg, &src_buf);
     MPIR_ERR_CHECK(mpi_errno);
 
-    IPC_TRACE("handle_lmt_single_recv: handle matched rreq %p [source %d, tag %d, "
+    IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, src %lx, bytes %ld\n", rreq,
               MPIDIG_REQUEST(rreq, rank), MPIDIG_REQUEST(rreq, tag),
               MPIDIG_REQUEST(rreq, context_id), (char *) MPIDIG_REQUEST(rreq, buffer),
@@ -124,10 +130,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_typ
 
     /* Copy data to receive buffer */
     MPI_Aint actual_unpack_bytes;
-    mpi_errno =
-        MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
-                            (char *) MPIDIG_REQUEST(rreq, buffer), recv_data_sz,
-                            MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+    mpi_errno = MPIR_Typerep_unpack((const void *) src_buf, src_data_sz,
+                                    (char *) MPIDIG_REQUEST(rreq, buffer), recv_data_sz,
+                                    MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
     MPIR_ERR_CHECK(mpi_errno);
 
     mpi_errno = MPIDI_IPC_close_mem(mem_seg, src_buf);
@@ -145,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCG_handle_lmt_single_recv(MPIDI_SHM_IPC_typ
     MPID_Request_complete(rreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCG_HANDLE_SEND_LMT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCG_HANDLE_LMT_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

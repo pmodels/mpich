@@ -31,6 +31,7 @@ typedef union {
 #endif
 } MPIDI_IPC_mem_handle_t;
 
+/* request extension */
 typedef struct {
     MPIDI_SHM_IPC_type_t ipc_type;
     union {
