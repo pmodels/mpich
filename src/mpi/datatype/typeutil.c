@@ -190,10 +190,7 @@ int MPIR_Datatype_init_predefined(void)
         /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
          * only one that is ever optional and it comes last */
 
-        /* we use the _unsafe version because we are still in MPI_Init, before
-         * multiple threads are permitted and possibly before support for
-         * critical sections is entirely setup */
-        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
+        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
 
         MPIR_Assert(dptr);
         MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);
