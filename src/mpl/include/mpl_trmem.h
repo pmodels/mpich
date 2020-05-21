@@ -268,20 +268,29 @@ typedef struct {
  * that the max size exceeds that of PTRDIFF_MAX. */
 static inline void *MPL_malloc(size_t size, MPL_memory_class memclass)
 {
-    assert(size <= PTRDIFF_MAX);
-    return malloc(size);
+    if (size <= PTRDIFF_MAX) {
+        return malloc(size);
+    } else {
+        return NULL;
+    }
 }
 
 static inline void *MPL_calloc(size_t nmemb, size_t size, MPL_memory_class memclass)
 {
-    assert(size <= PTRDIFF_MAX);
-    return calloc(nmemb, size);
+    if (size <= PTRDIFF_MAX) {
+        return calloc(nmemb, size);
+    } else {
+        return NULL;
+    }
 }
 
 static inline void *MPL_realloc(void *ptr, size_t size, MPL_memory_class memclass)
 {
-    assert(size <= PTRDIFF_MAX);
-    return realloc(ptr, size);
+    if (size <= PTRDIFF_MAX) {
+        return realloc(ptr, size);
+    } else {
+        return NULL;
+    }
 }
 
 #define MPL_free(a)      free((void *)(a))
