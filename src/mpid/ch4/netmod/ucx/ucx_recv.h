@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     if (ucp_request->req)
         rreq = ucp_request->req;
     else
-        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0);
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -134,13 +134,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         } else {
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
             MPIR_cc_set(&req->cc, 0);
-            MPIR_Request_free((MPIR_Request *) ucp_request->req);
+            MPIR_Request_free_unsafe((MPIR_Request *) ucp_request->req);
         }
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     } else {
         if (req == NULL)
-            req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV, 0);
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).ucp_request = ucp_request;

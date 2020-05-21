@@ -30,7 +30,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr);
    define MPID_<OBJ>_PREALLOC 256
    MPIR_Object_alloc_t MPID_<obj>_mem = { 0, 0, 0, 0, MPID_<obj>,
                                           sizeof(MPID_<obj>), MPID_<obj>_direct,
-                                          MPID_<OBJ>_PREALLOC, };
+                                          MPID_<OBJ>_PREALLOC, NULL};
 
    // Preallocated objects
    MPID_<obj> MPID_<obj>_direct[MPID_<OBJ>_PREALLOC];
@@ -217,13 +217,22 @@ static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
     void *ret;
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
-    ret = MPIR_Handle_obj_alloc_unsafe(objmem);
+    ret = MPIR_Handle_obj_alloc_unsafe(objmem, HANDLE_NUM_BLOCKS, HANDLE_NUM_INDICES);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     return ret;
 }
 
-static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
+/* Beyond direct objects (a single static block), indirect objects are allocated by blocks,
+ * each block initialized with an array of objects upto max_indices. `max_blocks` depends
+ * on the bit size in the object handle. Request objects need extra bits to support multiple
+ * request pools, so it will have lower `max_blocks` than default (HANDLE_NUM_BLOCKS).
+ * While `max_indices` is also limited by handle bits, we also need balance the runtime cost.
+ * Having too large `max_indices` will take more delay to initialize all the objects each
+ * time we allocate a new block.
+ */
+static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem,
+                                                 int max_blocks, int max_indices)
 {
     /* ptr points to object to allocate */
     MPIR_Handle_common *ptr;
@@ -265,10 +274,8 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
 
         if (!ptr) {
             /* setup a new indirect block (index at objmem->indirect_size). */
-            ptr = MPIR_Handle_indirect_init(&objmem->indirect,
-                                            &objmem->indirect_size,
-                                            HANDLE_NUM_BLOCKS,
-                                            HANDLE_NUM_INDICES, objsize, objkind);
+            ptr = MPIR_Handle_indirect_init(&objmem->indirect, &objmem->indirect_size,
+                                            max_blocks, max_indices, objsize, objkind);
             if (ptr) {
                 objmem->avail = ptr->next;
             }
@@ -326,10 +333,16 @@ Input Parameters:
   +*/
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *object)
 {
-    MPIR_Handle_common *obj = (MPIR_Handle_common *) object;
-
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    MPIR_Handle_obj_free_unsafe(objmem, object);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+}
+
+static inline void MPIR_Handle_obj_free_unsafe(MPIR_Object_alloc_t * objmem, void *object)
+{
+    MPIR_Handle_common *obj = (MPIR_Handle_common *) object;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL, (MPL_DBG_FDEST,
                                                "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
@@ -373,8 +386,6 @@ static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *obje
 
     obj->next = objmem->avail;
     objmem->avail = obj;
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
 }
 
 /*

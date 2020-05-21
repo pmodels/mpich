@@ -1176,7 +1176,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
   null_op_exit:
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
-        *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
+        *sigreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
         MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                             "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
