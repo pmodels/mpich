@@ -414,6 +414,11 @@ typedef struct MPIDI_OFI_win_acc_hint {
                                                          * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
+enum {
+    MPIDI_OFI_PUT,
+    MPIDI_OFI_GET,
+};
+
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
