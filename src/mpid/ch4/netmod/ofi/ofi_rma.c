@@ -83,11 +83,14 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         riov.len = msg_len;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        if (rma_type == MPIDI_OFI_PUT)
+        if (rma_type == MPIDI_OFI_PUT) {
             MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write,
                                  FALSE);
-        else    /* MPIDI_OFI_GET */
+            req->rma_type = MPIDI_OFI_PUT;
+        } else {        /* MPIDI_OFI_GET */
             MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+            req->rma_type = MPIDI_OFI_GET;
+        }
 
         if (msg_len < origin_iov[origin_cur].iov_len) {
             origin_iov[origin_cur].iov_base = (char *) origin_iov[origin_cur].iov_base + msg_len;
