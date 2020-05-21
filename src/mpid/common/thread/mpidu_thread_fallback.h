@@ -92,15 +92,25 @@ M*/
 
 M*/
 
+/*M MPIDU_THREAD_ASSERT_IN_CS - Assert whether the code is inside a critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
 #define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
+#define MPIDU_THREAD_ASSERT_IN_CS(name, mutex) MPIDUI_THREAD_ASSERT_IN_CS_##name(mutex)
 
 #else
 #define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
 #define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
 #define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
+#define MPIDU_THREAD_ASSERT_IN_CS(name, mutex)  /* NOOP */
 
 #endif
 
@@ -161,6 +171,20 @@ M*/
         }                                                               \
     } while (0)
 
+/* debug macros */
+
+/* NOTE this macro is only available with VCI granularity */
+#define MPIDUI_THREAD_ASSERT_IN_CS(mutex) \
+    do { \
+        if (MPIR_ThreadInfo.isThreaded) {  \
+            int equal_ = 0;                                             \
+            MPL_thread_id_t self_;                                      \
+            MPL_thread_self(&self_);                                    \
+            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
+            MPIR_Assert(equal_ && mutex.count == 1); \
+        } \
+    } while (0)
+
 /* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
 
 /* GLOBAL is only enabled with MPICH_THREAD_GRANULARITY__GLOBAL */
@@ -190,10 +214,12 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD(mutex)
+#define MPIDUI_THREAD_ASSERT_IN_CS_VCI(mutex) MPIDUI_THREAD_ASSERT_IN_CS(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex)       /* NOOP */
+#define MPIDUI_THREAD_ASSERT_IN_CS_VCI(mutex)   /* NOOP */
 #endif
 
 #endif /* MPICH_IS_THREADED */
