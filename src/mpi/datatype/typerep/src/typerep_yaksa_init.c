@@ -28,51 +28,6 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
         MPIR_Datatype_get_size_macro(type, basic_type_size);
     }
 
-    yaksa_type_t float8_t = YAKSA_TYPE__NULL;
-    if (sizeof(float) == 1) {
-        float8_t = YAKSA_TYPE__FLOAT;
-    } else if (sizeof(double) == 1) {
-        float8_t = YAKSA_TYPE__DOUBLE;
-    } else if (sizeof(long double) == 1) {
-        float8_t = YAKSA_TYPE__LONG_DOUBLE;
-    }
-
-    yaksa_type_t float16_t = YAKSA_TYPE__NULL;
-    if (sizeof(float) == 2) {
-        float16_t = YAKSA_TYPE__FLOAT;
-    } else if (sizeof(double) == 2) {
-        float16_t = YAKSA_TYPE__DOUBLE;
-    } else if (sizeof(long double) == 2) {
-        float16_t = YAKSA_TYPE__LONG_DOUBLE;
-    }
-
-    yaksa_type_t float32_t = YAKSA_TYPE__NULL;
-    if (sizeof(float) == 4) {
-        float32_t = YAKSA_TYPE__FLOAT;
-    } else if (sizeof(double) == 4) {
-        float32_t = YAKSA_TYPE__DOUBLE;
-    } else if (sizeof(long double) == 4) {
-        float32_t = YAKSA_TYPE__LONG_DOUBLE;
-    }
-
-    yaksa_type_t float64_t = YAKSA_TYPE__NULL;
-    if (sizeof(float) == 8) {
-        float64_t = YAKSA_TYPE__FLOAT;
-    } else if (sizeof(double) == 8) {
-        float64_t = YAKSA_TYPE__DOUBLE;
-    } else if (sizeof(long double) == 8) {
-        float64_t = YAKSA_TYPE__LONG_DOUBLE;
-    }
-
-    yaksa_type_t float128_t = YAKSA_TYPE__NULL;
-    if (sizeof(float) == 16) {
-        float128_t = YAKSA_TYPE__FLOAT;
-    } else if (sizeof(double) == 16) {
-        float128_t = YAKSA_TYPE__DOUBLE;
-    } else if (sizeof(long double) == 16) {
-        float128_t = YAKSA_TYPE__LONG_DOUBLE;
-    }
-
     switch (type) {
         case MPI_CHAR:
         case MPI_SIGNED_CHAR:
@@ -279,23 +234,63 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
         case MPI_REAL8:
             switch (basic_type_size) {
                 case 1:
-                    yaksa_type = float8_t;
+                    if (sizeof(float) == 1) {
+                        yaksa_type = YAKSA_TYPE__FLOAT;
+                    } else if (sizeof(double) == 1) {
+                        yaksa_type = YAKSA_TYPE__DOUBLE;
+                    } else if (sizeof(long double) == 1) {
+                        yaksa_type = YAKSA_TYPE__LONG_DOUBLE;
+                    } else {
+                        yaksa_type = YAKSA_TYPE__NULL;
+                    }
                     break;
 
                 case 2:
-                    yaksa_type = float16_t;
+                    if (sizeof(float) == 2) {
+                        yaksa_type = YAKSA_TYPE__FLOAT;
+                    } else if (sizeof(double) == 2) {
+                        yaksa_type = YAKSA_TYPE__DOUBLE;
+                    } else if (sizeof(long double) == 2) {
+                        yaksa_type = YAKSA_TYPE__LONG_DOUBLE;
+                    } else {
+                        yaksa_type = YAKSA_TYPE__NULL;
+                    }
                     break;
 
                 case 4:
-                    yaksa_type = float32_t;
+                    if (sizeof(float) == 4) {
+                        yaksa_type = YAKSA_TYPE__FLOAT;
+                    } else if (sizeof(double) == 4) {
+                        yaksa_type = YAKSA_TYPE__DOUBLE;
+                    } else if (sizeof(long double) == 4) {
+                        yaksa_type = YAKSA_TYPE__LONG_DOUBLE;
+                    } else {
+                        yaksa_type = YAKSA_TYPE__NULL;
+                    }
                     break;
 
                 case 8:
-                    yaksa_type = float64_t;
+                    if (sizeof(float) == 8) {
+                        yaksa_type = YAKSA_TYPE__FLOAT;
+                    } else if (sizeof(double) == 8) {
+                        yaksa_type = YAKSA_TYPE__DOUBLE;
+                    } else if (sizeof(long double) == 8) {
+                        yaksa_type = YAKSA_TYPE__LONG_DOUBLE;
+                    } else {
+                        yaksa_type = YAKSA_TYPE__NULL;
+                    }
                     break;
 
                 case 16:
-                    yaksa_type = float128_t;
+                    if (sizeof(float) == 16) {
+                        yaksa_type = YAKSA_TYPE__FLOAT;
+                    } else if (sizeof(double) == 16) {
+                        yaksa_type = YAKSA_TYPE__DOUBLE;
+                    } else if (sizeof(long double) == 16) {
+                        yaksa_type = YAKSA_TYPE__LONG_DOUBLE;
+                    } else {
+                        yaksa_type = YAKSA_TYPE__NULL;
+                    }
                     break;
 
                 default:
