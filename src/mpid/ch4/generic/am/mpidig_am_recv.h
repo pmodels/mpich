@@ -166,7 +166,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
                 MPIR_Request_add_ref(*request);
                 MPID_Request_complete(*request);
                 /* Need to free here because we don't return this to user */
-                MPIR_Request_free(unexp_req);
+                MPIR_Request_free_unsafe(unexp_req);
             }
             goto fn_exit;
         }
