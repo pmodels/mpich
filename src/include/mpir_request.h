@@ -282,17 +282,18 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
+/* NOTE: in ch4 per-vci thread granularity, this function (and MPIR_Request_free)
+ * are unsafe by themself. It requires the callers to be always under consistent
+ * critical section per-pool.
+ */
 static inline MPIR_Request *MPIR_Request_create_from_pool(MPIR_Request_kind_t kind, int pool)
 {
     MPIR_Request *req;
 
-    /* TODO: move the VCI lock to caller */
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool],
                                        REQUEST_NUM_BLOCKS, REQUEST_NUM_INDICES);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     if (req != NULL) {
         /* Patch the handle for pool index. */
         req->handle |= (pool << REQUEST_POOL_SHIFT);
@@ -423,10 +424,8 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
         MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
     }
 }
 
