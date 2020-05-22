@@ -109,7 +109,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
-    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, -1 };
+    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
