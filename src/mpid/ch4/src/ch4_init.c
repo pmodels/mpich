@@ -101,7 +101,7 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Defines the threshold of high-density datatype. The
-        density is calculated by (datatype_size / datatype_max_contig_blocks).
+        density is calculated by (datatype_size / datatype_num_contig_blocks).
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

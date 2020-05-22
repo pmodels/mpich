@@ -125,7 +125,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     }
 
     new_dtp->is_contig = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
-    new_dtp->max_contig_blocks = (((MPI_Aint) type_size) == type_extent) ? 1 : 2;
 
     return mpi_errno;
 }

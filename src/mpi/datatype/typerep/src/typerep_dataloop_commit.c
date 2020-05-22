@@ -64,6 +64,15 @@ static int create_pairtype(MPI_Datatype type, void **dlp_p)
 
 static void create_named(MPI_Datatype type, void **dlp_p);
 
+#define GET_NUM_CONTIG_BLOCKS(ctype1, ctype2, num_contig_blocks)        \
+    do {                                                                \
+        struct {                                                        \
+            ctype1 x;                                                   \
+            ctype2 y;                                                   \
+        } z;                                                            \
+        num_contig_blocks = (sizeof(z.x) + sizeof(z.y) == sizeof(z)) ? 1 : 2; \
+    } while (0)
+
 void MPIR_Typerep_commit(MPI_Datatype type)
 {
     int i;
@@ -87,11 +96,36 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     MPIR_Datatype_get_ptr(type, typeptr);
     void **dlp_p = (void **) &typeptr->typerep.handle;
 
-    if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
-        type == MPI_LONG_INT || type == MPI_SHORT_INT ||
-        type == MPI_LONG_DOUBLE_INT || type == MPI_2INT) {
-        create_pairtype(type, dlp_p);
-        return;
+    switch (type) {
+        case MPI_FLOAT_INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(float, int, typeptr->typerep.num_contig_blocks);
+            return;
+
+        case MPI_DOUBLE_INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(double, int, typeptr->typerep.num_contig_blocks);
+            return;
+
+        case MPI_LONG_INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(long, int, typeptr->typerep.num_contig_blocks);
+            return;
+
+        case MPI_SHORT_INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(short, int, typeptr->typerep.num_contig_blocks);
+            return;
+
+        case MPI_LONG_DOUBLE_INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(long double, int, typeptr->typerep.num_contig_blocks);
+            return;
+
+        case MPI_2INT:
+            create_pairtype(type, dlp_p);
+            GET_NUM_CONTIG_BLOCKS(int, int, typeptr->typerep.num_contig_blocks);
+            return;
     }
 
     MPIR_Type_get_envelope(type, &nr_ints, &nr_aints, &nr_types, &combiner);

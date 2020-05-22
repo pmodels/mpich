@@ -78,8 +78,6 @@ int MPIR_Type_vector(int count,
         new_dtp->builtin_element_size = el_sz;
         new_dtp->basic_type = oldtype;
 
-        new_dtp->max_contig_blocks = count;
-
         eff_stride = (strideinbytes) ? stride : (stride * el_sz);
     } else {    /* user-defined base type (oldtype) */
 
@@ -102,8 +100,6 @@ int MPIR_Type_vector(int count,
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
-        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks * count * blocklength;
-
         eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
 
@@ -122,7 +118,6 @@ int MPIR_Type_vector(int count,
     if ((MPI_Aint) (new_dtp->size) == new_dtp->extent &&
         eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
         new_dtp->is_contig = 1;
-        new_dtp->max_contig_blocks = 1;
     } else {
         new_dtp->is_contig = 0;
     }

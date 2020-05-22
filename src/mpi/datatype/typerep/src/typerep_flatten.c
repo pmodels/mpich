@@ -18,7 +18,7 @@ struct flatten_hdr {
     MPI_Aint extent, ub, lb, true_ub, true_lb;
     int is_contig;
     int basic_type;
-    MPI_Aint max_contig_blocks;
+    MPI_Aint num_contig_blocks;
 };
 
 /*
@@ -72,7 +72,7 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     flatten_hdr->true_lb = datatype_ptr->true_lb;
     flatten_hdr->is_contig = datatype_ptr->is_contig;
     flatten_hdr->basic_type = datatype_ptr->basic_type;
-    flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
+    flatten_hdr->num_contig_blocks = datatype_ptr->typerep.num_contig_blocks;
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
     int rc = yaksa_flatten((yaksa_type_t) datatype_ptr->typerep.handle, flattened_typerep);
@@ -106,7 +106,7 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->attributes = 0;
     datatype_ptr->name[0] = 0;
     datatype_ptr->is_contig = flatten_hdr->is_contig;
-    datatype_ptr->max_contig_blocks = flatten_hdr->max_contig_blocks;
+    datatype_ptr->typerep.num_contig_blocks = flatten_hdr->num_contig_blocks;
     datatype_ptr->size = flatten_hdr->size;
     datatype_ptr->extent = flatten_hdr->extent;
     datatype_ptr->basic_type = flatten_hdr->basic_type;

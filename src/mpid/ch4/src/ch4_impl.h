@@ -965,7 +965,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
         MPIR_Assert(dtp != NULL);
-        vec_len = dtp->max_contig_blocks * target_count + 1;
+        vec_len = dtp->typerep.num_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         typerep_vec = (struct iovec *)
             MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_RMA);
