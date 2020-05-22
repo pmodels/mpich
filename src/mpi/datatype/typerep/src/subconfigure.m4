@@ -13,7 +13,7 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 ##### allow selection of datatype engine
 AC_ARG_WITH([datatype-engine],
             [AS_HELP_STRING([--with-datatype-engine={yaksa|dataloop|auto}],[controls datatype engine to use])],
-            [],[with_datatype_engine=dataloop])
+            [],[with_datatype_engine=auto])
 if test "${with_datatype_engine}" = "yaksa" ; then
     AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
 elif test "${with_datatype_engine}" = "dataloop" ; then
