@@ -11,7 +11,6 @@
 #include "mpidch4r.h"
 #include "mpidig_am.h"
 #include "ch4_impl.h"
-#include "ofi_iovec_util.h"
 
 #define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
 #define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
@@ -293,13 +292,11 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 {
     MPIDI_OFI_win_request_t *winreq;
     winreq = MPL_malloc(sizeof(*winreq), MPL_MEM_OTHER);
-    winreq->noncontig.iov_store = NULL; /* not used by put/get opreations */
     return winreq;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
-    MPL_free(winreq->noncontig.iov_store);
     MPL_free(winreq);
 }
 
