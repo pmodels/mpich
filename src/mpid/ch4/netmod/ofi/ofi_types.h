@@ -406,45 +406,6 @@ typedef struct {
     int tag;
 } MPIDI_OFI_send_control_t;
 
-typedef struct MPIDI_OFI_seg_state {
-    MPI_Aint buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
-                                 * This value remains constant once seg_state is initialized. */
-    MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
-
-    size_t origin_cursor;       /* First byte to pack */
-    size_t origin_end;          /* Last byte to pack */
-    const void *origin_buf;
-    size_t origin_count;
-    MPI_Datatype origin_type;
-    MPI_Aint origin_iov_len;    /* Length of data actually packed */
-    struct iovec origin_iov;    /* IOVEC returned after pack */
-    uintptr_t origin_addr;      /* Address of data actually packed */
-
-    size_t target_cursor;
-    size_t target_end;
-    MPI_Aint target_buf;
-    size_t target_count;
-    MPI_Datatype target_type;
-    MPI_Aint target_iov_len;
-    struct iovec target_iov;
-    uintptr_t target_addr;
-
-    size_t result_cursor;
-    size_t result_end;
-    const void *result_buf;
-    size_t result_count;
-    MPI_Datatype result_type;
-    MPI_Aint result_iov_len;
-    struct iovec result_iov;
-    uintptr_t result_addr;
-} MPIDI_OFI_seg_state_t;
-
-typedef enum MPIDI_OFI_segment_side {
-    MPIDI_OFI_SEGMENT_ORIGIN = 0,
-    MPIDI_OFI_SEGMENT_TARGET,
-    MPIDI_OFI_SEGMENT_RESULT,
-} MPIDI_OFI_segment_side_t;
-
 typedef struct MPIDI_OFI_win_acc_hint {
     uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
                                                          * atomicity support of all OFI datatypes. A datatype
