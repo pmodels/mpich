@@ -751,8 +751,13 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
          * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
         MPIDI_OFI_win_progress_fence(win);
     }
-    mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
-                                      target_disp, target_count, target_datatype, op, win);
+    if (sigreq)
+        mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                           target_disp, target_count, target_datatype, op, win,
+                                           sigreq);
+    else
+        mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
+                                          target_disp, target_count, target_datatype, op, win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
@@ -803,9 +808,16 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
             MPIDI_OFI_win_progress_fence(win);
         }
     }
-    mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
-                                          result_count, result_datatype, target_rank, target_disp,
-                                          target_count, target_datatype, op, win);
+    if (sigreq)
+        mpi_errno =
+            MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
+                                       result_count, result_datatype, target_rank, target_disp,
+                                       target_count, target_datatype, op, win, sigreq);
+    else
+        mpi_errno =
+            MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
+                                      result_count, result_datatype, target_rank, target_disp,
+                                      target_count, target_datatype, op, win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
