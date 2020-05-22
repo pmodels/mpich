@@ -378,6 +378,7 @@ AC_ARG_ENABLE(g,
                    eliminate access warnings from programs like valgrind
         memarena - Check for overwrite errors in memory allocation arena
         mutex    - Enable error checking on pthread mutexes
+        mutexnesting - Check for non-nesting of mutexes
         most     - Most of the above options, excluding some with severe
                    performance impacts.  Recommended for typical development.
         yes      - synonym for "most" (*not* "all")
@@ -1644,11 +1645,15 @@ for option in $enable_g ; do
 	mutex)
 	perform_dbgmutex=yes
 	;;
+	mutexnesting)
+	perform_mutexnesting=yes
+	;;
         most|yes)
         perform_memtracing=yes
         enable_append_g=yes
         perform_meminit=yes
         perform_dbgmutex=yes
+        perform_mutexnesting=yes
         perform_handlealloc=yes
         perform_handle=yes
         ;;
@@ -1658,6 +1663,7 @@ for option in $enable_g ; do
 	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
+	perform_mutexnesting=yes
 	perform_handlealloc=yes
         perform_handle=yes
 	;;

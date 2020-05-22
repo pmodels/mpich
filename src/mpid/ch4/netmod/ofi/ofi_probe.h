@@ -33,7 +33,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_av_to_phys(addr);
 
     if (message) {
-        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, 0);
+        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE, 0);
         MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = &r;
@@ -59,7 +59,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
-            MPIR_Request_free_unsafe(rreq);
+            MPIR_Request_free(rreq);
         goto fn_exit;
     }
 
@@ -71,7 +71,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
             *flag = 0;
 
             if (message)
-                MPIR_Request_free_unsafe(rreq);
+                MPIR_Request_free(rreq);
 
             goto fn_exit;
             break;

@@ -158,7 +158,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free_unsafe(sreq);
+        MPIR_Request_free(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_PUT);
     return mpi_errno;
@@ -281,7 +281,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free_unsafe(sreq);
+        MPIR_Request_free(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_GET);
     return mpi_errno;
@@ -448,7 +448,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free_unsafe(sreq);
+        MPIR_Request_free(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_ACCUMULATE);
     return mpi_errno;
@@ -629,7 +629,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free_unsafe(sreq);
+        MPIR_Request_free(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_GET_ACCUMULATE);
     return mpi_errno;

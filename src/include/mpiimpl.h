@@ -218,7 +218,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 /********************* PART 5: DEVICE DEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
-#include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
+#include "mpir_thread.h"
 #include "mpir_attr.h"
 #include "mpir_group.h"
 #include "mpir_comm.h"

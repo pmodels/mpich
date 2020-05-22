@@ -404,7 +404,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
 
     /* Create a request */
-    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
     if (!reqp)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     *req = reqp;

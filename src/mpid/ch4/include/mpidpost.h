@@ -29,8 +29,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
 
     MPL_atomic_fetch_add_int(&MPIDI_global.progress_count, 1);
 
-    /* This is tricky. I think the only solution is to expose partner
-     * to the upper layer */
     if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
         NULL != MPIDI_REQUEST_ANYSOURCE_PARTNER(req))
         MPIR_Request_free(MPIDI_REQUEST_ANYSOURCE_PARTNER(req));

@@ -16,8 +16,7 @@ MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
-    MPIR_DATATYPE_PREALLOC,
-    NULL
+    MPIR_DATATYPE_PREALLOC
 };
 
 static int pairtypes_finalize_cb(void *dummy);
@@ -191,7 +190,10 @@ int MPIR_Datatype_init_predefined(void)
         /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
          * only one that is ever optional and it comes last */
 
-        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+        /* we use the _unsafe version because we are still in MPI_Init, before
+         * multiple threads are permitted and possibly before support for
+         * critical sections is entirely setup */
+        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
 
         MPIR_Assert(dptr);
         MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);

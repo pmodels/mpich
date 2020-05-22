@@ -17,7 +17,7 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
 
-    req = MPIR_Request_create_from_pool(kind, 0);
+    req = MPIR_Request_create(kind, 0);
     if (req == NULL)
         goto fn_fail;
 
@@ -108,7 +108,7 @@ static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_c
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
                     /* cancel freed it once, freed once more on behalf of mpi-layer */
-                    MPIR_Request_free_unsafe(anysrc_partner);
+                    MPIR_Request_free(anysrc_partner);
                 }
             } else {
                 /* NM, cancel SHM partner */
@@ -147,7 +147,7 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
              * final free for NM request happen at call-site MPID_Request_complete
              * final free for SHM partner happen at mpi-layer
              */
-            MPIR_Request_free_unsafe(rreq);
+            MPIR_Request_free(rreq);
         } else {
             /* SHM, NM partner should already been freed (this branch can't happen) */
             MPIR_Assert(0);
