@@ -183,6 +183,9 @@ int MPI_Finalize(void)
     MPIR_Typerep_finalize();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
+    mpi_errno = MPL_gpu_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* ... end of body of routine ... */
   fn_exit:
     MPIR_FUNC_TERSE_FINALIZE_EXIT(MPID_STATE_MPI_FINALIZE);
