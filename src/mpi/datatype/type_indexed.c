@@ -89,8 +89,6 @@ int MPIR_Type_indexed(int count,
         MPIR_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
         new_dtp->builtin_element_size = el_sz;
         new_dtp->basic_type = oldtype;
-
-        new_dtp->max_contig_blocks = count;
     } else {
         /* user-defined base type (oldtype) */
         MPIR_Datatype *old_dtp;
@@ -113,11 +111,6 @@ int MPIR_Type_indexed(int count,
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
-
-        new_dtp->max_contig_blocks = 0;
-        for (i = 0; i < count; i++)
-            new_dtp->max_contig_blocks
-                += old_dtp->max_contig_blocks * ((MPI_Aint) blocklength_array[i]);
     }
 
     /* find the first nonzero blocklength element */
@@ -185,7 +178,6 @@ int MPIR_Type_indexed(int count,
                                                           blklens,
                                                           displacement_array, dispinbytes,
                                                           old_extent);
-        new_dtp->max_contig_blocks = contig_count;
         if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;
         }
