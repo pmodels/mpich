@@ -460,26 +460,6 @@ typedef struct MPIDI_OFI_win_request {
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int target_rank;
-    struct {
-        union {
-            struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-                struct fi_ioc *resultv;
-                struct fi_ioc *comparev;
-            } cas;
-            struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-            } accumulate;
-            struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-                struct fi_ioc *resultv;
-            } get_accumulate;
-        } iov;
-        char *iov_store;
-    } noncontig;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
