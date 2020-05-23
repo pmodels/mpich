@@ -463,8 +463,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
-                                                      int origin_count,
-                                                      MPI_Datatype origin_datatype,
+                                                      int origin_count_,
+                                                      MPI_Datatype origin_datatype_,
                                                       void *result_addr,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
@@ -483,6 +483,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
+    int origin_count = origin_count_;
+    MPI_Datatype origin_datatype = origin_datatype_;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
@@ -496,7 +498,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+    if (op == MPI_NO_OP) {
+        origin_count = 0;
+        origin_datatype = MPI_DATATYPE_NULL;
+        data_sz = 0;
+        dt_ptr = NULL;
+    } else {
+        MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+    }
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     MPIDI_Datatype_check_size(result_datatype, result_count, result_data_sz);
 
