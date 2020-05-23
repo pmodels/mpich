@@ -60,7 +60,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     new_dtp->contents = 0;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     /* if oldtype is a basic, we build a contiguous typerep of count = 1 */
     if (HANDLE_IS_BUILTIN(oldtype)) {
@@ -102,7 +102,7 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
     }
 
-    int mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, &new_dtp->typerep);
+    int mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 
     *newtype_p = new_dtp->handle;

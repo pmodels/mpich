@@ -79,7 +79,7 @@ struct dloop_flatten_hdr {
 
 int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_loop_size)
 {
-    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep;
+    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep.handle;
 
     *flattened_loop_size = sizeof(struct dloop_flatten_hdr) + dloop->dloop_sz;
 
@@ -90,7 +90,7 @@ int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void *flattened_dataloop)
 {
     struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
     int mpi_errno = MPI_SUCCESS;
-    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep;
+    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep.handle;
 
     /*
      * Our flattened layout contains three elements:
@@ -114,16 +114,17 @@ int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
     MPI_Aint ptrdiff;
     int mpi_errno = MPI_SUCCESS;
 
-    dtp->typerep = MPL_malloc(dloop_flatten_hdr->dloop_sz, MPL_MEM_DATATYPE);
-    MPIR_ERR_CHKANDJUMP1(dtp->typerep == NULL, mpi_errno, MPI_ERR_INTERN, "**nomem", "**nomem %s",
-                         "dataloop flatten hdr");
+    dtp->typerep.handle = MPL_malloc(dloop_flatten_hdr->dloop_sz, MPL_MEM_DATATYPE);
+    MPIR_ERR_CHKANDJUMP1(dtp->typerep.handle == NULL, mpi_errno, MPI_ERR_INTERN, "**nomem",
+                         "**nomem %s", "dataloop flatten hdr");
 
-    MPIR_Memcpy(dtp->typerep, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
+    MPIR_Memcpy(dtp->typerep.handle, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
                 dloop_flatten_hdr->dloop_sz);
 
     ptrdiff =
-        (MPI_Aint) ((char *) (dtp->typerep) - (char *) dloop_flatten_hdr->dataloop_local_addr);
-    MPII_Dataloop_update(dtp->typerep, ptrdiff);
+        (MPI_Aint) ((char *) (dtp->typerep.handle) -
+                    (char *) dloop_flatten_hdr->dataloop_local_addr);
+    MPII_Dataloop_update(dtp->typerep.handle, ptrdiff);
 
   fn_exit:
     return mpi_errno;

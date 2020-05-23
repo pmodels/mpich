@@ -64,7 +64,7 @@ static int create_pairtype(MPI_Datatype type, void **dlp_p)
 
 static void create_named(MPI_Datatype type, void **dlp_p);
 
-void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
+void MPIR_Typerep_commit(MPI_Datatype type)
 {
     int i;
     int err ATTRIBUTE((unused));
@@ -82,7 +82,10 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
     MPI_Aint stride;
     MPI_Aint *disps;
     MPI_Aint *blklen;
-    void **dlp_p = (void **) typerep_p;
+
+    MPIR_Datatype *typeptr;
+    MPIR_Datatype_get_ptr(type, typeptr);
+    void **dlp_p = (void **) &typeptr->typerep.handle;
 
     if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
         type == MPI_LONG_INT || type == MPI_SHORT_INT ||
@@ -147,9 +150,9 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
         MPIR_DATALOOP_GET_LOOPPTR(types[0], old_dlp);
         if (old_dlp == NULL) {
             /* no dataloop already present; create and store one */
-            MPIR_Typerep_commit(types[0], (void **) &old_dlp);
-
-            MPIR_DATALOOP_SET_LOOPPTR(types[0], old_dlp);
+            MPIR_Typerep_commit(types[0]);
+            MPIR_DATALOOP_GET_LOOPPTR(types[0], old_dlp);
+            assert(old_dlp);
         }
     }
 
@@ -237,9 +240,9 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
                 if (type_combiner != MPI_COMBINER_NAMED) {
                     MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
                     if (old_dlp == NULL) {
-                        MPIR_Typerep_commit(types[i], (void **) &old_dlp);
-
-                        MPIR_DATALOOP_SET_LOOPPTR(types[i], old_dlp);
+                        MPIR_Typerep_commit(types[i]);
+                        MPIR_DATALOOP_GET_LOOPPTR(types[i], old_dlp);
+                        assert(old_dlp);
                     }
                 }
             }
@@ -267,7 +270,13 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
             MPII_Typerep_convert_subarray(ndims, &ints[1], &ints[1 + ndims], &ints[1 + 2 * ndims],
                                           ints[1 + 3 * ndims], types[0], &tmptype);
 
-            MPIR_Typerep_commit(tmptype, (void **) dlp_p);
+            MPIR_Typerep_commit(tmptype);
+
+            {
+                void *tmploop;
+                MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
+                MPIR_Dataloop_dup(tmploop, dlp_p);
+            }
 
             MPIR_Type_free_impl(&tmptype);
             break;
@@ -277,7 +286,13 @@ void MPIR_Typerep_commit(MPI_Datatype type, void **typerep_p)
                                         &ints[3 + 2 * ndims], &ints[3 + 3 * ndims],
                                         ints[3 + 4 * ndims], types[0], &tmptype);
 
-            MPIR_Typerep_commit(tmptype, (void **) dlp_p);
+            MPIR_Typerep_commit(tmptype);
+
+            {
+                void *tmploop;
+                MPIR_DATALOOP_GET_LOOPPTR(tmptype, tmploop);
+                MPIR_Dataloop_dup(tmploop, dlp_p);
+            }
 
             MPIR_Type_free_impl(&tmptype);
             break;
@@ -337,7 +352,7 @@ static void create_named(MPI_Datatype type, void **dlp_p)
     }
 }
 
-void MPIR_Typerep_free(void **typerep_p)
+void MPIR_Typerep_free(MPIR_Datatype * typeptr)
 {
-    MPIR_Dataloop_free(typerep_p);
+    MPIR_Dataloop_free(&typeptr->typerep.handle);
 }

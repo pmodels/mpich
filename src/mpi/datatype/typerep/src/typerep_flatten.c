@@ -35,7 +35,7 @@ int MPIR_Typerep_flatten_size(MPIR_Datatype * datatype_ptr, int *flattened_type_
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
     uintptr_t size;
-    int rc = yaksa_flatten_size((yaksa_type_t) datatype_ptr->typerep, &size);
+    int rc = yaksa_flatten_size((yaksa_type_t) datatype_ptr->typerep.handle, &size);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
     assert(size <= INT_MAX);
     flattened_loop_size = (int) size;
@@ -75,7 +75,7 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
-    int rc = yaksa_flatten((yaksa_type_t) datatype_ptr->typerep, flattened_typerep);
+    int rc = yaksa_flatten((yaksa_type_t) datatype_ptr->typerep.handle, flattened_typerep);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 #else
     mpi_errno = MPIR_Dataloop_flatten(datatype_ptr, flattened_typerep);
@@ -118,7 +118,7 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->flattened = NULL;
 
 #if (MPICH_DATATYPE_ENGINE == MPICH_DATATYPE_ENGINE_YAKSA)
-    int rc = yaksa_unflatten((yaksa_type_t *) & datatype_ptr->typerep, flattened_typerep);
+    int rc = yaksa_unflatten((yaksa_type_t *) & datatype_ptr->typerep.handle, flattened_typerep);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 #else
     mpi_errno = MPIR_Dataloop_unflatten(datatype_ptr, flattened_typerep);

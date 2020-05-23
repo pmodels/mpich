@@ -135,8 +135,11 @@ struct MPIR_Datatype {
     void *flattened;
     int flattened_sz;
 
-    /* internal type representation */
-    void *typerep;              /* might be optimized for homogenous */
+    /* handle to the backend datatype engine + some content that we
+     * query from it and cache over here for performance reasons */
+    struct {
+        void *handle;
+    } typerep;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
