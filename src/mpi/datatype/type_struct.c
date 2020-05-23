@@ -89,7 +89,7 @@ static int type_struct(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)
@@ -245,7 +245,7 @@ static int type_struct(int count,
     }
 
     mpi_errno = MPIR_Typerep_create_struct(count, blocklength_array, displacement_array,
-                                           oldtype_array, &new_dtp->typerep);
+                                           oldtype_array, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 
     *newtype = new_dtp->handle;

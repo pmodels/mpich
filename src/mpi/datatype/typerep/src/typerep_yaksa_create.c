@@ -8,7 +8,7 @@
 #include "yaksa.h"
 
 int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
-                               void **typerep)
+                               MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_VECTOR);
@@ -17,7 +17,8 @@ int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datat
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_vector(count, blocklength, stride, type, (yaksa_type_t *) typerep);
+    int rc = yaksa_type_create_vector(count, blocklength, stride, type,
+                                      (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -28,7 +29,7 @@ int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datat
 }
 
 int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
-                                void **typerep)
+                                MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HVECTOR);
@@ -38,7 +39,7 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
     int rc = yaksa_type_create_hvector(count, blocklength, stride, type,
-                                       (yaksa_type_t *) typerep);
+                                       (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -48,7 +49,7 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, void **typerep)
+int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_CONTIG);
@@ -57,7 +58,7 @@ int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, void **typerep)
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_contig(count, type, (yaksa_type_t *) typerep);
+    int rc = yaksa_type_create_contig(count, type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -67,7 +68,7 @@ int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, void **typerep)
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_dup(MPI_Datatype oldtype, void **typerep)
+int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_DUP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_DUP);
@@ -76,7 +77,7 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, void **typerep)
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_dup(type, (yaksa_type_t *) typerep);
+    int rc = yaksa_type_create_dup(type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -87,7 +88,7 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, void **typerep)
 }
 
 int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *array_of_displacements,
-                                      MPI_Datatype oldtype, void **typerep)
+                                      MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED_BLOCK);
@@ -97,7 +98,7 @@ int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *arr
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
     int rc = yaksa_type_create_indexed_block(count, blocklength, array_of_displacements,
-                                             type, (yaksa_type_t *) typerep);
+                                             type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -109,7 +110,7 @@ int MPIR_Typerep_create_indexed_block(int count, int blocklength, const int *arr
 
 int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
                                        const MPI_Aint * array_of_displacements,
-                                       MPI_Datatype oldtype, void **typerep)
+                                       MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED_BLOCK);
@@ -119,7 +120,7 @@ int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
     int rc = yaksa_type_create_hindexed_block(count, blocklength, array_of_displacements,
-                                              type, (yaksa_type_t *) typerep);
+                                              type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -131,7 +132,7 @@ int MPIR_Typerep_create_hindexed_block(int count, int blocklength,
 
 int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
                                 const int *array_of_displacements, MPI_Datatype oldtype,
-                                void **typerep)
+                                MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_INDEXED);
@@ -141,7 +142,7 @@ int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
     int rc = yaksa_type_create_indexed(count, array_of_blocklengths, array_of_displacements,
-                                       type, (yaksa_type_t *) typerep);
+                                       type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -153,7 +154,7 @@ int MPIR_Typerep_create_indexed(int count, const int *array_of_blocklengths,
 
 int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
                                  const MPI_Aint * array_of_displacements, MPI_Datatype oldtype,
-                                 void **typerep)
+                                 MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_HINDEXED);
@@ -163,7 +164,7 @@ int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
     int rc = yaksa_type_create_hindexed(count, array_of_blocklengths, array_of_displacements,
-                                        type, (yaksa_type_t *) typerep);
+                                        type, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -173,7 +174,8 @@ int MPIR_Typerep_create_hindexed(int count, const int *array_of_blocklengths,
     goto fn_exit;
 }
 
-int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent, void **typerep)
+int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                                MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_RESIZED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_RESIZED);
@@ -182,7 +184,8 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(oldtype);
 
-    int rc = yaksa_type_create_resized(type, lb, extent, (yaksa_type_t *) typerep);
+    int rc =
+        yaksa_type_create_resized(type, lb, extent, (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
   fn_exit:
@@ -194,7 +197,7 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
 
 int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
-                               const MPI_Datatype * array_of_types, void **typerep)
+                               const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_STRUCT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_STRUCT);
@@ -208,7 +211,8 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
     }
 
     int rc = yaksa_type_create_struct(count, array_of_blocklengths, array_of_displacements,
-                                      array_of_yaksa_types, (yaksa_type_t *) typerep);
+                                      array_of_yaksa_types,
+                                      (yaksa_type_t *) & newtype->typerep.handle);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
 
     MPL_free(array_of_yaksa_types);
@@ -222,7 +226,7 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
 
 int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int *array_of_subsizes,
                                  const int *array_of_starts, int order,
-                                 MPI_Datatype oldtype, void **typerep)
+                                 MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_SUBARRAY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_SUBARRAY);
@@ -236,7 +240,7 @@ int MPIR_Typerep_create_subarray(int ndims, const int *array_of_sizes, const int
 int MPIR_Typerep_create_darray(int size, int rank, int ndims, const int *array_of_gsizes,
                                const int *array_of_distribs, const int *array_of_dargs,
                                const int *array_of_psizes, int order, MPI_Datatype oldtype,
-                               void **typerep)
+                               MPIR_Datatype * newtype)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_CREATE_DARRAY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_CREATE_DARRAY);

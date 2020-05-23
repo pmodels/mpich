@@ -69,7 +69,7 @@ int MPIR_Type_indexed(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         /* builtins are handled differently than user-defined types because
@@ -195,12 +195,12 @@ int MPIR_Type_indexed(int count,
     if (dispinbytes) {
         mpi_errno =
             MPIR_Typerep_create_hindexed(count, blocklength_array, displacement_array, oldtype,
-                                         &new_dtp->typerep);
+                                         new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno =
             MPIR_Typerep_create_indexed(count, blocklength_array, displacement_array, oldtype,
-                                        &new_dtp->typerep);
+                                        new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

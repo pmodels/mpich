@@ -58,7 +58,7 @@ int MPIR_Type_vector(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
@@ -128,12 +128,10 @@ int MPIR_Type_vector(int count,
     }
 
     if (strideinbytes) {
-        mpi_errno =
-            MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno =
-            MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

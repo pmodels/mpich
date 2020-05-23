@@ -61,7 +61,7 @@ int MPIR_Type_blockindexed(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
@@ -149,11 +149,11 @@ int MPIR_Type_blockindexed(int count,
 
     if (dispinbytes) {
         mpi_errno = MPIR_Typerep_create_hindexed_block(count, blocklength, displacement_array,
-                                                       oldtype, &new_dtp->typerep);
+                                                       oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno = MPIR_Typerep_create_indexed_block(count, blocklength, displacement_array,
-                                                      oldtype, &new_dtp->typerep);
+                                                      oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
