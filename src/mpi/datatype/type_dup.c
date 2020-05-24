@@ -60,8 +60,6 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->true_ub = old_dtp->true_ub;
         new_dtp->true_lb = old_dtp->true_lb;
         new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
         new_dtp->is_committed = old_dtp->is_committed;
 
         new_dtp->attributes = NULL;     /* Attributes are copied in the

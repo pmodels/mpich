@@ -16,7 +16,6 @@
 struct flatten_hdr {
     MPI_Aint size;
     MPI_Aint extent, ub, lb, true_ub, true_lb;
-    int has_sticky_ub, has_sticky_lb;
     int is_contig;
     int basic_type;
     MPI_Aint max_contig_blocks;
@@ -71,8 +70,6 @@ int MPIR_Typerep_flatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     flatten_hdr->lb = datatype_ptr->lb;
     flatten_hdr->true_ub = datatype_ptr->true_ub;
     flatten_hdr->true_lb = datatype_ptr->true_lb;
-    flatten_hdr->has_sticky_ub = datatype_ptr->has_sticky_ub;
-    flatten_hdr->has_sticky_lb = datatype_ptr->has_sticky_lb;
     flatten_hdr->is_contig = datatype_ptr->is_contig;
     flatten_hdr->basic_type = datatype_ptr->basic_type;
     flatten_hdr->max_contig_blocks = datatype_ptr->max_contig_blocks;
@@ -117,8 +114,6 @@ int MPIR_Typerep_unflatten(MPIR_Datatype * datatype_ptr, void *flattened_type)
     datatype_ptr->lb = flatten_hdr->lb;
     datatype_ptr->true_ub = flatten_hdr->true_ub;
     datatype_ptr->true_lb = flatten_hdr->true_lb;
-    datatype_ptr->has_sticky_ub = flatten_hdr->has_sticky_ub;
-    datatype_ptr->has_sticky_lb = flatten_hdr->has_sticky_lb;
     datatype_ptr->contents = NULL;
     datatype_ptr->flattened = NULL;
 

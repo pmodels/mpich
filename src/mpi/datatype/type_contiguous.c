@@ -65,8 +65,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
         el_type = oldtype;
 
         new_dtp->size = count * el_sz;
-        new_dtp->has_sticky_ub = 0;
-        new_dtp->has_sticky_lb = 0;
         new_dtp->true_lb = 0;
         new_dtp->lb = 0;
         new_dtp->true_ub = count * el_sz;
@@ -89,8 +87,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
         el_type = old_dtp->basic_type;
 
         new_dtp->size = count * old_dtp->size;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
 
         MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
                                    old_dtp->lb,

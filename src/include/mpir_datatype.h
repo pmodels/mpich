@@ -63,7 +63,7 @@ typedef struct MPIR_Datatype_contents {
   efficiency was outweighed by the added complexity of the implementation.
 
   A number of fields contain only boolean inforation ('is_contig',
-  'has_sticky_ub', 'has_sticky_lb', 'is_committed').  These
+  'is_committed').  These
   could be combined and stored in a single bit vector.
 
   'MPI_Type_dup' could be implemented with a shallow copy, where most of the
@@ -100,7 +100,6 @@ struct MPIR_Datatype {
     /* private fields */
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;
-    int has_sticky_ub, has_sticky_lb;
     int is_committed;
 
     /* element information; used for accumulate and get elements

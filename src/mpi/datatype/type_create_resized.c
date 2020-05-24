@@ -67,8 +67,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         int oldsize = MPIR_Datatype_get_basic_size(oldtype);
 
         new_dtp->size = oldsize;
-        new_dtp->has_sticky_ub = 0;
-        new_dtp->has_sticky_lb = 0;
         new_dtp->true_lb = 0;
         new_dtp->lb = lb;
         new_dtp->true_ub = oldsize;
@@ -87,8 +85,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
 
         new_dtp->size = old_dtp->size;
-        new_dtp->has_sticky_ub = 0;
-        new_dtp->has_sticky_lb = 0;
         new_dtp->true_lb = old_dtp->true_lb;
         new_dtp->lb = lb;
         new_dtp->true_ub = old_dtp->true_ub;
