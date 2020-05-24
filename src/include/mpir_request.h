@@ -392,13 +392,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *get_builtin_req(int idx, MPIR_Request_kind_t kind)
 {
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_Request *req = MPIR_Request_create(kind);
-    MPIR_cc_set(&req->cc, 0);
-    return req;
-#else
     return MPIR_Request_builtins + (idx);
-#endif
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request_kind_t kind)
