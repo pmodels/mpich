@@ -90,9 +90,6 @@ int MPIR_Type_indexed(int count,
         old_extent = (MPI_Aint) el_sz;
         old_is_contig = 1;
 
-        new_dtp->has_sticky_ub = 0;
-        new_dtp->has_sticky_lb = 0;
-
         MPIR_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
         new_dtp->builtin_element_size = el_sz;
         new_dtp->basic_type = el_type;
@@ -118,9 +115,6 @@ int MPIR_Type_indexed(int count,
         old_true_ub = old_dtp->true_ub;
         old_extent = old_dtp->extent;
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->builtin_element_size = (MPI_Aint) el_sz;

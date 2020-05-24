@@ -251,12 +251,6 @@ int MPI_Type_create_subarray(int ndims,
 
     disps[0] = 0;
 
-/* Instead of using MPI_LB/MPI_UB, which have been removed from MPI in MPI-3,
-   use MPI_Type_create_resized. Use hindexed_block to set the starting displacement
-   of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
-   and extent to disps[2], which makes ub = disps[2].
- */
-
     mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1], 1,      /* 1 means disp is in bytes */
                                        tmp1, &tmp2);
     MPIR_ERR_CHECK(mpi_errno);

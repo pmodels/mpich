@@ -79,8 +79,6 @@ int MPIR_Type_blockindexed(int count,
         old_is_contig = 1;
 
         new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
-        new_dtp->has_sticky_lb = 0;
-        new_dtp->has_sticky_ub = 0;
 
         new_dtp->alignsize = el_sz;     /* ??? */
         new_dtp->n_builtin_elements = count * blocklength;
@@ -104,8 +102,6 @@ int MPIR_Type_blockindexed(int count,
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *(MPI_Aint) old_dtp->size;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;

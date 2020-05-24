@@ -18,8 +18,6 @@ typedef struct MPIDU_Type_footprint_s {
      */
     MPI_Aint lb, ub, alignsz;
     MPI_Aint true_lb, true_ub;
-    int has_sticky_lb;
-    int has_sticky_ub;
 } MPII_Dataloop_type_footprint;
 
 void MPIDU_Type_calc_footprint(MPI_Datatype type, MPII_Dataloop_type_footprint * tfp);
