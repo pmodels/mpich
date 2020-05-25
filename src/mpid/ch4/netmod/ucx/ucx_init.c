@@ -184,6 +184,11 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
+int MPIDI_UCX_post_init(void)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIDI_UCX_get_vci_attr(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);

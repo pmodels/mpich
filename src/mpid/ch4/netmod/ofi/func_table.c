@@ -14,6 +14,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
     .mpi_init = MPIDI_OFI_mpi_init_hook,
     .mpi_finalize = MPIDI_OFI_mpi_finalize_hook,
+    .post_init = MPIDI_OFI_post_init,
     .progress = MPIDI_OFI_progress,
     .mpi_comm_connect = MPIDI_OFI_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_OFI_mpi_comm_disconnect,
