@@ -563,14 +563,14 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* TODO: update num_vnis according to provider capabilities, such as
      * prov_use->domain_attr->{tx,rx}_ctx_cnt
      */
-    if (num_vnis > MPIDI_OFI_MAX_CONTEXTS) {
-        num_vnis = MPIDI_OFI_MAX_CONTEXTS;
+    if (num_vnis > MPIDI_OFI_MAX_VNIS) {
+        num_vnis = MPIDI_OFI_MAX_VNIS;
     }
     /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
     /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
     MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
 
-    MPIDI_OFI_global.num_ctx = num_vnis;
+    MPIDI_OFI_global.num_vnis = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */
     mpi_errno = create_vni_context(0);
@@ -578,7 +578,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Creating the additional vni contexts.
      * This code maybe moved to a later stage */
-    for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
+    for (i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
         mpi_errno = create_vni_context(i);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -761,7 +761,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_Assert(MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
     /* Tearing down endpoints */
-    for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
+    for (i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
         mpi_errno = destroy_vni_context(i);
         MPIR_ERR_CHECK(mpi_errno);
     }
