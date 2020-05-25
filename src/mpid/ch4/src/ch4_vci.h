@@ -8,6 +8,11 @@
 
 #include "ch4_impl.h"
 
+/* vci is embedded in the request's pool index */
+
+#define MPIDI_Request_get_vci(req) \
+    (((req)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)
+
 /* VCI hashing function (fast path)
  * Call these function to get src_vci and dst_vci
  * NOTE: The returned vci should always MOD NUMVCIS, where NUMVCIS is
