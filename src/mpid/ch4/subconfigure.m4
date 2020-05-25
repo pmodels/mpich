@@ -319,6 +319,40 @@ if test $with_ch4_max_vcis -le 0 ; then
 fi
 AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs configured in CH4])
 
+# Check for enable-ch4-vci-method choice
+AC_ARG_ENABLE(ch4-vci-method,
+	AC_HELP_STRING([--enable-ch4-vci-method=type],
+			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
+                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_ch4_vci_method=zero)
+
+vci_method=MPICH_VCI__ZERO
+case $enable_ch4_vci_method in
+    zero)
+    # Essentially single VCI
+    vci_method=MPICH_VCI__ZERO
+    ;;
+    communicator)
+    # Every communicator gets a new VCI in a round-robin fashion
+    vci_method=MPICH_VCI__COMM
+    ;;
+    tag)
+    # Explicit VCI info embedded with a tag scheme (5 bit src vci, 5 bit dst vci, plus 5 bit user)
+    vci_method=MPICH_VCI__TAG
+    ;;
+    implicit)
+    # An automatic scheme taking into account of user hints
+    vci_method=MPICH_VCI__IMPLICIT
+    ;;
+    explicit)
+    # Directly passing down vci in parameters (MPIX or Endpoint rank)
+    vci_method=MPICH_VCI__EXPLICIT
+    ;;
+    *)
+    AC_MSG_ERROR([Unrecognized value $enable_ch4_vci_method for --enable-ch4-vci-method])
+    ;;
+esac
+AC_DEFINE_UNQUOTED([MPIDI_CH4_VCI_METHOD], $vci_method, [Method used to select vci])
+
 AC_ARG_ENABLE(ch4-mt,
     [--enable-ch4-mt=model
        Select model for multi-threading
