@@ -325,6 +325,7 @@ static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
 
 static int addr_exchange_root_vni(MPIR_Comm * init_comm);
+static int addr_exchange_all_vnis(void);
 
 static int get_ofi_version(void)
 {
@@ -569,6 +570,11 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
     /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
     MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
+
+    /* Multiple vni without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    MPIR_Assert(num_vnis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+#endif
 
     MPIDI_OFI_global.num_vnis = num_vnis;
 
@@ -1835,6 +1841,64 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
         MPIDU_bc_table_destroy();
     }
 
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int addr_exchange_all_vnis(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+    int num_vnis = MPIDI_OFI_global.num_vnis;
+
+    /* get addr name length */
+    size_t name_len = 0;
+    int ret = fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, NULL, &name_len);
+    MPIR_Assert(ret == -FI_ETOOSMALL);
+    MPIR_Assert(name_len > 0);
+
+    int my_len = num_vnis * name_len;
+    char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
+    MPIR_Assert(all_names);
+
+    char *my_names = all_names + rank * my_len;
+
+    /* put in my addrnames */
+    for (int i = 0; i < num_vnis; i++) {
+        size_t actual_name_len;
+        char *vni_addrname = my_names + i * name_len;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[i].ep, vni_addrname,
+                                  &actual_name_len), getname);
+        MPIR_Assert(actual_name_len == name_len);
+    }
+    /* Allgather */
+    MPIR_Comm *comm = MPIR_Process.comm_world;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
+                                            all_names, my_len, MPI_BYTE, comm, &errflag);
+    /* insert the addresses */
+    fi_addr_t *mapped_table;
+    mapped_table = (fi_addr_t *) MPL_malloc(size * num_vnis * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+    for (int vni_local = 0; vni_local < num_vnis; vni_local++) {
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni_local].av, all_names, size * num_vnis,
+                                    mapped_table, 0ULL, NULL), avmap);
+        for (int r = 0; r < size; r++) {
+            MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            for (int vni_remote = 0; vni_remote < num_vnis; vni_remote++) {
+                if (vni_local == 0 && vni_remote == 0) {
+                    /* don't overwrite existing addr, or bad things will happen */
+                    continue;
+                }
+                av->dest[vni_local][vni_remote] = mapped_table[r * num_vnis + vni_remote];
+            }
+        }
+    }
+#endif
   fn_exit:
     return mpi_errno;
   fn_fail:
