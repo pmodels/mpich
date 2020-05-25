@@ -287,9 +287,6 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
      */
     if (HANDLE_IS_BUILTIN(datatype) ||
         (datatype_ptr->builtin_element_size != -1 && datatype_ptr->size > 0)) {
-        /* QUESTION: WHAT IF SOMEONE GAVE US AN MPI_UB OR MPI_LB???
-         */
-
         /* in both cases we do not limit the number of types that might
          * be in bytes
          */

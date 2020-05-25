@@ -171,11 +171,6 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
             }
             break;
 
-        case MPI_LB:
-        case MPI_UB:
-            yaksa_type = YAKSA_TYPE__NULL;
-            break;
-
 #ifdef HAVE_FORTRAN_BINDING
         case MPI_CHARACTER:
             yaksa_type = YAKSA_TYPE__CHAR;
