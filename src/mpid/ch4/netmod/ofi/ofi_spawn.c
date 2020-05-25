@@ -920,7 +920,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
+        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, av->dest[0][0],
                                         &temp_buf[i * MPIDI_OFI_global.addrnamelen],
                                         &(*local_upid_size)[i]), 0, avlookup);
         total_size += (*local_upid_size)[i];
