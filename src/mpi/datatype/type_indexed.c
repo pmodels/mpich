@@ -32,7 +32,7 @@ int MPIR_Type_indexed(int count,
                       int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_builtin, old_is_contig;
+    int old_is_contig;
     int i;
     MPI_Aint contig_count;
     MPI_Aint el_sz, el_ct, old_ct, old_sz;
@@ -72,9 +72,7 @@ int MPIR_Type_indexed(int count,
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         /* builtins are handled differently than user-defined types because
          * they have no associated typerep or datatype structure.
          */

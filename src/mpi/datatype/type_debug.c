@@ -278,13 +278,10 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
  */
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 {
-    int is_builtin;
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     const char *string;
 #endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
-
-    is_builtin = (HANDLE_IS_BUILTIN(type));
 
     /* can get a NULL type a number of different ways, including not having
      * fortran support included.
@@ -295,7 +292,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
         return;
     }
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(type)) {
         string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
     } else {
@@ -306,7 +303,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         string));
 #endif
 
-    if (is_builtin)
+    if (HANDLE_IS_BUILTIN(type))
         return;
 
     MPIR_Datatype_get_ptr(type, dtp);
