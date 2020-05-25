@@ -249,7 +249,6 @@ exist.
     mpich-%VERSION%/m.txt (generated in step 1(e) above)
     mpich-%VERSION%/mi.txt (generated in step 1(f) above)
     mpich-%VERSION%/config.log (generated in step 1(d) above)
-    mpich-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/mpl/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/pm/hydra/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/pm/hydra/tools/topo/hwloc/hwloc/config.log (generated in step 1(d) above)

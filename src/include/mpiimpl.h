@@ -134,7 +134,6 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
 #include "mpl.h"
-#include "opa_primitives.h"
 #include "mpi.h"
 
 
