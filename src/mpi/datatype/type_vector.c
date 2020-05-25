@@ -32,7 +32,7 @@ int MPIR_Type_vector(int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int old_is_contig;
-    MPI_Aint el_sz, old_sz;
+    MPI_Aint old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
 
     MPIR_Datatype *new_dtp;
@@ -61,7 +61,7 @@ int MPIR_Type_vector(int count,
     new_dtp->typerep = NULL;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
-        el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
 
         old_lb = 0;
         old_true_lb = 0;
@@ -86,7 +86,6 @@ int MPIR_Type_vector(int count,
         MPIR_Datatype *old_dtp;
 
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        el_sz = old_dtp->builtin_element_size;
 
         old_lb = old_dtp->lb;
         old_true_lb = old_dtp->true_lb;
@@ -100,7 +99,7 @@ int MPIR_Type_vector(int count,
 
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = el_sz;
+        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks * count * blocklength;
