@@ -184,7 +184,19 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     /* large contiguous messages */
     if (origin_contig && target_contig) {
-        MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+        if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+            if (*sigreq) {
+                MPIR_Request_add_ref(*sigreq);
+            } else
+#endif
+            {
+                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+            }
+            flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+        } else {
+            flags = FI_DELIVERY_COMPLETE;
+        }
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
@@ -328,7 +340,19 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     if (origin_contig && target_contig) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         if (sigreq) {
-            MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+            if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+                if (*sigreq) {
+                    MPIR_Request_add_ref(*sigreq);
+                } else
+#endif
+                {
+                    MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+                }
+                flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+            } else {
+                flags = FI_DELIVERY_COMPLETE;
+            }
         } else {
             flags = 0;
         }

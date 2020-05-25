@@ -55,7 +55,20 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     origin_len = MPL_MIN(total_origin_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+    if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        if (*sigreq) {
+            MPIR_Request_add_ref(*sigreq);
+        } else
+#endif
+        {
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+        }
+        flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+    } else {
+        flags = FI_DELIVERY_COMPLETE;
+    }
+
     int i = 0, j = 0;
     size_t msg_len;
     while (i < total_origin_iov_len && j < total_target_iov_len) {

@@ -119,7 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
     char *send_buf;
     uint64_t match_bits;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
@@ -128,8 +127,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
 
-    MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
-    *request = sreq;
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    /* TODO: what cases when *request is NULL under workq? */
+    if (*request) {
+        MPIR_Request_add_ref(*request);
+    } else
+#endif
+    {
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, 0);
+    }
+
+    MPIR_Request *sreq = *request;
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
