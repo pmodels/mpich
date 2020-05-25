@@ -19,7 +19,7 @@
         types[1] = mt2_;                                                \
     }
 
-#define GET_NUM_CONTIG_BLOCKS(ctype1, ctype2, num_contig_blocks)        \
+#define PAIRTYPE_GET_NUM_CONTIG_BLOCKS(ctype1, ctype2, num_contig_blocks)        \
     do {                                                                \
         struct {                                                        \
             ctype1 x;                                                   \
@@ -59,22 +59,22 @@ static int create_pairtype(MPI_Datatype type)
 
     if (type == MPI_FLOAT_INT) {
         PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(float, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(float, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_DOUBLE_INT) {
         PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(double, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(double, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_LONG_INT) {
         PAIRTYPE_CONTENTS(MPI_LONG, long, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(long, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(long, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_SHORT_INT) {
         PAIRTYPE_CONTENTS(MPI_SHORT, short, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(short, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(short, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_LONG_DOUBLE_INT) {
         PAIRTYPE_CONTENTS(MPI_LONG_DOUBLE, long double, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(long double, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(long double, int, typeptr->typerep.num_contig_blocks);
     } else if (type == MPI_2INT) {
         PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
-        GET_NUM_CONTIG_BLOCKS(int, int, typeptr->typerep.num_contig_blocks);
+        PAIRTYPE_GET_NUM_CONTIG_BLOCKS(int, int, typeptr->typerep.num_contig_blocks);
     }
 
     return MPIR_Dataloop_create_struct(2, blocks, disps, types, (void **) &typeptr->typerep.handle);
