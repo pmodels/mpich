@@ -35,7 +35,7 @@ int MPIR_Type_indexed(int count,
     int old_is_contig;
     int i;
     MPI_Aint contig_count;
-    MPI_Aint el_sz, el_ct, old_ct, old_sz;
+    MPI_Aint el_ct, old_ct, old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
 
@@ -75,7 +75,7 @@ int MPIR_Type_indexed(int count,
         /* builtins are handled differently than user-defined types because
          * they have no associated typerep or datatype structure.
          */
-        el_sz = MPIR_Datatype_get_basic_size(oldtype);
+        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
         old_sz = el_sz;
         el_ct = 1;
 
@@ -100,7 +100,6 @@ int MPIR_Type_indexed(int count,
         /* Ensure that "builtin_element_size" fits into an int datatype. */
         MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
-        el_sz = old_dtp->builtin_element_size;
         old_sz = old_dtp->size;
         el_ct = old_dtp->n_builtin_elements;
 
@@ -112,7 +111,7 @@ int MPIR_Type_indexed(int count,
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->builtin_element_size = (MPI_Aint) el_sz;
+        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
         new_dtp->max_contig_blocks = 0;
