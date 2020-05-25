@@ -757,7 +757,11 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
 int MPIDI_OFI_post_init(void)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIDI_OFI_global.num_vnis > 1) {
+        mpi_errno = addr_exchange_all_vnis();
+    }
+    return mpi_errno;
 }
 
 int MPIDI_OFI_get_vci_attr(int vci)
