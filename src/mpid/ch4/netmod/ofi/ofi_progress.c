@@ -16,6 +16,14 @@ int MPIDI_OFI_progress(int vci, int blocking)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS);
 
     int vni = MPIDI_OFI_vci_to_vni(vci);
+    if (vni >= MPIDI_OFI_global.num_vnis) {
+        /* The requests generated from ofi will have vni/vci within our range.
+         * All requests that have vci beyond num_vnis are not from us, nothing
+         * to do, so simply return.
+         * NOTE: it is not an error since global progress will poll every vci.
+         */
+        return MPI_SUCCESS;
+    }
 
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
