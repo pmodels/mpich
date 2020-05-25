@@ -775,7 +775,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
                                int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
 {
     int nr_ints, nr_aints, nr_types, combiner;
-    int types_sz, struct_sz, ints_sz, epsilon, align_sz;
+    int types_sz, struct_sz, ints_sz, epsilon;
     MPIR_Datatype *dtp;
     MPIR_Datatype_contents *cp;
 
@@ -788,24 +788,18 @@ void MPIR_Type_access_contents(MPI_Datatype type,
     cp = dtp->contents;
     MPIR_Assert(cp != NULL);
 
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
-
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = nr_types * sizeof(MPI_Datatype);
     ints_sz = nr_ints * sizeof(int);
 
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = ints_sz % align_sz)) {
-        ints_sz += align_sz - epsilon;
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
     }
     *types_p = (MPI_Datatype *) (((char *) cp) + struct_sz);
     *ints_p = (int *) (((char *) (*types_p)) + types_sz);
