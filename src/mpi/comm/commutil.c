@@ -319,7 +319,11 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     intercomm_ptr->local_comm = localcomm_ptr;
 
     /* sets up the SMP-aware sub-communicators and tables */
+    /* This routine maybe used inside MPI_Comm_idup, so we can't synchronize
+     * seq using blocking collectives, thus a hacky solution */
+    localcomm_ptr->seq = -1;
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);
+    localcomm_ptr->seq = 0;
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
@@ -702,7 +706,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->seq == 0) {
         mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
