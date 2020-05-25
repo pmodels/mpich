@@ -110,11 +110,9 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->builtin_element_size = el_size;
     new_dtp->basic_type = type;
 
-    new_dtp->has_sticky_lb = 0;
     new_dtp->true_lb = 0;
     new_dtp->lb = 0;
 
-    new_dtp->has_sticky_ub = 0;
     new_dtp->true_ub = true_ub;
 
     new_dtp->size = type_size;
