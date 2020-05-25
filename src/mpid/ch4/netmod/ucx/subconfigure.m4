@@ -29,7 +29,6 @@ dnl Parse the device arguments
     IFS=':'
     args_array=$ucx_netmod_args
     do_am_only=false
-    echo "Parsing Arguments for UCX Netmod"
     for arg in $args_array; do
     case ${arg} in
       am-only)
