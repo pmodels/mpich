@@ -33,7 +33,7 @@ int MPIR_Type_blockindexed(int count,
                            int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS, i;
-    int is_builtin, old_is_contig;
+    int old_is_contig;
     MPI_Aint contig_count;
     MPI_Aint el_sz;
     MPI_Datatype el_type;
@@ -65,9 +65,7 @@ int MPIR_Type_blockindexed(int count,
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
         el_type = oldtype;
 

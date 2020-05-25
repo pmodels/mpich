@@ -31,7 +31,7 @@ int MPIR_Type_vector(int count,
                      int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_builtin, old_is_contig;
+    int old_is_contig;
     MPI_Aint el_sz, old_sz;
     MPI_Datatype el_type;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
@@ -61,9 +61,7 @@ int MPIR_Type_vector(int count,
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
         el_type = oldtype;
 

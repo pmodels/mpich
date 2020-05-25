@@ -29,7 +29,6 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_builtin;
     MPI_Aint el_sz;
     MPI_Datatype el_type;
     MPIR_Datatype *new_dtp;
@@ -58,9 +57,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 
     new_dtp->typerep = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         el_sz = MPIR_Datatype_get_basic_size(oldtype);
         el_type = oldtype;
 

@@ -186,7 +186,6 @@ static int type_struct(int count,
 
     new_dtp->max_contig_blocks = 0;
     for (i = 0; i < count; i++) {
-        int is_builtin = (HANDLE_IS_BUILTIN(oldtype_array[i]));
         MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
         MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
@@ -199,7 +198,7 @@ static int type_struct(int count,
         if (blocklength_array[i] == 0)
             continue;
 
-        if (is_builtin) {
+        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
             tmp_el_sz = MPIR_Datatype_get_basic_size(oldtype_array[i]);
             tmp_el_type = oldtype_array[i];
 
