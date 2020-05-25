@@ -172,7 +172,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         MPIDI_OFI_win_cntr_incr(win);
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
                                              (char *) origin_addr + origin_true_lb, target_bytes,
-                                             MPIDI_OFI_av_to_phys(addr),
+                                             MPIDI_OFI_av_to_phys(addr, 0, 0),
                                              (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
                                              + target_disp * MPIDI_OFI_winfo_disp_unit(win,
                                                                                        target_rank)
@@ -187,7 +187,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -335,7 +335,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         msg.desc = NULL;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_av_to_phys(addr);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
         msg.context = NULL;
@@ -533,7 +533,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_av_to_phys(av);
+    msg.addr = MPIDI_OFI_av_to_phys(av, 0, 0);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;
@@ -837,7 +837,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_av_to_phys(av);
+    msg.addr = MPIDI_OFI_av_to_phys(av, 0, 0);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;

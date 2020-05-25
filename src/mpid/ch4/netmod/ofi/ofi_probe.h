@@ -30,7 +30,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_av_to_phys(addr);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, 0, 0);
 
     if (message) {
         rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, 0);
