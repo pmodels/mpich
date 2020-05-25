@@ -422,26 +422,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrna
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+                                                        int vni_src, int vni_dst)
 {
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][0], ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[vni_src][vni_dst], ep_num,
+                          MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
+        return MPIDI_OFI_AV(av).dest[vni_src][vni_dst];
+    }
+#else /* MPIDI_OFI_VNI_USE_SEPCTX */
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][0], vni_dst, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+    } else {
+        MPIR_Assert(vni_dst == 0);
         return MPIDI_OFI_AV(av).dest[0][0];
     }
+#endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int grank)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int grank, int vni_src, int vni_dst)
 {
     MPIDI_av_entry_t *av = &MPIDIU_get_av(0, grank);
-    return MPIDI_OFI_av_to_phys(av);
+    return MPIDI_OFI_av_to_phys(av, vni_src, vni_dst);
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
+                                                          int vni_src, int vni_dst)
 {
     MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
-    return MPIDI_OFI_av_to_phys(av);
+    return MPIDI_OFI_av_to_phys(av, vni_src, vni_dst);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
