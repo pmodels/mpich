@@ -323,10 +323,17 @@ AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs c
 AC_ARG_ENABLE(ch4-vci-method,
 	AC_HELP_STRING([--enable-ch4-vci-method=type],
 			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
-                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_ch4_vci_method=zero)
+                          Values may be default, zero, communicator, tag, implicit, explicit]),,enable_ch4_vci_method=default)
 
 vci_method=MPICH_VCI__ZERO
 case $enable_ch4_vci_method in
+    default)
+    if test "$with_ch4_max_vcis" = 1 ; then
+        vci_method=MPICH_VCI__ZERO
+    else
+        vci_method=MPICH_VCI__COMM
+    fi
+    ;;
     zero)
     # Essentially single VCI
     vci_method=MPICH_VCI__ZERO
