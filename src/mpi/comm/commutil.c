@@ -212,7 +212,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
     comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
-    comm_p->seq_table = NULL;
     memset(comm_p->hints, 0, sizeof(comm_p->hints));
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
@@ -490,15 +489,6 @@ static int MPIR_Comm_commit_internal(MPIR_Comm * comm)
     mpi_errno = get_node_count(comm, &comm->node_count);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (comm->seq > 0) {
-        int n = comm->local_size;
-        comm->seq_table = MPL_calloc(n, sizeof(int), MPL_MEM_OTHER);
-        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Allgather(&comm->seq, 1, MPI_INT, comm->seq_table, n, MPI_INT, comm,
-                                   &errflag);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
     MPIR_Comm_map_free(comm);
 
   fn_exit:
@@ -622,6 +612,41 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm)
     goto fn_exit;
 }
 
+/* static routines for MPIR_Comm_commit */
+static int init_comm_seq(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Every user-level communicator gets a sequence number, which can be
+     * used, for example, to hash vci.
+     * Builtin-comm, e.g. MPI_COMM_WORLD, always have seq at 0 */
+    if (!HANDLE_IS_BUILTIN(comm->handle)) {
+        static int vci_seq = 0;
+        vci_seq++;
+        comm->seq = vci_seq;
+
+        /* Every rank need share the same seq from root. NOTE: it is possible for
+         * different communicators to have the same seq. It is only used as an
+         * opportunistic optimization */
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        mpi_errno = MPIR_Bcast_allcomm_auto(&comm->seq, 1, MPI_INT, 0, comm, &errflag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (comm->node_comm) {
+        comm->node_comm->seq = comm->seq;
+    }
+
+    if (comm->node_roots_comm) {
+        comm->node_roots_comm->seq = comm->seq;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Provides a hook for the top level functions to perform some manipulation on a
    communicator just before it is given to the application level.
 
@@ -647,11 +672,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->context_id)) {  /*make sure this is not a subcomm */
         mpi_errno = MPIR_Comm_create_subcomms(comm);
         MPIR_ERR_CHECK(mpi_errno);
-
-        /* Every user-level communicator gets a unique vci sequence. */
-        static int vci_seq = 0;
-        comm->seq = vci_seq;
-        vci_seq++;
     }
 
     /* Create collectives-specific infrastructure */
@@ -659,13 +679,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_ERR_CHECK(mpi_errno);
 
     if (comm->node_comm) {
-        comm->node_comm->seq = comm->seq;
         mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
     if (comm->node_roots_comm) {
-        comm->node_roots_comm->seq = comm->seq;
         mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -681,6 +699,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     if (comm->node_roots_comm) {
         mpi_errno = MPID_Comm_commit_post_hook(comm->node_roots_comm);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -973,9 +996,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         if (comm_ptr->remote_group)
             MPIR_Group_release(comm_ptr->remote_group);
 
-        if (comm_ptr->seq_table) {
-            MPL_free(comm_ptr->seq_table);
-        }
         /* free the intra/inter-node communicators, if they exist */
         if (comm_ptr->node_comm)
             MPIR_Comm_release(comm_ptr->node_comm);
