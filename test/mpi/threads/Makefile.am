@@ -7,5 +7,5 @@ include $(top_srcdir)/Makefile_single.mtest
 
 EXTRA_DIST = testlist.in
 
-SUBDIRS = pt2pt comm init mpi_t $(spawndir) rma coll
-DIST_SUBDIRS = pt2pt comm init mpi_t spawn rma coll
+SUBDIRS = pt2pt comm init mpi_t $(spawndir) rma coll perf
+DIST_SUBDIRS = pt2pt comm init mpi_t spawn rma coll perf
