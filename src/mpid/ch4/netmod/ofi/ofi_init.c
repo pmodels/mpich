@@ -1815,6 +1815,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
                        avmap);
 
         for (int i = 0; i < num_nodes; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
@@ -1841,6 +1842,7 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
                        (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL), avmap);
 
         for (int i = 0; i < size; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
@@ -1903,7 +1905,9 @@ static int addr_exchange_all_vnis(void)
                     /* don't overwrite existing addr, or bad things will happen */
                     continue;
                 }
-                av->dest[vni_local][vni_remote] = mapped_table[r * num_vnis + vni_remote];
+                int idx = r * num_vnis + vni_remote;
+                MPIR_Assert(mapped_table[idx] != FI_ADDR_NOTAVAIL);
+                av->dest[vni_local][vni_remote] = mapped_table[idx];
             }
         }
     }

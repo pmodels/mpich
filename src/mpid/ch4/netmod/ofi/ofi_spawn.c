@@ -578,6 +578,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -761,6 +762,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
@@ -878,11 +880,11 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
+            fi_addr_t addr;
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
-                                            1,
-                                            (fi_addr_t *) &
-                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0], 0ULL,
-                                            NULL), 0, avmap);
+                                            1, &addr, 0ULL, NULL), 0, avmap);
+            MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
