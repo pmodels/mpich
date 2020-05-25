@@ -64,7 +64,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     }
 
     MPIDI_OFI_CALL(ofi_err, trecvmsg);
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
+    MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START, 0);
 
     switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
         case MPIDI_OFI_PEEK_NOT_FOUND:
