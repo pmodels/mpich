@@ -881,14 +881,11 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
                                             1,
                                             (fi_addr_t *) &
-                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
+                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0], 0ULL,
                                             NULL), 0, avmap);
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);

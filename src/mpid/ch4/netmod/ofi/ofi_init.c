@@ -619,7 +619,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                            avmap);
 
             for (i = 0; i < num_nodes; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
 #endif
@@ -646,7 +646,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                            avmap);
 
             for (i = 0; i < size; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
                 MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #endif
@@ -1212,7 +1212,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
 #endif
