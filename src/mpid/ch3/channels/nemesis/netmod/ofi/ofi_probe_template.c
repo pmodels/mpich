@@ -149,15 +149,20 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe) (struct MPIDI_VC * vc,
                                       MPIR_Comm * comm,
                                       int context_offset,
                                       int *flag, MPIR_Request ** message, MPI_Status * status) {
-    int old_error = status->MPI_ERROR;
+    int old_error;
     int s;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_OFI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_OFI_IMPROBE);
     *flag = CLAIM_PEEK;
+    if (status != MPI_STATUS_IGNORE) {
+        old_error = status->MPI_ERROR;
+    }
     s = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (vc, source,
                                               tag, comm, context_offset, flag, status, message);
     if (*flag) {
-        status->MPI_ERROR = old_error;
+        if (status != MPI_STATUS_IGNORE) {
+            status->MPI_ERROR = old_error;
+        }
         (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_OFI_IMPROBE);
