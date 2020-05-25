@@ -187,39 +187,12 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             #STR);                              \
     } while (0)
 
-#define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
+#define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \
-        (req) = MPIR_Request_create_from_pool(kind, 0);  \
+        (req) = MPIR_Request_create_from_pool(kind, vni);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
-{
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
-        return 1;       /* Always allocated by netmod */
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
-        return (req == NULL);
-    } else {
-        /* Invalid MT model */
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
-#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
-      do {                                                              \
-          if (MPIDI_OFI_need_request_creation(req)) {                   \
-              MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
-                          (req) == NULL);                               \
-              (req) = MPIR_Request_create_from_pool(kind, 0);           \
-              MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
-                                  "**nomemreq");                        \
-          }                                                             \
-          /* At this line we should always have a valid request */      \
-          MPIR_Assert((req) != NULL);                                   \
-          MPIR_Request_add_ref((req));                                  \
-      } while (0)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
@@ -260,18 +233,6 @@ void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
 
 /* RMA */
-#define MPIDI_OFI_INIT_SIGNAL_REQUEST(win,sigreq,flags)                 \
-    do {                                                                \
-        if (sigreq)                                                     \
-        {                                                               \
-            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
-            *(flags) = FI_COMPLETION | FI_DELIVERY_COMPLETE;            \
-        }                                                               \
-        else {                                                          \
-            *(flags) = FI_DELIVERY_COMPLETE;                            \
-        }                                                               \
-    } while (0)
-
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
     do {                                                                \
         if (sigreq) {                                                   \
@@ -306,10 +267,7 @@ static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
 static inline void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
 {
     if (sigreq) {
-        /* If sigreq is not NULL, *sigreq should be a valid object after
-         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
-         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
-         * depending on MPIDI_CH4_MT_MODEL. */
+        /* If sigreq is not NULL, *sigreq should be a valid object now. */
         MPIR_Assert(*sigreq != NULL);
         MPID_Request_complete(*sigreq);
     }
