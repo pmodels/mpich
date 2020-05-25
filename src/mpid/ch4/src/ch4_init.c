@@ -640,6 +640,9 @@ int MPID_InitCompleted(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INITCOMPLETED);
 
+    mpi_errno = MPIDI_NM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (MPIR_Process.has_parent) {
         mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
         MPIR_ERR_CHECK(mpi_errno);
@@ -653,7 +656,7 @@ int MPID_InitCompleted(void)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INITCOMPLETED);
 
   fn_exit:
-    return MPI_SUCCESS;
+    return mpi_errno;
 
   fn_fail:
     goto fn_exit;

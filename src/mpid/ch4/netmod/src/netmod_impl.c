@@ -382,6 +382,19 @@ int MPIDI_NM_mpi_finalize_hook(void)
     return ret;
 }
 
+int MPIDI_NM_post_init(void)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_POST_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_POST_INIT);
+
+    ret = MPIDI_NM_func->post_init();
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_POST_INIT);
+    return ret;
+}
+
 int MPIDI_NM_get_vci_attr(int vci)
 {
     int ret;
