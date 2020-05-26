@@ -3009,100 +3009,15 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
     fi
 fi
+
 # ----------------------------------------------------------------------------
-# Get default structure alignment for integers
-dnl PAC_C_MAX_INTEGER_ALIGN places the default alignment into
-dnl pac_cv_c_max_integer_align, with possible values including
-dnl packed (byte), largest, two, four, eight (or other failure message).
-PAC_C_MAX_INTEGER_ALIGN
+AC_CHECK_ALIGNOF([max_align_t],[0],[#include <stddef.h>])
 
-if test "$pac_cv_c_max_integer_align" = "packed" ; then
-    pac_cv_c_struct_align_nr=1
-elif test "$pac_cv_c_max_integer_align" = "two" ; then
-    pac_cv_c_struct_align_nr=2
-elif test "$pac_cv_c_max_integer_align" = "four" ; then
-    pac_cv_c_struct_align_nr=4
-elif test "$pac_cv_c_max_integer_align" = "eight" ; then
-    pac_cv_c_struct_align_nr=8
-fi
-
-if test -n "$pac_cv_c_struct_align_nr" ; then
-    AC_DEFINE_UNQUOTED(HAVE_MAX_INTEGER_ALIGNMENT,$pac_cv_c_struct_align_nr,[Controls byte alignment of integer structures (for MPI structs)])
-    AC_DEFINE_UNQUOTED(HAVE_MAX_STRUCT_ALIGNMENT,$pac_cv_c_struct_align_nr,[Controls byte alignment of structures (for aligning allocated structures)])
-fi
-# Get default structure alignment for floating point types
-dnl PAC_C_MAX_FP_ALIGN places the default alignment into
-dnl pac_cv_c_max_fp_align, with possible values including
-dnl packed (byte), largest, two, four, eight (or other failure message).
-PAC_C_MAX_FP_ALIGN
-
-if test "$pac_cv_c_max_fp_align" = "packed" ; then
-    pac_cv_c_fp_align_nr=1
-elif test "$pac_cv_c_max_fp_align" = "two" ; then
-    pac_cv_c_fp_align_nr=2
-elif test "$pac_cv_c_max_fp_align" = "four" ; then
-    pac_cv_c_fp_align_nr=4
-elif test "$pac_cv_c_max_fp_align" = "eight" ; then
-    pac_cv_c_fp_align_nr=8
-elif test "$pac_cv_c_max_fp_align" = "sixteen" ; then
-    pac_cv_c_fp_align_nr=16
-elif test "$pac_cv_c_max_fp_align" = "largest" ; then
-    AC_MSG_ERROR([Configure detected unsupported structure alignment rules.])
-fi
-
-if test -n "$pac_cv_c_fp_align_nr" ; then
-    AC_DEFINE_UNQUOTED(HAVE_MAX_FP_ALIGNMENT,$pac_cv_c_fp_align_nr,[Controls byte alignment of structures with floats, doubles, and long doubles (for MPI structs)])
-fi
-
-# Test for the alignment of structs containing only long doubles.
-if test "$pac_cv_have_long_double" = yes ; then
-    # Check for alignment of just float and double (no long doubles)
-    PAC_C_MAX_DOUBLE_FP_ALIGN
-    PAC_C_MAX_LONGDOUBLE_FP_ALIGN
-    # FIXME: If this alignment is not the same as that for all float types,
-    # we need to do something else in the alignment rule code.
-    if test "$pac_cv_c_max_fp_align" != "$pac_cv_c_max_longdouble_fp_align" -o \
-            "$pac_cv_c_max_fp_align" != "$pac_cv_c_max_double_fp_align" ; then
-        AC_MSG_WARN([Structures containing long doubles may be aligned differently from structures with floats or longs.  MPICH does not handle this case automatically and you should avoid assumed extents for structures containing float types.])
-
-	double_align=-1
-	case $pac_cv_c_max_double_fp_align in
-	packed) double_align=1 ;;
-	two)    double_align=2 ;;
-	four)   double_align=4 ;;
-	eight)  double_align=8 ;;
-	esac
-	longdouble_align=-1
-	case $pac_cv_c_max_longdouble_fp_align in
-	packed) longdouble_align=1 ;;
-	two)    longdouble_align=2 ;;
-	four)   longdouble_align=4 ;;
-	eight)  longdouble_align=8 ;;
-	sixteen)longdouble_align=16 ;;
-	esac
-
-	AC_DEFINE_UNQUOTED(HAVE_MAX_DOUBLE_FP_ALIGNMENT,$double_align,[Controls byte alignment of structs with doubles])
-	AC_DEFINE_UNQUOTED(HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT,$longdouble_align,[Controls byte alignment of structs with long doubles])
-    fi
-fi
-
-# Test for weird struct alignment rules that vary padding based on
-# size of leading type only.
-PAC_C_DOUBLE_POS_ALIGN
-if test "$pac_cv_c_double_pos_align" = "yes" ; then
-    AC_DEFINE_UNQUOTED(HAVE_DOUBLE_POS_ALIGNMENT,1,[Controls how alignment is applied based on position of doubles in the structure])
-fi
-
-# Test for same weird issues with long long int.
-PAC_C_LLINT_POS_ALIGN
-if test "$pac_cv_c_llint_pos_align" = "yes" ; then
-   AC_DEFINE_UNQUOTED(HAVE_LLINT_POS_ALIGNMENT,1,[Controls how alignment is applied based on position of long long ints in the structure])
-fi
-
-# Test for double alignment not following all our other carefully constructed rules
-PAC_C_DOUBLE_ALIGNMENT_EXCEPTION
-if test "$pac_cv_c_double_alignment_exception" = "four" ; then
-   AC_DEFINE_UNQUOTED(HAVE_DOUBLE_ALIGNMENT_EXCEPTION,4,[Controls how alignment of doubles is performed, separate from other FP values])
+if test "$ac_cv_alignof_max_align_t" != "0" ; then
+    AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_max_align_t,[Controls byte alignment of structures (for aligning allocated structures)])
+else
+    AC_CHECK_ALIGNOF(long double)
+    AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_long_double,[Controls byte alignment of structures (for aligning allocated structures)])
 fi
 
 # Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)
@@ -3145,6 +3060,22 @@ AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
 AC_CHECK_SIZEOF(short_int, 0, [typedef struct { short a; int b; } short_int; ])
 AC_CHECK_SIZEOF(two_int, 0, [typedef struct { int a; int b; } two_int; ])
 AC_CHECK_SIZEOF(long_double_int, 0, [typedef struct { long double a; int b;} long_double_int; ])
+
+# alignments for basic types
+AC_CHECK_ALIGNOF(char)
+AC_CHECK_ALIGNOF(float)
+AC_CHECK_ALIGNOF(double)
+AC_CHECK_ALIGNOF(long)
+AC_CHECK_ALIGNOF(long long)
+AC_CHECK_ALIGNOF(long double)
+AC_CHECK_ALIGNOF(short)
+AC_CHECK_ALIGNOF(int)
+AC_CHECK_ALIGNOF(int8_t)
+AC_CHECK_ALIGNOF(int16_t)
+AC_CHECK_ALIGNOF(int32_t)
+AC_CHECK_ALIGNOF(int64_t)
+AC_CHECK_ALIGNOF(bool)
+AC_CHECK_ALIGNOF(wchar_t, 0, [#include <stddef.h>])
 
 # sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
 # Include it when testing for these types

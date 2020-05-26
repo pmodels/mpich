@@ -354,12 +354,12 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);
-    int align_sz = 8, epsilon;
+    int epsilon;
     MPIR_Datatype *old_dtp;
     MPI_Datatype *array_of_types;
 
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
 
     /* note: relies on types being first after structure */
@@ -391,17 +391,11 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              const MPI_Aint array_of_aints[],
                                              const MPI_Datatype array_of_types[])
 {
-    int i, contents_size, align_sz, epsilon, mpi_errno;
+    int i, contents_size, epsilon, mpi_errno;
     int struct_sz, ints_sz, aints_sz, types_sz;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
     char *ptr;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = nr_types * sizeof(MPI_Datatype);
@@ -413,14 +407,14 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
      * note: it's not necessary that we pad the aints,
      *       because they are last in the region.
      */
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = ints_sz % align_sz)) {
-        ints_sz += align_sz - epsilon;
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
     }
 
     contents_size = struct_sz + types_sz + ints_sz + aints_sz;
