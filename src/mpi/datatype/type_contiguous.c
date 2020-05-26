@@ -53,7 +53,7 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
@@ -70,8 +70,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
         new_dtp->builtin_element_size = el_sz;
         new_dtp->basic_type = oldtype;
         new_dtp->is_contig = 1;
-        new_dtp->max_contig_blocks = 1;
-
     } else {
         /* user-defined base type (oldtype) */
         MPIR_Datatype *old_dtp;
@@ -97,13 +95,9 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
         new_dtp->basic_type = old_dtp->basic_type;
 
         MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
-        if (new_dtp->is_contig)
-            new_dtp->max_contig_blocks = 1;
-        else
-            new_dtp->max_contig_blocks = count * old_dtp->max_contig_blocks;
     }
 
-    mpi_errno = MPIR_Typerep_create_contig(count, oldtype, &new_dtp->typerep);
+    mpi_errno = MPIR_Typerep_create_contig(count, oldtype, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 
     *newtype = new_dtp->handle;

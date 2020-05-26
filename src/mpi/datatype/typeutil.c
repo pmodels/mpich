@@ -440,7 +440,7 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     new_dtp->size = 0;
     new_dtp->lb = 0;
@@ -673,8 +673,8 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr)
     if (ptr->contents) {
         MPIR_Datatype_free_contents(ptr);
     }
-    if (ptr->typerep) {
-        MPIR_Typerep_free(&(ptr->typerep));
+    if (ptr->typerep.handle) {
+        MPIR_Typerep_free(ptr);
     }
     MPL_free(ptr->flattened);
     MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);

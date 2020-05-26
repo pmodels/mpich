@@ -878,7 +878,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         int accumulated_count;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
-        vec_len = dtp->max_contig_blocks * target_count + 1;
+        vec_len = dtp->typerep.num_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         typerep_vec = (struct iovec *)
             MPL_malloc(vec_len * sizeof(struct iovec), MPL_MEM_DATATYPE);

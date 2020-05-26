@@ -344,7 +344,7 @@ yaksa_type_t MPII_Typerep_get_yaksa_type(MPI_Datatype type)
                 } else {
                     MPIR_Datatype *typeptr;
                     MPIR_Datatype_get_ptr(type, typeptr);
-                    yaksa_type = ((yaksa_type_t) typeptr->typerep);
+                    yaksa_type = ((yaksa_type_t) typeptr->typerep.handle);
                 }
             }
             break;
