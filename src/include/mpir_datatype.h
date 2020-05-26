@@ -122,11 +122,6 @@ struct MPIR_Datatype {
      * contiguous.
      */
     int is_contig;
-    /* Upper bound on the number of contig blocks for one instance.
-     * It is not trivial to calculate the *real* number of contig
-     * blocks in the case where old datatype is non-contiguous
-     */
-    MPI_Aint max_contig_blocks;
 
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
@@ -135,8 +130,12 @@ struct MPIR_Datatype {
     void *flattened;
     int flattened_sz;
 
-    /* internal type representation */
-    void *typerep;              /* might be optimized for homogenous */
+    /* handle to the backend datatype engine + some content that we
+     * query from it and cache over here for performance reasons */
+    struct {
+        void *handle;
+        MPI_Aint num_contig_blocks;     /* contig blocks in one datatype element */
+    } typerep;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
@@ -277,7 +276,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
             MPIR_Datatype_get_ptr((datatype_), dt_ptr_);        \
             MPI_Aint size_;                                     \
             MPIR_Datatype_get_size_macro((datatype_), size_);   \
-            (density_) = size_ / dt_ptr_->max_contig_blocks;    \
+            (density_) = size_ / dt_ptr_->typerep.num_contig_blocks;    \
         }                                                       \
     } while (0)
 

@@ -70,16 +70,14 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
-        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
-
-        new_dtp->typerep = NULL;
+        new_dtp->typerep.handle = NULL;
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
             MPID_Type_commit_hook(new_dtp);
         }
 
-        mpi_errno = MPIR_Typerep_create_dup(oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
