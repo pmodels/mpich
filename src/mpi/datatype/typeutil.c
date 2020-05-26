@@ -217,7 +217,6 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
         case MPI_CHAR:
         case MPI_UNSIGNED_CHAR:
         case MPI_SIGNED_CHAR:
-        case MPI_CHARACTER:
             return ALIGNOF_CHAR;
 
         case MPI_BYTE:
@@ -270,24 +269,34 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
             return ALIGNOF_INT64_T;
 
         case MPI_C_BOOL:
-        case MPI_CXX_BOOL:
             return ALIGNOF_BOOL;
 
         case MPI_C_COMPLEX:
-        case MPI_CXX_FLOAT_COMPLEX:
             return ALIGNOF_FLOAT;
 
         case MPI_C_DOUBLE_COMPLEX:
-        case MPI_CXX_DOUBLE_COMPLEX:
             return ALIGNOF_DOUBLE;
 
         case MPI_C_LONG_DOUBLE_COMPLEX:
-        case MPI_CXX_LONG_DOUBLE_COMPLEX:
             return ALIGNOF_LONG_DOUBLE;
 
         case MPI_AINT:
         case MPI_OFFSET:
         case MPI_COUNT:
+            if (size == sizeof(int8_t))
+                return ALIGNOF_INT8_T;
+            else if (size == sizeof(int16_t))
+                return ALIGNOF_INT16_T;
+            else if (size == sizeof(int32_t))
+                return ALIGNOF_INT32_T;
+            else if (size == sizeof(int64_t))
+                return ALIGNOF_INT64_T;
+            break;
+
+#ifdef HAVE_FORTRAN_BINDING
+        case MPI_CHARACTER:
+            return ALIGNOF_CHAR;
+
         case MPI_LOGICAL:
         case MPI_INTEGER:
         case MPI_2INTEGER:
@@ -333,6 +342,21 @@ int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
             else if (size / 2 == sizeof(long double))
                 return ALIGNOF_LONG_DOUBLE;
             break;
+#endif /* HAVE_FORTRAN_BINDING */
+
+#ifdef HAVE_CXX_BINDING
+        case MPI_CXX_BOOL:
+            return ALIGNOF_BOOL;
+
+        case MPI_CXX_FLOAT_COMPLEX:
+            return ALIGNOF_FLOAT;
+
+        case MPI_CXX_DOUBLE_COMPLEX:
+            return ALIGNOF_DOUBLE;
+
+        case MPI_CXX_LONG_DOUBLE_COMPLEX:
+            return ALIGNOF_LONG_DOUBLE;
+#endif /* HAVE_CXX_BINDING */
 
         default:
             break;
