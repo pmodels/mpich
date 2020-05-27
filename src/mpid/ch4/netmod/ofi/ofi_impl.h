@@ -333,6 +333,11 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Aint target_disp, int target_count,
                             MPI_Datatype target_datatype, MPIR_Win * win,
                             MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       MPI_Aint target_disp, int target_count,
+                       MPI_Datatype target_datatype, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
 
 /* Common Utility functions used by the
  * C and C++ components
@@ -369,6 +374,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
+    if (winreq->rma_type == MPIDI_OFI_PUT)
+        MPL_free(winreq->noncontig.put.origin.pack_buffer);
     MPL_free(winreq);
 }
 

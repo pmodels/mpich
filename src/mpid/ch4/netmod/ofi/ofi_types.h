@@ -426,8 +426,34 @@ typedef struct MPIDI_OFI_win_request {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
+    struct MPIDI_OFI_win_request *prev;
     int rma_type;
     MPIR_Request **sigreq;
+    union {
+        struct {
+            struct {
+                const void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+                void *pack_buffer;
+                MPI_Aint pack_size;
+            } origin;
+            struct {
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } put;
+    } noncontig;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
