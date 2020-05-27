@@ -220,6 +220,14 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
+    if (origin_density < MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+        mpi_errno =
+            MPIDI_OFI_pack_put(origin_addr, origin_count, origin_datatype, target_rank,
+                               target_disp, target_count, target_datatype, win, addr, sigreq);
+        goto fn_exit;
+    }
+
     if (sigreq)
         mpi_errno =
             MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
