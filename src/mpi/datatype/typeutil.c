@@ -211,158 +211,93 @@ int MPIR_Datatype_init_predefined(void)
 
 int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
 {
+    if (type == MPI_DATATYPE_NULL)
+        return 1;
+
     int size = MPIR_Datatype_get_basic_size(type);
 
-    switch (type) {
-        case MPI_CHAR:
-        case MPI_UNSIGNED_CHAR:
-        case MPI_SIGNED_CHAR:
-            return ALIGNOF_CHAR;
-
-        case MPI_BYTE:
-        case MPI_UINT8_T:
-        case MPI_INT8_T:
-        case MPI_PACKED:
-        case MPI_LB:
-        case MPI_UB:
+    if (type == MPI_CHAR || type == MPI_UNSIGNED_CHAR || type == MPI_SIGNED_CHAR) {
+        return ALIGNOF_CHAR;
+    } else if (type == MPI_BYTE || type == MPI_UINT8_T || type == MPI_INT8_T ||
+               type == MPI_PACKED || type == MPI_LB || type == MPI_UB) {
+        return ALIGNOF_INT8_T;
+    } else if (type == MPI_WCHAR) {
+        return ALIGNOF_WCHAR_T;
+    } else if (type == MPI_SHORT || type == MPI_UNSIGNED_SHORT) {
+        return ALIGNOF_SHORT;
+    } else if (type == MPI_INT || type == MPI_UNSIGNED || type == MPI_2INT) {
+        return ALIGNOF_INT;
+    } else if (type == MPI_LONG || type == MPI_UNSIGNED_LONG) {
+        return ALIGNOF_LONG;
+    } else if (type == MPI_FLOAT || type == MPI_C_COMPLEX) {
+        return ALIGNOF_FLOAT;
+    } else if (type == MPI_DOUBLE || type == MPI_C_DOUBLE_COMPLEX) {
+        return ALIGNOF_DOUBLE;
+    } else if (type == MPI_LONG_DOUBLE || type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        return ALIGNOF_LONG_DOUBLE;
+    } else if (type == MPI_LONG_LONG_INT || type == MPI_UNSIGNED_LONG_LONG) {
+        return ALIGNOF_LONG_LONG;
+    } else if (type == MPI_INT16_T || type == MPI_UINT16_T) {
+        return ALIGNOF_INT16_T;
+    } else if (type == MPI_INT32_T || type == MPI_UINT32_T) {
+        return ALIGNOF_INT32_T;
+    } else if (type == MPI_INT64_T || type == MPI_UINT64_T) {
+        return ALIGNOF_INT64_T;
+    } else if (type == MPI_C_BOOL) {
+        return ALIGNOF_BOOL;
+    } else if (type == MPI_AINT || type == MPI_OFFSET || type == MPI_COUNT) {
+        if (size == sizeof(int8_t))
             return ALIGNOF_INT8_T;
-
-        case MPI_WCHAR:
-            return ALIGNOF_WCHAR_T;
-
-        case MPI_SHORT:
-        case MPI_UNSIGNED_SHORT:
-            return ALIGNOF_SHORT;
-
-        case MPI_INT:
-        case MPI_UNSIGNED:
-        case MPI_2INT:
-            return ALIGNOF_INT;
-
-        case MPI_LONG:
-        case MPI_UNSIGNED_LONG:
-            return ALIGNOF_LONG;
-
-        case MPI_FLOAT:
-            return ALIGNOF_FLOAT;
-
-        case MPI_DOUBLE:
-            return ALIGNOF_DOUBLE;
-
-        case MPI_LONG_DOUBLE:
-            return ALIGNOF_LONG_DOUBLE;
-
-        case MPI_LONG_LONG_INT:
-        case MPI_UNSIGNED_LONG_LONG:
-            return ALIGNOF_LONG_LONG;
-
-        case MPI_INT16_T:
-        case MPI_UINT16_T:
+        else if (size == sizeof(int16_t))
             return ALIGNOF_INT16_T;
-
-        case MPI_INT32_T:
-        case MPI_UINT32_T:
+        else if (size == sizeof(int32_t))
             return ALIGNOF_INT32_T;
-
-        case MPI_INT64_T:
-        case MPI_UINT64_T:
+        else if (size == sizeof(int64_t))
             return ALIGNOF_INT64_T;
-
-        case MPI_C_BOOL:
-            return ALIGNOF_BOOL;
-
-        case MPI_C_COMPLEX:
-            return ALIGNOF_FLOAT;
-
-        case MPI_C_DOUBLE_COMPLEX:
-            return ALIGNOF_DOUBLE;
-
-        case MPI_C_LONG_DOUBLE_COMPLEX:
-            return ALIGNOF_LONG_DOUBLE;
-
-        case MPI_AINT:
-        case MPI_OFFSET:
-        case MPI_COUNT:
-            if (size == sizeof(int8_t))
-                return ALIGNOF_INT8_T;
-            else if (size == sizeof(int16_t))
-                return ALIGNOF_INT16_T;
-            else if (size == sizeof(int32_t))
-                return ALIGNOF_INT32_T;
-            else if (size == sizeof(int64_t))
-                return ALIGNOF_INT64_T;
-            break;
-
 #ifdef HAVE_FORTRAN_BINDING
-        case MPI_CHARACTER:
-            return ALIGNOF_CHAR;
-
-        case MPI_LOGICAL:
-        case MPI_INTEGER:
-        case MPI_2INTEGER:
-        case MPI_INTEGER1:
-        case MPI_INTEGER2:
-        case MPI_INTEGER4:
-        case MPI_INTEGER8:
-        case MPI_INTEGER16:
-            if (size == sizeof(int8_t))
-                return ALIGNOF_INT8_T;
-            else if (size == sizeof(int16_t))
-                return ALIGNOF_INT16_T;
-            else if (size == sizeof(int32_t))
-                return ALIGNOF_INT32_T;
-            else if (size == sizeof(int64_t))
-                return ALIGNOF_INT64_T;
-            break;
-
-        case MPI_COMPLEX:
-        case MPI_DOUBLE_COMPLEX:
-        case MPI_REAL:
-        case MPI_DOUBLE_PRECISION:
-        case MPI_2REAL:
-        case MPI_2DOUBLE_PRECISION:
-        case MPI_REAL4:
-        case MPI_REAL8:
-        case MPI_REAL16:
-            if (size == sizeof(float))
-                return ALIGNOF_FLOAT;
-            else if (size == sizeof(double))
-                return ALIGNOF_DOUBLE;
-            else if (size == sizeof(long double))
-                return ALIGNOF_LONG_DOUBLE;
-            break;
-
-        case MPI_COMPLEX8:
-        case MPI_COMPLEX16:
-        case MPI_COMPLEX32:
-            if (size / 2 == sizeof(float))
-                return ALIGNOF_FLOAT;
-            else if (size / 2 == sizeof(double))
-                return ALIGNOF_DOUBLE;
-            else if (size / 2 == sizeof(long double))
-                return ALIGNOF_LONG_DOUBLE;
-            break;
+    } else if (type == MPI_CHARACTER) {
+        return ALIGNOF_CHAR;
+    } else if (type == MPI_LOGICAL || type == MPI_INTEGER || type == MPI_2INTEGER ||
+               type == MPI_INTEGER1 || type == MPI_INTEGER2 || type == MPI_INTEGER4 ||
+               type == MPI_INTEGER8 || type == MPI_INTEGER16) {
+        if (size == sizeof(int8_t))
+            return ALIGNOF_INT8_T;
+        else if (size == sizeof(int16_t))
+            return ALIGNOF_INT16_T;
+        else if (size == sizeof(int32_t))
+            return ALIGNOF_INT32_T;
+        else if (size == sizeof(int64_t))
+            return ALIGNOF_INT64_T;
+    } else if (type == MPI_COMPLEX || type == MPI_DOUBLE_COMPLEX || type == MPI_REAL ||
+               type == MPI_DOUBLE_PRECISION || type == MPI_2REAL || type == MPI_2DOUBLE_PRECISION ||
+               type == MPI_REAL4 || type == MPI_REAL8 || type == MPI_REAL16) {
+        if (size == sizeof(float))
+            return ALIGNOF_FLOAT;
+        else if (size == sizeof(double))
+            return ALIGNOF_DOUBLE;
+        else if (size == sizeof(long double))
+            return ALIGNOF_LONG_DOUBLE;
+    } else if (type == MPI_COMPLEX8 || type == MPI_COMPLEX16 || type == MPI_COMPLEX32) {
+        if (size / 2 == sizeof(float))
+            return ALIGNOF_FLOAT;
+        else if (size / 2 == sizeof(double))
+            return ALIGNOF_DOUBLE;
+        else if (size / 2 == sizeof(long double))
+            return ALIGNOF_LONG_DOUBLE;
 #endif /* HAVE_FORTRAN_BINDING */
 
 #ifdef HAVE_CXX_BINDING
-        case MPI_CXX_BOOL:
-            return ALIGNOF_BOOL;
-
-        case MPI_CXX_FLOAT_COMPLEX:
-            return ALIGNOF_FLOAT;
-
-        case MPI_CXX_DOUBLE_COMPLEX:
-            return ALIGNOF_DOUBLE;
-
-        case MPI_CXX_LONG_DOUBLE_COMPLEX:
-            return ALIGNOF_LONG_DOUBLE;
+    } else if (type == MPI_CXX_BOOL) {
+        return ALIGNOF_BOOL;
+    } else if (type == MPI_CXX_FLOAT_COMPLEX) {
+        return ALIGNOF_FLOAT;
+    } else if (type == MPI_CXX_DOUBLE_COMPLEX) {
+        return ALIGNOF_DOUBLE;
+    } else if (type == MPI_CXX_LONG_DOUBLE_COMPLEX) {
+        return ALIGNOF_LONG_DOUBLE;
 #endif /* HAVE_CXX_BINDING */
-
-        default:
-            break;
     }
 
-    /* control should never reach this point */
     return 1;
 }
 
