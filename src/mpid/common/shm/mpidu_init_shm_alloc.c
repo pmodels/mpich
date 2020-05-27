@@ -79,7 +79,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
         current_addr =
             (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 0;
+        memory->symmetrical = 1;
     } else {
         if (local_rank == 0) {
             /* root prepare shm segment */
@@ -116,14 +116,14 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
         }
         current_addr = memory->base_addr;
         memory->symmetrical = 0;
+
+        mpi_errno = check_alloc(memory);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* assign sections of the shared memory segment to their pointers */
 
     *ptr = current_addr;
-
-    mpi_errno = check_alloc(memory);
-    MPIR_ERR_CHECK(mpi_errno);
 
     memory_node->ptr = *ptr;
     memory_node->memory = memory;
