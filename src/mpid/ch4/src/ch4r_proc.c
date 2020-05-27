@@ -205,12 +205,14 @@ int MPIDIU_free_avt(int avtid)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVT);
+    MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
 
     free_globals_for_avtid(avtid);
     MPL_free(MPIDI_av_table[avtid]);
     MPIDI_av_table[avtid] = NULL;
     free_avtid(avtid);
 
+    MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_FREE_AVT);
     return mpi_errno;
 }
