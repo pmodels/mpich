@@ -900,8 +900,8 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
                 sz = MPIDI_OFI_global.addrnamelen;
-                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_TO_PHYS(k, j),
-                                            &tbladdr, &sz), avlookup);
+                MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_TO_PHYS(k, j),
+                                                &tbladdr, &sz), 0, avlookup);
                 if (sz == remote_upid_size[i]
                     && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
                     (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
@@ -926,11 +926,11 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
-                                        1,
-                                        (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                        NULL), avmap);
+            MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
+                                            1,
+                                            (fi_addr_t *) &
+                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
+                                            NULL), 0, avmap);
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
