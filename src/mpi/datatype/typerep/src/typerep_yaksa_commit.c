@@ -17,27 +17,32 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     switch (type) {
         case MPI_FLOAT_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__FLOAT_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__FLOAT_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__FLOAT_INT,
+                          (uintptr_t *) & typeptr->typerep.num_contig_blocks);
             break;
 
         case MPI_DOUBLE_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__DOUBLE_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__DOUBLE_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__DOUBLE_INT,
+                          (uintptr_t *) & typeptr->typerep.num_contig_blocks);
             break;
 
         case MPI_LONG_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__LONG_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__LONG_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__LONG_INT,
+                          (uintptr_t *) & typeptr->typerep.num_contig_blocks);
             break;
 
         case MPI_SHORT_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__SHORT_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__SHORT_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__SHORT_INT,
+                          (uintptr_t *) & typeptr->typerep.num_contig_blocks);
             break;
 
         case MPI_LONG_DOUBLE_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__LONG_DOUBLE_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__LONG_DOUBLE_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__LONG_DOUBLE_INT,
+                          (uintptr_t *) & typeptr->typerep.num_contig_blocks);
             break;
 
         default:
