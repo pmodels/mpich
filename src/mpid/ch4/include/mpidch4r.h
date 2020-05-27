@@ -10,7 +10,6 @@
 #include "ch4r_proc.h"
 #include "ch4r_init.h"
 #include "ch4r_callbacks.h"
-#include "ch4r_comm.h"
 #include "ch4r_probe.h"
 #include "ch4r_proc.h"
 #include "ch4r_request.h"
