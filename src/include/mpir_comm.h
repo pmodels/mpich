@@ -197,12 +197,8 @@ struct MPIR_Comm {
     /* A sequence number used for e.g. vci hashing. We can't directly use context_id
      * because context_id is non-sequential and can't be used to identify user-level
      * communicators (due to sub-comms). */
-
-    /* As an optimization for comm_world, if seq==0, every processes in the comm
-     * has seq=0. */
     int seq;
-    int *seq_table;             /* Table of sequence numbers for each rank.
-                                 * If seq==0, seq_table is NULL */
+
     int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator
                                          * use int array for fast access */
 

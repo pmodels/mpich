@@ -8,6 +8,11 @@
 
 #include "ch4_impl.h"
 
+/* vci is embedded in the request's pool index */
+
+#define MPIDI_Request_get_vci(req) \
+    (((req)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)
+
 /* VCI hashing function (fast path)
  * Call these function to get src_vci and dst_vci
  * NOTE: The returned vci should always MOD NUMVCIS, where NUMVCIS is
@@ -37,11 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_vci_get_src(MPIR_Comm * comm_ptr, int rank, i
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_vci_get_dst(MPIR_Comm * comm_ptr, int rank, int tag)
 {
-    if (comm_ptr->seq > 0) {
-        return comm_ptr->seq_table[rank];
-    } else {
-        return 0;
-    }
+    return comm_ptr->seq;
 }
 
 #elif MPIDI_CH4_VCI_METHOD == MPICH_VCI__TAG
