@@ -32,7 +32,7 @@ typedef struct MPIDI_IPC_win {
 } MPIDI_IPC_win_t;
 
 /* ctrl packet header types */
-typedef struct MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts {
+typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_mem_handle_t mem_handle;
     uint64_t data_sz;           /* data size in bytes */
@@ -43,11 +43,11 @@ typedef struct MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
-} MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t;
+} MPIDI_IPC_ctrl_send_contig_lmt_rts_t;
 
-typedef struct MPIDI_SHM_ctrl_ipc_send_contig_lmt_fin {
+typedef struct MPIDI_IPC_ctrl_send_contig_lmt_fin {
     MPIDI_IPCI_type_t ipc_type;
     uint64_t req_ptr;
-} MPIDI_SHM_ctrl_ipc_send_contig_lmt_fin_t;
+} MPIDI_IPC_ctrl_send_contig_lmt_fin_t;
 
 #endif /* IPC_PRE_H_INCLUDED */

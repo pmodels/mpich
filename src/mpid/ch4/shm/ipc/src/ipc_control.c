@@ -9,7 +9,7 @@
 #include "ipc_recv.h"
 #include "ipc_control.h"
 
-int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = (MPIR_Request *) ctrl_hdr->ipc_contig_slmt_fin.req_ptr;
@@ -29,10 +29,10 @@ int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
     goto fn_exit;
 }
 
-int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHM_ctrl_hdr_t * ctrl_hdr)
+int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_SHM_ctrl_ipc_send_contig_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_contig_slmt_rts;
+    MPIDI_IPC_ctrl_send_contig_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_contig_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
