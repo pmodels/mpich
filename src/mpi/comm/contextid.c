@@ -75,9 +75,6 @@ static void dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len
    a time (should this be enforced by the logging interface?).
    Converts the mask to hex and returns a pointer to that string.
 
-   Callers should own the context ID critical section, or should be prepared to
-   suffer data races in any fine-grained locking configuration.
-
    This routine is no longer static in order to allow advanced users and
    developers to debug context ID problems "in the field".  We provide a
    prototype here to keep the compiler happy, but users will need to put a
@@ -90,6 +87,7 @@ static char *context_mask_to_str(void)
     int i;
     int maxset = 0;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     for (maxset = MPIR_MAX_CONTEXT_MASK - 1; maxset >= 0; maxset--) {
         if (context_mask[maxset] != 0)
             break;
@@ -98,6 +96,7 @@ static char *context_mask_to_str(void)
     for (i = 0; i < maxset; i++) {
         MPL_snprintf(&bufstr[i * 8], 9, "%.8x", context_mask[i]);
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     return bufstr;
 }
 #endif
@@ -110,13 +109,11 @@ static char *context_mask_to_str(void)
  * This routine is for debugging in very particular situations and does not
  * attempt to control concurrent access to the mask vector.
  *
- * Callers should own the context ID critical section, or should be prepared to
- * suffer data races in any fine-grained locking configuration.
- *
  * The routine is non-static in order to permit "in the field debugging".  We
  * provide a prototype here to keep the compiler happy. */
 static void context_mask_stats(int *free_ids, int *total_ids)
 {
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (free_ids) {
         unsigned int i, j;
         *free_ids = 0;
@@ -134,6 +131,7 @@ static void context_mask_stats(int *free_ids, int *total_ids)
     if (total_ids) {
         *total_ids = MPIR_MAX_CONTEXT_MASK * sizeof(context_mask[0]) * 8;
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 }
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
@@ -260,7 +258,9 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
     MPIR_Context_id_t context_id;
     context_id = locate_context_bit(local_mask);
     if (context_id != 0) {
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
         context_id = allocate_context_bit(context_mask, context_id);
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     }
     return context_id;
 }
@@ -268,6 +268,7 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
 /* context_mask accessor */
 static void copy_context_mask(uint32_t local_mask[], int do_eager)
 {
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (do_eager) {
         for (int i = 0; i < eager_nelem; i++) {
             local_mask[i] = context_mask[i];
@@ -280,6 +281,7 @@ static void copy_context_mask(uint32_t local_mask[], int do_eager)
             local_mask[i] = context_mask[i];
         }
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 }
 
 /* EAGER CONTEXT ID ALLOCATION: Attempt to allocate the context ID during the
@@ -331,7 +333,9 @@ struct gcn_state *next_gcn = NULL;
 static int match_next_gcn(struct gcn_state *st)
 {
     int ret;
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     ret = (st == next_gcn);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     return ret;
 }
 
@@ -342,6 +346,7 @@ static int match_next_gcn(struct gcn_state *st)
 static void add_gcn_to_list(struct gcn_state *new_state)
 {
     struct gcn_state *tmp = NULL;
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (next_gcn == NULL) {
         next_gcn = new_state;
         new_state->next = NULL;
@@ -361,11 +366,13 @@ static void add_gcn_to_list(struct gcn_state *new_state)
         tmp->next = new_state;
 
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 }
 
 /* When successfully obtained context_id, we remove ourselves from the queue */
 static void remove_gcn_from_list(struct gcn_state *st)
 {
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (next_gcn == st) {
         next_gcn = st->next;
     } else {
@@ -373,6 +380,7 @@ static void remove_gcn_from_list(struct gcn_state *st)
         for (tmp = next_gcn; tmp->next != st; tmp = tmp->next); /* avoid compiler warnings */
         tmp->next = st->next;
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 }
 
 /* Allocates a new context ID collectively over the given communicator.  This
@@ -414,7 +422,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         /* We lock only around access to the mask (except in the global locking
          * case).  If another thread is using the mask, we take a mask of zero. */
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
         if (ignore_id) {
             /* We are not participating in the resulting communicator, so our
@@ -462,7 +469,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             }
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
         /* Note: MPIR_MAX_CONTEXT_MASK elements of local_mask are used by the
          * context ID allocation algorithm.  The additional element is ignored
@@ -494,7 +500,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
          * narrow this region */
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
         if (ignore_id) {
             /* we don't care what the value was, but make sure that everyone
              * who did care agreed on a value */
@@ -517,7 +522,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
             }
         } else if (st.own_mask) {
             /* There is a chance that we've found a context id */
@@ -540,7 +544,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
             }
         } else {
             /* As above, force this thread to yield */
@@ -549,10 +552,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
              * others */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-            MPID_THREAD_CS_YIELD(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
         /* Test for context ID exhaustion: All threads that will participate in
          * the new communicator owned the mask and could not allocate a context
@@ -600,10 +601,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* to avoid deadlocks, the element is not added to the list bevore the first iteration */
             if (!ignore_id && *context_id == 0) {
                 MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
                 add_gcn_to_list(&st);
                 MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
             }
         }
     }
@@ -618,7 +617,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
   fn_fail:
     /* Release the masks */
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (st.own_mask) {
         MPL_atomic_store_int(&mask_in_use, 0);
     }
@@ -627,7 +625,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         remove_gcn_from_list(&st);
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
 
     goto fn_exit;
