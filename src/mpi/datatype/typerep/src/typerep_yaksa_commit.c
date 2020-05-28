@@ -14,30 +14,36 @@ void MPIR_Typerep_commit(MPI_Datatype type)
     MPIR_Datatype *typeptr;
     MPIR_Datatype_get_ptr(type, typeptr);
 
+    uintptr_t num_contig_blocks;
     switch (type) {
         case MPI_FLOAT_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__FLOAT_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__FLOAT_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__FLOAT_INT, &num_contig_blocks);
+            typeptr->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks;
             break;
 
         case MPI_DOUBLE_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__DOUBLE_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__DOUBLE_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__DOUBLE_INT, &num_contig_blocks);
+            typeptr->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks;
             break;
 
         case MPI_LONG_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__LONG_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__LONG_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__LONG_INT, &num_contig_blocks);
+            typeptr->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks;
             break;
 
         case MPI_SHORT_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__SHORT_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__SHORT_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__SHORT_INT, &num_contig_blocks);
+            typeptr->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks;
             break;
 
         case MPI_LONG_DOUBLE_INT:
             typeptr->typerep.handle = (void *) YAKSA_TYPE__LONG_DOUBLE_INT;
-            yaksa_iov_len(1, YAKSA_TYPE__LONG_DOUBLE_INT, &typeptr->typerep.num_contig_blocks);
+            yaksa_iov_len(1, YAKSA_TYPE__DOUBLE_INT, &num_contig_blocks);
+            typeptr->typerep.num_contig_blocks = (MPI_Aint) num_contig_blocks;
             break;
 
         default:
