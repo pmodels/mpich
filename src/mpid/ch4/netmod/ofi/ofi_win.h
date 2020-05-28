@@ -14,7 +14,7 @@
  * do_free - Flag to indicate whether it is safe to free the operations (whether this progress
  *           function is being called internally or by the user).
  */
-static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free)
+static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win, bool do_free)
 {
     int mpi_errno = MPI_SUCCESS;
     int itercount = 0;
@@ -22,8 +22,8 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
     uint64_t tcount, donecount;
     MPIDI_OFI_win_request_t *r;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
 
     tcount = *MPIDI_OFI_WIN(win).issued_cntr;
     donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
@@ -65,7 +65,7 @@ static inline int MPIDI_OFI_win_progress_fence_impl(MPIR_Win * win, bool do_free
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE_IMPL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -83,7 +83,7 @@ static inline int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win)
 
     if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
         if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
-            MPIDI_OFI_win_progress_fence_impl(win, false);
+            MPIDI_OFI_win_do_progress(win, false);
             MPIDI_OFI_WIN(win).progress_counter = 1;
         }
         MPIDI_OFI_WIN(win).progress_counter++;
@@ -101,7 +101,7 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
 
-    mpi_errno = MPIDI_OFI_win_progress_fence_impl(win, true);
+    mpi_errno = MPIDI_OFI_win_do_progress(win, true);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     return mpi_errno;
