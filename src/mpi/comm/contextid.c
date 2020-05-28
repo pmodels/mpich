@@ -247,9 +247,6 @@ static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
     /* clear the bit */
     mask[idx] &= ~(1U << bitpos);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                             "allocating contextid = %d, (mask=%p, mask[%d], bit %d)",
-                                             id, mask, idx, bitpos));
     return id;
 }
 
@@ -377,10 +374,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
     *context_id = 0;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                             "Entering; shared state is %d:%d, my ctx id is %d, tag=%d",
-                                             mask_in_use, eager_in_use, comm_ptr->context_id, tag));
-
     while (*context_id == 0) {
         /* We lock only around access to the mask (except in the global locking
          * case).  If another thread is using the mask, we take a mask of zero. */
@@ -424,10 +417,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             if (mask_in_use || &st != next_gcn) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 st.own_mask = 0;
-                MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE, (MPL_DBG_FDEST,
-                                                         "Mask is in use, my context_id is %d, owner context id is %d",
-                                                         st.comm_ptr->context_id,
-                                                         next_gcn->comm_ptr->context_id));
             } else {
                 int i;
                 /* Copy safe mask segment to local_mask */
@@ -438,7 +427,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
                 mask_in_use = 1;
                 st.own_mask = 1;
-                MPL_DBG_MSG(MPIR_DBG_COMM, VERBOSE, "Copied local_mask");
             }
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
@@ -484,8 +472,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
-                          *context_id);
 
             st.own_eager_mask = 0;
             eager_in_use = 0;
@@ -505,8 +491,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Context id is now %" CONTEXT_ID_FMT,
-                          *context_id);
 
             mask_in_use = 0;
 
@@ -604,7 +588,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
   fn_exit:
     if (ignore_id)
         *context_id = MPIR_INVALID_CONTEXT_ID;
-    MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "Context mask = %s", context_mask_to_str());
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
     return mpi_errno;
 
@@ -1111,8 +1094,6 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
      * same way that low bits of non-dynamic ctx IDs do.  So we have to
      * check the dynamic case first. */
     if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, context_id)) {
-        MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "skipping dynamic process ctx id, context_id=%d",
-                      context_id);
         goto fn_exit;
     } else {    /* non-dynamic context ID */
         /* In terms of the context ID bit vector, intercomms and their constituent
@@ -1120,15 +1101,8 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
          * don't free the context ID for localcomms and assume it will be cleaned up
          * when the parent intercomm is itself completely freed. */
         if (MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id)) {
-#ifdef MPL_USE_DBG_LOGGING
-            char dump_str[1024];
-            dump_context_id(context_id, dump_str, sizeof(dump_str));
-            MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "skipping localcomm id: %s", dump_str);
-#endif
             goto fn_exit;
         } else if (MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id)) {
-            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE,
-                          "skipping non-parent communicator ctx id, context_id=%d", context_id);
             goto fn_exit;
         }
     }
@@ -1136,12 +1110,6 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
     /* --BEGIN ERROR HANDLING-- */
     /* Check that this context id has been allocated */
     if ((context_mask[idx] & (0x1U << bitpos)) != 0) {
-#ifdef MPL_USE_DBG_LOGGING
-        char dump_str[1024];
-        dump_context_id(context_id, dump_str, sizeof(dump_str));
-        MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "context dump: %s", dump_str);
-        MPL_DBG_MSG_S(MPIR_DBG_COMM, VERBOSE, "context mask = %s", context_mask_to_str());
-#endif
         MPID_Abort(0, MPI_ERR_INTERN, 1, "In MPIR_Free_contextid, the context id is not in use");
     }
     /* --END ERROR HANDLING-- */
@@ -1155,10 +1123,6 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "Freed context %d, mask[%d] bit %d (prefix=%#x)",
-                     context_id, idx, bitpos, raw_prefix));
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_FREE_CONTEXTID);
 }
