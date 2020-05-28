@@ -310,6 +310,14 @@ struct gcn_state {
 };
 struct gcn_state *next_gcn = NULL;
 
+/* When in contention, we let the head to win, thus avoiding deadlock */
+static int match_next_gcn(struct gcn_state *st)
+{
+    int ret;
+    ret = (st == next_gcn);
+    return ret;
+}
+
 /* All pending context_id allocations are added to a list. The context_id allocations are ordered
  * according to the context_id of of parrent communicator and the tag, wherby blocking context_id
  * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
@@ -338,6 +346,18 @@ static void add_gcn_to_list(struct gcn_state *new_state)
     }
 }
 
+/* When successfully obtained context_id, we remove ourselves from the queue */
+static void remove_gcn_from_list(struct gcn_state *st)
+{
+    if (next_gcn == st) {
+        next_gcn = st->next;
+    } else {
+        struct gcn_state *tmp;
+        for (tmp = next_gcn; tmp->next != st; tmp = tmp->next); /* avoid compiler warnings */
+        tmp->next = st->next;
+    }
+}
+
 /* Allocates a new context ID collectively over the given communicator.  This
  * routine is "sparse" in the sense that while it is collective, some processes
  * may not care about the value selected context ID.
@@ -359,7 +379,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     struct gcn_state st;
-    struct gcn_state *tmp;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -413,7 +432,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* only the first element in the list can own the mask. However, maybe the mask is used
              * by another thread, which added another allcoation to the list bevore. So we have to check,
              * if the mask is used and mark, if we own it */
-            if (&st != next_gcn) {
+            if (!match_next_gcn(&st)) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 st.own_mask = 0;
             } else {
@@ -500,12 +519,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             if (*context_id > 0) {
                 /* If we found a new context id, we have to remove the element from the list, so the
                  * next allocation can own the mask */
-                if (next_gcn == &st) {
-                    next_gcn = st.next;
-                } else {
-                    for (tmp = next_gcn; tmp->next != &st; tmp = tmp->next);    /* avoid compiler warnings */
-                    tmp->next = st.next;
-                }
+                remove_gcn_from_list(&st);
             } else {
                 /* else we did not find a context id. Give up the mask in case
                  * there is another thread in the gcn_next_list
@@ -600,12 +614,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     }
     /*If in list, remove it */
     if (!st.first_iter && !ignore_id) {
-        if (next_gcn == &st) {
-            next_gcn = st.next;
-        } else {
-            for (tmp = next_gcn; tmp->next != &st; tmp = tmp->next);
-            tmp->next = st.next;
-        }
+        remove_gcn_from_list(&st);
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
     MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
@@ -682,7 +691,7 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
 static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state, *tmp;
+    struct gcn_state *st = state;
     MPIR_Context_id_t newctxid;
     if (st->own_eager_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
@@ -704,12 +713,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
         MPL_atomic_store_int(&mask_in_use, 0);
         /* If we found a ctx, remove element form list */
         if (newctxid > 0) {
-            if (next_gcn == st) {
-                next_gcn = st->next;
-            } else {
-                for (tmp = next_gcn; tmp->next != st; tmp = tmp->next);
-                tmp->next = st->next;
-            }
+            remove_gcn_from_list(st);
         }
     }
 
@@ -780,12 +784,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
   fn_fail:
     /* make sure that the pending allocations are scheduled */
     if (!st->first_iter) {
-        if (next_gcn == st) {
-            next_gcn = st->next;
-        } else {
-            for (tmp = next_gcn; tmp && tmp->next != st; tmp = tmp->next);
-            tmp->next = st->next;
-        }
+        remove_gcn_from_list(st);
     }
     /* In the case of failure, the new communicator was half created.
      * So we need to clean the memory allocated for it. */
@@ -815,7 +814,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         }
     } else {
         /* Same rules as for the blocking case */
-        if (st != next_gcn) {
+        if (!match_next_gcn(st)) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
             st->local_mask[ALL_OWN_MASK_FLAG] = 0;
