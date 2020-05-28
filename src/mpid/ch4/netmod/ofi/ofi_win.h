@@ -84,19 +84,6 @@ static inline int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win)
     return mpi_errno;
 }
 
-static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
-
-    mpi_errno = MPIDI_OFI_win_do_progress(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
-    return mpi_errno;
-}
-
 static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -312,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        mpi_errno = MPIDI_OFI_win_do_progress(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -330,7 +317,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        mpi_errno = MPIDI_OFI_win_do_progress(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -349,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank ATTRIBUTE((u
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        mpi_errno = MPIDI_OFI_win_do_progress(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -368,7 +355,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank ATTRIB
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_LOCAL_CMPL_HOOK);
     if (MPIDI_OFI_ENABLE_RMA) {
         /* network completion */
-        mpi_errno = MPIDI_OFI_win_progress_fence(win);
+        mpi_errno = MPIDI_OFI_win_do_progress(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
