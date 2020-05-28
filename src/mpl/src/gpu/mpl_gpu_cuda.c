@@ -168,17 +168,3 @@ int MPL_gpu_finalize()
 {
     return MPL_SUCCESS;
 }
-
-int MPL_gpu_get_device_handle(const void *buf, MPL_gpu_device_handle_t * h_device)
-{
-    cudaError_t ret;
-    cudaPointerAttributes cuda_attributes;
-    ret = cudaPointerGetAttributes(&cuda_attributes, buff);
-    CUDA_ERR_CHECK(ret);
-    *h_device = cuda_attributes.device;
-
-  fn_exit:
-    return MPL_SUCCESS;
-  fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
-}
