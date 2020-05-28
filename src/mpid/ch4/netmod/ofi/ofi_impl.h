@@ -338,6 +338,11 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
                        MPI_Aint target_disp, int target_count,
                        MPI_Datatype target_datatype, MPIR_Win * win,
                        MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       MPI_Aint target_disp, int target_count,
+                       MPI_Datatype target_datatype, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
 
 /* Common Utility functions used by the
  * C and C++ components
@@ -376,6 +381,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
 {
     if (winreq->rma_type == MPIDI_OFI_PUT)
         MPL_free(winreq->noncontig.put.origin.pack_buffer);
+
+    if (winreq->rma_type == MPIDI_OFI_GET) {
+        if (winreq->noncontig.get.origin.pack_buffer) {
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(winreq->noncontig.get.origin.pack_buffer,
+                                winreq->noncontig.get.origin.pack_size,
+                                winreq->noncontig.get.origin.addr,
+                                winreq->noncontig.get.origin.count,
+                                winreq->noncontig.get.origin.datatype,
+                                winreq->noncontig.get.origin.pack_offset -
+                                winreq->noncontig.get.origin.pack_size, &actual_unpack_bytes);
+            MPIR_Assert(winreq->noncontig.get.origin.pack_size == actual_unpack_bytes);
+            MPL_free(winreq->noncontig.get.origin.pack_buffer);
+        }
+    }
+
     MPL_free(winreq);
 }
 
