@@ -35,7 +35,6 @@ cvars:
  * available context id values.
  */
 static uint32_t context_mask[MPIR_MAX_CONTEXT_MASK];
-static int initialize_context_mask = 1;
 const int ALL_OWN_MASK_FLAG = MPIR_MAX_CONTEXT_MASK;
 
 /* utility function to pretty print a context ID for debugging purposes, see
@@ -154,7 +153,9 @@ static int check_context_ids_on_finalize(void *context_mask_ptr)
 }
 #endif
 
-static void context_id_init(void)
+static int eager_nelem = -1;
+
+void MPIR_context_id_init(void)
 {
     int i;
 
@@ -169,13 +170,18 @@ static void context_id_init(void)
 #else
     context_mask[0] = 0xFFFFFFFC;
 #endif
-    initialize_context_mask = 0;
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
     /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
      * that we run after MPID_Finalize. */
     MPIR_Add_finalize(check_context_ids_on_finalize, context_mask, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 #endif
+
+    /* Ensure that at least one word of deadlock-free context IDs is
+     * always set aside for the base protocol */
+    MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
+                MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
+    eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
 }
 
 /* Return the context id corresponding to the first set bit in the mask.
@@ -269,7 +275,6 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
  * They are used to avoid deadlock in multi-threaded case. In single-threaded
  * case, they are not used.
  */
-static volatile int eager_nelem = -1;
 static volatile int eager_in_use = 0;
 
 /* In multi-threaded case, mask_in_use is used to maintain thread safety. In
@@ -381,18 +386,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
          * case).  If another thread is using the mask, we take a mask of zero. */
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
         MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-
-        if (initialize_context_mask) {
-            context_id_init();
-        }
-
-        if (eager_nelem < 0) {
-            /* Ensure that at least one word of deadlock-free context IDs is
-             * always set aside for the base protocol */
-            MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
-                        MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
-            eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
-        }
 
         if (ignore_id) {
             /* We are not participating in the resulting communicator, so our
@@ -917,10 +910,6 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     struct gcn_state *st = NULL;
     MPIR_CHKPMEM_DECL(1);
 
-    if (initialize_context_mask) {
-        context_id_init();
-    }
-
     MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state",
                         MPL_MEM_COMM);
     st->ctx0 = ctx0;
@@ -939,13 +928,6 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     st->first_iter = 1;
     st->new_comm = newcomm;
     st->own_mask = 0;
-    if (eager_nelem < 0) {
-        /* Ensure that at least one word of deadlock-free context IDs is
-         * always set aside for the base protocol */
-        MPIR_Assert(MPIR_CVAR_CTXID_EAGER_SIZE >= 0 &&
-                    MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
-        eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
-    }
     mpi_errno = MPIR_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_SCHED_BARRIER(s);

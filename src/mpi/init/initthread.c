@@ -101,6 +101,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     /**********************************************************************/
 
     MPIR_Typerep_init();
+    MPIR_context_id_init();
     MPII_thread_mutex_create();
     MPII_init_request();
     MPII_hwtopo_init();
