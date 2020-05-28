@@ -453,6 +453,29 @@ typedef struct MPIDI_OFI_win_request {
                 uint64_t key;
             } target;
         } put;
+        struct {
+            struct {
+                void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+                void *pack_buffer;
+                MPI_Aint pack_size;
+            } origin;
+            struct {
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } get;
     } noncontig;
 } MPIDI_OFI_win_request_t;
 
