@@ -47,7 +47,7 @@ $rootSrcDir = "";
 	      "compiling ROMIO in", 
 	      "Make completed",
 	      "echo", "cat",
-	      "CC", "CCLD", "AR", "RANLIB", "LIBTOOL", "MV", 
+	      "NVCC", "CC", "CCLD", "AR", "RANLIB", "LIBTOOL", "MV",
               "MOD", "GEN", "F77", "FC", "CXXLD", "CXX", "FCLD",
 	      "CP", # "terse" make versions
 	      "\\(?cd",
