@@ -15,7 +15,7 @@
 
 typedef struct {
     MPIDI_POSIX_Global_t posix;
-    MPIDI_SHM_ctrl_cb ctrl_cbs[MPIDI_SHM_CTRL_IDS_MAX];
+    MPIDI_SHMI_ctrl_cb ctrl_cbs[MPIDI_SHMI_CTRL_IDS_MAX];
 } MPIDI_SHM_Global_t;
 
 #endif /* SHM_PRE_H_INCLUDED */

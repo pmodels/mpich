@@ -68,7 +68,7 @@ static int progress_recv(int blocking)
         /* TODO: internal control can use the generic am interface,
          *       just need register callbacks */
         if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
-            mpi_errno = MPIDI_SHM_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
+            mpi_errno = MPIDI_SHMI_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
 
             /* TODO: discard payload for now as we only handle header in
              * current internal control protocols. */
