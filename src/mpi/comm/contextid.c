@@ -272,11 +272,11 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
  * They are used to avoid deadlock in multi-threaded case. In single-threaded
  * case, they are not used.
  */
-static volatile int eager_in_use = 0;
+static MPL_atomic_int_t eager_in_use = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 /* In multi-threaded case, mask_in_use is used to maintain thread safety. In
  * single-threaded case, it is always 0. */
-static volatile int mask_in_use = 0;
+static MPL_atomic_int_t mask_in_use = MPL_ATOMIC_INT_T_INITIALIZER(0);
 
 /* In multi-threaded case, lowest_context_id is used to prioritize access when
  * multiple threads are contending for the mask, lowest_tag is used to break
@@ -397,12 +397,11 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st.own_eager_mask = 0;
             /* Attempt to reserve the eager mask segment */
-            if (!eager_in_use && eager_nelem > 0) {
+            int in_use = MPL_atomic_cas_int(&eager_in_use, 0, 1);
+            if (!in_use) {
                 int i;
                 for (i = 0; i < eager_nelem; i++)
                     st.local_mask[i] = context_mask[i];
-
-                eager_in_use = 1;
                 st.own_eager_mask = 1;
             }
         }
@@ -414,19 +413,23 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* only the first element in the list can own the mask. However, maybe the mask is used
              * by another thread, which added another allcoation to the list bevore. So we have to check,
              * if the mask is used and mark, if we own it */
-            if (mask_in_use || &st != next_gcn) {
+            if (&st != next_gcn) {
                 memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 st.own_mask = 0;
             } else {
-                int i;
-                /* Copy safe mask segment to local_mask */
-                for (i = 0; i < eager_nelem; i++)
-                    st.local_mask[i] = 0;
-                for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                    st.local_mask[i] = context_mask[i];
-
-                mask_in_use = 1;
-                st.own_mask = 1;
+                int in_use = MPL_atomic_cas_int(&mask_in_use, 0, 1);
+                if (in_use) {
+                    memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+                    st.own_mask = 0;
+                } else {
+                    int i;
+                    /* Copy safe mask segment to local_mask */
+                    for (i = 0; i < eager_nelem; i++)
+                        st.local_mask[i] = 0;
+                    for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
+                        st.local_mask[i] = context_mask[i];
+                    st.own_mask = 1;
+                }
             }
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
@@ -474,7 +477,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             *context_id = find_and_allocate_context_id(st.local_mask);
 
             st.own_eager_mask = 0;
-            eager_in_use = 0;
+            MPL_atomic_store_int(&eager_in_use, 0);
             if (*context_id <= 0) {
                 /* else we did not find a context id. Give up the mask in case
                  * there is another thread (with a lower input context id)
@@ -492,7 +495,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
             *context_id = find_and_allocate_context_id(st.local_mask);
 
-            mask_in_use = 0;
+            MPL_atomic_store_int(&mask_in_use, 0);
 
             if (*context_id > 0) {
                 /* If we found a new context id, we have to remove the element from the list, so the
@@ -539,11 +542,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             int minfree;
 
             if (st.own_mask) {
-                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
-                mask_in_use = 0;
-                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
-                MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
+                MPL_atomic_store_int(&mask_in_use, 0);
             }
 
             context_mask_stats(&nfree, &ntotal);
@@ -597,7 +596,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
     MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_CTX_MUTEX);
     if (st.own_mask) {
-        mask_in_use = 0;
+        MPL_atomic_store_int(&mask_in_use, 0);
     }
     /*If in list, remove it */
     if (!st.first_iter && !ignore_id) {
@@ -693,7 +692,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             *st->ctx1 = newctxid;
 
         st->own_eager_mask = 0;
-        eager_in_use = 0;
+        MPL_atomic_store_int(&eager_in_use, 0);
     } else if (st->own_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -702,7 +701,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             *st->ctx1 = newctxid;
 
         /* reset flag for the next try */
-        mask_in_use = 0;
+        MPL_atomic_store_int(&mask_in_use, 0);
         /* If we found a ctx, remove element form list */
         if (newctxid > 0) {
             if (next_gcn == st) {
@@ -807,30 +806,35 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         st->own_eager_mask = 0;
 
         /* Attempt to reserve the eager mask segment */
-        if (!eager_in_use && eager_nelem > 0) {
+        int in_use = MPL_atomic_cas_int(&eager_in_use, 0, 1);
+        if (!in_use) {
             int i;
             for (i = 0; i < eager_nelem; i++)
                 st->local_mask[i] = context_mask[i];
-
-            eager_in_use = 1;
             st->own_eager_mask = 1;
         }
     } else {
         /* Same rules as for the blocking case */
-        if (mask_in_use || st != next_gcn) {
+        if (st != next_gcn) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
             st->local_mask[ALL_OWN_MASK_FLAG] = 0;
         } else {
-            /* Copy safe mask segment to local_mask */
-            int i;
-            for (i = 0; i < eager_nelem; i++)
-                st->local_mask[i] = 0;
-            for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                st->local_mask[i] = context_mask[i];
-            mask_in_use = 1;
-            st->own_mask = 1;
-            st->local_mask[ALL_OWN_MASK_FLAG] = 1;
+            int in_use = MPL_atomic_cas_int(&mask_in_use, 0, 1);
+            if (in_use) {
+                memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+                st->own_mask = 0;
+                st->local_mask[ALL_OWN_MASK_FLAG] = 0;
+            } else {
+                /* Copy safe mask segment to local_mask */
+                int i;
+                for (i = 0; i < eager_nelem; i++)
+                    st->local_mask[i] = 0;
+                for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
+                    st->local_mask[i] = context_mask[i];
+                st->own_mask = 1;
+                st->local_mask[ALL_OWN_MASK_FLAG] = 1;
+            }
         }
     }
 
