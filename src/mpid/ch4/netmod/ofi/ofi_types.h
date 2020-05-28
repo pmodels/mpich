@@ -427,6 +427,7 @@ typedef struct MPIDI_OFI_win_request {
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int rma_type;
+    MPIR_Request **sigreq;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
