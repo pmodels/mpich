@@ -265,6 +265,23 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
     return context_id;
 }
 
+/* context_mask accessor */
+static void copy_context_mask(uint32_t local_mask[], int do_eager)
+{
+    if (do_eager) {
+        for (int i = 0; i < eager_nelem; i++) {
+            local_mask[i] = context_mask[i];
+        }
+    } else {
+        for (int i = 0; i < eager_nelem; i++) {
+            local_mask[i] = 0;
+        }
+        for (int i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++) {
+            local_mask[i] = context_mask[i];
+        }
+    }
+}
+
 /* EAGER CONTEXT ID ALLOCATION: Attempt to allocate the context ID during the
  * initial synchronization step.  If eager protocol fails, threads fall back to
  * the base algorithm.
@@ -418,9 +435,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             /* Attempt to reserve the eager mask segment */
             int in_use = MPL_atomic_cas_int(&eager_in_use, 0, 1);
             if (!in_use) {
-                int i;
-                for (i = 0; i < eager_nelem; i++)
-                    st.local_mask[i] = context_mask[i];
+                copy_context_mask(st.local_mask, 1);
                 st.own_eager_mask = 1;
             }
         }
@@ -441,12 +456,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                     memset(st.local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                     st.own_mask = 0;
                 } else {
-                    int i;
-                    /* Copy safe mask segment to local_mask */
-                    for (i = 0; i < eager_nelem; i++)
-                        st.local_mask[i] = 0;
-                    for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                        st.local_mask[i] = context_mask[i];
+                    copy_context_mask(st.local_mask, 0);
                     st.own_mask = 1;
                 }
             }
@@ -807,9 +817,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         /* Attempt to reserve the eager mask segment */
         int in_use = MPL_atomic_cas_int(&eager_in_use, 0, 1);
         if (!in_use) {
-            int i;
-            for (i = 0; i < eager_nelem; i++)
-                st->local_mask[i] = context_mask[i];
+            copy_context_mask(st->local_mask, 1);
             st->own_eager_mask = 1;
         }
     } else {
@@ -825,12 +833,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
                 st->own_mask = 0;
                 st->local_mask[ALL_OWN_MASK_FLAG] = 0;
             } else {
-                /* Copy safe mask segment to local_mask */
-                int i;
-                for (i = 0; i < eager_nelem; i++)
-                    st->local_mask[i] = 0;
-                for (i = eager_nelem; i < MPIR_MAX_CONTEXT_MASK; i++)
-                    st->local_mask[i] = context_mask[i];
+                copy_context_mask(st->local_mask, 0);
                 st->own_mask = 1;
                 st->local_mask[ALL_OWN_MASK_FLAG] = 1;
             }
