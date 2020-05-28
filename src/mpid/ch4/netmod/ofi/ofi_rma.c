@@ -31,6 +31,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
+    req->sigreq = sigreq;
 
     /* allocate target iovecs */
     struct iovec *target_iov;
@@ -108,7 +109,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     }
     MPIR_Assert(i == total_origin_iov_len);
     MPIR_Assert(j == total_target_iov_len);
-    MPIDI_OFI_sigreq_complete(sigreq);
     MPL_free(origin_iov);
     MPL_free(target_iov);
 
