@@ -174,19 +174,6 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-/* Find device where a given memory address is allocated */
-int MPL_gpu_get_device_handle(const void *buf, MPL_gpu_device_handle_t * h_device)
-{
-    int ret;
-    ze_memory_allocation_properties_t ptr_attr;
-    ret = zeDriverGetMemAllocProperties(global_ze_driver_handle, buf, &ptr_attr, h_device);
-    ZE_ERR_CHECK(ret);
-  fn_exit:
-    return MPL_SUCCESS;
-  fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
-}
-
 int MPL_gpu_malloc(void **ptr, size_t size, MPL_gpu_device_handle_t h_device)
 {
     int ret;
