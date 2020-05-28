@@ -426,7 +426,6 @@ typedef struct MPIDI_OFI_win_request {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
-    int target_rank;
     int rma_type;
 } MPIDI_OFI_win_request_t;
 
