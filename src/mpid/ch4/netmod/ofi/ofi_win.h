@@ -8,13 +8,10 @@
 
 #include "ofi_impl.h"
 
-/* Blocking progress function to complete outstanding RMA operations on the input window.
- *
- * win - Window on which to complete operations
- * do_free - Flag to indicate whether it is safe to free the operations (whether this progress
- *           function is being called internally or by the user).
+/*
+ * Blocking progress function to complete outstanding RMA operations on the input window.
  */
-static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win, bool do_free)
+static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int itercount = 0;
@@ -49,20 +46,13 @@ static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win, bool do_free)
     }
 
     r = MPIDI_OFI_WIN(win).syncQ;
-
-    /* Should not free the RMA request when do_free = 0; manual RMA flush could happen in
-     * the middle of issuing one MPI-level RMA op and it could lead to premature freeing of
-     * the request. */
-    if (do_free) {
-        while (r) {
-            MPIDI_OFI_win_request_t *next = r->next;
-            MPIDI_OFI_win_request_complete(r);
-            r = next;
-        }
-
-        MPIDI_OFI_WIN(win).syncQ = NULL;
-        MPIDI_OFI_WIN(win).progress_counter = 1;
+    while (r) {
+        MPIDI_OFI_win_request_t *next = r->next;
+        MPIDI_OFI_win_request_complete(r);
+        r = next;
     }
+    MPIDI_OFI_WIN(win).syncQ = NULL;
+    MPIDI_OFI_WIN(win).progress_counter = 1;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_DO_PROGRESS);
@@ -83,7 +73,7 @@ static inline int MPIDI_OFI_win_trigger_rma_progress(MPIR_Win * win)
 
     if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS && MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL != -1) {
         if (MPIDI_OFI_WIN(win).progress_counter % MPIR_CVAR_CH4_OFI_RMA_PROGRESS_INTERVAL == 0) {
-            MPIDI_OFI_win_do_progress(win, false);
+            MPIDI_OFI_win_do_progress(win);
             MPIDI_OFI_WIN(win).progress_counter = 1;
         }
         MPIDI_OFI_WIN(win).progress_counter++;
@@ -101,7 +91,7 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
 
-    mpi_errno = MPIDI_OFI_win_do_progress(win, true);
+    mpi_errno = MPIDI_OFI_win_do_progress(win);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     return mpi_errno;
