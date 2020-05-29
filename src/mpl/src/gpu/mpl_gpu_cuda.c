@@ -10,7 +10,7 @@
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
     cudaError_t ret;
-    struct cudaPointerAttributes ptr_attr = { 0 };
+    struct cudaPointerAttributes ptr_attr;
     ret = cudaPointerGetAttributes(&ptr_attr, ptr);
     if (ret == cudaSuccess) {
         switch (ptr_attr.type) {
