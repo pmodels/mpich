@@ -211,8 +211,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     MPIR_Datatype_get_density(origin_datatype, origin_density);
     MPIR_Datatype_get_density(target_datatype, target_density);
 
-    if (origin_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+    if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         mpi_errno =
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, addr,
@@ -357,8 +357,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIR_Datatype_get_density(origin_datatype, origin_density);
     MPIR_Datatype_get_density(target_datatype, target_density);
 
-    if (origin_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
-        target_density > MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
+    if (origin_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN &&
+        target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         mpi_errno =
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, addr,
