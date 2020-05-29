@@ -277,13 +277,9 @@ static HYD_status global_env_fn(char *arg, char ***argv)
             str[strlen(str) - 1] = 0;
         }
 
-        if (!strcmp(arg, "global-inherited-env")) {
+        if (!strcmp(arg, "global-inherited-env"))
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.inherited);
-            /* Make sure to let proxy aware of HYDRA related variables */
-            if (!strncmp(str, "HYDRA_", 6)) {
-                MPL_putenv(str);
-            }
-        } else if (!strcmp(arg, "global-system-env"))
+        else if (!strcmp(arg, "global-system-env"))
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.system);
         else if (!strcmp(arg, "global-user-env"))
             HYDU_append_env_str_to_list(str, &HYD_pmcd_pmip.user_global.global_env.user);
