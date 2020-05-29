@@ -1426,6 +1426,10 @@ static HYD_status set_default_values(void)
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
 
+    if (HYD_server_info.user_global.topo_debug == -1 &&
+        MPL_env2bool("HYDRA_TOPO_DEBUG", &HYD_server_info.user_global.topo_debug) == 0)
+        HYD_server_info.user_global.topo_debug = 0;
+
     /* don't clobber existing iface values from the command line */
     if (HYD_server_info.user_global.iface == NULL) {
         if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)

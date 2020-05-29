@@ -260,6 +260,11 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     return status;
 }
 
+static HYD_status topo_debug_fn(char *arg, char ***argv)
+{
+    return HYDU_set_int(arg, &HYDT_topo_info.debug, 1);
+}
+
 static HYD_status global_env_fn(char *arg, char ***argv)
 {
     int i, count;
@@ -588,6 +593,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
+    {"topo-debug", topo_debug_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
@@ -639,6 +645,9 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.user_global.debug == -1)
         HYD_pmcd_pmip.user_global.debug = 0;
+
+    if (HYDT_topo_info.debug == -1)
+        HYDT_topo_info.debug = 0;
 
     status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.rmk,
                             HYD_pmcd_pmip.user_global.launcher,
