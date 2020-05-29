@@ -12,7 +12,7 @@
 /* One cache line per process should be enough for all cases */
 #define MPIDU_INIT_SHM_BLOCK_SIZE MPIDU_SHM_CACHE_LINE_LEN
 
-#if defined(MPL_USE_LOCK_BASED_PRIMITIVES)
+#if defined(MPL_USE_LOCK_BASED_PRIMITIVES) && !defined(ENABLE_NO_LOCAL)
 #error Lock-based atomics are used (probably due to missing compiler support), \
        shared memory will not work properly. Consider disable it with --enable-nolocal.
 #endif
