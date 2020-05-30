@@ -3,20 +3,12 @@
  *     See COPYRIGHT in top-level directory
  */
 
-/*
- * In this file, we directly call the POSIX shared memory module all the time. In the future, this
- * code could have some logic to call other modules in certain circumstances (e.g. XPMEM for large
- * messages and POSIX for small messages).
- */
-
 #ifndef SHM_AM_H_INCLUDED
 #define SHM_AM_H_INCLUDED
 
 #include <shm.h>
 #include "../posix/shm_inline.h"
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
-#include "../xpmem/shm_inline.h"
-#endif
+#include "../ipc/src/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
                                                    int handler_id, const void *am_hdr,
