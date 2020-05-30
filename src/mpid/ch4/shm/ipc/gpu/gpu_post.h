@@ -9,17 +9,6 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH4_GPU_ENABLE
-      category    : CH4
-      type        : int
-      default     : 1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        To manually disable GPU set to 0. The environment variable is valid only when the GPU
-        submodule is enabled.
-
     - name        : MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE
       category    : CH4
       type        : int
@@ -49,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
-    if (MPIR_CVAR_CH4_GPU_ENABLE) {
+    if (MPIR_CVAR_ENABLE_GPU) {
         MPL_gpu_ipc_get_mem_handle(&attr->mem_handle.gpu.ipc_handle, (void *) vaddr);
         attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE;
     } else {
