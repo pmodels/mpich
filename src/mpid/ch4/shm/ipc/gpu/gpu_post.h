@@ -23,7 +23,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE
       category    : CH4
       type        : int
-      default     : 32768
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -34,6 +34,10 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+/* TODO: We set MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE to 0 for now to always use
+ * IPC for GPU send/receive because POSIX does not support GPU buffers.
+ * However, once we add support in POSIX, the recommended value should be 32768 */
 
 #include "ch4_impl.h"
 #include "gpu_pre.h"
