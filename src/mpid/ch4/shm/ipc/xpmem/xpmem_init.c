@@ -57,6 +57,10 @@ int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits)
     /* Initialize other global parameters */
     MPIDI_XPMEMI_global.sys_page_sz = (size_t) sysconf(_SC_PAGESIZE);
 
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_XPMEMI_seg_t) <= MPIDI_XPMEMI_SEG_BUF_POOL_SIZE);
+    MPIDI_XPMEMI_global.seg_buf_pool =
+        MPIDIU_create_buf_pool(MPIDI_XPMEMI_SEG_BUF_POOL_NUM, MPIDI_XPMEMI_SEG_BUF_POOL_SIZE);
+
     for (i = 0; i < MPIR_Process.local_size; ++i) {
         /* Init AVL tree based segment cache */
         MPIDI_XPMEMI_segtree_init(&MPIDI_XPMEMI_global.segmaps[i].segcache_ubuf);       /* Initialize user buffer tree */
@@ -109,6 +113,8 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
         /* success(0) or failure(-1) */
         MPIR_ERR_CHKANDJUMP(ret == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_remove");
     }
+
+    MPIDIU_destroy_buf_pool(MPIDI_XPMEMI_global.seg_buf_pool);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_MPI_FINALIZE_HOOK);

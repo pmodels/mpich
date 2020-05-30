@@ -45,13 +45,12 @@ static int seg_do_create(MPIDI_XPMEMI_seg_t ** seg_ptr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEG_DO_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEG_DO_CREATE);
 
-    *seg_ptr = MPIR_Handle_obj_alloc(&MPIDI_XPMEMI_seg_mem);
+    *seg_ptr = (MPIDI_XPMEMI_seg_t *) MPIDIU_get_buf(MPIDI_XPMEMI_global.seg_buf_pool);
     MPIR_ERR_CHKANDJUMP1(!(*seg_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
                          "**nomem %s", "MPIDI_XPMEMI_seg_t");
     seg = *seg_ptr;
     seg->low = low;
     seg->high = high;
-    MPIR_Object_set_ref(seg, 0);
 
     xpmem_addr.apid = apid;
     xpmem_addr.offset = seg->low;
@@ -64,7 +63,7 @@ static int seg_do_create(MPIDI_XPMEMI_seg_t ** seg_ptr,
     return mpi_errno;
   fn_fail:
     if (seg)    /* in case xpmem_attach fails */
-        MPIR_Handle_obj_free(&MPIDI_XPMEMI_seg_mem, seg);
+        MPIDIU_release_buf(seg);
     goto fn_exit;
 }
 
@@ -76,10 +75,9 @@ static int seg_do_release(MPIDI_XPMEMI_seg_t * seg)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEG_DO_RELEASE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEG_DO_RELEASE);
 
-    MPIR_Assert(MPIR_Object_get_ref(seg) == 0);
     ret = xpmem_detach((void *) seg->vaddr);
     MPIR_ERR_CHKANDJUMP(ret == -1, mpi_errno, MPI_ERR_OTHER, "**xpmem_detach");
-    MPIR_Handle_obj_free(&MPIDI_XPMEMI_seg_mem, seg);
+    MPIDIU_release_buf(seg);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEMI_SEG_DO_RELEASE);
@@ -523,13 +521,13 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, size_t size,
         segtree_do_search_and_insert_safe(segcache, seg_low, seg_high,
                                           segmap->apid, &seg, &voffset);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Object_add_ref(seg);
+
     /* return mapped vaddr without round down */
     *vaddr = (void *) ((off_t) seg->vaddr + offset_diff + voffset);
     *seg_ptr = seg;
-    XPMEM_TRACE("seg: register segment %p(refcount %d) for node_rank %d, apid 0x%lx, "
+    XPMEM_TRACE("seg: register segment %p for node_rank %d, apid 0x%lx, "
                 "size 0x%lx->0x%lx, seg->low %p->0x%lx, attached_vaddr %p, vaddr %p\n", seg,
-                MPIR_Object_get_ref(seg), node_rank, (uint64_t) segmap->apid, size, seg_size,
+                node_rank, (uint64_t) segmap->apid, size, seg_size,
                 remote_vaddr, seg->low, seg->vaddr, *vaddr);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEMI_SEG_REGIST);
@@ -538,16 +536,14 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, size_t size,
     goto fn_exit;
 }
 
-/* Deregister a segment from cache.
- * It only decreases the segment's reference count. */
+/* Deregister a segment from cache. */
 int MPIDI_XPMEMI_seg_deregist(MPIDI_XPMEMI_seg_t * seg)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEG_DEREGIST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEG_DEREGIST);
-    MPIR_Object_release_ref(seg, &c);
-    XPMEM_TRACE("seg: deregister segment %p(refcount %d) vaddr=%p\n", seg,
-                MPIR_Object_get_ref(seg), seg->vaddr);
+
+    XPMEM_TRACE("seg: deregister segment %p vaddr=%p\n", seg, seg->vaddr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEMI_SEG_DEREGIST);
     return mpi_errno;

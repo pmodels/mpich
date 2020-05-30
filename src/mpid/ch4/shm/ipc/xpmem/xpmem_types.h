@@ -7,10 +7,10 @@
 #define XPMEM_TYPES_H_INCLUDED
 
 #define MPIDI_XPMEMI_PERMIT_VALUE ((void *)0600)
-#define MPIDI_XPMEMI_SEG_PREALLOC 8     /* Number of segments to preallocate in the "direct" block */
+#define MPIDI_XPMEMI_SEG_BUF_POOL_SIZE            (128)
+#define MPIDI_XPMEMI_SEG_BUF_POOL_NUM             (1024)
 
 typedef struct MPIDI_XPMEMI_seg {
-    MPIR_OBJECT_HEADER;
     /* AVL-tree internal components start */
     struct MPIDI_XPMEMI_seg *parent;
     struct MPIDI_XPMEMI_seg *left;
@@ -38,11 +38,11 @@ typedef struct {
 typedef struct {
     xpmem_segid_t segid;        /* my local segid associated with entire address space */
     MPIDI_XPMEMI_segmap_t *segmaps;     /* remote seg info for every local processes. */
+    MPIDIU_buf_pool_t *seg_buf_pool;
     size_t sys_page_sz;
 } MPIDI_XPMEMI_global_t;
 
 extern MPIDI_XPMEMI_global_t MPIDI_XPMEMI_global;
-extern MPIR_Object_alloc_t MPIDI_XPMEMI_seg_mem;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_XPMEMI_DBG_GENERAL;
