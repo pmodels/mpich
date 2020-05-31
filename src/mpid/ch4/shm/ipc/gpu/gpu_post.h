@@ -38,14 +38,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
-    if (MPIR_CVAR_ENABLE_GPU) {
-        MPL_gpu_ipc_get_mem_handle(&attr->mem_handle.gpu.ipc_handle, (void *) vaddr);
-        attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE;
-    } else {
-        memset(&attr->mem_handle.gpu.ipc_handle, 0, sizeof(MPL_gpu_ipc_mem_handle_t));
-        attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
-    }
+    MPL_gpu_ipc_get_mem_handle(&attr->mem_handle.gpu.ipc_handle, (void *) vaddr);
+    attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE;
 #else
+    /* Do not support IPC data transfer */
     attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 #endif
