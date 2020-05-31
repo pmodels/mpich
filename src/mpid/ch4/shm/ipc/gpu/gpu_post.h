@@ -9,7 +9,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE
+    - name        : MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD
       category    : CH4
       type        : int
       default     : 0
@@ -17,14 +17,14 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If a send message size is greater than or equal to MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE (in
+        If a send message size is greater than or equal to MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD (in
         bytes), then enable GPU-based single copy protocol for intranode communication. The
         environment variable is valid only when then GPU IPC shmmod is enabled.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-/* TODO: We set MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE to 0 for now to always use
+/* TODO: We set MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD to 0 for now to always use
  * IPC for GPU send/receive because POSIX does not support GPU buffers.
  * However, once we add support in POSIX, the recommended value should be 32768 */
 
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
     MPL_gpu_ipc_get_mem_handle(&attr->mem_handle.gpu.ipc_handle, (void *) vaddr);
-    attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_GPU_LMT_MSG_SIZE;
+    attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
 #else
     /* Do not support IPC data transfer */
     attr->ipc_type = MPIDI_IPCI_TYPE__NONE;

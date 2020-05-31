@@ -26,7 +26,7 @@ cvars:
         To manually disable XPMEM set to 0. The environment variable is valid only when the XPMEM
         submodule is enabled.
 
-    - name        : MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE
+    - name        : MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD
       category    : CH4
       type        : int
       default     : 4096
@@ -34,7 +34,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If a send message size is greater than or equal to MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE (in
+        If a send message size is greater than or equal to MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD (in
         bytes), then enable XPMEM-based single copy protocol for intranode communication. The
         environment variable is valid only when the XPMEM submodule is enabled.
 
@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr,
     attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
     attr->mem_handle.xpmem.src_offset = (uint64_t) vaddr;
     if (MPIR_CVAR_CH4_XPMEM_ENABLE)
-        attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_XPMEM_LMT_MSG_SIZE;
+        attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD;
     else
         attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 #else
