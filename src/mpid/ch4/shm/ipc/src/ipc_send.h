@@ -39,6 +39,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         }
+        /* TODO: add flattening datatype protocol for noncontig send. Different
+         * threshold may be required to tradeoff the flattening overhead.*/
     }
 
     mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
