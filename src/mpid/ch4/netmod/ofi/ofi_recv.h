@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     recv_buf = (char *) buf + dt_true_lb;
-    MPL_gpu_query_pointer_attr(recv_buf, &attr);
+    MPIR_GPU_query_pointer_attr(recv_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* FIXME: at this point, GPU data takes host-buffer staging

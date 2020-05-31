@@ -349,7 +349,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_pointer_attr_t attr;
-    MPL_gpu_query_pointer_attr(buf, &attr);
+    MPIR_GPU_query_pointer_attr(buf, &attr);
     if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
         /* Force packing of GPU buffer in host memory */
         dt_contig = 0;
