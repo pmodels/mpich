@@ -31,6 +31,7 @@ typedef union MPIDI_IPCI_mem_handle {
 typedef struct MPIDI_IPCI_mem_attr {
     MPIDI_IPCI_type_t ipc_type;
     MPIDI_IPCI_mem_handle_t mem_handle;
+    MPL_pointer_attr_t gpu_attr;
     struct {
         size_t send_lmt_sz;
     } threshold;
