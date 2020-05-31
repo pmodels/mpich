@@ -50,8 +50,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     MPIDIG_REQUEST(sreq, count) = count;
     MPIDIG_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
-    MPIR_Assert(data_sz > 0);
-
     slmt_req_hdr->src_lrank = MPIR_Process.local_rank;
     slmt_req_hdr->data_sz = data_sz;
     slmt_req_hdr->sreq_ptr = (uint64_t) sreq;
