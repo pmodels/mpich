@@ -20,10 +20,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_get_mem_attr(const void *vaddr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_GET_MEM_ATTR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_GET_MEM_ATTR);
 
-    MPL_pointer_attr_t mpl_attr;
-    MPL_gpu_query_pointer_attr(vaddr, &mpl_attr);
+    MPL_gpu_query_pointer_attr(vaddr, &attr->gpu_attr);
 
-    if (mpl_attr.type == MPL_GPU_POINTER_DEV) {
+    if (attr->gpu_attr.type == MPL_GPU_POINTER_DEV) {
         mpi_errno = MPIDI_GPU_get_mem_attr(vaddr, attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
