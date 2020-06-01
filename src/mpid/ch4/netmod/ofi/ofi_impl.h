@@ -262,6 +262,88 @@ uint64_t MPIDI_OFI_mr_key_alloc(void);
 void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
 
+/* RMA */
+#define MPIDI_OFI_INIT_SIGNAL_REQUEST(win,sigreq,flags)                 \
+    do {                                                                \
+        if (sigreq)                                                     \
+        {                                                               \
+            MPIDI_OFI_REQUEST_CREATE_CONDITIONAL((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
+            *(flags) = FI_COMPLETION | FI_DELIVERY_COMPLETE;            \
+        }                                                               \
+        else {                                                          \
+            *(flags) = FI_DELIVERY_COMPLETE;                            \
+        }                                                               \
+    } while (0)
+
+#define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
+    do {                                                                \
+        if (sigreq) {                                                   \
+            int tmp;                                                    \
+            MPIDI_OFI_chunk_request *creq;                              \
+            MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                      \
+            creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER); \
+            MPIR_ERR_CHKANDSTMT(creq == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem"); \
+            creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                \
+            creq->parent = *(sigreq);                                   \
+            msg.context = &creq->context;                               \
+        }                                                               \
+        MPIDI_OFI_win_cntr_incr(win);                                   \
+    } while (0)
+
+static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
+{
+    uint32_t ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+
+    if (MPIDI_OFI_WIN(win).winfo)
+        ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
+    else
+        ret = win->disp_unit;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    return ret;
+}
+
+static inline void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+{
+    if (sigreq) {
+        /* If sigreq is not NULL, *sigreq should be a valid object after
+         * returning from MPIDI_OFI_INIT_SIGNAL_REQUEST(). The allocation of
+         * *sigreq is inside MPIDI_OFI_INIT_SIGNAL_REQUEST() or from upper level,
+         * depending on MPIDI_CH4_MT_MODEL. */
+        MPIR_Assert(*sigreq != NULL);
+        MPID_Request_complete(*sigreq);
+    }
+}
+
+static inline void MPIDI_OFI_load_iov(const void *buffer, int count, MPI_Datatype datatype,
+                                      MPI_Aint max_len,
+                                      MPI_Aint * loaded_iov_offset, struct iovec *iov)
+{
+    MPI_Aint outlen;
+    MPIR_Typerep_to_iov_offset(buffer, count, datatype, *loaded_iov_offset, iov, max_len, &outlen);
+    *loaded_iov_offset += outlen;
+}
+
+int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win);
+int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
+                            MPI_Datatype origin_datatype, int target_rank,
+                            MPI_Aint target_disp, int target_count,
+                            MPI_Datatype target_datatype, MPIR_Win * win,
+                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       MPI_Aint target_disp, int target_count,
+                       MPI_Datatype target_datatype, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       MPI_Aint target_disp, int target_count,
+                       MPI_Datatype target_datatype, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+
 /* Common Utility functions used by the
  * C and C++ components
  */
@@ -297,6 +379,24 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
+    if (winreq->rma_type == MPIDI_OFI_PUT)
+        MPL_free(winreq->noncontig.put.origin.pack_buffer);
+
+    if (winreq->rma_type == MPIDI_OFI_GET) {
+        if (winreq->noncontig.get.origin.pack_buffer) {
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(winreq->noncontig.get.origin.pack_buffer,
+                                winreq->noncontig.get.origin.pack_size,
+                                winreq->noncontig.get.origin.addr,
+                                winreq->noncontig.get.origin.count,
+                                winreq->noncontig.get.origin.datatype,
+                                winreq->noncontig.get.origin.pack_offset -
+                                winreq->noncontig.get.origin.pack_size, &actual_unpack_bytes);
+            MPIR_Assert(winreq->noncontig.get.origin.pack_size == actual_unpack_bytes);
+            MPL_free(winreq->noncontig.get.origin.pack_buffer);
+        }
+    }
+
     MPL_free(winreq);
 }
 

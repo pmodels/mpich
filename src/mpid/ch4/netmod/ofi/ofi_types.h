@@ -166,7 +166,6 @@ enum {
     MPIDI_OFI_EVENT_ABORT,
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
-    MPIDI_OFI_EVENT_RMA_DONE,
     MPIDI_OFI_EVENT_AM_SEND,
     MPIDI_OFI_EVENT_AM_RECV,
     MPIDI_OFI_EVENT_AM_READ,
@@ -415,12 +414,69 @@ typedef struct MPIDI_OFI_win_acc_hint {
                                                          * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
+enum {
+    MPIDI_OFI_PUT,
+    MPIDI_OFI_GET,
+    MPIDI_OFI_ACC,
+    MPIDI_OFI_GET_ACC,
+};
+
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
-    int target_rank;
+    struct MPIDI_OFI_win_request *prev;
+    int rma_type;
+    MPIR_Request **sigreq;
+    union {
+        struct {
+            struct {
+                const void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+                void *pack_buffer;
+                MPI_Aint pack_size;
+            } origin;
+            struct {
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } put;
+        struct {
+            struct {
+                void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+                void *pack_buffer;
+                MPI_Aint pack_size;
+            } origin;
+            struct {
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } get;
+    } noncontig;
 } MPIDI_OFI_win_request_t;
 
 typedef struct {
