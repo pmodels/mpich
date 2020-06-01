@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef MPIR_DATALOOP_H_INCLUDED
-#define MPIR_DATALOOP_H_INCLUDED
+#ifndef MPIR_TYPEREP_H_INCLUDED
+#define MPIR_TYPEREP_H_INCLUDED
 
 #include <mpi.h>
 
@@ -75,4 +75,4 @@ int MPIR_Typerep_unpack_external(const void *inbuf, void *outbuf, MPI_Aint outco
 
 void MPIR_Typerep_debug(MPI_Datatype type);
 
-#endif /* MPIR_DATALOOP_H_INCLUDED */
+#endif /* MPIR_TYPEREP_H_INCLUDED */
