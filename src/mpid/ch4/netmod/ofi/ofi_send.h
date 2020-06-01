@@ -158,7 +158,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     send_buf = (char *) buf + dt_true_lb;
-    MPL_gpu_query_pointer_attr(send_buf, &attr);
+    MPIR_GPU_query_pointer_attr(send_buf, &attr);
     if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
         if (!MPIDI_OFI_ENABLE_HMEM) {
             /* Force packing of GPU buffer in host memory */
@@ -313,7 +313,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
         MPI_Aint actual_pack_bytes = 0;
         void *send_buf = (char *) buf + dt_true_lb;
-        MPL_gpu_query_pointer_attr(send_buf, &attr);
+        MPIR_GPU_query_pointer_attr(send_buf, &attr);
         if (attr.type == MPL_GPU_POINTER_DEV) {
             if (!MPIDI_OFI_ENABLE_HMEM) {
                 /* Force pack for GPU buffer. */

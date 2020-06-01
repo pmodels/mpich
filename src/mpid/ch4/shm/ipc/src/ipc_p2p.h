@@ -50,8 +50,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     MPIDIG_REQUEST(sreq, count) = count;
     MPIDIG_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
-    MPIR_Assert(data_sz > 0);
-
     slmt_req_hdr->src_lrank = MPIR_Process.local_rank;
     slmt_req_hdr->data_sz = data_sz;
     slmt_req_hdr->sreq_ptr = (uint64_t) sreq;
@@ -113,7 +111,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, src_data_sz,
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
+
+    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, attr.device, src_data_sz,
                                       &mem_seg, &src_buf);
     MPIR_ERR_CHECK(mpi_errno);
 

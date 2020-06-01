@@ -162,6 +162,7 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
             int node_rank = ranks_in_shm_grp[shm_comm_ptr->local_size + i];
             mpi_errno = MPIDI_IPCI_attach_mem(ipc_shared_table[i].ipc_type, node_rank,
                                               ipc_shared_table[i].mem_handle,
+                                              attr.gpu_attr.device,
                                               ipc_shared_table[i].size,
                                               &ipc_win->mem_segs[i],
                                               &shared_table[i].shm_base_addr);

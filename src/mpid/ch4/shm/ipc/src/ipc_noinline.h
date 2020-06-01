@@ -8,6 +8,7 @@
 
 #include "mpidimpl.h"
 #include "../xpmem/xpmem_noinline.h"
+#include "../gpu/gpu_noinline.h"
 
 int MPIDI_IPC_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_IPC_mpi_finalize_hook(void);

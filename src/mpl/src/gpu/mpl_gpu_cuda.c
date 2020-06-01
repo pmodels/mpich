@@ -60,10 +60,15 @@ int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
                                 MPL_gpu_device_handle_t h_device)
 {
     cudaError_t ret;
+    int prev_devid;
+
+    cudaGetDevice(&prev_devid);
+    cudaSetDevice(h_device);
     ret = cudaIpcOpenMemHandle(ptr, h_mem, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
+    cudaSetDevice(prev_devid);
     return MPL_SUCCESS;
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
