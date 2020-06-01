@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     MPL_pointer_attr_t attr;
-    MPL_gpu_query_pointer_attr(data, &attr);
+    MPIR_GPU_query_pointer_attr(data, &attr);
     if (attr.type == MPL_GPU_POINTER_DEV) {
         /* Force packing of GPU buffer in host memory */
         dt_contig = 0;
