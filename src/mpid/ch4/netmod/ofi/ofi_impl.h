@@ -401,12 +401,6 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int grank, int vni_src, int vni_dst)
-{
-    MPIDI_av_entry_t *av = &MPIDIU_get_av(0, grank);
-    return MPIDI_OFI_av_to_phys(av, vni_src, vni_dst);
-}
-
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
                                                           int vni_src, int vni_dst)
 {
