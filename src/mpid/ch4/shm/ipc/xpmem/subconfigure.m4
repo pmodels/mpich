@@ -12,8 +12,8 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])dnl end _PREREQ
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
-AM_COND_IF([BUILD_SHM_IPC_XPMEM],[
-    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:shm:xpmem])
+    AM_COND_IF([BUILD_SHM_IPC_XPMEM],[
+        AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:shm:xpmem])
 
         PAC_SET_HEADER_LIB_PATH(xpmem)
         PAC_PUSH_FLAG(LIBS)
@@ -29,7 +29,7 @@ AM_COND_IF([BUILD_SHM_IPC_XPMEM],[
         if test "${have_xpmem}" = "yes" ; then
             AC_DEFINE(MPIDI_CH4_SHM_ENABLE_XPMEM, 1, [Enable XPMEM shared memory submodule in CH4])
         fi
-])dnl end AM_COND_IF(BUILD_SHM_IPC_XPMEM,...)
+    ])dnl end AM_COND_IF(BUILD_SHM_IPC_XPMEM,...)
 ])dnl end _BODY
 
 [#] end of __file__
