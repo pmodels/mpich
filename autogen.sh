@@ -603,7 +603,7 @@ echo
 check_submodule_presence modules/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa modules/hwloc test/mpi modules/json-c modules/yaksa"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio modules/hwloc test/mpi modules/json-c modules/yaksa"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence modules/izem
@@ -645,7 +645,6 @@ confdb_dirs=
 confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
 confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/openpa/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"

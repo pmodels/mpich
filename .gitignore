@@ -113,7 +113,6 @@ apply-xfail.sh
 /src/armci/m4
 /src/mpi/romio/confdb
 /src/mpl/confdb
-/src/openpa/confdb
 /src/pm/hydra/confdb
 /src/pm/hydra/mpl
 /src/pm/hydra/mpl/confdb

@@ -6,8 +6,6 @@
 #ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
 #define MPIDU_THREAD_FALLBACK_H_INCLUDED
 
-#include "opa_primitives.h"
-
 /* some important critical section names:
  *   GLOBAL - entered/exited at beginning/end of (nearly) every MPI_ function
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
