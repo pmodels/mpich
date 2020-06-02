@@ -148,7 +148,7 @@ static void *generate_random_addr(size_t size)
         iter--;
 
         if (iter == 0) {
-            map_pointer = -1ULL;
+            map_pointer = UINTPTR_MAX;
             goto fn_exit;
         }
     }
