@@ -247,16 +247,16 @@ AC_ARG_ENABLE(ch4-direct,
 
 # setup shared memory submodules
 AC_ARG_WITH(ch4-shmmods,
-    [  --with-ch4-shmmods@<:@=ARG@:>@ Specify the shared memory submodules for MPICH/CH4.
+    [  --with-ch4-shmmods@<:@=ARG@:>@ Comma-separated list of shared memory modules for MPICH/CH4.
                           Valid options are:
-                          posix_only   - Only enable POSIX SHM (default)
-                          xpmem        - Enable XPMEM SHM for partial communication paths and use
-                                         POSIX SHM as fallback for others
-                          gpu          - Enable GPU SHM for partial communication paths and use
-                                         POSIX SHM as fallback for others
+                          auto         - Enable everything that is available/allowed by netmod (default)
+                                         (cannot be combined with other options)
+                          posix        - Enable POSIX shmmod
+                          xpmem        - Enable XPMEM IPC (requires posix)
+                          gpu          - Enable GPU Direct IPC (requires posix)
                  ],
                  [with_ch4_shmmods=$withval],
-                 [with_ch4_shmmods=posix_only])
+                 [with_ch4_shmmods=auto])
 # shmmod0,shmmod1,... format
 # (posix is always enabled thus ch4_shm is not checked in posix module)
 ch4_shm="`echo $with_ch4_shmmods | sed -e 's/,/ /g'`"
