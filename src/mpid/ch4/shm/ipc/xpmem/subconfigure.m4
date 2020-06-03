@@ -21,15 +21,16 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
         PAC_CHECK_HEADER_LIB([xpmem.h],[xpmem],[xpmem_make],[have_xpmem=yes],[have_xpmem=no])
         if test "${have_xpmem}" = "yes" ; then
             PAC_APPEND_FLAG([-lxpmem],[WRAPPER_LIBS])
+            AC_DEFINE(MPIDI_CH4_SHM_ENABLE_XPMEM, 1, [Enable XPMEM shared memory submodule in CH4])
+            if test "${build_ch4_shm_ipc_xpmem}" = "auto" ; then
+                AC_DEFINE([MPIDI_CH4_SHM_XPMEM_ALLOW_SILENT_FALLBACK],[1],
+                          [Silently disable XPMEM, if it fails at runtime])
+            fi
         elif test "$build_ch4_shm_ipc_xpmem" = "yes" ; then
             AC_MSG_ERROR(['xpmem.h or libxpmem library not found.'])
         fi
         PAC_POP_FLAG(LIBS)
         AM_CONDITIONAL([BUILD_SHM_IPC_XPMEM],[test "$have_xpmem" = "yes"])
-
-        if test "${have_xpmem}" = "yes" ; then
-            AC_DEFINE(MPIDI_CH4_SHM_ENABLE_XPMEM, 1, [Enable XPMEM shared memory submodule in CH4])
-        fi
     ])dnl end AM_COND_IF(BUILD_SHM_IPC_XPMEM,...)
 ])dnl end _BODY
 
