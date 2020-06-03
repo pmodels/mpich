@@ -1420,11 +1420,7 @@ thread_refcount=MPICH_REFCOUNT__NONE
 if test "$enable_threads" = "multiple" ; then
     # default depends on ch3 or ch4
     if test "$enable_thread_cs" = "default" ; then
-        if test "$device_name" = "ch4" ; then
-            enable_thread_cs="per-vci"
-        else
-            enable_thread_cs="global"
-        fi
+        enable_thread_cs="global"
     fi
 
     case $enable_thread_cs in
