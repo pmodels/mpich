@@ -1336,7 +1336,7 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
         MPIDIG_REQUEST(rreq, req->preq.dt) = NULL;
 
-        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
+        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset + msg_hdr->target_true_lb);
         MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         MPIDIG_recv_type_init(in_data_sz, rreq);
@@ -1964,7 +1964,6 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
     MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->data_sz;
     MPIDIG_REQUEST(rreq, req->greq.datatype) = MPI_BYTE;
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
@@ -1976,9 +1975,11 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
         void *flattened_dt = MPL_malloc(msg_hdr->flattened_sz, MPL_MEM_BUFFER);
         MPIDIG_recv_init(1, in_data_sz, flattened_dt, msg_hdr->flattened_sz, rreq);
         MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = flattened_dt;
+        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
     } else {
         MPIR_Assert(!in_data_sz || in_data_sz == 0);
         MPIDIG_recv_init(1, 0, NULL, 0, rreq);
+        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset + msg_hdr->target_true_lb;
     }
 
     if (is_async) {
