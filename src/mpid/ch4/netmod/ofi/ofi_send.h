@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                         buf,
                                         data_sz,
                                         cq_data,
-                                        MPIDI_OFI_av_to_phys(addr),
+                                        MPIDI_OFI_av_to_phys(addr, 0, 0),
                                         match_bits),
                          tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
   fn_exit:
@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = cq_data;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
+    msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
 
     MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv, FALSE);
 
@@ -119,7 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
     char *send_buf;
     uint64_t match_bits;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
@@ -128,8 +127,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
 
-    MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
-    *request = sreq;
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    /* TODO: what cases when *request is NULL under workq? */
+    if (*request) {
+        MPIR_Request_add_ref(*request);
+    } else
+#endif
+    {
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, 0);
+    }
+
+    MPIR_Request *sreq = *request;
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -151,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr),       /* remote proc */
+                                      MPIDI_OFI_av_to_phys(addr, 0, 0), /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
                                       (void *) &(ackreq->context)), trecvsync, FALSE);
@@ -213,14 +222,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             send_buf,
                                             data_sz,
                                             cq_data,
-                                            MPIDI_OFI_av_to_phys(addr),
+                                            MPIDI_OFI_av_to_phys(addr, 0, 0),
                                             match_bits), tinjectdata, FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr),
+                                          MPIDI_OFI_av_to_phys(addr, 0, 0),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              tsenddata, FALSE /* eagain */);
@@ -270,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
                                           send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr),
+                                          MPIDI_OFI_av_to_phys(addr, 0, 0),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              tsenddata, FALSE /* eagain */);

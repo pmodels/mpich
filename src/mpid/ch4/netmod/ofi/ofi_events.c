@@ -189,7 +189,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
                                             0 /* len */ ,
                                             MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r),
+                                            MPIDI_OFI_comm_to_phys(c, r, 0, 0),
                                             ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
@@ -434,7 +434,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                      (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),  /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank),   /* Destination  */
+                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, 0, 0),     /* Destination  */
                                      recv_rbase(recv_elem) + recv_elem->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), rdma_readfrom,      /* Context */

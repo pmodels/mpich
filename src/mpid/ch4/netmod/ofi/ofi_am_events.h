@@ -164,7 +164,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, 0, 0),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
@@ -304,10 +304,10 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
     msg.hdr.am_type = am_type;
     msg.hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg.hdr.fi_src_addr
-        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank);
+        = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, 0, 0);
     msg.pyld.sreq_ptr = sreq_ptr;
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_global.ctx[0].tx, &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank)), inject);
+                                      MPIDI_OFI_comm_to_phys(comm, rank, 0, 0)), inject);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
     return mpi_errno;
