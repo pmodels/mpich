@@ -67,6 +67,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->preq.win_ptr) = win;
     MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -81,8 +82,11 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
     MPIDIG_REQUEST(sreq, rank) = target_rank;
 
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    int is_contig;
+    MPIR_Datatype_is_contig(target_datatype, &is_contig);
+    if (is_contig) {
         am_hdr.flattened_sz = 0;
+        MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -106,7 +110,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     void *flattened_dt;
     MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -221,6 +224,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, req->greq.target_datatype) = target_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -234,8 +238,11 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    int is_contig;
+    MPIR_Datatype_is_contig(target_datatype, &is_contig);
+    if (is_contig) {
         am_hdr.flattened_sz = 0;
+        MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -259,7 +266,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     void *flattened_dt;
     MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
