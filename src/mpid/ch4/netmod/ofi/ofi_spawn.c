@@ -578,6 +578,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -761,6 +762,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
@@ -878,17 +880,14 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
         MPIR_ERR_CHECK(mpi_errno);
 
         for (i = 0; i < n_new_procs; i++) {
+            fi_addr_t addr;
             MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
-                                            1,
-                                            (fi_addr_t *) &
-                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                            NULL), 0, avmap);
+                                            1, &addr, 0ULL, NULL), 0, avmap);
+            MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
@@ -923,7 +922,8 @@ int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char 
 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
-        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
+        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, av->dest[0][0],
                                         &temp_buf[i * MPIDI_OFI_global.addrnamelen],
                                         &(*local_upid_size)[i]), 0, avlookup);
         total_size += (*local_upid_size)[i];

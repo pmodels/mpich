@@ -55,7 +55,20 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     origin_len = MPL_MIN(total_origin_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
-    MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, &flags);
+    if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+        if (*sigreq) {
+            MPIR_Request_add_ref(*sigreq);
+        } else
+#endif
+        {
+            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+        }
+        flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+    } else {
+        flags = FI_DELIVERY_COMPLETE;
+    }
+
     int i = 0, j = 0;
     size_t msg_len;
     while (i < total_origin_iov_len && j < total_target_iov_len) {
@@ -71,7 +84,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         msg_len = MPL_MIN(origin_iov[origin_cur].iov_len, target_iov[target_cur].iov_len);
 
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(addr);
+        msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -156,7 +169,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         msg_len = MPL_MIN(actual_pack_bytes - i, req->noncontig.put.target.iov[target_cur].iov_len);
 
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, 0, 0);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;
@@ -243,7 +256,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         msg_len = MPL_MIN(get_bytes - i, req->noncontig.get.target.iov[target_cur].iov_len);
 
         msg.desc = NULL;
-        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr);
+        msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.get.target.addr, 0, 0);
         msg.context = NULL;
         msg.data = 0;
         msg.msg_iov = &iov;

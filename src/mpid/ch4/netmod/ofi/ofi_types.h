@@ -22,8 +22,8 @@
      : __FILE__                                 \
 )
 
-/* TODO: make it a configure option */
-#define MPIDI_OFI_MAX_CONTEXTS                  16
+/* TODO: This should come from provider capability */
+#define MPIDI_OFI_MAX_VNIS                  16
 
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
@@ -340,8 +340,8 @@ typedef struct {
 
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_CONTEXTS];
-    int num_ctx;
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS];
+    int num_vnis;
 
     /* Window/RMA Globals */
     void *win_map;
