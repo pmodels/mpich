@@ -121,6 +121,8 @@ win-Get_attr bool (, , ,return ) const
 win-Get_name void (, ,in:refint ) const
 win-Set_attr void (, ,in:const )
 win-Set_name void (,in:const )
+op-Is_commutative () const
+op-Reduce_local void (in:const, , ,in:constref:Datatype, ,) const
 file-Close void ()
 file-Delete static void (in:const ,in:constref:Info )
 file-Get_amode int (,return) const
@@ -248,8 +250,6 @@ dtype-Pack_size int (, ,in:constref:Comm ,return) const
 # op-Init requires special handling
 #op-Init void (,User_function* function ,in:bool )
 op-Free void ()
-op-Is_commutative () const
-op-Reduce_local void (in:const, , ,in:constref:Datatype, ,) const
 #intra-Allreduce void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
 #intra-Reduce_scatter void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
 intra-Scan void (in:const , , ,in:constref:Datatype ,in:constref:Op ) const
