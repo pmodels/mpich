@@ -93,7 +93,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         msg.rma_iov_count = 1;
         iov.iov_base = origin_iov[origin_cur].iov_base;
         iov.iov_len = msg_len;
-        riov.addr = (uint64_t) target_iov[target_cur].iov_base;
+        riov.addr = (uintptr_t) target_iov[target_cur].iov_base;
         riov.len = msg_len;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
@@ -178,7 +178,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         msg.rma_iov_count = 1;
         iov.iov_base = (char *) req->noncontig.put.origin.pack_buffer + i;
         iov.iov_len = msg_len;
-        riov.addr = (uint64_t) req->noncontig.put.target.iov[target_cur].iov_base;
+        riov.addr = (uintptr_t) req->noncontig.put.target.iov[target_cur].iov_base;
         riov.len = msg_len;
         riov.key = req->noncontig.put.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
@@ -265,7 +265,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         msg.rma_iov_count = 1;
         iov.iov_base = (char *) req->noncontig.get.origin.pack_buffer + i;
         iov.iov_len = msg_len;
-        riov.addr = (uint64_t) req->noncontig.get.target.iov[target_cur].iov_base;
+        riov.addr = (uintptr_t) req->noncontig.get.target.iov[target_cur].iov_base;
         riov.len = msg_len;
         riov.key = req->noncontig.get.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);

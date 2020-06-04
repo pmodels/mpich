@@ -197,7 +197,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                           int handler_id,
                                           const void *am_hdr,
                                           size_t am_hdr_sz,
-                                          const void *data, size_t data_sz, MPIR_Request * sreq)
+                                          const void *data, MPI_Aint data_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -278,7 +278,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                            int handler_id,
                                            const void *am_hdr,
                                            size_t am_hdr_sz,
-                                           const void *data, size_t data_sz, MPIR_Request * sreq)
+                                           const void *data, MPI_Aint data_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -334,7 +334,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
 
