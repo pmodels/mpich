@@ -17,6 +17,30 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
+    /* fast-path for contig CPU buffers */
+    bool is_contig;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+    if (is_contig) {
+        MPL_pointer_attr_t inattr, outattr;
+        MPL_gpu_query_pointer_attr((const char *) inbuf + inoffset, &inattr);
+        MPL_gpu_query_pointer_attr(outbuf, &outattr);
+        if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
+            (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+            MPI_Aint size;
+            MPIR_Datatype_get_size_macro(datatype, size);
+            MPI_Aint pack_bytes = MPL_MIN(incount * size - inoffset, max_pack_bytes);
+
+            MPI_Aint true_lb;
+            MPIR_Datatype_get_true_lb(datatype, &true_lb);
+
+            MPIR_Memcpy(outbuf, (const char *) inbuf + inoffset + true_lb, pack_bytes);
+            *actual_pack_bytes = pack_bytes;
+            goto fn_exit;
+        }
+    }
+
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
     yaksa_request_t request;
@@ -45,6 +69,30 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_Ai
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
+
+    /* fast-path for contig CPU buffers */
+    bool is_contig;
+    MPIR_Datatype_is_contig(datatype, &is_contig);
+    if (is_contig) {
+        MPL_pointer_attr_t inattr, outattr;
+        MPL_gpu_query_pointer_attr(inbuf, &inattr);
+        MPL_gpu_query_pointer_attr((char *) outbuf + outoffset, &outattr);
+        if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
+            (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+            MPI_Aint size;
+            MPIR_Datatype_get_size_macro(datatype, size);
+            MPI_Aint unpack_bytes = MPL_MIN(outcount * size - outoffset, insize);
+
+            MPI_Aint true_lb;
+            MPIR_Datatype_get_true_lb(datatype, &true_lb);
+
+            MPIR_Memcpy((char *) outbuf + outoffset + true_lb, inbuf, unpack_bytes);
+            *actual_unpack_bytes = unpack_bytes;
+            goto fn_exit;
+        }
+    }
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
