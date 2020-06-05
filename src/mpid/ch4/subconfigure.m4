@@ -236,53 +236,44 @@ if test "$ch4_nets_array_sz" = "1" && (test "$enable_ch4_netmod_inline" = "yes" 
    PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
-AC_ARG_ENABLE(ch4-direct,
-    [--enable-ch4-direct
-       Defines the direct communication routine used in CH4 device
-       level:
-         netmod     - Directly transfer data through the chosen netmode
-         auto       - The CH4 device controls whether transfer data through netmod
-                      or through shared memory based on locality
-    ],,enable_ch4_direct=default)
+AC_ARG_ENABLE([ch4-direct],
+              [--enable-ch4-direct   DO NOT USE!  Use --without-ch4-shmmods instead],
+              [enable_ch4_direct=yes],[enable_ch4_direct=no])
+if test "${enable_ch4_direct}" = "yes" ; then
+    AC_MSG_ERROR([do not use --enable-ch4-direct; use --without-ch4-shmmods instead])
+fi
 
 # setup shared memory submodules
 AC_ARG_WITH(ch4-shmmods,
-    [  --with-ch4-shmmods@<:@=ARG@:>@ Specify the shared memory submodules for MPICH/CH4.
+    [  --with-ch4-shmmods@<:@=ARG@:>@ Comma-separated list of shared memory modules for MPICH/CH4.
                           Valid options are:
-                          posix_only   - Only enable POSIX SHM (default)
-                          xpmem        - Enable XPMEM SHM for partial communication paths and use
-                                         POSIX SHM as fallback for others
-                          gpu          - Enable GPU SHM for partial communication paths and use
-                                         POSIX SHM as fallback for others
+                          auto         - Enable everything that is available/allowed by netmod (default)
+                                         (cannot be combined with other options)
+                          none         - No shmmods, network only (cannot be combined with other options)
+                          posix        - Enable POSIX shmmod
+                          xpmem        - Enable XPMEM IPC (requires posix)
+                          gpu          - Enable GPU Direct IPC (requires posix)
                  ],
                  [with_ch4_shmmods=$withval],
-                 [with_ch4_shmmods=posix_only])
+                 [with_ch4_shmmods=auto])
 # shmmod0,shmmod1,... format
 # (posix is always enabled thus ch4_shm is not checked in posix module)
 ch4_shm="`echo $with_ch4_shmmods | sed -e 's/,/ /g'`"
 export ch4_shm
 
 # setup default direct communication routine
-if test "${enable_ch4_direct}" = "default" ; then
+if test "${with_ch4_shmmods}" = "auto" -a "${ch4_netmods}" = "ucx" ; then
     # ucx can only choose direct netmod because it does not handle any_src
     # receive when both nemod and shared memory are used.
-    if test "${ch4_netmods}" = "ucx" ; then
-        enable_ch4_direct=netmod
-    else
-        enable_ch4_direct=auto
-    fi
+    with_ch4_shmmods=none
 fi
 
-if test "$enable_ch4_direct" != "auto" -a "$enable_ch4_direct" != "netmod"; then
-    AC_MSG_ERROR([Direct comunication option ${enable_ch4_direct} is unknown])
-fi
-
-if test "$enable_ch4_direct" = "auto" ; then
+if test "${with_ch4_shmmods}" = "none" -o "${with_ch4_shmmods}" = "no" ; then
+    AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
+else
     # This variable can be set either when CH4 controls the data transfer routine
     # or when the netmod doesn't want to implement its own locality information
     AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
-elif test "$enable_ch4_direct" = "netmod" ; then
-    AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)
@@ -422,7 +413,7 @@ src/mpid/ch4/include/netmodpre.h
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
 # we have to define it here to cover ch3 build
-AM_CONDITIONAL([BUILD_CH4_SHM],[test "$enable_ch4_direct" = "auto"])
+AM_CONDITIONAL([BUILD_CH4_SHM],[test "${with_ch4_shmmods}" != "none" -a "${with_ch4_shmmods}" != "no"])
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY

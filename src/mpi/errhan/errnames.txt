@@ -1489,6 +1489,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 ## XPMEM related error messages
 **xpmem_make: xpmem_make failed
+**xpmem_segid: xpmem remote segid is unset
 **xpmem_get: xpmem_get failed
 **xpmem_attach: xpmem_attach failed
 **xpmem_detach: xpmem_detach failed
