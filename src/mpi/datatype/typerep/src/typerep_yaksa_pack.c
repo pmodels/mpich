@@ -7,6 +7,70 @@
 #include "yaksa.h"
 #include "typerep_internal.h"
 
+typedef enum {
+    MEMCPY_DIR__PACK,
+    MEMCPY_DIR__UNPACK,
+} memcpy_dir_e;
+
+static inline bool fastpath_memcpy(const void *inbuf, void *outbuf, MPI_Datatype type,
+                                   MPI_Aint count, MPI_Aint offset, MPI_Aint max_bytes,
+                                   MPI_Aint * actual_bytes, memcpy_dir_e dir)
+{
+    bool ret = false;
+
+    /* special case builtin types, over other contiguous types, to
+     * avoid the three pointer dereferences (for is_contig, size and
+     * true_lb) into the MPIR_Datatype structure */
+    if (HANDLE_IS_BUILTIN(type)) {
+        MPL_pointer_attr_t inattr, outattr;
+        MPL_gpu_query_pointer_attr(inbuf, &inattr);
+        MPL_gpu_query_pointer_attr(outbuf, &outattr);
+
+        if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
+            (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+             outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+            MPI_Aint size = MPIR_Datatype_get_basic_size(type);
+            *actual_bytes = MPL_MIN(count * size, max_bytes);
+            if (dir == MEMCPY_DIR__PACK)
+                MPIR_Memcpy(outbuf, (const char *) inbuf + offset, *actual_bytes);
+            else
+                MPIR_Memcpy((char *) outbuf + offset, inbuf, *actual_bytes);
+            ret = true;
+        }
+    } else {
+        MPIR_Datatype *dtp;
+        MPIR_Datatype_get_ptr(type, dtp);
+
+        if (dtp->is_contig) {
+            MPL_pointer_attr_t inattr, outattr;
+
+            if (dir == MEMCPY_DIR__PACK) {
+                MPL_gpu_query_pointer_attr((const char *) inbuf + dtp->true_lb + offset, &inattr);
+                MPL_gpu_query_pointer_attr(outbuf, &outattr);
+            } else {
+                MPL_gpu_query_pointer_attr(inbuf, &inattr);
+                MPL_gpu_query_pointer_attr((char *) outbuf + dtp->true_lb + offset, &outattr);
+            }
+
+            if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+                 inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
+                (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+                 outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+                *actual_bytes = MPL_MIN(count * dtp->size, max_bytes);
+                if (dir == MEMCPY_DIR__PACK)
+                    MPIR_Memcpy(outbuf, (const char *) inbuf + dtp->true_lb + offset,
+                                *actual_bytes);
+                else
+                    MPIR_Memcpy((char *) outbuf + dtp->true_lb + offset, inbuf, *actual_bytes);
+                ret = true;
+            }
+        }
+    }
+
+    return ret;
+}
+
 int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype,
                       MPI_Aint inoffset, void *outbuf, MPI_Aint max_pack_bytes,
                       MPI_Aint * actual_pack_bytes)
@@ -16,6 +80,19 @@ int MPIR_Typerep_pack(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
+
+    if (incount == 0) {
+        *actual_pack_bytes = 0;
+        goto fn_exit;
+    }
+
+    MPIR_Assert(datatype != MPI_DATATYPE_NULL);
+
+    /* fast-path for contig CPU buffers */
+    bool fast = fastpath_memcpy(inbuf, outbuf, datatype, incount, inoffset, max_pack_bytes,
+                                actual_pack_bytes, MEMCPY_DIR__PACK);
+    if (fast)
+        goto fn_exit;
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
@@ -45,6 +122,19 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_Ai
 
     int mpi_errno = MPI_SUCCESS;
     int rc;
+
+    if (outcount == 0) {
+        *actual_unpack_bytes = 0;
+        goto fn_exit;
+    }
+
+    MPIR_Assert(datatype != MPI_DATATYPE_NULL);
+
+    /* fast-path for contig CPU buffers */
+    bool fast = fastpath_memcpy(inbuf, outbuf, datatype, outcount, outoffset, insize,
+                                actual_unpack_bytes, MEMCPY_DIR__UNPACK);
+    if (fast)
+        goto fn_exit;
 
     yaksa_type_t type = MPII_Typerep_get_yaksa_type(datatype);
 
