@@ -29,7 +29,10 @@ int main(int argc, char *argv[])
     DTP_pool_s dtp;
     DTP_obj_s send_obj, recv_obj;
     void *sendbuf, *recvbuf;
+    void *sendbuf_h, *recvbuf_h;
     char *basic_type;
+    mtest_mem_type_e sendmem;
+    mtest_mem_type_e recvmem;
 
     MTest_Init(&argc, &argv);
 
@@ -39,6 +42,8 @@ int main(int argc, char *argv[])
     count[0] = MTestArgListGetLong(head, "sendcnt");
     count[1] = MTestArgListGetLong(head, "recvcnt");
     basic_type = MTestArgListGetString(head, "type");
+    sendmem = MTestArgListGetMemType(head, "sendmem");
+    recvmem = MTestArgListGetMemType(head, "recvmem");
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
@@ -96,17 +101,18 @@ int main(int argc, char *argv[])
                 maxmsg = MAXMSG;
 
             if (rank == source) {
-                sendbuf = malloc(send_obj.DTP_bufsize);
-                if (sendbuf == NULL) {
+                MTestAlloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf);
+                if (sendbuf == NULL || sendbuf_h == NULL) {
                     errs++;
                     break;
                 }
 
-                err = DTP_obj_buf_init(send_obj, sendbuf, 0, 1, count[0]);
+                err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
                 if (err != DTP_SUCCESS) {
                     errs++;
                     break;
                 }
+                MTestCopyContent(sendbuf_h, sendbuf, send_obj.DTP_bufsize, sendmem);
 
                 sendcount = send_obj.DTP_type_count;
                 sendtype = send_obj.DTP_datatype;
@@ -129,9 +135,9 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                free(sendbuf);
+                MTestFree(sendmem, sendbuf_h, sendbuf);
             } else if (rank == dest) {
-                recvbuf = malloc(recv_obj.DTP_bufsize);
+                MTestAlloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf);
                 if (recvbuf == NULL) {
                     errs++;
                     break;
@@ -141,11 +147,12 @@ int main(int argc, char *argv[])
                 recvtype = recv_obj.DTP_datatype;
 
                 for (nmsg = 1; nmsg < maxmsg; nmsg++) {
-                    err = DTP_obj_buf_init(recv_obj, recvbuf, -1, -1, count[0]);
+                    err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
                     if (err != DTP_SUCCESS) {
                         errs++;
                         break;
                     }
+                    MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, recvmem);
 
                     err =
                         MPI_Recv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, source, 0,
@@ -157,7 +164,8 @@ int main(int argc, char *argv[])
                         }
                     }
 
-                    err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
+                    MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, recvmem);
+                    err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
                     if (err != DTP_SUCCESS) {
                         if (errs < 10) {
                             char *recv_desc, *send_desc;
@@ -174,7 +182,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                free(recvbuf);
+                MTestFree(recvmem, recvbuf_h, recvbuf);
             }
             DTP_obj_free(recv_obj);
             DTP_obj_free(send_obj);
