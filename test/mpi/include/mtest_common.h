@@ -30,6 +30,7 @@ MTestArgList *MTestArgListCreate(int argc, char *argv[]);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
 int MTestArgListGetInt(MTestArgList * head, const char *arg);
 long MTestArgListGetLong(MTestArgList * head, const char *arg);
+mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
 void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf);

@@ -140,6 +140,19 @@ long MTestArgListGetLong(MTestArgList * head, const char *arg)
     return atol(MTestArgListGetString(head, arg));
 }
 
+mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg)
+{
+    char *memtype = MTestArgListGetString(head, arg);
+    if (strcmp(memtype, "host") == 0)
+        return MTEST_MEM_TYPE__UNREGISTERED_HOST;
+    else if (strcmp(memtype, "reg_host") == 0)
+        return MTEST_MEM_TYPE__REGISTERED_HOST;
+    else if (strcmp(memtype, "device") == 0)
+        return MTEST_MEM_TYPE__DEVICE;
+    else
+        return MTEST_MEM_TYPE__UNSET;
+}
+
 int MTestIsBasicDtype(MPI_Datatype type)
 {
     int numints, numaddrs, numtypes, combiner;
