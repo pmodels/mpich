@@ -28,7 +28,9 @@ int main(int argc, char *argv[])
     DTP_pool_s dtp;
     DTP_obj_s send_obj, recv_obj;
     void *sendbuf, *recvbuf;
+    void *sendbuf_h, *recvbuf_h;
     char *basic_type;
+    mtest_mem_type_e sendmem, recvmem;
 
     MTest_Init(&argc, &argv);
 
@@ -42,6 +44,8 @@ int main(int argc, char *argv[])
     count[0] = MTestArgListGetLong(head, "sendcnt");
     count[1] = MTestArgListGetLong(head, "recvcnt");
     basic_type = MTestArgListGetString(head, "type");
+    sendmem = MTestArgListGetMemType(head, "sendmem");
+    recvmem = MTestArgListGetMemType(head, "recvmem");
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
@@ -68,29 +72,31 @@ int main(int argc, char *argv[])
             errs++;
         }
 
-        sendbuf = malloc(send_obj.DTP_bufsize);
-        if (sendbuf == NULL) {
+        MTestAlloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf);
+        if (sendbuf_h == NULL || sendbuf == NULL) {
             errs++;
             break;
         }
 
-        recvbuf = malloc(recv_obj.DTP_bufsize);
-        if (recvbuf == NULL) {
+        MTestAlloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf);
+        if (recvbuf_h == NULL || recvbuf == NULL) {
             errs++;
             break;
         }
 
-        err = DTP_obj_buf_init(send_obj, sendbuf, 0, 1, count[0]);
+        err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
+        MTestCopyContent(sendbuf_h, sendbuf, send_obj.DTP_bufsize, sendmem);
 
-        err = DTP_obj_buf_init(recv_obj, recvbuf, -1, -1, count[0]);
+        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
+        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
 
         sendcount = send_obj.DTP_type_count;
         sendtype = send_obj.DTP_datatype;
@@ -116,7 +122,8 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
+        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, sendmem);
+        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
         if (err != DTP_SUCCESS) {
             if (errs < 10) {
                 char *recv_desc, *send_desc;
@@ -132,11 +139,12 @@ int main(int argc, char *argv[])
             errs++;
         }
 
-        err = DTP_obj_buf_init(recv_obj, recvbuf, -1, -1, count[0]);
+        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
+        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
 
         err =
             MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
@@ -156,7 +164,8 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
+        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, sendmem);
+        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
         if (err != DTP_SUCCESS) {
             if (errs < 10) {
                 char *recv_desc, *send_desc;
@@ -172,11 +181,12 @@ int main(int argc, char *argv[])
             errs++;
         }
 
-        err = DTP_obj_buf_init(recv_obj, recvbuf, -1, -1, count[0]);
+        err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
         if (err != DTP_SUCCESS) {
             errs++;
             break;
         }
+        MTestCopyContent(recvbuf_h, recvbuf, recv_obj.DTP_bufsize, sendmem);
 
         err =
             MPI_Irecv(recvbuf + recv_obj.DTP_buf_offset, recvcount, recvtype, rank, 0, comm, &req);
@@ -196,7 +206,8 @@ int main(int argc, char *argv[])
         }
 
         err = MPI_Wait(&req, MPI_STATUS_IGNORE);
-        err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
+        MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, sendmem);
+        err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
         if (err != DTP_SUCCESS) {
             if (errs < 10) {
                 char *recv_desc, *send_desc;
@@ -212,8 +223,8 @@ int main(int argc, char *argv[])
             errs++;
         }
 
-        free(sendbuf);
-        free(recvbuf);
+        MTestFree(sendmem, sendbuf_h, sendbuf);
+        MTestFree(recvmem, recvbuf_h, recvbuf);
         DTP_obj_free(send_obj);
         DTP_obj_free(recv_obj);
     }
