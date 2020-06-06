@@ -23,34 +23,39 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status) __attribute__ ((weak, a
 #undef MPI_Wait
 #define MPI_Wait PMPI_Wait
 
-int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
+/* MPID_Wait call MPIR_Wait_state with initialized progress state */
+int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Progress_state progress_state;
-    if (request_ptr == NULL)
-        goto fn_exit;
 
-    MPID_Progress_start(&progress_state);
     while (!MPIR_Request_is_complete(request_ptr)) {
-        mpi_errno = MPID_Progress_wait(&progress_state);
-        if (mpi_errno) {
-            /* --BEGIN ERROR HANDLING-- */
-            MPID_Progress_end(&progress_state);
-            MPIR_ERR_POP(mpi_errno);
-            /* --END ERROR HANDLING-- */
-        }
+        mpi_errno = MPID_Progress_wait(state);
+        MPIR_ERR_CHECK(mpi_errno);
 
         if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
             goto fn_fail;
         }
     }
-    MPID_Progress_end(&progress_state);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* legacy interface (for ch3) */
+int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+
+    MPIR_Assert(request_ptr != NULL);
+    MPID_Progress_start(&progress_state);
+    mpi_errno = MPIR_Wait_state(request_ptr, status, &progress_state);
+    MPID_Progress_end(&progress_state);
+
+    return mpi_errno;
 }
 
 int MPIR_Wait(MPI_Request * request, MPI_Status * status)
