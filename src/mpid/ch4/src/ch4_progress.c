@@ -96,11 +96,15 @@ void MPID_Progress_end(MPID_Progress_state * state)
     return;
 }
 
-int MPID_Progress_test(void)
+int MPID_Progress_test(MPID_Progress_state * state)
 {
-    MPID_Progress_state state;
-    MPID_Progress_start(&state);
-    return progress_test(&state);
+    if (state == NULL) {
+        MPID_Progress_state progress_state;
+        MPID_Progress_start(&progress_state);
+        return MPIDI_Progress_test(&progress_state);
+    } else {
+        return MPIDI_Progress_test(state);
+    }
 }
 
 int MPID_Progress_poke(void)
@@ -110,7 +114,7 @@ int MPID_Progress_poke(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_POKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_POKE);
 
-    ret = MPID_Progress_test();
+    ret = MPID_Progress_test(NULL);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_POKE);
     return ret;

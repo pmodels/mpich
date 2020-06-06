@@ -291,7 +291,7 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
         MPIDIG_WIN(win, sync).exposure_epoch_type = MPIDIG_EPOTYPE_NONE;
     } else {
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         *flag = 0;
     }

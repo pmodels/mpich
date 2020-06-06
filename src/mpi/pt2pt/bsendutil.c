@@ -476,7 +476,7 @@ static int MPIR_Bsend_check_active(void)
     int mpi_errno = MPI_SUCCESS;
 
     if (BsendBuffer.active) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Bsend_progress();
     }

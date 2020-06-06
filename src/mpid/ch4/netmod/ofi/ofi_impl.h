@@ -175,7 +175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni_dst(MPIR_Comm * comm_ptr, int ran
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        mpi_errno = MPID_Progress_test();                   \
+        mpi_errno = MPID_Progress_test(NULL);                   \
         MPIR_ERR_CHECK(mpi_errno);                          \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \

@@ -156,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, &flag, status);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
             MPIDI_improbe_safe(source, tag, comm, context_offset, av, &flag, message, status);
         MPIR_ERR_CHECK(mpi_errno);
 
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!*flag) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -244,7 +244,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     MPIR_ERR_CHECK(mpi_errno);
 
     if (!*flag) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
