@@ -8,57 +8,125 @@
 
 #include "ch4_impl.h"
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
+                                                     MPID_Progress_state * state)
+{
+    state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    state->progress_start = state->progress_count;
+
+    state->vci_count = 1;
+    state->vci[0] = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
+                                                       MPID_Progress_state * state)
+{
+    state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
+    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
+    state->progress_start = state->progress_count;
+
+    int idx = 0;
+    for (int i = 0; i < n; i++) {
+        if (reqs[i] == NULL) {
+            continue;
+        }
+
+        int vci = (reqs[i]->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+        int found = 0;
+        for (int j = 0; j < idx; j++) {
+            if (state->vci[j] == vci) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            state->vci[idx++] = vci;
+            MPIR_Assert(vci < MPIDI_global.n_vcis);
+        }
+    }
+    state->vci_count = idx;
+}
+
 /* MPID_Test, MPID_Testall, MPID_Testany, MPID_Testsome */
 
 MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
-    return MPIR_Test_impl(request_ptr, flag, status);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci(request_ptr, &progress_state);
+    return MPIR_Test_state(request_ptr, flag, status, &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testall(int count, MPIR_Request * request_ptrs[],
                                           int *flag, MPI_Status array_of_statuses[],
                                           int requests_property)
 {
-    return MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses, requests_property);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(count, request_ptrs, &progress_state);
+    return MPIR_Testall_state(count, request_ptrs, flag, array_of_statuses, requests_property,
+                              &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testany(int count, MPIR_Request * request_ptrs[],
                                           int *indx, int *flag, MPI_Status * status)
 {
-    return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(count, request_ptrs, &progress_state);
+    return MPIR_Testany_state(count, request_ptrs, indx, flag, status, &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_ptrs[],
                                            int *outcount, int array_of_indices[],
                                            MPI_Status array_of_statuses[])
 {
-    return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(incount, request_ptrs, &progress_state);
+    return MPIR_Testsome_state(incount, request_ptrs, outcount, array_of_indices,
+                               array_of_statuses, &progress_state);
 }
 
 /* MPID_Wait, MPID_Waitall, MPID_Waitany, MPID_Waitsome */
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    return MPIR_Wait_impl(request_ptr, status);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci(request_ptr, &progress_state);
+    return MPIR_Wait_state(request_ptr, status, &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
                                           MPI_Status array_of_statuses[], int request_properties)
 {
-    return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(count, request_ptrs, &progress_state);
+    return MPIR_Waitall_state(count, request_ptrs, array_of_statuses,
+                              request_properties, &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],
                                           int *indx, MPI_Status * status)
 {
-    return MPIR_Waitany_impl(count, request_ptrs, indx, status);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(count, request_ptrs, &progress_state);
+    return MPIR_Waitany_state(count, request_ptrs, indx, status, &progress_state);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitsome(int incount, MPIR_Request * request_ptrs[],
                                            int *outcount, int array_of_indices[],
                                            MPI_Status array_of_statuses[])
 {
-    return MPIR_Waitsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    MPID_Progress_state progress_state;
+
+    MPIDI_set_progress_vci_n(incount, request_ptrs, &progress_state);
+    return MPIR_Waitsome_state(incount, request_ptrs, outcount, array_of_indices,
+                               array_of_statuses, &progress_state);
 }
 
 #endif /* CH4_WAIT_H_INCLUDED */
