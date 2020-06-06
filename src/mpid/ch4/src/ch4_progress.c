@@ -5,7 +5,7 @@
 
 #include "mpidimpl.h"
 
-static int progress_made(MPID_Progress_state * state)
+static inline int progress_made(MPID_Progress_state * state)
 {
     if (state->progress_count != state->progress_start) {
         return TRUE;
