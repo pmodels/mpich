@@ -7,6 +7,42 @@
 #include "yaksa.h"
 #include "typerep_internal.h"
 
+int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_COPY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_COPY);
+
+    int mpi_errno = MPI_SUCCESS;
+    int rc;
+
+    MPL_pointer_attr_t inattr, outattr;
+    MPL_gpu_query_pointer_attr(inbuf, &inattr);
+    MPL_gpu_query_pointer_attr(outbuf, &outattr);
+
+    if ((inattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+         inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
+        (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
+         outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
+        MPIR_Memcpy(outbuf, inbuf, num_bytes);
+    } else {
+        yaksa_request_t request;
+        uintptr_t actual_pack_bytes;
+        rc = yaksa_ipack(inbuf, num_bytes, YAKSA_TYPE__BYTE, 0, outbuf, num_bytes,
+                         &actual_pack_bytes, NULL, &request);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+        MPIR_Assert(actual_pack_bytes == num_bytes);
+
+        rc = yaksa_request_wait(request);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_INTERN, "**yaksa");
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_COPY);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 typedef enum {
     MEMCPY_DIR__PACK,
     MEMCPY_DIR__UNPACK,
