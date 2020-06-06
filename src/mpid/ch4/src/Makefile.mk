@@ -15,6 +15,7 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_recv.h     \
                   src/mpid/ch4/src/ch4_rma.h      \
                   src/mpid/ch4/src/ch4_win.h      \
+                  src/mpid/ch4/src/ch4_wait.h     \
                   src/mpid/ch4/src/ch4r_probe.h   \
                   src/mpid/ch4/src/ch4r_rma.h     \
                   src/mpid/ch4/src/ch4r_win.h     \
