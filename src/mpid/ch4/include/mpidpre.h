@@ -52,6 +52,8 @@ typedef struct {
     int flag;
     int progress_count;
     int progress_start;
+    int vci_count;              /* number of vcis that need progress */
+    uint8_t vci[MPIDI_CH4_MAX_VCIS];    /* list of vcis that need progress */
 } MPID_Progress_state;
 
 typedef enum {

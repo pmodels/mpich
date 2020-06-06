@@ -5,6 +5,33 @@
 
 #include "mpidimpl.h"
 
+/* Global progress (polling every vci) is required for correctness. Currently we adopt the
+ * simple approach to do global progress every POLL_MASK.
+ *
+ * TODO: every time we do global progress, there will be a performance lag. We could --
+ * * amortize the cost by rotating the global vci to be polled (might be insufficient)
+ * * accept user hints (require new user interface)
+ */
+#define POLL_MASK 0xff
+
+#ifdef MPL_TLS
+static MPL_TLS int global_vci_poll_count = 0;
+#else
+/* We just need ensure global progress happen, so some race condition or even corruption
+ * can be tolerated.  */
+static int global_vci_poll_count = 0;
+#endif
+
+static inline int do_global_progress(void)
+{
+    if (MPIDI_global.n_vcis == 1) {
+        return 1;
+    } else {
+        global_vci_poll_count++;
+        return ((global_vci_poll_count & POLL_MASK) == 0);
+    }
+}
+
 static inline int progress_made(MPID_Progress_state * state)
 {
     if (state->progress_count != state->progress_start) {
@@ -41,21 +68,33 @@ static int progress_test(MPID_Progress_state * state, int wait)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(i).lock);
+    if (state->flag & MPIDI_PROGRESS_NM) {
         if (!wait || !progress_made(state)) {
-            if (state->flag & MPIDI_PROGRESS_NM) {
-                mpi_errno = MPIDI_NM_progress(i, 0);
+            if (do_global_progress()) {
+                for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+                    mpi_errno = MPIDI_NM_progress(vci, 0);
+                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+                }
+
+            } else {
+                for (int i = 0; i < state->vci_count; i++) {
+                    int vci = state->vci[i];
+                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+                    mpi_errno = MPIDI_NM_progress(vci, 0);
+                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+                }
             }
         }
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(i).lock);
     }
-
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-        mpi_errno = MPIDI_SHM_progress(0, 0);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        if (!wait || !progress_made(state)) {
+            /* SHM do single-vci for now */
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+            mpi_errno = MPIDI_SHM_progress(0, 0);
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        }
     }
 #endif
 
@@ -74,6 +113,13 @@ static void progress_state_init(MPID_Progress_state * state, int wait)
         state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
         state->progress_start = state->progress_count;
     }
+
+    /* global progress by default */
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        state->vci[i] = i;
+    }
+    state->vci_count = MPIDI_global.n_vcis;
+
 }
 
 int MPIDI_Progress_test(int flags)
