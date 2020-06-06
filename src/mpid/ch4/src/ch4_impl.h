@@ -393,7 +393,7 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 #define MPIDIU_PROGRESS()                                   \
     do {                                                        \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
-        mpi_errno = MPID_Progress_test();                       \
+        mpi_errno = MPID_Progress_test(NULL);                       \
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock); \
         MPIR_ERR_CHECK(mpi_errno);  \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
@@ -406,7 +406,7 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
     do {                                        \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
         while (cond) {                          \
-            mpi_errno = MPID_Progress_test();   \
+            mpi_errno = MPID_Progress_test(NULL);   \
             if (mpi_errno) break;               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         } \
@@ -423,7 +423,7 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
     do {                                        \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock); \
         do {                          \
-            mpi_errno = MPID_Progress_test();   \
+            mpi_errno = MPID_Progress_test(NULL);   \
             if (mpi_errno) break;               \
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
         } while (cond); \

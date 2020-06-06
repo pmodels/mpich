@@ -35,14 +35,14 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
     int n_inactive = 0;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(NULL);
     /* --BEGIN ERROR HANDLING-- */
     MPIR_ERR_CHECK(mpi_errno);
     /* --END ERROR HANDLING-- */
 
     for (i = 0; i < count; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test();
+            mpi_errno = MPID_Progress_test(NULL);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
