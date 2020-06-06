@@ -422,9 +422,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     if (MPIDIG_WIN(win, shm_allocated))
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
 
-    MPIR_Memcpy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
     if (MPIR_Compare_equal(compare_addr, target_addr, datatype)) {
-        MPIR_Memcpy(target_addr, origin_addr, dtype_sz);
+        MPIR_Typerep_copy(target_addr, origin_addr, dtype_sz);
     }
 
     if (MPIDIG_WIN(win, shm_allocated))
@@ -576,7 +576,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     if (MPIDIG_WIN(win, shm_allocated))
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
 
-    MPIR_Memcpy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
 
     if (op != MPI_NO_OP) {
         /* We need to make sure op is valid here.

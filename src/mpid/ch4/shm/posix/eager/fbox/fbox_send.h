@@ -64,7 +64,7 @@ MPIDI_POSIX_eager_send(int grank,
     /* Copy all of the user data that will fit into the fastbox. */
     for (i = 0; i < *iov_num; i++) {
         if (unlikely(fbox_payload_size_left < (*iov)[i].iov_len)) {
-            MPIR_Memcpy(fbox_payload_ptr, (*iov)[i].iov_base, fbox_payload_size_left);
+            MPIR_Typerep_copy(fbox_payload_ptr, (*iov)[i].iov_base, fbox_payload_size_left);
 
             (*iov)[i].iov_base = (char *) (*iov)[i].iov_base + fbox_payload_size_left;
             (*iov)[i].iov_len -= fbox_payload_size_left;
@@ -74,7 +74,7 @@ MPIDI_POSIX_eager_send(int grank,
             break;
         }
 
-        MPIR_Memcpy(fbox_payload_ptr, (*iov)[i].iov_base, (*iov)[i].iov_len);
+        MPIR_Typerep_copy(fbox_payload_ptr, (*iov)[i].iov_base, (*iov)[i].iov_len);
 
         fbox_payload_ptr += (*iov)[i].iov_len;
         fbox_payload_size_left -= (*iov)[i].iov_len;
