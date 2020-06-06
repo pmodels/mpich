@@ -103,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_memcpy(MPIDI_POSIX_eager_recv_transaction_t * transaction,
                               void *dst, const void *src, size_t size)
 {
-    MPIR_Memcpy(dst, src, size);
+    MPIR_Typerep_copy(dst, src, size);
 }
 
 MPL_STATIC_INLINE_PREFIX void

@@ -94,7 +94,7 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
             rreq->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
+        MPIR_Typerep_copy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
     MPL_free(MPIDIG_REQUEST(rreq, buffer));

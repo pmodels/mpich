@@ -869,8 +869,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
 
     p_data = MPL_malloc(data_sz * 2, MPL_MEM_BUFFER);
     MPIR_Assert(p_data);
-    MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
-    MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
+    MPIR_Typerep_copy(p_data, (char *) origin_addr, data_sz);
+    MPIR_Typerep_copy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
 
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");

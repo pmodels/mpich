@@ -82,7 +82,7 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
         if (nbytes > 0) {
             char *addr = (char *) buf + dt_true_lb;
             assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
-            MPIR_Memcpy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
+            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
         }
     }
 
