@@ -9,7 +9,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         done
     ])dnl end AM_COND_IF(BUILD_CH4,...)
 
-    AM_CONDITIONAL([BUILD_SHM_IPC_XPMEM],[test ! -z "X$build_ch4_shm_ipc_xpmem"])
+    AM_CONDITIONAL([BUILD_SHM_IPC_XPMEM],[test -n "$build_ch4_shm_ipc_xpmem"])
 ])dnl end _PREREQ
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
