@@ -62,25 +62,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr,
     return MPI_SUCCESS;
 }
 
-#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
+int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits);
+int MPIDI_XPMEM_mpi_finalize_hook(void);
 int MPIDI_XPMEM_attach_mem(int node_rank, MPIDI_XPMEM_mem_handle_t handle, size_t size,
                            MPIDI_XPMEM_mem_seg_t * mem_seg, void **vaddr);
 int MPIDI_XPMEM_close_mem(MPIDI_XPMEM_mem_seg_t mem_seg);
-#else
-
-/* stub functions */
-MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_attach_mem(int node_rank, MPIDI_XPMEM_mem_handle_t handle,
-                                                    size_t size, MPIDI_XPMEM_mem_seg_t * mem_seg,
-                                                    void **vaddr)
-{
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_close_mem(MPIDI_XPMEM_mem_seg_t mem_seg)
-{
-    return MPI_SUCCESS;
-}
-#endif
 
 
 #endif /* XPMEM_POST_H_INCLUDED */
