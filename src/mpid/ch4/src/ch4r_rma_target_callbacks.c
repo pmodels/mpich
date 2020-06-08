@@ -970,10 +970,10 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 
     if (MPIR_Compare_equal((void *) MPIDIG_REQUEST(rreq, req->creq.addr), compare_addr,
                            MPIDIG_REQUEST(rreq, req->creq.datatype))) {
-        MPIR_Memcpy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
-        MPIR_Memcpy((void *) MPIDIG_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
+        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
     } else {
-        MPIR_Memcpy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD

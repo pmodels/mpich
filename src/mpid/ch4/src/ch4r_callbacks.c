@@ -178,8 +178,8 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
             match_req->status.MPI_ERROR = mpi_errno;
         }
     } else {
-        MPIR_Memcpy((char *) MPIDIG_REQUEST(match_req, buffer) + dt_true_lb,
-                    MPIDIG_REQUEST(rreq, buffer), nbytes);
+        MPIR_Typerep_copy((char *) MPIDIG_REQUEST(match_req, buffer) + dt_true_lb,
+                          MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
     /* Now that the unexpected message has been completed, unset the status bit. */
