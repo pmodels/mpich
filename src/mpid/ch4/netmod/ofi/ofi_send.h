@@ -362,13 +362,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, (*request == NULL), 0ULL,
                                    MPIR_ERR_NONE);
@@ -403,14 +400,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_SEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_SEND_COLL);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
                              errflag);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, d_rank, tag, comm, context_offset,
                                    addr, request, (*request == NULL), 0ULL, *errflag);
     }
@@ -428,13 +422,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND,
                                    MPIR_ERR_NONE);
@@ -454,13 +445,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, 0, 0ULL, MPIR_ERR_NONE);
     }
@@ -494,14 +482,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_ISEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_ISEND_COLL);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                               request, errflag);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, 0, 0ULL, *errflag);
     }
@@ -519,13 +504,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISSEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND,
                                    MPIR_ERR_NONE);

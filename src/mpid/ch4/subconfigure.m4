@@ -278,6 +278,14 @@ else
     AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 fi
 
+AC_ARG_ENABLE([ch4-am-only],
+              AS_HELP_STRING([--ch4-am-only],[forces AM-only communication]),
+              [],[enable_ch4_am_only=no])
+
+if test "${enable_ch4_am_only}" = "yes"; then
+    AC_DEFINE(MPIDI_ENABLE_AM_ONLY, 1, [Enables AM-only communication])
+fi
+
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 ])dnl end PREREQ
 

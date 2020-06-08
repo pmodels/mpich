@@ -61,28 +61,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_target_local_cmpl_hook(int rank, MPIR
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_op_cs_enter_hook(MPIR_Win * win)
-{
-    int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_RMA_OP_CS_ENTER_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_RMA_OP_CS_ENTER_HOOK);
-
-    ret = MPIDI_POSIX_rma_op_cs_enter_hook(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_RMA_OP_CS_ENTER_HOOK);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_op_cs_exit_hook(MPIR_Win * win)
-{
-    int ret;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_RMA_OP_CS_EXIT_HOOK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_RMA_OP_CS_EXIT_HOOK);
-
-    ret = MPIDI_POSIX_rma_op_cs_exit_hook(win);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_RMA_OP_CS_EXIT_HOOK);
-    return ret;
-}
-
 #endif /* SHM_HOOKS_H_INCLUDED */

@@ -293,21 +293,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vni contexts])
     fi
 
-    AC_ARG_ENABLE(legacy-ofi,
-    [--enable-legacy-ofi
-       Allows OFI providers which do not support the minimum requirements for tagged communication.
-       Specifically, FI_TAGGED, completion queue data support of at least 4 bytes, FI_DIRECTED_RECV,
-       FI_DELIVERY_COMPLETE, FI_REMOTE_READ, FI_REMOTE_WRITE. Without enabling this, older or less
-       capable providers will have runtime failures.
-       level:
-         yes        - Enabled
-         no         - Disabled (default)
-    ],,enable_legacy_ofi=no)
-
-    if test "$enable_legacy_ofi" = "yes"; then
-        AC_DEFINE(MPIDI_ENABLE_LEGACY_OFI, 1, [CH4/OFI should build in support for legacy OFI providers])
-    fi
-
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 
