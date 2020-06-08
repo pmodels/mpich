@@ -103,10 +103,7 @@ MPIDI_POSIX_eager_send(int grank,
     for (i = 0; i < *iov_num; i++) {
         /* Optimize for the case where the message will fit into the cell. */
         if (likely(available >= (*iov)[i].iov_len)) {
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack((*iov)[i].iov_base, (*iov)[i].iov_len, MPI_BYTE,
-                              0, payload, (*iov)[i].iov_len, &actual_pack_bytes);
-            MPIR_Assert(actual_pack_bytes == (*iov)[i].iov_len);
+            MPIR_Typerep_copy(payload, (*iov)[i].iov_base, (*iov)[i].iov_len);
 
             payload += (*iov)[i].iov_len;
             available -= (*iov)[i].iov_len;
@@ -115,10 +112,7 @@ MPIDI_POSIX_eager_send(int grank,
         } else {
             /* If the message won't fit, put as much as we can and update the iovec for the next
              * time around. */
-            MPI_Aint actual_pack_bytes;
-            MPIR_Typerep_pack((*iov)[i].iov_base, available, MPI_BYTE,
-                              0, payload, available, &actual_pack_bytes);
-            MPIR_Assert(actual_pack_bytes == available);
+            MPIR_Typerep_copy(payload, (*iov)[i].iov_base, available);
 
             (*iov)[i].iov_base = (char *) (*iov)[i].iov_base + available;
             (*iov)[i].iov_len -= available;

@@ -135,7 +135,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
-        MPIR_Memcpy(data, in_data, data_sz);
+        MPIR_Typerep_copy(data, in_data, data_sz);
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
     } else {
         /* noncontig case */
@@ -146,7 +146,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         int rem = in_data_sz;
         for (int i = 0; i < iov_len && rem > 0; i++) {
             int curr_len = MPL_MIN(rem, iov[i].iov_len);
-            MPIR_Memcpy(iov[i].iov_base, (char *) in_data + done, curr_len);
+            MPIR_Typerep_copy(iov[i].iov_base, (char *) in_data + done, curr_len);
             rem -= curr_len;
             done += curr_len;
         }
@@ -240,14 +240,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
         int iov_done = 0;
         for (int i = 0; i < p->iov_num; i++) {
             if (payload_sz < p->iov_ptr[i].iov_len) {
-                MPIR_Memcpy(p->iov_ptr[i].iov_base, payload, payload_sz);
+                MPIR_Typerep_copy(p->iov_ptr[i].iov_base, payload, payload_sz);
                 p->iov_ptr[i].iov_base = (char *) p->iov_ptr[i].iov_base + payload_sz;
                 p->iov_ptr[i].iov_len -= payload_sz;
                 /* not done */
                 break;
             } else {
                 /* fill one iov */
-                MPIR_Memcpy(p->iov_ptr[i].iov_base, payload, p->iov_ptr[i].iov_len);
+                MPIR_Typerep_copy(p->iov_ptr[i].iov_base, payload, p->iov_ptr[i].iov_len);
                 payload = (char *) payload + p->iov_ptr[i].iov_len;
                 payload_sz -= p->iov_ptr[i].iov_len;
                 iov_done++;
