@@ -6,6 +6,7 @@
 #ifndef XPMEM_TYPES_H_INCLUDED
 #define XPMEM_TYPES_H_INCLUDED
 
+#include "mpidimpl.h"
 #include <xpmem.h>
 
 #define MPIDI_XPMEMI_PERMIT_VALUE ((void *)0600)
