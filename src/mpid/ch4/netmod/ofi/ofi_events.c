@@ -193,7 +193,7 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                             0 /* len */ ,
                                             MPIR_Comm_rank(c),
                                             MPIDI_OFI_comm_to_phys(c, r, vni_dst, vni_src),
-                                            ss_bits), tinjectdata, FALSE /* eagain */);
+                                            ss_bits), vni_dst, tinjectdata, FALSE /* eagain */);
     }
 
     MPIDIU_request_complete(rreq);
@@ -442,7 +442,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                      MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, vni_dst, vni_src), /* Destination  */
                                      recv_rbase(recv_elem) + recv_elem->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
-                                     (void *) &recv_elem->context), rdma_readfrom,      /* Context */
+                                     (void *) &recv_elem->context), vni_dst, rdma_readfrom,     /* Context */
                              FALSE);
         recv_elem->cur_offset += bytesToGet;
     }
