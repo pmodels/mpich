@@ -73,7 +73,7 @@ static void print_hints(int rank, MPI_File * mfh)
 static void fill_buffer(char *buffer, int bufsize, int rank, MPI_Offset offset)
 {
     memset((void *) buffer, 0, bufsize);
-    snprintf(buffer, bufsize, "Hello from %d at %lld\n", rank, offset);
+    snprintf(buffer, bufsize, "Hello from %d at %lld\n", rank, (long long) offset);
 }
 
 static MPI_Offset get_offset(int rank, int num_objs, int obj_size, int which_obj)
@@ -183,7 +183,7 @@ static void read_file(char *target, int rank, MPI_Info * info, int *corrupt_bloc
     for (i = 0; i < NUM_OBJS; i++) {
         if (memcmp(verify_buf[i], buffer[i], OBJ_SIZE) != 0) {
             (*corrupt_blocks)++;
-            printf("Corruption at %lld\n", offset[i]);
+            printf("Corruption at %lld\n", (long long) offset[i]);
             if (debug) {
                 printf("\tExpecting %s\n" "\tRecieved  %s\n", verify_buf[i], buffer[i]);
             }
