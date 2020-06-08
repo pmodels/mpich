@@ -4,7 +4,7 @@
  */
 
 #include "mpidimpl.h"
-#include "gpu_noinline.h"
+#include "gpu_post.h"
 
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 {
