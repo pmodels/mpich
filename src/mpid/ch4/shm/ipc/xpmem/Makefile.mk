@@ -13,6 +13,7 @@ noinst_HEADERS += src/mpid/ch4/shm/ipc/xpmem/xpmem_seg.h       \
 
 mpi_core_sources += src/mpid/ch4/shm/ipc/xpmem/globals.c       \
                     src/mpid/ch4/shm/ipc/xpmem/xpmem_init.c    \
+                    src/mpid/ch4/shm/ipc/xpmem/xpmem_mem.c     \
                     src/mpid/ch4/shm/ipc/xpmem/xpmem_seg.c
 
 endif
