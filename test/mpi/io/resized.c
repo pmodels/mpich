@@ -110,7 +110,8 @@ int main(int argc, char **argv)
     MPI_File_get_size(fh, &size);
     if (size != 4 * sizeof(int)) {
         errs++;
-        fprintf(stderr, "file size is %lld, should be %d\n", size, (int) (4 * sizeof(int)));
+        fprintf(stderr, "file size is %lld, should be %d\n", (long long) size,
+                (int) (4 * sizeof(int)));
     }
 
     for (i = 0; i < 4; i++)
