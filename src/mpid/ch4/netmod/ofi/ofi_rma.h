@@ -178,7 +178,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                                        target_rank)
                                              + target_true_lb, MPIDI_OFI_winfo_mr_key(win,
                                                                                       target_rank)),
-                             rdma_inject_write, FALSE);
+                             0, rdma_inject_write, FALSE);
         goto null_op_exit;
     }
 
@@ -212,7 +212,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
@@ -370,7 +370,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
         /* Complete signal request to inform completion to user. */
         MPIDI_OFI_sigreq_complete(sigreq);
         goto fn_exit;
@@ -566,8 +566,8 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.data = 0;
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg,
-                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), atomicto,
-                         FALSE);
+                                              &comparev, NULL, 1, &resultv, NULL, 1, 0), 0,
+                         atomicto, FALSE);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
     return mpi_errno;
@@ -870,7 +870,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     msg.data = 0;
     MPIDI_OFI_win_cntr_incr(win);
     MPIDI_OFI_CALL_RETRY(fi_fetch_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, &resultv,
-                                            NULL, 1, 0), rdma_readfrom, FALSE);
+                                            NULL, 1, 0), 0, rdma_readfrom, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);

@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                         cq_data,
                                         MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
                                         match_bits),
-                         tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+                         vni_src, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     return mpi_errno;
@@ -97,7 +97,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.data = cq_data;
     msg.addr = MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[vni_src].tx, &msg, flags), tsendv, FALSE);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[vni_src].tx, &msg, flags), vni_src,
+                         tsendv, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -166,7 +167,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),     /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), trecvsync, FALSE);
+                                      (void *) &(ackreq->context)), vni_src, trecvsync, FALSE);
     }
 
     send_buf = (char *) buf + dt_true_lb;
@@ -225,7 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             data_sz,
                                             cq_data,
                                             MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
-                                            match_bits), tinjectdata, FALSE /* eagain */);
+                                            match_bits), vni_src, tinjectdata, FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
@@ -234,7 +235,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                           MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_src, tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int c;
@@ -284,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                           MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_src, tsenddata, FALSE /* eagain */);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;
