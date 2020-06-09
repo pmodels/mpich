@@ -11,6 +11,7 @@ typedef struct MPIDI_GPU_mem_handle {
 } MPIDI_GPU_mem_handle_t;
 
 typedef struct MPIDI_GPU_mem_seg {
+    MPL_gpu_ipc_mem_handle_t ipc_handle;
     void *vaddr;
 } MPIDI_GPU_mem_seg_t;
 
