@@ -50,9 +50,9 @@ typedef struct {
 
 typedef struct {
     int flag;
-    int progress_count;
-    int progress_start;
+    int progress_made;
     int vci_count;              /* number of vcis that need progress */
+    int progress_counts[MPIDI_CH4_MAX_VCIS];
     uint8_t vci[MPIDI_CH4_MAX_VCIS];    /* list of vcis that need progress */
 } MPID_Progress_state;
 

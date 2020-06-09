@@ -264,10 +264,11 @@ typedef struct MPIDI_CH4_Global_t {
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    MPL_atomic_int_t progress_count;
 
     int n_vcis;
     MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
+    int progress_counts[MPIDI_CH4_MAX_VCIS];
+
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     /* TODO: move into MPIDI_vci to have per-vci workqueue */
     MPIDI_workq_t workqueue;

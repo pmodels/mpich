@@ -409,6 +409,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int inuse;
+    int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
 
     if (HANDLE_IS_BUILTIN(req->handle)) {
         /* do not free builtin request objects */
@@ -417,6 +418,12 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
     MPIR_Request_release_ref(req, &inuse);
 
+    if (need_safety) {
+        MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    }
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+#endif
     /* inform the device that we are decrementing the ref-count on
      * this request */
     MPID_Request_free_hook(req);
@@ -457,19 +464,16 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
         MPID_Request_destroy_hook(req);
 
-        int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
         if (need_safety) {
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
         } else {
-#ifdef MPICH_DEBUG_MUTEX
-            MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
-#endif
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
         }
+    }
+    if (need_safety) {
+        MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
     }
 }
 

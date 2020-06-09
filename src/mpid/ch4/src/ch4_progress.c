@@ -32,13 +32,27 @@ static inline int do_global_progress(void)
     }
 }
 
-static inline int progress_made(MPID_Progress_state * state)
+/* inside per-vci progress */
+static inline void check_progress_made_idx(MPID_Progress_state * state, int idx)
 {
-    if (state->progress_count != state->progress_start) {
-        return TRUE;
+    if (state->progress_counts[idx] != MPIDI_global.progress_counts[state->vci[idx]]) {
+        state->progress_counts[idx] = MPIDI_global.progress_counts[state->vci[idx]];
+        state->progress_made = 1;
     }
-    state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
-    return (state->progress_count != state->progress_start);
+}
+
+/* inside global progress */
+static inline void check_progress_made_vci(MPID_Progress_state * state, int vci)
+{
+    for (int i = 0; i < state->vci_count; i++) {
+        if (vci == state->vci[i]) {
+            if (state->progress_counts[i] != MPIDI_global.progress_counts[state->vci[i]]) {
+                state->progress_counts[i] = MPIDI_global.progress_counts[state->vci[i]];
+                state->progress_made = 1;
+            }
+            break;
+        }
+    }
 }
 
 static int progress_test(MPID_Progress_state * state, int wait)
@@ -69,11 +83,14 @@ static int progress_test(MPID_Progress_state * state, int wait)
 #endif
 
     if (state->flag & MPIDI_PROGRESS_NM) {
-        if (!wait || !progress_made(state)) {
+        if (!wait || !state->progress_made) {
             if (do_global_progress()) {
                 for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
                     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
                     mpi_errno = MPIDI_NM_progress(vci, 0);
+                    if (wait) {
+                        check_progress_made_vci(state, vci);
+                    }
                     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
                 }
 
@@ -82,6 +99,9 @@ static int progress_test(MPID_Progress_state * state, int wait)
                     int vci = state->vci[i];
                     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
                     mpi_errno = MPIDI_NM_progress(vci, 0);
+                    if (wait) {
+                        check_progress_made_idx(state, i);
+                    }
                     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
                 }
             }
@@ -89,10 +109,13 @@ static int progress_test(MPID_Progress_state * state, int wait)
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-        if (!wait || !progress_made(state)) {
+        if (!wait || !state->progress_made) {
             /* SHM do single-vci for now */
             MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
             mpi_errno = MPIDI_SHM_progress(0, 0);
+            if (wait) {
+                check_progress_made_vci(state, 0);
+            }
             MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
         }
     }
@@ -108,10 +131,12 @@ static int progress_test(MPID_Progress_state * state, int wait)
 static void progress_state_init(MPID_Progress_state * state, int wait)
 {
     state->flag = MPIDI_PROGRESS_ALL;
+    state->progress_made = 0;
     if (wait) {
-        /* only wait functions need check progress_count */
-        state->progress_count = MPL_atomic_load_int(&MPIDI_global.progress_count);
-        state->progress_start = state->progress_count;
+        /* only wait functions need check progress_counts */
+        for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+            state->progress_counts[i] = MPIDI_global.progress_counts[i];
+        }
     }
 
     /* global progress by default */
@@ -194,12 +219,11 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIDI_PROGRESS_YIELD();
 
 #else
-    /* track progress from last time left off */
-    state->progress_start = state->progress_count;
+    state->progress_made = 0;
     while (1) {
         mpi_errno = progress_test(state, 1);
         MPIR_ERR_CHECK(mpi_errno);
-        if (progress_made(state)) {
+        if (state->progress_made) {
             break;
         }
         MPIDI_PROGRESS_YIELD();
