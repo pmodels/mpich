@@ -660,8 +660,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                                       MPIDIG_REQUEST(rreq, req->areq.target_addr),
                                       MPIDIG_REQUEST(rreq, req->areq.target_count),
                                       MPIDIG_REQUEST(rreq, req->areq.target_datatype),
-                                      MPIDIG_REQUEST(rreq, req->areq.op),
-                                      MPIDIG_ACC_SRCBUF_DEFAULT);
+                                      MPIDIG_REQUEST(rreq, req->areq.op), MPIDIG_ACC_SRCBUF_PACKED);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->areq.target_datatype));
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
