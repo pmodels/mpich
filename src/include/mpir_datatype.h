@@ -329,7 +329,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 #define MPIR_Datatype_add_ref_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        !HANDLE_IS_BUILTIN((datatype_)))                            \
+        !MPIR_DATATYPE_IS_PREDEFINED((datatype_)))                  \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
@@ -341,7 +341,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 #define MPIR_Datatype_release_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        !HANDLE_IS_BUILTIN((datatype_)))                            \
+        !MPIR_DATATYPE_IS_PREDEFINED((datatype_)))                  \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
