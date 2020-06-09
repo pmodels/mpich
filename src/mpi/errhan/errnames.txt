@@ -1498,6 +1498,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 ## GPU related error messages
 **gpu_query_ptr: gpu_query_pointer_attr failed
+**gpu_ipc_open_mem_handle: gpu_ipc_open_mem_handle failed
+**gpu_ipc_get_mem_handle: gpu_ipc_get_mem_handle failed
+**gpu_ipc_close_mem_handle: gpu_ipc_close_mem_handle failed
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)
