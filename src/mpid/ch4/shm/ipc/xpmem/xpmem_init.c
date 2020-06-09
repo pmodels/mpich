@@ -4,7 +4,7 @@
  */
 
 #include "mpidimpl.h"
-#include "xpmem_noinline.h"
+#include "xpmem_post.h"
 #include "mpidu_init_shm.h"
 #include "xpmem_seg.h"
 #include "shm_control.h"

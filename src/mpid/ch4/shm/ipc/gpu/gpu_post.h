@@ -74,4 +74,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_close_mem(MPIDI_GPU_mem_seg_t mem_seg)
     return mpi_errno;
 }
 
+int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits);
+int MPIDI_GPU_mpi_finalize_hook(void);
+
 #endif /* GPU_POST_H_INCLUDED */
