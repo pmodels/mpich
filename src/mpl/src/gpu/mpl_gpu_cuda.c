@@ -6,6 +6,7 @@
 #include "mpl.h"
 
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
+#define CU_ERR_CHECK(ret) if (unlikely((ret) != CUDA_SUCCESS)) goto fn_fail
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
@@ -47,8 +48,16 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
 {
     cudaError_t ret;
-    ret = cudaIpcGetMemHandle(h_mem, ptr);
+    CUresult curet;
+    CUdeviceptr pbase;
+
+    curet = cuMemGetAddressRange(&pbase, NULL, (CUdeviceptr) ptr);
+    CU_ERR_CHECK(curet);
+
+    ret = cudaIpcGetMemHandle(&h_mem->handle, ptr);
     CUDA_ERR_CHECK(ret);
+
+    h_mem->offset = (uintptr_t) ptr - (uintptr_t) pbase;
 
   fn_exit:
     return MPL_SUCCESS;
@@ -61,11 +70,14 @@ int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
 {
     cudaError_t ret;
     int prev_devid;
+    void *pbase;
 
     cudaGetDevice(&prev_devid);
     cudaSetDevice(h_device);
-    ret = cudaIpcOpenMemHandle(ptr, h_mem, cudaIpcMemLazyEnablePeerAccess);
+    ret = cudaIpcOpenMemHandle(&pbase, h_mem.handle, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
+
+    *ptr = (void *) ((char *) pbase + h_mem.offset);
 
   fn_exit:
     cudaSetDevice(prev_devid);
