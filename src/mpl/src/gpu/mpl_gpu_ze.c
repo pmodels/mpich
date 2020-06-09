@@ -130,7 +130,7 @@ int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_close_mem_handle(void *ptr)
+int MPL_gpu_ipc_close_mem_handle(void *ptr, MPL_gpu_ipc_mem_handle_t h_mem)
 {
     ze_result_t ret;
     ret = zeDriverCloseMemIpcHandle(global_ze_driver_handle, ptr);
