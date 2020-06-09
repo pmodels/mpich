@@ -73,7 +73,13 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
-    am_hdr.data_sz = data_sz;
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+        am_hdr.target_count = target_count;
+        am_hdr.target_datatype = target_datatype;
+    } else {
+        am_hdr.target_count = data_sz;
+        am_hdr.target_datatype = MPI_BYTE;
+    }
     am_hdr.preq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
 
@@ -84,7 +90,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
 
     int is_contig;
     MPIR_Datatype_is_contig(target_datatype, &is_contig);
-    if (is_contig) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
         am_hdr.flattened_sz = 0;
         MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -229,7 +235,13 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
-    am_hdr.data_sz = data_sz;
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+        am_hdr.target_count = target_count;
+        am_hdr.target_datatype = target_datatype;
+    } else {
+        am_hdr.target_count = data_sz;
+        am_hdr.target_datatype = MPI_BYTE;
+    }
     am_hdr.greq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
@@ -240,7 +252,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
 
     int is_contig;
     MPIR_Datatype_is_contig(target_datatype, &is_contig);
-    if (is_contig) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
         am_hdr.flattened_sz = 0;
         MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -374,7 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
@@ -564,7 +576,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 

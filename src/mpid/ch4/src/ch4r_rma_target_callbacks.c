@@ -1329,15 +1329,15 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
         MPIDIG_REQUEST(rreq, datatype) = dt->handle;
-        MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz / dt->size;
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
         MPIDIG_recv_type_init(in_data_sz, rreq);
     } else {
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
         MPIDIG_REQUEST(rreq, req->preq.dt) = NULL;
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset + msg_hdr->target_true_lb);
-        MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
-        MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
+        MPIDIG_REQUEST(rreq, datatype) = msg_hdr->target_datatype;
         MPIDIG_recv_type_init(in_data_sz, rreq);
     }
 
@@ -1384,7 +1384,7 @@ int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     offset = win->disp_unit * msg_hdr->target_disp;
     base = MPIDIG_win_base_at_target(win);
     MPIDIG_REQUEST(rreq, buffer) = (void *) (offset + base);
-    MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
+    MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_dt_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1963,8 +1963,8 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->data_sz;
-    MPIDIG_REQUEST(rreq, req->greq.datatype) = MPI_BYTE;
+    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->target_count;
+    MPIDIG_REQUEST(rreq, req->greq.datatype) = msg_hdr->target_datatype;
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
