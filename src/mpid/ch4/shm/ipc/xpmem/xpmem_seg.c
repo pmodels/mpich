@@ -36,8 +36,8 @@ enum {
 #define MPIDI_XPMEMI_AVL_STACK_EMPTY(stack) (!stack##_sp)
 
 /* Creates a new segment and attaches into local virtual address space. */
-static int seg_do_create(MPIDI_XPMEMI_seg_t ** seg_ptr,
-                         uint64_t low, uint64_t high, xpmem_apid_t apid)
+MPL_STATIC_INLINE_PREFIX int seg_do_create(MPIDI_XPMEMI_seg_t ** seg_ptr,
+                                           uint64_t low, uint64_t high, xpmem_apid_t apid)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEMI_seg_t *seg = NULL;
@@ -69,7 +69,7 @@ static int seg_do_create(MPIDI_XPMEMI_seg_t ** seg_ptr,
 }
 
 /* Detaches and releases a segment. */
-static int seg_do_release(MPIDI_XPMEMI_seg_t * seg)
+MPL_STATIC_INLINE_PREFIX int seg_do_release(MPIDI_XPMEMI_seg_t * seg)
 {
     int ret;
     int mpi_errno = MPI_SUCCESS;
@@ -88,7 +88,7 @@ static int seg_do_release(MPIDI_XPMEMI_seg_t * seg)
     goto fn_exit;
 }
 
-static int avl_do_update_node_info(MPIDI_XPMEMI_seg_t * node)
+MPL_STATIC_INLINE_PREFIX int avl_do_update_node_info(MPIDI_XPMEMI_seg_t * node)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_AVL_DO_UPDATE_NODE_INFO);
@@ -102,7 +102,8 @@ static int avl_do_update_node_info(MPIDI_XPMEMI_seg_t * node)
     return mpi_errno;
 }
 
-static int avl_do_right_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t * left_child)
+MPL_STATIC_INLINE_PREFIX int avl_do_right_rotation(MPIDI_XPMEMI_seg_t * parent,
+                                                   MPIDI_XPMEMI_seg_t * left_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_AVL_DO_RIGHT_ROTATION);
@@ -135,7 +136,8 @@ static int avl_do_right_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t
     goto fn_exit;
 }
 
-static int avl_do_left_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t * right_child)
+MPL_STATIC_INLINE_PREFIX int avl_do_left_rotation(MPIDI_XPMEMI_seg_t * parent,
+                                                  MPIDI_XPMEMI_seg_t * right_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_AVL_DO_LEFT_ROTATION);
@@ -168,7 +170,8 @@ static int avl_do_left_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t 
     goto fn_exit;
 }
 
-static int avl_do_left_right_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t * left_child)
+MPL_STATIC_INLINE_PREFIX int avl_do_left_right_rotation(MPIDI_XPMEMI_seg_t * parent,
+                                                        MPIDI_XPMEMI_seg_t * left_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_AVL_DO_LEFT_RIGHT_ROTATION);
@@ -189,7 +192,8 @@ static int avl_do_left_right_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_
     goto fn_exit;
 }
 
-static int avl_do_right_left_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_seg_t * right_child)
+MPL_STATIC_INLINE_PREFIX int avl_do_right_left_rotation(MPIDI_XPMEMI_seg_t * parent,
+                                                        MPIDI_XPMEMI_seg_t * right_child)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_AVL_DO_RIGHT_LEFT_ROTATION);
@@ -209,8 +213,9 @@ static int avl_do_right_left_rotation(MPIDI_XPMEMI_seg_t * parent, MPIDI_XPMEMI_
 }
 
 /* Create a new segment and initialize tree node attributes */
-static int segtree_do_create_node(uint64_t low,
-                                  uint64_t high, xpmem_apid_t apid, MPIDI_XPMEMI_seg_t ** seg_ptr)
+MPL_STATIC_INLINE_PREFIX int segtree_do_create_node(uint64_t low,
+                                                    uint64_t high, xpmem_apid_t apid,
+                                                    MPIDI_XPMEMI_seg_t ** seg_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_XPMEMI_seg_t *seg = NULL;
@@ -264,7 +269,7 @@ static int segtree_do_create_node(uint64_t low,
 *  still obey the AVL tree requirement (left branch and right branch height difference
 *  cannot exceed 1). If it exceeds the limit, we then adjust the height of tree to
 *  make it balanced again. */
-static int
+MPL_STATIC_INLINE_PREFIX int
 segtree_do_search_and_insert_safe(MPIDI_XPMEMI_segtree_t * tree, uint64_t low,
                                   uint64_t high, xpmem_apid_t apid,
                                   MPIDI_XPMEMI_seg_t ** seg_ptr, off_t * voffset)
