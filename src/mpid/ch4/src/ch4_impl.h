@@ -949,7 +949,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     }
 
 
-    if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
+    if (is_empty_source == TRUE || HANDLE_IS_BUILTIN(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
         (*uop) (source_buf, target_buf, &source_count, &source_dtp);
     } else {
