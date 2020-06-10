@@ -958,11 +958,13 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 
 PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
-if test "X${have_cuda}" = "Xyes" ; then
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cudart=yes],[have_cudart=no])
+PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
+if test "X${have_cudart}" = "Xyes" -a \
+    "X${have_cuda}" = "Xyes" ; then
     AC_DEFINE([MPL_HAVE_CUDA],[1],[Define if CUDA is available])
 fi
-AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda}" = "Xyes"])
 
 
 PAC_SET_HEADER_LIB_PATH([ze])
