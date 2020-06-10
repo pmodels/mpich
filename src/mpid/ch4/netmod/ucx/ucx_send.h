@@ -177,8 +177,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
-                          addr, request, 1, 0);
+    mpi_errno = MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                               addr, request, 1, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
 

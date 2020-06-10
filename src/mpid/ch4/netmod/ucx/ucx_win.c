@@ -214,7 +214,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_CREATE_HOOK);
 
-#ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -222,7 +221,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
     mpi_errno = win_allgather(win, win->size, win->disp_unit, &win->base);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_CREATE_HOOK);
@@ -238,7 +236,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_ALLOCATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_ALLOCATE_HOOK);
 
-#ifndef MPICH_UCX_AM_ONLY
     mpi_errno = win_init(win);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -246,7 +243,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
     mpi_errno = win_allgather(win, win->size, win->disp_unit, &win->base);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_ALLOCATE_HOOK);
@@ -281,7 +277,6 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
 
-#ifndef MPICH_UCX_AM_ONLY
     if (MPIDI_UCX_is_reachable_win(win)) {
         int i;
         for (i = 0; i < win->comm_ptr->local_size; i++) {
@@ -295,7 +290,6 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
         MPL_free(MPIDI_UCX_WIN(win).info_table);
         MPL_free(MPIDI_UCX_WIN(win).target_sync);
     }
-#endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     return mpi_errno;

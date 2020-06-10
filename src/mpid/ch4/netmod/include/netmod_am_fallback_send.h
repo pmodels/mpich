@@ -3,10 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef UCX_AM_SEND_H_INCLUDED
-#define UCX_AM_SEND_H_INCLUDED
-
-#include "ucx_impl.h"
+#ifndef NETMOD_AM_FALLBACK_SEND_H_INCLUDED
+#define NETMOD_AM_FALLBACK_SEND_H_INCLUDED
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
                                                MPI_Aint count,
@@ -77,4 +75,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     return MPIDIG_mpi_cancel_send(sreq);
 }
 
-#endif /* UCX_AM_SEND_H_INCLUDED */
+#endif /* NETMOD_AM_FALLBACK_SEND_H_INCLUDED */
