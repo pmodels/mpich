@@ -8,6 +8,29 @@
 #include "mpidu_bc.h"
 #include <ucp/api/ucp.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : CH4_UCX
+      description : A category for CH4 UCX netmod variables
+
+cvars:
+    - name        : MPIR_CVAR_CH4_UCX_MAX_VNIS
+      category    : CH4_UCX
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If set to positive, this CVAR specifies the maximum number of CH4 VNIs
+        that UCX netmod exposes. If set to 0 (the default) or bigger than
+        MPIR_CVAR_CH4_NUM_VCIS, the number of exposed VNIs is set to MPIR_CVAR_CH4_NUM_VCIS.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static void request_init_callback(void *request);
 
 static void request_init_callback(void *request)
@@ -18,16 +41,116 @@ static void request_init_callback(void *request)
 
 }
 
+static void init_num_vnis(void)
+{
+    int num_vnis = 1;
+    if (MPIR_CVAR_CH4_UCX_MAX_VNIS == 0 || MPIR_CVAR_CH4_UCX_MAX_VNIS > MPIDI_global.n_vcis) {
+        num_vnis = MPIDI_global.n_vcis;
+    } else {
+        num_vnis = MPIR_CVAR_CH4_UCX_MAX_VNIS;
+    }
+
+    /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
+    /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
+    MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
+
+    MPIDI_UCX_global.num_vnis = num_vnis;
+}
+
+static int init_worker(int vni)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    ucp_worker_params_t worker_params;
+    worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
+    worker_params.thread_mode = UCS_THREAD_MODE_SERIALIZED;
+
+    ucs_status_t ucx_status;
+    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
+                                   &MPIDI_UCX_global.ctx[vni].worker);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+    ucx_status = ucp_worker_get_address(MPIDI_UCX_global.ctx[vni].worker,
+                                        &MPIDI_UCX_global.ctx[vni].if_address,
+                                        &MPIDI_UCX_global.ctx[vni].addrname_len);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
+    MPIR_Assert(MPIDI_UCX_global.ctx[vni].addrname_len <= INT_MAX);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int initial_address_exchange(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    ucs_status_t ucx_status;
+
+    void *table;
+    int recv_bc_len;
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      MPIDI_UCX_global.ctx[0].if_address,
+                                      (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
+                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    ucp_ep_params_t ep_params;
+    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        int *node_roots = MPIR_Process.node_root_map;
+        int num_nodes = MPIR_Process.num_nodes;
+        int *rank_map;
+
+        for (int i = 0; i < num_nodes; i++) {
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+            ucx_status =
+                ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0]);
+            MPIDI_UCX_CHK_STATUS(ucx_status);
+        }
+        MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.ctx[0].if_address,
+                           (int) MPIDI_UCX_global.ctx[0].addrname_len, FALSE,
+                           (void **) &table, &rank_map, &recv_bc_len);
+
+        /* insert new addresses, skipping over node roots */
+        for (int i = 0; i < MPIR_Process.size; i++) {
+            if (rank_map[i] >= 0) {
+
+                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+                ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+                ucx_status = ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
+                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
+                MPIDI_UCX_CHK_STATUS(ucx_status);
+            }
+        }
+        MPIDU_bc_table_destroy();
+    } else {
+        for (int i = 0; i < size; i++) {
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
+            ucx_status =
+                ucp_ep_create(MPIDI_UCX_global.ctx[0].worker, &ep_params,
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
+            MPIDI_UCX_CHK_STATUS(ucx_status);
+        }
+        MPIDU_bc_table_destroy();
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
-    int i;
     ucp_params_t ucp_params;
-    ucp_worker_params_t worker_params;
-    ucp_ep_params_t ep_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
@@ -54,66 +177,16 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
-    worker_params.thread_mode = UCS_THREAD_MODE_SERIALIZED;
+    init_num_vnis();
 
-    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
-                                   &MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    ucx_status =
-        ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
-                               &MPIDI_UCX_global.addrname_len);
-    MPIDI_UCX_CHK_STATUS(ucx_status);
-    MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
-
-    void *table;
-    int recv_bc_len;
-    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
-                                      MPIDI_UCX_global.if_address,
-                                      (int) MPIDI_UCX_global.addrname_len, FALSE,
-                                      MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &recv_bc_len);
+    /* initialize worker for vni 0 */
+    mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-        int *node_roots = MPIR_Process.node_root_map;
-        int num_nodes = MPIR_Process.num_nodes;
-        int *rank_map;
+    MPIDI_UCX_global.worker = MPIDI_UCX_global.ctx[0].worker;
 
-        for (i = 0; i < num_nodes; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0]);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
-        }
-        MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.if_address,
-                           (int) MPIDI_UCX_global.addrname_len, FALSE, (void **) &table, &rank_map,
-                           &recv_bc_len);
-
-        /* insert new addresses, skipping over node roots */
-        for (i = 0; i < MPIR_Process.size; i++) {
-            if (rank_map[i] >= 0) {
-
-                ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-                ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
-                ucx_status = ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
-                MPIDI_UCX_CHK_STATUS(ucx_status);
-            }
-        }
-        MPIDU_bc_table_destroy();
-    } else {
-        for (i = 0; i < size; i++) {
-            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
-            ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
-            ucx_status =
-                ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
-            MPIDI_UCX_CHK_STATUS(ucx_status);
-        }
-        MPIDU_bc_table_destroy();
-    }
+    mpi_errno = initial_address_exchange(init_comm);
+    MPIR_ERR_CHECK(mpi_errno);
 
     *tag_bits = MPIR_TAG_BITS_DEFAULT;
 
@@ -121,14 +194,13 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    if (MPIDI_UCX_global.ctx[0].worker != NULL)
+        ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
 
     goto fn_exit;
-
 }
 
 int MPIDI_UCX_mpi_finalize_hook(void)
@@ -155,7 +227,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
      * deadlock! */
     completed = p;
     while (completed != 0) {
-        ucp_worker_progress(MPIDI_UCX_global.worker);
+        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
         completed = p;
         for (i = 0; i < p; i++) {
             if (ucp_request_is_completed(pending[i]) != 0)
@@ -170,8 +242,8 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     mpi_errno = MPIR_pmi_barrier();
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (MPIDI_UCX_global.worker != NULL)
-        ucp_worker_destroy(MPIDI_UCX_global.worker);
+    if (MPIDI_UCX_global.ctx[0].worker != NULL)
+        ucp_worker_destroy(MPIDI_UCX_global.ctx[0].worker);
 
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
