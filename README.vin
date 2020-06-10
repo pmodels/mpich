@@ -810,10 +810,7 @@ For some configuration options (in particular, MPIR_CVAR_OFI_ENABLE_TAGGED and
 MPIR_CVAR_OFI_ENABLE_RMA), a default build of MPICH using the CH4 OFI netmod
 will fail if these options are not enabled. This is so that, for performance,
 MPICH can assume that some commonly available features are enabled by the OFI
-provider. If using a provider that does not support FI_TAGGED, FI_RMA, or
-FI_DELIVERY_COMPLETE, a special configure flag must be provided to build in
-support for workarounds for such features. Compile with --enable-legacy-ofi
-to enable such workarounds.
+provider.
 
 A full list of capability set configuration variables can be found in the
 environment variables README.envvar.

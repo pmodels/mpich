@@ -15,33 +15,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         done
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_UCX],[test "X$build_ch4_netmod_ucx" = "Xyes"])
-
-    AC_ARG_WITH(ch4-netmod-ucx-args,
-    [  --with-ch4-netmod-ucx-args=arg1:arg2:arg3
-    CH4 UCX netmod arguments:
-            am-only          - Do not use UCX tagged or RMA communication.
-            ],
-            [ucx_netmod_args=$withval],
-            [ucx_netmod_args=])
-
-dnl Parse the device arguments
-    SAVE_IFS=$IFS
-    IFS=':'
-    args_array=$ucx_netmod_args
-    do_am_only=false
-    for arg in $args_array; do
-    case ${arg} in
-      am-only)
-              do_am_only=true
-              echo " ---> CH4::UCX Disable native tagged and RMA communication : $arg"
-    esac
-    done
-    IFS=$SAVE_IFS
-
-    if [test "$do_am_only" = "true"]; then
-       AC_MSG_NOTICE([Disabling native UCX tagged and RMA communication])
-       PAC_APPEND_FLAG([-DMPICH_UCX_AM_ONLY], [CPPFLAGS])
-    fi
 ])dnl
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[

@@ -12,15 +12,21 @@
 #ifndef SHM_IMPL_H_INCLUDED
 #define SHM_IMPL_H_INCLUDED
 
-#include "shm_am.h"
+#ifdef MPIDI_ENABLE_AM_ONLY
+#include "shm_am_fallback.h"
+#else
 #include "shm_coll.h"
-#include "shm_hooks.h"
-#include "shm_init.h"
-#include "shm_misc.h"
 #include "shm_p2p.h"
 #include "shm_rma.h"
+#include "shm_hooks.h"
+#endif
+
+#include "shm_am.h"
+#include "shm_init.h"
+#include "shm_misc.h"
 #include "shm_types.h"
 #include "shm_control.h"
+#include "shm_hooks_internal.h"
 
 /* Not-inlined shm functions */
 #include "shm_noinline.h"

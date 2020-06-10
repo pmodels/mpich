@@ -10,12 +10,17 @@
 #include "ofi_events.h"
 #include "ofi_proc.h"
 #include "ofi_unimpl.h"
+
+#ifdef MPIDI_ENABLE_AM_ONLY
+#include "netmod_am_fallback.h"
+#else
 #include "ofi_coll.h"
 #include "ofi_probe.h"
 #include "ofi_recv.h"
 #include "ofi_send.h"
 #include "ofi_win.h"
 #include "ofi_rma.h"
+#endif
 
 /* Not-inlined OFI netmod functions */
 #include "ofi_noinline.h"
