@@ -388,6 +388,7 @@ struct HYD_user_global {
     char *binding;
     char *mapping;
     char *membind;
+    int topo_debug;
 
     /* Demux engine */
     char *demux;
