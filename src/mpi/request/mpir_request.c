@@ -7,8 +7,51 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
+MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
+
+static void init_builtin_request(MPIR_Request * req, int handle, int kind)
+{
+    req->handle = handle;
+    req->kind = kind;
+    MPIR_cc_set(&req->cc, 0);
+    req->cc_ptr = &req->cc;
+    req->completion_notification = NULL;
+    req->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
+    req->comm = NULL;
+}
+
+void MPII_init_request(void)
+{
+    MPID_Thread_mutex_t *lock_ptr = NULL;
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
+#endif
+
+    /* *INDENT-OFF* */
+    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
+    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
+        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
+    }
+    /* *INDENT-ON* */
+
+    MPIR_Request *req;
+
+    /* lightweight request, one for each kind */
+    for (int i = 0; i < MPIR_REQUEST_KIND__LAST; i++) {
+        req = &MPIR_Request_builtins[i];
+        init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, i);
+    }
+    MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
+    MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
+
+    /* for recv from MPI_PROC_NULL */
+    req = MPIR_Request_builtins + HANDLE_INDEX(MPIR_REQUEST_NULL_RECV);
+    init_builtin_request(req, MPIR_REQUEST_NULL_RECV, MPIR_REQUEST_KIND__RECV);
+    MPIR_Status_set_procnull(&req->status);
+}
 
 /* Complete a request, saving the status data if necessary.
    If debugger information is being provided for pending (user-initiated)
