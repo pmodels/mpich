@@ -371,6 +371,11 @@ void MPII_Sendq_remember(MPIR_Request * req, int rank, int tag, int context_id)
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Sendq *p;
 
+    /* Builtin requests are always completed, simply return. */
+    if (HANDLE_IS_BUILTIN(req->handle)) {
+        return;
+    }
+
     MPID_THREAD_CS_ENTER(VCI, lock);
     MPID_THREAD_CS_ENTER(POBJ, lock);
     if (pool) {

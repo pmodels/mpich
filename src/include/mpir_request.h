@@ -71,6 +71,19 @@ typedef enum MPIR_Request_kind_t {
 #endif
 } MPIR_Request_kind_t;
 
+/* define built-in handles for pre-completed requests. These are internally used
+ * and are not exposed to the user.
+ */
+#define MPIR_REQUEST_COMPLETE      (MPI_Request)0x6c000000
+#define MPIR_REQUEST_COMPLETE_SEND (MPI_Request)0x6c000001
+#define MPIR_REQUEST_COMPLETE_RECV (MPI_Request)0x6c000002
+#define MPIR_REQUEST_COMPLETE_COLL (MPI_Request)0x6c000006
+#define MPIR_REQUEST_COMPLETE_RMA  (MPI_Request)0x6c000008
+
+#define MPIR_REQUEST_NULL_RECV     (MPI_Request)0x6c000010
+
+#define MPIR_REQUEST_BUILTIN_COUNT      0x11
+
 /* This currently defines a single structure type for all requests.
    Eventually, we may want a union type, as used in MPICH-1 */
 /* Typedefs for Fortran generalized requests */
@@ -224,6 +237,7 @@ struct MPIR_Request {
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
+extern MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 
@@ -232,6 +246,14 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
         int pool, blk, idx; \
         pool = ((a) & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT; \
         switch (HANDLE_GET_KIND(a)) { \
+        case HANDLE_KIND_BUILTIN: \
+            if (a == MPI_MESSAGE_NO_PROC) { \
+                ptr = NULL; \
+            } else { \
+                MPIR_Assert(HANDLE_INDEX(a) < MPIR_REQUEST_BUILTIN_COUNT); \
+                ptr = MPIR_Request_builtins + HANDLE_INDEX(a); \
+            } \
+            break; \
         case HANDLE_KIND_DIRECT: \
             MPIR_Assert(pool == 0); \
             ptr = MPIR_Request_direct + HANDLE_INDEX(a); \
@@ -247,19 +269,7 @@ extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
         } \
     } while (0)
 
-static inline void MPII_init_request(void)
-{
-    MPID_Thread_mutex_t *lock_ptr = NULL;
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-    lock_ptr = &MPIR_THREAD_VCI_HANDLE_MUTEX;
-#endif
-    /* *INDENT-OFF* */
-    MPIR_Request_mem[0] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct, MPIR_REQUEST_PREALLOC, lock_ptr };
-    for (int i = 1; i < MPIR_REQUEST_NUM_POOLS; i++) {
-        MPIR_Request_mem[i] = (MPIR_Object_alloc_t) { 0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), NULL, 0, lock_ptr };
-    }
-    /* *INDENT-ON* */
-}
+void MPII_init_request(void);
 
 /* To get the benefit of multiple request pool, device layer need register their per-vci lock
  * with each pool that they are going to use, typically a 1-1 vci-pool mapping.
@@ -380,24 +390,30 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 #define MPIR_Request_release_ref(req_p_, inuse_) \
     do { MPIR_Object_release_ref(req_p_, inuse_); } while (0)
 
+MPL_STATIC_INLINE_PREFIX MPIR_Request *get_builtin_req(int idx, MPIR_Request_kind_t kind)
+{
+    return MPIR_Request_builtins + (idx);
+}
+
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request_kind_t kind)
 {
-    MPIR_Request *req;
+    /* pre-completed request uses kind as idx */
+    return get_builtin_req(kind, kind);
+}
 
-#ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind);
-    MPIR_cc_set(&req->cc, 0);
-#else
-    req = MPIR_Process.lw_req;
-    MPIR_Request_add_ref(req);
-#endif
-
-    return req;
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
+{
+    return get_builtin_req(HANDLE_INDEX(MPIR_REQUEST_NULL_RECV), MPIR_REQUEST_KIND__RECV);
 }
 
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int inuse;
+
+    if (HANDLE_IS_BUILTIN(req->handle)) {
+        /* do not free builtin request objects */
+        return;
+    }
 
     MPIR_Request_release_ref(req, &inuse);
 

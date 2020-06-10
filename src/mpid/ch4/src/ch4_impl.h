@@ -355,20 +355,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                                                       \
     } while (0)
 
-#define MPIDI_Request_create_null_rreq(rreq_, mpi_errno_, FAIL_)        \
-    do {                                                                \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);                   \
-        (rreq_) = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0);         \
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);                    \
-        if ((rreq_) != NULL) {                                          \
-            MPIR_cc_set(&(rreq_)->cc, 0);                               \
-            MPIR_Status_set_procnull(&(rreq_)->status);                 \
-        }                                                               \
-        else {                                                          \
-            MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq"); \
-        }                                                               \
-    } while (0)
-
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_IS_BUILTIN(_datatype))
 
