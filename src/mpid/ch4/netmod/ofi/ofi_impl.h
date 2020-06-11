@@ -363,6 +363,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni(int vci)
     return vci;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
+{
+    int vni = MPIDI_OFI_vci_to_vni(vci);
+    MPIR_Assert(vni < MPIDI_OFI_global.num_vnis);
+    return vni;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrname)
 {
     int mpi_errno = MPI_SUCCESS;
