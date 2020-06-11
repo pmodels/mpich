@@ -259,10 +259,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
                               NULL /*status */ , *req, NULL /*flag */ ,
                               NULL /*message */ , NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_send_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -296,11 +294,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
     MPIDI_workq_csend_enqueue(CSEND, buf, count, datatype, rank, tag, comm,
                               context_offset, av, *req, errflag);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_send_coll_unsafe(buf, count, datatype, rank, tag, comm,
                                        context_offset, av, req, errflag);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -334,10 +330,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
                               NULL /*status */ , *req, NULL /*flag */ ,
                               NULL /*message */ , NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_isend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -371,11 +365,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
     MPIDI_workq_csend_enqueue(ICSEND, buf, count, datatype, rank, tag, comm,
                               context_offset, av, *req, errflag);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_isend_coll_unsafe(buf, count, datatype, rank, tag, comm,
                                         context_offset, av, req, errflag);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -409,10 +401,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
                               NULL /*status */ , *req, NULL /*flag */ ,
                               NULL /*message */ , NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_ssend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
@@ -446,10 +436,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
                               NULL /*status */ , *req, NULL /*flag */ ,
                               NULL /*message */ , NULL /*processed */);
 #else
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     *(req) = NULL;
     mpi_errno = MPIDI_issend_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 #endif
 
   fn_exit:
