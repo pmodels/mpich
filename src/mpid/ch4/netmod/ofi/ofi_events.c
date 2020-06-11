@@ -186,10 +186,13 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
+        /* NOTE: use target rank, reply to src */
+        int vni_src = MPIDI_OFI_get_vni_src(c, c->rank, rreq->status.MPI_TAG);
+        int vni_dst = MPIDI_OFI_get_vni_dst(c, c->rank, rreq->status.MPI_TAG);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_dst].tx, NULL /* buf */ ,
                                             0 /* len */ ,
                                             MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r, 0, 0),
+                                            MPIDI_OFI_comm_to_phys(c, r, vni_dst, vni_src),
                                             ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
