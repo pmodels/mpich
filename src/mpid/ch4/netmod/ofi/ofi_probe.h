@@ -115,8 +115,11 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     }
 
     /* Set flags for mprobe peek, when ready */
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
 
@@ -143,8 +146,10 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_iprobe(source, tag, comm, context_offset, flag, status);
     } else {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno =
             MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
