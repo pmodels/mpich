@@ -166,6 +166,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_ucp_request_t *ucp_request;
     MPIR_Datatype *dt_ptr;
 
+    int vci = MPIDI_Request_get_vci(message);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {
         ucp_request =
@@ -199,6 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     }
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -214,7 +217,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPIDI_av_entry_t * addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
-    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+    int mpi_errno;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno =
+        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
@@ -225,7 +233,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+    int mpi_errno;
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    mpi_errno =
+        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
