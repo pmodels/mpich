@@ -82,6 +82,11 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
  * At matching time, we cancel one of them (but not freed).
  * At completion time, we complete and free both.
  */
+/* Thread-safety: MPIDI_anysrc_try_cancel_partner need be called inside the correct
+ * critical section, as both MPIDI_NM_mpi_cancel_recv and MPIDI_SHM_mpi_cancel_recv
+ * are unsafe. This assumes netmod, shmmod and am share the same vci. If that changes,
+ * here we need be called outside lock and shift the lock responsibility into netmod,
+ * shmmod, and am */
 static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
 {
     int mpi_errno = MPI_SUCCESS;

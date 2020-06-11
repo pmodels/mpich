@@ -355,13 +355,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
 
+    int vni = MPIDI_Request_get_vci(rreq);
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno = MPIDIG_mpi_cancel_recv(rreq);
         goto fn_exit;
     }
 
     /* Not using the OFI_CALL macro because there are error cases here that we want to catch */
-    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
+    ret = fi_cancel((fid_t) MPIDI_OFI_global.ctx[vni].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
     if (ret == -FI_ENOENT) {
         /* The context was not found inside libfabric which means it was matched previously and has
          * already been handled. Note that it is impossible to tell the difference in this case
@@ -380,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
             /* The cancel is local and must complete, so only poll this device (not global progress) */
-            if ((mpi_errno = MPIDI_OFI_progress(0, 0)) != MPI_SUCCESS)
+            if ((mpi_errno = MPIDI_OFI_progress(vni, 0)) != MPI_SUCCESS)
                 goto fn_exit;
         }
 
