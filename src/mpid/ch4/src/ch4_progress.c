@@ -41,18 +41,23 @@ static int progress_test(MPID_Progress_state * state)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    if (!progress_made(state)) {
-        if (state->flag & MPIDI_PROGRESS_NM) {
-            mpi_errno = MPIDI_NM_progress(0, 0);
+    for (int i = 0; i < MPIDI_global.n_vcis; i++) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(i).lock);
+        if (!progress_made(state)) {
+            if (state->flag & MPIDI_PROGRESS_NM) {
+                mpi_errno = MPIDI_NM_progress(i, 0);
+            }
         }
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-            mpi_errno = MPIDI_SHM_progress(0, 0);
-        }
-#endif
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(i).lock);
     }
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        mpi_errno = MPIDI_SHM_progress(0, 0);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
