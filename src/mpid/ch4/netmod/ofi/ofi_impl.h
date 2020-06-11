@@ -38,6 +38,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 }
 
 int MPIDI_OFI_progress(int vci, int blocking);
+
+/* vni mapping */
+/* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
+ * we may get away with bit mask */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni_src(MPIR_Comm * comm_ptr, int rank, int tag)
+{
+    return MPIDI_vci_get_src(comm_ptr, rank, tag) % MPIDI_OFI_global.num_vnis;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni_dst(MPIR_Comm * comm_ptr, int rank, int tag)
+{
+    return MPIDI_vci_get_dst(comm_ptr, rank, tag) % MPIDI_OFI_global.num_vnis;
+}
+
 /*
  * Helper routines and macros for request completion
  */
