@@ -36,21 +36,22 @@ static void sum_fn(void *invec, void *inoutvec, int *len, MPI_Datatype * datatyp
     }
 }
 
+int *buf = NULL;
+int *recvbuf = NULL;
+int *sendcounts = NULL;
+int *recvcounts = NULL;
+int *sdispls = NULL;
+int *rdispls = NULL;
+int *sendtypes = NULL;
+int *recvtypes = NULL;
+signed char *buf_alias = NULL;
+MPI_Request req;
+
+void test_icoll_with_root(int rank, int size, int root);
 
 int main(int argc, char **argv)
 {
-    int i, j;
     int rank, size;
-    int *buf = NULL;
-    int *recvbuf = NULL;
-    int *sendcounts = NULL;
-    int *recvcounts = NULL;
-    int *sdispls = NULL;
-    int *rdispls = NULL;
-    int *sendtypes = NULL;
-    int *recvtypes = NULL;
-    signed char *buf_alias = NULL;
-    MPI_Request req;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -64,16 +65,34 @@ int main(int argc, char **argv)
     rdispls = malloc(size * sizeof(int));
     sendtypes = malloc(size * sizeof(MPI_Datatype));
     recvtypes = malloc(size * sizeof(MPI_Datatype));
+    test_icoll_with_root(rank, size, 0);
+    test_icoll_with_root(rank, size, size - 1);
+
+    MTest_Finalize(0);
+    free(buf);
+    free(recvbuf);
+    free(sendcounts);
+    free(recvcounts);
+    free(rdispls);
+    free(sdispls);
+    free(recvtypes);
+    free(sendtypes);
+    return 0;
+}
+
+void test_icoll_with_root(int rank, int size, int root)
+{
+    int i, j;
 
     /* MPI_Ibcast */
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0) {
+        if (rank == root) {
             buf[i] = i;
         } else {
             buf[i] = 0xdeadbeef;
         }
     }
-    MPI_Ibcast(buf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Ibcast(buf, COUNT, MPI_INT, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     for (i = 0; i < COUNT; ++i) {
@@ -86,7 +105,7 @@ int main(int argc, char **argv)
     buf_alias = (signed char *) buf;
     my_assert(COUNT * size * sizeof(int) > PRIME);      /* sanity */
     for (i = 0; i < PRIME; ++i) {
-        if (rank == 0)
+        if (rank == root)
             buf_alias[i] = i;
         else
             buf_alias[i] = 0xdb;
@@ -94,7 +113,7 @@ int main(int argc, char **argv)
     for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
         buf_alias[i] = 0xbf;
     }
-    MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, 0, MPI_COMM_WORLD, &req);
+    MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < PRIME; ++i) {
         if (buf_alias[i] != i)
@@ -111,9 +130,9 @@ int main(int argc, char **argv)
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD, &req);
+    MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
-    if (rank == 0) {
+    if (rank == root) {
         for (i = 0; i < COUNT; ++i) {
             if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
                 printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
@@ -131,10 +150,10 @@ int main(int argc, char **argv)
             buf[i] = rank + i;
             recvbuf[i] = 0xdeadbeef;
         }
-        MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, 0, MPI_COMM_WORLD, &req);
+        MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, root, MPI_COMM_WORLD, &req);
         MPI_Op_free(&op);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
-        if (rank == 0) {
+        if (rank == root) {
             for (i = 0; i < COUNT; ++i) {
                 if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
                     printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
@@ -184,9 +203,9 @@ int main(int argc, char **argv)
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
-    if (rank == 0) {
+    if (rank == root) {
         for (i = 0; i < size; ++i) {
             for (j = 0; j < COUNT; ++j) {
                 my_assert(recvbuf[i * COUNT + j] == i + j);
@@ -207,11 +226,11 @@ int main(int argc, char **argv)
             buf[i] = rank + i;
             recvbuf[i] = 0xdeadbeef;
         }
-        MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, 0, MPI_COMM_WORLD, &req);
+        MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, root, MPI_COMM_WORLD, &req);
         MPI_Type_free(&type);   /* should cause implementations that don't refcount
                                  * correctly to blow up or hang in the wait */
         MPI_Wait(&req, MPI_STATUS_IGNORE);
-        if (rank == 0) {
+        if (rank == root) {
             for (i = 0; i < size; ++i) {
                 for (j = 0; j < COUNT; ++j) {
                     my_assert(recvbuf[i * COUNT + j] == i + j);
@@ -227,19 +246,19 @@ int main(int argc, char **argv)
     /* MPI_Iscatter */
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
-            if (rank == 0)
+            if (rank == root)
                 buf[i * COUNT + j] = i + j;
             else
                 buf[i * COUNT + j] = 0xdeadbeef;
             recvbuf[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, root, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == rank + j);
     }
-    if (rank != 0) {
+    if (rank != root) {
         for (i = 0; i < size * COUNT; ++i) {
             /* check we didn't corrupt the sendbuf somehow */
             my_assert(buf[i] == 0xdeadbeef);
@@ -252,20 +271,20 @@ int main(int argc, char **argv)
         sendcounts[i] = COUNT;
         sdispls[i] = i * COUNT;
         for (j = 0; j < COUNT; ++j) {
-            if (rank == 0)
+            if (rank == root)
                 buf[i * COUNT + j] = i + j;
             else
                 buf[i * COUNT + j] = 0xdeadbeef;
             recvbuf[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MPI_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD,
+    MPI_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, root, MPI_COMM_WORLD,
                   &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == rank + j);
     }
-    if (rank != 0) {
+    if (rank != root) {
         for (i = 0; i < size * COUNT; ++i) {
             /* check we didn't corrupt the sendbuf somehow */
             my_assert(buf[i] == 0xdeadbeef);
@@ -329,10 +348,10 @@ int main(int argc, char **argv)
         recvcounts[i] = COUNT;
         rdispls[i] = i * COUNT;
     }
-    MPI_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, 0, MPI_COMM_WORLD,
+    MPI_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, root, MPI_COMM_WORLD,
                  &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
-    if (rank == 0) {
+    if (rank == root) {
         for (i = 0; i < size; ++i) {
             for (j = 0; j < COUNT; ++j) {
                 my_assert(recvbuf[i * COUNT + j] == i + j);
@@ -439,15 +458,4 @@ int main(int argc, char **argv)
             my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
         }
     }
-
-    MTest_Finalize(0);
-    free(buf);
-    free(recvbuf);
-    free(sendcounts);
-    free(recvcounts);
-    free(rdispls);
-    free(sdispls);
-    free(recvtypes);
-    free(sendtypes);
-    return 0;
 }
