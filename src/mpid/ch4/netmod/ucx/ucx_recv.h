@@ -166,7 +166,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_ucp_request_t *ucp_request;
     MPIR_Datatype *dt_ptr;
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     int vci = MPIDI_Request_get_vci(message);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {

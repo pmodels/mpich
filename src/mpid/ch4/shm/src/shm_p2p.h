@@ -174,8 +174,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
 
-    int vci = MPIDI_Request_get_vci(message);
-
     mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, message);
     MPIR_ERR_CHECK(mpi_errno);
 

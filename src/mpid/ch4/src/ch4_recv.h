@@ -23,7 +23,9 @@ static inline int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     /* 1. hold shm vci lock to prevent shm progress while we establish netmod request.
      * 2. MPIDI_NM_mpi_irecv need use recursive locking in case it share the shm vci lock
      */
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     int shm_vci = MPIDI_Request_get_vci(*request);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(shm_vci).lock);
     need_unlock = 1;
     if (!MPIR_Request_is_complete(*request) && !MPIDIG_REQUEST_IN_PROGRESS(*request)) {
@@ -298,7 +300,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CANCEL_RECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CANCEL_RECV_SAFE);
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     int vci = MPIDI_Request_get_vci(rreq);
+#endif
     /* MPIDI_NM_mpi_cancel_recv is used both externally and internally. For internal
      * usage it's often used inside a critical section (e.g. progress and anysource
      * receive). Therefore, we allow recursive lock usage here.
