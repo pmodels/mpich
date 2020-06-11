@@ -245,7 +245,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
-        /* FIXME: check MPIDI_OFI_EVENT_SEND_HUGE use the correct vni */
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */
             ctrl.rma_key = MPIDI_OFI_mr_key_alloc();
@@ -289,6 +288,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;
+        ctrl.vni_src = vni_src;
+        ctrl.vni_dst = vni_dst;
 
         /* Send information about the memory region here to get the lmt going. */
         mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
