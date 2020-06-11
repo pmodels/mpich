@@ -240,7 +240,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int vci = MPIDI_Request_get_vci(message);
+#endif
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
@@ -263,7 +266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMRECV);
     return mpi_errno;
   fn_fail:

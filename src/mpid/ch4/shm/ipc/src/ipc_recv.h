@@ -64,9 +64,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_imrecv(void *buf, MPI_Aint count, MPI
     bool recvd_flag = false;
 
     /* Try IPC specific matched receive */
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int vci = MPIDI_Request_get_vci(message);
+#endif
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     mpi_errno = MPIDI_IPCI_try_matched_recv(buf, count, datatype, message, &recvd_flag);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* If not received, then fallback to POSIX matched receive */
