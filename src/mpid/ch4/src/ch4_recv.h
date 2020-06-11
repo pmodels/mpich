@@ -317,12 +317,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_cancel_recv_safe(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CANCEL_RECV_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CANCEL_RECV_SAFE);
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-
+    int vci = MPIDI_Request_get_vci(rreq);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     mpi_errno = MPIDI_cancel_recv_unsafe(rreq);
-
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
