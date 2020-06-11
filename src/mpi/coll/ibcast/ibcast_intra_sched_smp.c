@@ -49,18 +49,19 @@ int MPIR_Ibcast_intra_sched_smp(void *buffer, int count, MPI_Datatype datatype, 
     if (comm_ptr->node_comm != NULL && MPIR_Get_intranode_rank(comm_ptr, root) > 0) {   /* is not the node root (0) *//* and is on our node (!-1) */
         if (root == comm_ptr->rank) {
             mpi_errno = MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+            MPIR_ERR_CHECK(mpi_errno);
         } else if (0 == comm_ptr->node_comm->rank) {
             mpi_errno =
                 MPIR_Sched_recv_status(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
                                        &ibcast_state->status, s);
-        }
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
+            MPIR_ERR_CHECK(mpi_errno);
 #ifdef HAVE_ERROR_CHECKING
-        mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
-        MPIR_ERR_CHECK(mpi_errno);
+            MPIR_SCHED_BARRIER(s);
+            mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
+            MPIR_ERR_CHECK(mpi_errno);
 #endif
+        }
         MPIR_SCHED_BARRIER(s);
     }
 
