@@ -159,7 +159,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_cc_incr(sreq->cc_ptr, &c);
         ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        /* FIXME: check that MPIDI_OFI_EVENT_SSEND_ACK send back to the correct vni */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni_src].rx, /* endpoint    */
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
