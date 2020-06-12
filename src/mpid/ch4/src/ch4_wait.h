@@ -8,6 +8,24 @@
 
 #include "ch4_impl.h"
 
+/* a local wrapper that accounts for persistent request */
+MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
+{
+    int vci;
+    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
+        req->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {
+        if (req->u.persist.real_request) {
+            vci = MPIDI_Request_get_vci(req->u.persist.real_request);
+        } else {
+            /* TODO: skip it in MPIDI_set_progress_vci_n */
+            vci = 0;
+        }
+    } else {
+        vci = MPIDI_Request_get_vci(req);
+    }
+    return vci;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
                                                      MPID_Progress_state * state)
 {
@@ -16,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
     state->progress_start = state->progress_count;
 
     state->vci_count = 1;
-    state->vci[0] = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+    state->vci[0] = get_vci_wrapper(req);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
@@ -32,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** re
             continue;
         }
 
-        int vci = (reqs[i]->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+        int vci = get_vci_wrapper(reqs[i]);
         int found = 0;
         for (int j = 0; j < idx; j++) {
             if (state->vci[j] == vci) {
