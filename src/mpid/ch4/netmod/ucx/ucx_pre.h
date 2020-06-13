@@ -64,7 +64,7 @@ typedef struct {
 } MPIDI_UCX_win_t;
 
 typedef struct {
-    ucp_ep_h dest;
+    ucp_ep_h dest[MPIDI_CH4_MAX_VCIS][MPIDI_CH4_MAX_VCIS];
 } MPIDI_UCX_addr_t;
 
 typedef struct {

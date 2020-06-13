@@ -84,7 +84,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest);
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPIDU_bc_allgather(init_comm, MPIDI_UCX_global.if_address,
@@ -98,7 +98,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                 ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
                 ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
                 ucx_status = ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                                           &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
                 MPIDI_UCX_CHK_STATUS(ucx_status);
             }
         }
@@ -109,7 +109,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             ep_params.address = (ucp_address_t *) ((char *) table + i * recv_bc_len);
             ucx_status =
                 ucp_ep_create(MPIDI_UCX_global.worker, &ep_params,
-                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+                              &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
             MPIDI_UCX_CHK_STATUS(ucx_status);
         }
         MPIDU_bc_table_destroy();
@@ -143,7 +143,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size, MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
-        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest[0][0]);
         MPIDI_UCX_CHK_REQUEST(ucp_request);
         if (ucp_request != UCS_OK) {
             pending[p] = ucp_request;
