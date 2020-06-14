@@ -30,10 +30,10 @@ typedef struct {
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
-int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr);
-int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
-                                MPL_gpu_device_handle_t h_device);
-int MPL_gpu_ipc_close_mem_handle(void *ptr, MPL_gpu_ipc_mem_handle_t h_mem);
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
+                           void **ptr);
+int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle);
 
 int MPL_gpu_malloc_host(void **ptr, size_t size);
 int MPL_gpu_free_host(void *ptr);

@@ -102,10 +102,11 @@ int MPL_gpu_finalize()
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     ze_result_t ret;
-    ret = zeDriverGetMemIpcHandle(global_ze_driver_handle, ptr, h_mem);
+    ipc_handle->offset = 0;
+    ret = zeDriverGetMemIpcHandle(global_ze_driver_handle, ptr, &ipc_handle->handle);
     ZE_ERR_CHECK(ret);
 
   fn_exit:
@@ -114,13 +115,13 @@ int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
-                                MPL_gpu_device_handle_t h_device)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
+                           void **ptr)
 {
     ze_result_t ret;
-    ze_device_handle_t device;
+    /* TODO: retrive dev_id for device handle */
     ret =
-        zeDriverOpenMemIpcHandle(global_ze_driver_handle, h_device, h_mem,
+        zeDriverOpenMemIpcHandle(global_ze_driver_handle, dev_handle, ipc_handle.handle,
                                  ZE_IPC_MEMORY_FLAG_NONE, ptr);
     ZE_ERR_CHECK(ret);
 
@@ -130,10 +131,12 @@ int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_close_mem_handle(void *ptr, MPL_gpu_ipc_mem_handle_t h_mem)
+int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle)
 {
     ze_result_t ret;
-    ret = zeDriverCloseMemIpcHandle(global_ze_driver_handle, ptr);
+    ret =
+        zeDriverCloseMemIpcHandle(global_ze_driver_handle,
+                                  (void *) ((char *) ptr - ipc_handle.offset));
     ZE_ERR_CHECK(ret);
 
   fn_exit:
