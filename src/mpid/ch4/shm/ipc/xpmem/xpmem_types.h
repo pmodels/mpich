@@ -12,28 +12,14 @@
 #define MPIDI_XPMEMI_PERMIT_VALUE ((void *)0600)
 
 typedef struct MPIDI_XPMEMI_seg {
-    /* AVL-tree internal components start */
-    struct MPIDI_XPMEMI_seg *parent;
-    struct MPIDI_XPMEMI_seg *left;
-    struct MPIDI_XPMEMI_seg *right;
-    uint64_t height;            /* height of this subtree */
-    /* AVL-tree internal components end */
-
-    uint64_t low;               /* page aligned low address of remote seg */
-    uint64_t high;              /* page aligned high address of remote seg */
-    void *vaddr;                /* virtual address attached in current process */
+    uintptr_t remote_align_addr;
+    uintptr_t att_vaddr;
 } MPIDI_XPMEMI_seg_t;
-
-typedef struct MPIDI_XPMEMI_segtree {
-    MPIDI_XPMEMI_seg_t *root;
-    int tree_size;
-    MPID_Thread_mutex_t lock;
-} MPIDI_XPMEMI_segtree_t;
 
 typedef struct {
     xpmem_segid_t remote_segid;
     xpmem_apid_t apid;
-    MPIDI_XPMEMI_segtree_t segcache_ubuf;       /* AVL tree based segment cache for user buffer */
+    MPL_gavl_tree_t segcache_ubuf;      /* AVL tree based segment cache for user buffer */
 } MPIDI_XPMEMI_segmap_t;
 
 typedef struct {
