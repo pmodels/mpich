@@ -11,10 +11,6 @@ typedef struct {
     uint64_t src_offset;
 } MPIDI_XPMEM_mem_handle_t;
 
-typedef struct {
-    void *seg_ptr;
-} MPIDI_XPMEM_mem_seg_t;
-
 /* request extension definition */
 typedef struct {
     int dummy;
