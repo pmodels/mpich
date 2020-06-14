@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Test of broadcast with various roots and datatypes";
@@ -82,10 +83,7 @@ int main(int argc, char *argv[])
                 }
 
                 buf = malloc(obj.DTP_bufsize);
-                if (buf == NULL) {
-                    errs++;
-                    break;
-                }
+                assert(buf);
 
                 if (rank == root) {
                     err = DTP_obj_buf_init(obj, buf, 0, 1, count);

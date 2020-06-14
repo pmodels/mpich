@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Test of sending to self (with a preposted receive)";
@@ -73,16 +74,10 @@ int main(int argc, char *argv[])
         }
 
         MTestAlloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf);
-        if (sendbuf_h == NULL || sendbuf == NULL) {
-            errs++;
-            break;
-        }
+        assert(sendbuf && sendbuf_h);
 
         MTestAlloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf);
-        if (recvbuf_h == NULL || recvbuf == NULL) {
-            errs++;
-            break;
-        }
+        assert(recvbuf && recvbuf_h);
 
         err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
         if (err != DTP_SUCCESS) {

@@ -10,6 +10,7 @@
 #include <limits.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Get with Fence";
@@ -77,8 +78,7 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
 #endif
     } else if (rank == orig) {
         MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf);
-        if (origbuf == NULL || origbuf_h == NULL)
-            return ++errs;
+        assert(origbuf && origbuf_h);
 
 #if defined(USE_GET)
         err = DTP_obj_buf_init(orig_obj, origbuf_h, -1, -1, count);
@@ -212,9 +212,7 @@ int main(int argc, char *argv[])
     }
 
     MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf);
-    if (targetbuf == NULL || targetbuf_h == NULL) {
-        return ++errs;
-    }
+    assert(targetbuf && targetbuf_h);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
