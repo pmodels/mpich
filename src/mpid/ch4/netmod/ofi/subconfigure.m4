@@ -77,6 +77,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_perf="no"
         enable_rstream="no"
         enable_mrail="no"
+        enable_efa="no"
+        enable_netdir="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -94,6 +96,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_perf="yes"
         enable_rstream="yes"
         enable_mrail="yes"
+        enable_efa="yes"
+        enable_netdir="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -123,6 +127,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 enable_verbs="yes"
                 runtime_capabilities="yes"
                 ;;
+            "efa")
+                enable_efa="yes"
+                runtime_capabilities="yes"
+                ;;
             "usnic")
                 enable_usnic="yes"
                 runtime_capabilities="yes"
@@ -149,6 +157,22 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "mlx")
                 enable_mlx="yes"
+                runtime_capabilities="yes"
+                ;;
+            "perf")
+                enable_perf="yes"
+                runtime_capabilities="yes"
+                ;;
+            "rstream")
+                enable_rstream="yes"
+                runtime_capabilities="yes"
+                ;;
+            "mrail")
+                enable_mrail="yes"
+                runtime_capabilities="yes"
+                ;;
+            "netdir")
+                enable_netdir="yes"
                 runtime_capabilities="yes"
                 ;;
             *)
@@ -212,6 +236,26 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_mlx="yes"
                 ;;
+            "perf")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_perf="yes"
+                ;;
+            "rstream")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_rstream="yes"
+                ;;
+            "mrail")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_mrail="yes"
+                ;;
+            "efa")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_efa="yes"
+                ;;
+            "netdir")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_netdir="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -239,6 +283,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-perf=${enable_perf}"
             prov_config+=" --enable-rstream=${enable_rstream}"
             prov_config+=" --enable-mrail=${enable_mrail}"
+            prov_config+=" --enable-efa=${enable_efa}"
+            prov_config+=" --enable-netdir=${enable_netdir}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
