@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
@@ -88,8 +89,7 @@ int main(int argc, char **argv)
     }
 
     MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf);
-    if (targetbuf == NULL || targetbuf_h == NULL)
-        errs++;
+    assert(targetbuf && targetbuf_h);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL) {
@@ -126,10 +126,7 @@ int main(int argc, char **argv)
             }
 
             MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf);
-            if (origbuf == NULL || origbuf_h == NULL) {
-                errs++;
-                break;
-            }
+            assert(origbuf && origbuf_h);
 
             err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
             if (err != DTP_SUCCESS) {

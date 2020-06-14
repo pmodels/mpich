@@ -9,6 +9,7 @@
 #include <string.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Accumulate/Replace with Fence";
@@ -67,8 +68,7 @@ int main(int argc, char *argv[])
     }
 
     MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf);
-    if (targetbuf == NULL || targetbuf_h == NULL)
-        errs++;
+    assert(targetbuf && targetbuf_h);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -123,10 +123,7 @@ int main(int argc, char *argv[])
 
             if (rank == orig) {
                 MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf);
-                if (origbuf == NULL || origbuf_h == NULL) {
-                    errs++;
-                    break;
-                }
+                assert(origbuf && origbuf_h);
 
                 err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {

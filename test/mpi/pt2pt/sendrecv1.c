@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Send-Recv";
@@ -92,10 +93,7 @@ int main(int argc, char *argv[])
 
             if (rank == source) {
                 MTestAlloc(send_obj.DTP_bufsize, sendmem, &sendbuf_h, &sendbuf);
-                if (sendbuf == NULL || sendbuf_h == NULL) {
-                    errs++;
-                    break;
-                }
+                assert(sendbuf && sendbuf_h);
 
                 err = DTP_obj_buf_init(send_obj, sendbuf_h, 0, 1, count[0]);
                 if (err != DTP_SUCCESS) {
@@ -119,10 +117,7 @@ int main(int argc, char *argv[])
                 MTestFree(sendmem, sendbuf_h, sendbuf);
             } else if (rank == dest) {
                 MTestAlloc(recv_obj.DTP_bufsize, recvmem, &recvbuf_h, &recvbuf);
-                if (recvbuf == NULL || recvbuf_h == NULL) {
-                    errs++;
-                    break;
-                }
+                assert(recvbuf && recvbuf_h);
 
                 err = DTP_obj_buf_init(recv_obj, recvbuf_h, -1, -1, count[0]);
                 if (err != DTP_SUCCESS) {
