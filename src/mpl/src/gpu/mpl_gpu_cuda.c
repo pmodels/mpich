@@ -45,7 +45,7 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
+int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     cudaError_t ret;
     CUresult curet;
@@ -54,10 +54,10 @@ int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
     curet = cuMemGetAddressRange(&pbase, NULL, (CUdeviceptr) ptr);
     CU_ERR_CHECK(curet);
 
-    ret = cudaIpcGetMemHandle(&h_mem->handle, ptr);
+    ret = cudaIpcGetMemHandle(&ipc_handle->handle, ptr);
     CUDA_ERR_CHECK(ret);
 
-    h_mem->offset = (uintptr_t) ptr - (uintptr_t) pbase;
+    ipc_handle->offset = (uintptr_t) ptr - (uintptr_t) pbase;
 
   fn_exit:
     return MPL_SUCCESS;
@@ -65,19 +65,19 @@ int MPL_gpu_ipc_get_mem_handle(MPL_gpu_ipc_mem_handle_t * h_mem, void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
-                                MPL_gpu_device_handle_t h_device)
+int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
+                           void **ptr)
 {
     cudaError_t ret;
     int prev_devid;
     void *pbase;
 
     cudaGetDevice(&prev_devid);
-    cudaSetDevice(h_device);
-    ret = cudaIpcOpenMemHandle(&pbase, h_mem.handle, cudaIpcMemLazyEnablePeerAccess);
+    cudaSetDevice(dev_handle);
+    ret = cudaIpcOpenMemHandle(&pbase, ipc_handle.handle, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
 
-    *ptr = (void *) ((char *) pbase + h_mem.offset);
+    *ptr = (void *) ((char *) pbase + ipc_handle.offset);
 
   fn_exit:
     cudaSetDevice(prev_devid);
@@ -86,10 +86,10 @@ int MPL_gpu_ipc_open_mem_handle(void **ptr, MPL_gpu_ipc_mem_handle_t h_mem,
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_close_mem_handle(void *ptr, MPL_gpu_ipc_mem_handle_t h_mem)
+int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle)
 {
     cudaError_t ret;
-    ret = cudaIpcCloseMemHandle((void *) ((char *) ptr - h_mem.offset));
+    ret = cudaIpcCloseMemHandle((void *) ((char *) ptr - ipc_handle.offset));
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
