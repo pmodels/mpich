@@ -72,6 +72,7 @@ while read -r line ; do
         procs=`echo $line | cut -f5 -d':'`
         mintestsize=`echo $line | cut -f6 -d':'`
         maxtestsize=`echo $line | cut -f7 -d':'`
+        gacc=`echo $line | cut -f8 -d':'`
         other_args=""
     else
         # the line is a comment

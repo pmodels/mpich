@@ -5,7 +5,7 @@
 # This file is used by autogen.sh to generate multiple binary files for datatype testing.
 # Every line must have the format:
 #
-# <test pathname>:<ssv args>:<ssv counts>:<passthru args>:<procs#>:<mintestsize>:<maxtestsize>:<maxbufsize>
+# <test pathname>:<ssv args>:<ssv counts>:<passthru args>:<procs#>:<mintestsize>:<maxtestsize>:<maxbufsize>:<gacc>
 #
 # <passthru args> are space separated arguments that directly passed to testlist files.
 # It can be used to add attributes such as "timeLimit=<seconds>" and "mem=<GB>".
@@ -16,42 +16,42 @@
 #
 # NOTE: the second (ssv args), fourth (timeLimit) and seventh (maxtestsize) fields are optional.
 
-attr/fkeyvaltype::1::1:1024:
-coll/bcast::1 512::4:16:1024
-coll/bcast::262144:timeLimit=420 mem=1.2:4:16:
-coll/bcast_comm_world_only::1 512::10:16:1024
-coll/bcast_comm_world_only::262144:timeLimit=360 mem=1.9:10:16:
-cxx/attr/fkeyvaltypex::1::1:1024:
-cxx/datatype/packsizex::1::1:1024:
-pt2pt/pingping::1 512 262144 17 1018 65530::2:8:32
-pt2pt/pingping_barrier::1::2:8:32
-pt2pt/sendrecv1::1 512 262144 17 1018 65530::2:32:1024
-pt2pt/sendself::1 512 262144 17 1018 65530::1:32:1024
-rma/accfence1::1 512 17 1018::4:16:1024
-rma/accfence1::65530 262144:mem=1.2:4:16:
-rma/accpscw1::1 512 17 1018::4:16:1024
-rma/accpscw1::65530 262144:mem=1.7:4:16:
-rma/epochtest::1 512 17 1018::4:16:1024
-rma/epochtest::65530 262144:timeLimit=300 mem=5:4:16:
-rma/getfence1::1 512 17 1018::2:16:1024
-rma/getfence1::65530 262144:mem=2:2:16:
-rma/getfence1::16000000:timeLimit=1800 mem=3:2:4:
-rma/lock_contention_dt::1 512 17 1018::4:16:1024
-rma/lock_contention_dt::65530 262144:timeLimit=600 mem=2.1:4:16:
-rma/lock_dt::1 512 262144 17 1018 65530::2:16:1024
-rma/lock_dt_flush::1 512 262144 17 1018 65530::2:16:1024
-rma/lock_dt_flushlocal::1 512 262144 17 1018 65530::2:16:1024
-rma/lockall_dt::1 512 17 1018::4:16:1024
-rma/lockall_dt::65530 262144:timeLimit=600 mem=1.1:4:16:
-rma/lockall_dt_flush::1 512 262144 17 1018::4:16:1024
-rma/lockall_dt_flush::65530:timeLimit=600:4:16:
-rma/lockall_dt_flushall::1 512 262144 17 1018::4:16:1024
-rma/lockall_dt_flushall::65530:timeLimit=600:4:16:
-rma/lockall_dt_flushlocal::1 512 17 1018::4:16:1024
-rma/lockall_dt_flushlocal::65530 262144:timeLimit=600 mem=5:4:16:
-rma/lockall_dt_flushlocalall::1 512 17 1018::4:16:1024
-rma/lockall_dt_flushlocalall::65530 262144:timeLimit=600 mem=3:4:16:
-rma/putfence1::1 512 262144 17 1018 65530::2:16:1024
-rma/putfence1::16000000:timeLimit=1800 mem=2:2:4:
-rma/putpscw1::1 512 17 1018::4:16:1024
-rma/putpscw1::65530 262144:mem=4:4:16:
+attr/fkeyvaltype::1::1:1024::0
+coll/bcast::1 512::4:16:1024:0
+coll/bcast::262144:timeLimit=420 mem=1.2:4:16::0
+coll/bcast_comm_world_only::1 512::10:16:1024:0
+coll/bcast_comm_world_only::262144:timeLimit=360 mem=1.9:10:16::0
+cxx/attr/fkeyvaltypex::1::1:1024::0
+cxx/datatype/packsizex::1::1:1024::0
+pt2pt/pingping::1 512 262144 17 1018 65530::2:8:32:0
+pt2pt/pingping_barrier::1::2:8:32:0
+pt2pt/sendrecv1::1 512 262144 17 1018 65530::2:32:1024:0
+pt2pt/sendself::1 512 262144 17 1018 65530::1:32:1024:0
+rma/accfence1::1 512 17 1018::4:16:1024:0
+rma/accfence1::65530 262144:mem=1.2:4:16::0
+rma/accpscw1::1 512 17 1018::4:16:1024:0
+rma/accpscw1::65530 262144:mem=1.7:4:16::0
+rma/epochtest::1 512 17 1018::4:16:1024:0
+rma/epochtest::65530 262144:timeLimit=300 mem=5:4:16::0
+rma/getfence1::1 512 17 1018::2:16:1024:0
+rma/getfence1::65530 262144:mem=2:2:16::0
+rma/getfence1::16000000:timeLimit=1800 mem=3:2:4::0
+rma/lock_contention_dt::1 512 17 1018::4:16:1024:1
+rma/lock_contention_dt::65530 262144:timeLimit=600 mem=2.1:4:16::1
+rma/lock_dt::1 512 262144 17 1018 65530::2:16:1024:1
+rma/lock_dt_flush::1 512 262144 17 1018 65530::2:16:1024:1
+rma/lock_dt_flushlocal::1 512 262144 17 1018 65530::2:16:1024:1
+rma/lockall_dt::1 512 17 1018::4:16:1024:1
+rma/lockall_dt::65530 262144:timeLimit=600 mem=1.1:4:16::1
+rma/lockall_dt_flush::1 512 262144 17 1018::4:16:1024:1
+rma/lockall_dt_flush::65530:timeLimit=600:4:16::1
+rma/lockall_dt_flushall::1 512 262144 17 1018::4:16:1024:1
+rma/lockall_dt_flushall::65530:timeLimit=600:4:16::1
+rma/lockall_dt_flushlocal::1 512 17 1018::4:16:1024:1
+rma/lockall_dt_flushlocal::65530 262144:timeLimit=600 mem=5:4:16::1
+rma/lockall_dt_flushlocalall::1 512 17 1018::4:16:1024:1
+rma/lockall_dt_flushlocalall::65530 262144:timeLimit=600 mem=3:4:16::1
+rma/putfence1::1 512 262144 17 1018 65530::2:16:1024:0
+rma/putfence1::16000000:timeLimit=1800 mem=2:2:4::0
+rma/putpscw1::1 512 17 1018::4:16:1024:0
+rma/putpscw1::65530 262144:mem=4:4:16::0
