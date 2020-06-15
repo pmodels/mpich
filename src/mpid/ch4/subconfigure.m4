@@ -320,6 +320,9 @@ AC_ARG_WITH(ch4-max-vcis,
 if test $with_ch4_max_vcis -le 0 ; then
    AC_MSG_ERROR(Number of VCIs must be greater than 0)
 fi
+if test $with_ch4_max_vcis -gt 1 -a $thread_granularity != MPICH_THREAD_GRANULARITY__VCI ; then
+    AC_MSG_ERROR(CH4_MAX_VCIS greater than 1 requires --enable-thread-cs=per-vci)
+fi
 AC_DEFINE_UNQUOTED([MPIDI_CH4_MAX_VCIS], [$with_ch4_max_vcis], [Number of VCIs configured in CH4])
 
 # Check for enable-ch4-vci-method choice

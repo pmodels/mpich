@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
                                                   MPIR_Request ** request)
 {
     int mpi_errno =
-        MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
+        MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request, 1);
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }
@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_irecv(void *buf,
                                                    MPIR_Request ** request)
 {
     int mpi_errno =
-        MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+        MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, NULL);
     MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
     return mpi_errno;
 }
