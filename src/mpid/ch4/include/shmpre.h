@@ -18,8 +18,7 @@
                                      MPIDI_IPC_am_request_t ipc;
 #define MPIDI_SHM_REQUEST_DECL       MPIDI_POSIX_request_t posix;
 #define MPIDI_SHM_COMM_DECL          MPIDI_POSIX_comm_t posix;
-#define MPIDI_SHM_WIN_DECL           MPIDI_POSIX_win_t posix;   \
-                                     MPIDI_IPC_win_t ipc;
+#define MPIDI_SHM_WIN_DECL           MPIDI_POSIX_win_t posix;
 
 #define MPIDI_SHM_REQUEST(req, field)  ((req)->dev.ch4.am.shm_am.field)
 

@@ -59,7 +59,6 @@ typedef struct win_shared_info {
 int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPC_win_t *ipc_win = NULL;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i;
@@ -82,9 +81,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
     /* Determine IPC type based on buffer type and submodule availability.
      * We always exchange in case any remote buffer can be shared by IPC. */
     MPIDI_IPCI_get_mem_attr(win->base, &attr);
-
-    ipc_win = &win->dev.shm.ipc;
-    ipc_win->mem_segs = NULL;
 
     /* Disable local IPC for zero buffer */
     if (win->size == 0)
@@ -138,10 +134,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         goto fn_exit;
     }
 
-    MPIR_CHKPMEM_CALLOC(ipc_win->mem_segs, MPIDI_IPCI_mem_seg_t *,
-                        sizeof(MPIDI_IPCI_mem_seg_t) * shm_comm_ptr->local_size,
-                        mpi_errno, "IPC window memory segments", MPL_MEM_RMA);
-
     /* Attach remote memory regions based on its IPC type */
     MPIR_CHKLMEM_MALLOC(ranks_in_shm_grp, int *, shm_comm_ptr->local_size * sizeof(int) * 2,
                         mpi_errno, "ranks in shm group", MPL_MEM_RMA);
@@ -153,7 +145,6 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         shared_table[i].size = ipc_shared_table[i].size;
         shared_table[i].disp_unit = ipc_shared_table[i].disp_unit;
         shared_table[i].shm_base_addr = NULL;
-        ipc_win->mem_segs[i].ipc_type = MPIDI_IPCI_TYPE__NONE;
 
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
@@ -164,13 +155,12 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                                               ipc_shared_table[i].mem_handle,
                                               attr.gpu_attr.device,
                                               ipc_shared_table[i].size,
-                                              &ipc_win->mem_segs[i],
                                               &shared_table[i].shm_base_addr);
             MPIR_ERR_CHECK(mpi_errno);
         }
         IPC_TRACE("shared_table[%d]: size=0x%lx, disp_unit=0x%x, shm_base_addr=%p (ipc_type=%d)\n",
                   i, shared_table[i].size, shared_table[i].disp_unit,
-                  shared_table[i].shm_base_addr, ipc_win->mem_segs[i].ipc_type);
+                  shared_table[i].shm_base_addr, ipc_shared_table[i].ipc_type);
     }
 
     /* Initialize POSIX shm window components (e.g., shared mutex), thus
@@ -190,23 +180,15 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 int MPIDI_IPC_mpi_win_free_hook(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPC_win_t *ipc_win = &win->dev.shm.ipc;
     MPIR_Comm *shm_comm_ptr = win->comm_ptr->node_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);
 
     if (win->create_flavor != MPI_WIN_FLAVOR_CREATE ||
-        !shm_comm_ptr || !MPIDIG_WIN(win, shared_table) || !ipc_win->mem_segs /* no IPC support */)
+        !shm_comm_ptr || !MPIDIG_WIN(win, shared_table))
         goto fn_exit;
 
-    /* Close segments for remote processes */
-    for (int i = 0; i < shm_comm_ptr->local_size; i++) {
-        mpi_errno = MPIDI_IPCI_close_mem(ipc_win->mem_segs[i]);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
     MPL_free(MPIDIG_WIN(win, shared_table));
-    MPL_free(ipc_win->mem_segs);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_WIN_FREE_HOOK);

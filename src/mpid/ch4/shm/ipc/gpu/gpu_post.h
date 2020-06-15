@@ -35,9 +35,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
-    mpl_err = MPL_gpu_ipc_get_mem_handle(&attr->mem_handle.gpu.ipc_handle, (void *) vaddr);
+    mpl_err = MPL_gpu_ipc_handle_create(vaddr, &attr->mem_handle.gpu.ipc_handle);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_get_mem_handle");
+                        "**gpu_ipc_handle_create");
 
     attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
 #else
@@ -45,7 +45,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
     attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 #endif
-
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_GET_MEM_ATTR);
@@ -55,18 +54,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPC
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_attach_mem(MPIDI_GPU_mem_handle_t mem_handle,
-                                                  MPL_gpu_device_handle_t dev_handle,
-                                                  MPIDI_GPU_mem_seg_t * mem_seg, void **vaddr)
+                                                  MPL_gpu_device_handle_t dev_handle, void **vaddr)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_ATTACH_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_ATTACH_MEM);
 
-    mpl_err = MPL_gpu_ipc_open_mem_handle(vaddr, mem_handle.ipc_handle, dev_handle);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_open_mem_handle");
-    mem_seg->vaddr = *vaddr;
-    mem_seg->ipc_handle = mem_handle.ipc_handle;
+    mpl_err = MPL_gpu_ipc_handle_map(mem_handle.ipc_handle, dev_handle, vaddr);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_map");
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_ATTACH_MEM);
@@ -75,15 +70,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_attach_mem(MPIDI_GPU_mem_handle_t mem_han
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_close_mem(MPIDI_GPU_mem_seg_t mem_seg)
+MPL_STATIC_INLINE_PREFIX int MPIDI_GPU_close_mem(void *vaddr, MPL_gpu_ipc_mem_handle_t ipc_handle)
 {
     int mpi_errno = MPI_SUCCESS, mpl_err = MPL_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_CLOSE_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_CLOSE_MEM);
 
-    mpl_err = MPL_gpu_ipc_close_mem_handle(mem_seg.vaddr, mem_seg.ipc_handle);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_close_mem_handle");
+    mpl_err = MPL_gpu_ipc_handle_unmap(vaddr, ipc_handle);
+    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_unmap");
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_CLOSE_MEM);

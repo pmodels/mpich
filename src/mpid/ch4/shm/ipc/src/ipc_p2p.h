@@ -90,7 +90,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
                                                         int src_lrank, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPCI_mem_seg_t mem_seg;
     void *src_buf = NULL;
     size_t data_sz, recv_data_sz;
     MPIDI_SHMI_ctrl_hdr_t ack_ctrl_hdr;
@@ -99,7 +98,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_HANDLE_LMT_RECV);
 
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, datatype), MPIDIG_REQUEST(rreq, count), data_sz);
-    memset(&mem_seg, 0, sizeof(mem_seg));
 
     /* Data truncation checking */
     recv_data_sz = MPL_MIN(src_data_sz, data_sz);
@@ -115,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
 
     mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, attr.device, src_data_sz,
-                                      &mem_seg, &src_buf);
+                                      &src_buf);
     MPIR_ERR_CHECK(mpi_errno);
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
@@ -131,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
                                     MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_IPCI_close_mem(mem_seg);
+    mpi_errno = MPIDI_IPCI_close_mem(ipc_type, src_buf, mem_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     ack_ctrl_hdr.ipc_contig_slmt_fin.ipc_type = ipc_type;
