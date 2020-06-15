@@ -23,6 +23,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     ucp_tag_message_h message_h;
     MPIR_Request *req = NULL;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
 
@@ -47,6 +49,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
     *message = req;
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -66,6 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     ucp_tag_recv_info_t info;
     ucp_tag_message_h message_h;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+
     tag_mask = MPIDI_UCX_tag_mask(tag, source);
     ucp_tag = MPIDI_UCX_recv_tag(tag, source, comm->recvcontext_id + context_offset);
 
@@ -84,6 +89,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
     } else {
         *flag = 0;
     }
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     return mpi_errno;
 }

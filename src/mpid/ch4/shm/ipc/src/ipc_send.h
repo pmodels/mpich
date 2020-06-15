@@ -28,6 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
 
     MPIDI_Datatype_check_contig_size_lb(datatype, count, dt_contig, data_sz, true_lb);
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     MPIDI_IPCI_mem_attr_t attr;
     MPIDI_IPCI_get_mem_attr((char *) buf + true_lb, &attr);
 
@@ -42,6 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
         /* TODO: add flattening datatype protocol for noncontig send. Different
          * threshold may be required to tradeoff the flattening overhead.*/
     }
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno = MPIDI_POSIX_mpi_isend(buf, count, datatype, rank, tag, comm,
                                       context_offset, addr, request);

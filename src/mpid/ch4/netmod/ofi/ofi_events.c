@@ -186,10 +186,13 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
                                                   MPIDI_OFI_SYNC_SEND_ACK);
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx, NULL /* buf */ ,
+        /* NOTE: use target rank, reply to src */
+        int vni_src = MPIDI_OFI_get_vni_src(c, c->rank, rreq->status.MPI_TAG);
+        int vni_dst = MPIDI_OFI_get_vni_dst(c, c->rank, rreq->status.MPI_TAG);
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_dst].tx, NULL /* buf */ ,
                                             0 /* len */ ,
                                             MPIR_Comm_rank(c),
-                                            MPIDI_OFI_comm_to_phys(c, r, 0, 0),
+                                            MPIDI_OFI_comm_to_phys(c, r, vni_dst, vni_src),
                                             ss_bits), tinjectdata, FALSE /* eagain */);
     }
 
@@ -428,13 +431,15 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
         }
 
         remote_key = recv_elem->remote_info.rma_key;
+        int vni_src = recv_elem->remote_info.vni_src;
+        int vni_dst = recv_elem->remote_info.vni_dst;
 
         MPIDI_OFI_cntr_incr();
-        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[0].tx,        /* endpoint     */
+        MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[vni_dst].tx,  /* endpoint     */
                                      (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),  /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, 0, 0),     /* Destination  */
+                                     MPIDI_OFI_comm_to_phys(recv_elem->comm_ptr, recv_elem->remote_info.origin_rank, vni_dst, vni_src), /* Destination  */
                                      recv_rbase(recv_elem) + recv_elem->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), rdma_readfrom,      /* Context */
