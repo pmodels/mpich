@@ -202,6 +202,9 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
+
+    mpi_errno = MPL_gpu_init();
+    MPIR_ERR_CHECK(mpi_errno);
     return mpi_errno;
 
   fn_fail:

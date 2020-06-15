@@ -10,10 +10,8 @@
 #include <xpmem.h>
 
 #define MPIDI_XPMEMI_PERMIT_VALUE ((void *)0600)
-#define MPIDI_XPMEMI_SEG_PREALLOC 8     /* Number of segments to preallocate in the "direct" block */
 
 typedef struct MPIDI_XPMEMI_seg {
-    MPIR_OBJECT_HEADER;
     /* AVL-tree internal components start */
     struct MPIDI_XPMEMI_seg *parent;
     struct MPIDI_XPMEMI_seg *left;
@@ -45,7 +43,6 @@ typedef struct {
 } MPIDI_XPMEMI_global_t;
 
 extern MPIDI_XPMEMI_global_t MPIDI_XPMEMI_global;
-extern MPIR_Object_alloc_t MPIDI_XPMEMI_seg_mem;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_XPMEMI_DBG_GENERAL;

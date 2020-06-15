@@ -21,8 +21,7 @@ typedef struct {
 /* memory handle definition
  * MPIDI_IPCI_mem_handle_t: local memory handle
  * MPIDI_IPCI_mem_attr_t: local memory attributes including available handle,
- *                        IPC type, and thresholds
- * MPIDI_IPCI_mem_seg_t: mapped segment with remote memory handle */
+ *                        IPC type, and thresholds */
 typedef union MPIDI_IPCI_mem_handle {
     MPIDI_XPMEM_mem_handle_t xpmem;
     MPIDI_GPU_mem_handle_t gpu;
@@ -36,14 +35,6 @@ typedef struct MPIDI_IPCI_mem_attr {
         size_t send_lmt_sz;
     } threshold;
 } MPIDI_IPCI_mem_attr_t;
-
-typedef struct MPIDI_IPCI_mem_seg {
-    MPIDI_IPCI_type_t ipc_type;
-    union {
-        MPIDI_XPMEM_mem_seg_t xpmem;
-        MPIDI_GPU_mem_seg_t gpu;
-    } u;
-} MPIDI_IPCI_mem_seg_t;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;

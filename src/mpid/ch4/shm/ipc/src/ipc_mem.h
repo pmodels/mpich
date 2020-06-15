@@ -45,22 +45,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_attach_mem(MPIDI_IPCI_type_t ipc_type,
                                                    int node_rank,
                                                    MPIDI_IPCI_mem_handle_t mem_handle,
                                                    MPL_gpu_device_handle_t dev_handle, size_t size,
-                                                   MPIDI_IPCI_mem_seg_t * mem_seg, void **vaddr)
+                                                   void **vaddr)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_ATTACH_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_ATTACH_MEM);
 
-    mem_seg->ipc_type = ipc_type;
-
     switch (ipc_type) {
         case MPIDI_IPCI_TYPE__XPMEM:
-            mpi_errno = MPIDI_XPMEM_attach_mem(node_rank, mem_handle.xpmem, size,
-                                               &mem_seg->u.xpmem, vaddr);
+            mpi_errno = MPIDI_XPMEM_attach_mem(node_rank, mem_handle.xpmem, size, vaddr);
             break;
         case MPIDI_IPCI_TYPE__GPU:
-            mpi_errno = MPIDI_GPU_attach_mem(mem_handle.gpu, dev_handle, &mem_seg->u.gpu, vaddr);
+            mpi_errno = MPIDI_GPU_attach_mem(mem_handle.gpu, dev_handle, vaddr);
             break;
         case MPIDI_IPCI_TYPE__NONE:
             /* no-op */
@@ -75,19 +72,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_attach_mem(MPIDI_IPCI_type_t ipc_type,
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_close_mem(MPIDI_IPCI_mem_seg_t mem_seg)
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_close_mem(MPIDI_IPCI_type_t ipc_type, void *vaddr,
+                                                  MPIDI_IPCI_mem_handle_t mem_handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_CLOSE_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_CLOSE_MEM);
 
-    switch (mem_seg.ipc_type) {
+    switch (ipc_type) {
         case MPIDI_IPCI_TYPE__XPMEM:
-            mpi_errno = MPIDI_XPMEM_close_mem(mem_seg.u.xpmem);
             break;
         case MPIDI_IPCI_TYPE__GPU:
-            mpi_errno = MPIDI_GPU_close_mem(mem_seg.u.gpu);
+            mpi_errno = MPIDI_GPU_close_mem(vaddr, mem_handle.gpu.ipc_handle);
             break;
         case MPIDI_IPCI_TYPE__NONE:
             /* noop */
@@ -101,4 +98,5 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_close_mem(MPIDI_IPCI_mem_seg_t mem_seg)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_CLOSE_MEM_HANDLE);
     return mpi_errno;
 }
+
 #endif /* IPC_MEM_H_INCLUDED */

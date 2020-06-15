@@ -169,15 +169,15 @@ int MPI_Finalize(void)
      * for atomic file updates makes this harder. */
     MPII_final_coverage_delay(rank);
 
+    mpi_errno = MPL_gpu_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
+
     /* All memory should be freed at this point */
     MPII_finalize_memory_tracing();
 
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
-
-    mpi_errno = MPL_gpu_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* ... end of body of routine ... */
   fn_exit:

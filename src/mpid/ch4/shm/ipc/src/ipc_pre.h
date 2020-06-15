@@ -26,12 +26,6 @@ typedef struct MPIDI_IPC_am_request {
     MPIDI_IPC_am_unexp_rreq_t unexp_rreq;
 } MPIDI_IPC_am_request_t;
 
-/* window extension */
-typedef struct MPIDI_IPC_win {
-    MPIDI_IPCI_mem_seg_t *mem_segs;     /* store opened memory handles
-                                         * for all local processes in the window. */
-} MPIDI_IPC_win_t;
-
 /* ctrl packet header types */
 typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
     MPIDI_IPCI_type_t ipc_type;
