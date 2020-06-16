@@ -10,12 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_CUDA
-#include <cuda_runtime_api.h>
-extern int ndevices;
-extern int device_id;
-#endif
-
 typedef enum {
     MTEST_MEM_TYPE__UNSET,
     MTEST_MEM_TYPE__UNREGISTERED_HOST,
