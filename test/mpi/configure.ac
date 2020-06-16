@@ -153,6 +153,35 @@ fi
 
 AC_SUBST(DTP_SWITCH)
 
+# GPU support
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_PUSH_FLAG([LDFLAGS])
+PAC_PUSH_FLAG([LIBS])
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+cuda_CPPFLAGS=""
+cuda_LDFLAGS=""
+cuda_LIBS=""
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    if test -n "${with_cuda}" ; then
+        cuda_CPPFLAGS="-I${with_cuda}/include"
+        if test -d ${with_cuda}/lib64 ; then
+            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+        else
+            cuda_LDFLAGS="-L${with_cuda}/lib"
+        fi
+        cuda_LIBS="-lcudart"
+    fi
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AC_SUBST([cuda_CPPFLAGS])
+AC_SUBST([cuda_LDFLAGS])
+AC_SUBST([cuda_LIBS])
+PAC_POP_FLAG([CPPFLAGS])
+PAC_POP_FLAG([LDFLAGS])
+PAC_POP_FLAG([LIBS])
+
 AC_ARG_ENABLE(cxx,
 	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
