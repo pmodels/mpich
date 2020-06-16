@@ -26,7 +26,6 @@
 #include <sys/resource.h>
 #endif
 #include <errno.h>
-#include <assert.h>
 
 /*
  * Utility routines for writing MPI tests.
@@ -152,20 +151,6 @@ void MTest_Init(int *argc, char ***argv)
 #if MPI_VERSION >= 2 || defined(HAVE_MPI_INIT_THREAD)
     const char *str = 0;
     int threadLevel;
-
-#ifdef HAVE_CUDA
-    cudaGetDeviceCount(&ndevices);
-    assert(ndevices != -1);
-    if (ndevices > 1)
-        /*
-         * set initial device id to 1 to simulate the case where
-         * the user is trying to move data from a device that is
-         * not the "current" device
-         */
-        device_id = 1;
-    else
-        device_id = 0;
-#endif
 
     threadLevel = MPI_THREAD_SINGLE;
     str = getenv("MTEST_THREADLEVEL_DEFAULT");
