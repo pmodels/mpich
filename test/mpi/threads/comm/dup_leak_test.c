@@ -50,6 +50,7 @@ int main(int argc, char **argv)
 
     MTestArgList *head = MTestArgListCreate(argc, argv);
     num_iter = MTestArgListGetInt(head, "iter");
+    MTestArgListDestroy(head);
 
     for (x = 0; x < NTHREADS; ++x) {
         MPI_Comm_dup(MPI_COMM_WORLD, &comms[x]);
