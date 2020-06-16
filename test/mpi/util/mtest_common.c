@@ -140,6 +140,19 @@ long MTestArgListGetLong(MTestArgList * head, const char *arg)
     return atol(MTestArgListGetString(head, arg));
 }
 
+mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg)
+{
+    char *memtype = MTestArgListGetString(head, arg);
+    if (strcmp(memtype, "host") == 0)
+        return MTEST_MEM_TYPE__UNREGISTERED_HOST;
+    else if (strcmp(memtype, "reg_host") == 0)
+        return MTEST_MEM_TYPE__REGISTERED_HOST;
+    else if (strcmp(memtype, "device") == 0)
+        return MTEST_MEM_TYPE__DEVICE;
+    else
+        return MTEST_MEM_TYPE__UNSET;
+}
+
 int MTestIsBasicDtype(MPI_Datatype type)
 {
     int numints, numaddrs, numtypes, combiner;
@@ -148,4 +161,62 @@ int MTestIsBasicDtype(MPI_Datatype type)
     int is_basic = (combiner == MPI_COMBINER_NAMED);
 
     return is_basic;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Utilities to support device memory allocation */
+#ifdef HAVE_CUDA
+int ndevices = -1;
+int device_id;
+#endif
+
+/* allocates memory of specified type */
+void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf)
+{
+    if (type == MTEST_MEM_TYPE__UNREGISTERED_HOST) {
+        *devicebuf = malloc(size);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
+#ifdef HAVE_CUDA
+    } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
+        cudaMallocHost(devicebuf, size);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
+    } else if (type == MTEST_MEM_TYPE__DEVICE) {
+        cudaSetDevice(device_id);
+        cudaMalloc(devicebuf, size);
+        if (hostbuf)
+            cudaMallocHost(hostbuf, size);
+        device_id++;
+        device_id %= ndevices;
+#endif
+    } else {
+        fprintf(stderr, "ERROR: unsupported memory type %d\n", type);
+        exit(1);
+    }
+}
+
+void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf)
+{
+    if (type == MTEST_MEM_TYPE__UNREGISTERED_HOST) {
+        free(hostbuf);
+#ifdef HAVE_CUDA
+    } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
+        cudaFreeHost(devicebuf);
+    } else if (type == MTEST_MEM_TYPE__DEVICE) {
+        cudaFree(devicebuf);
+        if (hostbuf) {
+            cudaFreeHost(hostbuf);
+        }
+#endif
+    }
+}
+
+void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_e type)
+{
+#ifdef HAVE_CUDA
+    if (type == MTEST_MEM_TYPE__DEVICE) {
+        cudaMemcpy(dbuf, sbuf, size, cudaMemcpyDefault);
+    }
+#endif
 }

@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Test of broadcast with various roots and datatypes";
@@ -28,7 +29,9 @@ int main(int argc, char *argv[])
     DTP_pool_s dtp;
     DTP_obj_s obj;
     void *buf;
+    void *buf_h;
     char *basic_type;
+    mtest_mem_type_e memtype;
 
     MTest_Init(&argc, &argv);
 
@@ -41,6 +44,11 @@ int main(int argc, char *argv[])
     maxbufsize = MTestDefaultMaxBufferSize();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank % 2 == 0)
+        memtype = MTestArgListGetMemType(head, "evenmemtype");
+    else
+        memtype = MTestArgListGetMemType(head, "oddmemtype");
 
     err = DTP_pool_create(basic_type, count, seed + rank, &dtp);
     if (err != DTP_SUCCESS) {
@@ -81,11 +89,8 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                buf = malloc(obj.DTP_bufsize);
-                if (buf == NULL) {
-                    errs++;
-                    break;
-                }
+                MTestAlloc(obj.DTP_bufsize, memtype, &buf_h, &buf);
+                assert(buf);
 
                 if (rank == root) {
                     err = DTP_obj_buf_init(obj, buf, 0, 1, count);
@@ -100,6 +105,7 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
+                MTestCopyContent(buf_h, buf, obj.DTP_bufsize, memtype);
 
                 err =
                     MPI_Bcast(buf + obj.DTP_buf_offset, obj.DTP_type_count, obj.DTP_datatype, root,
@@ -109,6 +115,7 @@ int main(int argc, char *argv[])
                     MTestPrintError(err);
                 }
 
+                MTestCopyContent(buf, buf_h, obj.DTP_bufsize, memtype);
                 err = DTP_obj_buf_check(obj, buf, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
@@ -122,7 +129,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                free(buf);
+                MTestFree(memtype, buf_h, buf);
                 DTP_obj_free(obj);
             }
         }
