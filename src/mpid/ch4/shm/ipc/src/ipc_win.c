@@ -169,7 +169,8 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
                      * local GPU device. */
                     mpi_errno =
                         MPIDI_GPU_attach_mem(ipc_shared_table[i].mem_handle.gpu,
-                                             attr.gpu_attr.device, &shared_table[i].shm_base_addr);
+                                             attr.gpu_attr.device, MPI_BYTE,
+                                             &shared_table[i].shm_base_addr);
                     break;
                 case MPIDI_IPCI_TYPE__NONE:
                     /* no-op */
