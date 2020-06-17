@@ -10,7 +10,7 @@
 
 int MPIDI_XPMEMI_segtree_init(MPIDI_XPMEMI_segtree_t * tree);
 int MPIDI_XPMEMI_segtree_delete_all(MPIDI_XPMEMI_segtree_t * tree);
-int MPIDI_XPMEMI_seg_regist(int node_rank, size_t size,
+int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
                             void *remote_vaddr, void **vaddr, MPIDI_XPMEMI_segtree_t * segcache);
 
 #endif /* XPMEM_SEG_H_INCLUDED */
