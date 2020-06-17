@@ -14,7 +14,7 @@ int MPIDI_XPMEM_ipc_handle_map(MPIDI_XPMEM_ipc_handle_t handle, void **vaddr)
     mpi_errno =
         MPIDI_XPMEMI_seg_regist(handle.src_lrank, handle.data_sz,
                                 (void *) handle.src_offset, vaddr,
-                                &MPIDI_XPMEMI_global.segmaps[handle.src_lrank].segcache_ubuf);
+                                MPIDI_XPMEMI_global.segmaps[handle.src_lrank].segcache_ubuf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_IPC_HANDLE_MAP);
     return mpi_errno;
