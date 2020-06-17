@@ -21,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
     int mpi_errno = MPI_SUCCESS;
     bool dt_contig;
     MPI_Aint true_lb;
-    size_t data_sz;
+    uintptr_t data_sz;
     void *vaddr;
     MPIDI_IPCI_ipc_attr_t ipc_attr;
 

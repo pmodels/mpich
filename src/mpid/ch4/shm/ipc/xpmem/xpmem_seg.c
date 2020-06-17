@@ -493,7 +493,7 @@ int MPIDI_XPMEMI_segtree_delete_all(MPIDI_XPMEMI_segtree_t * tree)
  *            or a newly created one.
  * - vaddr:   corresponding start address of the remote buffer in local
  *            virtual address space. */
-int MPIDI_XPMEMI_seg_regist(int node_rank, size_t size,
+int MPIDI_XPMEMI_seg_regist(int node_rank, uintptr_t size,
                             void *remote_vaddr, void **vaddr, MPIDI_XPMEMI_segtree_t * segcache)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -517,7 +517,7 @@ int MPIDI_XPMEMI_seg_regist(int node_rank, size_t size,
     seg_low = MPL_ROUND_DOWN_ALIGN((uint64_t) remote_vaddr,
                                    (uint64_t) MPIDI_XPMEMI_global.sys_page_sz);
     offset_diff = (off_t) remote_vaddr - seg_low;
-    seg_size = MPL_ROUND_UP_ALIGN(size + (size_t) offset_diff, MPIDI_XPMEMI_global.sys_page_sz);
+    seg_size = MPL_ROUND_UP_ALIGN(size + (uintptr_t) offset_diff, MPIDI_XPMEMI_global.sys_page_sz);
     seg_high = seg_low + seg_size;
     mpi_errno =
         segtree_do_search_and_insert_safe(segcache, seg_low, seg_high,

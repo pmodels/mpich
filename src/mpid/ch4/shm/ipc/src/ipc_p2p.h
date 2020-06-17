@@ -25,7 +25,7 @@
  * and perform direct data transfer.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Aint count,
-                                                        MPI_Datatype datatype, size_t data_sz,
+                                                        MPI_Datatype datatype, uintptr_t data_sz,
                                                         int rank, int tag, MPIR_Comm * comm,
                                                         int context_offset, MPIDI_av_entry_t * addr,
                                                         MPIDI_IPCI_ipc_attr_t ipc_attr,
@@ -91,7 +91,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
 {
     int mpi_errno = MPI_SUCCESS;
     void *src_buf = NULL;
-    size_t data_sz, recv_data_sz;
+    uintptr_t data_sz, recv_data_sz;
     MPIDI_SHMI_ctrl_hdr_t ack_ctrl_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_HANDLE_LMT_RECV);
