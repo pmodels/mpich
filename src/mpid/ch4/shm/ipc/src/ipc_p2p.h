@@ -25,10 +25,10 @@
  * and perform direct data transfer.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Aint count,
-                                                        MPI_Datatype datatype, size_t data_sz,
+                                                        MPI_Datatype datatype, uintptr_t data_sz,
                                                         int rank, int tag, MPIR_Comm * comm,
                                                         int context_offset, MPIDI_av_entry_t * addr,
-                                                        MPIDI_IPCI_mem_attr_t attr,
+                                                        MPIDI_IPCI_ipc_attr_t ipc_attr,
                                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -53,8 +53,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     slmt_req_hdr->src_lrank = MPIR_Process.local_rank;
     slmt_req_hdr->data_sz = data_sz;
     slmt_req_hdr->sreq_ptr = sreq;
-    slmt_req_hdr->ipc_type = attr.ipc_type;
-    slmt_req_hdr->mem_handle = attr.mem_handle;
+    slmt_req_hdr->ipc_type = ipc_attr.ipc_type;
+    slmt_req_hdr->ipc_handle = ipc_attr.ipc_handle;
 
     /* message matching info */
     slmt_req_hdr->src_rank = comm->rank;
@@ -84,14 +84,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
  * LMT_FIN ack to the sender.
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_type,
-                                                        MPIDI_IPCI_mem_handle_t mem_handle,
+                                                        MPIDI_IPCI_ipc_handle_t ipc_handle,
                                                         size_t src_data_sz,
                                                         MPIR_Request * sreq_ptr,
-                                                        int src_lrank, MPIR_Request * rreq)
+                                                        MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     void *src_buf = NULL;
-    size_t data_sz, recv_data_sz;
+    uintptr_t data_sz, recv_data_sz;
     MPIDI_SHMI_ctrl_hdr_t ack_ctrl_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_HANDLE_LMT_RECV);
@@ -112,9 +112,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
 
-    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, attr.device, src_data_sz,
-                                      &src_buf);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* attach remote buffer */
+    switch (ipc_type) {
+        case MPIDI_IPCI_TYPE__XPMEM:
+            mpi_errno = MPIDI_XPMEM_ipc_handle_map(ipc_handle.xpmem, &src_buf);
+            break;
+        case MPIDI_IPCI_TYPE__GPU:
+            mpi_errno =
+                MPIDI_GPU_ipc_handle_map(ipc_handle.gpu, attr.device,
+                                         MPIDIG_REQUEST(rreq, datatype), &src_buf);
+            break;
+        case MPIDI_IPCI_TYPE__NONE:
+            /* no-op */
+            break;
+        default:
+            /* Unknown IPC type */
+            MPIR_Assert(0);
+            break;
+    }
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, bytes %ld\n", rreq,
@@ -129,7 +144,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
                                     MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
     MPIR_ERR_CHECK(mpi_errno);
 
-    mpi_errno = MPIDI_IPCI_close_mem(ipc_type, src_buf, mem_handle);
+    mpi_errno = MPIDI_IPCI_handle_unmap(ipc_type, src_buf, ipc_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
     ack_ctrl_hdr.ipc_contig_slmt_fin.ipc_type = ipc_type;
