@@ -10,6 +10,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #ifdef MPL_HAVE_ZE
 
 ze_driver_handle_t global_ze_driver_handle;
+ze_device_handle_t *device_handles;
 int gpu_ze_init_driver();
 
 #define ZE_ERR_CHECK(ret) \
@@ -21,9 +22,17 @@ int gpu_ze_init_driver();
 int MPL_gpu_init()
 {
     int ret_error;
+    int device_count;
     ret_error = gpu_ze_init_driver();
     if (ret_error != MPL_SUCCESS)
         goto fn_fail;
+
+    ret = zeDeviceGet(global_ze_driver_handle, &device_count, NULL);
+    ZE_ERR_CHECK(ret);
+
+    device_handles = MPL_malloc(device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
+    ret = zeDeviceGet(global_ze_driver_handle, &device_count, device_handles);
+    ZE_ERR_CHECK(ret);
 
   fn_exit:
     return MPL_SUCCESS;
@@ -99,6 +108,7 @@ int gpu_ze_init_driver()
 
 int MPL_gpu_finalize()
 {
+    MPL_free(device_handles);
     return MPL_SUCCESS;
 }
 
@@ -119,7 +129,6 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_h
                            void **ptr)
 {
     ze_result_t ret;
-    /* TODO: retrive dev_id for device handle */
     ret =
         zeDriverOpenMemIpcHandle(global_ze_driver_handle, dev_handle, ipc_handle.handle,
                                  ZE_IPC_MEMORY_FLAG_NONE, ptr);
@@ -246,6 +255,21 @@ int MPL_gpu_register_host(const void *ptr, size_t size)
 
 int MPL_gpu_unregister_host(const void *ptr)
 {
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+{
+    ze_device_properties_t devproerty;
+
+    zeDeviceGetProperties(dev_handle, &devproerty);
+    *dev_id = devproerty.deviceId;
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
+{
+    *dev_handle = device_handles[dev_id];
     return MPL_SUCCESS;
 }
 

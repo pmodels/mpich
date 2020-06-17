@@ -16,8 +16,7 @@ int MPIDI_XPMEM_mpi_finalize_hook(void)
     return MPI_SUCCESS;
 }
 
-int MPIDI_XPMEM_attach_mem(int node_rank, MPIDI_XPMEM_mem_handle_t handle,
-                           size_t size, void **vaddr)
+int MPIDI_XPMEM_attach_mem(MPIDI_XPMEM_mem_handle_t mem_handle, void **vaddr)
 {
     return MPI_SUCCESS;
 }
