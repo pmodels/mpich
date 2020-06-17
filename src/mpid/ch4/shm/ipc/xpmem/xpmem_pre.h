@@ -8,8 +8,10 @@
 
 /* memory handle definition */
 typedef struct {
-    uint64_t src_offset;
-} MPIDI_XPMEM_mem_handle_t;
+    uintptr_t src_offset;
+    int src_lrank;
+    uintptr_t data_sz;
+} MPIDI_XPMEM_ipc_handle_t;
 
 /* request extension definition */
 typedef struct {

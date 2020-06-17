@@ -12,7 +12,7 @@
 
 /* request extension */
 typedef struct MPIDI_IPC_am_unexp_rreq {
-    MPIDI_IPCI_mem_handle_t mem_handle;
+    MPIDI_IPCI_ipc_handle_t ipc_handle;
     uint64_t data_sz;
     MPIR_Request *sreq_ptr;
     int src_lrank;
@@ -29,7 +29,7 @@ typedef struct MPIDI_IPC_am_request {
 /* ctrl packet header types */
 typedef struct MPIDI_IPC_ctrl_send_contig_lmt_rts {
     MPIDI_IPCI_type_t ipc_type;
-    MPIDI_IPCI_mem_handle_t mem_handle;
+    MPIDI_IPCI_ipc_handle_t ipc_handle;
     uint64_t data_sz;           /* data size in bytes */
     MPIR_Request *sreq_ptr;     /* send request pointer */
     int src_lrank;              /* sender rank on local node */

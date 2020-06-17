@@ -66,12 +66,27 @@ int MPL_gpu_free(void *ptr)
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_init()
+int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
 {
     return MPL_SUCCESS;
 }
 
 int MPL_gpu_finalize()
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
 {
     return MPL_SUCCESS;
 }
