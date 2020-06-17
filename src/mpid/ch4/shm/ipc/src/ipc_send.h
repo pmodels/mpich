@@ -22,6 +22,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
     bool dt_contig;
     MPI_Aint true_lb;
     size_t data_sz;
+    void *vaddr;
+    MPIDI_IPCI_mem_attr_t attr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_ISEND);
@@ -29,8 +31,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_isend(const void *buf, MPI_Aint count
     MPIDI_Datatype_check_contig_size_lb(datatype, count, dt_contig, data_sz, true_lb);
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_IPCI_mem_attr_t attr;
-    MPIDI_IPCI_get_mem_attr((char *) buf + true_lb, &attr);
+
+    vaddr = (char *) buf + true_lb;
+    MPIR_GPU_query_pointer_attr(vaddr, &attr.gpu_attr);
+
+    if (attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
+        mpi_errno = MPIDI_GPU_get_mem_attr(vaddr, &attr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIDI_XPMEM_get_mem_attr(vaddr, data_sz, &attr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     if (rank != comm->rank && attr.ipc_type != MPIDI_IPCI_TYPE__NONE &&
         data_sz >= attr.threshold.send_lmt_sz) {

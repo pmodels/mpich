@@ -81,9 +81,7 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
         /* Complete IPC receive */
         mpi_errno = MPIDI_IPCI_handle_lmt_recv(slmt_rts_hdr->ipc_type,
                                                slmt_rts_hdr->mem_handle,
-                                               slmt_rts_hdr->data_sz,
-                                               slmt_rts_hdr->sreq_ptr,
-                                               slmt_rts_hdr->src_lrank, rreq);
+                                               slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr, rreq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Enqueue unexpected receive request */

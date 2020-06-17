@@ -75,3 +75,13 @@ int MPL_gpu_finalize()
 {
     return MPL_SUCCESS;
 }
+
+int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
+{
+    return MPL_SUCCESS;
+}

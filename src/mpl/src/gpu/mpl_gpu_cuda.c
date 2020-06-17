@@ -54,7 +54,7 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
     curet = cuMemGetAddressRange(&pbase, NULL, (CUdeviceptr) ptr);
     CU_ERR_CHECK(curet);
 
-    ret = cudaIpcGetMemHandle(&ipc_handle->handle, ptr);
+    ret = cudaIpcGetMemHandle(&ipc_handle->handle, (void *) ptr);
     CUDA_ERR_CHECK(ret);
 
     ipc_handle->offset = (uintptr_t) ptr - (uintptr_t) pbase;
@@ -183,5 +183,17 @@ int MPL_gpu_init()
 
 int MPL_gpu_finalize()
 {
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_id(MPL_gpu_device_handle_t dev_handle, int *dev_id)
+{
+    *dev_id = dev_handle;
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
+{
+    *dev_handle = dev_id;
     return MPL_SUCCESS;
 }

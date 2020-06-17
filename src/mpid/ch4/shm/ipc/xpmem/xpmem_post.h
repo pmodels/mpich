@@ -38,7 +38,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr,
+MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr, uintptr_t data_sz,
                                                       MPIDI_IPCI_mem_attr_t * attr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEM_GET_MEM_ATTR);
@@ -49,6 +49,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr,
 #ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
     attr->ipc_type = MPIDI_IPCI_TYPE__XPMEM;
     attr->mem_handle.xpmem.src_offset = (uint64_t) vaddr;
+    attr->mem_handle.xpmem.data_sz = data_sz;
+    attr->mem_handle.xpmem.src_lrank = MPIR_Process.local_rank;
     if (MPIR_CVAR_CH4_XPMEM_ENABLE)
         attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_XPMEM_P2P_THRESHOLD;
     else
@@ -64,7 +66,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_mem_attr(const void *vaddr,
 
 int MPIDI_XPMEM_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_XPMEM_mpi_finalize_hook(void);
-int MPIDI_XPMEM_attach_mem(int node_rank, MPIDI_XPMEM_mem_handle_t handle, size_t size,
-                           void **vaddr);
+int MPIDI_XPMEM_attach_mem(MPIDI_XPMEM_mem_handle_t mem_handle, void **vaddr);
 
 #endif /* XPMEM_POST_H_INCLUDED */

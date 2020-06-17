@@ -80,7 +80,15 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
 
     /* Determine IPC type based on buffer type and submodule availability.
      * We always exchange in case any remote buffer can be shared by IPC. */
-    MPIDI_IPCI_get_mem_attr(win->base, &attr);
+    MPIR_GPU_query_pointer_attr(win->base, &attr.gpu_attr);
+
+    if (attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
+        mpi_errno = MPIDI_GPU_get_mem_attr(win->base, &attr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        mpi_errno = MPIDI_XPMEM_get_mem_attr(win->base, win->size, &attr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
     /* Disable local IPC for zero buffer */
     if (win->size == 0)
@@ -149,14 +157,28 @@ int MPIDI_IPC_mpi_win_create_hook(MPIR_Win * win)
         if (i == shm_comm_ptr->rank) {
             shared_table[i].shm_base_addr = win->base;
         } else {
-            /* Attach only remote buffer. No-op if ipc_type is NONE including zero-size. */
-            int node_rank = ranks_in_shm_grp[shm_comm_ptr->local_size + i];
-            mpi_errno = MPIDI_IPCI_attach_mem(ipc_shared_table[i].ipc_type, node_rank,
-                                              ipc_shared_table[i].mem_handle,
-                                              attr.gpu_attr.device,
-                                              ipc_shared_table[i].size,
-                                              &shared_table[i].shm_base_addr);
-            MPIR_ERR_CHECK(mpi_errno);
+            /* attach remote buffer */
+            switch (ipc_shared_table[i].ipc_type) {
+                case MPIDI_IPCI_TYPE__XPMEM:
+                    mpi_errno =
+                        MPIDI_XPMEM_attach_mem(ipc_shared_table[i].mem_handle.xpmem,
+                                               &shared_table[i].shm_base_addr);
+                    break;
+                case MPIDI_IPCI_TYPE__GPU:
+                    /* FIXME: remote win buffer should be mapped to each of their corresponding
+                     * local GPU device. */
+                    mpi_errno =
+                        MPIDI_GPU_attach_mem(ipc_shared_table[i].mem_handle.gpu,
+                                             attr.gpu_attr.device, &shared_table[i].shm_base_addr);
+                    break;
+                case MPIDI_IPCI_TYPE__NONE:
+                    /* no-op */
+                    break;
+                default:
+                    /* Unknown IPC type */
+                    MPIR_Assert(0);
+                    break;
+            }
         }
         IPC_TRACE("shared_table[%d]: size=0x%lx, disp_unit=0x%x, shm_base_addr=%p (ipc_type=%d)\n",
                   i, shared_table[i].size, shared_table[i].disp_unit,

@@ -17,6 +17,7 @@ int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPCI_mem_attr_t * attr)
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                         "**gpu_ipc_handle_create");
 
+    MPL_gpu_get_dev_id(attr->gpu_attr.device, &attr->mem_handle.gpu.dev_id);
     attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
 #else
     /* Do not support IPC data transfer */
@@ -40,7 +41,13 @@ int MPIDI_GPU_attach_mem(MPIDI_GPU_mem_handle_t mem_handle,
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int mpl_err = MPL_SUCCESS;
-    mpl_err = MPL_gpu_ipc_handle_map(mem_handle.ipc_handle, dev_handle, vaddr);
+    if (mem_handle.dev_id == -1)
+        mpl_err = MPL_gpu_ipc_handle_map(mem_handle.ipc_handle, dev_handle, vaddr);
+    else {
+        MPL_gpu_device_handle_t remote_dev_handle;
+        MPL_gpu_get_dev_handle(mem_handle.dev_id, &remote_dev_handle);
+        mpl_err = MPL_gpu_ipc_handle_map(mem_handle.ipc_handle, remote_dev_handle, vaddr);
+    }
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_map");
 #endif
 
@@ -51,7 +58,7 @@ int MPIDI_GPU_attach_mem(MPIDI_GPU_mem_handle_t mem_handle,
     goto fn_exit;
 }
 
-int MPIDI_GPU_close_mem(void *vaddr, MPL_gpu_ipc_mem_handle_t ipc_handle)
+int MPIDI_GPU_close_mem(void *vaddr, MPIDI_GPU_mem_handle_t ipc_handle)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_CLOSE_MEM);
@@ -59,7 +66,7 @@ int MPIDI_GPU_close_mem(void *vaddr, MPL_gpu_ipc_mem_handle_t ipc_handle)
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int mpl_err = MPL_SUCCESS;
-    mpl_err = MPL_gpu_ipc_handle_unmap(vaddr, ipc_handle);
+    mpl_err = MPL_gpu_ipc_handle_unmap(vaddr, handle.ipc_handle);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_unmap");
 #endif
 

@@ -87,7 +87,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
                                                         MPIDI_IPCI_mem_handle_t mem_handle,
                                                         size_t src_data_sz,
                                                         MPIR_Request * sreq_ptr,
-                                                        int src_lrank, MPIR_Request * rreq)
+                                                        MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     void *src_buf = NULL;
@@ -112,9 +112,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(MPIDIG_REQUEST(rreq, buffer), &attr);
 
-    mpi_errno = MPIDI_IPCI_attach_mem(ipc_type, src_lrank, mem_handle, attr.device, src_data_sz,
-                                      &src_buf);
-    MPIR_ERR_CHECK(mpi_errno);
+    /* attach remote buffer */
+    switch (ipc_type) {
+        case MPIDI_IPCI_TYPE__XPMEM:
+            mpi_errno = MPIDI_XPMEM_attach_mem(mem_handle.xpmem, &src_buf);
+            break;
+        case MPIDI_IPCI_TYPE__GPU:
+            mpi_errno = MPIDI_GPU_attach_mem(mem_handle.gpu, attr.device, &src_buf);
+            break;
+        case MPIDI_IPCI_TYPE__NONE:
+            /* no-op */
+            break;
+        default:
+            /* Unknown IPC type */
+            MPIR_Assert(0);
+            break;
+    }
 
     IPC_TRACE("handle_lmt_recv: handle matched rreq %p [source %d, tag %d, "
               " context_id 0x%x], copy dst %p, bytes %ld\n", rreq,

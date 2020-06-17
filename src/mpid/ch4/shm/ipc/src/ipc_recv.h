@@ -38,9 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_matched_recv(void *buf,
 
         mpi_errno = MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_REQUEST(message, ipc_type),
                                                unexp_rreq->mem_handle,
-                                               unexp_rreq->data_sz,
-                                               unexp_rreq->sreq_ptr, unexp_rreq->src_lrank,
-                                               message);
+                                               unexp_rreq->data_sz, unexp_rreq->sreq_ptr, message);
         MPIR_ERR_CHECK(mpi_errno);
 
         *recvd_flag = true;
