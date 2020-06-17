@@ -26,10 +26,11 @@ cvars:
 
 #include "gpu_pre.h"
 
-int MPIDI_GPU_get_mem_attr(const void *vaddr, MPIDI_IPCI_mem_attr_t * attr);
-int MPIDI_GPU_attach_mem(MPIDI_GPU_mem_handle_t mem_handle,
-                         MPL_gpu_device_handle_t dev_handle, MPI_Datatype recv_type, void **vaddr);
-int MPIDI_GPU_close_mem(void *vaddr, MPIDI_GPU_mem_handle_t handle);
+int MPIDI_GPU_get_ipc_attr(const void *vaddr, MPIDI_IPCI_ipc_attr_t * ipc_attr);
+int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
+                             MPL_gpu_device_handle_t dev_handle,
+                             MPI_Datatype recv_type, void **vaddr);
+int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle);
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits);
 int MPIDI_GPU_mpi_finalize_hook(void);
 
