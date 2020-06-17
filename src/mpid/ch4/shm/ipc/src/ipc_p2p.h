@@ -118,7 +118,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
             mpi_errno = MPIDI_XPMEM_attach_mem(mem_handle.xpmem, &src_buf);
             break;
         case MPIDI_IPCI_TYPE__GPU:
-            mpi_errno = MPIDI_GPU_attach_mem(mem_handle.gpu, attr.device, &src_buf);
+            mpi_errno =
+                MPIDI_GPU_attach_mem(mem_handle.gpu, attr.device, MPIDIG_REQUEST(rreq, datatype),
+                                     &src_buf);
             break;
         case MPIDI_IPCI_TYPE__NONE:
             /* no-op */
