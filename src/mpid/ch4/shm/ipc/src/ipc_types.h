@@ -19,22 +19,22 @@ typedef struct {
 } MPIDI_IPCI_global_t;
 
 /* memory handle definition
- * MPIDI_IPCI_mem_handle_t: local memory handle
- * MPIDI_IPCI_mem_attr_t: local memory attributes including available handle,
+ * MPIDI_IPCI_ipc_handle_t: local memory handle
+ * MPIDI_IPCI_ipc_attr_t: local memory attributes including available handle,
  *                        IPC type, and thresholds */
-typedef union MPIDI_IPCI_mem_handle {
-    MPIDI_XPMEM_mem_handle_t xpmem;
-    MPIDI_GPU_mem_handle_t gpu;
-} MPIDI_IPCI_mem_handle_t;
+typedef union MPIDI_IPCI_ipc_handle {
+    MPIDI_XPMEM_ipc_handle_t xpmem;
+    MPIDI_GPU_ipc_handle_t gpu;
+} MPIDI_IPCI_ipc_handle_t;
 
-typedef struct MPIDI_IPCI_mem_attr {
+typedef struct MPIDI_IPCI_ipc_attr {
     MPIDI_IPCI_type_t ipc_type;
-    MPIDI_IPCI_mem_handle_t mem_handle;
+    MPIDI_IPCI_ipc_handle_t ipc_handle;
     MPL_pointer_attr_t gpu_attr;
     struct {
         size_t send_lmt_sz;
     } threshold;
-} MPIDI_IPCI_mem_attr_t;
+} MPIDI_IPCI_ipc_attr_t;
 
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_IPCI_DBG_GENERAL;

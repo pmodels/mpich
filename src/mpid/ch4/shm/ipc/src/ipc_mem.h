@@ -11,19 +11,19 @@
 #include "../xpmem/xpmem_post.h"
 #include "../gpu/gpu_post.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_close_mem(MPIDI_IPCI_type_t ipc_type, void *vaddr,
-                                                  MPIDI_IPCI_mem_handle_t mem_handle)
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_unmap(MPIDI_IPCI_type_t ipc_type, void *vaddr,
+                                                     MPIDI_IPCI_ipc_handle_t ipc_handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_CLOSE_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_CLOSE_MEM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
 
     switch (ipc_type) {
         case MPIDI_IPCI_TYPE__XPMEM:
             break;
         case MPIDI_IPCI_TYPE__GPU:
-            mpi_errno = MPIDI_GPU_close_mem(vaddr, mem_handle.gpu);
+            mpi_errno = MPIDI_GPU_ipc_handle_unmap(vaddr, ipc_handle.gpu);
             break;
         case MPIDI_IPCI_TYPE__NONE:
             /* noop */
@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_close_mem(MPIDI_IPCI_type_t ipc_type, vo
             break;
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_CLOSE_MEM_HANDLE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_HANDLE_UNMAP);
     return mpi_errno;
 }
 
