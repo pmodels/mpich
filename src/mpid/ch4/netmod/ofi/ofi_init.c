@@ -1956,7 +1956,7 @@ static int addr_exchange_all_vnis(void)
 
     /* put in my addrnames */
     for (int i = 0; i < num_vnis; i++) {
-        size_t actual_name_len;
+        size_t actual_name_len = name_len;
         char *vni_addrname = my_names + i * name_len;
         MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[i].ep, vni_addrname,
                                   &actual_name_len), getname);
