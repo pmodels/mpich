@@ -256,6 +256,20 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
     return;
 }
 
+/* MPID_Progress_start_ex is an extended version of MPID_Progress_start.
+ * It allows initializing the progress_state with vci informantion and lock optimization */
+MPL_STATIC_INLINE_PREFIX void MPID_Progress_start_ex(MPID_Progress_state * state, int count,
+                                                     MPIR_Request ** reqs, int requests_property)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START_EX);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START_EX);
+
+    MPIDI_progress_state_init(state);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START_EX);
+    return;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
@@ -263,6 +277,11 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
     return;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Progress_locked(MPID_Progress_state * state)
+{
+    return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(MPID_Progress_state * state)

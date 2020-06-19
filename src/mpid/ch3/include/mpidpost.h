@@ -173,8 +173,10 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
  * Device level progress engine macros
  */
 #define MPID_Progress_start(progress_state_) MPIDI_CH3_Progress_start(progress_state_)
+#define MPID_Progress_start_ex(progress_state_, n_, reqs_, property_) MPIDI_CH3_Progress_start(progress_state_)
 #define MPID_Progress_wait(progress_state_)  MPIDI_CH3_Progress_wait(progress_state_)
 #define MPID_Progress_end(progress_state_)   MPIDI_CH3_Progress_end(progress_state_)
+#define MPID_Progress_locked(progress_state_) 0
 /* This is static inline instead of macro because otherwise MPID_Progress_test will
  * be a chain of macros and therefore can not be used as a callback function */
 static inline int MPID_Progress_test(MPID_Progress_state * state) /* state is unused */
