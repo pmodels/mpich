@@ -123,20 +123,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_p
 
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
-    MPID_Progress_state progress_state;
-
-    MPIDI_set_progress_vci(request_ptr, &progress_state);
-    return MPIR_Wait_state(request_ptr, status, &progress_state);
+    return MPIR_Wait_impl(request_ptr, status);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
                                           MPI_Status array_of_statuses[], int request_properties)
 {
-    MPID_Progress_state progress_state;
-
-    MPIDI_set_progress_vci_n(count, request_ptrs, &progress_state);
-    return MPIR_Waitall_state(count, request_ptrs, array_of_statuses,
-                              request_properties, &progress_state);
+    return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],

@@ -704,9 +704,6 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 
-int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state);
-int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
-                       int request_properties, MPID_Progress_state * state);
 int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status,
                        MPID_Progress_state * state);
 int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],

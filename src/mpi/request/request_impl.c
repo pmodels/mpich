@@ -830,8 +830,7 @@ int MPIR_Testsome(int incount, MPI_Request array_of_requests[], MPIR_Request * r
 }
 
 /* -- Wait -- */
-/* MPID_Wait call MPIR_Wait_state with initialized progress state */
-int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state)
+static int wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -851,15 +850,14 @@ int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progre
     goto fn_exit;
 }
 
-/* legacy interface (for ch3) */
 int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Progress_state progress_state;
 
     MPIR_Assert(request_ptr != NULL);
-    MPID_Progress_start(&progress_state);
-    mpi_errno = MPIR_Wait_state(request_ptr, status, &progress_state);
+    MPID_Progress_start_ex(&progress_state, 1, &request_ptr, 0);
+    mpi_errno = wait_state(request_ptr, status, &progress_state);
     MPID_Progress_end(&progress_state);
 
     return mpi_errno;
@@ -917,9 +915,8 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 }
 
 /* -- Waitall -- */
-/* MPID_Waitall call MPIR_Waitall_state with initialized progress state */
-int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
-                       int requests_property, MPID_Progress_state * state)
+static int waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
+                         int requests_property, MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -958,9 +955,9 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     int mpi_errno = MPI_SUCCESS;
     MPID_Progress_state progress_state;
 
-    MPID_Progress_start(&progress_state);
-    mpi_errno = MPIR_Waitall_state(count, request_ptrs, array_of_statuses, requests_property,
-                                   &progress_state);
+    MPID_Progress_start_ex(&progress_state, count, request_ptrs, requests_property);
+    mpi_errno = waitall_state(count, request_ptrs, array_of_statuses, requests_property,
+                              &progress_state);
     MPID_Progress_end(&progress_state);
     MPIR_ERR_CHECK(mpi_errno);
 
