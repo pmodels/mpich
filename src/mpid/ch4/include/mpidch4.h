@@ -346,6 +346,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "shm_impl.h"
 #endif
 
+/* declare some prototypes to avoid circular dependency */
+MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
+                                                       MPID_Progress_state * state);
+
 #include "ch4i_workq.h"
 
 #include "ch4_probe.h"

@@ -68,12 +68,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_vci(MPID_Progress_state 
 }
 
 #define MPIDI_THREAD_CS_ENTER_VCI_OPTIONAL(vci)         \
-    if (!(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {	\
+    if (!(state->is_locked || state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {	\
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
     }
 
 #define MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci)          \
-    if (!(state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {  \
+    if (!(state->is_locked || state->flag & MPIDI_PROGRESS_NM_LOCKLESS)) {  \
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);	\
     } while (0)
 
@@ -98,10 +98,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_check_progress_made_vci(MPID_Progress_state 
             MPIDI_THREAD_CS_EXIT_VCI_OPTIONAL(vci);                     \
         }                                                               \
         if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) { \
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);             \
-            mpi_errno = MPIDI_SHM_progress(vci, 0);                     \
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);              \
-        }                                                               \
+            if (!state->is_locked) { \
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock); \
+            } \
+            mpi_errno = MPIDI_SHM_progress(vci, 0); \
+            if (!state->is_locked) { \
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock); \
+            } \
+        } \
   } while (0)
 #endif
 
@@ -141,6 +145,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
 #else
     /* multiple vci */
     if (MPIDI_do_global_progress()) {
+        bool state_is_locked = state->is_locked;
+        if (state_is_locked) {
+            state->is_locked = false;
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(state->vci[0]).lock);
+        }
         for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
             MPIDI_PROGRESS(vci);
             if (wait) {
@@ -150,6 +159,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_progress_test(MPID_Progress_state * state, in
             if (wait && state->progress_made) {
                 break;
             }
+        }
+        if (state_is_locked) {
+            state->is_locked = true;
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(state->vci[0]).lock);
         }
     } else {
         for (int i = 0; i < state->vci_count; i++) {
@@ -264,7 +277,11 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_start_ex(MPID_Progress_state * state
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START_EX);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START_EX);
 
-    MPIDI_progress_state_init(state);
+    MPIDI_set_progress_vci_n(count, reqs, state);
+    if (state->vci_count == 1) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(state->vci[0]).lock);
+        state->is_locked = 1;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_START_EX);
     return;
@@ -275,13 +292,17 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
 
+    if (state->is_locked) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(state->vci[0]).lock);
+    }
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_END);
     return;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_locked(MPID_Progress_state * state)
 {
-    return 0;
+    return state->is_locked;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(MPID_Progress_state * state)

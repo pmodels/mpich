@@ -36,8 +36,8 @@ MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
                                                      MPID_Progress_state * state)
 {
+    memset(state, 0, sizeof(MPID_Progress_state));
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
-    state->progress_made = 0;
 
     int vci = get_vci_wrapper(req);
 
@@ -49,8 +49,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
 MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
                                                        MPID_Progress_state * state)
 {
+    memset(state, 0, sizeof(MPID_Progress_state));
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
-    state->progress_made = 0;
 
     int idx = 0;
     for (int i = 0; i < n; i++) {
