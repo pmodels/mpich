@@ -82,44 +82,48 @@ static int progress_test(MPID_Progress_state * state, int wait)
     MPIR_ERR_CHECK(mpi_errno);
 #endif
 
-    if (state->flag & MPIDI_PROGRESS_NM) {
-        if (!wait || !state->progress_made) {
-            if (do_global_progress()) {
-                for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
-                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-                    mpi_errno = MPIDI_NM_progress(vci, 0);
-                    if (wait) {
-                        check_progress_made_vci(state, vci);
-                    }
-                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
-                }
-
-            } else {
-                for (int i = 0; i < state->vci_count; i++) {
-                    int vci = state->vci[i];
-                    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
-                    mpi_errno = MPIDI_NM_progress(vci, 0);
-                    if (wait) {
-                        check_progress_made_idx(state, i);
-                    }
-                    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
-                }
+    if (do_global_progress()) {
+        for (int vci = 0; vci < MPIDI_global.n_vcis; vci++) {
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+            if (state->flag & MPIDI_PROGRESS_NM) {
+                mpi_errno = MPIDI_NM_progress(vci, 0);
             }
-        }
-    }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
-        if (!wait || !state->progress_made) {
-            /* SHM do single-vci for now */
-            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-            mpi_errno = MPIDI_SHM_progress(0, 0);
-            if (wait) {
-                check_progress_made_vci(state, 0);
+            if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
+                mpi_errno = MPIDI_SHM_progress(vci, 0);
             }
-            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+#endif
+            if (wait) {
+                check_progress_made_vci(state, vci);
+            }
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (wait && state->progress_made) {
+                break;
+            }
+        }
+    } else {
+        for (int i = 0; i < state->vci_count; i++) {
+            int vci = state->vci[i];
+            MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
+            if (state->flag & MPIDI_PROGRESS_NM) {
+                mpi_errno = MPIDI_NM_progress(vci, 0);
+            }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (state->flag & MPIDI_PROGRESS_SHM && mpi_errno == MPI_SUCCESS) {
+                mpi_errno = MPIDI_SHM_progress(vci, 0);
+            }
+#endif
+            if (wait) {
+                check_progress_made_idx(state, i);
+            }
+            MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
+            MPIR_ERR_CHECK(mpi_errno);
+            if (wait && state->progress_made) {
+                break;
+            }
         }
     }
-#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
