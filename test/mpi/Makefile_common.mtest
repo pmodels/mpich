@@ -30,7 +30,11 @@ $(top_builddir)/dtpools/src/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
 if HAVE_CUDA
+if GPU_ONLY
+TESTLIST ?= testlist.gpu
+else
 TESTLIST ?= testlist,testlist.dtp,testlist.cvar,testlist.gpu
+endif
 else
 TESTLIST ?= testlist,testlist.dtp,testlist.cvar
 endif
