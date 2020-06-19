@@ -60,8 +60,8 @@ static int progress_test(MPID_Progress_state * state, int wait)
     int mpi_errno, made_progress;
     mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PROGRESS_TEST);
 
 #ifdef HAVE_SIGNAL
     if (MPIDI_global.sigusr1_count > MPIDI_global.my_sigusr1_count) {
@@ -126,7 +126,7 @@ static int progress_test(MPID_Progress_state * state, int wait)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PROGRESS_TEST);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
