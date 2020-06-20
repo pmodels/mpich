@@ -949,7 +949,8 @@ static int waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status ar
 }
 
 static int requests_completion_processing(int count, MPIR_Request ** request_ptrs,
-                                          MPI_Status * array_of_statuses, int requests_property)
+                                          MPI_Status * array_of_statuses,
+                                          int requests_property, bool is_locked)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -967,7 +968,7 @@ static int requests_completion_processing(int count, MPIR_Request ** request_ptr
                 MPII_SENDQ_FORGET(request_ptr);
             }
             int rc = request_ptrs[i]->status.MPI_ERROR;
-            MPIR_Request_free(request_ptrs[i]);
+            MPIR_Request_free_with_safety(request_ptrs[i], !is_locked);
             if (rc != MPI_SUCCESS) {
                 MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
                 goto fn_exit;
@@ -983,7 +984,7 @@ static int requests_completion_processing(int count, MPIR_Request ** request_ptr
             int rc = MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
             if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
                 !MPIR_Request_is_partitioned(request_ptrs[i])) {
-                MPIR_Request_free(request_ptrs[i]);
+                MPIR_Request_free_with_safety(request_ptrs[i], !is_locked);
             }
             if (rc != MPI_SUCCESS) {
                 MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
@@ -999,7 +1000,7 @@ static int requests_completion_processing(int count, MPIR_Request ** request_ptr
         int rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
         if (!MPIR_Request_is_persistent(request_ptrs[i]) &&
             !MPIR_Request_is_partitioned(request_ptrs[i])) {
-            MPIR_Request_free(request_ptrs[i]);
+            MPIR_Request_free_with_safety(request_ptrs[i], !is_locked);
         }
 
         if (rc == MPI_SUCCESS) {
@@ -1033,7 +1034,6 @@ static int requests_completion_processing(int count, MPIR_Request ** request_ptr
     return mpi_errno;
 }
 
-/* legacy interface (for ch3) */
 int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
                       int requests_property)
 {
@@ -1043,6 +1043,11 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     MPID_Progress_start_ex(&progress_state, count, request_ptrs, requests_property);
     mpi_errno = waitall_state(count, request_ptrs, array_of_statuses, requests_property,
                               &progress_state);
+    if (mpi_errno == MPI_SUCCESS) {
+        bool is_locked = MPID_Progress_locked(&progress_state);
+        mpi_errno = requests_completion_processing(count, request_ptrs, array_of_statuses,
+                                                   requests_property, is_locked);
+    }
     MPID_Progress_end(&progress_state);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -1134,10 +1139,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
         }
 
         mpi_errno = MPID_Waitall(icount, &request_ptrs[ii], p_statuses, requests_property);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = requests_completion_processing(icount, &request_ptrs[ii], p_statuses,
-                                                   requests_property);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL) {
