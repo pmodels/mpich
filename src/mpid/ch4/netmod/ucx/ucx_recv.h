@@ -94,7 +94,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
                                             int rank,
                                             int tag, MPIR_Comm * comm,
                                             int context_offset,
-                                            MPIDI_av_entry_t * addr, MPIR_Request ** request)
+                                            MPIDI_av_entry_t * addr,
+                                            int vni_dst, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -114,14 +115,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
                                                         (char *) buf + dt_true_lb, data_sz,
                                                         ucp_dt_make_contig(1),
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.ctx[vni_dst].worker,
                                                         buf, count,
                                                         dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
@@ -166,14 +167,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     MPIDI_UCX_ucp_request_t *ucp_request;
     MPIR_Datatype *dt_ptr;
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     int vci = MPIDI_Request_get_vci(message);
-#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
                                                             (char *) buf + dt_true_lb,
                                                             data_sz,
                                                             ucp_dt_make_contig(1),
@@ -182,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     } else {
         MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
-            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[vci].worker,
                                                             buf, count,
                                                             dt_ptr->dev.netmod.ucx.ucp_datatype,
                                                             MPIDI_UCX_REQ(message).message_handler,
@@ -220,11 +219,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPI_Status * status, MPIR_Request ** request)
 {
     int mpi_errno;
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+
+    int vni_dst;
+    if (context_offset == 0) {
+        /* pt2pt */
+        vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    } else {
+        /* collective */
+        vni_dst = 0;
+    }
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
     mpi_errno =
-        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
+                       request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, NULL);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
     return mpi_errno;
 }
 
@@ -238,18 +247,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPIR_Request * partner)
 {
     int mpi_errno;
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+
+    int vni_dst;
+    if (context_offset == 0) {
+        /* pt2pt */
+        vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    } else {
+        /* collective */
+        vni_dst = 0;
+    }
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
     mpi_errno =
-        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
+        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
+                       request);
     MPIDI_REQUEST_SET_LOCAL(*request, 0, partner);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
     return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     if (!MPIR_Request_is_complete(rreq)) {
-        ucp_request_cancel(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_REQ(rreq).ucp_request);
+        int vci = MPIDI_Request_get_vci(rreq);
+        ucp_request_cancel(MPIDI_UCX_global.ctx[vci].worker, MPIDI_UCX_REQ(rreq).ucp_request);
     }
 
     return MPI_SUCCESS;
