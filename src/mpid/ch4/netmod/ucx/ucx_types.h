@@ -23,6 +23,12 @@
 #define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
 
 typedef struct {
+    ucp_worker_h worker;
+    ucp_address_t *if_address;
+    size_t addrname_len;
+} MPIDI_UCX_context_t;
+
+typedef struct {
     int avtid;
     ucp_context_h context;
     ucp_worker_h worker;
@@ -32,6 +38,8 @@ typedef struct {
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
+    MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
+    int num_vnis;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
