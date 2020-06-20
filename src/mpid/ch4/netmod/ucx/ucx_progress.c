@@ -33,23 +33,23 @@ int MPIDI_UCX_progress(int vci, int blocking)
     /* TODO: test UCX active message APIs instead of layering over tagged */
     while (true) {
         /* check for pending active messages */
-        ucp_tag_message_h message_handle =
-            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1,
-                             &info);
+        ucp_tag_message_h message_handle;
+        message_handle = ucp_tag_probe_nb(MPIDI_UCX_global.ctx[0].worker,
+                                          MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
         if (message_handle == NULL)
             break;
 
         /* message is available. allocate a buffer and start receiving it */
         MPL_gpu_malloc_host(&am_buf, info.length);
-        ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
-                                                                      am_buf,
-                                                                      info.length,
-                                                                      ucp_dt_make_contig(1),
-                                                                      message_handle, &am_handler);
+        ucp_request =
+            (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+                                                            am_buf, info.length,
+                                                            ucp_dt_make_contig(1),
+                                                            message_handle, &am_handler);
 
         /* block until receive completes and am_handler executes */
         while (!ucp_request_is_completed(ucp_request)) {
-            ucp_worker_progress(MPIDI_UCX_global.worker);
+            ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
         }
 
         /* free resources for handled message */
@@ -57,7 +57,7 @@ int MPIDI_UCX_progress(int vci, int blocking)
         MPL_gpu_free_host(am_buf);
     }
 
-    ucp_worker_progress(MPIDI_UCX_global.worker);
+    ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
 
     return mpi_errno;
 }

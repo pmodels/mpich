@@ -241,8 +241,6 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_UCX_global.worker = MPIDI_UCX_global.ctx[0].worker;
-
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);
 

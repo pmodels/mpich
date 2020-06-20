@@ -30,7 +30,6 @@ typedef struct {
 
 typedef struct {
     ucp_context_h context;
-    ucp_worker_h worker;
     MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
     int num_vnis;
 } MPIDI_UCX_global_t;

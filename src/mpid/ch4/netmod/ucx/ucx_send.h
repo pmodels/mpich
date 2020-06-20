@@ -234,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
     if (!MPIR_Request_is_complete(sreq)) {
-        ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(sreq).ucp_request);
+        ucp_request_cancel(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_REQ(sreq).ucp_request);
     }
 
     return MPI_SUCCESS;

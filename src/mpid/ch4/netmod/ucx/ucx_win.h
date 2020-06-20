@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
     if (MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_win_need_flush(win)) {
         ucs_status_t ucp_status;
         /* maybe we just flush all eps here? More efficient for smaller communicators... */
-        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        ucp_status = ucp_worker_flush(MPIDI_UCX_global.ctx[0].worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_win_unset_sync(win);
     }
@@ -156,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 
         /* currently, UCP does not support local flush, so we have to call
          * a global flush. This is not good for performance - but OK for now */
-        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        ucp_status = ucp_worker_flush(MPIDI_UCX_global.ctx[0].worker);
         MPIDI_UCX_CHK_STATUS(ucp_status);
 
         /* TODO: should set to FLUSH after replace with real local flush. */
