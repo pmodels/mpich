@@ -11,6 +11,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories:
+    - name        : GPU
+      description : GPU related cvars
+
 cvars:
     - name        : MPIR_CVAR_ENABLE_GPU
       category    : GPU
