@@ -153,35 +153,6 @@ fi
 
 AC_SUBST(DTP_SWITCH)
 
-# GPU support
-PAC_PUSH_FLAG([CPPFLAGS])
-PAC_PUSH_FLAG([LDFLAGS])
-PAC_PUSH_FLAG([LIBS])
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
-cuda_CPPFLAGS=""
-cuda_LDFLAGS=""
-cuda_LIBS=""
-if test "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    if test -n "${with_cuda}" ; then
-        cuda_CPPFLAGS="-I${with_cuda}/include"
-        if test -d ${with_cuda}/lib64 ; then
-            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
-        else
-            cuda_LDFLAGS="-L${with_cuda}/lib"
-        fi
-        cuda_LIBS="-lcudart"
-    fi
-fi
-AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
-AC_SUBST([cuda_CPPFLAGS])
-AC_SUBST([cuda_LDFLAGS])
-AC_SUBST([cuda_LIBS])
-PAC_POP_FLAG([CPPFLAGS])
-PAC_POP_FLAG([LDFLAGS])
-PAC_POP_FLAG([LIBS])
-
 AC_ARG_ENABLE(cxx,
 	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
@@ -423,7 +394,7 @@ fi
 
 # errordir is substituted into the testlist file as errors when the
 # tests should check error handling and as a comment (#) otherwise.
-errordir="#"
+errordir="#errors"
 if test "$enable_checkerrors" = "yes" ; then
     errordir=errors
 fi
@@ -432,7 +403,7 @@ AC_SUBST(errordir)
 # The performance tests are not part of the MPI standard
 perfdir="perf"
 if test "$enable_strictmpi" = "yes" -o "$enable_perftest" = "no" ; then
-     perfdir="#"
+     perfdir="#perf"
 fi
 AC_SUBST(perfdir)
 
@@ -454,6 +425,7 @@ AC_SUBST(comm_overlap)
 
 # 
 # Only run the threads tests if multiple is specified
+threadsdir="#threads"
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
     threadsdir="threads"
 fi
@@ -513,6 +485,8 @@ AC_ARG_VAR([MPI_NO_SPAWN],[set to "yes" to disable dynamic process tests])
 if test "$enable_spawn" = "yes" -a "$MPI_NO_SPAWN" != "yes" ; then
     spawndir=spawn
     AC_DEFINE(HAVE_MPI_SPAWN,1,[Define if Dynamic Process functionality is available])
+else
+    spawndir="#spawn"
 fi
 AC_SUBST(spawndir)
 
@@ -520,15 +494,15 @@ AC_SUBST(spawndir)
 AC_ARG_VAR([MPI_NO_RMA],[set to "yes" to disable one-sided tests])
 rmadir=rma
 if test "$enable_rma" != yes ; then
-    rmadir="#"
+    rmadir="#rma"
 elif test "$MPI_NO_RMA"  = yes ; then
-    rmadir="#"
+    rmadir="#rma"
 else
     AC_DEFINE(HAVE_MPI_WIN_CREATE,1,[Define if MPI_Win_create is available])
 fi
 AC_SUBST(rmadir)
 
-faultsdir=#
+faultsdir="#faults"
 if test "$enable_checkfaults" = "yes" ; then
     faultsdir=faults
 fi
@@ -904,7 +878,7 @@ if test "$enable_f77" = yes ; then
 fi
 # Simple tests for which other languages we can handle.  
 # Use these only when configuring separate from an MPICH build
-f77dir="#"
+f77dir="#f77"
 AC_SUBST(f77dir)
 buildingF77=no
 if test "$FROM_MPICH" = yes ; then
@@ -1210,7 +1184,7 @@ if test "$enable_fc" = yes ; then
         enable_fc=no
     fi
 fi
-f90dir="#"
+f90dir="#f90"
 AC_SUBST(f90dir)
 # First, see if we have an f90 compiler.  This uses code similar to that
 # in the MPICH top-level configure
@@ -1243,7 +1217,7 @@ if test "$enable_fc" = yes ; then
             FCFLAGS="$FCFLAGS $FCFLAGS_f90"
         ],[
             AC_MSG_WARN([Fortran 90 test being disabled because the $FC compiler does not accept a .f90 extension])
-            f90dir=#
+            f90dir="#f90"
             enable_fc=no
         ])
         AC_LANG_POP([Fortran])
@@ -1332,7 +1306,7 @@ if test "$enable_f08" = "yes" ; then
     PAC_FC_2008_SUPPORT([enable_f08=yes],[enable_f08=no])
 fi
 
-f08dir="#"
+f08dir="#f08"
 AC_SUBST(f08dir)
 # FIXME if $FROM_MPICH is no, we should test build an MPI F08 program
 if test "$enable_f08" = "yes" -a "$FROM_MPICH" = "yes" ; then
@@ -1347,7 +1321,7 @@ if test "$enable_cxx" = yes ; then
     fi
 fi
 # Simple tests for which other languages we can handle
-cxxdir="#"
+cxxdir="#cxx"
 # The C++ interface added support for the Distgraph routines in MPI-2.2,
 # but not all MPI implementations support that.  nocxxdistgraph allows
 # us to detect that and to skip the test when it is not supported.
@@ -1441,7 +1415,7 @@ AC_LANG_C
 LT_INIT()
 
 # IO
-iodir="#"
+iodir="#io"
 if test "$enable_romio" != no ; then
     iodir=io
     AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
@@ -1598,6 +1572,35 @@ else
     # the user will need to determine how to run a program
     AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 fi
+
+# GPU support
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_PUSH_FLAG([LDFLAGS])
+PAC_PUSH_FLAG([LIBS])
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+cuda_CPPFLAGS=""
+cuda_LDFLAGS=""
+cuda_LIBS=""
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    if test -n "${with_cuda}" ; then
+        cuda_CPPFLAGS="-I${with_cuda}/include"
+        if test -d ${with_cuda}/lib64 ; then
+            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+        else
+            cuda_LDFLAGS="-L${with_cuda}/lib"
+        fi
+        cuda_LIBS="-lcudart"
+    fi
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AC_SUBST([cuda_CPPFLAGS])
+AC_SUBST([cuda_LDFLAGS])
+AC_SUBST([cuda_LIBS])
+PAC_POP_FLAG([CPPFLAGS])
+PAC_POP_FLAG([LDFLAGS])
+PAC_POP_FLAG([LIBS])
 
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])
