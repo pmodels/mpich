@@ -8,6 +8,13 @@
 
 #include "ucx_impl.h"
 
+/* when the recv is immediately completed, we need get a request to fill the status,
+ * but we need to get request from the correct pool or race condition arises. And we
+ * don't know the correct vni!
+ * The new ucx API should help: https://github.com/openucx/ucx/pull/5060
+ * For now, we malloc a temporary request.
+ * FIXME: update with new ucx api
+ */
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
                                                      ucp_tag_recv_info_t * info)
 {
@@ -20,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     if (ucp_request->req)
         rreq = ucp_request->req;
     else
-        rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0);
+        rreq = MPL_malloc(sizeof(MPIR_Request), MPL_MEM_OTHER);
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
@@ -131,7 +138,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
 
     if (ucp_request->req) {
         if (req == NULL) {
-            req = ucp_request->req;
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst);
+            memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
+            MPIR_cc_set(&req->cc, 0);
+            MPL_free(ucp_request->req);
         } else {
             memcpy(&req->status, &((MPIR_Request *) ucp_request->req)->status, sizeof(MPI_Status));
             MPIR_cc_set(&req->cc, 0);
@@ -141,7 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
         ucp_request_release(ucp_request);
     } else {
         if (req == NULL)
-            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, 0);
+            req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst);
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).ucp_request = ucp_request;
