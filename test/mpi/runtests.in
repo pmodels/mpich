@@ -432,6 +432,8 @@ sub RunList {
         @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
     }
 
+    my $dir_hash = get_subdirs();
+
     # eg: runtests -tests='testlist,testlist.dtp'
     my @all_listfiles = split /,\s*/, $listfile;
     foreach my $_f (@all_listfiles){
@@ -456,6 +458,10 @@ sub RunList {
                 # Too many timeout failures
                 print STDERR "Terminating test because of too many timeout failures\n";
                 last;
+            }
+            # disabled dir
+            if (/^#\s*(\S+)/ and -d $1) {
+                $dir_hash->{$1} = 0;
             }
             # Skip comments
             s/#.*//g;
@@ -594,9 +600,7 @@ sub RunList {
             }
 
             if (-d $programname) {
-                # If a directory, go into the that directory and 
-                # look for a new list file
-                &ProcessDir( $programname, $listfile );
+                $dir_hash->{$programname} = 1;
             }
             else {
                 $g_total_run++;
@@ -630,6 +634,12 @@ sub RunList {
             }
         }
         close( $LIST );
+    }
+
+    foreach my $dir (sort keys %$dir_hash) {
+        if ($dir_hash->{$dir}) {
+            ProcessDir($dir, $listfile);
+        }
     }
 }
 #
@@ -1409,4 +1419,16 @@ sub relese_lock {
         print "Releasing lock [$lockfile]\n";
     }
     close(LOCK);
+}
+
+# collect all subdirs into a hash from current directory
+sub get_subdirs {
+    my %dirs;
+    my @all = glob("*");
+    foreach my $a (@all) {
+        if (-d $a) {
+            $dirs{$a} = 1;
+        }
+    }
+    return \%dirs;
 }
