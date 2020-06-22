@@ -304,6 +304,10 @@ else {
     }
 }
 
+if ($listfiles eq "") {
+    $listfiles = $ENV{MPITEST_TESTLIST};
+}
+
 #
 # Process any files
 if ($listfiles eq "") {
