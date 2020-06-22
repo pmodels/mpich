@@ -311,13 +311,7 @@ if ($listfiles eq "") {
 #
 # Process any files
 if ($listfiles eq "") {
-    if ($batchRun) {
-        print STDERR "An implicit list of tests is not permitted in batch mode. See README for more details\n";
-        exit(1);
-    } 
-    else {
-        &ProcessImplicitList;
-    }
+    $listfiles = "testlist";
 }
 elsif (-d $listfiles) { 
     print STDERR "Testing by directories not yet supported\n";
@@ -647,80 +641,6 @@ sub RunList {
     }
 }
 #
-# This routine tries to run all of the files in the current
-# directory
-sub ProcessImplicitList {
-    # The default is to run every file in the current directory.
-    # If there are no built programs, build and run every file
-    # WARNING: This assumes that anything executable should be run as
-    # an MPI test.
-    $found_exec = 0;
-    $found_src  = 0;
-    open (PGMS, "ls -1 |" ) || die "Cannot list directory\n";
-    while (<PGMS>) {
-        s/\r?\n//;
-        $programname = $_;
-        if (-d $programname) { next; }  # Ignore directories
-        if ($programname eq "runtests") { next; } # Ignore self
-        if ($programname eq "checktests") { next; } # Ignore helper
-        if ($programname eq "configure") { next; } # Ignore configure script
-        if ($programname eq "config.status") { next; } # Ignore configure helper
-        if (-x $programname) { $found_exec++; }
-        if ($programname =~ /\.[cf]$/) { $found_src++; } 
-    }
-    close PGMS;
-    
-    my $default_test_opt = {args=>[], envs=>[], mpiexecargs=>[]};
-    if ($found_exec) {
-        print "Found executables\n" if $debug;
-        open (PGMS, "ls -1 |" ) || die "Cannot list programs\n";
-        while (<PGMS>) {
-            # Check for stop file
-            if (-s $stopfile) {
-                # Exit because we found a stopfile
-                print STDERR "Terminating test because stopfile $stopfile found\n";
-                last;
-            }
-            s/\r?\n//;
-            $programname = $_;
-            if (-d $programname) { next; }  # Ignore directories
-            if ($programname eq "runtests") { next; } # Ignore self
-            if (-x $programname) {
-                $g_total_run++;
-                &RunMPIProgram( $programname, $np_default, $default_test_opt);
-            }
-        }
-        close PGMS;
-    }
-    elsif ($found_src) { 
-        print "Found source files\n" if $debug;
-        open (PGMS, "ls -1 *.c |" ) || die "Cannot list programs\n";
-        while (<PGMS>) {
-            if (-s $stopfile) {
-                # Exit because we found a stopfile
-                print STDERR "Terminating test because stopfile $stopfile found\n";
-                last;
-            }
-            s/\r?\n//;
-            $programname = $_;
-            # Skip messages from ls about no files
-            if (! -s $programname) { next; }
-            $programname =~ s/\.c//;
-            $g_total_run++;
-            if (&BuildMPIProgram( $programname, "") == 0) {
-                &RunMPIProgram( $programname, $np_default, $default_test_opt);
-            }
-            else {
-                # We expected to run this program, so failure to build
-                # is an error
-                $found_error = 1;
-                $err_count++;
-            }
-            &CleanUpAfterRun( $programname, $default_test_opt );
-        }
-        close PGMS;
-    }
-}
 # Run the program.  
 # ToDo: Add a way to limit the time that any particular program may run.
 # The arguments are
