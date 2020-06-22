@@ -421,7 +421,7 @@ Input Parameters:
     errflag - the error flag to be passed along with the message
 @*/
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int d_rank, int tag,
+                                                MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
@@ -433,11 +433,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     /* NOTE: collective use vci 0 and critical section taken at ch4-layer */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
+            MPIDIG_send_coll(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                              errflag);
     } else {
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-        mpi_errno = MPIDI_OFI_send(buf, count, datatype, d_rank, tag, comm, context_offset,
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm, context_offset,
                                    addr, 0, 0, request, (*request == NULL), 0ULL, *errflag);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     }
