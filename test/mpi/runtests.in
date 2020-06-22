@@ -441,7 +441,7 @@ sub RunList {
         if (! -s "$_f" && -s "$srcdir/$curdir/$_f" ) {
             $listfileSource = "$srcdir/$curdir/$_f";
         }
-        if (!-f $listfileSource && $_f ne "testlist") {
+        if (!-f $listfileSource) {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
