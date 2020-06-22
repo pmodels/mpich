@@ -113,8 +113,6 @@ my $junitoutput = 0;
 my $junitfile = '';
 my $junitfullfile = '';
 
-$debug = 1;
-
 $depth = 0;              # This is used to manage multiple open list files
 
 # Build flags
@@ -215,7 +213,6 @@ foreach $_ (@ARGV) {
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
     elsif (/--?showprogress/) { $showProgress = 1; }
-    elsif (/--?debug/) { $debug = 1; }
     elsif (/--?batchdir=(.*)/) { $batrundir = $1; }
     elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?timeoutarg=(.*)/) { $timeoutArgPattern = $1; }
@@ -284,7 +281,7 @@ foreach $_ (@ARGV) {
         [-ppn=max-proc-per-node] [-ppnarg=string] \
         [-timelimitarg=string] [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
-        [-verbose] [-showprogress] [-debug] [-batch]\n";
+        [-verbose] [-showprogress] [-batch]\n";
         exit(1);
     }
 }
@@ -398,7 +395,7 @@ sub ProcessDir {
       $srcdir = "../$srcdir";
     }
 
-    print "Processing directory $dir\n" if ($verbose || $debug);
+    print "Processing directory $dir\n" if ($verbose);
     chdir $dir;
     if ($dir =~ /\//) {
         print STDERR "only direct subdirectories allowed in list files";
@@ -443,7 +440,7 @@ sub RunList {
             # just skip, do not complain missing unless it is "testlist"
             next;
         }
-        print "Looking in $curdir/$_f\n" if $debug;
+        print "Looking in $curdir/$_f\n";
         open( $LIST, "<$listfileSource" ) || die "Could not open $listfileSource\n";
         while (<$LIST>) {
             # Check for stop file
