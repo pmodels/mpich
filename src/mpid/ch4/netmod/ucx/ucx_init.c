@@ -213,6 +213,8 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
 
+    init_num_vnis();
+
     /* unable to support extended context id in current match bit configuration */
     MPL_COMPILE_TIME_ASSERT(MPIR_CONTEXT_ID_BITS <= MPIDI_UCX_CONTEXT_TAG_BITS);
 
@@ -231,11 +233,14 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         UCP_PARAM_FIELD_REQUEST_SIZE |
         UCP_PARAM_FIELD_ESTIMATED_NUM_EPS | UCP_PARAM_FIELD_REQUEST_INIT;
 
+    if (MPIDI_UCX_global.num_vnis > 1) {
+        ucp_params.mt_workers_shared = 1;
+        ucp_params.field_mask |= UCP_PARAM_FIELD_MT_WORKERS_SHARED;
+    }
+
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
-
-    init_num_vnis();
 
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
