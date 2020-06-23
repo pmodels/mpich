@@ -327,6 +327,19 @@ static int dynproc_send_disconnect(int conn_id);
 static int addr_exchange_root_vni(MPIR_Comm * init_comm);
 static int addr_exchange_all_vnis(void);
 
+static void *host_alloc(uintptr_t size);
+static void host_free(void *ptr);
+
+static void *host_alloc(uintptr_t size)
+{
+    return MPL_malloc(size, MPL_MEM_BUFFER);
+}
+
+static void host_free(void *ptr)
+{
+    MPL_free(ptr);
+}
+
 static int get_ofi_version(void)
 {
     if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
@@ -615,8 +628,13 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Maximum possible message size for short message send (=eager send)
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
-        MPIDI_OFI_global.am_buf_pool =
-            MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                  MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                  MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS,
+                                                  host_alloc, host_free,
+                                                  &MPIDI_OFI_global.am_hdr_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
             NULL;
@@ -735,7 +753,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
             MPL_free(MPIDI_OFI_global.am_bufs[i]);
 
-        MPIDIU_destroy_buf_pool(MPIDI_OFI_global.am_buf_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
 
         MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
                     MPIDI_OFI_global.cq_buffered_static_tail);

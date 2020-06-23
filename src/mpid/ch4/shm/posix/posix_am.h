@@ -9,6 +9,7 @@
 #include "posix_impl.h"
 #include "posix_am_impl.h"
 #include "posix_eager.h"
+#include "mpidu_genq.h"
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
@@ -218,11 +219,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
-    if (am_hdr_sz > MPIDI_POSIX_BUF_POOL_SIZE) {
+    if (am_hdr_sz > MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE) {
         am_hdr_buf = (uint8_t *) MPL_malloc(am_hdr_sz, MPL_MEM_SHM);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (uint8_t *) MPIDIU_get_buf(MPIDI_POSIX_global.am_buf_pool);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_POSIX_global.am_hdr_buf_pool,
+                                           (void **) &am_hdr_buf);
+        MPIR_Assert(am_hdr_buf);
         is_allocated = 0;
     }
 
@@ -240,7 +243,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDIU_release_buf(am_hdr_buf);
+        MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.am_hdr_buf_pool, am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 

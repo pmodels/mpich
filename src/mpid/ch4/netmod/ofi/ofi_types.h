@@ -15,6 +15,7 @@
 #include "ofi_pre.h"
 #include "ch4_types.h"
 #include "mpidch4r.h"
+#include "mpidu_genq.h"
 
 #define __SHORT_FILE__                          \
     (strrchr(__FILE__,'/')                      \
@@ -31,8 +32,9 @@
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_CACHELINE_SIZE           (MPL_CACHELINE_SIZE)
 #define MPIDI_OFI_IOV_MAX                  (32)
-#define MPIDI_OFI_BUF_POOL_SIZE            (1024)
-#define MPIDI_OFI_BUF_POOL_NUM             (1024)
+#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
+#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
+#define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 
 /* The number of bits in the immediate data field allocated to the source rank. */
@@ -356,7 +358,7 @@ typedef struct {
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDIU_buf_pool_t *am_buf_pool;
+    MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPL_atomic_int_t am_inflight_inject_emus;
     MPL_atomic_int_t am_inflight_rma_send_mrs;
     /* Sequence number trackers for active messages */

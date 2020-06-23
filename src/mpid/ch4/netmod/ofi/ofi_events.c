@@ -664,7 +664,7 @@ static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     MPID_Request_complete(rreq);
   fn_exit:
-    MPIDIU_release_buf((void *) ofi_req);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_READ_EVENT);
     return mpi_errno;
   fn_fail:
