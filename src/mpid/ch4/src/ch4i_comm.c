@@ -60,6 +60,11 @@ static int detect_regular_model(int *lpid, int size, int *offset, int *blocksize
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DETECT_REGULAR_MODEL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DETECT_REGULAR_MODEL);
 
+    if (size == 0) {
+        ret = MPIDI_SRC_MAPPER_DIRECT;
+        goto fn_exit;
+    }
+
     off = lpid[0];
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tdetect model: offset %d", off));
 
