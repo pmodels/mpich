@@ -627,14 +627,19 @@ static int init_comm_seq(MPIR_Comm * comm)
     if (!HANDLE_IS_BUILTIN(comm->handle)) {
         static int vci_seq = 0;
         vci_seq++;
-        comm->seq = vci_seq;
+
+        int tmp = vci_seq;
+        /* Bcast seq over vci 0 */
+        MPIR_Assert(comm->seq == 0);
 
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast_allcomm_auto(&comm->seq, 1, MPI_INT, 0, comm, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
+
+        comm->seq = tmp;
     }
 
     if (comm->node_comm) {
