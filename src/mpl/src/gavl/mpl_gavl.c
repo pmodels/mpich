@@ -6,8 +6,6 @@
 #include "mpl.h"
 #include <assert.h>
 
-#define GAVL_LEFT 0
-#define GAVL_RIGHT 1
 /*
  * We assume AVL tree height will not exceed 64. AVL tree with 64 height in worst case
  * can contain 27777890035287 nodes which is far enough for current applications.
@@ -18,19 +16,25 @@
  */
 #define MAX_STACK_SIZE 64
 
+enum {
+    SEARCH_LEFT = 0,
+    SEARCH_RIGHT,
+    BUFFER_MATCH,
+    NO_BUFFER_MATCH
+};
+
 typedef struct gavl_tree_node {
     struct gavl_tree_node *parent;
     struct gavl_tree_node *left;
     struct gavl_tree_node *right;
-    long height;
-    long addr;
+    uintptr_t height;
+    uintptr_t addr;
     uintptr_t len;
     const void *val;
 } gavl_tree_node_s;
 
 typedef struct gavl_tree {
     gavl_tree_node_s *root;
-    uintptr_t valsize;
 } gavl_tree_s;
 
 #define DECLARE_STACK(type, stack) \
@@ -117,18 +121,18 @@ static void gavl_right_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_no
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int gavl_cmp_func(long ustart, uintptr_t len, gavl_tree_node_s * tnode)
+static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
 {
-    long uend = ustart + len;
-    long tstart = tnode->addr;
-    long tend = tnode->addr + tnode->len;
+    uintptr_t uend = ustart + len;
+    uintptr_t tstart = tnode->addr;
+    uintptr_t tend = tnode->addr + tnode->len;
 
     if (ustart < tstart)
-        return -1;
+        return SEARCH_LEFT;
     else if (uend <= tend)
-        return 0;
+        return BUFFER_MATCH;
     else
-        return 1;
+        return SEARCH_RIGHT;
 }
 
 int MPL_gavl_tree_create(MPL_gavl_tree_t * gavl_tree)
@@ -147,7 +151,6 @@ int MPL_gavl_tree_create(MPL_gavl_tree_t * gavl_tree)
 int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                          const void *val)
 {
-    int mpl_err = MPL_SUCCESS;
     gavl_tree_node_s *node_ptr;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
 
@@ -156,7 +159,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     node_ptr->left = NULL;
     node_ptr->right = NULL;
     node_ptr->height = 1;
-    node_ptr->addr = (long) addr;
+    node_ptr->addr = (uintptr_t) addr;
     node_ptr->len = len;
     node_ptr->val = val;
 
@@ -167,24 +170,29 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
         gavl_tree_node_s *cur_node = gavl_tree_iptr->root;
         int direction;
         do {
-            int cmp_ret = gavl_cmp_func((long) node_ptr->addr, node_ptr->len, cur_node);
-            if (cmp_ret < 0) {
+            int cmp_ret = gavl_subset_cmp_func((uintptr_t) node_ptr->addr, node_ptr->len, cur_node);
+            if (cmp_ret == SEARCH_LEFT) {
                 if (cur_node->left != NULL) {
                     STACK_PUSH(node_stack, cur_node);
                     cur_node = cur_node->left;
                     continue;
                 } else
-                    direction = GAVL_LEFT;
-            } else {
+                    direction = SEARCH_LEFT;
+            } else if (cmp_ret == SEARCH_RIGHT) {
                 if (cur_node->right != NULL) {
                     STACK_PUSH(node_stack, cur_node);
                     cur_node = cur_node->right;
                     continue;
                 } else
-                    direction = GAVL_RIGHT;
+                    direction = SEARCH_RIGHT;
+            } else {
+                /* we cannot insert the duplicate buffer */
+                gavl_tree_iptr->gavl_free_fn(node_ptr->val);
+                MPL_free(node_ptr);
+                break;
             }
 
-            if (direction == GAVL_LEFT)
+            if (direction == SEARCH_LEFT)
                 cur_node->left = node_ptr;
             else
                 cur_node->right = node_ptr;
@@ -222,7 +230,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
             gavl_tree_iptr->root = gavl_tree_iptr->root->parent;
     }
 
-    return mpl_err;
+    return MPL_SUCCESS;
 }
 
 int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len, void **val)
@@ -234,11 +242,11 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     *val = NULL;
     cur_node = gavl_tree_iptr->root;
     while (cur_node) {
-        int cmp_ret = gavl_cmp_func((long) addr, len, cur_node);
-        if (cmp_ret == 0) {
+        int cmp_ret = gavl_subset_cmp_func((uintptr_t) addr, len, cur_node);
+        if (cmp_ret == BUFFER_MATCH) {
             *val = (void *) cur_node->val;
             break;
-        } else if (cmp_ret < 0)
+        } else if (cmp_ret == SEARCH_LEFT)
             cur_node = cur_node->left;
         else
             cur_node = cur_node->right;
