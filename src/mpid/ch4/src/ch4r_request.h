@@ -7,7 +7,7 @@
 #define CH4R_REQUEST_H_INCLUDED
 
 #include "ch4_types.h"
-#include "ch4r_buf.h"
+#include "mpidu_genq.h"
 
 static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
@@ -38,8 +38,9 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_BUF_POOL_SZ);
-    MPIDIG_REQUEST(req, req) = (MPIDIG_req_ext_t *) MPIDIU_get_buf(MPIDI_global.buf_pool);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_REQUEST_POOL_CELL_SIZE);
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.request_pool,
+                                       (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 
@@ -65,8 +66,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_BUF_POOL_SZ);
-    MPIDIG_REQUEST(req, req) = (MPIDIG_req_ext_t *) MPIDIU_get_buf(MPIDI_global.buf_pool);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_REQUEST_POOL_CELL_SIZE);
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.request_pool,
+                                       (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 

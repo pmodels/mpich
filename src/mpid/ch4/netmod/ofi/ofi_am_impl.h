@@ -7,6 +7,7 @@
 #define OFI_AM_IMPL_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "mpidu_genq.h"
 
 static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
 
@@ -85,7 +86,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
         MPL_free(req_hdr->am_hdr);
     }
 
-    MPIDIU_release_buf(req_hdr);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
 
   fn_exit:
@@ -102,8 +103,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
-        req_hdr = (MPIDI_OFI_am_request_header_t *)
-            MPIDIU_get_buf(MPIDI_OFI_global.am_buf_pool);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &req_hdr);
         MPIR_Assert(req_hdr);
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 
