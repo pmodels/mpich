@@ -128,12 +128,26 @@ static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_
     uintptr_t tstart = tnode->addr;
     uintptr_t tend = tnode->addr + tnode->len;
 
-    if (ustart < tstart)
-        return SEARCH_LEFT;
-    else if (uend <= tend)
+    if (tstart <= ustart && uend <= tend)
         return BUFFER_MATCH;
+    else if (ustart < tstart)
+        return SEARCH_LEFT;
     else
         return SEARCH_RIGHT;
+}
+
+static int gavl_intersect_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
+{
+    uintptr_t uend = ustart + len;
+    uintptr_t tstart = tnode->addr;
+    uintptr_t tend = tnode->addr + tnode->len;
+
+    if (uend <= tstart)
+        return SEARCH_LEFT;
+    else if (tend <= ustart)
+        return SEARCH_RIGHT;
+    else
+        return BUFFER_MATCH;
 }
 
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
@@ -284,4 +298,130 @@ int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree)
     }
     MPL_free(gavl_tree_iptr);
     return mpl_err;
+}
+
+int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
+{
+    int mpl_err = MPL_SUCCESS;
+    gavl_tree_node_s *cur_node;
+    gavl_tree_node_s *inorder_node;
+    gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
+
+    DECLARE_STACK(gavl_tree_node_s *, node_stack);
+    cur_node = gavl_tree_iptr->root;
+
+    if (cur_node == NULL) {
+        goto fn_exit;
+    } else {
+        void *val;
+        do {
+            val = NULL;
+            do {
+                int cmp_ret = gavl_intersect_cmp_func((uintptr_t) addr, len, cur_node);
+                if (cmp_ret == SEARCH_LEFT) {
+                    if (cur_node->left != NULL) {
+                        STACK_PUSH(node_stack, cur_node);
+                        cur_node = cur_node->left;
+                        continue;
+                    } else
+                        break;
+                } else if (cmp_ret == SEARCH_RIGHT) {
+                    if (cur_node->right != NULL) {
+                        STACK_PUSH(node_stack, cur_node);
+                        cur_node = cur_node->right;
+                        continue;
+                    } else
+                        break;
+                }
+
+                if (cur_node->right == NULL) {
+                    if (cur_node->parent == NULL) {
+                        /* delete root node */
+                        if (cur_node->left) {
+                            gavl_tree_iptr->root = cur_node->left;
+                            gavl_tree_iptr->root->parent = NULL;
+                        } else {
+                            gavl_tree_iptr->root = NULL;
+                        }
+                        val = (void *) cur_node->val;
+                        MPL_free(cur_node);
+                        break;
+                    } else {
+                        inorder_node = cur_node->parent;
+                        if (inorder_node->left == cur_node)
+                            inorder_node->left = cur_node->left;
+                        else
+                            inorder_node->right = cur_node->left;
+                        if (cur_node->left)
+                            cur_node->left->parent = inorder_node;
+
+                        val = (void *) cur_node->val;
+                        MPL_free(cur_node);
+                        STACK_PUSH(node_stack, inorder_node);
+                    }
+                } else {
+                    inorder_node = cur_node->right;
+                    STACK_PUSH(node_stack, cur_node);
+                    while (inorder_node->left) {
+                        STACK_PUSH(node_stack, inorder_node);
+                        inorder_node = inorder_node->left;
+                    }
+
+                    if (inorder_node->parent != cur_node) {
+                        if (inorder_node->right)
+                            inorder_node->right->parent = inorder_node->parent;
+                        inorder_node->parent->left = inorder_node->right;
+                    } else {
+                        /* only right child of deleted node */
+                        cur_node->right = NULL;
+                    }
+                    val = (void *) cur_node->val;
+                    cur_node->addr = inorder_node->addr;
+                    cur_node->len = inorder_node->len;
+                    cur_node->val = inorder_node->val;
+                    MPL_free(inorder_node);
+                }
+
+                STACK_POP(node_stack, cur_node);
+
+              stack_recovery:
+                gavl_update_node_info(cur_node);
+
+                int lheight = cur_node->left == NULL ? 0 : cur_node->left->height;
+                int rheight = cur_node->right == NULL ? 0 : cur_node->right->height;
+                if (lheight - rheight > 1) {
+                    gavl_tree_node_s *lnode = cur_node->left;
+                    int llheight = lnode->left == NULL ? 0 : lnode->left->height;
+                    if (llheight + 1 == lheight)
+                        gavl_right_rotation(cur_node, lnode);
+                    else
+                        gavl_left_right_rotation(cur_node, lnode);
+                } else if (rheight - lheight > 1) {
+                    gavl_tree_node_s *rnode = cur_node->right;
+                    int rlheight = rnode->left == NULL ? 0 : rnode->left->height;
+                    if (rlheight + 1 == rheight)
+                        gavl_right_left_rotation(cur_node, rnode);
+                    else
+                        gavl_left_rotation(cur_node, rnode);
+                }
+
+                if (!STACK_EMPTY(node_stack)) {
+                    STACK_POP(node_stack, cur_node);
+                    goto stack_recovery;
+                } else
+                    break;
+            } while (1);
+
+            while (gavl_tree_iptr->root && gavl_tree_iptr->root->parent != NULL)
+                gavl_tree_iptr->root = gavl_tree_iptr->root->parent;
+
+            if (val && gavl_free_fn)
+                gavl_free_fn(val);
+        } while (val);
+    }
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
 }
