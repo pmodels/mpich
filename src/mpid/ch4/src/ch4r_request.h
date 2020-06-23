@@ -7,7 +7,6 @@
 #define CH4R_REQUEST_H_INCLUDED
 
 #include "ch4_types.h"
-#include "ch4r_buf.h"
 #include "mpidu_genq.h"
 
 static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int ref_count)

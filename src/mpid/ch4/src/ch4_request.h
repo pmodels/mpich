@@ -7,7 +7,6 @@
 #define CH4_REQUEST_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_buf.h"
 #include "mpidu_genq.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * req)
