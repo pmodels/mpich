@@ -18,7 +18,7 @@ int MPIDI_XPMEMI_segtree_init(MPL_gavl_tree_t * tree)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_XPMEMI_SEGTREE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_XPMEMI_SEGTREE_INIT);
 
-    ret = MPL_gavl_tree_create(tree);
+    ret = MPL_gavl_tree_create(MPIDI_XPMEM_seg_free, tree);
     MPIR_ERR_CHKANDJUMP(ret != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**xpmem_segtree_init");
 
   fn_exit:

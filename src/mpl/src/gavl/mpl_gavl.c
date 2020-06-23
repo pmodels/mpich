@@ -35,6 +35,7 @@ typedef struct gavl_tree_node {
 
 typedef struct gavl_tree {
     gavl_tree_node_s *root;
+    void (*gavl_free_fn) (void *);
 } gavl_tree_s;
 
 #define DECLARE_STACK(type, stack) \
@@ -135,7 +136,7 @@ static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_
         return SEARCH_RIGHT;
 }
 
-int MPL_gavl_tree_create(MPL_gavl_tree_t * gavl_tree)
+int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
 {
     gavl_tree_s *gavl_tree_iptr;
 
@@ -144,6 +145,7 @@ int MPL_gavl_tree_create(MPL_gavl_tree_t * gavl_tree)
         return MPL_ERR_SHM_NOMEM;
 
     gavl_tree_iptr->root = NULL;
+    gavl_tree_iptr->gavl_free_fn = free_fn;
     *gavl_tree = (MPL_gavl_tree_t) gavl_tree_iptr;
     return MPL_SUCCESS;
 }
@@ -187,7 +189,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                     direction = SEARCH_RIGHT;
             } else {
                 /* we cannot insert the duplicate buffer */
-                gavl_tree_iptr->gavl_free_fn(node_ptr->val);
+                gavl_tree_iptr->gavl_free_fn((void *) node_ptr->val);
                 MPL_free(node_ptr);
                 break;
             }
@@ -255,7 +257,7 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     return mpl_err;
 }
 
-int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree, void (*free_fn) (void *))
+int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
@@ -275,8 +277,8 @@ int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree, void (*free_fn) (void *))
                 else
                     cur_node->right = NULL;
             }
-            if (free_fn)
-                free_fn((void *) dnode->val);
+            if (gavl_tree_iptr->gavl_free_fn)
+                gavl_tree_iptr->gavl_free_fn((void *) dnode->val);
             MPL_free(dnode);
         }
     }
