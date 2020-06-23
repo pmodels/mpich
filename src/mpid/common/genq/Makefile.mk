@@ -12,10 +12,13 @@ noinst_HEADERS += \
 		  src/mpid/common/genq/mpidu_genq.h \
 		  src/mpid/common/genq/mpidu_genq_shmem_pool.h \
 		  src/mpid/common/genq/mpidu_genq_shmem_queue.h \
-		  src/mpid/common/genq/mpidu_genqi_shmem_types.h
+		  src/mpid/common/genq/mpidu_genqi_shmem_types.h \
+		  src/mpid/common/genq/mpidu_genq_common.h \
+		  src/mpid/common/genq/mpidu_genq_private_pool.h
 
 mpi_core_sources += \
 		    src/mpid/common/genq/mpidu_genq_shmem_pool.c \
-		    src/mpid/common/genq/mpidu_genq_shmem_queue.c
+		    src/mpid/common/genq/mpidu_genq_shmem_queue.c \
+		    src/mpid/common/genq/mpidu_genq_private_pool.c
 
 endif BUILD_MPID_COMMON_GENQ

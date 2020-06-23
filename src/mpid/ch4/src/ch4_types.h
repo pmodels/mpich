@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "ch4i_workq_types.h"
+#include "mpidu_genq.h"
 
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
@@ -20,8 +21,9 @@ enum {
     MPIDI_VCI_RX = 0x2, /* Can receive */
 };
 
-#define MPIDIU_BUF_POOL_NUM (1024)
-#define MPIDIU_BUF_POOL_SZ (256)
+#define MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK (1024)
+#define MPIDIU_REQUEST_POOL_MAX_NUM_CELLS (257 * 1024)
+#define MPIDIU_REQUEST_POOL_CELL_SIZE (256)
 
 /* Flags for MPIDI_Progress_test
  *
@@ -181,21 +183,6 @@ typedef struct MPIDIG_comm_req_list_t {
     MPIDIG_rreq_t *uelist[2][4];
 } MPIDIG_comm_req_list_t;
 
-typedef struct MPIDIU_buf_pool_t {
-    int size;
-    int num;
-    void *memory_region;
-    struct MPIDIU_buf_pool_t *next;
-    struct MPIDIU_buf_t *head;
-    MPID_Thread_mutex_t lock;
-} MPIDIU_buf_pool_t;
-
-typedef struct MPIDIU_buf_t {
-    struct MPIDIU_buf_t *next;
-    MPIDIU_buf_pool_t *pool;
-    char data[];
-} MPIDIU_buf_t;
-
 typedef struct {
     int mmapped_size;
     int max_n_avts;
@@ -270,7 +257,7 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
-    MPIDIU_buf_pool_t *buf_pool;
+    MPIDU_genq_private_pool_t request_pool;
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
     volatile int sigusr1_count;

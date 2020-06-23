@@ -8,6 +8,7 @@
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
+#include "mpidu_genq.h"
 
 static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
 
@@ -59,11 +60,12 @@ static inline int MPIDI_NM_am_isendv(int rank,
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
-    if (am_hdr_sz > MPIDI_OFI_BUF_POOL_SIZE) {
+    if (am_hdr_sz > MPIDI_OFI_AM_HDR_POOL_CELL_SIZE) {
         am_hdr_buf = (char *) MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (char *) MPIDIU_get_buf(MPIDI_OFI_global.am_buf_pool);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &am_hdr_buf);
+        MPIR_Assert(am_hdr_buf);
         is_allocated = 0;
     }
 
@@ -81,7 +83,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDIU_release_buf(am_hdr_buf);
+        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISENDV);
     return mpi_errno;
