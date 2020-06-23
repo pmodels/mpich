@@ -31,8 +31,6 @@ typedef struct gavl_tree_node {
 typedef struct gavl_tree {
     gavl_tree_node_s *root;
     uintptr_t valsize;
-    int need_thread_safety;
-    MPL_thread_mutex_t lock;
 } gavl_tree_s;
 
 #define DECLARE_STACK(type, stack) \
@@ -133,24 +131,13 @@ MPL_STATIC_INLINE_PREFIX int gavl_cmp_func(long ustart, uintptr_t len, gavl_tree
         return 1;
 }
 
-int MPL_gavl_tree_create(int need_thread_safety, MPL_gavl_tree_t * gavl_tree)
+int MPL_gavl_tree_create(MPL_gavl_tree_t * gavl_tree)
 {
-    int mpl_err;
     gavl_tree_s *gavl_tree_iptr;
 
     gavl_tree_iptr = (gavl_tree_s *) MPL_malloc(sizeof(gavl_tree_s), MPL_MEM_OTHER);
     if (gavl_tree_iptr == NULL)
         return MPL_ERR_SHM_NOMEM;
-
-    if (need_thread_safety) {
-        assert(MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE);
-        MPL_thread_mutex_create(&gavl_tree_iptr->lock, &mpl_err);
-        if (mpl_err != MPL_SUCCESS) {
-            MPL_free(gavl_tree_iptr);
-            return mpl_err;
-        }
-    }
-    gavl_tree_iptr->need_thread_safety = need_thread_safety;
 
     gavl_tree_iptr->root = NULL;
     *gavl_tree = (MPL_gavl_tree_t) gavl_tree_iptr;
@@ -163,12 +150,6 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     int mpl_err = MPL_SUCCESS;
     gavl_tree_node_s *node_ptr;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
-
-    if (gavl_tree_iptr->need_thread_safety) {
-        MPL_thread_mutex_lock(&gavl_tree_iptr->lock, &mpl_err, MPL_THREAD_PRIO_HIGH);
-        if (mpl_err != MPL_SUCCESS)
-            return mpl_err;
-    }
 
     node_ptr = (gavl_tree_node_s *) MPL_malloc(sizeof(gavl_tree_node_s), MPL_MEM_OTHER);
     node_ptr->parent = NULL;
@@ -240,8 +221,6 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
         while (gavl_tree_iptr->root->parent != NULL)
             gavl_tree_iptr->root = gavl_tree_iptr->root->parent;
     }
-    if (gavl_tree_iptr->need_thread_safety)
-        MPL_thread_mutex_unlock(&gavl_tree_iptr->lock, &mpl_err);
 
     return mpl_err;
 }
@@ -251,12 +230,6 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     int mpl_err = MPL_SUCCESS;
     gavl_tree_node_s *cur_node;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
-
-    if (gavl_tree_iptr->need_thread_safety) {
-        MPL_thread_mutex_lock(&gavl_tree_iptr->lock, &mpl_err, MPL_THREAD_PRIO_HIGH);
-        if (mpl_err != MPL_SUCCESS)
-            return mpl_err;
-    }
 
     *val = NULL;
     cur_node = gavl_tree_iptr->root;
@@ -271,8 +244,6 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
             cur_node = cur_node->right;
     }
 
-    if (gavl_tree_iptr->need_thread_safety)
-        MPL_thread_mutex_unlock(&gavl_tree_iptr->lock, &mpl_err);
     return mpl_err;
 }
 
@@ -301,8 +272,6 @@ int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree, void (*free_fn) (void *))
             MPL_free(dnode);
         }
     }
-    if (gavl_tree_iptr->need_thread_safety)
-        MPL_thread_mutex_destroy(&gavl_tree_iptr->lock, &mpl_err);
     MPL_free(gavl_tree_iptr);
     return mpl_err;
 }
