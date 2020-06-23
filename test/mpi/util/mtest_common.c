@@ -166,13 +166,31 @@ int MTestIsBasicDtype(MPI_Datatype type)
 /* ------------------------------------------------------------------------ */
 /* Utilities to support device memory allocation */
 #ifdef HAVE_CUDA
+#include <cuda_runtime_api.h>
+#include <assert.h>
 int ndevices = -1;
-int device_id;
+int device_id = -1;
 #endif
 
 /* allocates memory of specified type */
 void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf)
 {
+#ifdef HAVE_CUDA
+    if (device_id == -1) {
+        cudaGetDeviceCount(&ndevices);
+        assert(ndevices != -1);
+        if (ndevices > 1)
+            /*
+             * set initial device id to 1 to simulate the case where
+             * the user is trying to move data from a device that is
+             * not the "current" device
+             */
+            device_id = 1;
+        else
+            device_id = 0;
+    }
+#endif
+
     if (type == MTEST_MEM_TYPE__UNREGISTERED_HOST) {
         *devicebuf = malloc(size);
         if (hostbuf)
