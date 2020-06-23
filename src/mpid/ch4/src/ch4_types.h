@@ -183,21 +183,6 @@ typedef struct MPIDIG_comm_req_list_t {
     MPIDIG_rreq_t *uelist[2][4];
 } MPIDIG_comm_req_list_t;
 
-typedef struct MPIDIU_buf_pool_t {
-    int size;
-    int num;
-    void *memory_region;
-    struct MPIDIU_buf_pool_t *next;
-    struct MPIDIU_buf_t *head;
-    MPID_Thread_mutex_t lock;
-} MPIDIU_buf_pool_t;
-
-typedef struct MPIDIU_buf_t {
-    struct MPIDIU_buf_t *next;
-    MPIDIU_buf_pool_t *pool;
-    char data[];
-} MPIDIU_buf_t;
-
 typedef struct {
     int mmapped_size;
     int max_n_avts;
