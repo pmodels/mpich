@@ -8,6 +8,7 @@
 
 #include "posix_types.h"
 #include "posix_impl.h"
+#include "mpidu_genq.h"
 
 static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t ** req_hdr_ptr)
 {
@@ -19,7 +20,7 @@ static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t
         MPL_free((*req_hdr_ptr)->am_hdr);
     }
 #ifndef POSIX_AM_REQUEST_INLINE
-    MPIDIU_release_buf((*req_hdr_ptr));
+    MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.am_hdr_buf_pool, (*req_hdr_ptr));
 #endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
@@ -43,8 +44,7 @@ static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
 #endif /* POSIX_AM_REQUEST_INLINE */
 
     if (req_hdr == NULL) {
-        req_hdr = (MPIDI_POSIX_am_request_header_t *)
-            MPIDIU_get_buf(MPIDI_POSIX_global.am_buf_pool);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_POSIX_global.am_hdr_buf_pool, (void **) &req_hdr);
         MPIR_ERR_CHKANDJUMP(!req_hdr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         req_hdr->am_hdr = (void *) &req_hdr->am_hdr_buf[0];

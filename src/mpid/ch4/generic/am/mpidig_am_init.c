@@ -6,8 +6,22 @@
 #include "mpidimpl.h"
 #include "mpidig_am.h"
 #include "mpidch4r.h"
+#include "mpidu_genq.h"
 
 static int dynamic_am_handler_id = MPIDIG_HANDLER_STATIC_MAX;
+
+static void *host_alloc(uintptr_t size);
+static void host_free(void *ptr);
+
+static void *host_alloc(uintptr_t size)
+{
+    return MPL_malloc(size, MPL_MEM_BUFFER);
+}
+
+static void host_free(void *ptr)
+{
+    MPL_free(ptr);
+}
 
 int MPIDIG_am_reg_cb_dynamic(MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
 {
@@ -50,8 +64,12 @@ int MPIDIG_am_init(void)
     MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
     MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
 
-    MPIDI_global.buf_pool = MPIDIU_create_buf_pool(MPIDIU_BUF_POOL_NUM, MPIDIU_BUF_POOL_SZ);
-    MPIR_Assert(MPIDI_global.buf_pool);
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
+                                              MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
+                                              MPIDIU_REQUEST_POOL_MAX_NUM_CELLS, host_alloc,
+                                              host_free, &MPIDI_global.request_pool);
+    MPIR_ERR_CHECK(mpi_errno);
     MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
     MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDIG_send_origin_cb, &MPIDIG_send_target_msg_cb);
@@ -120,7 +138,7 @@ void MPIDIG_am_finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_AM_FINALIZE);
 
     MPIDIU_map_destroy(MPIDI_global.win_map);
-    MPIDIU_destroy_buf_pool(MPIDI_global.buf_pool);
+    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_global.request_pool);
     MPL_free(MPIDI_global.comm_req_lists);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_FINALIZE);
