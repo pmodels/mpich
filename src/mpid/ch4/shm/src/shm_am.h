@@ -109,11 +109,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void)
 {
-    int ret;
-
-    ret = MPIDI_POSIX_am_eager_limit();
-
-    return ret;
+    return MPIDI_POSIX_am_eager_limit();
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)

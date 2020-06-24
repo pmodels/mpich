@@ -24,7 +24,9 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_stub_funcs = {
     MPIDI_POSIX_eager_recv_commit,
 
     MPIDI_POSIX_eager_recv_posted_hook,
-    MPIDI_POSIX_eager_recv_completed_hook
+    MPIDI_POSIX_eager_recv_completed_hook,
+
+    MPIDI_POSIX_eager_payload_limit
 };
 
 #endif /* POSIX_EAGER_INLINE */

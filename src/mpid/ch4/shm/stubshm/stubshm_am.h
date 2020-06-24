@@ -98,4 +98,10 @@ static inline int MPIDI_STUBSHM_am_send_hdr_reply(MPIR_Context_id_t context_id, 
     return MPI_SUCCESS;
 }
 
+static inline size_t MPIDI_STUBSHM_am_eager_limit(void)
+{
+    MPIR_Assert(0);
+    return 0;
+}
+
 #endif /* STUBSHM_AM_H_INCLUDED */
