@@ -250,6 +250,11 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
+AC_ARG_ENABLE(gpu-tests-only,
+        [AC_HELP_STRING([--enable-gpu-tests-only],
+                [Run only GPU tests])],,
+        [enable_gpu_tests_only=no])
+
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
     [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
@@ -1598,6 +1603,12 @@ AC_SUBST([cuda_LIBS])
 PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
+
+# GPU only tests
+if test $have_cuda = "no" -a $enable_gpu_tests_only = "yes" ; then
+    AC_MSG_ERROR([GPU only test configuration requires CUDA])
+fi
+AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
 
 # TODO: use variables such as has_f77 etc. instead of double use $f77dir etc.
 AM_CONDITIONAL([HAS_F77], [test $f77dir = f77])

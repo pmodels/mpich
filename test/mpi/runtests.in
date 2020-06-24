@@ -212,6 +212,7 @@ foreach $_ (@ARGV) {
     elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
     elsif (/--?timelimitarg=(.*)/) { $timelimitArg = $1; }
     elsif (/--?tests=(.*)/) { $listfiles = $1; }
+    elsif (/--?testdirs=(.*)/) { $testdirs = $1; }
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
     elsif (/--?showprogress/) { $showProgress = 1; }
@@ -279,7 +280,7 @@ foreach $_ (@ARGV) {
     }
     else {
         print STDERR "Unrecognized argument $_\n";
-        print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
+        print STDERR "runtests [-tests=testfile] [-testdirs=dirs] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-ppn=max-proc-per-node] [-ppnarg=string] \
         [-timelimitarg=string] [-xmlfile=filename ] [-tapfile=filename ] \
@@ -315,8 +316,11 @@ if ($listfiles eq "") {
         &ProcessImplicitList;
     }
 }
-elsif (-d $listfiles) { 
-    print STDERR "Testing by directories not yet supported\n";
+elsif ($testdirs ne "") {
+    my @all_testdirs = split /,\s*/, $testdirs;
+    foreach my $_d (@all_testdirs) {
+        &ProcessDir( $_d, $listfiles );
+    }
 }
 else {
     &RunList( $listfiles );
@@ -401,9 +405,8 @@ sub ProcessDir {
     }
 
     print "Processing directory $dir\n" if ($verbose || $debug);
-    chdir $dir;
-    if ($dir =~ /\//) {
-        print STDERR "only direct subdirectories allowed in list files";
+    unless(chdir $dir) {
+        die "Error: Cannot find directory $dir";
     }
     $curdir .= "/$dir";
 
