@@ -64,7 +64,9 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * messag
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            if (count > 0) {
+                MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            }
 
             /* TODO more checks may be appropriate */
         }

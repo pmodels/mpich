@@ -118,37 +118,47 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPIR_ERRTEST_RECV_RANK(comm_ptr, source, mpi_errno);
             }
 
-            /* Validate datatype handles */
-            MPIR_ERRTEST_DATATYPE(sendtype, "datatype", mpi_errno);
-            MPIR_ERRTEST_DATATYPE(recvtype, "datatype", mpi_errno);
+            if (sendcount > 0) {
+                /* Validate datatype handles */
+                MPIR_ERRTEST_DATATYPE(sendtype, "datatype", mpi_errno);
 
-            /* Validate datatype objects */
-            if (!HANDLE_IS_BUILTIN(sendtype)) {
-                MPIR_Datatype *datatype_ptr = NULL;
+                /* Validate datatype objects */
+                if (!HANDLE_IS_BUILTIN(sendtype)) {
+                    MPIR_Datatype *datatype_ptr = NULL;
 
-                MPIR_Datatype_get_ptr(sendtype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-            }
-            if (!HANDLE_IS_BUILTIN(recvtype)) {
-                MPIR_Datatype *datatype_ptr = NULL;
+                    MPIR_Datatype_get_ptr(sendtype, datatype_ptr);
+                    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                    MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                }
 
-                MPIR_Datatype_get_ptr(recvtype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
+                /* Validate buffers */
+                MPIR_ERRTEST_USERBUFFER(sendbuf, sendcount, sendtype, mpi_errno);
             }
 
-            /* Validate buffers */
-            MPIR_ERRTEST_USERBUFFER(sendbuf, sendcount, sendtype, mpi_errno);
-            MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, recvtype, mpi_errno);
+            if (recvcount > 0) {
+                /* Validate datatype handles */
+                MPIR_ERRTEST_DATATYPE(recvtype, "datatype", mpi_errno);
+
+                /* Validate datatype objects */
+                if (!HANDLE_IS_BUILTIN(recvtype)) {
+                    MPIR_Datatype *datatype_ptr = NULL;
+
+                    MPIR_Datatype_get_ptr(recvtype, datatype_ptr);
+                    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                    MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                }
+
+                /* Validate buffers */
+                MPIR_ERRTEST_USERBUFFER(recvbuf, recvcount, recvtype, mpi_errno);
+            }
         }
         MPID_END_ERROR_CHECKS;
     }

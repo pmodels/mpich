@@ -92,22 +92,25 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
                 goto fn_fail;
 
             MPIR_ERRTEST_COUNT(count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_SEND_RANK(comm_ptr, dest, mpi_errno);
             MPIR_ERRTEST_SEND_TAG(tag, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
 
-            /* Validate datatype object */
-            if (!HANDLE_IS_BUILTIN(datatype)) {
-                MPIR_Datatype *datatype_ptr = NULL;
+            if (count > 0) {
+                MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
-                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
-                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno)
-                    goto fn_fail;
+                /* Validate datatype object */
+                if (!HANDLE_IS_BUILTIN(datatype)) {
+                    MPIR_Datatype *datatype_ptr = NULL;
+
+                    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+                    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                    MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                    if (mpi_errno)
+                        goto fn_fail;
+                }
             }
         }
         MPID_END_ERROR_CHECKS;
