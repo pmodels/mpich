@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     {
         void *p1, *p2;
         p1 = s;
-        p2 = &(s[10].i);        /* This statement may fail on some systems */
+        p2 = s + 10;
         MTestPrintfMsg(0,
                        "C array starts at %p and ends at %p for a length of %d\n",
                        s, &(s[9].c), (char *) p2 - (char *) p1);
