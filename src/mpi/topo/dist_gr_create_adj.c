@@ -158,20 +158,26 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     dist_graph_ptr->out_weights = NULL;
     dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
 
-    MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree * sizeof(int), mpi_errno,
-                        "dist_graph_ptr->in", MPL_MEM_COMM);
-    MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree * sizeof(int), mpi_errno,
-                        "dist_graph_ptr->out", MPL_MEM_COMM);
-    MPIR_Memcpy(dist_graph_ptr->in, sources, indegree * sizeof(int));
-    MPIR_Memcpy(dist_graph_ptr->out, destinations, outdegree * sizeof(int));
+    if (indegree > 0) {
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree * sizeof(int), mpi_errno,
+                            "dist_graph_ptr->in", MPL_MEM_COMM);
+        MPIR_Memcpy(dist_graph_ptr->in, sources, indegree * sizeof(int));
+        if (dist_graph_ptr->is_weighted) {
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree * sizeof(int),
+                                mpi_errno, "dist_graph_ptr->in_weights", MPL_MEM_COMM);
+            MPIR_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree * sizeof(int));
+        }
+    }
 
-    if (dist_graph_ptr->is_weighted) {
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->in_weights", MPL_MEM_COMM);
-        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree * sizeof(int), mpi_errno,
-                            "dist_graph_ptr->out_weights", MPL_MEM_COMM);
-        MPIR_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree * sizeof(int));
-        MPIR_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree * sizeof(int));
+    if (outdegree > 0) {
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree * sizeof(int), mpi_errno,
+                            "dist_graph_ptr->out", MPL_MEM_COMM);
+        MPIR_Memcpy(dist_graph_ptr->out, destinations, outdegree * sizeof(int));
+        if (dist_graph_ptr->is_weighted) {
+            MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree * sizeof(int),
+                                mpi_errno, "dist_graph_ptr->out_weights", MPL_MEM_COMM);
+            MPIR_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree * sizeof(int));
+        }
     }
 
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
