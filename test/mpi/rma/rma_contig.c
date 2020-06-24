@@ -103,7 +103,7 @@ void run_test(int lock_mode, int lock_assert)
 
                 MPI_Win_lock(lock_mode, target_rank, lock_assert, win);
                 MPI_Accumulate(buf, data_size / sizeof(int), MPI_INT, target_rank,
-                               0, data_size / sizeof(int), MPI_INT, MPI_SUM, win);
+                               0, data_size / sizeof(int), MPI_INT, MPI_BXOR, win);
                 MPI_Win_unlock(target_rank, win);
             }
             t_acc = (MPI_Wtime() - t_acc) / num_iter;
