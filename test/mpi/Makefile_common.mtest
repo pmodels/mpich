@@ -30,14 +30,19 @@ $(top_builddir)/dtpools/src/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
 if HAVE_CUDA
+if GPU_ONLY
+TESTDIRS ?= coll,pt2pt,rma
+TESTLIST ?= testlist.gpu
+else
 TESTLIST ?= testlist,testlist.dtp,testlist.cvar,testlist.gpu
+endif
 else
 TESTLIST ?= testlist,testlist.dtp,testlist.cvar
 endif
 SUMMARY_BASENAME ?= summary
 
 testing:
-	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=$(TESTLIST) \
+	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=$(TESTLIST) -testdirs=$(TESTDIRS) \
 		-mpiexec="${MPIEXEC}" -xmlfile=$(SUMMARY_BASENAME).xml \
 		-tapfile=$(SUMMARY_BASENAME).tap -junitfile=$(SUMMARY_BASENAME).junit.xml
 
