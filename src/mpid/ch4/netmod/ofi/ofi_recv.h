@@ -32,6 +32,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
     MPI_Aint num_contig, size;
+    int vni_remote = vni_src;
+    int vni_local = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_RECV_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -75,10 +77,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
     msg.addr =
-        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, vni_dst, vni_src);
+        (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr, vni_local,
+                                                                         vni_remote);
 
-    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_dst, trecv,
-                         FALSE);
+    MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_local,
+                         trecv, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_RECV_IOV);
@@ -114,6 +117,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     char *recv_buf;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
+    int vni_remote = vni_src;
+    int vni_local = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -212,10 +217,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       data_sz,
                                       NULL,
                                       (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC :
-                                      MPIDI_OFI_av_to_phys(addr, vni_dst, vni_src),
+                                      MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                       match_bits, mask_bits,
-                                      (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_dst, trecv,
-                             FALSE);
+                                      (void *) &(MPIDI_OFI_REQUEST(rreq, context))), vni_local,
+                             trecv, FALSE);
     else {
         MPIDI_OFI_REQUEST(rreq, util.iov.iov_base) = recv_buf;
         MPIDI_OFI_REQUEST(rreq, util.iov.iov_len) = data_sz;
@@ -229,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_dst,
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_global.ctx[vni_dst].rx, &msg, flags), vni_local,
                              trecv, FALSE);
     }
 
