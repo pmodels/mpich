@@ -224,6 +224,22 @@ typedef struct {
     uint64_t msglen;
 } MPIDI_OFI_dynamic_process_request_t;
 
+typedef struct MPIDI_OFI_deferred_am_isend_req {
+    int rank;
+    MPIR_Comm *comm;
+    int handler_id;
+    size_t am_hdr_sz;
+    const void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+    MPIR_Request *sreq;
+
+    MPI_Aint data_sz;
+
+    struct MPIDI_OFI_deferred_am_isend_req *prev;
+    struct MPIDI_OFI_deferred_am_isend_req *next;
+} MPIDI_OFI_deferred_am_isend_req_t;
+
 typedef struct {
     uint8_t op;
     uint8_t dt;
@@ -359,6 +375,7 @@ typedef struct {
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
+    MPIDU_genq_private_pool_t am_pack_buf_pool;
     MPL_atomic_int_t am_inflight_inject_emus;
     MPL_atomic_int_t am_inflight_rma_send_mrs;
     /* Sequence number trackers for active messages */
@@ -383,6 +400,8 @@ typedef struct {
 
     /* Communication info for dynamic processes */
     MPIDI_OFI_conn_manager_t conn_mgr;
+
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
