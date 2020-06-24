@@ -312,6 +312,28 @@ cvars:
         Specifies the maximum number of iovecs to allocate for RMA operations
         to/from noncontiguous buffers.
 
+    - name        : MPIR_CVAR_CH4_OFI_NUM_AM_PACK_BUFFERS_PER_CHUNK
+      category    : CH4_OFI
+      type        : int
+      default     : 16
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for packing/unpacking active messages in
+        each block of the pool.
+
+    - name        : MPIR_CVAR_CH4_OFI_MAX_NUM_AM_PACK_BUFFERS
+      category    : CH4_OFI
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the max number of buffers for packing/unpacking active messages
+        in the pool.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -328,15 +350,31 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm);
 static int addr_exchange_all_vnis(void);
 
 static void *host_alloc(uintptr_t size);
+static void *host_alloc_registered(uintptr_t size);
 static void host_free(void *ptr);
+static void host_free_registered(void *ptr);
 
 static void *host_alloc(uintptr_t size)
 {
     return MPL_malloc(size, MPL_MEM_BUFFER);
 }
 
+static void *host_alloc_registered(uintptr_t size)
+{
+    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    MPIR_Assert(ptr);
+    MPL_gpu_register_host(ptr, size);
+    return ptr;
+}
+
 static void host_free(void *ptr)
 {
+    MPL_free(ptr);
+}
+
+static void host_free_registered(void *ptr)
+{
+    MPL_gpu_unregister_host(ptr);
     MPL_free(ptr);
 }
 
@@ -635,6 +673,15 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                                   host_alloc, host_free,
                                                   &MPIDI_OFI_global.am_hdr_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
+                                                  MPIR_CVAR_CH4_OFI_NUM_AM_PACK_BUFFERS_PER_CHUNK,
+                                                  MPIR_CVAR_CH4_OFI_MAX_NUM_AM_PACK_BUFFERS,
+                                                  host_alloc_registered,
+                                                  host_free_registered,
+                                                  &MPIDI_OFI_global.am_pack_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+
 
         MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
             NULL;
@@ -683,6 +730,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* index datatypes for RMA atomics */
     MPIDI_OFI_index_datatypes();
+
+    MPIDI_OFI_global.deferred_am_isend_q = NULL;
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -754,6 +803,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPL_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
 
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_pack_buf_pool);
 
         MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
                     MPIDI_OFI_global.cq_buffered_static_tail);
