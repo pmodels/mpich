@@ -112,6 +112,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void)
     return MPIDI_POSIX_am_eager_limit();
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_buf_limit(void)
+{
+    return MPIDI_POSIX_am_eager_buf_limit();
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_REQUEST_INIT);
