@@ -104,4 +104,10 @@ static inline size_t MPIDI_STUBSHM_am_eager_limit(void)
     return 0;
 }
 
+static inline size_t MPIDI_STUBSHM_am_eager_buf_limit(void)
+{
+    MPIR_Assert(0);
+    return 0;
+}
+
 #endif /* STUBSHM_AM_H_INCLUDED */

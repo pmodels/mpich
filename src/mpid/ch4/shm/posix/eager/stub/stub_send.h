@@ -14,6 +14,12 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_payload_limit(void)
     return 0;
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
+{
+    MPIR_Assert(0);
+    return 0;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
                                                     MPIDI_POSIX_am_header_t ** msg_hdr,
                                                     struct iovec **iov, size_t * iov_num)
