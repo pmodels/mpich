@@ -978,10 +978,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* If the source buffer has been packed by the caller, the distance between
          * two elements can be smaller than extent. E.g., predefined pairtype may
          * have larger extent than size.*/
-        if (src_kind == MPIDIG_ACC_SRCBUF_PACKED)
+        /* when predefined pairtype have larger extent than size, we'll end up
+         * missaligned access. Memcpy the source to workaround the alignment issue.
+         */
+        char *src_ptr = NULL;
+        if (src_kind == MPIDIG_ACC_SRCBUF_PACKED) {
             src_type_stride = source_dtp_size;
-        else
+            if (source_dtp_size < source_dtp_extent) {
+                src_ptr = MPL_malloc(source_dtp_extent, MPL_MEM_OTHER);
+            }
+        } else {
             src_type_stride = source_dtp_extent;
+        }
 
         i = 0;
         curr_loc = typerep_vec[0].iov_base;
@@ -997,8 +1005,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 
             MPIR_Assign_trunc(count, curr_len / type_size, int);
 
-            (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
-                    (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+            if (src_ptr) {
+                MPI_Aint unpacked_size;
+                MPIR_Typerep_unpack((char *) source_buf + src_type_stride * accumulated_count,
+                                    source_dtp_size, src_ptr, 1, source_dtp, 0, &unpacked_size);
+                (*uop) (src_ptr, (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+            } else {
+                (*uop) ((char *) source_buf + src_type_stride * accumulated_count,
+                        (char *) target_buf + MPIR_Ptr_to_aint(curr_loc), &count, &type);
+            }
 
             if (curr_len % type_size == 0) {
                 i++;
@@ -1014,6 +1029,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
             accumulated_count += count;
         }
 
+        MPL_free(src_ptr);
         MPL_free(typerep_vec);
     }
 
