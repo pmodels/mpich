@@ -40,7 +40,7 @@ int MPIDI_UCX_progress(int vci, int blocking)
             break;
 
         /* message is available. allocate a buffer and start receiving it */
-        am_buf = MPL_malloc(info.length, MPL_MEM_BUFFER);
+        MPL_gpu_malloc_host(&am_buf, info.length);
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
                                                                       am_buf,
                                                                       info.length,
@@ -54,7 +54,7 @@ int MPIDI_UCX_progress(int vci, int blocking)
 
         /* free resources for handled message */
         ucp_request_release(ucp_request);
-        MPL_free(am_buf);
+        MPL_gpu_free_host(am_buf);
     }
 
     ucp_worker_progress(MPIDI_UCX_global.worker);

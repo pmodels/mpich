@@ -8,6 +8,16 @@
 
 #include "fbox_impl.h"
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_payload_limit(void)
+{
+    return MPIDI_POSIX_FBOX_DATA_LEN;
+}
+
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
+{
+    return MPIDI_POSIX_FBOX_SIZE;
+}
+
 /* This function attempts to send the next chunk of a message via the fastbox. If the fastbox is
  * already full, this function will return and the caller is expected to queue the message for later
  * and retry.

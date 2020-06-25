@@ -7,6 +7,29 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
+static int handle_deferred_ops();
+
+static int handle_deferred_ops()
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_deferred_am_isend_req_t *dreq = MPIDI_OFI_global.deferred_am_isend_q;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
+
+    if (dreq) {
+        mpi_errno = MPIDI_OFI_deferred_am_isend_issue(dreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_progress(int vci, int blocking)
 {
     int mpi_errno;
@@ -37,6 +60,8 @@ int MPIDI_OFI_progress(int vci, int blocking)
         else
             mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
     }
+
+    handle_deferred_ops();
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
 

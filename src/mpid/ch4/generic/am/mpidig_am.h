@@ -94,4 +94,6 @@ void MPIDIG_am_finalize(void);
 void MPIDIG_am_comm_abort_init(void);
 int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code);
 
+int MPIDIG_am_check_init(void);
+
 #endif /* MPIDIG_AM_H_INCLUDED */

@@ -601,6 +601,8 @@ int MPID_Init(int requested, int *provided)
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
+    MPIDIG_am_check_init();
+
     /* Initialize collective selection */
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,

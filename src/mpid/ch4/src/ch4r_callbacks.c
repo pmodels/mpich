@@ -195,7 +195,13 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 #endif
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(match_req, datatype));
-    MPL_free(MPIDIG_REQUEST(rreq, buffer));
+    if (MPIDIG_REQUEST(rreq, count) <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
+        /* unexp pack buf is MPI_BYTE type, count == data size */
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                          MPIDIG_REQUEST(rreq, buffer));
+    } else {
+        MPL_gpu_free_host(MPIDIG_REQUEST(rreq, buffer));
+    }
     MPIR_Object_release_ref(rreq, &in_use);
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);
@@ -300,6 +306,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
+    void *pack_buf = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
@@ -332,7 +339,13 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         if (in_data_sz) {
-            MPIDIG_REQUEST(rreq, buffer) = (char *) MPL_malloc(in_data_sz, MPL_MEM_BUFFER);
+            if (in_data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
+                mpi_errno =
+                    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
+            } else {
+                MPL_gpu_malloc_host(&pack_buf, in_data_sz);
+            }
+            MPIDIG_REQUEST(rreq, buffer) = pack_buf;
             MPIDIG_REQUEST(rreq, count) = in_data_sz;
         } else {
             MPIDIG_REQUEST(rreq, buffer) = NULL;
@@ -363,7 +376,13 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
             if (unlikely(root_comm_again != NULL)) {
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-                MPL_free(MPIDIG_REQUEST(rreq, buffer));
+                if (MPIDIG_REQUEST(rreq, count) <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
+                    /* unexp pack buf is MPI_BYTE type, count == data size */
+                    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                                      MPIDIG_REQUEST(rreq, buffer));
+                } else {
+                    MPL_gpu_free_host(MPIDIG_REQUEST(rreq, buffer));
+                }
                 MPIR_Request_free_unsafe(rreq);
                 MPID_Request_complete(rreq);
                 rreq = NULL;
@@ -478,7 +497,13 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
             root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
             if (unlikely(root_comm_again != NULL)) {
                 MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
-                MPL_free(MPIDIG_REQUEST(rreq, buffer));
+                if (MPIDIG_REQUEST(rreq, count) <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
+                    /* unexp pack buf is MPI_BYTE type, count == data size */
+                    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                                      MPIDIG_REQUEST(rreq, buffer));
+                } else {
+                    MPL_gpu_free_host(MPIDIG_REQUEST(rreq, buffer));
+                }
                 MPIR_Request_free_unsafe(rreq);
                 MPID_Request_complete(rreq);
                 rreq = NULL;
