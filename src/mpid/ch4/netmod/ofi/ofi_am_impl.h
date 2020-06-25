@@ -9,6 +9,9 @@
 #include "ofi_impl.h"
 #include "mpidu_genq.h"
 
+int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq);
+void MPIDI_OFI_deferred_am_isend_dequeue(MPIDI_OFI_deferred_am_isend_req_t * dreq);
+
 static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
@@ -324,6 +327,42 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     goto fn_exit;
 }
 
+static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm, int handler_id,
+                                                      size_t am_hdr_sz, const void *buf,
+                                                      size_t count, MPI_Datatype datatype,
+                                                      MPIR_Request * sreq, MPI_Aint data_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_req = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
+
+    deferred_req =
+        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
+                                                         MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDJUMP(!deferred_req, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    deferred_req->rank = rank;
+    deferred_req->comm = comm;
+    deferred_req->handler_id = handler_id;
+    deferred_req->am_hdr_sz = am_hdr_sz;
+    deferred_req->buf = buf;
+    deferred_req->count = count;
+    deferred_req->datatype = datatype;
+    deferred_req->sreq = sreq;
+    deferred_req->data_sz = data_sz;
+
+    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, deferred_req);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static inline int MPIDI_OFI_do_am_isend(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
@@ -337,6 +376,8 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
+    bool data_lt_eager_threshold = false;
+    bool need_packing = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
@@ -344,28 +385,50 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
 
+    data_lt_eager_threshold =
+        (am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
     MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDI_OFI_global.deferred_am_isend_q) {
+        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
+        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
+                                                        buf, count, datatype, sreq, data_sz);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
+
+    need_packing = dt_contig ? false : true;
 
     MPL_pointer_attr_t attr;
     MPIR_GPU_query_pointer_attr(buf, &attr);
     if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
         /* Force packing of GPU buffer in host memory */
-        dt_contig = 0;
+        need_packing = true;
     }
 
-    if (!dt_contig) {
+    if (need_packing) {
         /* FIXME: currently we always do packing, also for high density types. However,
          * we should not do packing unless needed. Also, for large low-density types
          * we should not allocate the entire buffer and do the packing at once. */
         /* TODO: (1) Skip packing for high-density datatypes;
          *       (2) Pipeline allocation for low-density datatypes; */
-        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
-         * However, once the new buffer pool infrastructure is setup, we would simply be
-         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
-         * registered buffer should be equivalent with respect to performance. */
-        MPL_gpu_malloc_host((void **) &send_buf, data_sz);
+        if (data_lt_eager_threshold) {
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
+                                               (void **) &send_buf);
+            if (send_buf == NULL) {
+                mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
+                                                                buf, count, datatype, sreq,
+                                                                data_sz);
+                MPIR_ERR_CHECK(mpi_errno);
+                goto fn_exit;
+            }
+        } else {
+            /* only for large message RDMA read */
+            MPL_gpu_malloc_host((void **) &send_buf, data_sz);
+        }
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -374,7 +437,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    if (am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
+    if (data_lt_eager_threshold) {
         mpi_errno =
             MPIDI_OFI_am_isend_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                      am_hdr_sz, send_buf, data_sz, sreq);

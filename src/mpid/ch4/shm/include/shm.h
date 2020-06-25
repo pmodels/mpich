@@ -43,6 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
                                                       MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_buf_limit(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                      int *lpid_ptr,
                                                      bool is_remote) MPL_STATIC_INLINE_SUFFIX;

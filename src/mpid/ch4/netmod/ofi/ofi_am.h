@@ -125,6 +125,11 @@ static inline size_t MPIDI_NM_am_eager_limit(void)
     return MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t);
 }
 
+static inline size_t MPIDI_NM_am_eager_buf_limit(void)
+{
+    return MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
+}
+
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id, const void *am_hdr, size_t am_hdr_sz)

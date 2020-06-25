@@ -97,7 +97,13 @@ static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
         MPIR_Typerep_copy((char *) buf + dt_true_lb, MPIDIG_REQUEST(rreq, buffer), nbytes);
     }
 
-    MPL_free(MPIDIG_REQUEST(rreq, buffer));
+    if (MPIDIG_REQUEST(rreq, count) <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
+        /* unexp pack buf is MPI_BYTE type, count == data size */
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                          MPIDIG_REQUEST(rreq, buffer));
+    } else {
+        MPL_gpu_free_host(MPIDIG_REQUEST(rreq, buffer));
+    }
     rreq->kind = MPIR_REQUEST_KIND__RECV;
 
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_PEER_SSEND) {

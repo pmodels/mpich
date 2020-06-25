@@ -107,11 +107,12 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
 {
-    int ret;
+    return MPIDI_NM_func->am_eager_limit();
+}
 
-    ret = MPIDI_NM_func->am_eager_limit();
-
-    return ret;
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
+{
+    return MPIDI_NM_func->am_eager_buf_limit();
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,

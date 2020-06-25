@@ -45,6 +45,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
     MPIDI_POSIX_eager_func->recv_completed_hook(grank);
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_payload_limit(void)
+{
+    return MPIDI_POSIX_eager_func->payload_limit();
+}
+
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_buf_limit(void)
+{
+    return MPIDI_POSIX_eager_func->buf_limit();
+}
+
 #endif /* POSIX_EAGER_DISABLE_INLINES  */
 
 #else /* POSIX_EAGER_INLINE */
