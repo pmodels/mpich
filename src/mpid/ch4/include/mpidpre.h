@@ -335,6 +335,7 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+    bool coll_attach;           /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
