@@ -24,6 +24,10 @@ MTestArgList *MTestArgListCreate(int argc, char *argv[]);
 char *MTestArgListGetString(MTestArgList * head, const char *arg);
 int MTestArgListGetInt(MTestArgList * head, const char *arg);
 long MTestArgListGetLong(MTestArgList * head, const char *arg);
+const char *MTestArgListGetString_with_default(MTestArgList * head, const char *arg,
+                                               const char *default_str);
+int MTestArgListGetInt_with_default(MTestArgList * head, const char *arg, int default_val);
+long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long default_val);
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
