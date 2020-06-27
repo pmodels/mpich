@@ -101,7 +101,7 @@ extern int DTPI_func_nesting;
             DTPI_FREE(t2_);                                             \
         }                                                               \
         DTPI_ERR_ASSERT(strlen(tmp_) < max_len - cur_len - 1, rc_);     \
-        strncpy(tstr + cur_len, tmp_, strlen(tmp_) + 1);                \
+        strcpy(tstr + cur_len, tmp_);                                   \
         cur_len += strlen(tmp_);                                        \
     } while (0)
 
