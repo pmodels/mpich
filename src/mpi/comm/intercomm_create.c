@@ -130,6 +130,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(local_comm_ptr));
 
+    (*new_intercomm_ptr)->tainted = 1;
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
