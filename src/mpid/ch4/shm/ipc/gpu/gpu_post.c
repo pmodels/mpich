@@ -89,5 +89,6 @@ int MPIDI_GPU_ipc_handle_unmap(void *vaddr, MPIDI_GPU_ipc_handle_t handle)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_IPC_HANDLE_UNMAP);
     return mpi_errno;
-  fn_fail:goto fn_exit;
+  fn_fail:
+    goto fn_exit;
 }
