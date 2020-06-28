@@ -11,6 +11,7 @@
 typedef struct MPIDI_GPU_ipc_handle {
     MPL_gpu_ipc_mem_handle_t ipc_handle;
     int global_dev_id;
+    uintptr_t offset;
 } MPIDI_GPU_ipc_handle_t;
 
 #endif /* GPU_PRE_H_INCLUDED */

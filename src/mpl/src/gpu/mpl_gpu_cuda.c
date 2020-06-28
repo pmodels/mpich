@@ -49,16 +49,9 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     cudaError_t ret;
-    CUresult curet;
-    CUdeviceptr pbase;
 
-    curet = cuMemGetAddressRange(&pbase, NULL, (CUdeviceptr) ptr);
-    CU_ERR_CHECK(curet);
-
-    ret = cudaIpcGetMemHandle(&ipc_handle->handle, (void *) ptr);
+    ret = cudaIpcGetMemHandle(ipc_handle, (void *) ptr);
     CUDA_ERR_CHECK(ret);
-
-    ipc_handle->offset = (uintptr_t) ptr - (uintptr_t) pbase;
 
   fn_exit:
     return MPL_SUCCESS;
@@ -71,14 +64,11 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_h
 {
     cudaError_t ret;
     int prev_devid;
-    void *pbase;
 
     cudaGetDevice(&prev_devid);
     cudaSetDevice(dev_handle);
-    ret = cudaIpcOpenMemHandle(&pbase, ipc_handle.handle, cudaIpcMemLazyEnablePeerAccess);
+    ret = cudaIpcOpenMemHandle(ptr, ipc_handle, cudaIpcMemLazyEnablePeerAccess);
     CUDA_ERR_CHECK(ret);
-
-    *ptr = (void *) ((char *) pbase + ipc_handle.offset);
 
   fn_exit:
     cudaSetDevice(prev_devid);
@@ -87,10 +77,10 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_h
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle)
+int MPL_gpu_ipc_handle_unmap(void *ptr)
 {
     cudaError_t ret;
-    ret = cudaIpcCloseMemHandle((void *) ((char *) ptr - ipc_handle.offset));
+    ret = cudaIpcCloseMemHandle(ptr);
     CUDA_ERR_CHECK(ret);
 
   fn_exit:
@@ -250,6 +240,19 @@ int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
             global_ids[i] = i;
         }
     }
+
+  fn_exit:
+    return MPL_SUCCESS;
+  fn_fail:
+    return MPL_ERR_GPU_INTERNAL;
+}
+
+int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
+{
+    CUresult curet;
+
+    curet = cuMemGetAddressRange((CUdeviceptr *) pbase, (size_t *) len, (CUdeviceptr) ptr);
+    CU_ERR_CHECK(curet);
 
   fn_exit:
     return MPL_SUCCESS;
