@@ -4,13 +4,14 @@
  */
 
 #include "mpl.h"
+#include <assert.h>
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef MPL_HAVE_ZE
 
 ze_driver_handle_t global_ze_driver_handle;
-ze_device_handle_t *device_handles;
+ze_device_handle_t *global_ze_devices_handle;
 int gpu_ze_init_driver();
 
 #define ZE_ERR_CHECK(ret) \
@@ -21,20 +22,21 @@ int gpu_ze_init_driver();
 
 int MPL_gpu_init(int *device_count_ptr, int *max_dev_id_ptr)
 {
-    int ret_error;
-    int device_count;
+    ze_result_t ret;
+    int ret_error, device_count;
     ret_error = gpu_ze_init_driver();
     if (ret_error != MPL_SUCCESS)
         goto fn_fail;
 
+    zeDriverGet(NULL, &global_ze_driver_handle);
     ret = zeDeviceGet(global_ze_driver_handle, &device_count, NULL);
     ZE_ERR_CHECK(ret);
 
-    device_handles = MPL_malloc(device_count * sizeof(ze_device_handle_t), MPL_MEM_OTHER);
-    ret = zeDeviceGet(global_ze_driver_handle, &device_count, device_handles);
-    ZE_ERR_CHECK(ret);
-
     *max_dev_id_ptr = *device_count_ptr = device_count;
+    global_ze_devices_handle =
+        (ze_device_handle_t *) MPL_malloc(sizeof(ze_device_handle_t) * device_count, MPL_MEM_OTHER);
+    ret = zeDeviceGet(global_ze_driver_handle, &device_count, global_ze_devices_handle);
+    ZE_ERR_CHECK(ret);
 
   fn_exit:
     return MPL_SUCCESS;
@@ -110,15 +112,15 @@ int gpu_ze_init_driver()
 
 int MPL_gpu_finalize()
 {
-    MPL_free(device_handles);
+    MPL_free(global_ze_devices_handle);
     return MPL_SUCCESS;
 }
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
+    int mpl_err;
     ze_result_t ret;
-    ipc_handle->offset = 0;
-    ret = zeDriverGetMemIpcHandle(global_ze_driver_handle, ptr, &ipc_handle->handle);
+    ret = zeDriverGetMemIpcHandle(global_ze_driver_handle, ptr, ipc_handle);
     ZE_ERR_CHECK(ret);
 
   fn_exit:
@@ -130,24 +132,28 @@ int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_ha
 int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_handle_t dev_handle,
                            void **ptr)
 {
+    int mpl_err = MPL_SUCCESS;
     ze_result_t ret;
+
     ret =
-        zeDriverOpenMemIpcHandle(global_ze_driver_handle, dev_handle, ipc_handle.handle,
-                                 ZE_IPC_MEMORY_FLAG_NONE, ptr);
-    ZE_ERR_CHECK(ret);
+        zeDriverOpenMemIpcHandle(global_ze_driver_handle,
+                                 global_ze_devices_handle[ipc_handle.global_dev_id],
+                                 ipc_handle.handle, ZE_IPC_MEMORY_FLAG_NONE, ptr);
+    if (ret != ZE_RESULT_SUCCESS) {
+        mpl_err = MPL_ERR_GPU_INTERNAL;
+        goto fn_fail;
+    }
 
   fn_exit:
-    return MPL_SUCCESS;
+    return mpl_err;
   fn_fail:
-    return MPL_ERR_GPU_INTERNAL;
+    goto fn_exit;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle)
+int MPL_gpu_ipc_handle_unmap(void *ptr)
 {
     ze_result_t ret;
-    ret =
-        zeDriverCloseMemIpcHandle(global_ze_driver_handle,
-                                  (void *) ((char *) ptr - ipc_handle.offset));
+    ret = zeDriverCloseMemIpcHandle(global_ze_driver_handle, ptr);
     ZE_ERR_CHECK(ret);
 
   fn_exit:
@@ -279,6 +285,17 @@ int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
 {
     for (int i = 0; i < count; ++i)
         global_ids[i] = i;
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
+{
+    /* TODO: need to find oneAPI function to retrieve base addr and buffer len */
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
+{
     return MPL_SUCCESS;
 }
 
