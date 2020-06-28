@@ -7,6 +7,49 @@
 #include "gpu_pre.h"
 #include "gpu_types.h"
 
+static int get_map_device(int remote_global_dev_id,
+                          MPL_gpu_device_handle_t local_dev_handle,
+                          MPI_Datatype recv_type, int *dev_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_MAP_DEVICE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_MAP_DEVICE);
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    int recv_dev_id;
+    int recv_dt_contig;
+    MPIDI_GPUI_dev_id_t *avail_id = NULL;
+
+    MPIDI_Datatype_check_contig(recv_type, recv_dt_contig);
+
+    HASH_FIND_INT(MPIDI_GPUI_global.global_to_local_map, &remote_global_dev_id, avail_id);
+    MPL_gpu_get_dev_id(local_dev_handle, &recv_dev_id);
+    if (recv_dev_id < 0) {
+        /* when receiver's buffer is on host memory, recv_dev_id will be less than 0.
+         * however, when we decide to map buffer onto receiver's device, this mapping
+         * will be invalid, so we need to assign a default gpu instead; for now, we
+         * assume process can at least access one GPU, so device id 0 is set. */
+        recv_dev_id = 0;
+    }
+
+    if (avail_id == NULL) {
+        *dev_id = recv_dev_id;
+    } else {
+        if (!recv_dt_contig)
+            *dev_id = recv_dev_id;
+        else
+            *dev_id = avail_id->local_dev_id;
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_MAP_DEVICE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_GPU_get_ipc_attr(const void *vaddr, MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,21 +101,13 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     void *pbase;
-    int recv_dt_contig, mpl_err = MPL_SUCCESS;
-    MPIDI_GPUI_dev_id_t *avail_id = NULL;
-    MPIDI_Datatype_check_contig(recv_type, recv_dt_contig);
-    HASH_FIND_INT(MPIDI_GPUI_global.global_to_local_map, &handle.global_dev_id, avail_id);
+    int mpl_err = MPL_SUCCESS;
+    int dev_id;
+    mpi_errno = get_map_device(handle.global_dev_id, dev_handle, recv_type, &dev_id);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    if (avail_id == NULL)
-        mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, dev_handle, &pbase);
-    else {
-        MPL_gpu_device_handle_t remote_dev_handle;
-        MPL_gpu_get_dev_handle(avail_id->local_dev_id, &remote_dev_handle);
-        if (!recv_dt_contig)
-            mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, dev_handle, &pbase);
-        else
-            mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, remote_dev_handle, &pbase);
-    }
+    MPL_gpu_get_dev_handle(dev_id, &dev_handle);
+    mpl_err = MPL_gpu_ipc_handle_map(handle.ipc_handle, dev_handle, &pbase);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_ipc_handle_map");
 
     *vaddr = (void *) ((uintptr_t) pbase + handle.offset);
