@@ -26,7 +26,7 @@ int MPL_gpu_ipc_handle_map(MPL_gpu_ipc_mem_handle_t ipc_handle, MPL_gpu_device_h
     return MPL_ERR_GPU_INTERNAL;
 }
 
-int MPL_gpu_ipc_handle_unmap(void *ptr, MPL_gpu_ipc_mem_handle_t ipc_handle)
+int MPL_gpu_ipc_handle_unmap(void *ptr)
 {
     abort();
     return MPL_ERR_GPU_INTERNAL;
@@ -87,6 +87,16 @@ int MPL_gpu_get_dev_handle(int dev_id, MPL_gpu_device_handle_t * dev_handle)
 }
 
 int MPL_gpu_get_global_dev_ids(int *global_ids, int count)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
+{
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
 {
     return MPL_SUCCESS;
 }
