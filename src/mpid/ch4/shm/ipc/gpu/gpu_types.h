@@ -20,6 +20,7 @@ typedef struct {
     int **visible_dev_global_id;
     int *local_ranks;
     int *local_procs;
+    int global_max_dev_id;
     int initialized;
 } MPIDI_GPUI_global_t;
 
