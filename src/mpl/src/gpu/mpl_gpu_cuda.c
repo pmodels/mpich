@@ -3,11 +3,24 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include <dlfcn.h>
 #include "mpl.h"
 #include <assert.h>
 
 #define CUDA_ERR_CHECK(ret) if (unlikely((ret) != cudaSuccess)) goto fn_fail
 #define CU_ERR_CHECK(ret) if (unlikely((ret) != CUDA_SUCCESS)) goto fn_fail
+
+typedef struct gpu_free_hook {
+    void (*free_hook) (void *dptr);
+    struct gpu_free_hook *next;
+} gpu_free_hook_s;
+
+static gpu_free_hook_s *free_hook_chain = NULL;
+
+static CUresult CUDAAPI(*sys_cuMemFree) (CUdeviceptr dptr);
+static cudaError_t CUDARTAPI(*sys_cudaFree) (void *dptr);
+
+static int gpu_mem_hook_init();
 
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
 {
@@ -196,6 +209,8 @@ int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
     *max_dev_id_ptr = max_dev_id;
     *device_count = count;
 
+    gpu_mem_hook_init();
+
   fn_exit:
     return MPL_SUCCESS;
   fn_fail:
@@ -204,6 +219,12 @@ int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
 
 int MPL_gpu_finalize()
 {
+    gpu_free_hook_s *prev;
+    while (free_hook_chain) {
+        prev = free_hook_chain;
+        free_hook_chain = free_hook_chain->next;
+        MPL_free(prev);
+    }
     return MPL_SUCCESS;
 }
 
@@ -258,4 +279,63 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     return MPL_SUCCESS;
   fn_fail:
     return MPL_ERR_GPU_INTERNAL;
+}
+
+static void gpu_free_hooks_cb(void *dptr)
+{
+    gpu_free_hook_s *current = free_hook_chain;
+    while (current) {
+        current->free_hook(dptr);
+        current = current->next;
+    }
+    return;
+}
+
+static int gpu_mem_hook_init()
+{
+    void *libcuda_handle;
+    void *libcudart_handle;
+
+    libcuda_handle = dlopen("libcuda.so", RTLD_LAZY | RTLD_GLOBAL);
+    assert(libcuda_handle);
+    libcudart_handle = dlopen("libcudart.so", RTLD_LAZY | RTLD_GLOBAL);
+    assert(libcudart_handle);
+
+    sys_cuMemFree = (void *) dlsym(libcuda_handle, "cuMemFree");
+    assert(sys_cuMemFree);
+    sys_cudaFree = (void *) dlsym(libcudart_handle, "cudaFree");
+    assert(sys_cudaFree);
+    return MPL_SUCCESS;
+}
+
+int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
+{
+    gpu_free_hook_s *hook_obj = MPL_malloc(sizeof(gpu_free_hook_s), MPL_MEM_OTHER);
+    assert(hook_obj);
+    hook_obj->free_hook = free_hook;
+    hook_obj->next = NULL;
+    if (!free_hook_chain)
+        free_hook_chain = hook_obj;
+    else {
+        hook_obj->next = free_hook_chain;
+        free_hook_chain = hook_obj;
+    }
+
+    return MPL_SUCCESS;
+}
+
+CUresult CUDAAPI cuMemFree(CUdeviceptr dptr)
+{
+    CUresult result;
+    gpu_free_hooks_cb((void *) dptr);
+    result = sys_cuMemFree(dptr);
+    return (result);
+}
+
+cudaError_t CUDARTAPI cudaFree(void *dptr)
+{
+    cudaError_t result;
+    gpu_free_hooks_cb(dptr);
+    result = sys_cudaFree(dptr);
+    return result;
 }

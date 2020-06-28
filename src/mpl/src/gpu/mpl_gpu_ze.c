@@ -294,4 +294,9 @@ int MPL_gpu_get_buffer_bounds(const void *ptr, void **pbase, uintptr_t * len)
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_free_hook_register(void (*free_hook) (void *dptr))
+{
+    return MPL_SUCCESS;
+}
+
 #endif /* MPL_HAVE_ZE */
