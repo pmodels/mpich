@@ -13,5 +13,6 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                          const void *val);
 int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len, void **val);
 int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree);
+int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len);
 
 #endif /* MPL_GAVL_H_INCLUDED  */
