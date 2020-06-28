@@ -61,6 +61,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
     slmt_req_hdr->tag = tag;
     slmt_req_hdr->context_id = comm->context_id + context_offset;
 
+    if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
+        mpi_errno = MPIDI_GPU_ipc_handle_cache_insert(rank, comm, ipc_attr.ipc_handle.gpu);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
     IPC_TRACE("send_contig_lmt: shm ctrl_id %d, data_sz 0x%" PRIu64 ", sreq_ptr 0x%p, "
               "src_lrank %d, match info[dest %d, src_rank %d, tag %d, context_id 0x%x]\n",
               MPIDI_IPC_SEND_CONTIG_LMT_RTS, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,

@@ -115,7 +115,66 @@ static int get_map_device(int remote_global_dev_id,
     goto fn_exit;
 }
 
-int MPIDI_GPU_get_ipc_attr(const void *vaddr, MPIDI_IPCI_ipc_attr_t * ipc_attr)
+static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_DELETE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_DELETE);
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    int mpl_err = MPL_SUCCESS;
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+        mpl_err = MPL_gavl_tree_delete(gavl_tree, addr, len);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_delete");
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_DELETE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_GPU_ipc_handle_cache_insert(int rank, MPIR_Comm * comm, MPIDI_GPU_ipc_handle_t handle)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_IPC_HANDLE_CACHE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GPU_IPC_HANDLE_CACHE);
+
+#ifdef MPIDI_CH4_SHM_ENABLE_GPU
+    if (handle.handle_status == MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED) {
+        bool insert_successful = false;
+        int recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
+
+        MPIDI_GPU_ipc_handle_t *handle_obj =
+            MPL_malloc(sizeof(MPIDI_GPU_ipc_handle_t), MPL_MEM_OTHER);
+        *handle_obj = handle;
+        handle_obj->handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
+
+        mpi_errno = ipc_handle_cache_insert(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
+                                            [handle.global_dev_id],
+                                            (void *) handle.remote_base_addr, handle.len,
+                                            handle_obj, &insert_successful);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        if (insert_successful == false) {
+            MPL_free(handle_obj);
+        }
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GPU_IPC_HANDLE_CACHE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_GPU_get_ipc_attr(const void *vaddr, int rank, MPIR_Comm * comm,
+                           MPIDI_IPCI_ipc_attr_t * ipc_attr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GPU_GET_IPC_ATTR);
@@ -127,14 +186,30 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, MPIDI_IPCI_ipc_attr_t * ipc_attr)
     void *pbase;
     uintptr_t len;
     int mpl_err = MPL_SUCCESS;
+    MPIDI_GPU_ipc_handle_t *handle_obj = NULL;
+    int recv_lrank;
 
+    recv_lrank = MPIDI_GPUI_global.local_ranks[MPIDIU_rank_to_lpid(rank, comm)];
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__GPU;
+
+    MPL_gpu_get_dev_id(ipc_attr->gpu_attr.device, &local_dev_id);
+    HASH_FIND_INT(MPIDI_GPUI_global.local_to_global_map, &local_dev_id, tmp);
+
     mpl_err = MPL_gpu_get_buffer_bounds(vaddr, &pbase, &len);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_get_buffer_info");
 
-    mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->ipc_handle.gpu.ipc_handle);
-    MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
-                        "**gpu_ipc_handle_create");
+    mpi_errno = ipc_handle_cache_search(MPIDI_GPUI_global.ipc_handle_track_trees[recv_lrank]
+                                        [tmp->global_dev_id], pbase, len, (void **) &handle_obj);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (handle_obj == NULL) {
+        mpl_err = MPL_gpu_ipc_handle_create(pbase, &ipc_attr->ipc_handle.gpu.ipc_handle);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**gpu_ipc_handle_create");
+        ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED;
+    } else {
+        ipc_attr->ipc_handle.gpu.handle_status = MPIDI_GPU_IPC_HANDLE_VALID;
+    }
 
     /* MPIDI_GPU_get_ipc_attr will be called by sender to create an ipc handle.
      * remote_base_addr, len and node_rank attributes in ipc handle will be sent
@@ -146,8 +221,6 @@ int MPIDI_GPU_get_ipc_attr(const void *vaddr, MPIDI_IPCI_ipc_attr_t * ipc_attr)
     ipc_attr->ipc_handle.gpu.node_rank = MPIR_Process.local_rank;
     ipc_attr->ipc_handle.gpu.offset = (uintptr_t) vaddr - (uintptr_t) pbase;
 
-    MPL_gpu_get_dev_id(ipc_attr->gpu_attr.device, &local_dev_id);
-    HASH_FIND_INT(MPIDI_GPUI_global.local_to_global_map, &local_dev_id, tmp);
     ipc_attr->ipc_handle.gpu.global_dev_id = tmp->global_dev_id;
     ipc_attr->threshold.send_lmt_sz = MPIR_CVAR_CH4_IPC_GPU_P2P_THRESHOLD;
 #else
@@ -177,6 +250,16 @@ int MPIDI_GPU_ipc_handle_map(MPIDI_GPU_ipc_handle_t handle,
     int mpl_err = MPL_SUCCESS;
     int dev_id;
     MPIDI_GPUI_handle_obj_s *handle_obj = NULL;
+
+    if (handle.handle_status == MPIDI_GPU_IPC_HANDLE_REMAP_REQUIRED) {
+        for (int i = 0; i < MPIDI_GPUI_global.local_device_count; ++i) {
+            mpi_errno =
+                ipc_handle_cache_delete(MPIDI_GPUI_global.ipc_handle_mapped_trees[handle.node_rank]
+                                        [handle.global_dev_id][i], (void *) handle.remote_base_addr,
+                                        handle.len);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+    }
 
     mpi_errno = get_map_device(handle.global_dev_id, dev_handle, recv_type, &dev_id);
     MPIR_ERR_CHECK(mpi_errno);

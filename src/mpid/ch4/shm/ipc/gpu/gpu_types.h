@@ -24,6 +24,7 @@ typedef struct {
     int global_max_dev_id;
     int initialized;
     MPL_gavl_tree_t ***ipc_handle_mapped_trees;
+    MPL_gavl_tree_t **ipc_handle_track_trees;
 } MPIDI_GPUI_global_t;
 
 typedef struct {

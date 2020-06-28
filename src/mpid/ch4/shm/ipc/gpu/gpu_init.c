@@ -23,6 +23,47 @@ static void ipc_handle_cache_free(void *handle_obj)
     return;
 }
 
+static void ipc_handle_status_free(void *handle_obj)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_STATUS_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_STATUS_FREE);
+
+    MPL_free(handle_obj);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_STATUS_FREE);
+    return;
+}
+
+static void ipc_handle_free_hook(void *dptr)
+{
+    void *pbase;
+    uintptr_t len;
+    int mpl_err, local_dev_id;
+    MPL_pointer_attr_t gpu_attr;
+    MPIDI_GPUI_dev_id_t *tmp;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_FREE_HOOK);
+
+    if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
+        mpl_err = MPL_gpu_get_buffer_bounds(dptr, &pbase, &len);
+        MPIR_Assert(mpl_err == MPL_SUCCESS);
+
+        MPIR_GPU_query_pointer_attr(pbase, &gpu_attr);
+        MPL_gpu_get_dev_id(gpu_attr.device, &local_dev_id);
+        HASH_FIND_INT(MPIDI_GPUI_global.local_to_global_map, &local_dev_id, tmp);
+
+        for (int i = 0; i < MPIR_Process.local_size; ++i) {
+            mpl_err = MPL_gavl_tree_delete(MPIDI_GPUI_global.ipc_handle_track_trees[i]
+                                           [tmp->global_dev_id], pbase, len);
+            MPIR_Assert(mpl_err == MPL_SUCCESS);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_FREE_HOOK);
+    return;
+}
+
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
@@ -129,6 +170,13 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
     memset(MPIDI_GPUI_global.ipc_handle_mapped_trees, 0,
            sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size);
 
+    MPIDI_GPUI_global.ipc_handle_track_trees =
+        (MPL_gavl_tree_t **) MPL_malloc(sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size,
+                                        MPL_MEM_OTHER);
+    MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees != NULL);
+    memset(MPIDI_GPUI_global.ipc_handle_track_trees, 0,
+           sizeof(MPL_gavl_tree_t) * MPIR_Process.local_size);
+
     for (int i = 0; i < MPIR_Process.local_size; ++i) {
         MPIDI_GPUI_global.ipc_handle_mapped_trees[i] =
             (MPL_gavl_tree_t **) MPL_malloc(sizeof(MPL_gavl_tree_t *) *
@@ -136,6 +184,14 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
                                             MPL_MEM_OTHER);
         MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
         memset(MPIDI_GPUI_global.ipc_handle_mapped_trees[i], 0,
+               sizeof(MPL_gavl_tree_t *) * (MPIDI_GPUI_global.global_max_dev_id + 1));
+
+        MPIDI_GPUI_global.ipc_handle_track_trees[i] =
+            (MPL_gavl_tree_t *) MPL_malloc(sizeof(MPL_gavl_tree_t) *
+                                           (MPIDI_GPUI_global.global_max_dev_id + 1),
+                                           MPL_MEM_OTHER);
+        MPIR_Assert(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
+        memset(MPIDI_GPUI_global.ipc_handle_track_trees[i], 0,
                sizeof(MPL_gavl_tree_t *) * (MPIDI_GPUI_global.global_max_dev_id + 1));
 
         for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
@@ -153,10 +209,17 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
                 MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                     "**mpl_gavl_create");
             }
+
+            mpl_err =
+                MPL_gavl_tree_create(ipc_handle_status_free,
+                                     &MPIDI_GPUI_global.ipc_handle_track_trees[i][j]);
+            MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                "**mpl_gavl_create");
         }
     }
 
     MPIDI_GPUI_global.local_device_count = device_count;
+    MPL_gpu_free_hook_register(ipc_handle_free_hook);
 
     MPIDI_GPUI_global.initialized = 1;
 
@@ -210,6 +273,19 @@ int MPIDI_GPU_mpi_finalize_hook(void)
         }
     }
     MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees);
+
+    if (MPIDI_GPUI_global.ipc_handle_track_trees) {
+        for (int i = 0; i < MPIR_Process.local_size; ++i) {
+            if (MPIDI_GPUI_global.ipc_handle_track_trees[i]) {
+                for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
+                    if (MPIDI_GPUI_global.ipc_handle_track_trees[i][j])
+                        MPL_gavl_tree_free(MPIDI_GPUI_global.ipc_handle_track_trees[i][j]);
+                }
+            }
+            MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
+        }
+    }
+    MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees);
 
     mpl_err = MPL_gpu_finalize();
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");
