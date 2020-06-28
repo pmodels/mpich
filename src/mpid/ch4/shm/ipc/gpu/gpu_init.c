@@ -25,7 +25,7 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
         goto fn_exit;
 
     int *global_ids = MPL_malloc(sizeof(int) * device_count, MPL_MEM_OTHER);
-    assert(global_ids);
+    MPIR_Assert(global_ids);
 
     mpl_err = MPL_gpu_get_global_dev_ids(global_ids, device_count);
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
@@ -36,13 +36,13 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
     for (int i = 0; i < device_count; ++i) {
         MPIDI_GPUI_dev_id_t *id_obj =
             (MPIDI_GPUI_dev_id_t *) MPL_malloc(sizeof(MPIDI_GPUI_dev_id_t), MPL_MEM_OTHER);
-        assert(id_obj);
+        MPIR_Assert(id_obj);
         id_obj->local_dev_id = i;
         id_obj->global_dev_id = global_ids[i];
         HASH_ADD_INT(MPIDI_GPUI_global.local_to_global_map, local_dev_id, id_obj, MPL_MEM_OTHER);
 
         id_obj = (MPIDI_GPUI_dev_id_t *) MPL_malloc(sizeof(MPIDI_GPUI_dev_id_t), MPL_MEM_OTHER);
-        assert(id_obj);
+        MPIR_Assert(id_obj);
         id_obj->local_dev_id = i;
         id_obj->global_dev_id = global_ids[i];
         HASH_ADD_INT(MPIDI_GPUI_global.global_to_local_map, global_dev_id, id_obj, MPL_MEM_OTHER);
