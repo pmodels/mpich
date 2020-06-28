@@ -11,6 +11,9 @@
 typedef struct MPIDI_GPU_ipc_handle {
     MPL_gpu_ipc_mem_handle_t ipc_handle;
     int global_dev_id;
+    uintptr_t remote_base_addr;
+    uintptr_t len;
+    int node_rank;
     uintptr_t offset;
 } MPIDI_GPU_ipc_handle_t;
 

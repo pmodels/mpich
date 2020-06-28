@@ -7,6 +7,22 @@
 #include "gpu_post.h"
 #include "gpu_types.h"
 
+static void ipc_handle_cache_free(void *handle_obj)
+{
+    int mpl_err;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IPC_HANDLE_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IPC_HANDLE_FREE);
+
+    MPIDI_GPUI_handle_obj_s *handle_obj_ptr = (MPIDI_GPUI_handle_obj_s *) handle_obj;
+    mpl_err = MPL_gpu_ipc_handle_unmap((void *) handle_obj_ptr->mapped_base_addr);
+    MPIR_Assert(mpl_err == MPL_SUCCESS);
+    MPL_free(handle_obj);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IPC_HANDLE_FREE);
+    return;
+}
+
 int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
 {
     int mpl_err, mpi_errno = MPI_SUCCESS;
@@ -106,6 +122,42 @@ int MPIDI_GPU_mpi_init_hook(int rank, int size, int *tag_bits)
         MPIDI_GPUI_global.local_ranks[MPIDI_GPUI_global.local_procs[i]] = i;
     }
 
+    MPIDI_GPUI_global.ipc_handle_mapped_trees =
+        (MPL_gavl_tree_t ***) MPL_malloc(sizeof(MPL_gavl_tree_t **) * MPIR_Process.local_size,
+                                         MPL_MEM_OTHER);
+    MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees != NULL);
+    memset(MPIDI_GPUI_global.ipc_handle_mapped_trees, 0,
+           sizeof(MPL_gavl_tree_t *) * MPIR_Process.local_size);
+
+    for (int i = 0; i < MPIR_Process.local_size; ++i) {
+        MPIDI_GPUI_global.ipc_handle_mapped_trees[i] =
+            (MPL_gavl_tree_t **) MPL_malloc(sizeof(MPL_gavl_tree_t *) *
+                                            (MPIDI_GPUI_global.global_max_dev_id + 1),
+                                            MPL_MEM_OTHER);
+        MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
+        memset(MPIDI_GPUI_global.ipc_handle_mapped_trees[i], 0,
+               sizeof(MPL_gavl_tree_t *) * (MPIDI_GPUI_global.global_max_dev_id + 1));
+
+        for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
+            MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j] =
+                (MPL_gavl_tree_t *) MPL_malloc(sizeof(MPL_gavl_tree_t) *
+                                               device_count, MPL_MEM_OTHER);
+            MPIR_Assert(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
+            memset(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j], 0,
+                   sizeof(MPL_gavl_tree_t) * device_count);
+
+            for (int k = 0; k < device_count; ++k) {
+                mpl_err =
+                    MPL_gavl_tree_create(ipc_handle_cache_free,
+                                         &MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j][k]);
+                MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                    "**mpl_gavl_create");
+            }
+        }
+    }
+
+    MPIDI_GPUI_global.local_device_count = device_count;
+
     MPIDI_GPUI_global.initialized = 1;
 
   fn_exit:
@@ -139,6 +191,25 @@ int MPIDI_GPU_mpi_finalize_hook(void)
             MPL_free(MPIDI_GPUI_global.visible_dev_global_id[i]);
         MPL_free(MPIDI_GPUI_global.visible_dev_global_id);
     }
+
+    if (MPIDI_GPUI_global.ipc_handle_mapped_trees) {
+        for (int i = 0; i < MPIR_Process.local_size; ++i) {
+            if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i]) {
+                for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
+                    if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]) {
+                        for (int k = 0; k < MPIDI_GPUI_global.local_device_count; ++k) {
+                            if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j][k])
+                                MPL_gavl_tree_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]
+                                                   [k]);
+                        }
+                    }
+                    MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
+                }
+            }
+            MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]);
+        }
+    }
+    MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees);
 
     mpl_err = MPL_gpu_finalize();
     MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**gpu_finalize");

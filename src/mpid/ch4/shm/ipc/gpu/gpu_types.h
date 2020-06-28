@@ -20,9 +20,15 @@ typedef struct {
     int **visible_dev_global_id;
     int *local_ranks;
     int *local_procs;
+    int local_device_count;
     int global_max_dev_id;
     int initialized;
+    MPL_gavl_tree_t ***ipc_handle_mapped_trees;
 } MPIDI_GPUI_global_t;
+
+typedef struct {
+    uintptr_t mapped_base_addr;
+} MPIDI_GPUI_handle_obj_s;
 
 extern MPIDI_GPUI_global_t MPIDI_GPUI_global;
 
