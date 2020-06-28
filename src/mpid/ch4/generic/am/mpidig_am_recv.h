@@ -117,7 +117,7 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
 
 static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                   int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIR_Request ** request, int alloc_req, uint64_t flags)
+                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -179,14 +179,12 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
     }
 
     if (*request != NULL) {
+        /* request from workq */
         rreq = *request;
         MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
-    } else if (alloc_req) {
+    } else {
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
-        rreq = *request;
-        MPIR_Assert(0);
     }
 
     *request = rreq;
@@ -226,8 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno =
-        MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -295,8 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
      * prevent shm progress). Therefore, recursive locking is allowed here */
     MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(0).lock);
 
-    mpi_errno =
-        MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno = MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);
