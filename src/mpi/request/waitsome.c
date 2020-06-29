@@ -29,38 +29,28 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Waitsome
 #define MPI_Waitsome PMPI_Waitsome
 
-int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
-                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+/* MPID_Waitsome call MPIR_Waitsome_state with initialized progress state */
+int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
+                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state)
 {
-    MPID_Progress_state progress_state;
-    int i;
-    int n_active;
-    int n_inactive;
     int mpi_errno = MPI_SUCCESS;
 
     /* Bill Gropp says MPI_Waitsome() is expected to try to make
      * progress even if some requests have already completed;
      * therefore, we kick the pipes once and then fall into a loop
      * checking for completion and waiting for progress. */
-    mpi_errno = MPID_Progress_test();
-    if (mpi_errno != MPI_SUCCESS) {
-        /* --BEGIN ERROR HANDLING-- */
-        goto fn_fail;
-        /* --END ERROR HANDLING-- */
-    }
-    n_active = 0;
+    mpi_errno = MPID_Progress_test(state);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPID_Progress_start(&progress_state);
+    int n_active = 0;
     for (;;) {
-        n_inactive = 0;
+        int n_inactive = 0;
 
-        for (i = 0; i < incount; i++) {
+        for (int i = 0; i < incount; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPID_Progress_end(&progress_state);
-                    goto fn_fail;
-                }
+                mpi_errno = MPID_Progress_test(state);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             if (request_ptrs[i] != NULL) {
@@ -90,22 +80,30 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
             break;
         }
 
-        mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS) {
-            /* --BEGIN ERROR HANDLING-- */
-            MPID_Progress_end(&progress_state);
-            goto fn_fail;
-            /* --END ERROR HANDLING-- */
-        }
+        mpi_errno = MPID_Progress_test(state);
+        MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPID_Progress_end(&progress_state);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+/* legacy interface (for ch3) */
+int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
+                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+{
+    MPID_Progress_state progress_state;
+
+    MPID_Progress_start(&progress_state);
+    int mpi_errno = MPIR_Waitsome_state(incount, request_ptrs, outcount,
+                                        array_of_indices, array_of_statuses, &progress_state);
+    MPID_Progress_end(&progress_state);
+
+    return mpi_errno;
 }
 
 #endif

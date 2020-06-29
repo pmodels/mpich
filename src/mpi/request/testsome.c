@@ -29,14 +29,15 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Testsome
 #define MPI_Testsome PMPI_Testsome
 
-int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
-                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
+                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state)
 {
     int i;
     int n_inactive;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(state);
     /* --BEGIN ERROR HANDLING-- */
     MPIR_ERR_CHECK(mpi_errno);
     /* --END ERROR HANDLING-- */
@@ -46,7 +47,7 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
 
     for (i = 0; i < incount; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test();
+            mpi_errno = MPID_Progress_test(state);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -70,6 +71,13 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
+                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+{
+    return MPIR_Testsome_state(incount, request_ptrs, outcount, array_of_indices,
+                               array_of_statuses, NULL);
 }
 
 #endif

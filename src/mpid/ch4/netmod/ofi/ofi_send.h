@@ -18,6 +18,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         int vni_src, int vni_dst)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
     uint64_t match_bits;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
@@ -26,9 +28,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                         buf,
                                         data_sz,
                                         cq_data,
-                                        MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
+                                        MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                         match_bits),
-                         tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+                         vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     return mpi_errno;
@@ -60,6 +62,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     struct fi_msg_tagged msg;
     uint64_t flags;
     MPI_Aint num_contig, size;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -95,9 +99,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = cq_data;
-    msg.addr = MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst);
+    msg.addr = MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[vni_src].tx, &msg, flags), tsendv, FALSE);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[vni_local].tx, &msg, flags), vni_local,
+                         tsendv, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -126,6 +131,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     uint64_t match_bits;
     MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
     bool force_gpu_pack = false;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
@@ -163,10 +170,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),     /* remote proc */
+                                      MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),        /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), trecvsync, FALSE);
+                                      (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
     }
 
     send_buf = (char *) buf + dt_true_lb;
@@ -224,17 +231,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             send_buf,
                                             data_sz,
                                             cq_data,
-                                            MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
-                                            match_bits), tinjectdata, FALSE /* eagain */);
+                                            MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
+                                            match_bits), vni_local, tinjectdata,
+                             FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
     } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
+                                          MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_local, tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int c;
@@ -281,10 +289,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
                                           send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr, vni_src, vni_dst),
+                                          MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_local, tsenddata, FALSE /* eagain */);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;

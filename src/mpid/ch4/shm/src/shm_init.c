@@ -63,12 +63,14 @@ int MPIDI_SHM_get_vci_attr(int vci)
 
 int MPIDI_SHM_progress(int vci, int blocking)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
 
-    ret = MPIDI_POSIX_progress(blocking);
+    if (vci == 0) {
+        ret = MPIDI_POSIX_progress(blocking);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
     return ret;

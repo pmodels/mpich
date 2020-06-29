@@ -352,7 +352,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
         int all_local_completed = 0, all_remote_completed = 0;
 
         /* NOTE: MPID_Win_free does not take on locks */
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
