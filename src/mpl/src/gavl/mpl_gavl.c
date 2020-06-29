@@ -157,25 +157,37 @@ static int gavl_intersect_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_no
 
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
 {
+    int mpl_err = MPL_SUCCESS;
     gavl_tree_s *gavl_tree_iptr;
 
     gavl_tree_iptr = (gavl_tree_s *) MPL_malloc(sizeof(gavl_tree_s), MPL_MEM_OTHER);
-    if (gavl_tree_iptr == NULL)
-        return MPL_ERR_SHM_NOMEM;
+    if (gavl_tree_iptr == NULL) {
+        mpl_err = MPL_ERR_SHM_NOMEM;
+        goto fn_fail;
+    }
 
     gavl_tree_iptr->root = NULL;
     gavl_tree_iptr->gavl_free_fn = free_fn;
     *gavl_tree = (MPL_gavl_tree_t) gavl_tree_iptr;
-    return MPL_SUCCESS;
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                          const void *val)
 {
+    int mpl_err = MPL_SUCCESS;
     gavl_tree_node_s *node_ptr;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
 
     node_ptr = (gavl_tree_node_s *) MPL_malloc(sizeof(gavl_tree_node_s), MPL_MEM_OTHER);
+    if (node_ptr == NULL) {
+        mpl_err = MPL_ERR_SHM_NOMEM;
+        goto fn_fail;
+    }
     node_ptr->parent = NULL;
     node_ptr->left = NULL;
     node_ptr->right = NULL;
@@ -210,7 +222,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                 /* we cannot insert the duplicate buffer */
                 gavl_tree_iptr->gavl_free_fn((void *) node_ptr->val);
                 MPL_free(node_ptr);
-                break;
+                goto fn_exit;
             }
 
             if (direction == SEARCH_LEFT)
@@ -251,7 +263,10 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
             gavl_tree_iptr->root = gavl_tree_iptr->root->parent;
     }
 
-    return MPL_SUCCESS;
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len, void **val)
