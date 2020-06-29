@@ -129,30 +129,36 @@ static void gavl_right_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_no
 
 static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
 {
+    int cmp_ret;
     uintptr_t uend = ustart + len;
     uintptr_t tstart = tnode->addr;
     uintptr_t tend = tnode->addr + tnode->len;
 
     if (tstart <= ustart && uend <= tend)
-        return BUFFER_MATCH;
+        cmp_ret = BUFFER_MATCH;
     else if (ustart < tstart)
-        return SEARCH_LEFT;
+        cmp_ret = SEARCH_LEFT;
     else
-        return SEARCH_RIGHT;
+        cmp_ret = SEARCH_RIGHT;
+
+    return cmp_ret;
 }
 
 static int gavl_intersect_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
 {
+    int cmp_ret;
     uintptr_t uend = ustart + len;
     uintptr_t tstart = tnode->addr;
     uintptr_t tend = tnode->addr + tnode->len;
 
     if (uend <= tstart)
-        return SEARCH_LEFT;
+        cmp_ret = SEARCH_LEFT;
     else if (tend <= ustart)
-        return SEARCH_RIGHT;
+        cmp_ret = SEARCH_RIGHT;
     else
-        return BUFFER_MATCH;
+        cmp_ret = BUFFER_MATCH;
+
+    return cmp_ret;
 }
 
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
