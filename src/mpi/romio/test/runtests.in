@@ -22,7 +22,7 @@ subset_only=0
 FILENAME=test
 # Using shifts should remove args from the list.
 for arg in "$@" ; do
-    case $arg in 
+    case $arg in
 	-checkonly)
 	shift
 	runtests=0
@@ -69,7 +69,7 @@ for arg in "$@" ; do
 	echo "If -check is used, only a single simple test is run; this"
 	echo "is used to check that mpirun can run an MPI program."
 	echo "If -subset is used, we skip tests for atomicity and shared"
-	echo "file pointers which can fail on some distributed file systems" 
+	echo "file pointers which can fail on some distributed file systems"
 	exit 1
 	;;
 	*)
@@ -83,13 +83,13 @@ done
 
 # MakeExe program-name
 MakeExe() {
-    if [ -s $STOPFILE ] ; then 
+    if [ -s $STOPFILE ] ; then
         echo "Found stopfile; exiting"
         exit 0
     fi
     if [ ! -x $1 ] ; then
 	$MAKE $1
-        if [ ! -x $1 ] ; then 
+        if [ ! -x $1 ] ; then
 	    echo "Could not build executable $1; aborting tests"
 	    exit 1
         fi
@@ -126,7 +126,7 @@ CheckOutput() {
 	grep -v 'FORTRAN STOP' ${bfile}.out > ${bfile}.tout
         if diff -b $bfile.tout $stdfile > /dev/null ; then
 	    true
-	elif [ -s $stdfile2 ] ; then 
+	elif [ -s $stdfile2 ] ; then
 	    # check for alternate in case configuration has fewer datatypes
 	    if diff -b $bfile.tout $stdfile2 > /dev/null ; then
 	        true
@@ -155,7 +155,7 @@ RunTest() {
       rm -rf $FILENAME*
       echo "**** Testing ${1}.c ****"
       mpirun -np 4 ./${1} -fname $FILENAME "$@" >>${1}.out 2>1
-      CheckOutput ${1} 
+      CheckOutput ${1}
       CleanExe ${1}
 }
 
@@ -200,13 +200,13 @@ $mpirun -np 4 ./async-multiple -fname $FILENAME
 CleanExe async-multiple
 #
 OutTime
-if [ $subset_only -eq 0 ] ; then 
+if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles atomicity.out"
 	\rm -f atomicity.out
 	MakeExe atomicity
 	\rm -f $FILENAME*
 	echo '**** Testing atomicity.c ****'
-	# Atomicity test recommends at least 8 processes (separate processors 
+	# Atomicity test recommends at least 8 processes (separate processors
 	# even better)
 	$mpirun -np 4 ./atomicity -fname $FILENAME
 	# CheckOutput atomicity
@@ -306,7 +306,7 @@ CleanExe hindexed
 #	-offm 4 -hints romio_cb_write enable -fname $FILENAME
 #CleanExe write_all_test
 OutTime
-if [ $subset_only -eq 0 ] ; then 
+if [ $subset_only -eq 0 ] ; then
 	testfiles="$testfiles misc.out"
 	\rm -f misc.out
 	MakeExe misc
@@ -398,7 +398,7 @@ $mpirun -np 1 ./syshints $srcdir/test_hintfile
 CleanExe syshints
 
 #
-if [ @NOF77@ = 0 ] ; then 
+if [ @NOF77@ = 0 ] ; then
     echo ""
     echo "FORTRAN TESTS"
     OutTime
@@ -451,7 +451,7 @@ fi
 # nodiff=1
 # for file in $testfiles ; do
 #     stdfile="${srcdir}/std/`basename $file .out`.std"
-#     # if basename is sendrecv or isndrcv, then we may want to test 
+#     # if basename is sendrecv or isndrcv, then we may want to test
 #     # with .std2 as well.  We should really separate out the long double
 #     # tests ...
 #     if [ -s $stdfile ] ; then
@@ -462,7 +462,7 @@ fi
 # 	grep -v 'FORTRAN STOP' ${file} > ${bfile}
 #         if diff -b $bfile $stdfile > /dev/null ; then
 # 	    true
-# 	elif [ -s $stdfile2 ] ; then 
+# 	elif [ -s $stdfile2 ] ; then
 # 	    # check for alternate in case configuration has fewer datatypes
 # 	    if diff -b $bfile $stdfile2 > /dev/null ; then
 # 	        true
@@ -488,4 +488,4 @@ fi
 #    echo "-- No differences found; test successful"
 # fi
  exit 0
- 
+
