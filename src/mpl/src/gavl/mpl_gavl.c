@@ -17,7 +17,7 @@
 #define MAX_STACK_SIZE 64
 
 enum {
-    SEARCH_LEFT = 0,
+    SEARCH_LEFT,
     SEARCH_RIGHT,
     BUFFER_MATCH,
     NO_BUFFER_MATCH
