@@ -7,9 +7,9 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-static int handle_deferred_ops();
+static int handle_deferred_ops(void);
 
-static int handle_deferred_ops()
+static int handle_deferred_ops(void)
 {
 
     int mpi_errno = MPI_SUCCESS;
