@@ -62,7 +62,7 @@ void MPIR_Typerep_free(MPIR_Datatype * typeptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TYPEREP_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TYPEREP_FREE);
 
-    yaksa_type_t type = (yaksa_type_t) typeptr->typerep.handle;
+    yaksa_type_t type = (yaksa_type_t) (intptr_t) typeptr->typerep.handle;
 
     if (type != YAKSA_TYPE__FLOAT_INT && type != YAKSA_TYPE__DOUBLE_INT &&
         type != YAKSA_TYPE__LONG_INT && type != YAKSA_TYPE__SHORT_INT &&
