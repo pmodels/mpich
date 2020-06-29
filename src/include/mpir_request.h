@@ -237,6 +237,8 @@ struct MPIR_Request {
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
+#define MPIR_REQUEST_POOL(req_) (((req_)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT);
+
 extern MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
@@ -409,7 +411,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int inuse;
-    int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
+    int pool = MPIR_REQUEST_POOL(req);
 
     if (HANDLE_IS_BUILTIN(req->handle)) {
         /* do not free builtin request objects */

@@ -10,8 +10,7 @@
 
 /* vci is embedded in the request's pool index */
 
-#define MPIDI_Request_get_vci(req) \
-    (((req)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT)
+#define MPIDI_Request_get_vci(req) MPIR_REQUEST_POOL(req)
 
 /* VCI hashing function (fast path)
  * Call these function to get src_vci and dst_vci
