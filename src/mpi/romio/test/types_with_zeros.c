@@ -23,11 +23,11 @@ static void handle_error(int errcode, const char *str)
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-enum {
+enum testcases {
     INDEXED,
     HINDEXED,
     STRUCT
-} testcases;
+};
 
 static int test_indexed_with_zeros(char *filename, int testcase)
 {
@@ -82,7 +82,7 @@ static int test_indexed_with_zeros(char *filename, int testcase)
             MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
             break;
         case HINDEXED:
-            MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
+            MPI_Type_create_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
             break;
         case STRUCT:
             MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
@@ -157,5 +157,5 @@ int main(int argc, char **argv)
         printf(" No Errors\n");
 
     MPI_Finalize();
-    return 0;
+    return (nr_errors > 0);
 }

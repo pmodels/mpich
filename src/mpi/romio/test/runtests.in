@@ -4,6 +4,9 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 bindir=@bindir@
@@ -69,7 +72,7 @@ for arg in "$@" ; do
 	echo "If -check is used, only a single simple test is run; this"
 	echo "is used to check that mpirun can run an MPI program."
 	echo "If -subset is used, we skip tests for atomicity and shared"
-	echo "file pointers which can fail on some distributed file systems"
+	echo "file pointers which can fail on some distributed file systems" 
 	exit 1
 	;;
 	*)
@@ -233,15 +236,25 @@ $mpirun -np 4 ./excl -fname $FILENAME
 # CheckOutput excl
 CleanExe excl
 #
-OutTime
 testfiles="$testfiles file_info.out"
 \rm -f file_info.out
 MakeExe file_info
 \rm -f $FILENAME*
-echo '**** Testing file_info.c ****'
-$mpirun -np 4 ./file_info -fname $FILENAME
-# CheckOutput file_info
-CleanExe file_info
+for fs in @FILE_SYSTEM@ ; do
+   OutTime
+   echo "**** Testing file_info.c - file system = $fs ****"
+   if [ $fs = "testfs" ] ; then
+      $mpirun -np 4 ./file_info -fname $FILENAME
+   elif [ $fs = "ufs" ] ; then
+      $mpirun -np 4 ./file_info -u -fname $FILENAME
+   elif [ $fs = "gpfs" ] ; then
+      $mpirun -np 4 ./file_info -b -fname $FILENAME
+   elif [ $fs = "lustre" ] ; then
+      $mpirun -np 4 ./file_info -l -fname $FILENAME
+   fi
+   # CheckOutput file_info
+   CleanExe file_info
+done
 #
 OutTime
 testfiles="$testfiles i_noncontig.out"
@@ -282,16 +295,19 @@ echo '**** Testing noncontig_coll2.c ****'
 $mpirun -np 4 ./noncontig_coll2 -fname $FILENAME
 # CheckOutput noncontig_coll2
 CleanExe noncontig_coll2
+OutTime
 MakeExe aggregation1
 echo '**** Testing aggregation1 ****'
 $mpirun -np 4 ./aggregation1 -h -f $FILENAME
 # CheckOutput aggregation1
 CleanExe aggregation1
+OutTime
 MakeExe aggregation2
 echo '**** Testing aggregation2 ****'
 $mpirun -np 4 ./aggregation2 $FILENAME
 # CheckOutput aggregation2
 CleanExe aggregation2
+OutTime
 MakeExe hindexed
 echo '**** Testing hindexed ****'
 $mpirun -np 4 ./hindexed $FILENAME
@@ -348,15 +364,17 @@ $mpirun -np 4 ./split_coll -fname $FILENAME
 # CheckOutput split_coll
 CleanExe split_coll
 #
-OutTime
-testfiles="$testfiles psimple.out"
-\rm -f psimple.out
-MakeExe psimple
-\rm -f $FILENAME*
-echo '**** Testing psimple.c ****'
-$mpirun -np 4 ./psimple -fname $FILENAME
-# CheckOutput psimple
-CleanExe psimple
+if [ @NOPROFILE@ = 0 ] ; then
+	OutTime
+	testfiles="$testfiles psimple.out"
+	\rm -f psimple.out
+	MakeExe psimple
+	\rm -f $FILENAME*
+	echo '**** Testing psimple.c ****'
+	$mpirun -np 4 ./psimple -fname $FILENAME
+	# CheckOutput psimple
+	CleanExe psimple
+fi
 #
 OutTime
 testfiles="$testfiles error.out"
@@ -378,6 +396,7 @@ echo '**** Testing status.c ****'
 $mpirun -np 1 ./status -fname $FILENAME
 # CheckOutput status
 CleanExe status
+OutTime
 testfiles="$testfiles types_with_zeros.out"
 \rm -f types_with_zeros.out
 MakeExe types_with_zeros
@@ -385,6 +404,7 @@ MakeExe types_with_zeros
 echo '**** Testing types_with_zeros ****'
 $mpirun -np 2 ./types_with_zeros $FILENAME
 CleanExe types_with_zeros
+OutTime
 testfiles="$testfiles darray_read.out"
 \rm -f darray_read.out
 MakeExe darray_read
@@ -392,9 +412,11 @@ MakeExe darray_read
 echo '**** Testing darray_read ****'
 $mpirun -np 4 ./darray_read $FILENAME
 CleanExe darray_read
+\rm -f $FILENAME*
+OutTime
 MakeExe syshints
 echo '**** Testing syshints ****'
-$mpirun -np 1 ./syshints $srcdir/test_hintfile
+$mpirun -np 1 ./syshints $srcdir/romio_hintfile
 CleanExe syshints
 
 #
@@ -432,6 +454,7 @@ if [ @NOF77@ = 0 ] ; then
     $mpirun -np 4 ./pfcoll_test -fname $FILENAME
     # CheckOutput pfcoll_test
     CleanExe pfcoll_test
+    \rm -f $FILENAME*
 #
 echo ""
 fi
