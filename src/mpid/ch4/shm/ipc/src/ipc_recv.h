@@ -108,7 +108,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
     unexp_req = MPIDIG_dequeue_unexp(rank, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
-        *request = unexp_req;
         /* - Mark as DEQUEUED so that progress engine can complete a matched BUSY
          * rreq once all data arrived;
          * - Mark as IN_PRORESS so that the SHM receive cannot be cancelled. */
@@ -117,15 +116,36 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
         /* TODO: create unsafe version of imrecv to avoid extra locking */
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-        mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, *request);
+        mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, unexp_req);
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         MPIR_ERR_CHECK(mpi_errno);
+
+        if (*request == NULL) {
+            *request = unexp_req;
+        } else {
+            /* request from workq */
+            while (!MPIR_Request_is_complete(unexp_req)) {
+                MPID_Progress_test(NULL);
+            }
+            (*request)->status = unexp_req->status;
+            MPIR_Request_add_ref(*request);
+            MPID_Request_complete(*request);
+            /* Need to free here because we don't return this to user */
+            MPIR_Request_free_unsafe(unexp_req);
+        }
     } else {
         /* No matching request found, post the receive request  */
         MPIR_Request *rreq = NULL;
 
-        rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        if (*request == NULL) {
+            rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
+            MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                "**nomemreq");
+        } else {
+            /* request from workq */
+            rreq = *request;
+            MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
+        }
 
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDIG_prepare_recv_req(rank, tag, context_id, buf, count, datatype, rreq);
