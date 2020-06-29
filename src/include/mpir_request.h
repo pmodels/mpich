@@ -237,6 +237,8 @@ struct MPIR_Request {
 #define MPIR_REQUEST_NUM_POOLS REQUEST_POOL_MAX
 #define MPIR_REQUEST_PREALLOC 8
 
+#define MPIR_REQUEST_POOL(req_) (((req_)->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT);
+
 extern MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 extern MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 extern MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
@@ -409,6 +411,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_null_recv(void)
 static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_safety)
 {
     int inuse;
+    int pool = MPIR_REQUEST_POOL(req);
 
     if (HANDLE_IS_BUILTIN(req->handle)) {
         /* do not free builtin request objects */
@@ -417,6 +420,12 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
     MPIR_Request_release_ref(req, &inuse);
 
+    if (need_safety) {
+        MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    }
+#ifdef MPICH_DEBUG_MUTEX
+    MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+#endif
     /* inform the device that we are decrementing the ref-count on
      * this request */
     MPID_Request_free_hook(req);
@@ -457,19 +466,16 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
 
         MPID_Request_destroy_hook(req);
 
-        int pool = (req->handle & REQUEST_POOL_MASK) >> REQUEST_POOL_SHIFT;
         if (need_safety) {
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPID_THREAD_CS_ENTER(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-            MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
         } else {
-#ifdef MPICH_DEBUG_MUTEX
-            MPID_THREAD_ASSERT_IN_CS(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
-#endif
             MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool], req);
         }
+    }
+    if (need_safety) {
+        MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
     }
 }
 
@@ -605,6 +611,16 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_
     return mpi_errno;
 }
 
+int MPIR_Test_state(MPIR_Request * request, int *flag, MPI_Status * status,
+                    MPID_Progress_state * state);
+int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
+                       MPI_Status array_of_statuses[], int requests_property,
+                       MPID_Progress_state * state);
+int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[], int *indx, int *flag,
+                       MPI_Status * status, MPID_Progress_state * state);
+int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[], int *outcount,
+                        int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state);
 int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[], int requests_property);
@@ -613,6 +629,14 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[]);
 
+int MPIR_Wait_state(MPIR_Request * request_ptr, MPI_Status * status, MPID_Progress_state * state);
+int MPIR_Waitall_state(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
+                       int request_properties, MPID_Progress_state * state);
+int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status,
+                       MPID_Progress_state * state);
+int MPIR_Waitsome_state(int incount, MPIR_Request * request_ptrs[],
+                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[],
+                        MPID_Progress_state * state);
 int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status);
 int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
                       int request_properties);

@@ -23,6 +23,8 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     MPIR_Request r, *rreq;      /* don't need to init request, output only */
     struct fi_msg_tagged msg;
     int ofi_err;
+    int vni_local = vni_dst;
+    int vni_remote = vni_src;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);
@@ -30,7 +32,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_av_to_phys(addr, vni_dst, vni_src);
+        remote_proc = MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
 
     if (message) {
         rreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__MPROBE, vni_dst);

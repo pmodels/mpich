@@ -98,12 +98,13 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         if (rma_type == MPIDI_OFI_PUT) {
-            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write,
+            MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_PUT;
             req->noncontig.put.origin.pack_buffer = NULL;
         } else {        /* MPIDI_OFI_GET */
-            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+            MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
+                                 FALSE);
             req->rma_type = MPIDI_OFI_GET;
             req->noncontig.get.origin.pack_buffer = NULL;
         }
@@ -182,7 +183,7 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.put.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
         i += msg_len;
 
         if (msg_len < req->noncontig.put.target.iov[target_cur].iov_len) {
@@ -269,7 +270,7 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         riov.len = msg_len;
         riov.key = req->noncontig.get.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
-        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), rdma_write, FALSE);
+        MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
         i += msg_len;
 
         if (msg_len < req->noncontig.get.target.iov[target_cur].iov_len) {

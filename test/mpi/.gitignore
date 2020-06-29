@@ -1443,6 +1443,7 @@
 /threads/pt2pt/mt_bsendrecv_pers_huge
 /threads/pt2pt/mt_ssendrecv_pers_huge
 /threads/pt2pt/mt_mpicancel
+/threads/perf/mt_pt2pt_msgrate
 /threads/rma/multifence
 /threads/spawn/alltoall
 /threads/spawn/multispawn
