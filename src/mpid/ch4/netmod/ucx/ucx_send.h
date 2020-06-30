@@ -115,8 +115,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_SEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_SEND_COLL);
 
-    int vni_src = 0;
-    int vni_dst = 0;
+    int vni_src = MPIDI_UCX_get_vni_src(comm, rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni_dst(comm, rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
 
     switch (*errflag) {
@@ -186,8 +186,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_ISEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_ISEND_COLL);
-    int vni_src = 0;
-    int vni_dst = 0;
+    int vni_src = MPIDI_UCX_get_vni_src(comm, rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni_dst(comm, rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
 
     switch (*errflag) {
