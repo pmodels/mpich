@@ -248,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 /* Common macro used by all MPIDI_NM_mpi_recv routines to facilitate tuning */
 #define MPIDI_OFI_RECV_VNIS(vni_src_, vni_dst_) \
     do { \
-        if (*request != NULL || context_offset != 0) { \
+        if (*request != NULL) { \
             /* workq path  or collectives */ \
             vni_src_ = 0; \
             vni_dst_ = 0; \

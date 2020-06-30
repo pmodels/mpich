@@ -421,7 +421,7 @@ Input Parameters:
     errflag - the error flag to be passed along with the message
 @*/
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int d_rank, int tag,
+                                                MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
@@ -433,13 +433,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     /* NOTE: collective use vci 0 and critical section taken at ch4-layer */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
+            MPIDIG_send_coll(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                              errflag);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-        mpi_errno = MPIDI_OFI_send(buf, count, datatype, d_rank, tag, comm, context_offset,
-                                   addr, 0, 0, request, (*request == NULL), 0ULL, *errflag);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm, context_offset,
+                                   addr, vni_src, vni_dst, request, (*request == NULL), 0ULL,
+                                   *errflag);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_SEND_COLL);
@@ -530,10 +533,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
             MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                               request, errflag);
     } else {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, 0, 0, request, 0, 0ULL, *errflag);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+                                   context_offset, addr, vni_src, vni_dst, request, 0, 0ULL,
+                                   *errflag);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
