@@ -571,6 +571,10 @@ int MPID_Init(int requested, int *provided)
         MPIR_Assert(MPIDI_global.n_vcis <= MPIDI_CH4_MAX_VCIS);
         MPIR_Assert(MPIDI_global.n_vcis <= MPIR_REQUEST_NUM_POOLS);
     }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    /* workq does not work with multiple vci */
+    MPIR_Assert(MPIDI_global.n_vcis == 1);
+#endif
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
