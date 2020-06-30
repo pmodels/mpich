@@ -1599,7 +1599,6 @@ if test $WITHIN_KNOWN_MPI_IMPL = no ; then
                  [AC_DEFINE_UNQUOTED([MPI_Count],[MPI_Aint],
                  [Define to "MPI_Aint" if MPI does not provide MPI_Count])],
                  [[#include <mpi.h>]])
-   PAC_TEST_NEEDS_CONST
    AC_CHECK_DECLS([MPI_COMBINER_HINDEXED_BLOCK], [], [], [[#include <mpi.h>]])
    AC_CHECK_FUNCS(MPI_Type_size_x MPI_Status_set_elements_x)
 fi
