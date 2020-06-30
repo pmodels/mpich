@@ -315,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
                                             int vni_src, int vni_dst,
-                                            MPIR_Request ** request, int noreq,
+                                            MPIR_Request ** request,
                                             uint64_t syncflag, MPIR_Errflag_t err_flag)
 {
     int dt_contig, mpi_errno;
@@ -353,7 +353,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
              * lightweight_send. */
             MPL_gpu_free_host(send_buf);
         }
-        if (noreq) {
+        if (*request == NULL) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         } else {
             mpi_errno = MPID_Request_complete(*request);
@@ -399,7 +399,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst, request,
-                                   (*request == NULL), 0ULL, MPIR_ERR_NONE);
+                                   0ULL, MPIR_ERR_NONE);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
@@ -442,8 +442,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm, context_offset,
-                                   addr, vni_src, vni_dst, request, (*request == NULL), 0ULL,
-                                   *errflag);
+                                   addr, vni_src, vni_dst, request, 0ULL, *errflag);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
@@ -468,7 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vni_src, vni_dst, request, 0,
+                                   context_offset, addr, vni_src, vni_dst, request,
                                    MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
@@ -496,7 +495,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
                                    context_offset, addr, vni_src, vni_dst,
-                                   request, 0, 0ULL, MPIR_ERR_NONE);
+                                   request, 0ULL, MPIR_ERR_NONE);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
@@ -539,8 +538,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vni_src, vni_dst, request, 0, 0ULL,
-                                   *errflag);
+                                   context_offset, addr, vni_src, vni_dst, request, 0ULL, *errflag);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
@@ -565,7 +563,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
         MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
         MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vni_src, vni_dst, request, 0,
+                                   context_offset, addr, vni_src, vni_dst, request,
                                    MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
