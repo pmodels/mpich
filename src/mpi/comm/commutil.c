@@ -212,6 +212,7 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
     comm_p->seq = 0;    /* default to 0, to be updated at Comm_commit */
+    comm_p->tainted = 0;
     memset(comm_p->hints, 0, sizeof(comm_p->hints));
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
@@ -320,10 +321,9 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 
     /* sets up the SMP-aware sub-communicators and tables */
     /* This routine maybe used inside MPI_Comm_idup, so we can't synchronize
-     * seq using blocking collectives, thus a hacky solution */
-    localcomm_ptr->seq = -1;
+     * seq using blocking collectives, thus mark as tainted. */
+    localcomm_ptr->tainted = 1;
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);
-    localcomm_ptr->seq = 0;
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_fail:
@@ -627,14 +627,19 @@ static int init_comm_seq(MPIR_Comm * comm)
     if (!HANDLE_IS_BUILTIN(comm->handle)) {
         static int vci_seq = 0;
         vci_seq++;
-        comm->seq = vci_seq;
+
+        int tmp = vci_seq;
+        /* Bcast seq over vci 0 */
+        MPIR_Assert(comm->seq == 0);
 
         /* Every rank need share the same seq from root. NOTE: it is possible for
          * different communicators to have the same seq. It is only used as an
          * opportunistic optimization */
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast_allcomm_auto(&comm->seq, 1, MPI_INT, 0, comm, &errflag);
+        mpi_errno = MPIR_Bcast_allcomm_auto(&tmp, 1, MPI_INT, 0, comm, &errflag);
         MPIR_ERR_CHECK(mpi_errno);
+
+        comm->seq = tmp;
     }
 
     if (comm->node_comm) {
@@ -706,7 +711,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->seq == 0) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && !comm->tainted) {
         mpi_errno = init_comm_seq(comm);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -866,6 +871,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
         MPII_Comm_set_hints(newcomm_ptr, info);
     }
 
+    newcomm_ptr->tainted = comm_ptr->tainted;
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -935,6 +941,9 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
     *outcomm_ptr = newcomm_ptr;
+
+    /* inherit tainted flag */
+    newcomm_ptr->tainted = comm_ptr->tainted;
 
   fn_fail:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
