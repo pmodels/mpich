@@ -16,7 +16,7 @@ static char MTEST_Descrip[] = "One implementation delivered incorrect data when 
 
 int main(int argc, char *argv[])
 {
-    int wrank, wsize, master, worker, i, j, idx, count;
+    int wrank, wsize, sender, receiver, i, j, idx, count;
     int errs = 0;
     MPI_Request r[MAX_MSGS];
     int buf[MAX_MSGS][MAX_MSGS];
@@ -29,12 +29,12 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
 
     comm = MPI_COMM_WORLD;
-    master = 0;
-    worker = 1;
+    sender = 0;
+    receiver = 1;
 
     /* The test takes advantage of the ordering rules for messages */
 
-    if (wrank == master) {
+    if (wrank == sender) {
         /* Initialize the send buffer */
         for (i = 0; i < MAX_MSGS; i++) {
             for (j = 0; j < MAX_MSGS; j++) {
@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
         }
         MPI_Barrier(MPI_COMM_WORLD);
         for (i = 0; i < MAX_MSGS; i++) {
-            MPI_Send(buf[i], MAX_MSGS - i, MPI_INT, worker, 3, comm);
+            MPI_Send(buf[i], MAX_MSGS - i, MPI_INT, receiver, 3, comm);
         }
-    } else if (wrank == worker) {
+    } else if (wrank == receiver) {
         /* Initialize the recv buffer */
         for (i = 0; i < MAX_MSGS; i++) {
             for (j = 0; j < MAX_MSGS; j++) {

@@ -1051,7 +1051,7 @@ mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h
 
 # FIXME does AM_CPPFLAGS need to be included elsewhere somehow in the
 # target-specific variable?
-AM_CPPFLAGS += -I\${master_top_srcdir}/src/binding/fortran/mpif_h
+AM_CPPFLAGS += -I\${main_top_srcdir}/src/binding/fortran/mpif_h
 
 
 noinst_HEADERS += src/binding/fortran/mpif_h/fproto.h src/binding/fortran/mpif_h/mpi_fortimpl.h

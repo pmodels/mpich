@@ -907,7 +907,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     }
     /* do scan on localfulldata to prefulldata. for example,
      * prefulldata on rank 4 contains reduce result of ranks
-     * 1,2,3,4,5,6. it will be sent to rank 7 which is master
+     * 1,2,3,4,5,6. it will be sent to rank 7 which is the main
      * process of node 3. */
     if (comm_ptr->node_roots_comm != NULL) {
         coll_ret =

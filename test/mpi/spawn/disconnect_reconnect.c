@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
                 MPI_Comm_disconnect(&intercomm);
             }
 
-            /* Send the errs back to the master process */
+            /* Send the errs back to the parent process */
             /* Errors cannot be sent back to the parent because there is no
              * communicator connected to the parent */
             /*MPI_Ssend(&errs, 1, MPI_INT, 0, 1, intercomm); */

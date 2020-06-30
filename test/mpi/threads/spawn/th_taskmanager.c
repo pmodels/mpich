@@ -29,7 +29,7 @@ MPI_Comm th_comms[DEFAULT_TASK_WINDOW];
 void process_spawn(MPI_Comm * comm, int thread_id);
 void process_spawn(MPI_Comm * comm, int thread_id)
 {
-    CHECK_SUCCESS(MPI_Comm_spawn((char *) "./th_taskmaster", (char **) NULL,
+    CHECK_SUCCESS(MPI_Comm_spawn((char *) "./th_taskmanager", (char **) NULL,
                                  1, MPI_INFO_NULL, 0, th_comms[thread_id], comm, NULL));
 }
 

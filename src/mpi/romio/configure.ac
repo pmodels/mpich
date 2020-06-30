@@ -1440,30 +1440,30 @@ if test -z "$srcdir" -o "$srcdir" = "." ; then srcdir="$ROMIO_HOME" ; fi
 AC_SUBST(srcdir)
 
 # preserve these values across a config.status --recheck
-AC_ARG_VAR([master_top_srcdir],[set by the MPICH configure to indicate the MPICH source root])
-AC_ARG_VAR([master_top_builddir],[set by the MPICH configure to indicate the MPICH build root])
+AC_ARG_VAR([main_top_srcdir],[set by the MPICH configure to indicate the MPICH source root])
+AC_ARG_VAR([main_top_builddir],[set by the MPICH configure to indicate the MPICH build root])
 
-# The master_top_srcdir is the location of the source for the building
+# The main_top_srcdir is the location of the source for the building
 # package.  This is used only as part of the MPICH build, including 
 # the documentation targets mandoc, htmldoc, and latexdoc
-if test -z "$master_top_srcdir" ; then
+if test -z "$main_top_srcdir" ; then
     if test "$FROM_MPICH" = yes ; then
-        AC_MSG_WARN([Could not determine master_top_srcdir])
+        AC_MSG_WARN([Could not determine main_top_srcdir])
     fi
 fi
 #
-# Get the master builddir (which may be imported from above)
-if test -z "$master_top_builddir" ; then
+# Get the main builddir (which may be imported from above)
+if test -z "$main_top_builddir" ; then
     if test "$FROM_MPICH" = yes ; then
         # this variable is essential to proper build operation
-        AC_MSG_ERROR([Could not determine master_top_srcdir])
+        AC_MSG_ERROR([Could not determine main_top_srcdir])
     fi
-    master_top_builddir=`pwd`
+    main_top_builddir=`pwd`
 fi
 # Make sure the alternate spelling is used until we clean up all of the code
-master_topbuild_dir=$master_top_builddir
-export master_topbuild_dir
-AC_SUBST(master_topbuild_dir)
+main_topbuild_dir=$main_top_builddir
+export main_topbuild_dir
+AC_SUBST(main_topbuild_dir)
 
 # The following definitions are needed within adio/common/status_setb.c
 if test "$FROM_MPICH" = yes ; then
@@ -1481,8 +1481,8 @@ if test "$FROM_MPICH" = no ; then
 else
     MPILIBNAME=${MPILIBNAME:-mpich}
     if test -z "$LIBNAME" ; then
-        if test -d "$master_top_builddir/lib" ; then
-            LIBNAME=$master_top_builddir/lib/lib${MPILIBNAME}.a
+        if test -d "$main_top_builddir/lib" ; then
+            LIBNAME=$main_top_builddir/lib/lib${MPILIBNAME}.a
         else
             LIBNAME="$ROMIO_HOME/lib${MPILIBNAME}.a"
 	fi
@@ -1565,10 +1565,10 @@ elif test $FROM_MPICH = yes ; then
    # properly set
    #CC=${top_build_dir}/bin/mpicc
    #
-   # set the compilers to the ones in MPICH bin directory (master_top_builddir/bin)
+   # set the compilers to the ones in MPICH bin directory (main_top_builddir/bin)
    TEST_CC='$(bindir)/mpicc'
    TEST_F77='$(bindir)/mpifort'
-   MPI_H_INCLUDE="-I${master_top_builddir}/src/include"
+   MPI_H_INCLUDE="-I${main_top_builddir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""
    USER_FFLAGS=""

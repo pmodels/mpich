@@ -46,18 +46,18 @@ if test -z "$top_srcdir" ; then
 else
    use_top_srcdir=$top_srcdir
 fi
-if test -z "$master_top_srcdir" ; then 
-    master_top_srcdir=$use_top_srcdir
+if test -z "$main_top_srcdir" ; then
+    main_top_srcdir=$use_top_srcdir
 fi
-AC_SUBST(master_top_srcdir)
-export master_top_srcdir
+AC_SUBST(main_top_srcdir)
+export main_top_srcdir
 #
-# Get the master builddir (which may be imported from above)
-if test -z "$master_top_builddir" ; then
-    master_top_builddir=`pwd`
+# Get the main builddir (which may be imported from above)
+if test -z "$main_top_builddir" ; then
+    main_top_builddir=`pwd`
 fi
-export master_top_builddir
-AC_SUBST(master_top_builddir)
+export main_top_builddir
+AC_SUBST(main_top_builddir)
 
 dnl Find a C compiler
 AC_PROG_CC

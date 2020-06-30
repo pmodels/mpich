@@ -50,7 +50,7 @@ AC_CHECK_HEADERS([stdlib.h string.h limits.h stdint.h sys/types.h],,
                  [AC_MSG_ERROR([Cannot find headers.])],)
 
 # Must be able to find mpi.h
-MPI_H_INCLUDE="-I${master_top_builddir}/src/include"
+MPI_H_INCLUDE="-I${main_top_builddir}/src/include"
 AC_SUBST([MPI_H_INCLUDE])
 
 # check if we need declarations

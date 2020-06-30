@@ -68,10 +68,10 @@ int main(int argc, char *argv[])
         }
         for (i = 0; i < LOOP_COUNT; i++) {
             if (verbose) {
-                fprintf(pf, "Master : loop %d\n", i);
+                fprintf(pf, "Main : loop %d\n", i);
                 fflush(pf);
             } else if (loopProgress && (i & PROGRESS_COUNT) == 0) {
-                fprintf(pf, "Master: loop %d\n", i);
+                fprintf(pf, "Main: loop %d\n", i);
                 fflush(pf);
             }
             for (j = 1; j < nProc; j++) {
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         precv = (int *) calloc(DATA_SIZE, sizeof(int));
         for (i = 0; i < LOOP_COUNT; i++) {
             if (verbose) {
-                fprintf(pf, "  send to master\n");
+                fprintf(pf, "  send to main\n");
                 fflush(pf);
             }
             /*
@@ -121,15 +121,15 @@ int main(int argc, char *argv[])
              */
             status = MPI_Send(psend, DATA_SIZE - 1, MPI_INT, 0, MP_TAG, MPI_COMM_WORLD);
             if (verbose) {
-                fprintf(pf, "  send to master done, status = %d\n", status);
+                fprintf(pf, "  send to main done, status = %d\n", status);
                 fflush(pf);
-                fprintf(pf, "  read from master\n");
+                fprintf(pf, "  read from main\n");
                 fflush(pf);
             }
             status = MPI_Recv(precv, DATA_SIZE, MPI_INT, 0, MP_TAG,
                               MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (verbose) {
-                fprintf(pf, "  read from master done, status = %d\n", status);
+                fprintf(pf, "  read from main done, status = %d\n", status);
                 fflush(pf);
             }
         }

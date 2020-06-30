@@ -1135,7 +1135,7 @@ if ($doFuncspec) {
 open STAMPFD, '>', 'buildiface-stamp';
 close STAMPFD;
 
-# create the master file
+# create the main file
 $filename = "mpicxx.h.in";
 $OUTFD = OUTFILEHANDLE;
 open ( $OUTFD, ">${filename}.new" ) || die "Could not open ${filename}.new\n";

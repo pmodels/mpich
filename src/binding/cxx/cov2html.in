@@ -141,7 +141,7 @@ sub ReadAndAnnoteSrcfile {
 }
 
 # Summary report
-# TODO : compare the routines found to a master list of all routines.
+# TODO : compare the routines found to a main list of all routines.
 # generate a third list of unseen routines
 $maxcol = 4;
 sub CoverageSummary {

@@ -87,8 +87,8 @@ int MPIR_Iscan_intra_sched_smp(const void *sendbuf, void *recvbuf, int count, MP
 
     /* do scan on localfulldata to prefulldata. for example,
      * prefulldata on rank 4 contains reduce result of ranks
-     * 1,2,3,4,5,6. it will be sent to rank 7 which is master
-     * process of node 3. */
+     * 1,2,3,4,5,6. it will be sent to rank 7 which is the
+     * main process of node 3. */
     if (roots_comm != NULL) {
         /* FIXME just use roots_comm->rank instead */
         int roots_rank = MPIR_Get_internode_rank(comm_ptr, rank);
