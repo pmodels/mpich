@@ -356,6 +356,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         if (*request == NULL) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         } else {
+            MPIR_Request_add_ref(*request);
             mpi_errno = MPID_Request_complete(*request);
         }
     } else {
