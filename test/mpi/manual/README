@@ -18,14 +18,14 @@ dimsbalanced - A test of MPI_Dims_create; this checks that Dims_create
                default MPI_Dims_create when there is no underlying 
                network topology.
 
-spawntest_master, spawntest_child - A test of MPI_Comm_disconnect to ensure
+spawntest_parent, spawntest_child - A test of MPI_Comm_disconnect to ensure
 		  that once processes are disconnected, one can proceed
 		  through MPI_Finalize without waiting for the other to
 		  also proceed through MPI_Finalize.  This test is 
-		  designed to succeed even if either the child or master
+		  designed to succeed even if either the child or parent
 		  waits for the other in MPI_Finalize.  If MPI_Comm_disconnect
 		  works correctly, the spawned children (4 by default), 
-		  should exit roughly 30 seconds before the master.
+		  should exit roughly 30 seconds before the parent.
 
 segfault - a simple test that intentionally segfaults if its rank is 0,
            otherwise does nothing.  The output from mpiexec should make it clear

@@ -21,8 +21,8 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         # $device_name - name of the device
         # $device_args - contains name of channel select plus an channel args
         # $channel_name - name of the channel
-        # $master_top_srcdir - top-level source directory
-        # $master_top_builddir - top-level build directory
+        # $main_top_srcdir - top-level source directory
+        # $main_top_builddir - top-level build directory
         # $ac_configure_args - all arguments passed to configure
         #
         
@@ -41,7 +41,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         # run *before* the MPICH device (not the setup directory itself) is
         # configured, but the actual configuration of the associated directory
         # needs to be done *after* the device is configured.
-        file=${master_top_srcdir}/src/mpid/common/sock/setup
+        file=${main_top_srcdir}/src/mpid/common/sock/setup
         if test -f $file ; then
            echo sourcing $file
            . $file
@@ -52,7 +52,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         pathlist="$pathlist src/util/wrappers"
         ## TODO delete this -I junk
         ##for path in $pathlist ; do
-        ##    CPPFLAGS="$CPPFLAGS -I${master_top_builddir}/${path} -I${master_top_srcdir}/${path}"
+        ##    CPPFLAGS="$CPPFLAGS -I${main_top_builddir}/${path} -I${main_top_srcdir}/${path}"
         ##done
 
 # Adding this prevents the pesky "(strerror() not found)" problem, which can be

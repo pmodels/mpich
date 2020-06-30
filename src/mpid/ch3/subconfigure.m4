@@ -26,7 +26,7 @@ channel_args=`echo ${device_args} | sed -e 's/^[[^:]]*//' -e 's/^://'`
 #
 DEVICE="${device_name}:${channel_name}"
 
-dir=${master_top_srcdir}/src/mpid/${device_name}/channels/${channel_name}
+dir=${main_top_srcdir}/src/mpid/${device_name}/channels/${channel_name}
 if test ! -d $dir ; then
     echo "ERROR: ${dir} does not exist"
     exit 1

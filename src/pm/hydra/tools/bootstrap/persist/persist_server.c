@@ -10,13 +10,13 @@
 struct HYDT_persist_handle_s HYDT_persist_handle;
 static struct {
     enum {
-        MASTER,
-        SLAVE
+        SERVER,
+        CLIENT
     } type;
 
-    /* master variables */
+    /* server variables */
     int listen_fd;
-    int slave_pid;
+    int client_pid;
 
     /* client variables */
     int client_fd;
@@ -151,21 +151,21 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "accept error\n");
 
     if (!HYDT_persist_handle.debug) {
-        /* In debug mode, we don't fork a slave process, but the
-         * master takes over the work of the slave. */
+        /* In debug mode, we don't fork a client process, but the
+         * server process takes over the work of the client. */
 
-        /* fork and let the slave process handle this connection */
-        private.slave_pid = fork();
-        HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR, "fork failed\n");
+        /* fork and let the client process handle this connection */
+        private.client_pid = fork();
+        HYDU_ERR_CHKANDJUMP(status, private.client_pid < 0, HYD_INTERNAL_ERROR, "fork failed\n");
 
-        if (private.slave_pid > 0) {    /* master process */
-            close(private.client_fd);   /* the slave process will handle this */
+        if (private.client_pid > 0) {   /* server process */
+            close(private.client_fd);   /* the worker process will handle this */
             goto fn_exit;
         }
     }
 
-    /* This is the slave process. Close and deregister the listen socket */
-    private.type = SLAVE;
+    /* This is the client process. Close and deregister the listen socket */
+    private.type = CLIENT;
     status = HYDT_dmx_deregister_fd(private.listen_fd);
     HYDU_ERR_POP(status, "unable to deregister listen fd\n");
     close(private.listen_fd);
@@ -262,16 +262,16 @@ int main(int argc, char **argv)
     status = HYDT_dmx_register_fd(1, &private.listen_fd, HYD_POLLIN, NULL, listen_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    /* set type to master; when a slave forks out, it'll reset the
-     * type to slave. */
-    private.type = MASTER;
+    /* set type to server; when a client forks out, it'll reset the
+     * type to client. */
+    private.type = SERVER;
 
     while (1) {
         /* Wait for some event to occur */
         status = HYDT_dmx_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
 
-        if (private.type == SLAVE) {
+        if (private.type == CLIENT) {
             /* check if all stdio fd's have been deregistered */
 
             if (HYDT_dmx_query_fd_registration(private.stdout_fd) ||

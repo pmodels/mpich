@@ -23,7 +23,7 @@ noinst_PROGRAMS =         \
     spaconacc2            \
     selfconacc            \
     spawnmult2            \
-    taskmaster            \
+    taskmanager           \
     join                  \
     disconnect_reconnect  \
     disconnect_reconnect2 \

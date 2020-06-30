@@ -15,7 +15,7 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
-/* This is the master test routine */
+/* This is the main test routine */
 #define MAX_CNT 660000
 #define MAX_LOOP 200
 
