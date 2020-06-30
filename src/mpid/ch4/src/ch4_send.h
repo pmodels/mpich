@@ -448,56 +448,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
-                                       MPI_Aint count,
-                                       MPI_Datatype datatype,
-                                       int rank,
-                                       int tag,
-                                       MPIR_Comm * comm, int context_offset,
-                                       MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
-
-    av = MPIDIU_comm_rank_to_av(comm, rank);
-    mpi_errno = MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request);
-
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
-                                            MPI_Aint count,
-                                            MPI_Datatype datatype,
-                                            int rank,
-                                            int tag,
-                                            MPIR_Comm * comm, int context_offset,
-                                            MPIR_Request ** request, MPIR_Errflag_t * errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_COLL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_COLL);
-
-    av = MPIDIU_comm_rank_to_av(comm, rank);
-    mpi_errno = MPIDI_send_coll_safe(buf, count, datatype, rank, tag, comm, context_offset, av,
-                                     request, errflag);
-
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND_COLL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -549,6 +499,27 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend_coll(const void *buf,
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
+                                       MPI_Aint count,
+                                       MPI_Datatype datatype,
+                                       int rank,
+                                       int tag,
+                                       MPIR_Comm * comm, int context_offset,
+                                       MPIR_Request ** request)
+{
+    return MPID_Isend(buf, count, datatype, rank, tag, comm, context_offset, request);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Send_coll(const void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIR_Request ** request, MPIR_Errflag_t * errflag)
+{
+    return MPID_Isend_coll(buf, count, datatype, rank, tag, comm, context_offset, request, errflag);
+}
 
 MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
                                         MPI_Aint count,
@@ -558,26 +529,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    /*
-     * FIXME: this implementation of MPID_Rsend is identical to that of MPID_Send.
-     * Need to support rsend protocol, i.e., check if receive is posted on the
-     * reveiver side before the send is posted.
-     */
-
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
-
-    av = MPIDIU_comm_rank_to_av(comm, rank);
-    mpi_errno = MPIDI_send_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request);
-
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RSEND);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPID_Irsend(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
@@ -619,21 +571,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND);
-
-    av = MPIDIU_comm_rank_to_av(comm, rank);
-    mpi_errno =
-        MPIDI_ssend_safe(buf, count, datatype, rank, tag, comm, context_offset, av, request);
-
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SSEND);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPID_Issend(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
