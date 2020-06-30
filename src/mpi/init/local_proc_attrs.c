@@ -37,7 +37,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
     /* We need this inorder to implement IS_THREAD_MAIN */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
-    MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
+    MPID_Thread_self(&MPIR_ThreadInfo.main_thread);
 #endif
 #endif /* MPICH_IS_THREADED */
 

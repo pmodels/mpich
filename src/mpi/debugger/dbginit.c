@@ -508,7 +508,7 @@ void MPII_CommL_remember(MPIR_Comm * comm_ptr)
     comm_ptr->comm_next = MPIR_All_communicators.head;
     MPIR_All_communicators.head = comm_ptr;
     MPIR_All_communicators.sequence_number++;
-    MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "master head is %p", MPIR_All_communicators.head);
+    MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "main head is %p", MPIR_All_communicators.head);
 
     MPID_THREAD_CS_EXIT(VCI, lock);
     MPID_THREAD_CS_EXIT(POBJ, lock);

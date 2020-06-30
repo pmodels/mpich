@@ -43,7 +43,7 @@ my $dep_ns = "MPICH";
 
 # Default :output source files
 # NOTE: it's important to use single quote. abs_srcdir may contain sigils
-#   e.g. /var/lib/jenkins-slave/workspace/hzhou-custom@2/config/ch3-sock/label/centos64
+#   e.g. /var/lib/jenkins/workspace/hzhou-custom@2/config/ch3-sock/label/centos64
 my $header_file = '@abs_srcdir@/../src/include/mpir_cvars.h';
 my $c_file      = '@abs_srcdir@/../src/util/mpir_cvars.c';
 my $readme_file = '@abs_srcdir@/../README.envvar';

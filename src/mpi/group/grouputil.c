@@ -195,7 +195,7 @@ static int mergesort_lpidarray(MPII_Group_pmap_t maparray[], int n)
  *
  * Called by group_compare, group_translate_ranks, group_union
  *
- * In the case of a single master thread lock, the lock must
+ * In the case of a single main thread lock, the lock must
  * be held on entry to this routine.  This forces some of the routines
  * noted above to hold the SINGLE_CS; which would otherwise not be required.
  */

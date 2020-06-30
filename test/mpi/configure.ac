@@ -64,14 +64,14 @@ if test -z "$mpich_top_srcdir" ; then
 fi
 AC_SUBST(mpich_top_srcdir)
 
-# these (in particular master_top_srcdir) are needed to regenerate
+# these (in particular main_top_srcdir) are needed to regenerate
 # the f90 files from the f77 files
-AC_ARG_VAR([master_top_builddir],[path to the MPICH top-level build directory (if present)])
-AC_ARG_VAR([master_top_srcdir],[path to the MPICH top-level source directory (if present)])
+AC_ARG_VAR([main_top_builddir],[path to the MPICH top-level build directory (if present)])
+AC_ARG_VAR([main_top_srcdir],[path to the MPICH top-level source directory (if present)])
 
-# Ensure that master_top_srcdir is set if maintainer mode for is set, 
+# Ensure that main_top_srcdir is set if maintainer mode for is set,
 # since some of the Makefile targets require it.
-if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
+if test "X$main_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir   
     else
@@ -86,9 +86,9 @@ if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     esac
     # Now, see if we can find the f77tof90 routine
     if test -x $use_top_srcdir/maint/f77tof90 ; then
-        master_top_srcdir=$use_top_srcdir
+        main_top_srcdir=$use_top_srcdir
     else 
-        AC_MSG_ERROR([Unable to find master source file - reconfigure using --disable-maintainer_mode])
+        AC_MSG_ERROR([Unable to find main source file - reconfigure using --disable-maintainer_mode])
     fi
 fi
 

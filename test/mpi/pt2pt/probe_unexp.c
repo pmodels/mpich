@@ -84,7 +84,7 @@ int main(int argc, char **argv)
                     MTestPrintError(mpi_errno);
                 }
 
-                /* Perform probe, hopefully before the master process can
+                /* Perform probe, hopefully before the main process can
                  * send its reply */
                 mpi_errno = MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (mpi_errno != MPI_SUCCESS && errs++ < 10) {
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
                          p_rank, msg_size, incoming_msg_size, msg_cnt);
                 }
 
-                /* Receive the probed message from the master process */
+                /* Receive the probed message from the main process */
                 mpi_errno = MPI_Recv(buf, msg_size, MPI_BYTE, 0, tag, MPI_COMM_WORLD, &status);
                 if (mpi_errno != MPI_SUCCESS && errs++ < 10) {
                     MTestPrintError(mpi_errno);

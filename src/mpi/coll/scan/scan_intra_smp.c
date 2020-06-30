@@ -93,8 +93,8 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
 
     /* do scan on localfulldata to prefulldata. for example,
      * prefulldata on rank 4 contains reduce result of ranks
-     * 1,2,3,4,5,6. it will be sent to rank 7 which is master
-     * process of node 3. */
+     * 1,2,3,4,5,6. it will be sent to rank 7 which is the
+     * main process of node 3. */
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
                               op, comm_ptr->node_roots_comm, errflag);

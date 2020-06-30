@@ -138,7 +138,7 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
                     *flag = 0;
                 } else {
                     /* We call MPID_Get_universe_size only once (see 10.5.1).
-                     * Thus, we must put the value into the "master" copy */
+                     * Thus, we must put the value into the "main" copy */
                     mpi_errno = MPID_Get_universe_size(&MPIR_Process.attrs.universe);
                     /* --BEGIN ERROR HANDLING-- */
                     if (mpi_errno != MPI_SUCCESS) {
