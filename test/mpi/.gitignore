@@ -1091,7 +1091,7 @@
 /manual/segfault
 /manual/singjoin
 /manual/spawntest_child
-/manual/spawntest_master
+/manual/spawntest_parent
 /manual/test-port
 /manual/testconnect
 /manual/testconnectserial
@@ -1371,7 +1371,7 @@
 /spawn/spawnmanyarg
 /spawn/spawnminfo1
 /spawn/spawnmult2
-/spawn/taskmaster
+/spawn/taskmanager
 /spawn/testlist
 /test.ncb
 /test.sln
@@ -1448,7 +1448,7 @@
 /threads/spawn/alltoall
 /threads/spawn/multispawn
 /threads/spawn/sendselfth
-/threads/spawn/th_taskmaster
+/threads/spawn/th_taskmanager
 /threads/spawn/threaded_sr
 /threads/testlist
 /topo/cartcreates

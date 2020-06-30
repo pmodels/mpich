@@ -8,7 +8,7 @@ include $(top_srcdir)/Makefile_single.mtest
 SUBDIRS = mpi_t
 
 noinst_PROGRAMS = singjoin testconnect testconnectserial dimsbalanced \
-                  spawntest_master spawntest_child segfault
+                  spawntest_parent spawntest_child segfault
 
 # testconnectserial would like MPICHLIBSTR to be defined as the installation
 # directory of the MPI library.  This definition is not required.

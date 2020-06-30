@@ -786,7 +786,7 @@ if test -z "$top_srcdir" ; then
 else
    use_top_srcdir=$top_srcdir
 fi
-if test -z "$master_top_srcdir" ; then
+if test -z "$main_top_srcdir" ; then
     # This needs to be an absolute pathname
     case "$use_top_srcdir" in
     /*) ;;
@@ -794,20 +794,20 @@ if test -z "$master_top_srcdir" ; then
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
 	;;
     esac
-    master_top_srcdir=$use_top_srcdir
+    main_top_srcdir=$use_top_srcdir
 fi
 # Get the directory that we're running in...
-if test -z "$master_top_builddir" ; then
-   master_top_builddir="`pwd`"
+if test -z "$main_top_builddir" ; then
+   main_top_builddir="`pwd`"
 fi
-AC_SUBST(master_top_builddir)
-AC_SUBST(master_top_srcdir)
-export master_top_builddir
-export master_top_srcdir
+AC_SUBST(main_top_builddir)
+AC_SUBST(main_top_srcdir)
+export main_top_builddir
+export main_top_srcdir
 
 if test -z "$with_cross"; then
-  if test -f "$master_top_srcdir/src/cross/$host_alias"; then
-    with_cross="$master_top_srcdir/src/cross/$host_alias"
+  if test -f "$main_top_srcdir/src/cross/$host_alias"; then
+    with_cross="$main_top_srcdir/src/cross/$host_alias"
   else
     with_cross=no
   fi
@@ -1026,7 +1026,7 @@ if test "$with_mpl_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding MPL
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
     mplsrcdir="src/mpl"
@@ -1075,10 +1075,10 @@ if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; the
         if test -e "${use_top_srcdir}/modules/izem" ; then
             zm_subdir_args="--enable-embedded"
             PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-            zmsrcdir="${master_top_builddir}/modules/izem"
-            zmlib="${master_top_builddir}/modules/izem/src/lib${ZMLIBNAME}.la"
+            zmsrcdir="${main_top_builddir}/modules/izem"
+            zmlib="${main_top_builddir}/modules/izem/src/lib${ZMLIBNAME}.la"
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/izem/src/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${master_top_builddir}/modules/izem/src/include],[CPPFLAGS])
+            PAC_APPEND_FLAG([-I${main_top_builddir}/modules/izem/src/include],[CPPFLAGS])
         else
             AC_MSG_WARN([Attempted to use the embedded Izem source tree in "modules/izem", but it is missing.  Configuration or compilation may fail later.])
         fi
@@ -1149,7 +1149,7 @@ if test "$with_yaksa_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding YAKSA
     yaksa_subdir_args="--enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([modules/yaksa],[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
-    PAC_APPEND_FLAG([-I${master_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
 
     yaksasrcdir="modules/yaksa"
@@ -1202,10 +1202,10 @@ PAC_PUSH_ALL_FLAGS()
 PAC_RESET_ALL_FLAGS()
 PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
 PAC_POP_ALL_FLAGS()
-jsonsrcdir="${master_top_builddir}/modules/json-c"
-jsonlib="${master_top_builddir}/modules/json-c/libjson-c.la"
+jsonsrcdir="${main_top_builddir}/modules/json-c"
+jsonlib="${main_top_builddir}/modules/json-c/libjson-c.la"
 PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
-PAC_APPEND_FLAG([-I${master_top_builddir}/modules/json-c],[CPPFLAGS])
+PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
 # HWLOC
@@ -1597,7 +1597,7 @@ if test "$enable_romio" = "yes" ; then
        # This ought to be sufficient, but there is also a symlink setup in
        # src/include to accomodate current mpicc limitations.  See
        # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+       PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
 
        # Set environment variables that the romio configure expects
        export use_top_srcdir
@@ -2200,7 +2200,7 @@ if test "$has_fort_real8" = "yes" ; then
     cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
 fi
 fi],
-master_top_srcdir=$master_top_srcdir
+main_top_srcdir=$main_top_srcdir
 enable_f77=$enable_f77
 enable_fc=$enable_fc
 has_exclaim=$has_exclaim
@@ -3425,7 +3425,7 @@ export MPIX_C_FLOAT16
 #
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
-    # Up to size checking code in master configure.ac (where it tries to
+    # Up to size checking code in main configure.ac (where it tries to
     # find the matching C sizes) as part of defining mpi_integer8 etc.
     # The results are available in pac_cv_sizeof_f77_<type>
     # Size is 0 if unknown or unavailable (or cross-compiling)
@@ -3954,7 +3954,7 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
 	# interface (was error)
 	# Check to see if the f77 binding has enabled the code to support
 	# the case of int != fint.
-	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
+	if grep HAVE_FINT_IS_INT $main_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
 	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
 	else
             AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
@@ -4728,7 +4728,7 @@ typedef struct MPIR_Comm MPIR_Comm;
 #include <stdint.h>
 #endif
 
-#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
+#include "${main_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])

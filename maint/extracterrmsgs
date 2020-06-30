@@ -530,7 +530,7 @@ sub AddTestCall {
 # ==========================================================================
 # Read an errnames file.  This allows us to distribute the errnames.txt
 # files in the relevant modules, rather than making them part of one
-# single master file.
+# single main file.
 # This updates the global hashs longnames and longnamesDefined
 #  ReadErrnamesFile( filename )
 # ==========================================================================

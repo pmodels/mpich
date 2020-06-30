@@ -299,16 +299,16 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         PAC_RESET_ALL_FLAGS()
         PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
         PAC_POP_ALL_FLAGS()
-        PAC_APPEND_FLAG([-I${master_top_builddir}/modules/libfabric/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/include], [CPPFLAGS])
 
         if test "x$ofi_direct_provider" != "x" ; then
-            PAC_APPEND_FLAG([-I${master_top_builddir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
 
-        ofisrcdir="${master_top_builddir}/modules/libfabric"
+        ofisrcdir="${main_top_builddir}/modules/libfabric"
         ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
@@ -318,7 +318,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     # check for libfabric depedence libs
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
-        pcdir="${master_top_builddir}/modules/libfabric"
+        pcdir="${main_top_builddir}/modules/libfabric"
     elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi

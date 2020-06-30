@@ -35,7 +35,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         PAC_PUSH_FLAG(CPPFLAGS)
         PAC_CONFIG_SUBDIR_ARGS([modules/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
         PAC_POP_FLAG(CPPFLAGS)
-        PAC_APPEND_FLAG([-I${master_top_builddir}/modules/ucx/src], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/ucx/src], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/ucx/src], [CPPFLAGS])
 
         ucxdir="modules/ucx"

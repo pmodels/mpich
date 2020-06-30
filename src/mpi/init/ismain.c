@@ -67,7 +67,7 @@ int MPI_Is_thread_main(int *flag)
         MPID_Thread_id_t my_thread_id;
 
         MPID_Thread_self(&my_thread_id);
-        MPID_Thread_same(&MPIR_ThreadInfo.master_thread, &my_thread_id, flag);
+        MPID_Thread_same(&MPIR_ThreadInfo.main_thread, &my_thread_id, flag);
     }
 #endif
     /* ... end of body of routine ... */

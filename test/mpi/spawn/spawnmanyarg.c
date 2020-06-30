@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
                 inargv[narg] = saveArgp;
                 /* We now have a valid intercomm */
 
-                /* Master */
+                /* Parent */
                 MPI_Comm_remote_size(intercomm, &rsize);
                 MPI_Comm_size(intercomm, &size);
                 MPI_Comm_rank(intercomm, &rank);
@@ -173,7 +173,7 @@ int worker(int argc, char *argv[], MPI_Comm intercomm, char *outargv[], int np)
     /* Restore the argument vector (not necessary in this case, since the
      * worker will exit) */
     outargv[narg] = saveoutArgp;
-    /* Send the errs back to the master process */
+    /* Send the errs back to the parent process */
     MPI_Ssend(&errs, 1, MPI_INT, 0, 1, intercomm);
 
     return errs;

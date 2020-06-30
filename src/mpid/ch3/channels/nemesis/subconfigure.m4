@@ -15,8 +15,8 @@ MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 # $device_name - name of the device
 # $device_args - contains name of channel select plus an channel args
 # $channel_name - name of the channel
-# $master_top_srcdir - top-level source directory
-# $master_top_builddir - top-level build directory
+# $main_top_srcdir - top-level source directory
+# $main_top_builddir - top-level build directory
 # $ac_configure_args - all arguments passed to configure
 if test -z "${channel_args}" ; then
     nemesis_networks="tcp"
