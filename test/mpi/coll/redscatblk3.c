@@ -57,8 +57,10 @@ int main(int argc, char **argv)
     for (i = 0; i < mycount; i++) {
         if (recvbuf[i] != sumval) {
             errs++;
-            fprintf(stdout, "Did not get expected value for reduce scatter\n");
-            fprintf(stdout, "[%d] Got %d expected %d\n", rank, recvbuf[i], sumval);
+            if (errs < 10) {
+                fprintf(stdout, "Did not get expected value for reduce scatter\n");
+                fprintf(stdout, "[%d] Got %d expected %d\n", rank, recvbuf[i], sumval);
+            }
         }
     }
 
@@ -69,8 +71,10 @@ int main(int argc, char **argv)
     for (i = 0; i < mycount; i++) {
         if (sendbuf[i] != sumval) {
             errs++;
-            fprintf(stdout, "Did not get expected value for reduce scatter (in place)\n");
-            fprintf(stdout, "[%d] Got %d expected %d\n", rank, sendbuf[i], sumval);
+            if (errs < 10) {
+                fprintf(stdout, "Did not get expected value for reduce scatter (in place)\n");
+                fprintf(stdout, "[%d] Got %d expected %d\n", rank, sendbuf[i], sumval);
+            }
         }
     }
 
