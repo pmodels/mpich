@@ -243,24 +243,8 @@ print OUTPUT_C <<EOT;
 EOT
 # Output the definitions
 foreach my $p (@cvars) {
-    my $default = FmtDefault($p->{name}, $p->{default}, $p->{type});
-
-    if ($p->{class} eq 'device') {
-        printf OUTPUT_C "#if defined MPID_%s\n", $p->{name};
-        printf OUTPUT_C "%s ${uc_ns}_%s = MPID_%s;\n", Type2Ctype($p->{type}), $p->{name},
-                       $p->{name};
-        printf OUTPUT_C "#else\n";
-    }
-
-    if ($p->{type} eq 'string') {
-        printf OUTPUT_C "%s ${uc_ns}_%s = (const char*)%s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
-    } else {
-        printf OUTPUT_C "%s ${uc_ns}_%s = %s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
-    }
-
-    if ($p->{class} eq 'device') {
-        printf OUTPUT_C "#endif /* MPID_%s */\n\n", $p->{name};
-    }
+    my $type = Type2Ctype($p->{type});
+    print OUTPUT_C "$type ${uc_ns}_$p->{name};\n";
 }
 
 # Generate the init function.
@@ -322,10 +306,14 @@ foreach my $p (@cvars) {
         qq(        "$p->{category}", /* category */),
         qq(        "$desc");
 
+    my $var_name = "${uc_ns}_" . $p->{name};
+    if ($p->{type} ne 'string') {
+        print OUTPUT_C "    $var_name = $dftvar;\n";
+    }
+
     if ($p->{type} eq 'string') {
-print OUTPUT_C <<EOT;
-    ${uc_ns}_GET_DEFAULT_STRING(${uc_ns}_$p->{name}, &tmp_str);
-EOT
+        # we will strdup the tmp_str
+        print OUTPUT_C "    tmp_str = defaultval.str;\n";
     }
     elsif ($p->{type} eq 'enum') {
         print OUTPUT_C "    tmp_str=NULL;\n";
@@ -334,7 +322,6 @@ EOT
     # Get the env variable value.
     my $env_fn = Type2EnvFn($p->{type});
     my @env_names = ();
-    my $var_name = "${uc_ns}_" . $p->{name};
 
     # Process extra envs first so the primary always wins
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
