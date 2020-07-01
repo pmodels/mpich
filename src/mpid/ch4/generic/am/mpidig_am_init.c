@@ -152,10 +152,24 @@ int MPIDIG_am_init(void)
     MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
     MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDIG_send_origin_cb, &MPIDIG_send_target_msg_cb);
+    /* FIXME: remove old LMT */
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_REQ, NULL, &MPIDIG_send_long_req_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_ACK, NULL, &MPIDIG_send_long_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_LMT,
                      &MPIDIG_send_long_lmt_origin_cb, &MPIDIG_send_long_lmt_target_msg_cb);
+    /* pipeline protocol */
+    MPIDIG_am_reg_cb(MPIDIG_SEND_PIPELINE_RTS,
+                     &MPIDIG_send_pipeline_rts_origin_cb, &MPIDIG_send_pipeline_rts_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SEND_PIPELINE_CTS, NULL, &MPIDIG_send_pipeline_cts_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SEND_PIPELINE_SEG,
+                     &MPIDIG_send_pipeline_seg_origin_cb, &MPIDIG_send_pipeline_seg_target_msg_cb);
+    /* rdma read protocol */
+    MPIDIG_am_reg_cb(MPIDIG_SEND_RDMA_READ_REQ,
+                     &MPIDIG_send_rdma_read_req_origin_cb,
+                     &MPIDIG_send_rdma_read_req_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SEND_RDMA_READ_ACK, NULL, &MPIDIG_send_rdma_read_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SEND_RDMA_READ_NAK, NULL, &MPIDIG_send_rdma_read_nak_target_msg_cb);
+
     MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ, &MPIDIG_send_origin_cb, &MPIDIG_ssend_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK,
                      &MPIDIG_ssend_ack_origin_cb, &MPIDIG_ssend_ack_target_msg_cb);

@@ -17,6 +17,7 @@ int MPIDIG_do_long_ack(MPIR_Request * rreq);
 int MPIDIG_check_cmpl_order(MPIR_Request * req);
 void MPIDIG_progress_compl_list(void);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);
+/* FIXME: remove old LMT */
 int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq);
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req);
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
@@ -24,9 +25,34 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req);
+/* FIXME: remove old LMT */
 int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req);
+/* pipeline protocol */
+int MPIDIG_send_pipeline_rts_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, int is_local, int is_async,
+                                           MPIR_Request ** req);
+int MPIDIG_send_pipeline_rts_origin_cb(MPIR_Request * sreq);
+int MPIDIG_send_pipeline_cts_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, int is_local, int is_async,
+                                           MPIR_Request ** req);
+int MPIDIG_send_pipeline_seg_origin_cb(MPIR_Request * sreq);
+int MPIDIG_send_pipeline_seg_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                           MPI_Aint in_data_sz, int is_local, int is_async,
+                                           MPIR_Request ** req);
+/* rdma read protocol */
+int MPIDIG_send_rdma_read_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                            MPI_Aint in_data_sz, int is_local, int is_async,
+                                            MPIR_Request ** req);
+int MPIDIG_send_rdma_read_req_origin_cb(MPIR_Request * sreq);
+int MPIDIG_send_rdma_read_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                            MPI_Aint in_data_sz, int is_local, int is_async,
+                                            MPIR_Request ** req);
+int MPIDIG_send_rdma_read_nak_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                            MPI_Aint in_data_sz, int is_local, int is_async,
+                                            MPIR_Request ** req);
+
 int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint p_data_sz,
                                int is_local, int is_async, MPIR_Request ** req);
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
@@ -35,5 +61,4 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
 int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint p_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req);
-
 #endif /* CH4R_CALLBACKS_H_INCLUDED */
