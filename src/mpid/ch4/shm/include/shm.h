@@ -41,6 +41,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
                                                       size_t am_hdr_sz, const void *data,
                                                       MPI_Count count, MPI_Datatype datatype,
                                                       MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_pipeline(MPIR_Context_id_t context_id, int src_rank,
+                                                         int handler_id, const void *am_hdr,
+                                                         size_t am_hdr_sz, const void *data,
+                                                         MPI_Count count, MPI_Datatype datatype,
+                                                         MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_buf_limit(void) MPL_STATIC_INLINE_SUFFIX;
