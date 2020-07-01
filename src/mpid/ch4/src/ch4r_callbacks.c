@@ -19,6 +19,8 @@ int MPIDIG_do_long_ack(MPIR_Request * rreq)
     am_hdr.rreq_ptr = rreq;
     MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
 
+    am_hdr.preferred_protocol = MPIDIG_SEND_LONG_PIPELINE;
+
     int rank = MPIDIG_REQUEST(rreq, rank);
     MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -296,8 +298,23 @@ int MPIDIG_send_long_pipeline_origin_cb(MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
 
-    MPIR_Assert(0);
+    parent_req = MPIDIG_REQUEST(sreq, req->lreq).parent_req;
 
+    if (parent_req != sreq) {
+        printf("pipeline src CB child sreq %p, cc %d, parent req %p\n", sreq, *(sreq->cc_ptr), parent_req);
+        /* this is a child req, check if parent req sent all the data.
+         * If all data is sent, free parent req, then free this req */
+        printf("parent data_sz_left %d\n", MPIDIG_REQUEST(parent_req, req->lreq).data_sz_left);
+        if (MPIDIG_REQUEST(parent_req, req->lreq).data_sz_left == 0) {
+            MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(parent_req, req->lreq).datatype);
+            MPID_Request_complete(parent_req);
+        }
+        MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->lreq).datatype);
+        MPID_Request_complete(sreq);
+    } else {
+        printf("pipeline src CB parent sreq %p, cc %d, parent req %p\n", sreq, *(sreq->cc_ptr), parent_req);
+    }
+    /* if this req is parent, do nothing---there should be at least one child req in the future */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
     return mpi_errno;
@@ -462,6 +479,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
 
+    printf("long RTS CB\n");
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
   root_comm_retry:
     if (root_comm) {
@@ -487,6 +505,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
     }
 
     if (rreq == NULL) {
+        printf("unexpected long RTS\n");
         rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
@@ -500,6 +519,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+        MPIDIG_recv_setup(rreq);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         MPIDI_REQUEST(rreq, is_local) = is_local;
@@ -540,6 +560,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
         }
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
     } else {
+        printf("expected long RTS\n");
         /* Matching receive was posted */
         rreq->comm = root_comm;
         /* NOTE: we are skipping MPIR_Comm_release for taking off posted_list since we are holding
@@ -555,10 +576,13 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
         /* Mark `match_req` as NULL so that we know nothing else to complete when
          * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+        MPIDIG_recv_setup(rreq);
 
         mpi_errno = MPIDIG_do_long_ack(rreq);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    MPIDIG_recv_type_init(lreq_hdr->data_sz, rreq);
 
     if (is_async)
         *req = NULL;
@@ -613,8 +637,24 @@ int MPIDIG_send_long_pipeline_target_msg_cb(int handler_id, void *am_hdr, void *
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
 
-    MPIR_Assert(0);
+    printf("pipeline target CB\n");
 
+    rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
+    MPIR_Assert(rreq);
+
+    if (is_async) {
+        *req = rreq;
+    } else {
+        printf("async recv next in_data_sz %d, offset %d\n", MPIDIG_REQUEST(rreq, req->async).in_data_sz,
+               MPIDIG_REQUEST(rreq, req->async).offset);
+        is_done = MPIDIG_recv_copy_seg(data, in_data_sz, rreq);
+        if (is_done) {
+            MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+            MPIDIG_REQUEST(rreq, req->seq_no) =
+                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+            MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
     return mpi_errno;
@@ -632,7 +672,9 @@ int MPIDIG_send_long_rdma_read_target_msg_cb(int handler_id, void *am_hdr, void 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
 
+    rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
     MPIR_Assert(0);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -688,6 +730,63 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     return mpi_errno;
 }
 
+int do_send_long_pipeline(MPIR_Request * sreq, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDIG_send_long_pipeline_msg_t send_hdr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_LONG_PIPELINE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_LONG_PIPELINE);
+
+    send_hdr.rreq_ptr = rreq;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(sreq, is_local))
+        mpi_errno =
+            MPIDI_SHM_am_isend_pipeline(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+                                        MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_PIPELINE,
+                                        &send_hdr, sizeof(send_hdr),
+                                        MPIDIG_REQUEST(sreq, req->lreq).src_buf,
+                                        MPIDIG_REQUEST(sreq, req->lreq).count,
+                                        MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+    else
+#endif
+    {
+        mpi_errno =
+            MPIDI_NM_am_isend_pipeline(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+                                       MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_PIPELINE,
+                                       &send_hdr, sizeof(send_hdr),
+                                       MPIDIG_REQUEST(sreq, req->lreq).src_buf,
+                                       MPIDIG_REQUEST(sreq, req->lreq).count,
+                                       MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_LONG_PIPELINE);
+    return mpi_errno;
+}
+
+int do_send_long_rdma_read(MPIR_Request * sreq, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDIG_send_long_rdma_read_msg_t send_hdr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_SEND_LONG_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_SEND_LONG_RDMA_READ);
+
+    send_hdr.rreq_ptr = rreq;
+
+    mpi_errno =
+        MPIDI_NM_am_isend_rdma_read(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+                                    MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_RDMA_READ,
+                                    &send_hdr, sizeof(send_hdr),
+                                    MPIDIG_REQUEST(sreq, req->lreq).src_buf,
+                                    MPIDIG_REQUEST(sreq, req->lreq).count,
+                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_SEND_LONG_RDMA_READ);
+    return mpi_errno;
+}
+
 int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req)
@@ -704,26 +803,42 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
-    /* TODO: Add ack for pipeline and rdma_read protocol */
+    MPIR_Assert(msg_hdr->preferred_protocol == MPIDIG_SEND_LONG_PIPELINE);
+    printf("preferred_protocol %d\n", msg_hdr->preferred_protocol);
+
+    switch (msg_hdr->preferred_protocol) {
+        case MPIDIG_SEND_LONG_LMT:
+            /* FIXME: this is old lmt implementation, will be removed */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_REQUEST(sreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
-                                     MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
-                                     &send_hdr, sizeof(send_hdr),
-                                     MPIDIG_REQUEST(sreq, req->lreq).src_buf,
-                                     MPIDIG_REQUEST(sreq, req->lreq).count,
-                                     MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
-    else
+            if (MPIDI_REQUEST(sreq, is_local))
+                mpi_errno =
+                    MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+                                             MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
+                                             &send_hdr, sizeof(send_hdr),
+                                             MPIDIG_REQUEST(sreq, req->lreq).src_buf,
+                                             MPIDIG_REQUEST(sreq, req->lreq).count,
+                                             MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+            else
 #endif
-    {
-        mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
-                                    MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
-                                    &send_hdr, sizeof(send_hdr),
-                                    MPIDIG_REQUEST(sreq, req->lreq).src_buf,
-                                    MPIDIG_REQUEST(sreq, req->lreq).count,
-                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+            {
+                mpi_errno =
+                    MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->lreq).context_id,
+                                            MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_LONG_LMT,
+                                            &send_hdr, sizeof(send_hdr),
+                                            MPIDIG_REQUEST(sreq, req->lreq).src_buf,
+                                            MPIDIG_REQUEST(sreq, req->lreq).count,
+                                            MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+            }
+            break;
+        case MPIDIG_SEND_LONG_PIPELINE:
+            do_send_long_pipeline(sreq, msg_hdr->rreq_ptr);
+            break;
+        case MPIDIG_SEND_LONG_RDMA_READ:
+            do_send_long_rdma_read(sreq, msg_hdr->rreq_ptr);
+            break;
+            break;
+        default:
+            MPIR_Assert(0);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

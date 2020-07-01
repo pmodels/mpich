@@ -89,6 +89,9 @@ typedef struct MPIDIG_lreq_t {
     int rank;
     int tag;
     MPIR_Context_id_t context_id;
+    MPI_Count data_sz_left;  /* number of count left for segmenting/packing in pipeline */
+    MPI_Aint offset;  /* offset to next segment in user buffer */
+    MPIR_Request *parent_req;
 } MPIDIG_lreq_t;
 
 typedef struct MPIDIG_rreq_t {
@@ -102,6 +105,8 @@ typedef struct MPIDIG_rreq_t {
     MPIR_Request *match_req;
     MPIR_Request *request;
 
+    MPI_Aint data_sz_left;
+    MPI_Aint offset;
     struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
 

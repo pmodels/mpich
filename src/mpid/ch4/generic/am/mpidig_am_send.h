@@ -197,6 +197,8 @@ static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datat
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
 
+    printf("do rndv send\n");
+
     if (sreq == NULL) {
         sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
         MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
@@ -220,6 +222,8 @@ static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datat
     MPIDIG_REQUEST(sreq, req->lreq).tag = am_hdr.hdr.tag;
     MPIDIG_REQUEST(sreq, req->lreq).rank = am_hdr.hdr.src_rank;
     MPIDIG_REQUEST(sreq, req->lreq).context_id = am_hdr.hdr.context_id;
+    MPIDIG_REQUEST(sreq, req->lreq).data_sz_left = data_sz;
+    MPIDIG_REQUEST(sreq, req->lreq).offset = 0;
     MPIDIG_REQUEST(sreq, rank) = rank;
 
 #ifdef HAVE_DEBUGGER_SUPPORT

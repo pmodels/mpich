@@ -536,9 +536,11 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
             break;
     }
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_pack_buf_pool,
-                                      MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
+        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_pack_buf_pool,
+                                          MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    }
 
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
 
@@ -562,6 +564,8 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_RECV_EVENT);
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
+
+    printf("am recv am_hdr seqno %d\n", am_hdr->seqno);
 
     expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
