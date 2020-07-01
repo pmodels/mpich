@@ -51,9 +51,15 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .am_isendv = MPIDI_NM_am_isendv,
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
+    .am_isend_pipeline_rts = MPIDI_NM_am_isend_pipeline_rts,
+    .am_isend_pipeline_seg = MPIDI_NM_am_isend_pipeline_seg,
+    .am_isend_rdma_read_req = MPIDI_NM_am_isend_rdma_read_req,
+    .am_recv_rdma_read = MPIDI_NM_am_recv_rdma_read,
+    .am_rdma_read_unreg = MPIDI_NM_am_rdma_read_unreg,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
     .am_eager_limit = MPIDI_NM_am_eager_limit,
-    .am_eager_buf_limit = MPIDI_NM_am_eager_buf_limit
+    .am_eager_buf_limit = MPIDI_NM_am_eager_buf_limit,
+    .am_choose_protocol = MPIDI_NM_am_choose_protocol
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {

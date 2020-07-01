@@ -92,6 +92,88 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_pipeline_rts(int rank, MPIR_Comm * comm,
+                                                            int handler_id, const void *am_hdr,
+                                                            size_t am_hdr_sz, const void *data,
+                                                            MPI_Count count, MPI_Datatype datatype,
+                                                            MPIR_Request * sreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_RTS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_RTS);
+
+    ret = MPIDI_NM_func->am_isend_pipeline_rts(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
+                                               count, datatype, sreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_RTS);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_pipeline_seg(MPIR_Context_id_t context_id,
+                                                            int src_rank, int handler_id,
+                                                            const void *am_hdr, size_t am_hdr_sz,
+                                                            const void *data, MPI_Count count,
+                                                            MPI_Datatype datatype,
+                                                            MPIR_Request * sreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_SEG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_SEG);
+
+    ret = MPIDI_NM_func->am_isend_pipeline_seg(context_id, src_rank, handler_id, am_hdr, am_hdr_sz,
+                                               data, count, datatype, sreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE_SEG);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_rdma_read_req(int rank, MPIR_Comm * comm,
+                                                             int handler_id, const void *am_hdr,
+                                                             size_t am_hdr_sz, const void *data,
+                                                             MPI_Count count, MPI_Datatype datatype,
+                                                             MPIR_Request * sreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
+
+    ret = MPIDI_NM_func->am_isend_rdma_read_req(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
+                                                count, datatype, sreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv_rdma_read(void *lmt_msg, size_t recv_data_sz,
+                                                        MPIR_Request * rreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV_RDMA_READ);
+
+    ret = MPIDI_NM_func->am_recv_rdma_read(lmt_msg, recv_data_sz, rreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV_RDMA_READ);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_rdma_read_unreg(MPIR_Request * sreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
+
+    ret = MPIDI_NM_func->am_rdma_read_unreg(sreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
@@ -113,6 +195,13 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
 {
     return MPIDI_NM_func->am_eager_buf_limit();
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                         MPI_Datatype datatype, size_t am_ext_sz,
+                                                         int handler_id)
+{
+    return MPIDI_NM_func->am_choose_protocol(buf, count, datatype, am_ext_sz, handler_id);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
