@@ -293,6 +293,46 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     goto fn_exit;
 }
 
+static inline int MPIDI_NM_am_isend_pipeline(MPIR_Context_id_t context_id,
+                                             int src_rank,
+                                             int handler_id,
+                                             const void *am_hdr,
+                                             size_t am_hdr_sz,
+                                             const void *data,
+                                             MPI_Count count,
+                                             MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE);
+
+    MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_PIPELINE);
+    return mpi_errno;
+}
+
+static inline int MPIDI_NM_am_isend_rdma_read(MPIR_Context_id_t context_id,
+                                              int src_rank,
+                                              int handler_id,
+                                              const void *am_hdr,
+                                              size_t am_hdr_sz,
+                                              const void *data,
+                                              MPI_Count count,
+                                              MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ);
+
+    MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ);
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
