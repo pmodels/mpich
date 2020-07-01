@@ -6,10 +6,14 @@
   select a netmod in order to build ch4, else configure will prompt
   the user to choose.
 
-# Further improvements to ch4 business card exchange: extra
-  long address support and fixes for PMIx integration.
+# Add support for Yaksa datatype engine.
 
-# Un-inline non-critical ch4 code for improved build times.
+# Add support for GPU buffers in pt2pt communication.
+
+# Add support for XPMEM.
+
+# Add support for multiple virtual communication interfaces for more
+  efficient MPI_THREAD_MULTIPLE (experimental).
 
 # Add DAOS ADIO driver to ROMIO (contributed by Intel).
 
@@ -24,11 +28,17 @@
 
 # Remove MPIX_Mutex interfaces.
 
+# Further improvements to ch4 business card exchange: extra
+  long address support and fixes for PMIx integration.
+
+# Un-inline non-critical ch4 code for improved build times.
+
 # Fix several test program bugs.
 
 # Fix several static analysis and compiler warnings.
 
-# Add MPID_Pre_init to ADI, and change the signature of MPID_Init.
+# Change the signature of MPID_Init to include requested and provided
+  thread levels.
 
 ===============================================================================
                                Changes in 3.3.2
