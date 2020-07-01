@@ -231,16 +231,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                MPIDI_av_entry_t * addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
-    int mpi_errno;
-
-    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
-    mpi_errno =
-        MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
-                       request);
-    MPIDI_REQUEST_SET_LOCAL(*request, 0, NULL);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
-    return mpi_errno;
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
