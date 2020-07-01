@@ -331,20 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                        int context_offset, MPI_Status * status,
                                        MPIR_Request ** request)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
-
-    MPIDI_av_entry_t *av = (rank == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, rank));
-    mpi_errno =
-        MPIDI_recv_safe(buf, count, datatype, rank, tag, comm, context_offset, av, status, request);
-
-    MPIR_ERR_CHECK(mpi_errno);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPID_Irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
