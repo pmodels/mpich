@@ -379,52 +379,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
         } \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
-                                               MPI_Datatype datatype, int rank, int tag,
-                                               MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int rank, int tag,
-                                                MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr,
-                                                MPIR_Request ** request, MPIR_Errflag_t * errflag)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int rank, int tag,
-                                                MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND);
-
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else {
-        int vni_src, vni_dst;
-        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
-        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, vni_src, vni_dst, request, 0,
-                                   MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
-    return mpi_errno;
-}
-
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
                                                 MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,

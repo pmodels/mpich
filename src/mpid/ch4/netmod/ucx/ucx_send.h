@@ -104,40 +104,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int rank, int tag,
-                                                MPIR_Comm * comm,
-                                                int context_offset, MPIDI_av_entry_t * addr,
-                                                MPIR_Request ** request, MPIR_Errflag_t * errflag)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf,
-                                                MPI_Aint count,
-                                                MPI_Datatype datatype,
-                                                int rank,
-                                                int tag,
-                                                MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,

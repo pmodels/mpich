@@ -57,12 +57,9 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {
-    .mpi_send = MPIDI_NM_mpi_send,
-    .mpi_ssend = MPIDI_NM_mpi_ssend,
     .mpi_isend = MPIDI_NM_mpi_isend,
     .mpi_issend = MPIDI_NM_mpi_issend,
     .mpi_cancel_send = MPIDI_NM_mpi_cancel_send,
-    .mpi_recv = MPIDI_NM_mpi_recv,
     .mpi_irecv = MPIDI_NM_mpi_irecv,
     .mpi_imrecv = MPIDI_NM_mpi_imrecv,
     .mpi_cancel_recv = MPIDI_NM_mpi_cancel_recv,
