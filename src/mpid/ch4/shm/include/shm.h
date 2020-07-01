@@ -41,9 +41,37 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
                                                       size_t am_hdr_sz, const void *data,
                                                       MPI_Count count, MPI_Datatype datatype,
                                                       MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_pipeline_rts(int rank, MPIR_Comm * comm,
+                                                             int handler_id, const void *am_hdr,
+                                                             size_t am_hdr_sz, const void *data,
+                                                             MPI_Count count, MPI_Datatype datatype,
+                                                             MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_pipeline_seg(MPIR_Context_id_t context_id,
+                                                             int src_rank, int handler_id,
+                                                             const void *am_hdr, size_t am_hdr_sz,
+                                                             const void *data, MPI_Count count,
+                                                             MPI_Datatype datatype,
+                                                             MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_rdma_read_req(int rank, MPIR_Comm * comm,
+                                                              int handler_id, const void *am_hdr,
+                                                              size_t am_hdr_sz, const void *data,
+                                                              MPI_Count count,
+                                                              MPI_Datatype datatype,
+                                                              MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv_rdma_read(void *lmt_msg, size_t recv_data_sz,
+                                                         MPIR_Request * rreq)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_rdma_read_unreg(MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_buf_limit(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                          MPI_Datatype datatype, size_t am_ext_sz,
+                                                          int handler_id) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                      int *lpid_ptr,
                                                      bool is_remote) MPL_STATIC_INLINE_SUFFIX;
