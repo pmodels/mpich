@@ -221,20 +221,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm,
-                                               int context_offset,
-                                               MPIDI_av_entry_t * addr,
-                                               MPI_Status * status, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Aint count,
                                                 MPI_Datatype datatype,

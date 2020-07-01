@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     goto fn_exit;
 }
 
-/* Common macro used by all MPIDI_NM_mpi_recv routines to facilitate tuning */
+/* Common macro used by all MPIDI_NM_mpi_irecv routines to facilitate tuning */
 #define MPIDI_OFI_RECV_VNIS(vni_src_, vni_dst_) \
     do { \
         if (*request != NULL) { \
@@ -259,19 +259,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         } \
     } while (0)
 
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm,
-                                               int context_offset, MPIDI_av_entry_t * addr,
-                                               MPI_Status * status, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                  MPI_Aint count,
