@@ -213,33 +213,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
-                                             MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm,
-                                             int context_offset, MPI_Status * status,
-                                             MPIR_Request ** request, int is_local)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV);
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-
-    mpi_errno =
-        MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIDI_REQUEST_SET_LOCAL(*request, is_local, NULL);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
                                                MPI_Aint count,
                                                MPI_Datatype datatype, MPIR_Request * message)

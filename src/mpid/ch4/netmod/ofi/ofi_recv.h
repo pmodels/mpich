@@ -269,27 +269,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int context_offset, MPIDI_av_entry_t * addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV);
-
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request,
-                            0);
-    } else {
-        int vni_src, vni_dst;
-        MPIDI_OFI_RECV_VNIS(vni_src, vni_dst);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
-        mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                       context_offset, addr, vni_src, vni_dst, request,
-                                       MPIDI_OFI_ON_HEAP, 0ULL);
-        MPIDI_REQUEST_SET_LOCAL(*request, 0, NULL);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_dst).lock);
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
-    return mpi_errno;
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
