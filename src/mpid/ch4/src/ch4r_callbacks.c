@@ -288,6 +288,31 @@ int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
+int MPIDIG_send_long_pipeline_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *parent_req = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
+
+    MPIR_Assert(0);
+
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_ORIGIN_CB);
+    return mpi_errno;
+}
+
+int MPIDIG_send_long_rdma_read_origin_cb(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_ORIGIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_ORIGIN_CB);
+    MPIR_Assert(0);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_ORIGIN_CB);
+    return mpi_errno;
+}
+
 int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -576,6 +601,42 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
     return mpi_errno;
 }
 
+int MPIDIG_send_long_pipeline_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                            MPI_Aint in_data_sz, int is_local, int is_async,
+                                            MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_done = 0;
+    MPIR_Request *rreq;
+    MPIDIG_send_long_pipeline_msg_t *lmt_hdr = (MPIDIG_send_long_pipeline_msg_t *) am_hdr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
+
+    MPIR_Assert(0);
+
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_PIPELINE_TARGET_MSG_CB);
+    return mpi_errno;
+}
+
+int MPIDIG_send_long_rdma_read_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                             MPI_Aint in_data_sz, int is_local, int is_async,
+                                             MPIR_Request ** req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_done = 0;
+    MPIR_Request *rreq;
+    MPIDIG_send_long_rdma_read_msg_t *lmt_hdr = (MPIDIG_send_long_rdma_read_msg_t *) am_hdr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
+
+    MPIR_Assert(0);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_RDMA_READ_TARGET_MSG_CB);
+    return mpi_errno;
+}
+
 int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
                                int is_local, int is_async, MPIR_Request ** req)
 {
@@ -643,6 +704,7 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
 
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
+    /* TODO: Add ack for pipeline and rdma_read protocol */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(sreq, is_local))
         mpi_errno =
