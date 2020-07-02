@@ -372,7 +372,7 @@ will be included in the mpicc and other MPI wrapper script.
 =================================
 
 The communication mechanisms in MPICH are called "devices". MPICH
-supports ch3 (default) and ch4 (experimental), as well as many
+supports ch3 and ch4 (default), as well as many
 third-party devices that are released and maintained by other
 institutes.
 
