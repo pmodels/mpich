@@ -143,6 +143,13 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct fi_rma_iov riov;
     uint64_t flags;
 
+    if (req->noncontig.put.origin.pack_buffer == NULL) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
+                                           &req->noncontig.put.origin.pack_buffer);
+        if (req->noncontig.put.origin.pack_buffer == NULL)
+            goto fn_exit;
+    }
+
     /* load the pack buffer */
     MPIR_Typerep_pack(req->noncontig.put.origin.addr, req->noncontig.put.origin.count,
                       req->noncontig.put.origin.datatype,
@@ -222,6 +229,13 @@ static int issue_packed_get(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct iovec iov;
     struct fi_rma_iov riov;
     uint64_t flags;
+
+    if (req->noncontig.get.origin.pack_buffer == NULL) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
+                                           &req->noncontig.get.origin.pack_buffer);
+        if (req->noncontig.get.origin.pack_buffer == NULL)
+            goto fn_exit;
+    }
 
     /* unpack from pack buffer */
     if (req->noncontig.put.origin.pack_offset > 0) {
@@ -332,11 +346,6 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
         (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
                   +(target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
 
-    /* allocate pack buffer */
-    /* FIXME: use genq API to get pack buffer(s) */
-    MPI_Aint pack_bytes = MPL_MIN(origin_bytes, 64 * 1024);
-    void *pack_buffer = MPL_malloc(pack_bytes, MPL_MEM_BUFFER);
-
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);
     req->rma_type = MPIDI_OFI_PUT;
@@ -345,9 +354,9 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.origin.addr = origin_addr;
     req->noncontig.put.origin.count = origin_count;
     req->noncontig.put.origin.datatype = origin_datatype;
-    req->noncontig.put.origin.pack_buffer = pack_buffer;
+    req->noncontig.put.origin.pack_buffer = NULL;
     req->noncontig.put.origin.pack_offset = 0;
-    req->noncontig.put.origin.pack_size = pack_bytes;
+    req->noncontig.put.origin.pack_size = MPL_MIN(origin_bytes, MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     req->noncontig.put.origin.total_bytes = origin_bytes;
 
     /* target */
@@ -400,11 +409,6 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
         (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
                   +(target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
 
-    /* allocate pack buffer */
-    /* FIXME: use genq API to get pack buffer(s) */
-    MPI_Aint pack_bytes = MPL_MIN(origin_bytes, 64 * 1024);
-    void *pack_buffer = MPL_malloc(pack_bytes, MPL_MEM_BUFFER);
-
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);
     req->rma_type = MPIDI_OFI_GET;
@@ -413,9 +417,9 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->noncontig.get.origin.addr = origin_addr;
     req->noncontig.get.origin.count = origin_count;
     req->noncontig.get.origin.datatype = origin_datatype;
-    req->noncontig.get.origin.pack_buffer = pack_buffer;
+    req->noncontig.get.origin.pack_buffer = NULL;
     req->noncontig.get.origin.pack_offset = 0;
-    req->noncontig.get.origin.pack_size = pack_bytes;
+    req->noncontig.get.origin.pack_size = MPL_MIN(origin_bytes, MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     req->noncontig.get.origin.total_bytes = origin_bytes;
 
     /* target */
