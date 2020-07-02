@@ -80,3 +80,18 @@ define install_repo
 	zypper --non-interactive ar $(1)
 endef
 endif
+ifeq ($(ID_LIKE),debian)
+ifndef LANG
+export LANG = C.UTF-8
+endif
+ifndef LC_ALL
+export LC_ALL = C.UTF-8
+endif
+else
+ifndef LANG
+export LANG = C.utf8
+endif
+ifndef LC_ALL
+export LC_ALL = C.utf8
+endif
+endif

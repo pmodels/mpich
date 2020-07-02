@@ -1,5 +1,5 @@
 # Common Makefile for including
-# Needs the following variables set at a minium:
+# Needs the following variables set at a minimum:
 # NAME :=
 # SRC_EXT :=
 
@@ -25,6 +25,8 @@ PACKAGING_CHECK_DIR ?= ../packaging
 LOCAL_REPOS ?= true
 
 PR_REPOS         := $(shell set -x; git show -s --format=%B | sed -ne 's/^PR-repos: *\(.*\)/\1/p')
+LEAP_15_PR_REPOS := $(shell set -x; git show -s --format=%B | sed -ne 's/^PR-repos-leap15: *\(.*\)/\1/p')
+EL_7_PR_REPOS    := $(shell set -x; git show -s --format=%B | sed -ne 's/^PR-repos-el7: *\(.*\)/\1/p')
 COMMON_RPM_ARGS  := --define "%_topdir $$PWD/_topdir" $(BUILD_DEFINES)
 SPEC             := $(shell if [ -f $(NAME)-$(DISTRO_BASE).spec ]; then echo $(NAME)-$(DISTRO_BASE).spec; else echo $(NAME).spec; fi)
 VERSION           = $(eval VERSION := $(shell rpm $(COMMON_RPM_ARGS) --specfile --qf '%{version}\n' $(SPEC) | sed -n '1p'))$(VERSION)
@@ -44,22 +46,8 @@ ifeq ($(ID_LIKE),debian)
 DEBS             := $(addsuffix _$(DEB_VERS)-1_amd64.deb,$(shell sed -n '/-udeb/b; s,^Package:[[:blank:]],$(DEB_TOP)/,p' debian/control))
 DEB_PREV_RELEASE := $(shell dpkg-parsechangelog -S version)
 DEB_DSC          := $(DEB_NAME)_$(DEB_PREV_RELEASE)$(GIT_INFO).dsc
-#Ubuntu Containers do not set a UTF-8 environment by default.
-ifndef LANG
-export LANG = C.UTF-8
-endif
-ifndef LC_ALL
-export LC_ALL = C.UTF-8
-endif
 TARGETS := $(DEBS)
 else
-# CentOS/Suse packages that want a locale set need this.
-ifndef LANG
-export LANG = en_US.utf8
-endif
-ifndef LC_ALL
-export LC_ALL = en_US.utf8
-endif
 TARGETS := $(RPMS) $(SRPM)
 endif
 
@@ -79,6 +67,9 @@ define distro_map
 endef
 
 define install_repos
+	for baseurl in $($(DISTRO_BASE)_LOCAL_REPOS); do                    \
+	    $(call install_repo,$$baseurl);                                 \
+	    done
 	for repo in $($(DISTRO_BASE)_PR_REPOS)                              \
 	            $(PR_REPOS) $(1); do                                    \
 	    branch="master";                                                \
@@ -128,6 +119,10 @@ endif
 $(NAME)-$(DL_VERSION).tar.$(SRC_EXT).asc:
 	rm -f ./$(NAME)-*.tar.{gz,bz*,xz}.asc
 	curl -f -L -O '$(SOURCE).asc'
+
+$(NAME)-$(DL_VERSION).tar.$(SRC_EXT).sig:
+	rm -f ./$(NAME)-*.tar.{gz,bz*,xz}.sig
+	curl -f -L -O '$(SOURCE).sig'
 
 $(NAME)-$(DL_VERSION).tar.$(SRC_EXT):
 	rm -f ./$(NAME)-*.tar.{gz,bz*,xz}
@@ -394,7 +389,9 @@ ifndef DEBFULLNAME
 endif
 
 test:
-	@echo "No test defined for this module"
+	# Test the rpmbuild by installing the built RPM
+	$(call install_repos,$(NAME)@$(BRANCH_NAME):$(BUILD_NUMBER))
+	yum -y install $(NAME)
 
 show_version:
 	@echo $(VERSION)

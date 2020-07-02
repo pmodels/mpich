@@ -63,7 +63,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        1
+Release:        2
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -72,6 +72,10 @@ Source0:        http://www.mpich.org/static/downloads/%{version}/mpich-%{vers}.t
 Source1:        mpivars.sh
 Source2:        mpivars.csh
 Source3:        macros.hpc-mpich
+# bjm - borrowed from the EL7 spec.  not sure how SUSE typically does this
+Source4:        mpich.pth.py2
+Source5:        mpich.pth.py3
+
 Source100:      _multibuild
 # PATCH-FIX-UPSTREAM 0001-Drop-GCC-check.patch (bnc#1129421)
 # It's been merged upstream, should be removed with the next release
@@ -104,7 +108,9 @@ Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
 
 Provides:       mpi
 %if %{without hpc}
-BuildRequires:  Modules
+# bjm - we use lua-lmod here
+# BuildRequires:  Modules
+BuildRequires:  lua-lmod
 BuildRequires:  gcc-c++
 BuildRequires:  gcc-fortran
 BuildRequires:  mpi-selector
@@ -210,28 +216,36 @@ echo without HPC
 %{hpc_configure} \
 %else
 %configure \
+    --enable-sharedlibs=gcc \
+    --enable-shared \
+    --enable-static=no \
+    --enable-lib-depend \
+    --disable-rpath \
+    --disable-silent-rules \
+    --enable-fc \
+   --with-device=ch3:nemesis \
     --prefix=%{p_prefix} \
     --exec-prefix=%{p_prefix} \
-    --datadir=%{p_datadir} \
-    --bindir=%{p_bindir} \
-    --includedir=%{p_includedir} \
-    --libdir=%{p_libdir} \
     --libexecdir=%{p_libexecdir} \
-    --mandir=%{p_mandir} \
 %endif
+    --with-pm=hydra:gforker \
+    --includedir=%{p_includedir} \
+    --bindir=%{p_bindir} \
+    --libdir=%{p_libdir} \
+    --datadir=%{p_datadir} \
+    --mandir=%{p_mandir} \
+    --docdir=%{_datadir}/doc/%{name} \
+    --with-hwloc-prefix=embedded \
+    --enable-romio \
+    --with-file-system=ufs+daos \
+    --with-daos=/usr \
+    --with-cart=/usr \
     --disable-checkerrors \
     --disable-perftest \
     --disable-large-tests \
     --disable-ft-tests \
     --disable-comm-overlap-tests \
     --enable-threads=single \
-    --with-file-system=ufs+daos \
-    --with-daos=/usr \
-    --with-cart=/usr \
-    --docdir=%{_datadir}/doc/%{name} \
-    --disable-rpath      \
-    --disable-wrapper-rpath      \
-   --with-device=ch3:nemesis:ofi \
    
 	CFLAGS="%optflags -fPIC"			\
 	CXXLAGS="%optflags -fPIC"			\
@@ -290,6 +304,8 @@ sed -e 's,prefix,%p_prefix,g' -e 's,libdir,%{p_libdir},g' %{S:2} > %{buildroot}%
 
 mkdir -p %{buildroot}%{_moduledir}
 
+# bjm - Not really sure why SUSE doesn't just use the 
+#       src/packaging/envmods/mpich.module that ships with mpich
 cat << EOF > %{buildroot}%{_moduledir}/%{version}
 #%%Module
 proc ModulesHelp { } {
@@ -299,18 +315,19 @@ proc ModulesHelp { } {
 
 module-whatis  "Loads the gnu mpich %{version} Environment."
 conflict gnu-mpich
+setenv       MPI_PYTHON_SITEARCH %{python2_sitearch}/%{name}
+setenv       MPI_PYTHON2_SITEARCH %{python2_sitearch}/%{name}
+setenv       MPI_PYTHON3_SITEARCH %{python3_sitearch}/%{name}
 prepend-path PATH %{p_bindir}
 prepend-path INCLUDE %{p_includedir}
 prepend-path INCLUDE %{p_libdir}
 prepend-path MANPATH %{p_mandir}
 prepend-path LD_LIBRARY_PATH %{p_libdir}
-
 EOF
 
 cat << EOF > %{buildroot}%{_moduledir}/.version
 #%%Module1.0
 set ModulesVersion "%{version}"
-
 EOF
 %else # with hpc
 
@@ -354,6 +371,13 @@ sed -e "s/export/setenv/" -e "s/=/ /" \
 mkdir -p %{buildroot}%{_sysconfdir}/rpm
 %endif # with hpc
 
+# Install the .pth files
+# bjm - borrowed from the EL7 spec.  not sure how SUSE typically does this
+mkdir -p %{buildroot}%{python2_sitearch}/%{name}
+install -pDm0644 %{SOURCE4} %{buildroot}%{python2_sitearch}/%{name}.pth
+mkdir -p %{buildroot}%{python3_sitearch}/%{name}
+install -pDm0644 %{SOURCE5} %{buildroot}%{python3_sitearch}/%{name}.pth
+
 find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 
 %fdupes -s %{buildroot}
@@ -391,7 +415,8 @@ fi
 %dir /usr/%_lib/mpi
 %dir /usr/%_lib/mpi/gcc
 %dir /usr/share/modules
-%dir %{_moduledir}
+%{python2_sitearch}/%{name}.pth
+%{python3_sitearch}/%{name}.pth
 %{_moduledir}
 %else
 %hpc_mpi_dirs
@@ -436,6 +461,11 @@ fi
 %endif # !testsuite
 
 %changelog
+* Mon Jun 22 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-2
+- Port Python functoinality from EL 7 spec
+- Use configure options from EL 7 spec to get a build that works
+  with mpi4py
+
 * Wed May 13 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-1
 - Update to 3.4a2
 - Reduce "folavor"s down to just "ofi"
