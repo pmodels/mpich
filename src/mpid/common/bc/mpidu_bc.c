@@ -7,10 +7,6 @@
 #include "mpidu_bc.h"
 #include "mpidu_init_shm.h"
 
-/* In case of systems with variable business card lengths,
- *set MPID_MAX_BC_SIZE to maximum possible bc size */
-#define MPID_MAX_BC_SIZE 4096
-
 static char *segment;
 static int *rank_map;
 
