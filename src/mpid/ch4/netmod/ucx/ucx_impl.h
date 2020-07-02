@@ -16,9 +16,9 @@
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
 #define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_UCX_COMM_TO_EP(comm,rank) \
-    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest
-#define MPIDI_UCX_AV_TO_EP(av) MPIDI_UCX_AV((av)).dest
+#define MPIDI_UCX_COMM_TO_EP(comm,rank,vni_src,vni_dst) \
+    MPIDI_UCX_AV(MPIDIU_comm_rank_to_av(comm, rank)).dest[vni_src][vni_dst]
+#define MPIDI_UCX_AV_TO_EP(av,vni_src,vni_dst) MPIDI_UCX_AV((av)).dest[vni_src][vni_dst]
 
 #define MPIDI_UCX_WIN(win) ((win)->dev.netmod.ucx)
 #define MPIDI_UCX_WIN_INFO(win, rank) MPIDI_UCX_WIN(win).info_table[rank]
@@ -109,6 +109,27 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win *
 {
     /* zero win target does not have rkey. */
     return MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
+}
+
+/* This function implements netmod vci to vni(context) mapping.
+ * It returns -1 if the vci does not have a mapping.
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_vci_to_vni(int vci)
+{
+    return vci < MPIDI_UCX_global.num_vnis ? vci : -1;
+}
+
+/* vni mapping */
+/* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
+ * we may get away with bit mask */
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni_src(MPIR_Comm * comm_ptr, int rank, int tag)
+{
+    return MPIDI_vci_get_src(comm_ptr, rank, tag) % MPIDI_UCX_global.num_vnis;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni_dst(MPIR_Comm * comm_ptr, int rank, int tag)
+{
+    return MPIDI_vci_get_dst(comm_ptr, rank, tag) % MPIDI_UCX_global.num_vnis;
 }
 
 #endif /* UCX_IMPL_H_INCLUDED */

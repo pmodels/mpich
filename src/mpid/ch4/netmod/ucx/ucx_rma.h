@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     uint64_t base;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
     char *buffer = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
 
     buffer = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(buffer);
@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr);
+    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
