@@ -7,7 +7,6 @@
  * Build Issues
    - Embedded ucx or libfabric builds will not succeed with Solaris
      compilers.
-   - 32-bit builds are not yet supported with CH4.
 
  * Dynamic process support
    - Requires fi_tagged capability in OFI netmod
