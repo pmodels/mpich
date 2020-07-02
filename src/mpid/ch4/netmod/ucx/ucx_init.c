@@ -328,6 +328,33 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 
 }
 
+/* static functions for MPIDI_UCX_post_init */
+static void flush_cb(void *request, ucs_status_t status)
+{
+}
+
+static void flush_all(void)
+{
+    void *reqs[MPIDI_CH4_MAX_VCIS];
+    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
+        reqs[vni] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker, 0, &flush_cb);
+    }
+    for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
+        if (reqs[vni] == NULL) {
+            continue;
+        } else if (UCS_PTR_IS_ERR(reqs[vni])) {
+            continue;
+        } else {
+            ucs_status_t status;
+            do {
+                MPID_Progress_test(NULL);
+                status = ucp_request_check_status(reqs[vni]);
+            } while (status == UCS_INPROGRESS);
+            ucp_request_release(reqs[vni]);
+        }
+    }
+}
+
 int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -338,6 +365,9 @@ int MPIDI_UCX_post_init(void)
     }
     mpi_errno = all_vnis_address_exchange();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* flush all pending wireup operations or it may interfere with RMA flush_ops count */
+    flush_all();
 
   fn_exit:
     return mpi_errno;
