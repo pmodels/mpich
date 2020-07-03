@@ -563,6 +563,21 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
+    /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
+     * when that's the case */
+#define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
+    char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(8);
+    if ((intptr_t) am_hdr & 0x7) {
+        int temp_size = MAX_HDR_SIZE;
+        if (temp_size > wc->len) {
+            temp_size = wc->len;
+        }
+        memcpy(temp, wc->buf, temp_size);
+        am_hdr = (void *) temp;
+        /* confirm it (in case MPL_ATTR_ALIGNED didn't work) */
+        MPIR_Assert(((intptr_t) am_hdr & 0x7) == 0);
+    }
+
     expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
         /* This message came earlier than the one that we were expecting.
@@ -581,6 +596,8 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
   repeat:
     fi_src_addr = am_hdr->fi_src_addr;
     next_seqno = am_hdr->seqno + 1;
+
+    void *p_data;
     switch (am_hdr->am_type) {
         case MPIDI_AMTYPE_SHORT_HDR:
             mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr + 1 /* payload */);
@@ -590,21 +607,23 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             break;
 
         case MPIDI_AMTYPE_SHORT:
-            mpi_errno = MPIDI_OFI_handle_short_am(am_hdr);
+            p_data = (char *) wc->buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            mpi_errno = MPIDI_OFI_handle_short_am(am_hdr, am_hdr + 1, p_data);
 
             MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
         case MPIDI_AMTYPE_LMT_REQ:
-            mpi_errno = MPIDI_OFI_handle_long_am(am_hdr);
+            p_data = (char *) am_hdr + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            mpi_errno = MPIDI_OFI_handle_long_am(am_hdr, am_hdr + 1, p_data);
 
             MPIR_ERR_CHECK(mpi_errno);
 
             break;
 
         case MPIDI_AMTYPE_LMT_ACK:
-            mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
+            mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr, am_hdr + 1);
 
             MPIR_ERR_CHECK(mpi_errno);
 
