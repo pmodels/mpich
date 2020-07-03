@@ -53,8 +53,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_seek_shared_(MPI_Fint *, MPI_Offset *
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS

@@ -53,8 +53,6 @@ extern FORTRAN_API void FORT_CALL mpi_file_read_all_end_(MPI_Fint *, void *, MPI
 
 /* end of weak pragmas */
 #endif
-/* Include mapping from MPI->PMPI */
-#include "mpioprof.h"
 #endif
 
 #ifdef FORTRANCAPS
