@@ -232,6 +232,8 @@ static int choose_netmod(void)
  */
 /* TODO: move them to ch4i_workq_init.c. */
 
+MPID_Thread_mutex_t MPIDI_workq_lock;
+
 static const char *get_mt_model_name(int mt);
 static void print_runtime_configurations(void);
 static int parse_mt_model(const char *name);
@@ -537,6 +539,9 @@ int MPID_Init(int requested, int *provided)
     MPIR_Assert(err == 0);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPID_Thread_mutex_create(&MPIDI_workq_lock, &err);
+    MPIR_Assert(err == 0);
+
     mpi_errno = set_runtime_configurations();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -752,6 +757,11 @@ int MPID_Finalize(void)
         MPID_Thread_mutex_destroy(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
     }
+
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPID_Thread_mutex_destroy(&MPIDI_workq_lock, &err);
+    MPIR_Assert(err == 0);
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
