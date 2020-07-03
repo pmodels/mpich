@@ -53,6 +53,20 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    if (argc != 2) {
+        if (!rank)
+            fprintf(stderr, "Usage: %s filename\n", argv[0]);
+        MPI_Finalize();
+        exit(1);
+    }
+    if (size != psize[0] * psize[1]) {
+        if (!rank)
+            fprintf(stderr, "Error: this program %s must run on %d MPI processes\n",
+                    argv[0], psize[0] * psize[1]);
+        MPI_Finalize();
+        exit(1);
+    }
+
     /* Set up type */
     CHECK(MPI_Type_create_darray(size, rank, 2, gsize, distrib,
                                  bsize, psize, MPI_ORDER_FORTRAN, MPI_DOUBLE, &darray));

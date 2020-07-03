@@ -239,7 +239,7 @@ int main(int argc, char **argv)
     free(buf);
     MPI_Type_free(&ftype);
     MPI_Finalize();
-    return 0;
+    return (nr_errors > 0);
 }
 
 /* command-line outputs are: (the global array is written twice)

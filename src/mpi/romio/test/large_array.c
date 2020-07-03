@@ -148,9 +148,10 @@ int main(int argc, char **argv)
     flag = 0;
     for (i = 0; i < bufcount; i++)
         if (readbuf[i] != mynod * 1024 + i) {
-            fprintf(stderr, "Process %d, readbuf=%d, writebuf=%d\n", mynod, readbuf[i],
+            fprintf(stderr, "Process %d, readbuf[%d]=%d but expecting %d\n", mynod, i, readbuf[i],
                     mynod * 1024 + i);
             flag = 1;
+            break;
         }
     if (!flag)
         fprintf(stderr, "Process %d: data read back is correct\n", mynod);
@@ -166,5 +167,5 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return (flag > 0);
 }
