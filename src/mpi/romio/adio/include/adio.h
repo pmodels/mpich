@@ -407,13 +407,13 @@ int ADIO_Feature(ADIO_File fd, int flag);
 
 /* functions to help deal with the array datatypes */
 int ADIO_Type_create_subarray(int ndims,
-                              int *array_of_sizes,
-                              int *array_of_subsizes,
-                              int *array_of_starts,
+                              const int *array_of_sizes,
+                              const int *array_of_subsizes,
+                              const int *array_of_starts,
                               int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int ADIO_Type_create_darray(int size, int rank, int ndims,
-                            int *array_of_gsizes, int *array_of_distribs,
-                            int *array_of_dargs, int *array_of_psizes,
+                            const int *array_of_gsizes, const int *array_of_distribs,
+                            const int *array_of_dargs, const int *array_of_psizes,
                             int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 
 /* MPI_File management functions (in mpio_file.c) */

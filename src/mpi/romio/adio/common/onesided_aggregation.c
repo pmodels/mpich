@@ -280,9 +280,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     if (!bufTypeIsContig) {
         /* Flatten the non-contiguous source datatype and set the extent. */
         if ((stripeSize == 0) || stripe_parms->firstStripedWriteCall) {
+            MPI_Aint lb;
             stripe_parms->flatBuf = ADIOI_Flatten_and_find(datatype);
             flatBuf = stripe_parms->flatBuf;
-            MPI_Type_extent(datatype, &(stripe_parms->bufTypeExtent));
+            MPI_Type_get_extent(datatype, &lb, &(stripe_parms->bufTypeExtent));
             bufTypeExtent = stripe_parms->bufTypeExtent;
         }
 #ifdef onesidedtrace
@@ -1645,8 +1646,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     if (!bufTypeIsContig) {
         /* Flatten the non-contiguous source datatype.
          */
+        MPI_Aint lb;
         flatBuf = ADIOI_Flatten_and_find(datatype);
-        MPI_Type_extent(datatype, &bufTypeExtent);
+        MPI_Type_get_extent(datatype, &lb, &bufTypeExtent);
 #ifdef onesidedtrace
         printf("flatBuf->count is %d bufTypeExtent is %d\n", flatBuf->count, bufTypeExtent);
         for (i = 0; i < flatBuf->count; i++)
