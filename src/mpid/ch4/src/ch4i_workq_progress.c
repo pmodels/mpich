@@ -111,6 +111,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 break;
             }
         case PUT:{
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
                 struct MPIDI_workq_put *wd = &workq_elemt->params.rma.put;
                 origin_datatype = wd->origin_datatype;
                 target_datatype = wd->target_datatype;
@@ -120,9 +121,11 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIR_Datatype_release_if_not_builtin(origin_datatype);
                 MPIR_Datatype_release_if_not_builtin(target_datatype);
                 MPIDI_workq_elemt_free(workq_elemt);
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
                 break;
             }
         case GET:{
+                MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
                 struct MPIDI_workq_get *wd = &workq_elemt->params.rma.get;
                 origin_datatype = wd->origin_datatype;
                 target_datatype = wd->target_datatype;
@@ -132,6 +135,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIR_Datatype_release_if_not_builtin(origin_datatype);
                 MPIR_Datatype_release_if_not_builtin(target_datatype);
                 MPIDI_workq_elemt_free(workq_elemt);
+                MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
                 break;
             }
         default:
@@ -164,11 +168,8 @@ int MPIDI_workq_vci_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-
     mpi_errno = MPIDI_workq_vci_progress_unsafe();
 
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
   fn_fail:
     return mpi_errno;
 }
