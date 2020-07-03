@@ -7,6 +7,8 @@
 
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
 
+extern MPID_Thread_mutex_t MPIDI_workq_lock;
+
 static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -168,7 +170,11 @@ int MPIDI_workq_vci_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
+
     mpi_errno = MPIDI_workq_vci_progress_unsafe();
+
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
 
   fn_fail:
     return mpi_errno;

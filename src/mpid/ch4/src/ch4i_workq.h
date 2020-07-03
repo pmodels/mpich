@@ -16,6 +16,8 @@ int MPIDI_workq_vci_progress(void);
 extern struct MPIDI_workq_elemt MPIDI_workq_elemt_direct[MPIDI_WORKQ_ELEMT_PREALLOC];
 extern MPIR_Object_alloc_t MPIDI_workq_elemt_mem;
 
+extern MPID_Thread_mutex_t MPIDI_workq_lock;
+
 /* Forward declarations of the routines that can be pushed to a work-queue */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
@@ -175,7 +177,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
             MPIR_Assert(0);
     }
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
@@ -212,7 +216,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
     wd->request = request;
     wd->errflag = *errflag;
 
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
@@ -270,7 +276,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
         default:
             MPIR_Assert(0);
     }
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, rma_elemt);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_t * workq_elemt)
