@@ -184,9 +184,7 @@ MAKE=${MAKE:-"make"}
 # foll. needed for f77 test programs
 F77GETARG="call getarg(i,str)"
 F77IARGC="iargc()"
-F77MPIOINC=""
 FORTRAN_MPI_OFFSET=""
-MPIOF_H_INCLUDED=0
 MPI_OFFSET_KIND1="!"
 MPI_OFFSET_KIND2="!"
 TEST_CC=""
@@ -1299,9 +1297,6 @@ AC_CHECK_DECLS([pwrite])
 ####################################################################
 
 if test -n "$mpi_mpich"; then
-   if test -z "$arch_SX4" ; then
-      MPIOF_H_INCLUDED=1
-   fi
    if test "$FROM_MPICH" = no; then
       AC_DEFINE(NEEDS_MPI_TEST,1,[Define if mpi_test needed])
       AC_DEFINE(MPICH,1,[Define if using MPICH])
@@ -1575,12 +1570,6 @@ AC_SUBST(FILE_SYS_DIRS)
 CFLAGS="$CFLAGS -DHAVE_ROMIOCONF_H"
 #
 
-if test -n "$MPIOF_H_INCLUDED"; then
-   F77MPIOINC=""
-else
-   F77MPIOINC="include 'mpiof.h'"
-fi
-
 AC_MSG_NOTICE([setting SYSDEP_INC to $SYSDEP_INC])
 AC_SUBST(SYSDEP_INC)
 
@@ -1622,7 +1611,6 @@ AC_SUBST(TEST_LIBNAME)
 AC_SUBST(LL)
 AC_SUBST(F77GETARG)
 AC_SUBST(F77IARGC)
-AC_SUBST(F77MPIOINC)
 AC_SUBST(FORTRAN_MPI_OFFSET)
 AC_SUBST(FROM_MPICH)
 AC_SUBST(FROM_LAM)

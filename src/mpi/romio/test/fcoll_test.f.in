@@ -6,7 +6,6 @@
       implicit none
 
       include 'mpif.h'
-      @F77MPIOINC@
 
 !     Fortran equivalent of coll_test.c
 
