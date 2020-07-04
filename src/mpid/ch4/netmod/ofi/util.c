@@ -24,7 +24,7 @@ int MPIDI_OFI_retry_progress()
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.
      */
-    return MPID_Progress_test(NULL);
+    return MPIDI_Progress_test(MPIDI_PROGRESS_SHM | MPIDI_PROGRESS_NM);
 }
 
 typedef struct MPIDI_OFI_mr_key_allocator_t {

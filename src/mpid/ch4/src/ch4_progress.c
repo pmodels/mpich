@@ -78,8 +78,10 @@ static int progress_test(MPID_Progress_state * state, int wait)
     /* todo: progress unexp_list */
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    mpi_errno = MPIDI_workq_vci_progress();
-    MPIR_ERR_CHECK(mpi_errno);
+    if (state->flag & MPIDI_PROGRESS_WORKQ) {
+        mpi_errno = MPIDI_workq_vci_progress();
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 #endif
 
     if (do_global_progress()) {
