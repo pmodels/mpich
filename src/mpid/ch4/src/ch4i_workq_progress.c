@@ -103,12 +103,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
         case IMRECV:{
                 struct MPIDI_workq_imrecv *wd = &workq_elemt->params.pt2pt.imrecv;
                 datatype = wd->datatype;
-                MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, *wd->message);
-                MPIR_Datatype_release_if_not_builtin(datatype);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-                if (!MPIDI_REQUEST(*wd->message, is_local))
-#endif
-                    MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+                MPIDI_imrecv_unsafe(wd->buf, wd->count, wd->datatype, wd->message);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }

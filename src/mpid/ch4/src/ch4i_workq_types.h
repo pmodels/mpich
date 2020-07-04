@@ -146,8 +146,7 @@ typedef struct MPIDI_workq_elemt {
                 void *buf;
                 MPI_Aint count;
                 MPI_Datatype datatype;
-                MPIR_Request **message;
-                MPIR_Request *request;
+                MPIR_Request *message;
             } imrecv;
         } pt2pt;
         union {
