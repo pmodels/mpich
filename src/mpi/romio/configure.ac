@@ -1327,8 +1327,8 @@ AC_SUBST(srcdir)
 AC_ARG_VAR([main_top_srcdir],[set by the MPICH configure to indicate the MPICH source root])
 AC_ARG_VAR([main_top_builddir],[set by the MPICH configure to indicate the MPICH build root])
 
-# The main_top_srcdir is the location of the source for the building
-# package.  This is used only as part of the MPICH build, including 
+# The master_top_srcdir is the location of the source for the building
+# package.  This is used only as part of the MPICH build, including
 # the documentation targets mandoc, htmldoc, and latexdoc
 if test -z "$main_top_srcdir" ; then
     if test "$FROM_MPICH" = yes ; then
