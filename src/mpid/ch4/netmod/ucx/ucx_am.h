@@ -385,6 +385,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
+    ucx_hdr.data_sz = 0;
 
     /* just pack and send for now */
     send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
