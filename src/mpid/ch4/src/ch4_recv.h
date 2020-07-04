@@ -472,6 +472,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_RECV);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    /* this is silly: izem queue doesn't have iter and delete interface
+     * so we can't simply delete from work queue. Progress and have the
+     * request posted before we cancel.
+     */
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     mpi_errno = MPIDI_cancel_recv_safe(rreq);
 
     MPIR_ERR_CHECK(mpi_errno);
