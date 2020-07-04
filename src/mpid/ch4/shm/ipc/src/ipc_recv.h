@@ -90,7 +90,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPC_MPI_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPC_MPI_IRECV);
+
+    int in_cs;
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    in_cs = 1;
 
     MPIR_Comm *root_comm = NULL;
     MPIR_Request *unexp_req = NULL;
@@ -116,8 +119,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
         /* TODO: create unsafe version of imrecv to avoid extra locking */
         MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        in_cs = 0;
         mpi_errno = MPIDI_IPC_mpi_imrecv(buf, count, datatype, unexp_req);
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         MPIR_ERR_CHECK(mpi_errno);
 
         if (*request == NULL) {
@@ -125,13 +128,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
         } else {
             /* request from workq */
             while (!MPIR_Request_is_complete(unexp_req)) {
-                MPID_Progress_test(NULL);
+                MPIDI_Progress_test(MPIDI_PROGRESS_SHM);
             }
             (*request)->status = unexp_req->status;
             MPIR_Request_add_ref(*request);
             MPID_Request_complete(*request);
             /* Need to free here because we don't return this to user */
-            MPIR_Request_free_unsafe(unexp_req);
+            MPIR_Request_free_safe(unexp_req);
         }
     } else {
         /* No matching request found, post the receive request  */
@@ -159,7 +162,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
 
   fn_exit:
     MPIDI_REQUEST_SET_LOCAL(*request, 1, NULL);
-    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    if (in_cs) {
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPC_MPI_IRECV);
     return mpi_errno;
   fn_fail:

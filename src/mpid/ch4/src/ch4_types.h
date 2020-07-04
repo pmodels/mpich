@@ -37,8 +37,9 @@ enum {
 #define MPIDI_PROGRESS_HOOKS  (1)
 #define MPIDI_PROGRESS_NM     (1<<1)
 #define MPIDI_PROGRESS_SHM    (1<<2)
+#define MPIDI_PROGRESS_WORKQ  (1<<3)
 
-#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
+#define MPIDI_PROGRESS_ALL 0xff
 
 enum {
     MPIDIG_EPOTYPE_NONE = 0,          /**< No epoch in affect */
