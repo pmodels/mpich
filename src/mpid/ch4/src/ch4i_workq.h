@@ -169,8 +169,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                 wd->buf = recv_buf;
                 wd->count = count;
                 wd->datatype = datatype;
-                wd->message = message;
-                wd->request = request;
+                wd->message = *message;
                 break;
             }
         default:
