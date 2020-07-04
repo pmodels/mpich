@@ -15,8 +15,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_START);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_start(group, assert, win);
@@ -40,8 +43,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_COMPLETE);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_complete(win);
@@ -65,8 +71,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_POST);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_post(group, assert, win);
@@ -90,8 +99,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_WAIT);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_wait(win);
@@ -116,8 +128,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_TEST);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_test(win, flag);
@@ -141,8 +156,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_LOCK);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_lock(lock_type, rank, assert, win, NULL);
@@ -166,8 +184,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_unlock(rank, win, NULL);
@@ -191,8 +212,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FENCE);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_fence(assert, win);
@@ -216,8 +240,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_flush_local(rank, win, NULL);
@@ -263,8 +290,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_flush(rank, win, NULL);
@@ -288,8 +318,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_flush_local_all(win);
@@ -313,8 +346,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_UNLOCK_ALL);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_unlock_all(win);
@@ -338,8 +374,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SYNC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SYNC);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_sync(win);
@@ -363,8 +402,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_ALL);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_flush_all(win);
@@ -388,8 +430,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int assert, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_LOCK_ALL);
 
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    mpi_errno = MPIDI_workq_vci_progress();
+    MPIR_ERR_CHECK(mpi_errno);
+#endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
-    MPIDI_workq_vci_progress_unsafe();
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_win_lock_all(assert, win);
