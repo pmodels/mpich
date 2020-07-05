@@ -155,7 +155,6 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
     MPI_Count i, j, old_size, prev_index, basic_num, num, nonzeroth;
     MPI_Aint lb, old_extent;    /* Assume extents are non-negative */
     int *ints;
-    MPI_Aint lb;
     MPI_Aint *adds;             /* Make no assumptions about +/- sign on these */
     MPI_Datatype *types;
     MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
@@ -201,9 +200,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #endif
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
-            {
+            if (ints[0] > 0) {
                 int dims = ints[0];
                 MPI_Datatype stype;
+
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_SUBARRAY\n");
 #endif
@@ -221,9 +221,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #endif
 #ifdef MPIIMPL_HAVE_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
-            {
+            if (ints[2] > 0) {
                 int dims = ints[2];
                 MPI_Datatype dtype;
+
 #ifdef FLATTEN_DEBUG
                 DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_DARRAY\n");
 #endif
@@ -257,6 +258,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_CONTIGUOUS\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -309,6 +313,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_VECTOR\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -376,6 +383,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_HVECTOR_INTEGER\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -441,6 +451,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_INDEXED\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -543,6 +556,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_INDEXED_BLOCK\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -633,6 +649,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_HINDEXED_INTEGER\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
             ADIOI_Datatype_iscontig(types[0], &old_is_contig);
@@ -720,6 +739,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 #ifdef FLATTEN_DEBUG
             DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_STRUCT_INTEGER\n");
 #endif
+            if (ints[0] == 0)
+                break;
+
             top_count = ints[0];
             for (n = 0; n < top_count; n++) {
                 MPI_Type_get_envelope(types[n], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
