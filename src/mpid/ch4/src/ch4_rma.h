@@ -400,11 +400,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_safe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
-    MPIDI_workq_rma_enqueue(PUT, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
-                            MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
-                            target_datatype, MPI_OP_NULL, win, NULL, NULL);
+    mpi_errno =
+        MPIDI_workq_rma_enqueue(PUT, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
+                                MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
+                                target_datatype, MPI_OP_NULL, win, NULL, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
 #else
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDI_put_unsafe(origin_addr, origin_count, origin_datatype,
@@ -433,13 +433,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_safe(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_SAFE);
 
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     /* For MPI_Get, "origin" has to be passed to the "result" parameter
      * field, because `origin_addr` is declared as `const void *`. */
-    MPIDI_workq_rma_enqueue(GET, NULL, origin_count, origin_datatype, NULL, origin_addr, 0,
-                            MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
-                            target_datatype, MPI_OP_NULL, win, NULL, NULL);
+    mpi_errno =
+        MPIDI_workq_rma_enqueue(GET, NULL, origin_count, origin_datatype, NULL, origin_addr, 0,
+                                MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
+                                target_datatype, MPI_OP_NULL, win, NULL, NULL);
+    MPIR_ERR_CHECK(mpi_errno);
 #else
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
     mpi_errno = MPIDI_get_unsafe(origin_addr, origin_count, origin_datatype,
