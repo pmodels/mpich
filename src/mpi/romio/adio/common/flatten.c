@@ -155,6 +155,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
     MPI_Count i, j, old_size, prev_index, basic_num, num, nonzeroth;
     MPI_Aint lb, old_extent;    /* Assume extents are non-negative */
     int *ints;
+    MPI_Aint lb;
     MPI_Aint *adds;             /* Make no assumptions about +/- sign on these */
     MPI_Datatype *types;
     MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
@@ -732,17 +733,13 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
 /* simplest case, current type is basic or contiguous types */
                     /* By using ADIO_Offset we preserve +/- sign and
                      * avoid >2G integer arithmetic problems */
-                    if (ints[1 + n] > 0 || types[n] == MPI_LB || types[n] == MPI_UB) {
+                    if (ints[1 + n] > 0) {
                         ADIO_Offset blocklength = ints[1 + n];
                         j = *curr_index;
                         flatlist_node_grow(flat, j);
                         flat->indices[j] = st_offset + adds[n];
                         MPI_Type_size_x(types[n], &old_size);
                         flat->blocklens[j] = blocklength * old_size;
-                        if (types[n] == MPI_LB)
-                            flat->lb_idx = j;
-                        if (types[n] == MPI_UB)
-                            flat->ub_idx = j;
 #ifdef FLATTEN_DEBUG
                         DBG_FPRINTF(stderr,
                                     "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
