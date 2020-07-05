@@ -224,27 +224,34 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
     MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
-                                                      const void *origin_addr,
-                                                      int origin_count,
-                                                      MPI_Datatype origin_datatype,
-                                                      const void *compare_addr,
-                                                      void *result_addr,
-                                                      int result_count,
-                                                      MPI_Datatype result_datatype,
-                                                      int target_rank,
-                                                      MPI_Aint target_disp,
-                                                      int target_count,
-                                                      MPI_Datatype target_datatype,
-                                                      MPI_Op acc_op,
-                                                      MPIR_Win * win_ptr,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPL_atomic_int_t * processed)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
+                                                     const void *origin_addr,
+                                                     int origin_count,
+                                                     MPI_Datatype origin_datatype,
+                                                     const void *compare_addr,
+                                                     void *result_addr,
+                                                     int result_count,
+                                                     MPI_Datatype result_datatype,
+                                                     int target_rank,
+                                                     MPI_Aint target_disp,
+                                                     int target_count,
+                                                     MPI_Datatype target_datatype,
+                                                     MPI_Op acc_op,
+                                                     MPIR_Win * win_ptr,
+                                                     MPIDI_av_entry_t * addr,
+                                                     MPL_atomic_int_t * processed)
 {
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win_ptr);
+
     MPIDI_workq_elemt_t *rma_elemt = NULL;
     rma_elemt = MPIDI_workq_elemt_create();
     rma_elemt->op = op;
     rma_elemt->processed = processed;
+
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     /* Find what type of work descriptor (wd) this element is and populate
      * it accordingly. */
@@ -282,6 +289,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, rma_elemt);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_t * workq_elemt)
