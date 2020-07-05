@@ -80,6 +80,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
     MPIR_Assert(request != NULL);
 
     MPIR_Request_add_ref(request);
+    if (op != IMRECV) {
+        MPIR_Comm_add_ref(comm_ptr);
+    }
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
     pt2pt_elemt->processed = processed;
@@ -200,6 +203,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
     MPIR_Assert(op == CSEND || op == ICSEND);
 
     MPIR_Request_add_ref(request);
+    MPIR_Comm_add_ref(comm_ptr);
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
 

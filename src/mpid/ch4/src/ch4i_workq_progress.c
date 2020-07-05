@@ -25,6 +25,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_send_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -35,6 +36,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_isend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
                                    wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -45,6 +47,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_ssend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
                                    wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -55,6 +58,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_issend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
                                     wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -66,6 +70,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                                        wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
                                        &(wd->errflag));
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -77,6 +82,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                                         wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
                                         &(wd->errflag));
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -87,6 +93,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_recv_unsafe(wd->recv_buf, wd->count, wd->datatype, wd->rank, wd->tag,
                                   wd->comm_ptr, wd->context_offset, wd->addr, wd->status, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
@@ -97,6 +104,7 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
                 MPIDI_irecv_unsafe(wd->recv_buf, wd->count, wd->datatype, wd->rank, wd->tag,
                                    wd->comm_ptr, wd->context_offset, wd->addr, &req);
                 MPIR_Datatype_release_if_not_builtin(datatype);
+                MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
                 break;
             }
