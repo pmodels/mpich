@@ -55,7 +55,7 @@ static void flatlist_node_grow(ADIOI_Flatlist_node * flat, int idx)
     }
 }
 
-void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
+static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type);
 /* flatten datatype and add it to Flatlist */
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
@@ -1182,7 +1182,7 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count * curr_
  * went in, the flattened representation should no longer have zero-length
  * blocks except for UB and LB markers.
  */
-void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
+static void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
 {
     int i, j, opt_blocks;
     ADIO_Offset *opt_blocklens;
