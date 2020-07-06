@@ -372,7 +372,9 @@ static inline void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Request * rr
         pack_size = MPIDI_OFI_global.max_msg_size;
     }
     MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.unpack);
-    p->lmt_msg = lmt_msg;
+    p->src_rank = lmt_msg->src_rank;
+    p->context_id = lmt_msg->context_id;
+    p->src_offset = lmt_msg->src_offset;
     MPL_gpu_malloc_host(&p->unpack_buffer, pack_size);
 
     MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
@@ -397,9 +399,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
         if (p->pack_size > remain) {
             p->pack_size = remain;
         }
-        MPIDI_OFI_lmt_msg_payload_t *lmt_msg = p->lmt_msg;
-        MPIDI_OFI_do_rdma_read(p->unpack_buffer, lmt_msg->src_offset + offset, p->pack_size,
-                               lmt_msg->context_id, lmt_msg->src_rank, rreq);
+        MPIDI_OFI_do_rdma_read(p->unpack_buffer, p->src_offset + offset, p->pack_size,
+                               p->context_id, p->src_rank, rreq);
         return FALSE;
     } else {
         /* all done. */
