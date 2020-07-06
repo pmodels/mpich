@@ -130,9 +130,29 @@ char *MTestArgListGetString(MTestArgList * head, const char *arg)
     return tmp;
 }
 
+const char *MTestArgListGetString_with_default(MTestArgList * head, const char *arg,
+                                               const char *default_str)
+{
+    char *tmp;
+
+    if (!(tmp = MTestArgListSearch((MTestArgListEntry *) head, arg)))
+        return default_str;
+
+    return tmp;
+}
+
 int MTestArgListGetInt(MTestArgList * head, const char *arg)
 {
     return atoi(MTestArgListGetString(head, arg));
+}
+
+int MTestArgListGetInt_with_default(MTestArgList * head, const char *arg, int default_val)
+{
+    const char *tmp = MTestArgListGetString_with_default(head, arg, NULL);
+    if (tmp)
+        return atoi(tmp);
+    else
+        return default_val;
 }
 
 long MTestArgListGetLong(MTestArgList * head, const char *arg)
@@ -140,10 +160,19 @@ long MTestArgListGetLong(MTestArgList * head, const char *arg)
     return atol(MTestArgListGetString(head, arg));
 }
 
+long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long default_val)
+{
+    const char *tmp = MTestArgListGetString_with_default(head, arg, NULL);
+    if (tmp)
+        return atol(tmp);
+    else
+        return default_val;
+}
+
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg)
 {
-    char *memtype = MTestArgListGetString(head, arg);
-    if (strcmp(memtype, "host") == 0)
+    const char *memtype = MTestArgListGetString_with_default(head, arg, NULL);
+    if (!memtype || strcmp(memtype, "host") == 0)
         return MTEST_MEM_TYPE__UNREGISTERED_HOST;
     else if (strcmp(memtype, "reg_host") == 0)
         return MTEST_MEM_TYPE__REGISTERED_HOST;
