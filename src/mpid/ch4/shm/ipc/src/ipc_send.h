@@ -28,12 +28,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     bool dt_contig;
     MPI_Aint true_lb;
     uintptr_t data_sz;
-    void *vaddr;
-    MPIDI_IPCI_ipc_attr_t ipc_attr;
-
     MPIDI_Datatype_check_contig_size_lb(datatype, count, dt_contig, data_sz, true_lb);
 
-    vaddr = (char *) buf + true_lb;
+    void *vaddr = (char *) buf + true_lb;
+    MPIDI_IPCI_ipc_attr_t ipc_attr;
     MPIR_GPU_query_pointer_attr(vaddr, &ipc_attr.gpu_attr);
 
     if (ipc_attr.gpu_attr.type == MPL_GPU_POINTER_DEV) {
@@ -51,7 +49,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
                                                    context_offset, addr, ipc_attr, request);
             MPIR_ERR_CHECK(mpi_errno);
             *done = true;
-            goto fn_exit;
         }
         /* TODO: add flattening datatype protocol for noncontig send. Different
          * threshold may be required to tradeoff the flattening overhead.*/
