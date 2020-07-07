@@ -165,7 +165,7 @@ int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
 
     gavl_tree_iptr = (gavl_tree_s *) MPL_calloc(1, sizeof(gavl_tree_s), MPL_MEM_OTHER);
     if (gavl_tree_iptr == NULL) {
-        mpl_err = MPL_ERR_SHM_NOMEM;
+        mpl_err = MPL_ERR_NOMEM;
         goto fn_fail;
     }
 
@@ -187,7 +187,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 
     node_ptr = (gavl_tree_node_s *) MPL_malloc(sizeof(gavl_tree_node_s), MPL_MEM_OTHER);
     if (node_ptr == NULL) {
-        mpl_err = MPL_ERR_SHM_NOMEM;
+        mpl_err = MPL_ERR_NOMEM;
         goto fn_fail;
     }
     node_ptr->parent = NULL;
