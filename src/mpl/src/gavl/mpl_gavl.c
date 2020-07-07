@@ -124,7 +124,8 @@ static void gavl_right_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_no
     return;
 }
 
-static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
+MPL_STATIC_INLINE_PREFIX int gavl_subset_cmp_func(gavl_tree_node_s * tnode, uintptr_t ustart,
+                                                  uintptr_t len)
 {
     int cmp_ret;
     uintptr_t uend = ustart + len;
@@ -141,7 +142,8 @@ static int gavl_subset_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_
     return cmp_ret;
 }
 
-static int gavl_intersect_cmp_func(uintptr_t ustart, uintptr_t len, gavl_tree_node_s * tnode)
+MPL_STATIC_INLINE_PREFIX int gavl_intersect_cmp_func(gavl_tree_node_s * tnode, uintptr_t ustart,
+                                                     uintptr_t len)
 {
     int cmp_ret;
     uintptr_t uend = ustart + len;
@@ -205,7 +207,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
         gavl_tree_node_s *cur_node = gavl_tree_iptr->root;
         int direction;
         do {
-            int cmp_ret = gavl_subset_cmp_func((uintptr_t) node_ptr->addr, node_ptr->len, cur_node);
+            int cmp_ret = gavl_subset_cmp_func(cur_node, (uintptr_t) node_ptr->addr, node_ptr->len);
             if (cmp_ret == SEARCH_LEFT) {
                 if (cur_node->left != NULL) {
                     TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
@@ -283,7 +285,7 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     *val = NULL;
     cur_node = gavl_tree_iptr->root;
     while (cur_node) {
-        int cmp_ret = gavl_subset_cmp_func((uintptr_t) addr, len, cur_node);
+        int cmp_ret = gavl_subset_cmp_func(cur_node, (uintptr_t) addr, len);
         if (cmp_ret == BUFFER_MATCH) {
             *val = (void *) cur_node->val;
             break;
@@ -342,7 +344,7 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
             goto fn_exit;
         } else {
             do {
-                int cmp_ret = gavl_intersect_cmp_func((uintptr_t) addr, len, cur_node);
+                int cmp_ret = gavl_intersect_cmp_func(cur_node, (uintptr_t) addr, len);
                 if (cmp_ret == SEARCH_LEFT) {
                     if (cur_node->left != NULL) {
                         TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
