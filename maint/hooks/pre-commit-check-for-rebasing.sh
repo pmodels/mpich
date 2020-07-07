@@ -21,7 +21,7 @@ url="$2"
 z40=0000000000000000000000000000000000000000
 
 GITHUB_REPO="pmodels/mpich"
-MAIN_BRANCH="master"
+MAIN_BRANCH="main"
 
 # getting the latest main branch hash from github
 MAIN_SHA=$(curl -s https://api.github.com/repos/${GITHUB_REPO}/git/ref/heads/${MAIN_BRANCH} | grep sha | sed -e 's/.*: "//g' | sed -e 's/".*//g')
