@@ -410,24 +410,24 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->rma_type = MPIDI_OFI_GET;
 
     /* origin */
-    req->noncontig.put.origin.addr = origin_addr;
-    req->noncontig.put.origin.count = origin_count;
-    req->noncontig.put.origin.datatype = origin_datatype;
-    req->noncontig.put.origin.pack_buffer = pack_buffer;
-    req->noncontig.put.origin.pack_offset = 0;
-    req->noncontig.put.origin.pack_size = pack_bytes;
-    req->noncontig.put.origin.total_bytes = origin_bytes;
+    req->noncontig.get.origin.addr = origin_addr;
+    req->noncontig.get.origin.count = origin_count;
+    req->noncontig.get.origin.datatype = origin_datatype;
+    req->noncontig.get.origin.pack_buffer = pack_buffer;
+    req->noncontig.get.origin.pack_offset = 0;
+    req->noncontig.get.origin.pack_size = pack_bytes;
+    req->noncontig.get.origin.total_bytes = origin_bytes;
 
     /* target */
-    req->noncontig.put.target.base = target_base;
-    req->noncontig.put.target.count = target_count;
-    req->noncontig.put.target.datatype = target_datatype;
-    req->noncontig.put.target.iov = target_iov;
-    req->noncontig.put.target.iov_len = target_len;
-    req->noncontig.put.target.iov_offset = 0;
-    req->noncontig.put.target.iov_cur = 0;
-    req->noncontig.put.target.addr = addr;
-    req->noncontig.put.target.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
+    req->noncontig.get.target.base = target_base;
+    req->noncontig.get.target.count = target_count;
+    req->noncontig.get.target.datatype = target_datatype;
+    req->noncontig.get.target.iov = target_iov;
+    req->noncontig.get.target.iov_len = target_len;
+    req->noncontig.get.target.iov_offset = 0;
+    req->noncontig.get.target.iov_cur = 0;
+    req->noncontig.get.target.addr = addr;
+    req->noncontig.get.target.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
 
     mpi_errno = issue_packed_get(win, req);
 
