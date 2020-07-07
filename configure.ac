@@ -373,6 +373,11 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
         debug    - Synonym for dbg
+        asan     - Add compiler flag, -fsanitize=address, to all internal
+                   compiler flags. It also includes other flags for nicer
+                   stacktrace such as -g -O1 -fno-omit-frame-pointer.
+        ubsan    - Add compiler flag, -fsanitize=undefined, to all internal
+                   compiler flags.
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
                    eliminate access warnings from programs like valgrind
@@ -1484,6 +1489,12 @@ for option in $enable_g ; do
         debug|dbg)
         enable_append_g=yes
 	;;
+        asan)
+        enable_asan=yes
+        ;;
+        ubsan)
+        enable_ubsan=yes
+        ;;
         no|none)
 	;;
 	handlealloc)
@@ -1540,6 +1551,29 @@ if test "$enable_append_g" = "yes" ; then
     PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
+fi
+
+if test "$enable_asan" = "yes" ; then
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CXXFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
+fi
+if test "$enable_ubsan" = "yes" ; then
+    PAC_APPEND_FLAG([-fsanitize=undefined],[CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[FFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
