@@ -36,30 +36,27 @@ typedef struct gavl_tree_node {
 typedef struct gavl_tree {
     gavl_tree_node_s *root;
     void (*gavl_free_fn) (void *);
+    /* internal stack structure. used to track the traverse trace for
+     * tree rebalance at node insertion or deletion */
+    gavl_tree_node_s *stack[MAX_STACK_SIZE];
+    int stack_sp;
 } gavl_tree_s;
 
-#define DECLARE_STACK(type, stack) \
-    type stack[MAX_STACK_SIZE];    \
-    int stack##_sp = 0
-
-#define STACK_PUSH(stack, value)             \
-    do {                                     \
-        assert(stack##_sp < MAX_STACK_SIZE); \
-        stack[stack##_sp++] = value;         \
+/* STACK is needed to rebalance the tree */
+#define TREE_STACK_PUSH(tree_ptr, value)               \
+    do {                                               \
+        assert(tree_ptr->stack_sp < MAX_STACK_SIZE);   \
+        tree_ptr->stack[tree_ptr->stack_sp++] = value; \
     } while (0)
 
-#define STACK_POP(stack, value)      \
-    do {                             \
-        assert(stack##_sp > 0);      \
-        value = stack[--stack##_sp]; \
+#define TREE_STACK_POP(tree_ptr, value)                \
+    do {                                               \
+        assert(tree_ptr->stack_sp > 0);                \
+        value = tree_ptr->stack[--tree_ptr->stack_sp]; \
     } while (0)
 
-#define CLEAR_STACK(stack)           \
-    do {                             \
-        stack##_sp = 0;              \
-    } while (0)
-
-#define STACK_EMPTY(stack) (!stack##_sp)
+#define TREE_STACK_START(tree_ptr) (tree_ptr)->stack_sp = 0
+#define TREE_STACK_IS_EMPTY(tree_ptr) (!(tree_ptr)->stack_sp)
 
 static void gavl_update_node_info(gavl_tree_node_s * node_iptr)
 {
@@ -166,13 +163,12 @@ int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
     int mpl_err = MPL_SUCCESS;
     gavl_tree_s *gavl_tree_iptr;
 
-    gavl_tree_iptr = (gavl_tree_s *) MPL_malloc(sizeof(gavl_tree_s), MPL_MEM_OTHER);
+    gavl_tree_iptr = (gavl_tree_s *) MPL_calloc(1, sizeof(gavl_tree_s), MPL_MEM_OTHER);
     if (gavl_tree_iptr == NULL) {
         mpl_err = MPL_ERR_SHM_NOMEM;
         goto fn_fail;
     }
 
-    gavl_tree_iptr->root = NULL;
     gavl_tree_iptr->gavl_free_fn = free_fn;
     *gavl_tree = (MPL_gavl_tree_t) gavl_tree_iptr;
 
@@ -205,14 +201,14 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     if (gavl_tree_iptr->root == NULL) {
         gavl_tree_iptr->root = node_ptr;
     } else {
-        DECLARE_STACK(gavl_tree_node_s *, node_stack);
+        TREE_STACK_START(gavl_tree_iptr);
         gavl_tree_node_s *cur_node = gavl_tree_iptr->root;
         int direction;
         do {
             int cmp_ret = gavl_subset_cmp_func((uintptr_t) node_ptr->addr, node_ptr->len, cur_node);
             if (cmp_ret == SEARCH_LEFT) {
                 if (cur_node->left != NULL) {
-                    STACK_PUSH(node_stack, cur_node);
+                    TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
                     cur_node = cur_node->left;
                     continue;
                 } else {
@@ -220,7 +216,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                 }
             } else if (cmp_ret == SEARCH_RIGHT) {
                 if (cur_node->right != NULL) {
-                    STACK_PUSH(node_stack, cur_node);
+                    TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
                     cur_node = cur_node->right;
                     continue;
                 } else {
@@ -260,8 +256,8 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                     gavl_left_rotation(cur_node, rnode);
             }
 
-            if (!STACK_EMPTY(node_stack)) {
-                STACK_POP(node_stack, cur_node);
+            if (!TREE_STACK_IS_EMPTY(gavl_tree_iptr)) {
+                TREE_STACK_POP(gavl_tree_iptr, cur_node);
                 goto stack_recovery;
             } else {
                 break;
@@ -337,11 +333,9 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     gavl_tree_node_s *inorder_node;
     gavl_tree_s *gavl_tree_iptr = (gavl_tree_s *) gavl_tree;
 
-    DECLARE_STACK(gavl_tree_node_s *, node_stack);
-
     void *val;
     do {
-        CLEAR_STACK(node_stack);
+        TREE_STACK_START(gavl_tree_iptr);
         cur_node = gavl_tree_iptr->root;
         val = NULL;
         if (cur_node == NULL) {
@@ -351,7 +345,7 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                 int cmp_ret = gavl_intersect_cmp_func((uintptr_t) addr, len, cur_node);
                 if (cmp_ret == SEARCH_LEFT) {
                     if (cur_node->left != NULL) {
-                        STACK_PUSH(node_stack, cur_node);
+                        TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
                         cur_node = cur_node->left;
                         continue;
                     } else {
@@ -359,7 +353,7 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                     }
                 } else if (cmp_ret == SEARCH_RIGHT) {
                     if (cur_node->right != NULL) {
-                        STACK_PUSH(node_stack, cur_node);
+                        TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
                         cur_node = cur_node->right;
                         continue;
                     } else {
@@ -390,13 +384,13 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 
                         val = (void *) cur_node->val;
                         MPL_free(cur_node);
-                        STACK_PUSH(node_stack, inorder_node);
+                        TREE_STACK_PUSH(gavl_tree_iptr, inorder_node);
                     }
                 } else {
                     inorder_node = cur_node->right;
-                    STACK_PUSH(node_stack, cur_node);
+                    TREE_STACK_PUSH(gavl_tree_iptr, cur_node);
                     while (inorder_node->left) {
-                        STACK_PUSH(node_stack, inorder_node);
+                        TREE_STACK_PUSH(gavl_tree_iptr, inorder_node);
                         inorder_node = inorder_node->left;
                     }
 
@@ -415,7 +409,7 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                     MPL_free(inorder_node);
                 }
 
-                STACK_POP(node_stack, cur_node);
+                TREE_STACK_POP(gavl_tree_iptr, cur_node);
 
               stack_recovery:
                 gavl_update_node_info(cur_node);
@@ -438,8 +432,8 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                         gavl_left_rotation(cur_node, rnode);
                 }
 
-                if (!STACK_EMPTY(node_stack)) {
-                    STACK_POP(node_stack, cur_node);
+                if (!TREE_STACK_IS_EMPTY(gavl_tree_iptr)) {
+                    TREE_STACK_POP(gavl_tree_iptr, cur_node);
                     goto stack_recovery;
                 } else {
                     break;
