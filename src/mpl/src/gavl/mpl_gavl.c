@@ -375,7 +375,7 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     return mpl_err;
 }
 
-int MPL_gavl_tree_free(MPL_gavl_tree_t gavl_tree)
+int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
     gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
