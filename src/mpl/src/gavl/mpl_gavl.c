@@ -185,6 +185,13 @@ MPL_STATIC_INLINE_PREFIX int gavl_intersect_cmp_func(gavl_tree_node_s * tnode, u
     return cmp_ret;
 }
 
+/*
+ * MPL_gavl_tree_create
+ * Description: create a gavl tree
+ * Parameters:
+ * free_fn        - (IN) user free function to free buffer object
+ * gavl_tree      - (OUT) created gavl tree
+ */
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
@@ -302,6 +309,17 @@ static void gavl_tree_rebalance(gavl_tree_s * tree_ptr)
     return;
 }
 
+/*
+ * MPL_gavl_tree_insert
+ * Description: insert a node with key (addr, len) into gavl tree. If new node is duplicate,
+ *              we should not insert it and need to free the node and return. This function
+ *              is not thread-safe.
+ * Parameters:
+ * gavl_tree        - (IN) gavl tree object
+ * addr             - (IN) input buffer starting addr
+ * len              - (IN) input buffer length
+ * val              - (IN) buffer object
+ */
 int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len,
                          const void *val)
 {
@@ -352,6 +370,16 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     goto fn_exit;
 }
 
+/*
+ * MPL_gavl_tree_search
+ * Description: search a node that matches input key (addr, len) and return corresponding
+ *              buffer object. This function is not thread-safe.
+ * Parameters:
+ * gavl_tree        - (IN) gavl tree object
+ * addr             - (IN) input buffer starting addr
+ * len              - (IN) input buffer length
+ * val              - (OUT) matched buffer object
+ */
 int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len, void **val)
 {
     int mpl_err = MPL_SUCCESS;
@@ -375,6 +403,12 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     return mpl_err;
 }
 
+/*
+ * MPL_gavl_tree_destory
+ * Description: free all nodes and buffer objects in the tree and tree itself.
+ * Parameters:
+ * gavl_tree        - (IN)  gavl tree object
+ */
 int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
@@ -477,6 +511,16 @@ static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s *
     return;
 }
 
+/*
+ * MPL_gavl_tree_delete
+ * Description: delete all intersecting nodes with input buffer in gavl tree and free
+ *              corresponding buffer objects using user-provided free function. This
+ *              function is not thread-safe.
+ * Parameters:
+ * gavl_tree        - (IN) gavl tree object
+ * addr             - (IN) input buffer starting addr
+ * len              - (IN) input buffer length
+ */
 int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
 {
     int mpl_err = MPL_SUCCESS;
