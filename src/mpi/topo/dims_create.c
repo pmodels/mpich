@@ -463,8 +463,11 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             if (q % f == 0) {
                 newdivs[nndivs++] = f;
                 sf = f;
-            } else {
+            } else if (k + 1 < ndivs) {
                 sf = divs[k + 1];
+            } else {
+                /* run out of next factors, bail out */
+                break;
             }
             if (idx < nd - 1 && sf - min > curbal) {
                 MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
