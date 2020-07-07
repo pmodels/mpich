@@ -43,7 +43,7 @@ static void free_port_name_tag(int tag)
     idx = tag / (sizeof(int) * 8);
     rem_tag = tag - (idx * sizeof(int) * 8);
 
-    MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+    MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1u << ((8 * sizeof(int)) - 1 - rem_tag));
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_FREE_PORT_NAME_TAG);
@@ -64,9 +64,9 @@ static int get_port_name_tag(int *port_name_tag)
 
     if (i < MPIR_MAX_CONTEXT_MASK)
         for (j = 0; j < (8 * sizeof(int)); j++) {
-            if ((MPIDI_OFI_global.port_name_tag_mask[i] | (1 << ((8 * sizeof(int)) - j - 1))) !=
+            if ((MPIDI_OFI_global.port_name_tag_mask[i] | (1u << ((8 * sizeof(int)) - j - 1))) !=
                 MPIDI_OFI_global.port_name_tag_mask[i]) {
-                MPIDI_OFI_global.port_name_tag_mask[i] |= (1 << ((8 * sizeof(int)) - j - 1));
+                MPIDI_OFI_global.port_name_tag_mask[i] |= (1u << ((8 * sizeof(int)) - j - 1));
                 *port_name_tag = ((i * 8 * sizeof(int)) + j);
                 goto fn_exit;
             }

@@ -15,6 +15,10 @@ int MPIR_Typerep_copy(void *outbuf, const void *inbuf, MPI_Aint num_bytes)
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
+    if (num_bytes == 0) {
+        goto fn_exit;
+    }
+
     MPL_pointer_attr_t inattr, outattr;
     MPL_gpu_query_pointer_attr(inbuf, &inattr);
     MPL_gpu_query_pointer_attr(outbuf, &outattr);
