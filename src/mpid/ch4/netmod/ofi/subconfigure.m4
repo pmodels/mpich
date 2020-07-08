@@ -267,32 +267,32 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
-            prov_config+=" --enable-psm=${enable_psm}"
-            prov_config+=" --enable-psm2=${enable_psm2}"
-            prov_config+=" --enable-sockets=${enable_sockets}"
-            prov_config+=" --enable-verbs=${enable_verbs}"
-            prov_config+=" --enable-usnic=${enable_usnic}"
-            prov_config+=" --enable-gni=${enable_gni}"
-            prov_config+=" --enable-bgq=${enable_bgq}"
-            prov_config+=" --enable-udp=${enable_udp}"
-            prov_config+=" --enable-rxm=${enable_rxm}"
-            prov_config+=" --enable-rxd=${enable_rxd}"
-            prov_config+=" --enable-tcp=${enable_tcp}"
-            prov_config+=" --enable-shm=${enable_shm}"
-            prov_config+=" --enable-mlx=${enable_mlx}"
-            prov_config+=" --enable-perf=${enable_perf}"
-            prov_config+=" --enable-rstream=${enable_rstream}"
-            prov_config+=" --enable-mrail=${enable_mrail}"
-            prov_config+=" --enable-efa=${enable_efa}"
-            prov_config+=" --enable-netdir=${enable_netdir}"
+            prov_config="$prov_config --enable-psm=${enable_psm}"
+            prov_config="$prov_config --enable-psm2=${enable_psm2}"
+            prov_config="$prov_config --enable-sockets=${enable_sockets}"
+            prov_config="$prov_config --enable-verbs=${enable_verbs}"
+            prov_config="$prov_config --enable-usnic=${enable_usnic}"
+            prov_config="$prov_config --enable-gni=${enable_gni}"
+            prov_config="$prov_config --enable-bgq=${enable_bgq}"
+            prov_config="$prov_config --enable-udp=${enable_udp}"
+            prov_config="$prov_config --enable-rxm=${enable_rxm}"
+            prov_config="$prov_config --enable-rxd=${enable_rxd}"
+            prov_config="$prov_config --enable-tcp=${enable_tcp}"
+            prov_config="$prov_config --enable-shm=${enable_shm}"
+            prov_config="$prov_config --enable-mlx=${enable_mlx}"
+            prov_config="$prov_config --enable-perf=${enable_perf}"
+            prov_config="$prov_config --enable-rstream=${enable_rstream}"
+            prov_config="$prov_config --enable-mrail=${enable_mrail}"
+            prov_config="$prov_config --enable-efa=${enable_efa}"
+            prov_config="$prov_config --enable-netdir=${enable_netdir}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
-            prov_config+=" --enable-direct=${ofi_direct_provider}"
+            prov_config="$prov_config --enable-direct=${ofi_direct_provider}"
             AC_MSG_NOTICE([Enabling direct embedded provider: ${ofi_direct_provider}])
         fi
 
-        ofi_subdir_args+=" $prov_config"
+        ofi_subdir_args="$ofi_subdir_args $prov_config"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
         PAC_PUSH_ALL_FLAGS()
