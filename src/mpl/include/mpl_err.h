@@ -27,7 +27,8 @@ enum {
      * code.  */
     MPL_ERR_TIMER_NOT_INITIALIZED,
     MPL_ERR_GPU_INTERNAL,
-    MPL_ERR_GPU_NOMEM
+    MPL_ERR_GPU_NOMEM,
+    MPL_ERR_NOMEM
 };
 
 #endif /* MPL_ERR_H_INCLUDED */
