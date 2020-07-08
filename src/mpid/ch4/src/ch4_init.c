@@ -618,7 +618,6 @@ int MPID_Init(int requested, int *provided)
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
 
     MPIR_Process.attrs.appnum = appnum;
-    MPIR_Process.attrs.wtime_is_global = 1;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     destroy_init_comm(&init_comm);
