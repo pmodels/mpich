@@ -127,8 +127,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPC_mpi_irecv(void *buf, MPI_Aint count, MPI_
             *request = unexp_req;
         } else {
             /* request from workq */
+            /* since we can't swap out the request, this become very tricky. Here we take
+             * the easy way out, simply wait for it to complete.
+             * NOTE: potentially the request is held up due to completion order, so need to
+             * progress both SHM and NM (since both could use active messages)
+             */
             while (!MPIR_Request_is_complete(unexp_req)) {
-                MPIDI_Progress_test(MPIDI_PROGRESS_SHM);
+                MPIDI_Progress_test(MPIDI_PROGRESS_SHM | MPIDI_PROGRESS_NM);
             }
             (*request)->status = unexp_req->status;
             MPIR_Request_add_ref(*request);
