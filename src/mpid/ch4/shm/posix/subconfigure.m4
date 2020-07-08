@@ -10,7 +10,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AC_ARG_WITH(ch4-posix-eager-modules,
     [  --with-ch4-posix-eager-modules=module-list
     CH4 POSIX eager arguments:
-            fbox - Use Fast Box module for eager transport
             iqueue - Use Inverted Queue module for eager transport
             ],
             [posix_eager_modules=$withval],
