@@ -262,8 +262,9 @@ int MPIDI_GPU_mpi_finalize_hook(void)
                     if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]) {
                         for (int k = 0; k < MPIDI_GPUI_global.local_device_count; ++k) {
                             if (MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j][k])
-                                MPL_gavl_tree_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]
-                                                   [k]);
+                                MPL_gavl_tree_destory(MPIDI_GPUI_global.ipc_handle_mapped_trees[i]
+                                                      [j]
+                                                      [k]);
                         }
                     }
                     MPL_free(MPIDI_GPUI_global.ipc_handle_mapped_trees[i][j]);
@@ -279,7 +280,7 @@ int MPIDI_GPU_mpi_finalize_hook(void)
             if (MPIDI_GPUI_global.ipc_handle_track_trees[i]) {
                 for (int j = 0; j < (MPIDI_GPUI_global.global_max_dev_id + 1); ++j) {
                     if (MPIDI_GPUI_global.ipc_handle_track_trees[i][j])
-                        MPL_gavl_tree_free(MPIDI_GPUI_global.ipc_handle_track_trees[i][j]);
+                        MPL_gavl_tree_destory(MPIDI_GPUI_global.ipc_handle_track_trees[i][j]);
                 }
             }
             MPL_free(MPIDI_GPUI_global.ipc_handle_track_trees[i]);
