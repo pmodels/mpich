@@ -48,7 +48,6 @@ static inline int MPIDI_OFI_win_do_progress(MPIR_Win * win)
 
         if (MPIDI_OFI_WIN(win).deferredQ) {
             MPIDI_OFI_issue_deferred_rma(win);
-            continue;
         } else {
             /* any/all deferred operations are complete */
             break;
