@@ -24,20 +24,20 @@
  * to the receiver. The receiver will then open the remote memory handle
  * and perform direct data transfer.
  */
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Aint count,
-                                                        MPI_Datatype datatype, uintptr_t data_sz,
-                                                        int rank, int tag, MPIR_Comm * comm,
-                                                        int context_offset, MPIDI_av_entry_t * addr,
-                                                        MPIDI_IPCI_ipc_attr_t ipc_attr,
-                                                        MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, uintptr_t data_sz,
+                                                 int rank, int tag, MPIR_Comm * comm,
+                                                 int context_offset, MPIDI_av_entry_t * addr,
+                                                 MPIDI_IPCI_ipc_attr_t ipc_attr,
+                                                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDI_SHMI_ctrl_hdr_t ctrl_hdr;
-    MPIDI_IPC_ctrl_send_contig_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.ipc_contig_slmt_rts;
+    MPIDI_IPC_ctrl_send_lmt_rts_t *slmt_req_hdr = &ctrl_hdr.ipc_slmt_rts;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_LMT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_LMT);
 
     /* Create send request */
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
@@ -68,15 +68,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_contig_lmt(const void *buf, MPI_Ain
 
     IPC_TRACE("send_contig_lmt: shm ctrl_id %d, data_sz 0x%" PRIu64 ", sreq_ptr 0x%p, "
               "src_lrank %d, match info[dest %d, src_rank %d, tag %d, context_id 0x%x]\n",
-              MPIDI_IPC_SEND_CONTIG_LMT_RTS, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,
+              MPIDI_IPC_SEND_LMT_RTS, slmt_req_hdr->data_sz, slmt_req_hdr->sreq_ptr,
               slmt_req_hdr->src_lrank, rank, slmt_req_hdr->src_rank, slmt_req_hdr->tag,
               slmt_req_hdr->context_id);
 
-    mpi_errno = MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_IPC_SEND_CONTIG_LMT_RTS, &ctrl_hdr);
+    mpi_errno = MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_IPC_SEND_LMT_RTS, &ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_LMT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -152,12 +152,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
     mpi_errno = MPIDI_IPCI_handle_unmap(ipc_type, src_buf, ipc_handle);
     MPIR_ERR_CHECK(mpi_errno);
 
-    ack_ctrl_hdr.ipc_contig_slmt_fin.ipc_type = ipc_type;
-    ack_ctrl_hdr.ipc_contig_slmt_fin.req_ptr = sreq_ptr;
+    ack_ctrl_hdr.ipc_slmt_fin.ipc_type = ipc_type;
+    ack_ctrl_hdr.ipc_slmt_fin.req_ptr = sreq_ptr;
     mpi_errno = MPIDI_SHM_do_ctrl_send(MPIDIG_REQUEST(rreq, rank),
                                        MPIDIG_context_id_to_comm(MPIDIG_REQUEST
                                                                  (rreq, context_id)),
-                                       MPIDI_IPC_SEND_CONTIG_LMT_FIN, &ack_ctrl_hdr);
+                                       MPIDI_IPC_SEND_LMT_FIN, &ack_ctrl_hdr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));

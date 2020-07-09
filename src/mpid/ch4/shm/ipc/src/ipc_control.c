@@ -9,13 +9,13 @@
 #include "ipc_recv.h"
 #include "ipc_control.h"
 
-int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
+int MPIDI_IPCI_send_lmt_fin_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = ctrl_hdr->ipc_contig_slmt_fin.req_ptr;
+    MPIR_Request *sreq = ctrl_hdr->ipc_slmt_fin.req_ptr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_FIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_FIN_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_LMT_FIN_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_LMT_FIN_CB);
 
     IPC_TRACE("send_contig_lmt_fin_cb: complete sreq %p\n", sreq);
 
@@ -23,20 +23,20 @@ int MPIDI_IPCI_send_contig_lmt_fin_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     MPID_Request_complete(sreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_FIN_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_LMT_FIN_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
+int MPIDI_IPCI_send_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_IPC_ctrl_send_contig_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_contig_slmt_rts;
+    MPIDI_IPC_ctrl_send_lmt_rts_t *slmt_rts_hdr = &ctrl_hdr->ipc_slmt_rts;
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_SEND_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_SEND_LMT_RTS_CB);
 
     IPC_TRACE("send_contig_lmt_rts_cb: received data_sz 0x%" PRIu64 ", sreq_ptr 0x%p, "
               "src_lrank %d, match info[src_rank %d, tag %d, context_id 0x%x]\n",
@@ -117,7 +117,7 @@ int MPIDI_IPCI_send_contig_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_CONTIG_LMT_RTS_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPCI_SEND_LMT_RTS_CB);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

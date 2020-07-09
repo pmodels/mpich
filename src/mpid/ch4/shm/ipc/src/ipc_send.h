@@ -45,8 +45,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
     if (rank != comm->rank && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE &&
         data_sz >= ipc_attr.threshold.send_lmt_sz) {
         if (dt_contig) {
-            mpi_errno = MPIDI_IPCI_send_contig_lmt(buf, count, datatype, data_sz, rank, tag, comm,
-                                                   context_offset, addr, ipc_attr, request);
+            mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, rank, tag, comm,
+                                            context_offset, addr, ipc_attr, request);
             MPIR_ERR_CHECK(mpi_errno);
             *done = true;
         }
