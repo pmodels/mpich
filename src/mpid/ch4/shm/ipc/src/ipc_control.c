@@ -72,16 +72,22 @@ int MPIDI_IPCI_send_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
     }
 
     if (rreq) {
+        void *flattened_type = NULL;
+
         /* Matching receive was posted */
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPIDIG_REQUEST(rreq, rank) = slmt_rts_hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = slmt_rts_hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = slmt_rts_hdr->context_id;
 
+        if (slmt_rts_hdr->flattened_type_size)
+            flattened_type = slmt_rts_hdr->flattened_type;
+
         /* Complete IPC receive */
         mpi_errno = MPIDI_IPCI_handle_lmt_recv(slmt_rts_hdr->ipc_type,
                                                slmt_rts_hdr->ipc_handle,
-                                               slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr, rreq);
+                                               slmt_rts_hdr->data_sz, slmt_rts_hdr->sreq_ptr,
+                                               flattened_type, rreq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         /* Enqueue unexpected receive request */
@@ -104,6 +110,14 @@ int MPIDI_IPCI_send_lmt_rts_cb(MPIDI_SHMI_ctrl_hdr_t * ctrl_hdr)
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).data_sz = slmt_rts_hdr->data_sz;
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).src_lrank = slmt_rts_hdr->src_lrank;
         MPIDI_IPCI_REQUEST(rreq, unexp_rreq).sreq_ptr = slmt_rts_hdr->sreq_ptr;
+        if (slmt_rts_hdr->flattened_type_size) {
+            MPIDI_IPCI_REQUEST(rreq, unexp_rreq).flattened_type =
+                MPL_malloc(slmt_rts_hdr->flattened_type_size, MPL_MEM_OTHER);
+            memcpy(MPIDI_IPCI_REQUEST(rreq, unexp_rreq).flattened_type,
+                   slmt_rts_hdr->flattened_type, slmt_rts_hdr->flattened_type_size);
+        } else {
+            MPIDI_IPCI_REQUEST(rreq, unexp_rreq).flattened_type = NULL;
+        }
 
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);       /* +1 for unexp_list */

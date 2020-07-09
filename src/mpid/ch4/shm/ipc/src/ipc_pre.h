@@ -16,6 +16,7 @@ typedef struct MPIDI_IPC_am_unexp_rreq {
     uint64_t data_sz;
     MPIR_Request *sreq_ptr;
     int src_lrank;
+    void *flattened_type;
 } MPIDI_IPC_am_unexp_rreq_t;
 
 typedef struct MPIDI_IPC_am_request {
@@ -42,6 +43,10 @@ typedef struct MPIDI_IPC_ctrl_send_lmt_rts {
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;
+
+    /* flatten type */
+    int flattened_type_size;
+    uint8_t flattened_type[];
 } MPIDI_IPC_ctrl_send_lmt_rts_t;
 
 typedef struct MPIDI_IPC_ctrl_send_lmt_fin {

@@ -28,10 +28,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    bool dt_contig;
     MPI_Aint true_lb;
     uintptr_t data_sz;
-    MPIDI_Datatype_check_contig_size_lb(datatype, count, dt_contig, data_sz, true_lb);
+    MPIDI_Datatype_check_size_lb(datatype, count, data_sz, true_lb);
 
     void *vaddr = (char *) buf + true_lb;
     MPIDI_IPCI_ipc_attr_t ipc_attr;
@@ -41,7 +40,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         mpi_errno = MPIDI_GPU_get_ipc_attr(vaddr, rank, comm, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno = MPIDI_XPMEM_get_ipc_attr(vaddr, data_sz, &ipc_attr);
+        MPI_Aint dtp_extent, buf_extent;
+        MPIR_Datatype_get_extent_macro(datatype, dtp_extent);
+        buf_extent = dtp_extent * count;
+        /* datatype extent could be negative, so we need to assure buffer
+         * extent is positive for attachment. */
+        if (buf_extent < 0)
+            buf_extent = buf_extent * (MPI_Aint) - 1;
+
+        mpi_errno = MPIDI_XPMEM_get_ipc_attr(vaddr, buf_extent, &ipc_attr);
         MPIR_ERR_CHECK(mpi_errno);
     }
 
@@ -57,14 +64,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
 
     if (rank != comm->rank && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE &&
         data_sz >= ipc_attr.threshold.send_lmt_sz && fallback_flag == false) {
-        if (dt_contig) {
-            mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, rank, tag, comm,
-                                            context_offset, addr, ipc_attr, request);
-            MPIR_ERR_CHECK(mpi_errno);
-            *done = true;
-        }
-        /* TODO: add flattening datatype protocol for noncontig send. Different
-         * threshold may be required to tradeoff the flattening overhead.*/
+        mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, rank, tag, comm,
+                                        context_offset, addr, ipc_attr, request);
+        MPIR_ERR_CHECK(mpi_errno);
+        *done = true;
     }
   fn_exit:
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
