@@ -6,6 +6,23 @@
 #ifndef IPC_P2P_H_INCLUDED
 #define IPC_P2P_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_CH4_IPC_NON_CONTIG_CHUNK_SIZE
+      category    : CH4
+      type        : int
+      default     : 1048576
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        this parameter sets the chunk size for the case where both source and
+        destination datatype are non-contiguous; it indicates the amount of data
+        to be copied each time
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #include "ch4_impl.h"
 #include "mpidimpl.h"
 #include "shm_control.h"
@@ -216,28 +233,41 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_handle_lmt_recv(MPIDI_IPCI_type_t ipc_ty
         void *tmp_buf;
         bool host_buf;
         int mpl_err;
+        MPI_Aint chunk_cnt, chunk_size;
+        MPI_Aint offset = 0;
 
+        chunk_size = MPL_MIN(MPIR_CVAR_CH4_IPC_NON_CONTIG_CHUNK_SIZE, recv_data_sz);
         if (ipc_type == MPIDI_IPCI_TYPE__XPMEM || attr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
             attr.type == MPL_GPU_POINTER_REGISTERED_HOST) {
-            tmp_buf = MPL_malloc(recv_data_sz, MPL_MEM_OTHER);
+            tmp_buf = MPL_malloc(chunk_size, MPL_MEM_OTHER);
             host_buf = true;
         } else {
             /* both src and dest buffer are on GPU, so tmp buffer should be allocated on GPU as well */
-            mpl_err = MPL_gpu_malloc(&tmp_buf, recv_data_sz, attr.device);
+            mpl_err = MPL_gpu_malloc(&tmp_buf, chunk_size, attr.device);
             MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**nomem");
             host_buf = false;
         }
 
-        mpi_errno = MPIR_Typerep_pack(copy_src_buf, src_count, src_datatype,
-                                      0, tmp_buf, recv_data_sz, &actual_pack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_pack_bytes <= recv_data_sz);
+        chunk_cnt = recv_data_sz / chunk_size;
+        if (recv_data_sz % chunk_size)
+            chunk_cnt++;
 
-        mpi_errno = MPIR_Typerep_unpack(tmp_buf, actual_pack_bytes,
-                                        MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq, count),
-                                        MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_unpack_bytes <= recv_data_sz);
+        for (int i = 0; i < chunk_cnt; ++i) {
+            mpi_errno = MPIR_Typerep_pack(copy_src_buf, src_count, src_datatype,
+                                          offset, tmp_buf, chunk_size, &actual_pack_bytes);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Assert(actual_pack_bytes <= chunk_size);
+
+            mpi_errno = MPIR_Typerep_unpack(tmp_buf, actual_pack_bytes,
+                                            MPIDIG_REQUEST(rreq, buffer), MPIDIG_REQUEST(rreq,
+                                                                                         count),
+                                            MPIDIG_REQUEST(rreq, datatype), offset,
+                                            &actual_unpack_bytes);
+            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Assert(actual_unpack_bytes <= chunk_size);
+
+            offset += chunk_size;
+        }
 
         if (host_buf) {
             MPL_free(tmp_buf);
