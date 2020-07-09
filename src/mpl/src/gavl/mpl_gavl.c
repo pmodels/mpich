@@ -29,9 +29,14 @@ enum {
 };
 
 typedef struct gavl_tree_node {
-    struct gavl_tree_node *parent;
-    struct gavl_tree_node *left;
-    struct gavl_tree_node *right;
+    union {
+        struct {
+            struct gavl_tree_node *parent;
+            struct gavl_tree_node *left;
+            struct gavl_tree_node *right;
+        };
+        struct gavl_tree_node *next;
+    };
     uintptr_t height;
     uintptr_t addr;
     uintptr_t len;
@@ -47,6 +52,8 @@ typedef struct gavl_tree {
     int stack_sp;
     /* cur_node points to the starting node of tree rebalance */
     gavl_tree_node_s *cur_node;
+    /* store nodes that are removed from tree but haven't been freed */
+    gavl_tree_node_s *remove_list;
 } gavl_tree_s;
 
 #define GAVL_TREE_NODE_INIT(node_ptr, addr, len, val)   \
@@ -82,6 +89,9 @@ typedef struct gavl_tree {
 
 #define TREE_STACK_START(tree_ptr) (tree_ptr)->stack_sp = 0
 #define TREE_STACK_IS_EMPTY(tree_ptr) (!(tree_ptr)->stack_sp)
+
+static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len, int mode);
+static void gavl_tree_delete_removed_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len);
 
 static void gavl_update_node_info(gavl_tree_node_s * node_iptr)
 {
@@ -327,6 +337,10 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     gavl_tree_node_s *node_ptr;
     gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
 
+    /* we remove all nodes that are subset of input key (addr, len) from the tree and add them
+     * into tree remove_list */
+    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, SUBSET_SEARCH);
+
     node_ptr = (gavl_tree_node_s *) MPL_calloc(1, sizeof(gavl_tree_node_s), MPL_MEM_OTHER);
     if (node_ptr == NULL) {
         mpl_err = MPL_ERR_NOMEM;
@@ -438,7 +452,7 @@ int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
     return mpl_err;
 }
 
-static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s * dnode)
+static void gavl_tree_remove_node_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s * dnode)
 {
     gavl_tree_node_s *inorder_node;
 
@@ -490,7 +504,7 @@ static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s *
             dnode->right = NULL;
         }
 
-        /* exchange inorder_node with dnode and then free dnode */
+        /* exchange inorder_node with dnode and then add dnode into remove_list */
         tmp_val = dnode->val;
         tmp_addr = dnode->addr;
         tmp_len = dnode->len;
@@ -503,10 +517,9 @@ static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s *
         dnode = inorder_node;
     }
 
-    /* free object using user-provided free function */
-    if (tree_ptr->gavl_free_fn)
-        tree_ptr->gavl_free_fn(dnode->val);
-    MPL_free(dnode);
+    /* add removed node into remove list */
+    dnode->next = tree_ptr->remove_list;
+    tree_ptr->remove_list = dnode;
 
     /* update stack for the consequent rebalance which will start from the top of
      * the stack (i.e., tree_ptr->cur_node). */
@@ -533,13 +546,26 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     int mpl_err = MPL_SUCCESS;
     gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
 
-    while (tree_ptr->root) {
-        int cmp_ret;
-        gavl_tree_node_s *dnode;
+    /* move all nodes intersecting input buffer (addr, len) to remove_list */
+    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, INTERSECTION_SEARCH);
 
+    /* free nodes and buffer objects from remove list */
+    gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
+}
+
+static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len, int mode)
+{
+    int cmp_ret;
+    gavl_tree_node_s *dnode;
+
+    while (tree_ptr->root) {
         /* search and return the node to be deleted */
-        dnode = gavl_tree_search_internal(tree_ptr, (uintptr_t) addr, len,
-                                          INTERSECTION_SEARCH, &cmp_ret);
+        dnode = gavl_tree_search_internal(tree_ptr, (uintptr_t) addr, len, mode, &cmp_ret);
 
         /* check whether dnode matches (addr, len) */
         if (cmp_ret != BUFFER_MATCH) {
@@ -547,8 +573,8 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
             goto fn_exit;
         }
 
-        /* delete the matched node and free corresponding buffer object val */
-        gavl_tree_delete_internal(tree_ptr, dnode);
+        /* detach the matched node from tree and add removed node into remove list */
+        gavl_tree_remove_node_internal(tree_ptr, dnode);
 
         /* we perform rebalance after every internal deletion in order to ensure
          * lightweight rebalance that rotates left and right childs with at most
@@ -557,7 +583,33 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     };
 
   fn_exit:
-    return mpl_err;
-  fn_fail:
-    goto fn_exit;
+    return;
+}
+
+/* gavl_tree_delete_removed_nodes delete all nodes that intersect input key (addr, len) in remove_list */
+static void gavl_tree_delete_removed_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len)
+{
+    int cmp_ret;
+    gavl_tree_node_s *prev, *cur, *dnode;
+
+    cur = tree_ptr->remove_list;
+    prev = NULL;
+    while (cur) {
+        cmp_ret = gavl_intersect_cmp_func(cur, addr, len);
+        if (cmp_ret == BUFFER_MATCH) {
+            if (prev)
+                prev->next = cur->next;
+            else
+                tree_ptr->remove_list = cur->next;
+
+            dnode = cur;
+            cur = cur->next;
+            if (tree_ptr->gavl_free_fn)
+                tree_ptr->gavl_free_fn((void *) dnode->val);
+            MPL_free(dnode);
+        } else {
+            prev = cur;
+            cur = cur->next;
+        }
+    }
 }
