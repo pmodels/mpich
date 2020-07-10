@@ -36,12 +36,17 @@ int MPIDI_OFI_init_provider(void)
     }
 
     /* Third, update global settings */
+    struct fi_info *prov_use = fi_dupinfo(prov);
+    MPIR_Assert(prov_use);
+    MPIDI_OFI_global.prov_use = prov_use;
+
+    /* stick to the original auto progress setting */
+    prov_use->domain_attr->data_progress = hints->domain_attr->data_progress;
+    prov_use->domain_attr->control_progress = hints->domain_attr->control_progress;
+
     /* NOTE: MPIDI_OFI_global.settings are not used when !MPIDI_OFI_ENABLE_RUNTIME_CHECKS,
      * but harmless to get updated together with rest of the global settings */
-    MPIDI_OFI_update_global_settings(prov, hints);
-
-    MPIDI_OFI_global.prov_use = fi_dupinfo(prov);
-    MPIR_Assert(MPIDI_OFI_global.prov_use);
+    MPIDI_OFI_update_global_settings(prov_use);
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
         MPIDI_OFI_dump_global_settings();

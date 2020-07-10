@@ -30,7 +30,7 @@ int MPIDI_OFI_init_provider(void);
 void MPIDI_OFI_init_hints(struct fi_info *hints);
 void MPIDI_OFI_init_global_settings(const char *prov_name);
 bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
-void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints);
+void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 void MPIDI_OFI_dump_global_settings(void);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_fi_version(void)

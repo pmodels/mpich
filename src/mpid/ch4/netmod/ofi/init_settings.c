@@ -278,7 +278,7 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
     MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
 
-void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints)
+void MPIDI_OFI_update_global_settings(struct fi_info *prov)
 {
     /* ------------------------------------------------------------------------ */
     /* Set global attributes attributes based on the provider choice            */
@@ -314,9 +314,9 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hint
     UPDATE_SETTING_BY_INFO(enable_hmem, prov->caps & FI_HMEM);
 #endif
     UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
-                           hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
+                           prov->domain_attr->data_progress & FI_PROGRESS_AUTO);
     UPDATE_SETTING_BY_INFO(enable_control_auto_progress,
-                           hints->domain_attr->control_progress & FI_PROGRESS_AUTO);
+                           prov->domain_attr->control_progress & FI_PROGRESS_AUTO);
 
     if (MPIDI_OFI_global.settings.enable_scalable_endpoints) {
         MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
