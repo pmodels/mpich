@@ -10,9 +10,8 @@
 static int find_provider(struct fi_info *hints);
 /* picks one matching provider from the list or return NULL */
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
-static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list);
-static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list);
 
+/* pick provider, set MPIDI_OFI_global.prov_use, and update global settings */
 int MPIDI_OFI_init_provider(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -74,14 +73,6 @@ static int find_provider(struct fi_info *hints)
     const char *provname = MPIR_CVAR_OFI_USE_PROVIDER;
     int ofi_version = MPIDI_OFI_get_fi_version();
 
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, MPIR_CVAR_OFI_USE_PROVIDER);
-    } else {
-        MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings,
-                                MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
-                                MPIDI_OFI_SET_NAME_DEFAULT);
-    }
-
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         struct fi_info *prov_list, *prov_use;
         MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
@@ -96,7 +87,13 @@ static int find_provider(struct fi_info *hints)
             prov_use->caps |= FI_DIRECTED_RECV;
         }
 
-        /* Initialize hints based on MPIDI_OFI_global.settings (updated by pick_provider_from_list()) */
+        /* Initialize MPIDI_OFI_global.settings */
+        MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
+        /* FIXME: this fills the hints with optimal settings. In order to work for providers
+         * that support halfway between minimal and optimal, we need try-loop to systematically
+         * relax settings.
+         */
+        /* Initialize hints based on MPIDI_OFI_global.settings */
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
         hints->caps = prov_use->caps;
@@ -108,7 +105,7 @@ static int find_provider(struct fi_info *hints)
         MPIR_ERR_CHKANDJUMP(provname != NULL &&
                             MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
-        /* Initialize hints based on MPIDI_OFI_global.settings (config macros) */
+        /* Initialize hints based on configure time macros) */
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
     }
@@ -118,91 +115,34 @@ static int find_provider(struct fi_info *hints)
     goto fn_exit;
 }
 
-#define DBG_TRY_PICK_PROVIDER(round) /* round is a str, eg "Round 1" */ \
-    if (NULL == prov_use) { \
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
-                        (MPL_DBG_FDEST, round ": find_provider returned NULL\n")); \
-    } else { \
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
-                        (MPL_DBG_FDEST, round ": find_provider returned %s\n", \
-                        prov_use->fabric_attr->prov_name)); \
-    }
-
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list)
 {
-    struct fi_info *prov_use = NULL;
-    /* We'll try to pick the best provider three times.
-     * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
-     * 2 - Check to see if any provider meets the default capability set
-     * 3 - Check to see if any provider meets the minimal capability set
-     */
     bool provname_is_set = (provname &&
                             strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT) != 0 &&
                             strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) != 0);
-    if (NULL == prov_use && provname_is_set) {
-        prov_use = pick_provider_by_name((char *) provname, prov_list);
-        DBG_TRY_PICK_PROVIDER("[match name]");
-    }
 
-    bool provname_is_minimal = (provname && strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) == 0);
-    if (NULL == prov_use && !provname_is_minimal) {
-        MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
-        prov_use = pick_provider_by_global_settings(prov_list);
-        DBG_TRY_PICK_PROVIDER("[match default]");
-    }
+    MPIDI_OFI_capabilities_t optimal_settings, minimal_settings;
+    MPIDI_OFI_init_settings(&optimal_settings, provname);
+    MPIDI_OFI_init_settings(&minimal_settings, MPIDI_OFI_SET_NAME_MINIMAL);
 
-    if (NULL == prov_use) {
-        MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
-        prov_use = pick_provider_by_global_settings(prov_list);
-        DBG_TRY_PICK_PROVIDER("[match minimal]");
-    }
-
-    return prov_use;
-}
-
-static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list)
-{
-    struct fi_info *prov, *prov_use = NULL;
-
-    prov = prov_list;
-    while (NULL != prov) {
-        /* Match provider name exactly */
-        if (0 != strcmp(provname, prov->fabric_attr->prov_name)) {
+    int best_score = 0;
+    struct fi_info *best_prov = NULL;
+    for (struct fi_info * prov = prov_list; prov; prov = prov->next) {
+        if (provname_is_set && 0 != strcmp(provname, prov->fabric_attr->prov_name)) {
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "Skipping provider: name mismatch"));
-            prov = prov->next;
             continue;
         }
 
-        MPIDI_OFI_init_global_settings(prov->fabric_attr->prov_name);
-
-        if (!MPIDI_OFI_match_global_settings(prov)) {
-            prov = prov->next;
-            continue;
+        int score = MPIDI_OFI_match_provider(prov, &optimal_settings, &minimal_settings);
+        if (best_score < score) {
+            best_score = score;
+            best_prov = prov;
         }
-
-        prov_use = prov;
-
-        break;
-    }
-
-    return prov_use;
-}
-
-static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list)
-{
-    struct fi_info *prov, *prov_use = NULL;
-
-    prov = prov_list;
-    while (NULL != prov) {
-        if (!MPIDI_OFI_match_global_settings(prov)) {
-            prov = prov->next;
-            continue;
-        } else {
-            prov_use = prov;
-            break;
+        if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+            printf("provider: %s, score = %d\n", prov->fabric_attr->prov_name, score);
         }
     }
 
-    return prov_use;
+    return best_prov;
 }

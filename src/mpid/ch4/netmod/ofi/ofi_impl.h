@@ -29,7 +29,9 @@ int MPIDI_OFI_init_provider(void);
 
 void MPIDI_OFI_init_hints(struct fi_info *hints);
 void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name);
-bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
+int MPIDI_OFI_match_provider(struct fi_info *prov,
+                             MPIDI_OFI_capabilities_t * optimal,
+                             MPIDI_OFI_capabilities_t * minimal);
 void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 void MPIDI_OFI_dump_global_settings(void);
 
