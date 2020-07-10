@@ -143,7 +143,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
             MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
                                  FALSE);
             req->rma_type = MPIDI_OFI_PUT;
-            req->noncontig.put.origin.pack_buffer = NULL;
         } else {        /* MPIDI_OFI_GET */
             MPIDI_OFI_CALL_RETRY(fi_readmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write,
                                  FALSE);
@@ -185,28 +184,20 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
     struct iovec iov;
     struct fi_rma_iov riov;
     uint64_t flags;
-
-    if (req->noncontig.put.origin.pack_buffer == NULL) {
-        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
-                                           &req->noncontig.put.origin.pack_buffer);
-        if (req->noncontig.put.origin.pack_buffer == NULL)
-            goto fn_exit;
-    }
-
-    /* load the pack buffer */
-    MPIR_Typerep_pack(req->noncontig.put.origin.addr, req->noncontig.put.origin.count,
-                      req->noncontig.put.origin.datatype,
-                      req->noncontig.put.origin.pack_offset, req->noncontig.put.origin.pack_buffer,
-                      req->noncontig.put.origin.pack_size, &actual_pack_bytes);
+    void *pack_buffer;
 
     if (sigreq)
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
     else
         flags = FI_DELIVERY_COMPLETE;
 
-    int i = 0, j = req->noncontig.put.target.iov_cur;
+    int j = req->noncontig.put.target.iov_cur;
     size_t msg_len;
-    while (i < actual_pack_bytes) {
+    while (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool, &pack_buffer);
+        if (pack_buffer == NULL)
+            break;
+
         MPI_Aint target_cur = j % req->noncontig.put.target.iov_len;
         if (j == req->noncontig.put.target.iov_offset)
             MPIDI_OFI_load_iov(req->noncontig.put.target.base,
@@ -216,7 +207,18 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
                                &req->noncontig.put.target.iov_offset,
                                req->noncontig.put.target.iov);
 
-        msg_len = MPL_MIN(actual_pack_bytes - i, req->noncontig.put.target.iov[target_cur].iov_len);
+        msg_len =
+            MPL_MIN(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
+                    req->noncontig.put.target.iov[target_cur].iov_len);
+        /* load the pack buffer */
+        MPIR_Typerep_pack(req->noncontig.put.origin.addr, req->noncontig.put.origin.count,
+                          req->noncontig.put.origin.datatype,
+                          req->noncontig.put.origin.pack_offset, pack_buffer,
+                          msg_len, &actual_pack_bytes);
+        MPIR_Assert(msg_len == actual_pack_bytes);
+
+        MPIDI_OFI_pack_chunk *chunk = create_chunk(pack_buffer, 0, 0, req);
+        MPIR_ERR_CHKANDSTMT(chunk == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(req->noncontig.put.target.addr, 0, 0);
@@ -226,14 +228,14 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
         msg.iov_count = 1;
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
-        iov.iov_base = (char *) req->noncontig.put.origin.pack_buffer + i;
+        iov.iov_base = pack_buffer;
         iov.iov_len = msg_len;
         riov.addr = (uintptr_t) req->noncontig.put.target.iov[target_cur].iov_base;
         riov.len = msg_len;
         riov.key = req->noncontig.put.target.key;
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
         MPIDI_OFI_CALL_RETRY(fi_writemsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0, rdma_write, FALSE);
-        i += msg_len;
+        req->noncontig.put.origin.pack_offset += msg_len;
 
         if (msg_len < req->noncontig.put.target.iov[target_cur].iov_len) {
             req->noncontig.put.target.iov[target_cur].iov_base =
@@ -243,8 +245,6 @@ static int issue_packed_put(MPIR_Win * win, MPIDI_OFI_win_request_t * req)
             j++;
         }
     }
-    MPIR_Assert(i == actual_pack_bytes);
-    req->noncontig.put.origin.pack_offset += actual_pack_bytes;
 
     /* not finished. update our place in the target iov array for later. */
     if (req->noncontig.put.origin.pack_offset < req->noncontig.put.origin.total_bytes) {
@@ -398,9 +398,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.origin.addr = origin_addr;
     req->noncontig.put.origin.count = origin_count;
     req->noncontig.put.origin.datatype = origin_datatype;
-    req->noncontig.put.origin.pack_buffer = NULL;
     req->noncontig.put.origin.pack_offset = 0;
-    req->noncontig.put.origin.pack_size = MPL_MIN(origin_bytes, MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     req->noncontig.put.origin.total_bytes = origin_bytes;
 
     /* target */

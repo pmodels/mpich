@@ -465,8 +465,6 @@ typedef struct MPIDI_OFI_win_request {
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
-                void *pack_buffer;
-                MPI_Aint pack_size;
             } origin;
             struct {
                 void *base;
