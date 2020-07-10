@@ -14,7 +14,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_ofi_version(void)
         return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
 }
 
-int MPIDI_OFI_find_provider(struct fi_info *hints);
+int MPIDI_OFI_find_provider(struct fi_info **prov_out);
+void MPIDI_OFI_find_provider_cleanup(void);
+int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
 
 /* set hints based on MPIDI_OFI_global.settings */
 void MPIDI_OFI_init_hints(struct fi_info *hints);
@@ -27,5 +29,8 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
 
 /* update MPIDI_OFI_global.settings */
 void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints);
+
+/* Determine if NIC has already been included in others */
+bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **others, int nic_count);
 
 #endif /* OFI_INIT_H_INCLUDED */
