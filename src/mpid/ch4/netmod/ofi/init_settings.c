@@ -211,6 +211,9 @@ void MPIDI_OFI_init_global_settings(const char *prov_name)
     if (MPIDI_OFI_global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
         MPIDI_OFI_global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
+
+    /* Always required settings */
+    MPIDI_OFI_global.settings.require_rdm = 1;
 }
 
 #define CHECK_CAP(SETTING, cond_bad) \
