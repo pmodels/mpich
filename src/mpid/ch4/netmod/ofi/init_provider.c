@@ -89,18 +89,18 @@ static int find_provider(struct fi_info *hints)
     }
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        struct fi_info *prov_list, *prov_use;
+        struct fi_info *prov_list, *prov;
         MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
 
-        prov_use = pick_provider_from_list(provname, prov_list);
+        prov = pick_provider_from_list(provname, prov_list);
 
-        MPIR_ERR_CHKANDJUMP(prov_use == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+        MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
 
         /* Initialize hints based on MPIDI_OFI_global.settings (updated by pick_provider_from_list()) */
         MPIDI_OFI_init_hints(hints);
-        hints->fabric_attr->prov_name = MPL_strdup(prov_use->fabric_attr->prov_name);
-        hints->caps = prov_use->caps;
-        hints->addr_format = prov_use->addr_format;
+        hints->fabric_attr->prov_name = MPL_strdup(prov->fabric_attr->prov_name);
+        hints->caps = prov->caps;
+        hints->addr_format = prov->addr_format;
 
         fi_freeinfo(prov_list);
     } else {
@@ -121,18 +121,18 @@ static int find_provider(struct fi_info *hints)
 /* internal routines */
 
 #define DBG_TRY_PICK_PROVIDER(round) /* round is a str, eg "Round 1" */ \
-    if (NULL == prov_use) { \
+    if (NULL == prov) { \
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
                         (MPL_DBG_FDEST, round ": find_provider returned NULL\n")); \
     } else { \
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
                         (MPL_DBG_FDEST, round ": find_provider returned %s\n", \
-                        prov_use->fabric_attr->prov_name)); \
+                        prov->fabric_attr->prov_name)); \
     }
 
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list)
 {
-    struct fi_info *prov_use = NULL;
+    struct fi_info *prov = NULL;
     /* We'll try to pick the best provider three times.
      * 1 - Check to see if any provider matches an existing capability set (e.g. sockets)
      * 2 - Check to see if any provider meets the default capability set
@@ -141,30 +141,30 @@ static struct fi_info *pick_provider_from_list(const char *provname, struct fi_i
     bool provname_is_set = (provname &&
                             strcmp(provname, MPIDI_OFI_SET_NAME_DEFAULT) != 0 &&
                             strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) != 0);
-    if (NULL == prov_use && provname_is_set) {
-        prov_use = pick_provider_by_name((char *) provname, prov_list);
+    if (NULL == prov && provname_is_set) {
+        prov = pick_provider_by_name((char *) provname, prov_list);
         DBG_TRY_PICK_PROVIDER("[match name]");
     }
 
     bool provname_is_minimal = (provname && strcmp(provname, MPIDI_OFI_SET_NAME_MINIMAL) == 0);
-    if (NULL == prov_use && !provname_is_minimal) {
+    if (NULL == prov && !provname_is_minimal) {
         MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_DEFAULT);
-        prov_use = pick_provider_by_global_settings(prov_list);
+        prov = pick_provider_by_global_settings(prov_list);
         DBG_TRY_PICK_PROVIDER("[match default]");
     }
 
-    if (NULL == prov_use) {
+    if (NULL == prov) {
         MPIDI_OFI_init_global_settings(MPIDI_OFI_SET_NAME_MINIMAL);
-        prov_use = pick_provider_by_global_settings(prov_list);
+        prov = pick_provider_by_global_settings(prov_list);
         DBG_TRY_PICK_PROVIDER("[match minimal]");
     }
 
-    return prov_use;
+    return prov;
 }
 
 static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list)
 {
-    struct fi_info *prov, *prov_use = NULL;
+    struct fi_info *prov;
 
     prov = prov_list;
     while (NULL != prov) {
@@ -183,17 +183,15 @@ static struct fi_info *pick_provider_by_name(const char *provname, struct fi_inf
             continue;
         }
 
-        prov_use = prov;
-
-        break;
+        return prov;
     }
 
-    return prov_use;
+    return NULL;
 }
 
 static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list)
 {
-    struct fi_info *prov, *prov_use = NULL;
+    struct fi_info *prov;
 
     prov = prov_list;
     while (NULL != prov) {
@@ -201,10 +199,9 @@ static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_lis
             prov = prov->next;
             continue;
         } else {
-            prov_use = prov;
-            break;
+            return prov;
         }
     }
 
-    return prov_use;
+    return NULL;
 }
