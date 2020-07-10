@@ -36,23 +36,12 @@ int MPIDI_OFI_init_provider(void)
     }
 
     /* Third, update global settings */
-    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_update_global_settings(prov, hints);
-    }
+    /* NOTE: MPIDI_OFI_global.settings are not used when !MPIDI_OFI_ENABLE_RUNTIME_CHECKS,
+     * but harmless to get updated together with rest of the global settings */
+    MPIDI_OFI_update_global_settings(prov, hints);
 
     MPIDI_OFI_global.prov_use = fi_dupinfo(prov);
     MPIR_Assert(MPIDI_OFI_global.prov_use);
-
-    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
-    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
-    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
-    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
-    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
         MPIDI_OFI_dump_global_settings();

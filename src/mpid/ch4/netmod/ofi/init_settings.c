@@ -278,15 +278,15 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
     MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
 
-void MPIDI_OFI_update_global_settings(struct fi_info *prov_use, struct fi_info *hints)
+void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints)
 {
     /* ------------------------------------------------------------------------ */
     /* Set global attributes attributes based on the provider choice            */
     /* ------------------------------------------------------------------------ */
-    UPDATE_SETTING_BY_INFO(enable_av_table, prov_use->domain_attr->av_type == FI_AV_TABLE);
+    UPDATE_SETTING_BY_INFO(enable_av_table, prov->domain_attr->av_type == FI_AV_TABLE);
     UPDATE_SETTING_BY_INFO(enable_scalable_endpoints,
-                           prov_use->domain_attr->max_ep_tx_ctx > 1 &&
-                           (prov_use->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
+                           prov->domain_attr->max_ep_tx_ctx > 1 &&
+                           (prov->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
     /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
      * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
      * being used. */
@@ -294,25 +294,24 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov_use, struct fi_info *
         /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
          * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
-                               prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
+                               prov->domain_attr->mr_mode != FI_MR_SCALABLE);
+        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode != FI_MR_SCALABLE);
     } else {
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov_use->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov_use->domain_attr->mr_mode & FI_MR_PROV_KEY);
+                               prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
+        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode & FI_MR_PROV_KEY);
     }
     UPDATE_SETTING_BY_INFO(enable_tagged,
-                           (prov_use->caps & FI_TAGGED) &&
-                           (prov_use->caps & FI_DIRECTED_RECV) &&
-                           (prov_use->domain_attr->cq_data_size >= 4));
+                           (prov->caps & FI_TAGGED) &&
+                           (prov->caps & FI_DIRECTED_RECV) &&
+                           (prov->domain_attr->cq_data_size >= 4));
     UPDATE_SETTING_BY_INFO(enable_am,
-                           (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
+                           (prov->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
                            (FI_MSG | FI_MULTI_RECV | FI_READ));
-    UPDATE_SETTING_BY_INFO(enable_rma, prov_use->caps & FI_RMA);
-    UPDATE_SETTING_BY_INFO(enable_atomics, prov_use->caps & FI_ATOMICS);
+    UPDATE_SETTING_BY_INFO(enable_rma, prov->caps & FI_RMA);
+    UPDATE_SETTING_BY_INFO(enable_atomics, prov->caps & FI_ATOMICS);
 #ifdef FI_HMEM
-    UPDATE_SETTING_BY_INFO(enable_hmem, prov_use->caps & FI_HMEM);
+    UPDATE_SETTING_BY_INFO(enable_hmem, prov->caps & FI_HMEM);
 #endif
     UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
                            hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
@@ -326,6 +325,18 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov_use, struct fi_info *
         MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_REGULAR;
         MPIDI_OFI_global.settings.max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR;
     }
+
+    /* update additional global settings (that are not used for provider selection) */
+    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
+    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
+    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
+    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 }
 
 void MPIDI_OFI_dump_global_settings(void)
