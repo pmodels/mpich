@@ -97,16 +97,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
     hints->domain_attr->threading = FI_THREAD_DOMAIN;
-    if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS) {
-        hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
-    } else {
-        hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
-    }
-    if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS) {
-        hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
-    } else {
-        hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
-    }
+    MPIDI_OFI_set_auto_progress(hints);
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
 
@@ -159,6 +150,20 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         /*     PROTOCOL         |  CONTEXT  |        SOURCE         |       TAG          */
         MPIDI_OFI_PROTOCOL_MASK | 0 | MPIDI_OFI_SOURCE_MASK | 0 /* With source bits */ :
         MPIDI_OFI_PROTOCOL_MASK | 0 | 0 | MPIDI_OFI_TAG_MASK /* No source bits */ ;
+}
+
+void MPIDI_OFI_set_auto_progress(struct fi_info *hints)
+{
+    if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS) {
+        hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
+    } else {
+        hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
+    }
+    if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS) {
+        hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
+    } else {
+        hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
+    }
 }
 
 #define UPDATE_SETTING_BY_CAP(cap, CVAR) \
@@ -287,7 +292,7 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
     MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
 
-void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints)
+void MPIDI_OFI_update_global_settings(struct fi_info *prov)
 {
     /* ------------------------------------------------------------------------ */
     /* Set global attributes attributes based on the provider choice            */
@@ -325,9 +330,9 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hint
     UPDATE_SETTING_BY_INFO(enable_hmem, prov->caps & FI_HMEM);
 #endif
     UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
-                           hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
+                           prov->domain_attr->data_progress & FI_PROGRESS_AUTO);
     UPDATE_SETTING_BY_INFO(enable_control_auto_progress,
-                           hints->domain_attr->control_progress & FI_PROGRESS_AUTO);
+                           prov->domain_attr->control_progress & FI_PROGRESS_AUTO);
 
     if (MPIDI_OFI_global.settings.enable_scalable_endpoints) {
         MPIDI_OFI_global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;

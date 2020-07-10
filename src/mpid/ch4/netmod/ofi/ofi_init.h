@@ -21,6 +21,9 @@ int MPIDI_OFI_init_multi_nic(struct fi_info *prov);
 /* set hints based on MPIDI_OFI_global.settings */
 void MPIDI_OFI_init_hints(struct fi_info *hints);
 
+/* set auto progress hints based on CVARs */
+void MPIDI_OFI_set_auto_progress(struct fi_info *hints);
+
 /* set MPIDI_OFI_global.settings based on provider-set */
 void MPIDI_OFI_init_global_settings(const char *prov_name);
 
@@ -28,7 +31,7 @@ void MPIDI_OFI_init_global_settings(const char *prov_name);
 bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
 
 /* update MPIDI_OFI_global.settings */
-void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints);
+void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 
 /* Determine if NIC has already been included in others */
 bool MPIDI_OFI_nic_already_used(const struct fi_info *prov, struct fi_info **others, int nic_count);

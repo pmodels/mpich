@@ -54,9 +54,12 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
                             mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
+    /* some hints need to be reset */
+    MPIDI_OFI_set_auto_progress(prov);
+
     /* Third, update global settings */
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_update_global_settings(prov, hints);
+        MPIDI_OFI_update_global_settings(prov);
     }
 
     MPIR_Assert(prov);
