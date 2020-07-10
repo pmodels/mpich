@@ -167,16 +167,16 @@ void MPIDI_OFI_set_auto_progress(struct fi_info *hints)
 }
 
 #define UPDATE_SETTING_BY_CAP(cap, CVAR) \
-    MPIDI_OFI_global.settings.cap = (CVAR != -1) ? CVAR : \
-                                    prov_name ? prov_caps->cap : \
-                                    CVAR
+    p_settings->cap = (CVAR != -1) ? CVAR : prov_caps->cap
 
-void MPIDI_OFI_init_global_settings(const char *prov_name)
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name)
 {
     int prov_idx = MPIDI_OFI_get_set_number(prov_name);
     MPIDI_OFI_capabilities_t *prov_caps = &MPIDI_OFI_caps_list[prov_idx];
 
-    /* Seed the global settings values for cases where we are using runtime sets */
+    memset(p_settings, 0, sizeof(MPIDI_OFI_capabilities_t));
+
+    /* Seed the settings values for cases where we are using runtime sets */
     UPDATE_SETTING_BY_CAP(enable_av_table, MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE);
     UPDATE_SETTING_BY_CAP(enable_scalable_endpoints, MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS);
     /* If the user specifies -1 (=don't care) and the provider supports it, then try to use STX
@@ -203,10 +203,10 @@ void MPIDI_OFI_init_global_settings(const char *prov_name)
     UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
     UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
     /* try to enable atomics only when RMA is enabled */
-    if (MPIDI_OFI_ENABLE_RMA) {
+    if (p_settings->enable_rma) {
         UPDATE_SETTING_BY_CAP(enable_atomics, MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS);
     } else {
-        MPIDI_OFI_global.settings.enable_atomics = 0;
+        p_settings->enable_atomics = 0;
     }
     UPDATE_SETTING_BY_CAP(fetch_atomic_iovecs, MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS);
     UPDATE_SETTING_BY_CAP(enable_data_auto_progress, MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS);
@@ -219,11 +219,11 @@ void MPIDI_OFI_init_global_settings(const char *prov_name)
     UPDATE_SETTING_BY_CAP(major_version, MPIR_CVAR_CH4_OFI_MAJOR_VERSION);
     UPDATE_SETTING_BY_CAP(minor_version, MPIR_CVAR_CH4_OFI_MINOR_VERSION);
     UPDATE_SETTING_BY_CAP(num_am_buffers, MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS);
-    if (MPIDI_OFI_global.settings.num_am_buffers < 0) {
-        MPIDI_OFI_global.settings.num_am_buffers = 0;
+    if (p_settings->num_am_buffers < 0) {
+        p_settings->num_am_buffers = 0;
     }
-    if (MPIDI_OFI_global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
-        MPIDI_OFI_global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
+    if (p_settings->num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
+        p_settings->num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
 }
 

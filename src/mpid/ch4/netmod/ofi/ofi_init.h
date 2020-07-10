@@ -24,8 +24,8 @@ void MPIDI_OFI_init_hints(struct fi_info *hints);
 /* set auto progress hints based on CVARs */
 void MPIDI_OFI_set_auto_progress(struct fi_info *hints);
 
-/* set MPIDI_OFI_global.settings based on provider-set */
-void MPIDI_OFI_init_global_settings(const char *prov_name);
+/* set settings based on provider-set */
+void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *prov_name);
 
 /* whether prov matches MPIDI_OFI_global.settings */
 bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
