@@ -25,7 +25,8 @@
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
-int MPIDI_OFI_find_provider(struct fi_info *hints);
+int MPIDI_OFI_init_provider(void);
+
 void MPIDI_OFI_init_hints(struct fi_info *hints);
 void MPIDI_OFI_init_global_settings(const char *prov_name);
 bool MPIDI_OFI_match_global_settings(struct fi_info *prov);

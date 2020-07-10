@@ -6,13 +6,74 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 
+/* find best matching provider and populate hints */
+static int find_provider(struct fi_info *hints);
 /* picks one matching provider from the list or return NULL */
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list);
 
+int MPIDI_OFI_init_provider(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    struct fi_info *prov = NULL;
+
+    /* First, find the provider and prepare the hints */
+    struct fi_info *hints = fi_allocinfo();
+    MPIR_Assert(hints != NULL);
+
+    mpi_errno = find_provider(hints);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Second, get the actual fi_info * prov */
+    MPIDI_OFI_CALL(fi_getinfo(MPIDI_OFI_get_fi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
+        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+    }
+
+    /* Third, update global settings */
+    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        MPIDI_OFI_update_global_settings(prov, hints);
+    }
+
+    MPIDI_OFI_global.prov_use = fi_dupinfo(prov);
+    MPIR_Assert(MPIDI_OFI_global.prov_use);
+
+    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
+    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
+    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
+    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
+    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
+    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
+
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        MPIDI_OFI_dump_global_settings();
+    }
+
+  fn_exit:
+    if (prov)
+        fi_freeinfo(prov);
+
+    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
+    MPL_free(hints->fabric_attr->prov_name);
+    hints->fabric_attr->prov_name = NULL;
+    fi_freeinfo(hints);
+
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Pick best matching provider and populate the hints accordingly */
-int MPIDI_OFI_find_provider(struct fi_info *hints)
+static int find_provider(struct fi_info *hints)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -27,10 +88,6 @@ int MPIDI_OFI_find_provider(struct fi_info *hints)
     }
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        /* Ensure that we aren't trying to shove too many bits into the match_bits.
-         * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
-        MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
-
         struct fi_info *prov_list, *prov_use;
         MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
 

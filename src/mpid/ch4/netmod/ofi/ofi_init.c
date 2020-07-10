@@ -337,8 +337,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static int get_ofi_version(void);
-static int open_fabric(void);
 static int create_vni_context(int vni);
 static int destroy_vni_context(int vni);
 
@@ -590,8 +588,22 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &err);
     MPIR_Assert(err == 0);
 
-    mpi_errno = open_fabric();
+    mpi_errno = MPIDI_OFI_init_provider();
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* Ensure that we aren't trying to shove too many bits into the match_bits.
+     * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
+    MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
+
+    /* if using extended context id, check that selected provider can support it */
+    MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
+    /* Check that the desired number of ranks is possible and abort if not */
+    if (MPIDI_OFI_MAX_RANK_BITS < 32 && MPIR_Process.size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
+    }
+
+    MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use->fabric_attr,
+                             &MPIDI_OFI_global.fabric, NULL), fabric);
 
     /* ------------------------------------------------------------------------ */
     /* Create transport level communication contexts.                           */
@@ -1253,77 +1265,6 @@ static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_
     }
 
   fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* ---------------------------------------------------------- */
-/* open_fabric (include pick provider and update settings)    */
-/* ---------------------------------------------------------- */
-static int open_fabric(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct fi_info *prov = NULL;
-
-    /* First, find the provider and prepare the hints */
-    struct fi_info *hints = fi_allocinfo();
-    MPIR_Assert(hints != NULL);
-
-    mpi_errno = MPIDI_OFI_find_provider(hints);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(MPIDI_OFI_get_fi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
-    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
-        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
-    }
-
-    /* Third, update global settings */
-    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_update_global_settings(prov, hints);
-    }
-
-    MPIDI_OFI_global.prov_use = fi_dupinfo(prov);
-    MPIR_Assert(MPIDI_OFI_global.prov_use);
-
-    MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
-    MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
-    MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
-    MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
-    MPIDI_OFI_global.tx_iov_limit = MIN(prov->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rx_iov_limit = MIN(prov->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
-    MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
-
-    /* if using extended context id, check that selected provider can support it */
-    MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
-    /* Check that the desired number of ranks is possible and abort if not */
-    if (MPIDI_OFI_MAX_RANK_BITS < 32 && MPIR_Process.size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
-    }
-
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
-        MPIDI_OFI_dump_global_settings();
-    }
-
-    /* Finally open the fabric */
-    MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
-
-  fn_exit:
-    if (prov)
-        fi_freeinfo(prov);
-
-    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
-    MPL_free(hints->fabric_attr->prov_name);
-    hints->fabric_attr->prov_name = NULL;
-    fi_freeinfo(hints);
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
