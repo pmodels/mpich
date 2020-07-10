@@ -225,28 +225,38 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
     if (p_settings->num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
         p_settings->num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
     }
+
+    /* Always required settings */
+    MPIDI_OFI_global.settings.require_rdm = 1;
 }
 
-#define CHECK_CAP(SETTING, cond_bad) \
-    if (SETTING) { \
-        if (cond_bad) { \
+#define CHECK_CAP(setting, cond_bad) \
+    do { \
+        bool bad = cond_bad; \
+        if (minimal->setting && bad) { \
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, \
-                            (MPL_DBG_FDEST, "provider failed " #SETTING)); \
-            return false; \
+                            (MPL_DBG_FDEST, "provider failed minimal setting " #setting)); \
+            return 0; \
         } \
-    }
+        if (optimal->setting && !bad) { \
+            score++; \
+        } \
+    } while (0)
 
-bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
+int MPIDI_OFI_match_provider(struct fi_info *prov,
+                             MPIDI_OFI_capabilities_t * optimal, MPIDI_OFI_capabilities_t * minimal)
 {
+    int score = 0;
+
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
     if (MPIR_CVAR_OFI_SKIP_IPV6) {
         if (prov->addr_format == FI_SOCKADDR_IN6) {
-            return false;
+            return 0;
         }
     }
-    CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
+    CHECK_CAP(enable_scalable_endpoints,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
 
@@ -258,30 +268,26 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
      * queue object (at least 32 bits). Previously, this was a separate capability set,
      * but as more and more providers supported this feature, the decision was made to
      * require it. */
-    CHECK_CAP(MPIDI_OFI_ENABLE_TAGGED,
-              !(prov->caps & FI_TAGGED) || prov->domain_attr->cq_data_size < 4);
+    CHECK_CAP(enable_tagged, !(prov->caps & FI_TAGGED) || prov->domain_attr->cq_data_size < 4);
 
-    CHECK_CAP(MPIDI_OFI_ENABLE_AM,
-              (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
+    CHECK_CAP(enable_am, (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
-    CHECK_CAP(MPIDI_OFI_ENABLE_RMA, !(prov->caps & FI_RMA));
+    CHECK_CAP(enable_rma, !(prov->caps & FI_RMA));
 #ifdef FI_HMEM
-    CHECK_CAP(MPIDI_OFI_ENABLE_HMEM, !(prov->caps & FI_HMEM));
+    CHECK_CAP(enable_hmem, !(prov->caps & FI_HMEM));
 #endif
     uint64_t msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
-    CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
+    CHECK_CAP(enable_atomics,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
 
-    CHECK_CAP(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS,
+    CHECK_CAP(enable_control_auto_progress,
               !(prov->domain_attr->control_progress & FI_PROGRESS_AUTO));
 
-    CHECK_CAP(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS,
-              !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO));
+    CHECK_CAP(enable_data_auto_progress, !(prov->domain_attr->data_progress & FI_PROGRESS_AUTO));
 
-    int MPICH_REQUIRE_RDM = 1;  /* hack to use CHECK_CAP macro */
-    CHECK_CAP(MPICH_REQUIRE_RDM, prov->ep_attr->type != FI_EP_RDM);
+    CHECK_CAP(require_rdm, prov->ep_attr->type != FI_EP_RDM);
 
-    return true;
+    return score;
 }
 
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
