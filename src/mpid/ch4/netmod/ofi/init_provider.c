@@ -6,6 +6,43 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 
+/* There are two configurations: with or without RUNTIME_CHECKS.
+ *
+ * 1. Without RUNTIME_CHECKS. Global settings are macros defined in ofi_capabilites.h, and
+ *    MPIDI_OFI_global.settings are not used.
+ *    Global settings are used to init hints, which is used to get the first matching provider.
+ *
+ * 2. With RUNTIME_CHECKS. Macros are redirected to fields in MPIDI_OFI_global.settings.
+ *    a. Find providers based on optimal and minimal settings. Global settings are not used at
+ *       this stage and remain uninitialized. The optimal settings are the default set or the set
+ *       that matches MPIR_CVAR_OFI_USE_PROVIDER.
+ *    b. The selected provider is used to init hints. This step is covoluted since we want to
+ *       reuse the init hints routine that is based on global settings.
+ *       b.1. Initialize global.settings with default (or MPIR_CVAR_OFI_USE_PROVIDER).
+ *       b.2. Init hints using global settings -- this step is the same as without RUNTIME_CHECKS
+ *       b.3. Use the hints to get MPIDI_OFI_global.prov_use. This may take a few try, each time
+ *            relaxing attributes such as tx_attr and domain_attr.
+ *
+ *  The hints is used to get the final MPIDI_OFI_global.prov_use, which is used to open the fabric.
+ *  Global settings are finally updated again with the final prov_use. Note that in case of without
+ *  RUNTIME_CHECKS, global settings are mostly macros so the update had little impact. Some settings
+ *  such as "max_buffered_send" are always updated according to fi_info.
+ *
+ * Another way to understand this, there are three ways of control provider selection.
+ * a. Static configuration without RUNTIME_CHECKS, e.g. `--with-device=ch4:ofi:sockets`
+ *    Most global settings are macro constants. We try get the provider with initialized hints once,
+ *    abort if fails.
+ * b. With RUNTIME_CHECKS, use MPIR_CVAR_OFI_USE_PROVIDER. We set the optimal settings based on
+ *    matching set. Thus, the static settings in ofi_capabilities.h can be used to control settings.
+ * c. With RUNTIME_CHECKS, use FI_PROVIDER. We set the optimal settins based on default set.
+ *
+ * Since the optimal settings in RUNTIME_CHECKS affect the provider configuration (ref. 2-b.1),
+ * there are subtle differences between b and c.
+ *
+ * CVARs such as MPIR_CVAR_CH4_OFI_ENABLE_TAGGED should overwrite both optimal and minimal settings,
+ * thus effective in both provider selection and final global settings.
+ */
+
 static int find_provider(void);
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 
