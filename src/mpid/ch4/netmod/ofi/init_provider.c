@@ -7,11 +7,74 @@
 #include "ofi_impl.h"
 #include "ofi_init.h"
 
+/* find best matching provider and populate hints */
+static int find_provider(struct fi_info *hints);
+
+/* picks one matching provider from the list or return NULL */
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_name(const char *provname, struct fi_info *prov_list);
 static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_list);
 
-int MPIDI_OFI_find_provider(struct fi_info *hints)
+/* Need hold prov_list until we done setting up multi-nic */
+static struct fi_info *prov_list = NULL;
+
+void MPIDI_OFI_find_provider_cleanup(void)
+{
+    if (prov_list) {
+        fi_freeinfo(prov_list);
+    }
+}
+
+int MPIDI_OFI_find_provider(struct fi_info **prov_out)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* First, find the provider and prepare the hints */
+    struct fi_info *hints = fi_allocinfo();
+    MPIR_Assert(hints != NULL);
+
+    mpi_errno = find_provider(hints);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* Second, get the actual fi_info * prov */
+    MPIDI_OFI_CALL(fi_getinfo(MPIDI_OFI_get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list),
+                   getinfo);
+
+    struct fi_info *prov = prov_list;
+    /* fi_getinfo may ignore the addr_format in hints, filter it again */
+    if (hints->addr_format != FI_FORMAT_UNSPEC) {
+        while (prov && prov->addr_format != hints->addr_format) {
+            prov = prov->next;
+        }
+    }
+    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
+        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
+    }
+
+    /* Third, update global settings */
+    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        MPIDI_OFI_update_global_settings(prov, hints);
+    }
+
+    MPIR_Assert(prov);
+    *prov_out = prov;
+
+  fn_exit:
+    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
+    MPL_free(hints->fabric_attr->prov_name);
+    hints->fabric_attr->prov_name = NULL;
+    fi_freeinfo(hints);
+
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* Pick best matching provider and populate the hints accordingly */
+static int find_provider(struct fi_info *hints)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -26,10 +89,6 @@ int MPIDI_OFI_find_provider(struct fi_info *hints)
     }
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        /* Ensure that we aren't trying to shove too many bits into the match_bits.
-         * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
-        MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
-
         struct fi_info *prov_list, *prov_use;
         MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
 

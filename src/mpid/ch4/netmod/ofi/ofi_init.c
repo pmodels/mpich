@@ -7,7 +7,6 @@
 #include "ofi_impl.h"
 #include "mpidu_bc.h"
 #include "ofi_noinline.h"
-#include "ofi_nic.h"
 #include "mpir_hwtopo.h"
 #include "ofi_init.h"
 
@@ -392,9 +391,9 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static int update_global_limits(struct fi_info *prov);
 static void dump_global_settings(void);
 static void dump_dynamic_settings(void);
-static int open_fabric(void);
 static int create_vni_context(int vni, int nic);
 static int destroy_vni_context(int vni, int nic);
 
@@ -495,8 +494,25 @@ int MPIDI_OFI_init_local(int *tag_bits)
      * MPIDI_OFI_global.prov_use that will map to the VNI contexts below. We can also use it to
      * generate the addresses in the business card exchange. */
     MPIDI_OFI_global.num_nics = 1;
-    mpi_errno = open_fabric();
+
+    struct fi_info *prov = NULL;
+    mpi_errno = MPIDI_OFI_find_provider(&prov);
     MPIR_ERR_CHECK(mpi_errno);
+
+    /* init multi-nic and populates MPIDI_OFI_global.prov_use[] */
+    mpi_errno = MPIDI_OFI_init_multi_nic(prov);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    mpi_errno = update_global_limits(MPIDI_OFI_global.prov_use[0]);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
+        dump_global_settings();
+    }
+
+    /* Finally open the fabric */
+    MPIDI_OFI_CALL(fi_fabric(MPIDI_OFI_global.prov_use[0]->fabric_attr,
+                             &MPIDI_OFI_global.fabric, NULL), fabric);
 
     /* ------------------------------------------------------------------------ */
     /* Create transport level communication contexts.                           */
@@ -541,6 +557,7 @@ int MPIDI_OFI_init_local(int *tag_bits)
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
+    MPIDI_OFI_find_provider_cleanup();
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1033,10 +1050,6 @@ static int create_vni_context(int vni, int nic)
     goto fn_exit;
 }
 
-/* ---------------------------------------------------------- */
-/* Provider Selections and open_fabric()                      */
-/* ---------------------------------------------------------- */
-
 static int destroy_vni_context(int vni, int nic)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1285,71 +1298,9 @@ static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av)
     goto fn_exit;
 }
 
-static int open_fabric(void)
+static int update_global_limits(struct fi_info *prov)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct fi_info *prov_list = NULL;
-    struct fid_nic *nic;
-    int nic_count = 0;
-
-    /* First, find the provider and prepare the hints */
-    struct fi_info *hints = fi_allocinfo();
-    MPIR_Assert(hints != NULL);
-
-    mpi_errno = MPIDI_OFI_find_provider(hints);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(MPIDI_OFI_get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list),
-                   getinfo);
-
-    struct fi_info *prov = prov_list;
-    /* fi_getinfo may ignore the addr_format in hints, filter it again */
-    if (hints->addr_format != FI_FORMAT_UNSPEC) {
-        while (prov && prov->addr_format != hints->addr_format) {
-            prov = prov->next;
-        }
-    }
-    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
-        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
-    }
-
-    /* Third, update global settings */
-    if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_update_global_settings(prov, hints);
-    }
-
-    if (MPIR_CVAR_CH4_OFI_MAX_NICS == 0 || MPIR_CVAR_CH4_OFI_MAX_NICS <= -2) {
-        /* Invalid values for the CVAR will force using first
-         * fi_info structure returned by fi_getinfo */
-        MPIDI_OFI_setup_single_nic(prov);
-    } else {
-        struct fi_info *prov_iter = prov;
-        /* Count the number of NICs */
-        prov_iter = prov;
-        while (prov_iter && nic_count < MPIDI_OFI_MAX_NICS) {
-            nic = prov_iter->nic;
-            if (nic && nic->bus_attr->bus_type == FI_BUS_PCI &&
-                !MPIDI_OFI_nic_already_used(prov_iter, MPIDI_OFI_global.prov_use, nic_count)) {
-                MPIDI_OFI_global.prov_use[nic_count] = fi_dupinfo(prov_iter);
-                MPIR_Assert(MPIDI_OFI_global.prov_use[nic_count]);
-                nic_count++;
-            }
-            prov_iter = prov_iter->next;
-        }
-        if (nic_count == 0) {
-            /* If no NICs are detected, then force using first
-             * fi_info structure returned by fi_getinfo */
-            MPIDI_OFI_setup_single_nic(prov);
-        } else {
-            MPIDI_OFI_global.num_nics = nic_count;
-            MPIDI_OFI_setup_multi_nic();
-        }
-    }
-    MPIR_Assert(MPIDI_OFI_global.num_nics > 0);
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
@@ -1368,6 +1319,10 @@ static int open_fabric(void)
     MPIDI_OFI_global.rma_iov_limit = MIN(prov->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_OFI_global.max_mr_key_size = prov->domain_attr->mr_key_size;
 
+    /* Ensure that we aren't trying to shove too many bits into the match_bits.
+     * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
+    MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
+
     /* if using extended context id, check that selected provider can support it */
     MPIR_Assert(MPIR_CONTEXT_ID_BITS <= MPIDI_OFI_CONTEXT_BITS);
     /* Check that the desired number of ranks is possible and abort if not */
@@ -1375,31 +1330,11 @@ static int open_fabric(void)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && MPIR_Process.rank == 0) {
-        dump_global_settings();
-    }
-
-    /* Finally open the fabric */
-    MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
-
   fn_exit:
-    if (prov_list) {
-        fi_freeinfo(prov_list);
-    }
-
-    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
-    MPL_free(hints->fabric_attr->prov_name);
-    hints->fabric_attr->prov_name = NULL;
-    fi_freeinfo(hints);
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
-
-/* ---------------------------------------------------------- */
-/* Debug Routines                                             */
-/* ---------------------------------------------------------- */
 
 static void dump_global_settings(void)
 {
