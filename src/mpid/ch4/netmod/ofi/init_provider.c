@@ -75,10 +75,11 @@ static int find_provider(struct fi_info *hints)
     int ofi_version = MPIDI_OFI_get_fi_version();
 
     if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
+        MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, MPIR_CVAR_OFI_USE_PROVIDER);
     } else {
-        MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
-                                       MPIDI_OFI_SET_NAME_DEFAULT);
+        MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings,
+                                MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER :
+                                MPIDI_OFI_SET_NAME_DEFAULT);
     }
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
