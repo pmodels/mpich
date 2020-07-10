@@ -7,6 +7,32 @@
 #include "ofi_impl.h"
 #include "ofi_init.h"
 
+/* There are two configurations: with or without RUNTIME_CHECKS.
+ *
+ * 1. With RUNTIME_CHECKS.
+ *    Macros are redirected to fields in MPIDI_OFI_global.settings.
+ *    a. First, get a list of providers by fi_getinfo with NULL hints. Environment
+ *       variable FI_PROVIDER can be used to filter the list at libfabric layer.
+ *    b. Pick providers based on optimal and minimal settings, and provider name if
+ *       MPIR_CVAR_OFI_USE_PROVIDER is set. Global settings are not used at
+ *       this stage and remain uninitialized. The optimal settings are the
+ *       default set or the preset matching MPIR_CVAR_OFI_USE_PROVIDER.
+ *    c. The selected provider is used to initialize hints and get final providers.
+ *       c.1. Initialize global.settings with preset matching the selected provider name.
+ *       c.2. Init hints using global settings.
+ *       c.3. Use the hints to get final providers. This may take a
+ *            few tries, each time relaxing attributes such as tx_attr and
+ *            domain_attr.
+ *
+ * 2. Without RUNTIME_CHECKS, e.g configure --with-device=ch4:ofi:sockets.
+ *    The step a and step b described above is skipped, and step c is simplified,
+ *    Just initialize the hints and get the final providers.
+ *
+ * CVARs such as MPIR_CVAR_CH4_OFI_ENABLE_TAGGED should overwrite both optimal
+ * and minimal settings, thus effective in both provider selection and final
+ * global settings.
+ */
+
 static int find_provider(struct fi_info **prov_out);
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 
