@@ -7,6 +7,27 @@
 #include "ofi_impl.h"
 #include "ofi_init.h"
 
+/* There are 4 exposed functions in this file.
+ *
+ * MPIDI_OFI_init_settings -- copying static settings (matching prov_name)
+ * allowing override by MPIR_CVAR_CH4_OFI_ENABLE_xxx
+ *
+ * MPIDI_OFI_init_hints -- settings + hardcoded defaults -> fi_info
+ *
+ * MPIDI_OFI_match_provider -- settings compared against fi_info
+ *
+ * MPIDI_OFI_update_global_settings -- fi_info -> MPIDI_OFI_global.settings
+ *
+ * Note that there are 3 ways global settings and fi_info interact, with
+ * similar logic but with subtle differences.
+ *
+ * Note the conversion from settings to fi_info and fi_info to settings are
+ * incomplete in each way, both contains hard coded logics embedded in
+ * MPIDI_OFI_init_settings and MPIDI_OFI_init_hints.
+ *
+ * Thus, it is a complex business, good luck.
+ */
+
 /* Initializes hint structure based MPIDI_OFI_global.settings (or config macros) */
 void MPIDI_OFI_init_hints(struct fi_info *hints)
 {
