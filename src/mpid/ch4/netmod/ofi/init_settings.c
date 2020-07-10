@@ -261,11 +261,6 @@ bool MPIDI_OFI_match_global_settings(struct fi_info *prov)
     CHECK_CAP(MPIDI_OFI_ENABLE_TAGGED,
               !(prov->caps & FI_TAGGED) || prov->domain_attr->cq_data_size < 4);
 
-    /* OFI provider doesn't expose FI_DIRECTED_RECV by default for performance consideration.
-     * MPICH should request this flag to enable it. */
-    if (MPIDI_OFI_ENABLE_TAGGED)
-        prov->caps |= FI_DIRECTED_RECV;
-
     CHECK_CAP(MPIDI_OFI_ENABLE_AM,
               (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
