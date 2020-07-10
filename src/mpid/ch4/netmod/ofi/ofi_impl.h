@@ -25,6 +25,21 @@
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
+int MPIDI_OFI_find_provider(struct fi_info *hints);
+void MPIDI_OFI_init_hints(struct fi_info *hints);
+void MPIDI_OFI_init_global_settings(const char *prov_name);
+bool MPIDI_OFI_match_global_settings(struct fi_info *prov);
+void MPIDI_OFI_update_global_settings(struct fi_info *prov, struct fi_info *hints);
+void MPIDI_OFI_dump_global_settings(void);
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_fi_version(void)
+{
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+        return FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+    else
+        return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
+}
+
 /* Get op index.
  * TODO: OP_NULL is the oddball. Change configure to table this correctly */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
