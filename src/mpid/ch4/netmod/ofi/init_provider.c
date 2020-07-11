@@ -114,9 +114,10 @@ static int find_provider(struct fi_info **prov_out)
             ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
         }
         if (ret || prov_list == NULL) {
-            /* some provider still expects FI_MR_BASIC */
             if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
                 hints->domain_attr->mr_mode = FI_MR_BASIC;
+            } else if (prov->domain_attr->mr_mode & FI_MR_SCALABLE) {
+                hints->domain_attr->mr_mode = FI_MR_SCALABLE;
             }
             ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
         }

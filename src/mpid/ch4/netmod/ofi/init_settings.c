@@ -127,9 +127,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
 #endif
-        /* avoid using FI_MR_SCALABLE and FI_MR_BASIC because they are only
-         * for backward compatibility (pre OFI version 1.5), and they don't allow any other
-         * mode bits to be added */
+
 #ifdef FI_MR_VIRT_ADDR
         if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
             hints->domain_attr->mr_mode |= FI_MR_VIRT_ADDR;
@@ -148,10 +146,16 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         }
 #endif
     } else {
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE)
-            hints->domain_attr->mr_mode = FI_MR_SCALABLE;
-        else
+        /* In old versions FI_MR_BASIC is equivallent to set
+         * FI_MR_VIRT_ADDR, FI_MR_PROV_KEY, and FI_MR_ALLOCATED on.
+         * FI_MR_SCALABLE is equivallent to all bits off in newer versions.
+         */
+        MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_PROV_KEY);
+        if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
             hints->domain_attr->mr_mode = FI_MR_BASIC;
+        } else {
+            hints->domain_attr->mr_mode = FI_MR_SCALABLE;
+        }
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
@@ -204,22 +208,10 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
      * and fall back if necessary in the RMA init code */
     UPDATE_SETTING_BY_CAP(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
 
-    /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
-     * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
-     * being used. */
-    if (MPIDI_OFI_get_ofi_version() < FI_VERSION(1, 5)) {
-        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS, FI_MR_ALLOCATED, and FI_MR_PROV_KEY as the opposite values. */
-        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
-        MPIDI_OFI_global.settings.enable_mr_virt_address =
-            MPIDI_OFI_global.settings.enable_mr_prov_key =
-            MPIDI_OFI_global.settings.enable_mr_allocated =
-            !MPIDI_OFI_global.settings.enable_mr_virt_address;
-    } else {
-        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
-        UPDATE_SETTING_BY_CAP(enable_mr_allocated, MPIR_CVAR_CH4_OFI_ENABLE_MR_ALLOCATED);
-        UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
-    }
+    UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
+    UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
+    UPDATE_SETTING_BY_CAP(enable_mr_allocated, MPIR_CVAR_CH4_OFI_ENABLE_MR_ALLOCATED);
+
     UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
     UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
     UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
@@ -313,6 +305,8 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
     MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
+#define UPDATE_SETTING_BY_INFO_DIRECT(cap, info_cond) \
+    MPIDI_OFI_global.settings.cap = !!(info_cond)
 
 void MPIDI_OFI_update_global_settings(struct fi_info *prov)
 {
@@ -323,22 +317,14 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
     UPDATE_SETTING_BY_INFO(enable_scalable_endpoints,
                            prov->domain_attr->max_ep_tx_ctx > 1 &&
                            (prov->caps & FI_NAMED_RX_CTX) == FI_NAMED_RX_CTX);
-    /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
-     * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
-     * being used. */
-    if (MPIDI_OFI_get_ofi_version() < FI_VERSION(1, 5)) {
-        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS, FI_MR_ALLOCATED, and FI_MR_PROV_KEY as the opposite values. */
-        UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov->domain_attr->mr_mode != FI_MR_SCALABLE);
-        UPDATE_SETTING_BY_INFO(enable_mr_allocated, prov->domain_attr->mr_mode != FI_MR_SCALABLE);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode != FI_MR_SCALABLE);
-    } else {
-        UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
-        UPDATE_SETTING_BY_INFO(enable_mr_allocated, prov->domain_attr->mr_mode & FI_MR_ALLOCATED);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode & FI_MR_PROV_KEY);
-    }
+    /* NOTE: As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated.
+     * FI_MR_BASIC is equivallent to FI_MR_VIRT_ADDR|FI_MR_ALLOCATED|FI_MR_PROV_KEY */
+    UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_virt_address,
+                                  prov->domain_attr->mr_mode & (FI_MR_VIRT_ADDR | FI_MR_BASIC));
+    UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_prov_key,
+                                  prov->domain_attr->mr_mode & (FI_MR_PROV_KEY | FI_MR_BASIC));
+    UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_allocated,
+                                  prov->domain_attr->mr_mode & (FI_MR_ALLOCATED | FI_MR_BASIC));
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov->caps & FI_TAGGED) &&
                            (prov->caps & FI_DIRECTED_RECV) &&
