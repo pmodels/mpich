@@ -7,10 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_init.h"
 
-/* find best matching provider and populate hints */
-static int find_provider(struct fi_info *hints);
-
-/* picks one matching provider from the list or return NULL */
+static int find_provider(struct fi_info **prov_out);
 static struct fi_info *pick_provider_from_list(const char *provname, struct fi_info *prov_list);
 
 /* Need hold prov_list until we done setting up multi-nic */
@@ -27,65 +24,38 @@ int MPIDI_OFI_find_provider(struct fi_info **prov_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* First, find the provider and prepare the hints */
-    struct fi_info *hints = fi_allocinfo();
-    MPIR_Assert(hints != NULL);
-
-    mpi_errno = find_provider(hints);
+    mpi_errno = find_provider(prov_out);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(MPIDI_OFI_get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list),
-                   getinfo);
-
-    struct fi_info *prov = prov_list;
-    /* fi_getinfo may ignore the addr_format in hints, filter it again */
-    if (hints->addr_format != FI_FORMAT_UNSPEC) {
-        while (prov && prov->addr_format != hints->addr_format) {
-            prov = prov->next;
-        }
-    }
-    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
-        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
-                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
-    }
-
-    /* some hints need to be reset */
-    MPIDI_OFI_set_auto_progress(prov);
-
-    /* Third, update global settings */
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_update_global_settings(prov);
+        MPIDI_OFI_update_global_settings(*prov_out);
     }
-
-    MPIR_Assert(prov);
-    *prov_out = prov;
 
   fn_exit:
-    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
-    MPL_free(hints->fabric_attr->prov_name);
-    hints->fabric_attr->prov_name = NULL;
-    fi_freeinfo(hints);
-
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-/* Pick best matching provider and populate the hints accordingly */
-static int find_provider(struct fi_info *hints)
+/* find best matching provider */
+static int find_provider(struct fi_info **prov_out)
 {
     int mpi_errno = MPI_SUCCESS;
 
     const char *provname = MPIR_CVAR_OFI_USE_PROVIDER;
     int ofi_version = MPIDI_OFI_get_ofi_version();
 
+    int ret;                    /* return from fi_getinfo() */
+
+    struct fi_info *hints = fi_allocinfo();
+    MPIR_Assert(hints != NULL);
+
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        struct fi_info *prov_list, *prov;
+        /* NOTE: prov_list should not be freed until we initialize multi-nic */
         MPIDI_OFI_CALL(fi_getinfo(ofi_version, NULL, NULL, 0ULL, NULL, &prov_list), getinfo);
 
+        /* Pick a best matching provider and use it to refine hints */
+        struct fi_info *prov;
         prov = pick_provider_from_list(provname, prov_list);
 
         MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
@@ -98,17 +68,35 @@ static int find_provider(struct fi_info *hints)
 
         /* Initialize MPIDI_OFI_global.settings */
         MPIDI_OFI_init_settings(&MPIDI_OFI_global.settings, provname);
-        /* FIXME: this fills the hints with optimal settings. In order to work for providers
+        /* NOTE: we fill the hints with optimal settings. In order to work for providers
          * that support halfway between minimal and optimal, we need try-loop to systematically
-         * relax settings.
+         * relax settings. The following code does this for the providers that we have tested.
          */
-        /* Initialize hints based on MPIDI_OFI_global.settings */
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = MPL_strdup(prov->fabric_attr->prov_name);
         hints->caps = prov->caps;
         hints->addr_format = prov->addr_format;
 
-        fi_freeinfo(prov_list);
+        /* Now we have the hints with best matched provider, get the new prov_list */
+        struct fi_info *old_prov_list = prov_list;
+
+        /* First try with the initial (optimal) hints */
+        ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        if (ret || prov_list == NULL) {
+            /* relax msg_order */
+            hints->tx_attr->msg_order = prov->tx_attr->msg_order;
+            ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        }
+        if (ret || prov_list == NULL) {
+            /* some provider still expects FI_MR_BASIC */
+            if (prov->domain_attr->mr_mode & FI_MR_BASIC) {
+                hints->domain_attr->mr_mode = FI_MR_BASIC;
+            }
+            ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        }
+        /* free the old one, the new one will be freed in MPIDI_OFI_find_provider_cleanup */
+        fi_freeinfo(old_prov_list);
+        MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     } else {
         /* Make sure that the user-specified provider matches the configure-specified provider. */
         MPIR_ERR_CHKANDJUMP(provname != NULL &&
@@ -117,8 +105,24 @@ static int find_provider(struct fi_info *hints)
         /* Initialize hints based on configure time macros) */
         MPIDI_OFI_init_hints(hints);
         hints->fabric_attr->prov_name = provname ? MPL_strdup(provname) : NULL;
+
+        ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov_list);
+        MPIR_ERR_CHKANDJUMP(prov_list == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
+
+        int set_number = MPIDI_OFI_get_set_number(prov_list->fabric_attr->prov_name);
+        MPIR_ERR_CHKANDJUMP(MPIDI_OFI_SET_NUMBER != set_number,
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
+
+    MPIDI_OFI_set_auto_progress(prov_list);
+    *prov_out = prov_list;
+
   fn_exit:
+    /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
+    MPL_free(hints->fabric_attr->prov_name);
+    hints->fabric_attr->prov_name = NULL;
+    fi_freeinfo(hints);
+
     return mpi_errno;
   fn_fail:
     goto fn_exit;
