@@ -252,7 +252,6 @@ typedef struct {
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
     unsigned enable_shared_contexts:1;
-    unsigned enable_mr_scalable:1;
     unsigned enable_mr_virt_address:1;
     unsigned enable_mr_allocated:1;
     unsigned enable_mr_prov_key:1;
