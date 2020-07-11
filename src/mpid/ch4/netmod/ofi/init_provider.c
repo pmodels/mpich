@@ -77,9 +77,11 @@ static int find_provider(void)
             ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov);
         }
         if (ret || prov == NULL) {
-            /* some provider still expects FI_MR_BASIC */
+            /* some provider still expects FI_MR_BASIC and FI_MR_SCALABLE */
             if (prov_use->domain_attr->mr_mode & FI_MR_BASIC) {
                 hints->domain_attr->mr_mode = FI_MR_BASIC;
+            } else if (prov_use->domain_attr->mr_mode & FI_MR_SCALABLE) {
+                hints->domain_attr->mr_mode = FI_MR_SCALABLE;
             }
             ret = fi_getinfo(ofi_version, NULL, NULL, 0ULL, hints, &prov);
         }

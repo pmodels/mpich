@@ -300,8 +300,9 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
         UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode != FI_MR_SCALABLE);
     } else {
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode & FI_MR_PROV_KEY);
+                               prov->domain_attr->mr_mode & (FI_MR_VIRT_ADDR | FI_MR_BASIC));
+        UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
+                               prov->domain_attr->mr_mode & (FI_MR_PROV_KEY | FI_MR_BASIC));
     }
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov->caps & FI_TAGGED) &&
