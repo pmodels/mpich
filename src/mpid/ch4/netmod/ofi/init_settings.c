@@ -177,10 +177,11 @@ void MPIDI_OFI_init_global_settings(const char *prov_name)
     if (MPIDI_OFI_get_fi_version() < FI_VERSION(1, 5)) {
         /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
          * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
-        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
+        UPDATE_SETTING_BY_CAP(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
         MPIDI_OFI_global.settings.enable_mr_virt_address =
-            MPIDI_OFI_global.settings.enable_mr_prov_key =
-            !MPIDI_OFI_global.settings.enable_mr_virt_address;
+            !MPIDI_OFI_global.settings.enable_mr_scalable;
+        MPIDI_OFI_global.settings.enable_mr_prov_key =
+            !MPIDI_OFI_global.settings.enable_mr_scalable;
     } else {
         UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
         UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
