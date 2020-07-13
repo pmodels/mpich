@@ -192,7 +192,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     /* Don't register MR for NULL buffer, because FI_MR_BASIC mode requires
      * that all registered memory regions must be backed by physical memory
      * pages at the time the registration call is made. */
-    if ((!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) || base) {
+    if ((!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) && base) {
         MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
                                  base,  /* In:  Lower memory address */
                                  win->size,     /* In:  Length              */
