@@ -189,10 +189,17 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
-    /* Don't register MR for NULL buffer, because FI_MR_BASIC mode requires
-     * that all registered memory regions must be backed by physical memory
-     * pages at the time the registration call is made. */
-    if ((!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) || base) {
+    /* It is unclear whether we can register NULL and what that means even in the case
+     * we can. So until there is clear documentation, we take the conservative measure
+     * and do not register a NULL base. */
+
+    /* Implication for dynamic window: since we are not registering mr here, we currently
+     * always fall-back to active messages for dynamic window. In any way, dynamic window
+     * probably will need per-attachment registration and a mechanism for dynamic
+     * synchronization to work with direct RMA. That is difficult without extra sematics or
+     * hints, unfortunately. Until then, we fall back. */
+
+    if (base) {
         MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
                                  base,  /* In:  Lower memory address */
                                  win->size,     /* In:  Length              */
