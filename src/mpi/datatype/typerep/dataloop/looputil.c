@@ -900,7 +900,7 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
         /* add this size to the last vector rather than using up another one */
         paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
     } else {
-        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (void *) ((intptr_t) bufp + rel_off);
         paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
         paramp->u.pack_vector.index++;
     }
@@ -989,7 +989,8 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
             /* add this size to the last vector rather than using up new one */
             paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
         } else {
-            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base =
+                (void *) ((intptr_t) bufp + rel_off);
             paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
             paramp->u.pack_vector.index++;
         }
