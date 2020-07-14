@@ -60,20 +60,6 @@ cvars:
         Otherwise, MPICH tries to use OFI shared contexts. If they are unavailable,
         it'll fall back to the mode without shared contexts.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE
-      category    : CH4_OFI
-      type        : int
-      default     : -1
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        This variable is only provided for backward compatibility. When using OFI versions 1.5+, use
-        the other memory region variables.
-
-        If true, MR_SCALABLE for OFI memory regions.
-        If false, MR_BASIC for OFI memory regions.
-
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS
       category    : CH4_OFI
       type        : int

@@ -135,9 +135,7 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
 #ifdef FI_RESTRICTED_COMP
         hints->domain_attr->mode = FI_RESTRICTED_COMP;
 #endif
-        /* avoid using FI_MR_SCALABLE and FI_MR_BASIC because they are only
-         * for backward compatibility (pre OFI version 1.5), and they don't allow any other
-         * mode bits to be added */
+
 #ifdef FI_MR_VIRT_ADDR
         if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
             hints->domain_attr->mr_mode |= FI_MR_VIRT_ADDR | FI_MR_ALLOCATED;
@@ -150,10 +148,12 @@ void MPIDI_OFI_init_hints(struct fi_info *hints)
         }
 #endif
     } else {
-        if (MPIDI_OFI_ENABLE_MR_SCALABLE)
-            hints->domain_attr->mr_mode = FI_MR_SCALABLE;
-        else
+        /* old versions only support FI_MR_BASIC */
+        MPIR_Assert(MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS == MPIDI_OFI_ENABLE_MR_PROV_KEY);
+        if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS)
             hints->domain_attr->mr_mode = FI_MR_BASIC;
+        else
+            hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
@@ -192,21 +192,9 @@ void MPIDI_OFI_init_settings(MPIDI_OFI_capabilities_t * p_settings, const char *
      * and fall back if necessary in the RMA init code */
     UPDATE_SETTING_BY_CAP(enable_shared_contexts, MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS);
 
-    /* As of OFI version 1.5, FI_MR_SCALABLE and FI_MR_BASIC are deprecated. Internally, we now use
-     * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
-     * being used. */
-    if (MPIDI_OFI_get_fi_version() < FI_VERSION(1, 5)) {
-        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
-        UPDATE_SETTING_BY_CAP(enable_mr_scalable, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
-        MPIDI_OFI_global.settings.enable_mr_virt_address =
-            !MPIDI_OFI_global.settings.enable_mr_scalable;
-        MPIDI_OFI_global.settings.enable_mr_prov_key =
-            !MPIDI_OFI_global.settings.enable_mr_scalable;
-    } else {
-        UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
-        UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
-    }
+    UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
+    UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
+
     UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
     UPDATE_SETTING_BY_CAP(enable_am, MPIR_CVAR_CH4_OFI_ENABLE_AM);
     UPDATE_SETTING_BY_CAP(enable_rma, MPIR_CVAR_CH4_OFI_ENABLE_RMA);
@@ -316,8 +304,6 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
      * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY so set them appropriately depending on the OFI version
      * being used. */
     if (MPIDI_OFI_get_fi_version() < FI_VERSION(1, 5)) {
-        /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
         UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_virt_address,
                                       prov->domain_attr->mr_mode & FI_MR_BASIC);
         UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_prov_key, prov->domain_attr->mr_mode & FI_MR_BASIC);
@@ -373,7 +359,6 @@ void MPIDI_OFI_dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
             MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
-    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS: %d\n", MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_PROV_KEY: %d\n", MPIDI_OFI_ENABLE_MR_PROV_KEY);
     fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
