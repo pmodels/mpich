@@ -2936,10 +2936,8 @@ else
     AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_long_double,[Controls byte alignment of structures (for aligning allocated structures)])
 fi
 
-# Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)
-if test "$host_cpu" = "sparc" ; then
-    AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
-fi
+# we need observe strict alignment to pass ubsan check
+AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
 
 # There are further alignment checks after we test for int64_t etc. below.
 
