@@ -216,10 +216,10 @@ static int get_port_name_tag(int * port_name_tag)
 	 * OR'ed bit was originally 1 (used); otherwise, it was
 	 * originally 0 (free). */
 	for (j = 0; j < (8 * sizeof(int)); j++) {
-	    if ((port_name_tag_mask[i] | (1 << ((8 * sizeof(int)) - j - 1))) !=
+	    if ((port_name_tag_mask[i] | (1U << ((8 * sizeof(int)) - j - 1))) !=
 		port_name_tag_mask[i]) {
 		/* Mark the appropriate bit as used and return that */
-		port_name_tag_mask[i] |= (1 << ((8 * sizeof(int)) - j - 1));
+		port_name_tag_mask[i] |= (1U << ((8 * sizeof(int)) - j - 1));
 		*port_name_tag = ((i * 8 * (int)sizeof(int)) + j);
 		goto fn_exit;
 	    }
@@ -246,7 +246,7 @@ static void free_port_name_tag(int tag)
     idx = tag / ((int)sizeof(int) * 8);
     rem_tag = tag - (int)(idx * sizeof(int) * 8);
 
-    port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+    port_name_tag_mask[idx] &= ~(1U << ((8 * sizeof(int)) - 1 - rem_tag));
 }
 
 /*
