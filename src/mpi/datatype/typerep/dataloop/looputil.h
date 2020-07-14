@@ -366,34 +366,34 @@ static inline void BASIC_convert128(const char *src, char *dest)
 #endif
 
 #ifdef HAVE_INT16_T
-#define TWO_BYTE_BASIC_TYPE int16_t
+#define TWO_BYTE_BASIC_TYPE uint16_t
 #else
 #if (SIZEOF_SHORT == 2)
-#define TWO_BYTE_BASIC_TYPE short
+#define TWO_BYTE_BASIC_TYPE unsigned short
 #else
 #error "Cannot detect a basic type that is 2 bytes long"
 #endif
 #endif /* HAVE_INT16_T */
 
 #ifdef HAVE_INT32_T
-#define FOUR_BYTE_BASIC_TYPE int32_t
+#define FOUR_BYTE_BASIC_TYPE uint32_t
 #else
 #if (SIZEOF_INT == 4)
-#define FOUR_BYTE_BASIC_TYPE int
+#define FOUR_BYTE_BASIC_TYPE unsigned int
 #elif (SIZEOF_LONG == 4)
-#define FOUR_BYTE_BASIC_TYPE long
+#define FOUR_BYTE_BASIC_TYPE unsigned long
 #else
 #error "Cannot detect a basic type that is 4 bytes long"
 #endif
 #endif /* HAVE_INT32_T */
 
 #ifdef HAVE_INT64_T
-#define EIGHT_BYTE_BASIC_TYPE int64_t
+#define EIGHT_BYTE_BASIC_TYPE uint64_t
 #else
 #ifdef HAVE_INT64
-#define EIGHT_BYTE_BASIC_TYPE __int64
+#define EIGHT_BYTE_BASIC_TYPE unsigned __int64
 #elif (SIZEOF_LONG_LONG == 8)
-#define EIGHT_BYTE_BASIC_TYPE long long
+#define EIGHT_BYTE_BASIC_TYPE unsigned long long
 #else
 #error "Cannot detect a basic type that is 8 bytes long"
 #endif
