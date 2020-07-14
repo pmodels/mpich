@@ -300,6 +300,8 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 
 #define UPDATE_SETTING_BY_INFO(cap, info_cond) \
     MPIDI_OFI_global.settings.cap = MPIDI_OFI_global.settings.cap && info_cond
+#define UPDATE_SETTING_BY_INFO_DIRECT(cap, info_cond) \
+    MPIDI_OFI_global.settings.cap = !!(info_cond)
 
 void MPIDI_OFI_update_global_settings(struct fi_info *prov)
 {
@@ -316,14 +318,14 @@ void MPIDI_OFI_update_global_settings(struct fi_info *prov)
     if (MPIDI_OFI_get_fi_version() < FI_VERSION(1, 5)) {
         /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
          * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
-        UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov->domain_attr->mr_mode != FI_MR_SCALABLE);
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov->domain_attr->mr_mode != FI_MR_SCALABLE);
+        UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_virt_address,
+                                      prov->domain_attr->mr_mode & FI_MR_BASIC);
+        UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_prov_key, prov->domain_attr->mr_mode & FI_MR_BASIC);
     } else {
-        UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
-                               prov->domain_attr->mr_mode & (FI_MR_VIRT_ADDR | FI_MR_BASIC));
-        UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
-                               prov->domain_attr->mr_mode & (FI_MR_PROV_KEY | FI_MR_BASIC));
+        UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_virt_address,
+                                      prov->domain_attr->mr_mode & (FI_MR_VIRT_ADDR | FI_MR_BASIC));
+        UPDATE_SETTING_BY_INFO_DIRECT(enable_mr_prov_key,
+                                      prov->domain_attr->mr_mode & (FI_MR_PROV_KEY | FI_MR_BASIC));
     }
     UPDATE_SETTING_BY_INFO(enable_tagged,
                            (prov->caps & FI_TAGGED) &&
