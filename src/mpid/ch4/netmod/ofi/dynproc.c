@@ -122,6 +122,12 @@ static int dynproc_send_disconnect(MPIDI_OFI_conn_t * conn)
                                              FI_REMOTE_CQ_DATA), 0, tsendmsg, FALSE);
         MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req.done);
 
+        /* HACK: some provider, e.g. verbs;ofi_rxm will lose the message if it exits before
+         * target receive is posted. It obviously is a provider bug, but let's wait a little
+         * to be sure -- it is halmless since we are exiting */
+        /* *INDENT-OFF* */
+        nanosleep(&(struct timespec){1, 0}, NULL);
+        /* *INDENT-ON* */
         conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
     }
 
