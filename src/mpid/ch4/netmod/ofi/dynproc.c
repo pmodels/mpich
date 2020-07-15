@@ -6,7 +6,8 @@
 #include "mpidimpl.h"
 #include "ofi_impl.h"
 
-static int dynproc_send_disconnect(int conn_id);
+static int dynproc_send_disconnect(MPIDI_OFI_conn_t * conn);
+static int dynproc_recv_disconnect(MPIDI_OFI_conn_t * conn);
 
 int MPIDI_OFI_dynproc_init(void)
 {
@@ -46,68 +47,33 @@ int MPIDI_OFI_dynproc_init(void)
 
 int MPIDI_OFI_dynproc_finalize(void)
 {
-    int mpi_errno = MPI_SUCCESS, i, j;
-    MPIDI_OFI_dynamic_process_request_t *req;
-    fi_addr_t *conn;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_OFI_DYNPROC_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_OFI_DYNPROC_FINALIZE);
+
     int max_n_conn = MPIDI_OFI_global.conn_mgr.max_n_conn;
-    int *close_msg;
-    uint64_t match_bits = 0;
-    uint64_t mask_bits = 0;
-    MPIR_Context_id_t context_id = 0xF000;
-    MPIR_CHKLMEM_DECL(3);
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_DESTROY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_DESTROY);
-
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
-    match_bits |= MPIDI_OFI_DYNPROC_SEND;
-
     if (max_n_conn > 0) {
-        /* try wait/close connections */
-        MPIR_CHKLMEM_MALLOC(req, MPIDI_OFI_dynamic_process_request_t *,
-                            max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t), mpi_errno,
-                            "req", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(conn, fi_addr_t *, max_n_conn * sizeof(fi_addr_t), mpi_errno, "conn",
-                            MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(close_msg, int *, max_n_conn * sizeof(int), mpi_errno, "int",
-                            MPL_MEM_BUFFER);
-
-        j = 0;
-        for (i = 0; i < max_n_conn; ++i) {
-            switch (MPIDI_OFI_global.conn_mgr.conn_list[i].state) {
-                case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-                    mpi_errno = dynproc_send_disconnect(i);
-                    MPIR_ERR_CHECK(mpi_errno);
-                    break;
-                case MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT:
-                case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-                    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                                    (MPL_DBG_FDEST, "Wait for close of conn_id=%d", i));
-                    conn[j] = MPIDI_OFI_global.conn_mgr.conn_list[i].dest;
-                    req[j].done = 0;
-                    req[j].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-                    MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,
-                                                  &close_msg[j],
-                                                  sizeof(int),
-                                                  NULL,
-                                                  conn[j],
-                                                  match_bits,
-                                                  mask_bits, &req[j].context), 0, trecv, FALSE);
-                    j++;
-                    break;
-                default:
-                    break;
+        for (int i = 0; i < max_n_conn; ++i) {
+            MPIDI_OFI_conn_t *conn = &MPIDI_OFI_global.conn_mgr.conn_list[i];
+            if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+                mpi_errno = dynproc_send_disconnect(conn);
+                MPIR_ERR_CHECK(mpi_errno);
+            } else if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
+                mpi_errno = dynproc_recv_disconnect(conn);
+                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
-        for (i = 0; i < j; ++i) {
-            MPIDI_OFI_PROGRESS_WHILE(!req[i].done, 0);
-            MPIDI_OFI_global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                            (MPL_DBG_FDEST, "conn_id=%d closed", i));
+        for (int i = 0; i < max_n_conn; ++i) {
+            MPIDI_OFI_conn_t *conn = &MPIDI_OFI_global.conn_mgr.conn_list[i];
+            if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
+                MPIDI_OFI_PROGRESS_WHILE(!conn->close_req.done, 0);
+                conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                                (MPL_DBG_FDEST, "conn_id=%d closed", i));
+            }
         }
-
-        MPIR_CHKLMEM_FREEALL();
     }
 
     MPL_munmap((void *) MPIDI_OFI_global.conn_mgr.conn_list, MPIDI_OFI_global.conn_mgr.mmapped_size,
@@ -115,13 +81,13 @@ int MPIDI_OFI_dynproc_finalize(void)
     MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_OFI_DYNPROC_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static int dynproc_send_disconnect(int conn_id)
+static int dynproc_send_disconnect(MPIDI_OFI_conn_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -135,10 +101,9 @@ static int dynproc_send_disconnect(int conn_id)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_SEND_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_SEND_DISCONNECT);
 
-    if (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+    if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
-                         conn_id));
+                        (MPL_DBG_FDEST, " [%p] send disconnect msg from child side", conn));
         match_bits = MPIDI_OFI_init_sendtag(context_id, 1, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
@@ -150,7 +115,7 @@ static int dynproc_send_disconnect(int conn_id)
         msg.msg_iov = &msg_iov;
         msg.desc = NULL;
         msg.iov_count = 0;
-        msg.addr = MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest;
+        msg.addr = conn->dest;
         msg.tag = match_bits;
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
@@ -159,27 +124,45 @@ static int dynproc_send_disconnect(int conn_id)
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
                              0, tsendmsg, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
-    }
 
-    switch (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state) {
-        case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
-                MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
-            break;
-        case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-            MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state =
-                MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
-            break;
-        default:
-            break;
+        conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
     }
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
-                     conn_id, MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_SEND_DISCONNECT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int dynproc_recv_disconnect(MPIDI_OFI_conn_t * conn)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DYNPROC_RECV_DISCONNECT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DYNPROC_RECV_DISCONNECT);
+
+    if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
+        MPIR_Context_id_t context_id = 0xF000;
+        uint64_t match_bits = 0;
+        uint64_t mask_bits = 0;
+
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, " [%p] recv disconnect msg from parent side", conn));
+
+        match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, 1);
+        match_bits |= MPIDI_OFI_DYNPROC_SEND;
+
+        conn->close_req.done = 0;
+        conn->close_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx, &conn->close_msg, sizeof(int),
+                                      NULL, conn->dest, match_bits, mask_bits,
+                                      &conn->close_req.context), 0, trecv, FALSE);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DYNPROC_RECV_DISCONNECT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

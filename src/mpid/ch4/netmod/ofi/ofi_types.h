@@ -312,6 +312,8 @@ typedef struct {
     fi_addr_t dest;
     int rank;
     int state;
+    MPIDI_OFI_dynamic_process_request_t close_req;
+    int close_msg;
 } MPIDI_OFI_conn_t;
 
 typedef struct MPIDI_OFI_conn_manager_t {
