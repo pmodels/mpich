@@ -440,7 +440,6 @@ int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
 
 static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s * dnode)
 {
-    void *val;
     gavl_tree_node_s *inorder_node;
 
     if (dnode->right == NULL) {
@@ -467,8 +466,10 @@ static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s *
 
             TREE_STACK_PUSH(tree_ptr, inorder_node);
         }
-        val = (void *) dnode->val;
     } else {
+        const void *tmp_val;
+        uintptr_t tmp_addr, tmp_len;
+
         /* find the next inorder node and move its buffer objects to dnode;
          * the original buffer object in dnode is freed */
         inorder_node = dnode->right;
@@ -488,17 +489,23 @@ static void gavl_tree_delete_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s *
         } else {
             dnode->right = NULL;
         }
-        val = (void *) dnode->val;
-        /* move inorder_node's buffer object to dnode and then free inorder_node */
+
+        /* exchange inorder_node with dnode and then free dnode */
+        tmp_val = dnode->val;
+        tmp_addr = dnode->addr;
+        tmp_len = dnode->len;
         dnode->addr = inorder_node->addr;
         dnode->len = inorder_node->len;
         dnode->val = inorder_node->val;
+        inorder_node->addr = tmp_addr;
+        inorder_node->len = tmp_len;
+        inorder_node->val = tmp_val;
         dnode = inorder_node;
     }
 
     /* free object using user-provided free function */
     if (tree_ptr->gavl_free_fn)
-        tree_ptr->gavl_free_fn(val);
+        tree_ptr->gavl_free_fn(dnode->val);
     MPL_free(dnode);
 
     /* update stack for the consequent rebalance which will start from the top of
