@@ -59,9 +59,6 @@ int MPIDI_OFI_dynproc_finalize(void)
             if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
                 mpi_errno = dynproc_send_disconnect(conn);
                 MPIR_ERR_CHECK(mpi_errno);
-            } else if (conn->state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
-                mpi_errno = dynproc_recv_disconnect(conn);
-                MPIR_ERR_CHECK(mpi_errno);
             }
         }
 
@@ -201,6 +198,10 @@ int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state)
     MPIDI_OFI_global.conn_mgr.conn_list[conn_id].dest = conn;
     MPIDI_OFI_global.conn_mgr.conn_list[conn_id].rank = rank;
     MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state = state;
+    if (state == MPIDI_OFI_DYNPROC_CONNECTED_PARENT) {
+        int mpi_errno = dynproc_recv_disconnect(&MPIDI_OFI_global.conn_mgr.conn_list[conn_id]);
+        MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
