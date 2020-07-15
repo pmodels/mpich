@@ -117,10 +117,10 @@ static int dynproc_send_disconnect(MPIDI_OFI_conn_t * conn)
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
         msg.data = 0;
-        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
-                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
-                             0, tsendmsg, FALSE);
-        MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
+        MPIDI_OFI_VCI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
+                                             FI_COMPLETION | FI_TRANSMIT_COMPLETE |
+                                             FI_REMOTE_CQ_DATA), 0, tsendmsg, FALSE);
+        MPIDI_OFI_VCI_PROGRESS_WHILE(0, !req.done);
 
         conn->state = MPIDI_OFI_DYNPROC_DISCONNECTED;
     }
@@ -153,9 +153,9 @@ static int dynproc_recv_disconnect(MPIDI_OFI_conn_t * conn)
         conn->close_req.done = 0;
         conn->close_req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx, &conn->close_msg, sizeof(int),
-                                      NULL, conn->dest, match_bits, mask_bits,
-                                      &conn->close_req.context), 0, trecv, FALSE);
+        MPIDI_OFI_VCI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx, &conn->close_msg, sizeof(int),
+                                          NULL, conn->dest, match_bits, mask_bits,
+                                          &conn->close_req.context), 0, trecv, FALSE);
     }
 
   fn_exit:
