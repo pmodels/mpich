@@ -97,6 +97,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "numblks %d, blklen %d, displs (",
                               attr->u.blkindx.numblks, attr->u.blkindx.blklen);
                 for (int j = 0; j < attr->u.blkindx.numblks; j++) {
+                    if (j >= 10 && j < attr->u.blkindx.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.blkindx.array_of_displs[j]);
                     if (j < attr->u.blkindx.numblks - 1)
@@ -109,6 +115,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "numblks %d, blklen %d, displs (",
                               attr->u.blkhindx.numblks, attr->u.blkhindx.blklen);
                 for (int j = 0; j < attr->u.blkhindx.numblks; j++) {
+                    if (j >= 10 && j < attr->u.blkhindx.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%zd",
                                   attr->u.blkhindx.array_of_displs[j]);
                     if (j < attr->u.blkhindx.numblks - 1)
@@ -121,6 +133,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "numblks %d, blklens (",
                               attr->u.indexed.numblks);
                 for (int j = 0; j < attr->u.indexed.numblks; j++) {
+                    if (j >= 10 && j < attr->u.indexed.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.indexed.array_of_blklens[j]);
                     if (j < attr->u.indexed.numblks - 1)
@@ -128,6 +146,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 }
                 DTPI_snprintf(rc, desc, desclen, maxlen, "), displs (");
                 for (int j = 0; j < attr->u.indexed.numblks; j++) {
+                    if (j >= 10 && j < attr->u.indexed.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.indexed.array_of_displs[j]);
                     if (j < attr->u.indexed.numblks - 1)
@@ -140,6 +164,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "numblks %d, blklens (",
                               attr->u.hindexed.numblks);
                 for (int j = 0; j < attr->u.hindexed.numblks; j++) {
+                    if (j >= 10 && j < attr->u.hindexed.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.hindexed.array_of_blklens[j]);
                     if (j < attr->u.hindexed.numblks - 1)
@@ -147,6 +177,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 }
                 DTPI_snprintf(rc, desc, desclen, maxlen, "), displs (");
                 for (int j = 0; j < attr->u.hindexed.numblks; j++) {
+                    if (j >= 10 && j < attr->u.hindexed.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%zd",
                                   attr->u.hindexed.array_of_displs[j]);
                     if (j < attr->u.hindexed.numblks - 1)
@@ -159,6 +195,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "ndims %d, sizes (",
                               attr->u.subarray.ndims);
                 for (int j = 0; j < attr->u.subarray.ndims; j++) {
+                    if (j >= 10 && j < attr->u.subarray.ndims - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.subarray.array_of_sizes[j]);
                     if (j < attr->u.subarray.ndims - 1)
@@ -166,6 +208,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 }
                 DTPI_snprintf(rc, desc, desclen, maxlen, "), subsizes (");
                 for (int j = 0; j < attr->u.subarray.ndims; j++) {
+                    if (j >= 10 && j < attr->u.subarray.ndims - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.subarray.array_of_subsizes[j]);
                     if (j < attr->u.subarray.ndims - 1)
@@ -173,6 +221,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 }
                 DTPI_snprintf(rc, desc, desclen, maxlen, "), starts (");
                 for (int j = 0; j < attr->u.subarray.ndims; j++) {
+                    if (j >= 10 && j < attr->u.subarray.ndims - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.subarray.array_of_starts[j]);
                     if (j < attr->u.subarray.ndims - 1)
@@ -189,6 +243,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 DTPI_snprintf(rc, desc, desclen, maxlen, "numblks %d, blklen (",
                               attr->u.structure.numblks);
                 for (int j = 0; j < attr->u.structure.numblks; j++) {
+                    if (j >= 10 && j < attr->u.structure.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%d",
                                   attr->u.structure.array_of_blklens[j]);
                     if (j < attr->u.structure.numblks - 1)
@@ -196,6 +256,12 @@ int DTPI_populate_dtp_desc(DTPI_obj_s * obj_priv, DTPI_pool_s * dtp, char **desc
                 }
                 DTPI_snprintf(rc, desc, desclen, maxlen, "), displs (");
                 for (int j = 0; j < attr->u.structure.numblks; j++) {
+                    if (j >= 10 && j < attr->u.structure.numblks - 10) {
+                        if (j == 10) {
+                            DTPI_snprintf(rc, desc, desclen, maxlen, "...,");
+                        }
+                        continue;
+                    }
                     DTPI_snprintf(rc, desc, desclen, maxlen, "%zd",
                                   attr->u.structure.array_of_displs[j]);
                     if (j < attr->u.structure.numblks - 1)
