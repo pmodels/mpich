@@ -35,6 +35,10 @@ int MPIDI_OFI_match_provider(struct fi_info *prov,
 void MPIDI_OFI_update_global_settings(struct fi_info *prov);
 void MPIDI_OFI_dump_global_settings(void);
 
+int MPIDI_OFI_dynproc_init(void);
+int MPIDI_OFI_dynproc_finalize(void);
+int MPIDI_OFI_dynproc_insert_conn(fi_addr_t conn, int rank, int state);
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_fi_version(void)
 {
     if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
