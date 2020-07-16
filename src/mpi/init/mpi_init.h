@@ -45,6 +45,7 @@ int MPIR_Init_thread(int *, char ***, int, int *);
 void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
+int MPII_update_tag_ub(void);
 int MPII_init_local_proc_attrs(int *p_thread_required);
 int MPII_finalize_local_proc_attrs(void);
 
