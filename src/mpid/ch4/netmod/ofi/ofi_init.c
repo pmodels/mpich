@@ -561,10 +561,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_MPI_FINALIZE_HOOK);
 
-    /* clean dynamic process connections */
-    mpi_errno = MPIDI_OFI_dynproc_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
-
     /* Progress until we drain all inflight RMA send long buffers */
     /* NOTE: am currently only use vni 0. Need update once that changes */
     while (MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
@@ -577,6 +573,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIDI_OFI_global.max_buffered_send = 0;
     mpi_errno = MPIR_Allreduce_allcomm_auto(&barrier[0], &barrier[1], 1, MPI_INT, MPI_SUM,
                                             MPIR_Process.comm_world, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* clean dynamic process connections */
+    mpi_errno = MPIDI_OFI_dynproc_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
