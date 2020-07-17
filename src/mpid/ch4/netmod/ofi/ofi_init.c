@@ -8,6 +8,7 @@
 #include "mpidu_bc.h"
 #include "ofi_noinline.h"
 #include "ofi_nic.h"
+#include "mpir_hwtopo.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -1908,6 +1909,12 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
     fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
     fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    fprintf(stdout, "MPIDI_OFI_VNI_USE_DOMAIN: %d\n", 1);
+#endif
+#ifdef MPIDI_OFI_VNI_USE_SEPCTX
+    fprintf(stdout, "MPIDI_OFI_VNI_USE_SEPCTX: %d\n", 1);
+#endif
     fprintf(stdout, "======================================\n");
 
     /* Discover the maximum number of ranks. If the source shift is not

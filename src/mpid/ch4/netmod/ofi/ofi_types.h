@@ -274,12 +274,24 @@ typedef struct {
     int num_am_buffers;
 } MPIDI_OFI_capabilities_t;
 
+typedef struct {
+    struct fi_info *nic;
+    int id;                     /* Unique NIC ID, consistent across intranode ranks */
+    int close;                  /* Boolean whether nic is close in terms of affinity */
+    int prefer;                 /* Preference to order (lower is more preferred) */
+    int count;                  /* Count of ranks which have this NIC as their preferred NIC */
+    int num_close_ranks;        /* number of ranks which are close to this NIC */
+    MPIR_hwtopo_gid_t parent;   /* Parent topology item of NIC which has affinity mask.
+                                 * This is typically the socket above the NIC */
+} MPIDI_OFI_nic_info_t;
+
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 typedef struct {
     /* OFI objects */
     int avtid;
     struct fi_info *prov_use[MPIDI_OFI_MAX_NICS];
+    MPIDI_OFI_nic_info_t nic_info[MPIDI_OFI_MAX_NICS];
     struct fid_fabric *fabric;
 
     int got_named_av;
@@ -307,6 +319,7 @@ typedef struct {
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS * MPIDI_OFI_MAX_NICS];
     int num_vnis;
     int num_nics;
+    int num_close_nics;
 
     /* Window/RMA Globals */
     void *win_map;
