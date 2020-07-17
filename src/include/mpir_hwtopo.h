@@ -132,4 +132,18 @@ int MPIR_hwtopo_mem_bind(void *baseaddr, size_t len, MPIR_hwtopo_gid_t gid);
  */
 uint64_t MPIR_hwtopo_get_node_mem(void);
 
+/*
+ * Return true if device is close to this process
+ */
+bool MPIR_hwtopo_is_dev_close_by_name(const char *name);
+
+/*
+ * Return true if pci device is close to this process
+ */
+bool MPIR_hwtopo_is_dev_close_by_pci(int domain, int bus, int dev, int func);
+
+/*
+ * Return the global id of the first non-io object above the PCI device
+ */
+MPIR_hwtopo_gid_t MPIR_hwtopo_get_dev_parent_by_pci(int domain, int bus, int dev, int func);
 #endif /* MPIR_HWTOPO_H_INCLUDED */
