@@ -249,7 +249,7 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);
 
-    *tag_bits = MPIR_TAG_BITS_DEFAULT;
+    *tag_bits = MPIDI_UCX_TAG_BITS;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_INIT_HOOK);
