@@ -445,9 +445,6 @@ enum {
 };
 
 typedef struct MPIDI_OFI_win_request {
-    MPIR_OBJECT_HEADER;
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
     int rma_type;

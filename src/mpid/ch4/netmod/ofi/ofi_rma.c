@@ -28,7 +28,6 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
@@ -319,7 +318,6 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->sigreq = sigreq;
 
     /* allocate target iovecs */
@@ -388,7 +386,6 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     /* allocate request */
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_win_request_create();
     MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->sigreq = sigreq;
 
     /* allocate target iovecs */
