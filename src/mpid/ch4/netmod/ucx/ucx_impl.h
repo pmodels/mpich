@@ -13,6 +13,10 @@
 
 #include <ucs/type/status.h>
 
+int MPIDI_UCX_am_init(void);
+int MPIDI_UCX_am_finalize(void);
+void MPIDI_UCX_am_progress(int vni);
+
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
 #define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
