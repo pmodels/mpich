@@ -383,4 +383,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank ATTRIB
   fn_fail:
     goto fn_exit;
 }
+
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_rma_am_progress_cond_check(MPIR_Win * win)
+{
+    /* FALSE if we successfully force to use native path for all RMAs */
+    return !MPIDI_OFI_WIN(win).force_native_flag;
+}
+
 #endif /* OFI_WIN_H_INCLUDED */

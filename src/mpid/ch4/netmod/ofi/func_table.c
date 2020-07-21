@@ -43,6 +43,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
     .rma_win_local_cmpl_hook = MPIDI_NM_rma_win_local_cmpl_hook,
     .rma_target_cmpl_hook = MPIDI_NM_rma_target_cmpl_hook,
     .rma_target_local_cmpl_hook = MPIDI_NM_rma_target_local_cmpl_hook,
+    .rma_am_progress_cond_check = MPIDI_NM_rma_am_progress_cond_check,
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_NM_am_request_init,
     .am_request_finalize = MPIDI_NM_am_request_finalize,
