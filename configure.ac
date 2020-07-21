@@ -400,6 +400,7 @@ AC_ARG_ENABLE([mpit-pvars],
         recvq    - All message queue-related
         nem      - All nemesis-related
         rma      - All rma-related
+        multinic - All multinic-related
         all      - All variables above
 ],[],[enable_mpit_pvars=none])
 
@@ -1703,13 +1704,15 @@ for var in $enable_mpit_pvars ; do
             [nem],[enable_pvar_nem=yes],
             [recvq],[enable_pvar_recvq=yes],
             [rma],[enable_pvar_rma=yes],
-	    [dims],[enable_pvar_dims=yes],
+            [dims],[enable_pvar_dims=yes],
+            [multinic],[enable_pvar_multinic=yes],
             [all|yes],
             [enable_pvar_nem=yes
              enable_pvar_recvq=yes
              enable_pvar_rma=yes
-	     enable_pvar_dims=yes
-	     ],
+             enable_pvar_dims=yes
+             enable_pvar_multinic=yes
+             ],
             [no|none],[],
             [IFS=$save_IFS
              AC_MSG_WARN([Unknown value ($option) for enable-mpit-pvars])
@@ -1754,6 +1757,14 @@ AC_DEFINE_UNQUOTED(ENABLE_PVAR_DIMS,$status_dims_pvars,
 if test "$enable_mpit_events" = "yes" ; then
     AC_DEFINE(HAVE_MPIT_EVENTS, [1], [Define if MPI_T Events are enabled])
 fi
+
+if test -n "$enable_pvar_multinic" ; then
+    status_multinic_pvars=1
+else
+    status_multinic_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_MULTINIC,$status_multinic_pvars,
+          [Define to 1 to enable message count transmitted through multiple NICs MPI_T performance variables])
 
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
