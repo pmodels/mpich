@@ -19,7 +19,6 @@
 
 /* Active Message Stuff */
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
 #define MPIDI_UCX_AM_BUF_COUNT         8
 #define MPIDI_UCX_AM_BUF_SIZE          MPIDI_UCX_MAX_AM_EAGER_SZ
 #define MPIDI_UCX_AM_PACK_LIMIT        1024

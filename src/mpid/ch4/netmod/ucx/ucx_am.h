@@ -8,23 +8,39 @@
 
 #include "ucx_impl.h"
 
+#define MPIDI_UCX_AM_PACK_LIMIT 1024
+#define MPIDI_UCX_AM(req, field) (sreq)->dev.ch4.am.netmod_am.ucx.field
+
+/* NOTE: only accessed inside critical section */
+static int next_payload_seq;
+#define MPIDI_UCX_am_get_payload_seq() ((next_payload_seq++) & 0xff)
+
+/* send side completion */
+MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_cmpl(MPIR_Request * sreq)
+{
+    MPIDI_UCX_AM(sreq, cmpl_cntr)--;
+    if (MPIDI_UCX_AM(sreq, cmpl_cntr) == 0) {
+        MPL_gpu_free_host(MPIDI_UCX_AM(sreq, pack_buffer));
+        MPIDI_UCX_AM(sreq, pack_buffer) = NULL;
+        MPIDIG_global.origin_cbs[MPIDI_UCX_AM(sreq, handler_id)] (sreq);
+    }
+}
+
+/* callback from am_isend, am_isendv, and am_isend_reply */
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = ucp_request->req;
-    int handler_id = req->dev.ch4.am.netmod_am.ucx.handler_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
 
-    MPL_gpu_free_host(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
-    req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
-    MPIDIG_global.origin_cbs[handler_id] (req);
-    ucp_request->req = NULL;
+    MPIDI_UCX_am_send_cmpl(ucp_request->req);
+    MPIDI_UCX_ucp_request_free(request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
 }
 
+/* callback from am_send_hdr and am_send_hdr_reply */
 MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -38,6 +54,111 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 }
 
+/* internal functions */
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_do_send(ucp_ep_h ep, void *sreq,
+                                                  void *send_buf, MPI_Aint send_sz,
+                                                  uint64_t ucx_tag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_UCX_ucp_request_t *ucp_request;
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf, send_sz,
+                                                              ucp_dt_make_contig(1), ucx_tag,
+                                                              &MPIDI_UCX_am_isend_callback);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
+
+    if (ucp_request == NULL) {
+        MPIDI_UCX_am_send_cmpl(sreq);
+    } else {
+        ucp_request->req = sreq;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* allocate send buffer and pack data.
+ *
+ * Input:  am_hdr_sz, data, count, datatype
+ * Output: p_buf, p_data, data_sz
+ */
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_send_prepare(MPI_Aint am_hdr_sz,
+                                                       const void *data,
+                                                       MPI_Aint count,
+                                                       MPI_Datatype datatype,
+                                                       void **p_buf,
+                                                       void **p_data, MPI_Aint * data_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    int dt_contig;
+    MPIR_Datatype *dt_ptr;
+    MPI_Aint dt_true_lb;
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, *data_sz, dt_ptr, dt_true_lb);
+
+    MPI_Aint header_sz = sizeof(MPIDI_UCX_am_header_t) + am_hdr_sz;
+    MPI_Aint total_sz = sizeof(MPIDI_UCX_am_header_t) + am_hdr_sz + *data_sz;
+
+    /* only support short messages (for now) */
+    MPIR_Assert(total_sz < MPIDI_UCX_AM_BUF_SIZE);
+
+    if (1) {    /* always pack everything in a single buffer (for now) */
+        MPL_gpu_malloc_host(p_buf, sizeof(MPIDI_UCX_am_header_t) + am_hdr_sz + *data_sz);
+        *p_data = (char *) (*p_buf) + header_sz;
+
+        MPI_Aint actual_pack_bytes;
+        mpi_errno = MPIR_Typerep_pack(data, count, datatype, 0,
+                                      *p_data, *data_sz, &actual_pack_bytes);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(actual_pack_bytes == *data_sz);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_am_send(int rank,
+                                               MPIR_Comm * comm,
+                                               int handler_id,
+                                               void *send_buf,
+                                               void *p_data,
+                                               MPI_Aint am_hdr_sz,
+                                               MPI_Aint data_sz, MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
+
+    MPIDI_UCX_am_header_t *msg_hdr = send_buf;
+    /* initialize our portion of the hdr */
+    msg_hdr->handler_id = handler_id;
+    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->data_sz = data_sz;
+
+    MPIDI_UCX_AM(sreq, pack_buffer) = send_buf;
+    MPIDI_UCX_AM(sreq, handler_id) = handler_id;
+
+    if (1) {    /* only support sending a single short buffer (for now) */
+        MPIDI_UCX_AM(sreq, cmpl_cntr) = 1;
+        uint64_t hdr_tag = MPIDI_UCX_am_init_hdr_tag(MPIR_Process.rank);
+
+        MPI_Aint total_sz = sizeof(MPIDI_UCX_am_header_t) + am_hdr_sz + data_sz;
+        mpi_errno = MPIDI_UCX_am_do_send(ep, sreq, send_buf, total_sz, hdr_tag);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/* NETMOD API functions */
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,
@@ -49,54 +170,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_UCX_ucp_request_t *ucp_request;
-    ucp_ep_h ep;
-    uint64_t ucx_tag;
-    char *send_buf;
-    size_t data_sz;
-    MPIDI_UCX_am_header_t ucx_hdr;
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
-    MPIDI_Datatype_check_size(datatype, count, data_sz);
-
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
-
-    /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.data_sz = data_sz;
-
-    MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
-    MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-    MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-    MPI_Aint actual_pack_bytes;
-    mpi_errno =
-        MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                          data_sz, &actual_pack_bytes);
+    void *send_buf, *p_data;
+    MPI_Aint data_sz;
+    mpi_errno = MPIDI_UCX_am_send_prepare(am_hdr_sz, data, count, datatype,
+                                          &send_buf, &p_data, &data_sz);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_isend_callback);
-    MPIDI_UCX_CHK_REQUEST(ucp_request);
+    /* copying the header to pack buffer */
+    MPIR_Memcpy((char *) send_buf + sizeof(MPIDI_UCX_am_header_t), am_hdr, am_hdr_sz);
 
-    /* send is done. free all resources and complete the request */
-    if (ucp_request == NULL) {
-        MPL_gpu_free_host(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
-        goto fn_exit;
-    }
-
-    /* set the ch4r request inside the UCP request */
-    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
-    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    MPIDI_UCX_ucp_request_free(ucp_request);
-
+    mpi_errno = MPIDI_UCX_am_send(rank, comm, handler_id, send_buf, p_data,
+                                  am_hdr_sz, data_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND);
@@ -115,61 +203,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t am_hdr_sz = 0, i;
-    MPIDI_UCX_ucp_request_t *ucp_request;
-    ucp_ep_h ep;
-    uint64_t ucx_tag;
-    char *send_buf;
-    size_t data_sz;
-    MPIDI_UCX_am_header_t ucx_hdr;
-
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
-
-    MPIDI_Datatype_check_size(datatype, count, data_sz);
-    for (i = 0; i < iov_len; i++) {
+    /* calculate the header size */
+    size_t am_hdr_sz = 0;
+    for (int i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
-    /* copy headers to send buffer */
-    MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.data_sz = data_sz;
-    MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-    am_hdr_sz = 0;
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    MPI_Aint actual_pack_bytes;
-    mpi_errno =
-        MPIR_Typerep_pack(data, count, datatype, 0, send_buf + sizeof(ucx_hdr) + am_hdr_sz,
-                          data_sz, &actual_pack_bytes);
+    void *send_buf, *p_data;
+    MPI_Aint data_sz;
+    mpi_errno = MPIDI_UCX_am_send_prepare(am_hdr_sz, data, count, datatype,
+                                          &send_buf, &p_data, &data_sz);
     MPIR_ERR_CHECK(mpi_errno);
-    MPIR_Assert(actual_pack_bytes == data_sz);
 
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              data_sz + am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_isend_callback);
-    MPIDI_UCX_CHK_REQUEST(ucp_request);
-
-    /* send is done. free all resources and complete the request */
-    if (ucp_request == NULL) {
-        MPL_free(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
-        goto fn_exit;
+    /* copying the header to pack buffer */
+    char *p = send_buf;
+    p += sizeof(MPIDI_UCX_am_header_t);
+    for (int i = 0; i < iov_len; i++) {
+        MPIR_Memcpy(p, am_hdr[i].iov_base, am_hdr[i].iov_len);
+        p += am_hdr[i].iov_len;
     }
 
-    /* set the ch4r request inside the UCP request */
-    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
-    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    MPIDI_UCX_ucp_request_free(ucp_request);
+    mpi_errno = MPIDI_UCX_am_send(rank, comm, handler_id, send_buf, p_data,
+                                  am_hdr_sz, data_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISENDV);
@@ -189,104 +249,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      const void *data, MPI_Count count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_UCX_ucp_request_t *ucp_request;
-    ucp_ep_h ep;
-    ucp_datatype_t dt;
-    uint64_t ucx_tag;
-    char *send_buf;
-    void *send_buf_p;
-    size_t data_sz;
-    size_t total_sz;
-    MPI_Aint dt_true_lb;
-    MPIR_Datatype *dt_ptr;
-    int dt_contig;
-    MPIDI_UCX_am_header_t ucx_hdr;
-    MPIR_Comm *use_comm;
-    ucp_dt_iov_t *iov = sreq->dev.ch4.am.netmod_am.ucx.iov;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
-
-    use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
-
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(data, &attr);
-    if (attr.type == MPL_GPU_POINTER_DEV) {
-        /* Force packing of GPU buffer in host memory */
-        dt_contig = 0;
-    }
-
-    /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.data_sz = data_sz;
-
-    if (dt_contig) {
-        send_buf = MPL_malloc(sizeof(ucx_hdr) + am_hdr_sz, MPL_MEM_BUFFER);
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-        iov[0].buffer = send_buf;
-        iov[0].length = sizeof(ucx_hdr) + am_hdr_sz;
-        iov[1].buffer = (char *) data + dt_true_lb;
-        iov[1].length = data_sz;
-
-        send_buf_p = iov;
-        dt = ucp_dt_make_iov();
-        total_sz = 2;
-    } else {
-        /* FIXME: currently we always do packing, also for high density types. However,
-         * we should not do packing unless needed. Also, for large low-density types
-         * we should not allocate the entire buffer and do the packing at once. */
-        /* TODO: (1) Skip packing for high-density datatypes;
-         *       (2) Pipeline allocation for low-density datatypes; */
-        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
-         * However, once the new buffer pool infrastructure is setup, we would simply be
-         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
-         * registered buffer should be equivalent with respect to performance. */
-        MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
-
-        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-        MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-        MPI_Aint actual_pack_bytes;
-        mpi_errno =
-            MPIR_Typerep_pack(data, count, datatype, 0, send_buf + am_hdr_sz + sizeof(ucx_hdr),
-                              data_sz, &actual_pack_bytes);
-        MPIR_ERR_CHECK(mpi_errno);
-        MPIR_Assert(actual_pack_bytes == data_sz);
-
-        send_buf_p = send_buf;
-        dt = ucp_dt_make_contig(1);
-        total_sz = data_sz + am_hdr_sz + sizeof(ucx_hdr);
-    }
-    ucp_request =
-        (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep,
-                                                    send_buf_p, total_sz, dt, ucx_tag,
-                                                    &MPIDI_UCX_am_isend_callback);
-    MPIDI_UCX_CHK_REQUEST(ucp_request);
-
-    /* send is done. free all resources and complete the request */
-    if (ucp_request == NULL) {
-        MPL_gpu_free_host(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
-        goto fn_exit;
-    }
-
-    /* set the ch4r request inside the UCP request */
-    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
-    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    MPIDI_UCX_ucp_request_free(ucp_request);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    MPIR_Comm *use_comm = MPIDIG_context_id_to_comm(context_id);
+    return MPIDI_NM_am_isend(src_rank, use_comm, handler_id, am_hdr,
+                             am_hdr_sz, data, count, datatype, sreq);
 }
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
@@ -328,7 +293,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
+    ucx_tag = MPIDI_UCX_am_init_hdr_tag(MPIR_Process.rank);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
@@ -377,7 +342,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
     ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
-    ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
+    ucx_tag = MPIDI_UCX_am_init_hdr_tag(MPIR_Process.rank);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
