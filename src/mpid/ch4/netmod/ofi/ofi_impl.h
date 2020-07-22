@@ -349,22 +349,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
-    if (winreq->rma_type == MPIDI_OFI_GET) {
-        if (winreq->noncontig.get.origin.pack_buffer) {
-            MPI_Aint actual_unpack_bytes;
-            MPIR_Typerep_unpack(winreq->noncontig.get.origin.pack_buffer,
-                                winreq->noncontig.get.origin.pack_size,
-                                winreq->noncontig.get.origin.addr,
-                                winreq->noncontig.get.origin.count,
-                                winreq->noncontig.get.origin.datatype,
-                                winreq->noncontig.get.origin.pack_offset -
-                                winreq->noncontig.get.origin.pack_size, &actual_unpack_bytes);
-            MPIR_Assert(winreq->noncontig.get.origin.pack_size == actual_unpack_bytes);
-            MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_pack_buf_pool,
-                                              winreq->noncontig.get.origin.pack_buffer);
-        }
-    }
-
     MPIDI_OFI_complete_chunks(winreq);
     MPL_free(winreq);
 }
