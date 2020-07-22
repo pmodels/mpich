@@ -58,7 +58,7 @@ int MPIDI_UCX_progress(int vci, int blocking)
             }
 
             /* free resources for handled message */
-            ucp_request_release(ucp_request);
+            MPIDI_UCX_ucp_request_free(ucp_request);
             MPL_gpu_free_host(am_buf);
         }
     }

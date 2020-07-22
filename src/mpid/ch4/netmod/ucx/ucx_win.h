@@ -143,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vni)
             ucp_worker_progress(MPIDI_UCX_global.ctx[vni].worker);
             status = ucp_request_check_status(request);
         } while (status == UCS_INPROGRESS);
-        ucp_request_release(request);
+        MPIDI_UCX_ucp_request_free(request);
         return status;
     }
 }

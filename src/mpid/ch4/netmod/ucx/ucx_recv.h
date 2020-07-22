@@ -48,8 +48,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
 
     if (ucp_request->req) {
         MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
+        MPIDI_UCX_ucp_request_free(ucp_request);
     } else {
         MPIR_cc_set(&rreq->cc, 0);
         ucp_request->req = rreq;
@@ -92,8 +91,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     if (has_request) {
         MPIR_Request *rreq = ucp_request->req;
         MPIDIU_request_complete(rreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
+        MPIDI_UCX_ucp_request_free(ucp_request);
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
@@ -150,8 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
             MPIR_cc_set(&req->cc, 0);
             MPIR_Request_free_unsafe((MPIR_Request *) ucp_request->req);
         }
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
+        MPIDI_UCX_ucp_request_free(ucp_request);
     } else {
         if (req == NULL)
             req = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RECV, vni_dst);
@@ -207,8 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         message->status = *(ucp_request->status);
         MPL_free(ucp_request->status);
         MPIDIU_request_complete(message);
-        ucp_request->status = NULL;
-        ucp_request_release(ucp_request);
+        MPIDI_UCX_ucp_request_free(ucp_request);
     } else {
         MPIDI_UCX_REQ(message).ucp_request = ucp_request;
         ucp_request->req = message;

@@ -305,7 +305,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     }
 
     for (int i = 0; i < p; i++) {
-        ucp_request_release(pending[i]);
+        MPIDI_UCX_ucp_request_free(pending[i]);
     }
 
     mpi_errno = MPIR_pmi_barrier();
@@ -350,7 +350,7 @@ static void flush_all(void)
                 MPID_Progress_test(NULL);
                 status = ucp_request_check_status(reqs[vni]);
             } while (status == UCS_INPROGRESS);
-            ucp_request_release(reqs[vni]);
+            MPIDI_UCX_ucp_request_free(reqs[vni]);
         }
     }
 }

@@ -17,6 +17,14 @@ int MPIDI_UCX_am_init(void);
 int MPIDI_UCX_am_finalize(void);
 void MPIDI_UCX_am_progress(int vni);
 
+/* ucp_request_free doesn't clear content, this will result in ucp_tag_recv_nb
+ * return a request with previous garbage. */
+#define MPIDI_UCX_ucp_request_free(p) \
+    do { \
+        memset(p, 0, sizeof(MPIDI_UCX_ucp_request_t)); \
+        ucp_request_free(p); \
+    } while (0)
+
 #define MPIDI_UCX_COMM(comm)     ((comm)->dev.ch4.netmod.ucx)
 #define MPIDI_UCX_REQ(req)       ((req)->dev.ch4.netmod.ucx)
 #define COMM_TO_INDEX(comm,rank) MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)

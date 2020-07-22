@@ -33,8 +33,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 
     MPL_free(ucp_request->buf);
-    ucp_request->buf = NULL;
-    ucp_request_release(ucp_request);
+    MPIDI_UCX_ucp_request_free(ucp_request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 }
@@ -96,8 +95,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     /* set the ch4r request inside the UCP request */
     sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
     sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    ucp_request->req = sreq;
-    ucp_request_release(ucp_request);
+    MPIDI_UCX_ucp_request_free(ucp_request);
 
 
   fn_exit:
@@ -171,8 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     /* set the ch4r request inside the UCP request */
     sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
     sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    ucp_request->req = sreq;
-    ucp_request_release(ucp_request);
+    MPIDI_UCX_ucp_request_free(ucp_request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISENDV);
@@ -283,8 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     /* set the ch4r request inside the UCP request */
     sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
     sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-    ucp_request->req = sreq;
-    ucp_request_release(ucp_request);
+    MPIDI_UCX_ucp_request_free(ucp_request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
