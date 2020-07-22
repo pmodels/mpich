@@ -18,9 +18,11 @@
 #define UCP_PEER_NAME_MAX         HOST_NAME_MAX
 
 /* Active Message Stuff */
-#define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
 #define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
+#define MPIDI_UCX_AM_BUF_COUNT         8
+#define MPIDI_UCX_AM_BUF_SIZE          MPIDI_UCX_MAX_AM_EAGER_SZ
+#define MPIDI_UCX_AM_PACK_LIMIT        1024
 
 typedef struct {
     ucp_worker_h worker;
@@ -53,5 +55,10 @@ extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 #define MPIDI_UCX_SOURCE_MASK   (0x0000FFFF00000000ULL)
 #define MPIDI_UCX_TAG_SHIFT     (32)
 #define MPIDI_UCX_SOURCE_SHIFT  (16)
+
+#define MPIDI_UCX_AM_HDR_TAG    (0x0000000080000000ULL)
+#define MPIDI_UCX_AM_DATA_TAG   (0x00000000C0000000ULL)
+#define MPIDI_UCX_AM_HDR_MASK   (0xFFFF0000FFFFFFFFULL)
+#define MPIDI_UCX_AM_DATA_MASK  (0xFFFFFFFFFFFFFFFFULL)
 
 #endif /* UCX_TYPES_H_INCLUDED */

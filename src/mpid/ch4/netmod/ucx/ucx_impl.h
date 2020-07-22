@@ -72,6 +72,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
     return ((int) ((match_bits & MPIDI_UCX_SOURCE_MASK) >> MPIDI_UCX_TAG_SHIFT));
 }
 
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_am_init_hdr_tag(int source)
+{
+    return MPIDI_UCX_AM_HDR_TAG | ((uint64_t) source << MPIDI_UCX_TAG_SHIFT);
+}
+
+MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_UCX_am_init_data_tag(int source, int seq)
+{
+    return MPIDI_UCX_AM_DATA_TAG | seq | ((uint64_t) source << MPIDI_UCX_TAG_SHIFT);
+}
+
 #define MPIDI_UCX_CHK_STATUS(STATUS)                                    \
     do {                                                                \
         MPIR_ERR_CHKANDJUMP4((STATUS!=UCS_OK && STATUS!=UCS_INPROGRESS), \
