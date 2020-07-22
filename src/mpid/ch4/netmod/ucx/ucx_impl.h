@@ -145,4 +145,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni(int flag, MPIR_Comm * comm_ptr,
     return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_UCX_global.num_vnis;
 }
 
+/* Most ucx operations expect a callback, but sometime we just need a dummy one */
+void MPIDI_UCX_dummy_cb(void *request, ucs_status_t status);
+void MPIDI_UCX_dummy_recv_cb(void *request, ucs_status_t status, ucp_tag_recv_info_t * info);
+
 #endif /* UCX_IMPL_H_INCLUDED */

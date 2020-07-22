@@ -125,14 +125,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * wi
 }
 
 /* replacing deprecated ucp_worker_flush */
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_flush_cmpl_cb(void *request, ucs_status_t status)
-{
-}
-
 MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vni)
 {
     void *request = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker,
-                                        0, &MPIDI_UCX_flush_cmpl_cb);
+                                        0, &MPIDI_UCX_dummy_cb);
     if (request == NULL) {
         return UCS_OK;
     } else if (UCS_PTR_IS_ERR(request)) {

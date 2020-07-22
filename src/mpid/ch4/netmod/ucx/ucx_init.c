@@ -31,6 +31,14 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+void MPIDI_UCX_dummy_cb(void *request, ucs_status_t status)
+{
+}
+
+void MPIDI_UCX_dummy_recv_cb(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
+{
+}
+
 static void request_init_callback(void *request)
 {
     memset(request, 0, sizeof(MPIDI_UCX_ucp_request_t));
@@ -324,15 +332,11 @@ int MPIDI_UCX_mpi_finalize_hook(void)
 }
 
 /* static functions for MPIDI_UCX_post_init */
-static void flush_cb(void *request, ucs_status_t status)
-{
-}
-
 static void flush_all(void)
 {
     void *reqs[MPIDI_CH4_MAX_VCIS];
     for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
-        reqs[vni] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker, 0, &flush_cb);
+        reqs[vni] = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker, 0, &MPIDI_UCX_dummy_cb);
     }
     for (int vni = 0; vni < MPIDI_UCX_global.num_vnis; vni++) {
         if (reqs[vni] == NULL) {
