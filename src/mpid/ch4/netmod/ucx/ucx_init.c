@@ -31,14 +31,9 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static void request_init_callback(void *request);
-
 static void request_init_callback(void *request)
 {
-
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    ucp_request->req = NULL;
-
+    memset(request, 0, sizeof(MPIDI_UCX_ucp_request_t));
 }
 
 static void init_num_vnis(void)
