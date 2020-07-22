@@ -18,6 +18,11 @@ typedef union {
     MPIR_Request *req;
     MPI_Status *status;
     void *buf;
+    struct {
+        bool is_set;
+        int idx;
+        int source;
+    } am;
 } MPIDI_UCX_ucp_request_t;
 
 typedef struct {
@@ -33,12 +38,23 @@ typedef struct {
     int handler_id;
     char *pack_buffer;
     ucp_dt_iov_t iov[2];
+    int cmpl_cntr;              /* am message may be sent in pieces,
+                                 * thus need track completion status */
 } MPIDI_UCX_am_request_t;
 
+typedef enum {
+    MPIDI_UCX_AM_PACK_INVALID,
+    MPIDI_UCX_AM_PACK_ONE,      /* all in one msg, if fit inside MPIDI_UCX_AM_BUF_SIZE */
+    MPIDI_UCX_AM_PACK_TWO_A,    /* two msgs, msg_hdr + am_hdr and payload */
+    MPIDI_UCX_AM_PACK_TWO_B,    /* two msgs, msg_hdr and am_hdr + payload, if am_hdr is too big */
+} MPIDI_UCX_am_pack_type;
+
 typedef struct MPIDI_UCX_am_header_t {
-    uint64_t handler_id;
-    uint64_t data_sz;
-    uint64_t payload[];
+    uint8_t pack_type;
+    uint8_t payload_seq;        /* needed to match payload packets */
+    uint16_t handler_id;
+    uint32_t am_hdr_sz;
+    MPI_Aint data_sz;
 } MPIDI_UCX_am_header_t;
 
 typedef struct MPIDI_UCX_win_info {

@@ -10,12 +10,10 @@ static void *am_buf;            /* message buffer has global scope because ucx e
 static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
 {
     void *p_data;
-    void *in_data;
     size_t data_sz;
     MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) am_buf;
 
-    p_data = in_data =
-        (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
+    p_data = (char *) msg_hdr + (info->length - msg_hdr->data_sz);
     data_sz = msg_hdr->data_sz;
 
     /* note: setting is_local, is_async to 0, 0 */

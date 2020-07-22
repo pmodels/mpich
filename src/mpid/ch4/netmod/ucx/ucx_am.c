@@ -39,6 +39,9 @@ int MPIDI_UCX_am_init(void)
     /* Make sure the circular queue will work */
     MPIR_Assert(MPIDI_UCX_AM_QUEUE_SIZE > MPIDI_UCX_AM_BUF_COUNT);
 
+    /* MPIDI_UCX_am_header_t need observe alignment */
+    MPIR_Assert((sizeof(MPIDI_UCX_am_header_t) & 0x7) == 0);
+
     return mpi_errno;
 }
 
