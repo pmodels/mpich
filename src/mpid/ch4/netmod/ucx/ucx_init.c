@@ -41,7 +41,10 @@ void MPIDI_UCX_dummy_recv_cb(void *request, ucs_status_t status, ucp_tag_recv_in
 
 static void request_init_callback(void *request)
 {
-    memset(request, 0, sizeof(MPIDI_UCX_ucp_request_t));
+
+    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
+    ucp_request->req = NULL;
+
 }
 
 static void init_num_vnis(void)
@@ -274,6 +277,9 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     ucs_status_ptr_t ucp_request;
     ucs_status_ptr_t *pending;
 
+
+    MPIDI_UCX_am_finalize();
+
     comm = MPIR_Process.comm_world;
     int n = MPIDI_UCX_global.num_vnis;
     pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size * n * n, MPL_MEM_OTHER);
@@ -308,7 +314,7 @@ int MPIDI_UCX_mpi_finalize_hook(void)
     }
 
     for (int i = 0; i < p; i++) {
-        MPIDI_UCX_ucp_request_free(pending[i]);
+        ucp_request_release(pending[i]);
     }
 
     mpi_errno = MPIR_pmi_barrier();
@@ -349,7 +355,7 @@ static void flush_all(void)
                 MPID_Progress_test(NULL);
                 status = ucp_request_check_status(reqs[vni]);
             } while (status == UCS_INPROGRESS);
-            MPIDI_UCX_ucp_request_free(reqs[vni]);
+            ucp_request_release(reqs[vni]);
         }
     }
 }
@@ -369,6 +375,8 @@ int MPIDI_UCX_post_init(void)
 
     /* flush all pending wireup operations or it may interfere with RMA flush_ops count */
     flush_all();
+
+    MPIDI_UCX_am_init();
 
   fn_exit:
     return mpi_errno;
