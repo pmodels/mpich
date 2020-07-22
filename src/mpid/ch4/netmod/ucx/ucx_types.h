@@ -33,6 +33,8 @@ typedef struct {
 typedef struct {
     ucp_context_h context;
     MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
+    char am_bufs[MPIDI_UCX_AM_BUF_COUNT][MPIDI_UCX_AM_BUF_SIZE] MPL_ATTR_ALIGNED(8);
+    MPIDI_UCX_ucp_request_t *am_ucp_reqs[MPIDI_UCX_AM_BUF_COUNT];
     int num_vnis;
 } MPIDI_UCX_global_t;
 
