@@ -297,6 +297,7 @@ static inline void MPIDI_OFI_load_iov(const void *buffer, int count, MPI_Datatyp
 }
 
 int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win);
+void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq);
 int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
                             MPI_Aint target_disp, int target_count,
@@ -368,6 +369,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
         }
     }
 
+    MPIDI_OFI_complete_chunks(winreq);
     MPL_free(winreq);
 }
 
