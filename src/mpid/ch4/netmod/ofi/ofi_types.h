@@ -444,11 +444,19 @@ enum {
     MPIDI_OFI_GET_ACC,
 };
 
+typedef struct MPIDI_OFI_pack_chunk {
+    struct MPIDI_OFI_pack_chunk *next;
+    void *pack_buffer;
+    MPI_Aint unpack_size;
+    MPI_Aint unpack_offset;
+} MPIDI_OFI_pack_chunk;
+
 typedef struct MPIDI_OFI_win_request {
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
     int rma_type;
     MPIR_Request **sigreq;
+    MPIDI_OFI_pack_chunk *chunks;
     union {
         struct {
             struct {

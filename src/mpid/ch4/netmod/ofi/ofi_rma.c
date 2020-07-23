@@ -7,6 +7,48 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
+static MPIDI_OFI_pack_chunk *create_chunk(void *pack_buffer, MPI_Aint unpack_size,
+                                          MPI_Aint unpack_offset, MPIDI_OFI_win_request_t * winreq)
+{
+    MPIDI_OFI_pack_chunk *chunk = MPL_malloc(sizeof(MPIDI_OFI_chunk_request), MPL_MEM_RMA);
+    if (chunk == NULL)
+        return NULL;
+
+    chunk->pack_buffer = pack_buffer;
+    chunk->unpack_size = unpack_size;
+    chunk->unpack_offset = unpack_offset;
+
+    /* prepend to chunk list */
+    chunk->next = winreq->chunks;
+    winreq->chunks = chunk;
+
+    return chunk;
+}
+
+void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq)
+{
+    MPIDI_OFI_pack_chunk *chunk = winreq->chunks;
+
+    while (chunk) {
+        if (chunk->unpack_size > 0) {
+            MPI_Aint actual_unpack_bytes;
+            MPIR_Typerep_unpack(chunk->pack_buffer,
+                                chunk->unpack_size, winreq->noncontig.get.origin.addr,
+                                winreq->noncontig.get.origin.count,
+                                winreq->noncontig.get.origin.datatype, chunk->unpack_offset,
+                                &actual_unpack_bytes);
+            MPIR_Assert(chunk->unpack_size == actual_unpack_bytes);
+        }
+
+        MPIDI_OFI_pack_chunk *next = chunk->next;
+        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_pack_buf_pool, chunk->pack_buffer);
+        MPL_free(chunk);
+        chunk = next;
+    }
+
+    winreq->chunks = NULL;
+}
+
 int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
                             MPI_Aint target_disp, int target_count,
@@ -31,6 +73,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     req->next = MPIDI_OFI_WIN(win).syncQ;
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
+    req->chunks = NULL;
 
     /* allocate target iovecs */
     struct iovec *target_iov;
@@ -349,6 +392,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);
     req->rma_type = MPIDI_OFI_PUT;
+    req->chunks = NULL;
 
     /* origin */
     req->noncontig.put.origin.addr = origin_addr;
@@ -412,6 +456,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);
     req->rma_type = MPIDI_OFI_GET;
+    req->chunks = NULL;
 
     /* origin */
     req->noncontig.get.origin.addr = origin_addr;
@@ -447,6 +492,9 @@ int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win)
     MPIDI_OFI_win_request_t *req = MPIDI_OFI_WIN(win).deferredQ;
 
     while (req) {
+        /* free temporary buffers */
+        MPIDI_OFI_complete_chunks(req);
+
         switch (req->rma_type) {
             case MPIDI_OFI_PUT:
                 mpi_errno = issue_packed_put(win, req);
