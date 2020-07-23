@@ -423,3 +423,19 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
 #endif
     }
 }
+
+void MTest_finalize_gpu()
+{
+#ifdef HAVE_ZE
+    if (device_id != -1) {
+        /* Free GPU resource */
+        free(device);
+        zerr = zeEventDestroy(event);
+        assert(zerr == ZE_RESULT_SUCCESS);
+        zerr = zeEventPoolDestroy(event_pool);
+        assert(zerr == ZE_RESULT_SUCCESS);
+        zeCommandListDestroy(command_list);
+        assert(zerr == ZE_RESULT_SUCCESS);
+    }
+#endif
+}
