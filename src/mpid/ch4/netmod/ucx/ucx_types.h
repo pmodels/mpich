@@ -24,6 +24,14 @@
 #define MPIDI_UCX_AM_BUF_SIZE          MPIDI_UCX_MAX_AM_EAGER_SZ
 #define MPIDI_UCX_AM_PACK_LIMIT        1024
 
+/* Circular buffer for FIFO queue, to handle when multiple am msgs arrive
+ * together.
+ * For simplicity, we require size to be power of 2 and strictly greater than
+ * MPIDI_UCX_AM_BUF_COUNT (to avoid boundary checking)
+ */
+#define MPIDI_UCX_AM_QUEUE_SIZE  16
+#define MPIDI_UCX_AM_QUEUE_MASK  0xf
+
 typedef struct {
     ucp_worker_h worker;
     ucp_address_t *if_address;
@@ -33,8 +41,14 @@ typedef struct {
 typedef struct {
     ucp_context_h context;
     MPIDI_UCX_context_t ctx[MPIDI_CH4_MAX_VCIS];
+
     char am_bufs[MPIDI_UCX_AM_BUF_COUNT][MPIDI_UCX_AM_BUF_SIZE] MPL_ATTR_ALIGNED(8);
     MPIDI_UCX_ucp_request_t *am_ucp_reqs[MPIDI_UCX_AM_BUF_COUNT];
+    /* simple stacks to track am messages that needs to be progressed */
+    int am_ready_queue[MPIDI_UCX_AM_QUEUE_SIZE];
+    int am_ready_head;
+    int am_ready_tail;
+
     int num_vnis;
 } MPIDI_UCX_global_t;
 
