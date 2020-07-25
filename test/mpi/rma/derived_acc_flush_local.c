@@ -76,7 +76,9 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         for (i = 0; i < DATA_SIZE - COUNT; i++) {
             if (tar_buf[i] != OPS_NUM) {
-                printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
+                if (errs < 10) {
+                    printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
+                }
                 errs++;
             }
         }
@@ -108,7 +110,9 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         for (i = 0; i < DATA_SIZE - COUNT; i++) {
             if (tar_buf[i] != OPS_NUM) {
-                printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
+                if (errs < 10) {
+                    printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
+                }
                 errs++;
             }
         }
