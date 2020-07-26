@@ -604,6 +604,9 @@ int MPIDIG_send_pipeline_cts_target_msg_cb(int handler_id, void *am_hdr, void *d
     sreq = (MPIR_Request *) cts_hdr->sreq_ptr;
     MPIR_Assert(sreq != NULL);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "pipeline got cts parent req handle=0x%x", sreq->handle));
+
     /* Start the data transfer of the rest segments */
     seg_hdr.rreq_ptr = cts_hdr->rreq_ptr;
 #ifndef MPIDI_CH4_DIRECT_NETMOD

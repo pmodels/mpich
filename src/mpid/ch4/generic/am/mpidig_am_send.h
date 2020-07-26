@@ -266,6 +266,9 @@ static inline int MPIDIG_do_pipeline_send(const void *buf, MPI_Aint count, MPI_D
     MPIDIG_REQUEST(sreq, count) = count;
 #endif
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "pipeline send parent req handle=0x%x", sreq->handle));
+
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (msg_req) {
         MPIDI_REQUEST(msg_req, is_local) = MPIDI_av_is_local(addr);

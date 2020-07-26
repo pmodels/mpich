@@ -319,10 +319,11 @@ static inline int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handl
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm, int handler_id,
-                                                      const void *buf, size_t count,
+static inline int MPIDI_OFI_deferred_am_isend_enqueue(int op, int rank, MPIR_Comm * comm,
+                                                      int handler_id, const void *buf, size_t count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq,
-                                                      MPI_Aint data_sz)
+                                                      MPI_Aint data_sz, const void *am_hdr,
+                                                      size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -336,6 +337,7 @@ static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm
                                                          MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP(!deferred_req, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
+    deferred_req->op = op;
     deferred_req->rank = rank;
     deferred_req->comm = comm;
     deferred_req->handler_id = handler_id;
@@ -344,6 +346,18 @@ static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm
     deferred_req->datatype = datatype;
     deferred_req->sreq = sreq;
     deferred_req->data_sz = data_sz;
+    if (am_hdr) {
+        deferred_req->am_hdr = MPL_malloc(am_hdr_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDSTMT(!deferred_req->am_hdr, mpi_errno, MPI_ERR_OTHER, goto fn_fail,
+                            "**nomemreq");
+        memcpy(deferred_req->am_hdr, am_hdr, am_hdr_sz);
+        deferred_req->am_hdr_sz = am_hdr_sz;
+    } else {
+        deferred_req->am_hdr = NULL;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "Enqueue deferred am isend hdr dreq=%p", deferred_req));
 
     DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, deferred_req);
 
@@ -385,8 +399,9 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
     if (MPIDI_OFI_global.deferred_am_isend_q) {
         /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
-                                                        datatype, sreq, data_sz);
+        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__EAGER, rank,
+                                                        comm, handler_id, buf, count, datatype,
+                                                        sreq, data_sz);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -409,8 +424,10 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         if (do_eager) {
             MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
             if (send_buf == NULL) {
-                mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
-                                                                datatype, sreq, data_sz);
+                mpi_errno =
+                    MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__EAGER, rank,
+                                                        comm, handler_id, buf, count, datatype,
+                                                        sreq, data_sz);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
             }
@@ -435,6 +452,204 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * comm, int handler_id,
+                                              const void *am_hdr, size_t am_hdr_sz, const void *buf,
+                                              size_t count, MPI_Datatype datatype,
+                                              MPIR_Request * sreq)
+{
+    int dt_contig, mpi_errno = MPI_SUCCESS;
+    char *send_buf;
+    MPI_Aint data_sz, packed_size;
+    MPI_Aint dt_true_lb, send_size;
+    MPIR_Datatype *dt_ptr;
+    bool need_packing = false;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
+
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    send_size = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - am_hdr_sz - sizeof(MPIDI_OFI_am_header_t);
+    send_buf = (char *) buf + dt_true_lb;
+
+    MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
+    mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDI_OFI_global.deferred_am_isend_q) {
+        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
+        MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__EAGER, rank, comm,
+                                            handler_id, buf, count, datatype, sreq, data_sz, NULL,
+                                            0);
+        goto fn_exit;
+    }
+
+    need_packing = dt_contig ? false : true;
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(buf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+        /* Force packing of GPU buffer in host memory */
+        need_packing = true;
+    }
+
+    /* how much data need to be send, max eager size or what is left */
+    send_size = MPL_MIN(MPIDIG_REQUEST(sreq, data_sz_left), send_size);
+
+    if (need_packing) {
+        /* FIXME: currently we always do packing, also for high density types. However,
+         * we should not do packing unless needed. Also, for large low-density types
+         * we should not allocate the entire buffer and do the packing at once. */
+        /* TODO: (1) Skip packing for high-density datatypes;
+         *       (2) Pipeline allocation for low-density datatypes; */
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
+        if (send_buf == NULL) {
+            MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__EAGER, rank, comm,
+                                                handler_id, buf, count, datatype, sreq, data_sz,
+                                                NULL, 0);
+            goto fn_exit;
+        }
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, MPIDIG_REQUEST(sreq, offset),
+                                      send_buf, send_size, &packed_size);
+        MPIR_ERR_CHECK(mpi_errno);
+        send_size = packed_size;
+
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = send_buf;
+    } else {
+        send_buf = (char *) send_buf + MPIDIG_REQUEST(sreq, offset);
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    }
+
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, send_size, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDIG_REQUEST(sreq, data_sz_left) -= send_size;
+    MPIDIG_REQUEST(sreq, offset) += send_size;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm * comm, int handler_id,
+                                                 const void *am_hdr, size_t am_hdr_sz,
+                                                 const void *buf, size_t count,
+                                                 MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    int dt_contig, mpi_errno = MPI_SUCCESS;
+    int c;
+    char *send_buf;
+    MPI_Aint data_sz, packed_size;
+    MPI_Aint dt_true_lb, send_size;
+    MPIR_Datatype *dt_ptr;
+    bool need_packing = false;
+    MPIR_Request *child_sreq = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_PIPELINE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_PIPELINE);
+
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    send_size = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - am_hdr_sz - sizeof(MPIDI_OFI_am_header_t);
+    send_buf = (char *) buf + dt_true_lb;
+
+    /* incr cc to prevent parent_req being freed.
+     * We will need to skip one if we went to deferred queue without sending anything.
+     * In that case, the seg_next will still be one, so we will check that. */
+    MPIR_cc_incr(sreq->cc_ptr, &c);
+
+    if (MPIDI_OFI_global.deferred_am_isend_q) {
+        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
+        MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__PIPELINE, rank, comm,
+                                            handler_id, buf, count, datatype, sreq, data_sz, am_hdr,
+                                            am_hdr_sz);
+        goto fn_exit;
+    }
+
+    need_packing = dt_contig ? false : true;
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(buf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+        /* Force packing of GPU buffer in host memory */
+        need_packing = true;
+    }
+
+    /* This child request is invisible to user, refcount should set to 1 */
+    child_sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 1);
+    MPIR_ERR_CHKANDSTMT((child_sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                        "**nomemreq");
+
+    MPIDIG_REQUEST(child_sreq, req->plreq).parent_req = sreq;
+    MPIDIG_REQUEST(child_sreq, req->plreq).seg_next = MPIDIG_REQUEST(sreq, req->plreq).seg_next;
+
+    MPIDIG_REQUEST(child_sreq, req->plreq).src_buf = buf;
+    MPIDIG_REQUEST(child_sreq, req->plreq).count = count;
+
+    // MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDIG_REQUEST(child_sreq, req->plreq).datatype = datatype;
+
+    MPIDIG_REQUEST(child_sreq, req->plreq).tag = MPIDIG_REQUEST(sreq, req->plreq).tag;
+    MPIDIG_REQUEST(child_sreq, req->plreq).rank = MPIDIG_REQUEST(sreq, req->plreq).rank;
+    MPIDIG_REQUEST(child_sreq, req->plreq).context_id = MPIDIG_REQUEST(sreq, req->plreq).context_id;
+    MPIDIG_REQUEST(child_sreq, rank) = MPIDIG_REQUEST(sreq, rank);
+
+    mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, child_sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* how much data need to be send, max eager size or what is left */
+    send_size = MPL_MIN(MPIDIG_REQUEST(sreq, data_sz_left), send_size);
+
+    if (need_packing) {
+        /* FIXME: currently we always do packing, also for high density types. However,
+         * we should not do packing unless needed. Also, for large low-density types
+         * we should not allocate the entire buffer and do the packing at once. */
+        /* TODO: (1) Skip packing for high-density datatypes;
+         *       (2) Pipeline allocation for low-density datatypes; */
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
+        if (send_buf == NULL) {
+            MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__PIPELINE, rank,
+                                                comm, handler_id, buf, count, datatype, sreq,
+                                                data_sz, am_hdr, am_hdr_sz);
+            goto fn_exit;
+        }
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, MPIDIG_REQUEST(sreq, offset),
+                                      send_buf, send_size, &packed_size);
+        MPIR_ERR_CHECK(mpi_errno);
+        send_size = packed_size;
+
+        MPIDI_OFI_AMREQUEST_HDR(child_sreq, pack_buffer) = send_buf;
+    } else {
+        send_buf = (char *) send_buf + MPIDIG_REQUEST(sreq, offset);
+        MPIDI_OFI_AMREQUEST_HDR(child_sreq, pack_buffer) = NULL;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST,
+                     "issue pipeline seg for parent=0x%x, cc=%d, seg_next=%d, child=0x%x",
+                     sreq->handle, *(sreq->cc_ptr), MPIDIG_REQUEST(sreq, req->plreq).seg_next,
+                     child_sreq->handle));
+
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, send_size, child_sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDIG_REQUEST(sreq, data_sz_left) -= send_size;
+    MPIDIG_REQUEST(sreq, offset) += send_size;
+    MPIDIG_REQUEST(sreq, req->plreq).seg_next += 1;
+
+    if (MPIDIG_REQUEST(sreq, data_sz_left) != 0) {
+        MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__PIPELINE, rank, comm,
+                                            handler_id, buf, count, datatype, sreq, data_sz, am_hdr,
+                                            am_hdr_sz);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_PIPELINE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -486,6 +701,15 @@ static inline int MPIDI_OFI_do_inject(int rank,
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+
+    if (MPIDI_OFI_global.deferred_am_isend_q) {
+        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(MPIDI_OFI_DEFERRED_AM_ISEND_OP__HDR, rank,
+                                                        comm, handler_id, NULL, 0,
+                                                        MPI_DATATYPE_NULL, NULL, 0, am_hdr,
+                                                        am_hdr_sz);
+        MPIR_ERR_CHECK(mpi_errno);
+        goto fn_exit;
+    }
 
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;

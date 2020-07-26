@@ -200,6 +200,13 @@ enum {
     MPIDI_OFI_DYNPROC_CONNECTED_PARENT
 };
 
+typedef enum {
+    MPIDI_OFI_DEFERRED_AM_ISEND_OP__HDR,
+    MPIDI_OFI_DEFERRED_AM_ISEND_OP__EAGER,
+    MPIDI_OFI_DEFERRED_AM_ISEND_OP__PIPELINE,
+    MPIDI_OFI_DEFERRED_AM_ISEND_OP__RDMA_READ
+} MPIDI_OFI_deferred_am_isend_op_e;
+
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
@@ -225,6 +232,7 @@ typedef struct {
 } MPIDI_OFI_dynamic_process_request_t;
 
 typedef struct MPIDI_OFI_deferred_am_isend_req {
+    int op;
     int rank;
     MPIR_Comm *comm;
     int handler_id;
@@ -234,6 +242,9 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     MPIR_Request *sreq;
 
     MPI_Aint data_sz;
+
+    void *am_hdr;
+    size_t am_hdr_sz;
 
     struct MPIDI_OFI_deferred_am_isend_req *prev;
     struct MPIDI_OFI_deferred_am_isend_req *next;
