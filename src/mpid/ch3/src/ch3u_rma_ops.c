@@ -806,7 +806,8 @@ int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
 int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
-             int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
+             int target_count, MPI_Datatype target_datatype,
+             MPIR_Win * win_ptr, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
 

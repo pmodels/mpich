@@ -238,6 +238,7 @@ foreach $_ (@ARGV) {
 	     'put-5' => 'MPI_Aint *',
 	     'get-5' => 'MPI_Aint *',
 	     'put_abs-5' => 'MPI_Aint *',
+	     'get_abs-5' => 'MPI_Aint *',
 	     'alloc_mem-1' => 'MPI_Aint *',
              'win_shared_query-3' => 'MPI_Aint *',
 	     'compare_and_swap-6' => 'MPI_Aint *',

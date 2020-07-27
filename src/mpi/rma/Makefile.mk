@@ -10,6 +10,7 @@ mpi_sources +=                          \
     src/mpi/rma/fetch_and_op.c          \
     src/mpi/rma/free_mem.c              \
     src/mpi/rma/get.c                   \
+    src/mpi/rma/get_abs.c               \
     src/mpi/rma/get_accumulate.c        \
     src/mpi/rma/put.c                   \
     src/mpi/rma/put_abs.c               \

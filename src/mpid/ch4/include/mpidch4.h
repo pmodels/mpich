@@ -98,7 +98,7 @@ int MPID_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **
 MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_free(MPIR_Win **);
 MPL_STATIC_INLINE_PREFIX int MPID_Get(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                                      MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
+                                      MPIR_Win *, bool) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_get_info(MPIR_Win *, MPIR_Info **);
 MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int, int, int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;

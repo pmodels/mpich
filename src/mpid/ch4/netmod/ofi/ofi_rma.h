@@ -428,7 +428,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               int target_rank,
                                               MPI_Aint target_disp,
                                               int target_count, MPI_Datatype target_datatype,
-                                              MPIR_Win * win, MPIDI_av_entry_t * av)
+                                              MPIR_Win * win, MPIDI_av_entry_t * av,
+                                              bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -150,6 +150,7 @@ my %bufpos = (
     "MPI_File_iread_at_all" => [2, 3, 4],
     "MPI_File_iwrite_all" => [1, 2, 3],
     "MPI_File_iwrite_at_all" => [2, 3, 4],
+    "MPIX_Get_abs" => [0, 1, 2],
     "MPIX_Put_abs" => [0, 1, 2],
 );
 

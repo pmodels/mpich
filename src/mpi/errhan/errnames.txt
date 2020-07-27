@@ -1155,6 +1155,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
 **mpix_put_abs:MPIX_Put_abs failed
 **mpix_put_abs %p %d %D %d %d %d %D %W:MPIX_Put_abs(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_addr=%d, target_count=%d, %D, %W) failed
+**mpix_get_abs:MPIX_Put_abs failed
+**mpix_get_abs %p %d %D %d %d %d %D %W:MPIX_Put_abs(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_addr=%d, target_count=%d, %D, %W) failed
 **mpi_win_allocate_shared:MPI_Win_allocate_shared failed
 **mpi_win_allocate_shared %d %I %C %p %p:MPI_Win_allocate_shared(size=%d, %I, %C, baseptr=%p, win=%p) failed
 **mpi_win_shared_query:MPI_Win_shared_query failed

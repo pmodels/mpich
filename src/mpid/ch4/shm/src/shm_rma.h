@@ -137,7 +137,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_unlock(int rank, MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_count,
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
-                                               MPI_Datatype target_datatype, MPIR_Win * win)
+                                               MPI_Datatype target_datatype, MPIR_Win * win,
+                                               bool target_abs_flag)
 {
     int ret;
 
@@ -145,7 +146,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GET);
 
     ret = MPIDI_POSIX_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                              target_disp, target_count, target_datatype, win);
+                              target_disp, target_count, target_datatype, win, target_abs_flag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GET);
     return ret;

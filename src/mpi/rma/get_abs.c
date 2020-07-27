@@ -5,30 +5,31 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPI_Get */
+/* -- Begin Profiling Symbol Block for routine MPIX_Get_abs */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Get = PMPI_Get
+#pragma weak MPIX_Get_abs = PMPIX_Get_abs
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Get  MPI_Get
+#pragma _HP_SECONDARY_DEF PMPIX_Get_abs  MPIX_Get_abs
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Get as PMPI_Get
+#pragma _CRI duplicate MPIX_Get_abs as PMPIX_Get_abs
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count,
-            MPI_Datatype target_datatype, MPI_Win win) __attribute__ ((weak, alias("PMPI_Get")));
+int MPIX_Get_abs(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                 int target_rank, MPI_Aint target_disp, int target_count,
+                 MPI_Datatype target_datatype, MPI_Win win)
+    __attribute__ ((weak, alias("PMPIX_Get_abs")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Get
-#define MPI_Get PMPI_Get
+#undef MPIX_Get_abs
+#define MPIX_Get_abs PMPIX_Get_abs
 
 #endif
 
 /*@
-   MPI_Get - Get data from a memory window on a remote process
+   MPIX_Get_abs - Get data from a memory window on a remote process
 
 Input Parameters:
 + origin_addr - Address of the buffer in which to receive the data
@@ -55,18 +56,18 @@ Input Parameters:
 
 .seealso: MPI_Rget
 @*/
-int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
-            int target_count, MPI_Datatype target_datatype, MPI_Win win)
+int MPIX_Get_abs(void *origin_addr, int origin_count, MPI_Datatype
+                 origin_datatype, int target_rank, MPI_Aint target_disp,
+                 int target_count, MPI_Datatype target_datatype, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_GET_ABS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_GET);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPIX_GET_ABS);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -141,14 +142,14 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Get(origin_addr, origin_count, origin_datatype,
-                         target_rank, target_disp, target_count, target_datatype, win_ptr, false);
+                         target_rank, target_disp, target_count, target_datatype, win_ptr, true);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_GET);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPIX_GET_ABS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -163,7 +163,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
                                                MPI_Datatype target_datatype,
-                                               MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+                                               MPIR_Win * win,
+                                               bool target_abs_flag) MPL_STATIC_INLINE_SUFFIX;
 int MPIDI_SHM_mpi_win_free(MPIR_Win ** win_ptr);
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert,
                                                      MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;

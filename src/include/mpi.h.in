@@ -1156,8 +1156,11 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count,
             MPI_Datatype target_datatype, MPI_Win win) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
+int MPIX_Get_abs(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                 int target_rank, MPI_Aint target_addr, int target_count,
+                 MPI_Datatype target_datatype, MPI_Win win) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 int MPIX_Put_abs(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-                 int target_rank, MPI_Aint target_disp, int target_count,
+                 int target_rank, MPI_Aint target_addr, int target_count,
                  MPI_Datatype target_datatype, MPI_Win win) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 int MPI_Win_complete(MPI_Win win) MPICH_API_PUBLIC;
 int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
@@ -2206,6 +2209,9 @@ int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp) MPICH_API_
 int PMPIX_Comm_revoke(MPI_Comm comm) MPICH_API_PUBLIC;
 int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
+int PMPIX_Get_abs(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                  int target_rank, MPI_Aint target_disp, int target_count,
+                  MPI_Datatype target_datatype, MPI_Win win) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 int PMPIX_Put_abs(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
                   int target_rank, MPI_Aint target_disp, int target_count,
                   MPI_Datatype target_datatype, MPI_Win win) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
