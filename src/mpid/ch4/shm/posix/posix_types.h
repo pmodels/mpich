@@ -25,14 +25,30 @@ enum {
 #define MPIDI_POSIX_REQUEST(req, field)       ((req)->dev.ch4.shm.posix.field)
 #define MPIDI_POSIX_COMM(comm, field)         ((comm)->dev.ch4.shm.posix.field)
 
+typedef enum {
+    MPIDI_POSIX_DEFERRED_AM_ISEND_OP__HDR,
+    MPIDI_POSIX_DEFERRED_AM_ISEND_OP__EAGER,
+    MPIDI_POSIX_DEFERRED_AM_ISEND_OP__PIPELINE
+} MPIDI_POSIX_deferred_am_isend_op_e;
+
+typedef struct MPIDI_POSIX_deferred_am_isend_req {
+    int op;
+    int grank;
+    const void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+    MPIR_Request *sreq;
+    MPIDI_POSIX_am_header_t msg_hdr;
+    void *am_hdr;
+
+    struct MPIDI_POSIX_deferred_am_isend_req *prev;
+    struct MPIDI_POSIX_deferred_am_isend_req *next;
+} MPIDI_POSIX_deferred_am_isend_req_t;
+
 typedef struct {
     MPIDU_genq_private_pool_t am_hdr_buf_pool;
 
-    /* Postponed queue */
-    MPIDI_POSIX_am_request_header_t *postponed_queue;
-
-    /* Active recv requests array */
-    MPIR_Request **active_rreq;
+    MPIDI_POSIX_deferred_am_isend_req_t *deferred_am_isend_q;
 
     void *shm_ptr;
 

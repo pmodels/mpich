@@ -127,8 +127,6 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     int mpi_errno = MPI_SUCCESS;
     int i, local_rank_0 = -1;
 
-    MPIR_CHKPMEM_DECL(1);
-
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
@@ -157,16 +155,8 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
 
     MPIDI_POSIX_global.local_rank_0 = local_rank_0;
 
-    /* This is used to track messages that the eager submodule was not ready to send. */
-    MPIDI_POSIX_global.postponed_queue = NULL;
-
-    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq,
-                        MPIR_Request **,
-                        size * sizeof(MPIR_Request *), mpi_errno, "active recv req", MPL_MEM_SHM);
-
-    for (i = 0; i < size; i++) {
-        MPIDI_POSIX_global.active_rreq[i] = NULL;
-    }
+    /* tracking for deferred operations. */
+    MPIDI_POSIX_global.deferred_am_isend_q = NULL;
 
     choose_posix_eager();
 
@@ -179,14 +169,11 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     mpi_errno = MPIDI_POSIX_coll_init(rank, size);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_CHKPMEM_COMMIT();
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -201,8 +188,6 @@ int MPIDI_POSIX_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_POSIX_global.am_hdr_buf_pool);
-
-    MPL_free(MPIDI_POSIX_global.active_rreq);
 
     mpi_errno = MPIDI_POSIX_coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);

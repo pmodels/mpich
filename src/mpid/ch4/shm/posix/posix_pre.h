@@ -91,7 +91,6 @@ typedef struct MPIDI_POSIX_am_request_header {
 
     /* Structure used with POSIX postponed_queue */
     MPIR_Request *request;      /* Store address of MPIR_Request* sreq */
-    struct MPIDI_POSIX_am_request_header *prev, *next;
 } MPIDI_POSIX_am_request_header_t;
 
 typedef struct MPIDI_POSIX_am_request {
