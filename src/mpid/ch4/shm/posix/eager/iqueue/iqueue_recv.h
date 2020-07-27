@@ -26,15 +26,9 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 
     if (cell) {
         transaction->src_grank = MPIDI_POSIX_global.local_procs[cell->from];
-        transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
-        transaction->payload_sz = cell->payload_size;
+        transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_GET_PAYLOAD(cell);
 
-        if (likely(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_HDR)) {
-            transaction->msg_hdr = &cell->am_header;
-        } else {
-            MPIR_Assert(cell->type == MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_DATA);
-            transaction->msg_hdr = NULL;
-        }
+        transaction->msg_hdr = &cell->am_header;
 
         transaction->transport.iqueue.pointer_to_cell = cell;
 

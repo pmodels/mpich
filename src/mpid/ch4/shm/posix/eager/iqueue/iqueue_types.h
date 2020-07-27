@@ -17,9 +17,7 @@ typedef struct MPIDI_POSIX_eager_iqueue_cell MPIDI_POSIX_eager_iqueue_cell_t;
 
 /* Each cell contains some data being communicated from one process to another. */
 struct MPIDI_POSIX_eager_iqueue_cell {
-    uint16_t type;              /* Type of cell (head/tail/etc.) */
     uint16_t from;              /* Who is the message in the cell from */
-    uint32_t payload_size;      /* Size of the message in the cell */
     MPIDI_POSIX_am_header_t am_header;  /* If this cell is the beginning of a message, it will have
                                          * an active message header and this will point to it. */
 };
@@ -40,8 +38,11 @@ static inline MPIDI_POSIX_eager_iqueue_transport_t *MPIDI_POSIX_eager_iqueue_get
     return &MPIDI_POSIX_eager_iqueue_transport_global;
 }
 
-#define MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell) \
+#define MPIDI_POSIX_EAGER_IQUEUE_CELL_GET_PAYLOAD(cell) \
     ((char*)(cell) + sizeof(MPIDI_POSIX_eager_iqueue_cell_t))
+
+#define MPIDI_POSIX_EAGER_IQUEUE_PAYLOAD_GET_CELL(payload) \
+    (MPIDI_POSIX_eager_iqueue_cell_t *) ((char*)(payload) - sizeof(MPIDI_POSIX_eager_iqueue_cell_t))
 
 #define MPIDI_POSIX_EAGER_IQUEUE_CELL_CAPACITY(transport) \
     ((transport)->size_of_cell - sizeof(MPIDI_POSIX_eager_iqueue_cell_t))

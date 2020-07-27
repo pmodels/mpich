@@ -16,6 +16,7 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_iqueue_funcs = {
     MPIDI_POSIX_iqueue_init,
     MPIDI_POSIX_iqueue_finalize,
 
+    MPIDI_POSIX_eager_get_buf,
     MPIDI_POSIX_eager_send,
 
     MPIDI_POSIX_eager_recv_begin,

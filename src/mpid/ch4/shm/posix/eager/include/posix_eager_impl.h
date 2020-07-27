@@ -9,11 +9,15 @@
 #ifndef POSIX_EAGER_INLINE
 #ifndef POSIX_EAGER_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
-                                                    MPIDI_POSIX_am_header_t ** msg_hdr,
-                                                    struct iovec **iov, size_t * iov_num)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_get_buf(void **eager_buf, size_t * eager_buf_sz)
 {
-    return MPIDI_POSIX_eager_func->send(grank, msg_hdr, iov, iov_num);
+    return MPIDI_POSIX_eager_func->get_buf(eager_buf, eager_buf_sz);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(void *eager_buf, size_t data_sz, int grank,
+                                                    MPIDI_POSIX_am_header_t * msg_hdr)
+{
+    return MPIDI_POSIX_eager_func->send(eager_buf, data_sz, grank, msg_hdr);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
