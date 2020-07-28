@@ -444,14 +444,19 @@ enum {
     MPIDI_OFI_GET_ACC,
 };
 
+typedef struct MPIDI_OFI_pack_chunk {
+    struct MPIDI_OFI_pack_chunk *next;
+    void *pack_buffer;
+    MPI_Aint unpack_size;
+    MPI_Aint unpack_offset;
+} MPIDI_OFI_pack_chunk;
+
 typedef struct MPIDI_OFI_win_request {
-    MPIR_OBJECT_HEADER;
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     struct MPIDI_OFI_win_request *prev;
     int rma_type;
     MPIR_Request **sigreq;
+    MPIDI_OFI_pack_chunk *chunks;
     union {
         struct {
             struct {
@@ -460,8 +465,6 @@ typedef struct MPIDI_OFI_win_request {
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
-                void *pack_buffer;
-                MPI_Aint pack_size;
             } origin;
             struct {
                 void *base;
@@ -483,8 +486,6 @@ typedef struct MPIDI_OFI_win_request {
                 MPI_Datatype datatype;
                 MPI_Aint total_bytes;
                 MPI_Aint pack_offset;
-                void *pack_buffer;
-                MPI_Aint pack_size;
             } origin;
             struct {
                 void *base;
