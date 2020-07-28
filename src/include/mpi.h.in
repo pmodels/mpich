@@ -2207,6 +2207,20 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 int PMPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
 int PMPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
 
+typedef struct {
+    int (* send)(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                 MPI_Comm comm, int layer_id);
+    int (* recv)(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+                 MPI_Comm comm, MPI_Status *status, int layer_id);
+} QMPI_Function_pointers_t;
+
+QMPI_Function_pointers_t ** QMPIX_Get_function_table() MPICH_API_PUBLIC;
+
+int QMPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+              MPI_Comm comm, int layer_id);
+int QMPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+              MPI_Comm comm, MPI_Status *status, int layer_id);
+
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
 

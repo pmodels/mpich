@@ -41,4 +41,7 @@ static inline void MPIR_Debugger_set_aborting(const char *dummy)
 #define MPII_REQUEST_CLEAR_DBG(_r)
 #endif
 
+extern QMPI_Function_pointers_t **MPIR_QMPI_pointers;
+extern int MPIR_QMPI_num_tools;
+
 #endif /* MPIR_DEBUGGER_H_INCLUDED */

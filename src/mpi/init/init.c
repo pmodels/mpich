@@ -7,6 +7,7 @@
 #include "mpi_init.h"
 
 #include <strings.h>
+#include <dlfcn.h>
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -29,6 +30,75 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+static int qmpi_setup(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* WB TODO - For now, assume there is only one tool. Add support for multiple tools later. */
+    char *err_string;
+
+    /* Look for the list of libraries to use when opening tools */
+    char *tool_list = getenv("QMPI_TOOL_LIST");
+
+    /* WB TODO - There will need to be parsing added here to find out how many tools there are. */
+    if (tool_list != NULL) {
+        MPIR_QMPI_num_tools = 1;
+    }
+
+    MPIR_QMPI_pointers = MPL_malloc(sizeof(QMPI_Function_pointers_t *) * (MPIR_QMPI_num_tools + 1),
+                                    MPL_MEM_OTHER);
+    if (!MPIR_QMPI_pointers) {
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                             MPI_ERR_OTHER, "**nomem", "**nomem");
+        goto fn_exit;
+    }
+
+    for (int i = 0; i < MPIR_QMPI_num_tools; i++) {
+        /* WB TODO - There will need to be parsing added here to find the next tool in the list. */
+        if (tool_list != NULL) {
+            /* Use dlopen to open the library. The assumption is that the tool's name is the name of
+             * the library that can be passed to dlopen. */
+            dlerror();
+            void *library = dlopen(tool_list, RTLD_NOW);
+            err_string = dlerror();
+            if (err_string) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPL_DBG_FDEST, "dlopen error %s",
+                                                          err_string));
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                     MPI_ERR_OTHER, "**mpi_init", "**mpi_init");
+                goto fn_exit;
+            }
+
+            /* Find the function that returns the stuct of function pointers. We assume this
+             * function is called QMPI_Register_callbacks. */
+            void (*register_func) (QMPI_Function_pointers_t ** pointers) =
+                dlsym(library, "QMPI_Register_callbacks");
+            err_string = dlerror();
+            if (err_string) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPL_DBG_FDEST, "dlsym error %s",
+                                                          err_string));
+                MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                     MPI_ERR_OTHER, "**mpi_init", "**mpi_init");
+                goto fn_exit;
+            }
+
+            register_func(&MPIR_QMPI_pointers[i]);
+        }
+    }
+
+    MPIR_QMPI_pointers[MPIR_QMPI_num_tools] =
+        MPL_malloc(sizeof(QMPI_Function_pointers_t), MPL_MEM_OTHER);
+    if (!MPIR_QMPI_pointers[MPIR_QMPI_num_tools]) {
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                             MPI_ERR_OTHER, "**nomem", "**nomem");
+        goto fn_exit;
+    }
+    MPIR_QMPI_pointers[MPIR_QMPI_num_tools]->recv = &QMPI_Recv;
+    MPIR_QMPI_pointers[MPIR_QMPI_num_tools]->send = &QMPI_Send;
+
+  fn_exit:
+    return mpi_errno;
+}
 
 /* -- Begin Profiling Symbol Block for routine MPI_Init */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -109,6 +179,10 @@ int MPI_Init(int *argc, char ***argv)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
+
+    /* Set up QMPI tools */
+    mpi_errno = qmpi_setup();
+    MPIR_ERR_CHECK(mpi_errno);
 
     int threadLevel = MPI_THREAD_SINGLE;
     const char *tmp_str;

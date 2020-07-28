@@ -62,6 +62,17 @@ length of the message can be determined with 'MPI_Get_count'.
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
              MPI_Comm comm, MPI_Status * status)
 {
+    /* Call the first layer in the QMPI stack that contains the correct function. */
+    for (int i = 0; i <= MPIR_QMPI_num_tools; i++) {
+        if (MPIR_QMPI_pointers[i]->recv) {
+            return MPIR_QMPI_pointers[i]->recv(buf, count, datatype, source, tag, comm, status, i);
+        }
+    }
+}
+
+int QMPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+              MPI_Comm comm, MPI_Status * status, int layer_id)
+{
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

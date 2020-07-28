@@ -1483,6 +1483,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_status_set_elements_x: MPI_Status_set_elements_x failed
 **mpi_status_set_elements_x %p %D %c: MPI_Status_set_elements_x(status=%p, datatype=%D, count=%c)
 
+## QMPI error messages
+**qmpi_get_function_table: QMPI_Get_function_table failed
+
 # Datarep conversion function not supported by ROMIO (Temproary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO
 

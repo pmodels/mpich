@@ -15,3 +15,6 @@ MPIR_Thread_info_t MPIR_ThreadInfo;
    MPI_Init and MPI_Finalize) */
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE MPL_USED = 0;
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE MPL_USED = 0;
+
+QMPI_Function_pointers_t **MPIR_QMPI_pointers;
+int MPIR_QMPI_num_tools = 0;

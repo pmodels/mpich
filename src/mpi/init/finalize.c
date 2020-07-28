@@ -94,6 +94,14 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 #endif
 #endif
 
+static void qmpi_teardown()
+{
+    MPL_free(MPIR_QMPI_pointers[MPIR_QMPI_num_tools]);
+    MPL_free(MPIR_QMPI_pointers);
+
+    /* WB TODO - Close the libraries opened in qmpi_setup */
+}
+
 /*@
    MPI_Finalize - Terminates MPI execution environment
 
@@ -147,6 +155,8 @@ int MPI_Finalize(void)
 
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
+
+    qmpi_teardown();
 
     mpi_errno = MPII_Coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);
