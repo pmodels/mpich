@@ -152,12 +152,6 @@ int MPIDIG_am_init(void)
     MPIR_Assert(MPIDIG_HANDLER_STATIC_MAX <= MPIDI_AM_HANDLERS_MAX);
 
     MPIDIG_am_reg_cb(MPIDIG_SEND, &MPIDIG_send_origin_cb, &MPIDIG_send_target_msg_cb);
-    /* FIXME: remove old LMT */
-    MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_REQ, NULL, &MPIDIG_send_long_req_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_ACK, NULL, &MPIDIG_send_long_ack_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_LMT,
-                     &MPIDIG_send_long_lmt_origin_cb, &MPIDIG_send_long_lmt_target_msg_cb);
-    /* pipeline protocol */
     MPIDIG_am_reg_cb(MPIDIG_SEND_PIPELINE_RTS,
                      &MPIDIG_send_pipeline_rts_origin_cb, &MPIDIG_send_pipeline_rts_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_PIPELINE_CTS, NULL, &MPIDIG_send_pipeline_cts_target_msg_cb);

@@ -74,21 +74,6 @@ typedef struct MPIDIG_hdr_t {
                                  * means the long message is a regular AM SEND */
 } MPIDIG_hdr_t;
 
-typedef struct MPIDIG_send_long_req_msg_t {
-    MPIDIG_hdr_t hdr;
-    size_t data_sz;             /* Message size in bytes */
-    MPIR_Request *sreq_ptr;     /* Pointer value of the request object at the sender side */
-} MPIDIG_send_long_req_msg_t;
-
-typedef struct MPIDIG_send_long_ack_msg_t {
-    MPIR_Request *sreq_ptr;
-    MPIR_Request *rreq_ptr;
-} MPIDIG_send_long_ack_msg_t;
-
-typedef struct MPIDIG_send_long_lmt_msg_t {
-    MPIR_Request *rreq_ptr;
-} MPIDIG_send_long_lmt_msg_t;
-
 typedef struct MPIDIG_send_pipeline_rts_msg_t {
     MPIDIG_hdr_t hdr;
     size_t data_sz;             /* Message size in bytes */

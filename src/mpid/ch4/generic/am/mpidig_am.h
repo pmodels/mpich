@@ -11,12 +11,6 @@
 enum {
     MPIDIG_SEND = 0,            /* Eager send */
 
-    MPIDIG_SEND_LONG_REQ,       /* Rendezvous send RTS (request to send) */
-    MPIDIG_SEND_LONG_ACK,       /* Rendezvous send CTS (clear to send) */
-    /* FIXME: This old long message protocol will be replaced by the new one
-     * I left it here will remove in a separate commit to lessen the conflict */
-    MPIDIG_SEND_LONG_LMT,       /* Rendezvous send LMT */
-
     /* new pipeline protocol, RTS, CTS and segment transmission. The protocol start by sender
      * sending RTS to receiver. The RTS contain the headers and the first segment of data.
      * The receiver will to match a posted recv request. If no posted recv, it will create a
