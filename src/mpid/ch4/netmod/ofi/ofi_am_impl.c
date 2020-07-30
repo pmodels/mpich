@@ -54,7 +54,7 @@ int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
          *       (2) Pipeline allocation for low-density datatypes; */
         if (dreq->am_hdr_sz + dreq->data_sz + sizeof(MPIDI_OFI_am_header_t) <=
             MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
-            mpi_errno = MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
+            mpi_errno = MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool,
                                                            (void **) &send_buf);
             if (send_buf == NULL) {
                 /* no buffer available, suppress error and exit */

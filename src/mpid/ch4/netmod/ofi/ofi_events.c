@@ -536,7 +536,7 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
             break;
     }
 
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_pack_buf_pool,
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
                                       MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
     MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
 
