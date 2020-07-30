@@ -416,8 +416,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         /* TODO: (1) Skip packing for high-density datatypes;
          *       (2) Pipeline allocation for low-density datatypes; */
         if (data_lt_eager_threshold) {
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_pack_buf_pool,
-                                               (void **) &send_buf);
+            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
             if (send_buf == NULL) {
                 mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
                                                                 buf, count, datatype, sreq,
