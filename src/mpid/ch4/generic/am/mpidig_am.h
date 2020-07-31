@@ -136,4 +136,61 @@ int MPIDIG_am_comm_abort(MPIR_Comm * comm, int exit_code);
 
 int MPIDIG_am_check_init(void);
 
+static inline bool MPIDIG_am_check_size_le_eager_limit(size_t data_sz, int am_op,
+                                                       size_t eager_limit)
+{
+    switch (am_op) {
+        case MPIDIG_SEND:
+            return (data_sz + sizeof(MPIDIG_hdr_t) <= eager_limit);
+            break;
+        case MPIDIG_SEND_PIPELINE_RTS:
+        case MPIDIG_SEND_PIPELINE_CTS:
+        case MPIDIG_SEND_PIPELINE_SEG:
+        case MPIDIG_SEND_RDMA_READ_REQ:
+        case MPIDIG_SEND_RDMA_READ_ACK:
+        case MPIDIG_SEND_RDMA_READ_NAK:
+            MPIR_Assert(0);
+            break;
+        case MPIDIG_SSEND_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_ssend_req_msg_t) <= eager_limit);
+            break;
+        case MPIDIG_SSEND_ACK:
+        case MPIDIG_PUT_REQ:
+        case MPIDIG_PUT_ACK:
+        case MPIDIG_PUT_DT_REQ:
+        case MPIDIG_PUT_DAT_REQ:
+        case MPIDIG_PUT_DT_ACK:
+        case MPIDIG_GET_REQ:
+        case MPIDIG_GET_ACK:
+        case MPIDIG_ACC_REQ:
+        case MPIDIG_ACC_ACK:
+        case MPIDIG_ACC_DT_REQ:
+        case MPIDIG_ACC_DAT_REQ:
+        case MPIDIG_ACC_DT_ACK:
+        case MPIDIG_GET_ACC_REQ:
+        case MPIDIG_GET_ACC_ACK:
+        case MPIDIG_GET_ACC_DT_REQ:
+        case MPIDIG_GET_ACC_DAT_REQ:
+        case MPIDIG_GET_ACC_DT_ACK:
+        case MPIDIG_CSWAP_REQ:
+        case MPIDIG_CSWAP_ACK:
+        case MPIDIG_FETCH_OP:
+        case MPIDIG_WIN_COMPLETE:
+        case MPIDIG_WIN_POST:
+        case MPIDIG_WIN_LOCK:
+        case MPIDIG_WIN_LOCK_ACK:
+        case MPIDIG_WIN_UNLOCK:
+        case MPIDIG_WIN_UNLOCK_ACK:
+        case MPIDIG_WIN_LOCKALL:
+        case MPIDIG_WIN_LOCKALL_ACK:
+        case MPIDIG_WIN_UNLOCKALL:
+        case MPIDIG_WIN_UNLOCKALL_ACK:
+            MPIR_Assert(0);
+            break;
+        default:
+            MPIR_Assert(0);
+    }
+    return false;
+}
+
 #endif /* MPIDIG_AM_H_INCLUDED */
