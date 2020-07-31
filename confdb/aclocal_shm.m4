@@ -46,4 +46,11 @@ if test "$with_shared_memory" = auto -o "$with_shared_memory" = sysv; then
         AC_MSG_ERROR([cannot support shared memory:  sysv shared memory functions functions not found])
     fi
 fi
+if test "$with_shared_memory" = nt ; then
+    AC_DEFINE(USE_NT_SHM,1,[Define if use Windows shared memory])
+fi
+
+if test "$with_shared_memory" = "auto" ; then
+    AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
+fi
 ])
