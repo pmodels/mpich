@@ -93,13 +93,13 @@ int main(int argc, char *argv[])
                 assert(buf);
 
                 if (rank == root) {
-                    err = DTP_obj_buf_init(obj, buf, 0, 1, count);
+                    err = DTP_obj_buf_init(obj, buf_h, 0, 1, count);
                     if (err != DTP_SUCCESS) {
                         errs++;
                         break;
                     }
                 } else {
-                    err = DTP_obj_buf_init(obj, buf, -1, -1, count);
+                    err = DTP_obj_buf_init(obj, buf_h, -1, -1, count);
                     if (err != DTP_SUCCESS) {
                         errs++;
                         break;
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                 }
 
                 MTestCopyContent(buf, buf_h, obj.DTP_bufsize, memtype);
-                err = DTP_obj_buf_check(obj, buf, 0, 1, count);
+                err = DTP_obj_buf_check(obj, buf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
                     if (errs < 10) {
