@@ -919,21 +919,6 @@ AC_CHECK_FUNCS(getpid)
 dnl Check for shm
 PAC_ARG_SHARED_MEMORY
 
-case $with_shared_memory in
-    sysv)
-        AC_DEFINE(MPL_USE_SYSV_SHM,1,[Define if use SYSV shared memory])
-        ;;
-    mmap)
-        AC_DEFINE(MPL_USE_MMAP_SHM,1,[Define if use MMAP shared memory])
-        ;;
-    nt)
-        AC_DEFINE(MPL_USE_NT_SHM,1,[Define if use Windows shared memory])
-        ;;
-    *)
-        AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
-esac
-
-
 #######################################################################
 ## END OF SHM CODE
 #######################################################################
@@ -962,7 +947,7 @@ PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have
 PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
 if test "X${have_cudart}" = "Xyes" -a \
     "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([MPL_HAVE_CUDA],[1],[Define if CUDA is available])
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
 fi
 AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda}" = "Xyes"])
 
@@ -974,7 +959,7 @@ PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[h
 PAC_CHECK_HEADER_LIB([CL/cl.h],[OpenCL],[clGetPlatformIDs],[have_cl=yes],[have_cl=no])
 if test "X${have_ze}" = "Xyes" -a \
     "X${have_cl}" = "Xyes" ; then
-    AC_DEFINE([MPL_HAVE_ZE],[1],[Define if ZE is available])
+    AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
 fi
 AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${have_ze}" = "Xyes" -a "X${have_cl}" = "Xyes"])
 
