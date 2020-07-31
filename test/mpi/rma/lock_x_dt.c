@@ -200,7 +200,7 @@ static int run_test(MPI_Comm comm, MPI_Win win, DTP_obj_s orig_obj, void *origbu
              * origins might receive the value that has already been
              * overwritten by other origins */
             MTestCopyContent(resultbuf, resultbuf_h, result_obj.DTP_bufsize, resultmem);
-            err = DTP_obj_buf_check(result_obj, resultbuf, 1, 2, count);
+            err = DTP_obj_buf_check(result_obj, resultbuf_h, 1, 2, count);
             if (err != DTP_SUCCESS)
                 errs++;
 #endif

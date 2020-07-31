@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
                 }
 
                 MTestCopyContent(recvbuf, recvbuf_h, recv_obj.DTP_bufsize, recvmem);
-                err = DTP_obj_buf_check(recv_obj, recvbuf, 0, 1, count[0]);
+                err = DTP_obj_buf_check(recv_obj, recvbuf_h, 0, 1, count[0]);
                 if (err != DTP_SUCCESS) {
                     if (errs < 10) {
                         char *recv_desc, *send_desc;

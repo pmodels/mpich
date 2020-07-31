@@ -46,13 +46,13 @@ static inline int test(MPI_Comm comm, int rank, int orig, int target,
 
     if (rank == target) {
 #if defined(USE_GET)
-        err = DTP_obj_buf_init(target_obj, targetbuf, 0, 1, count);
+        err = DTP_obj_buf_init(target_obj, targetbuf_h, 0, 1, count);
         if (err != DTP_SUCCESS) {
             return ++errs;
         }
         MTestCopyContent(targetbuf_h, targetbuf, maxbufsize, targetmem);
 #elif defined(USE_PUT)
-        err = DTP_obj_buf_init(target_obj, targetbuf, -1, -1, count);
+        err = DTP_obj_buf_init(target_obj, targetbuf_h, -1, -1, count);
         if (err != DTP_SUCCESS) {
             return ++errs;
         }
