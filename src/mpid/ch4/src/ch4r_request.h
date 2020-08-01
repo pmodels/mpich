@@ -43,6 +43,7 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
+    MPIDIG_REQUEST(req, req->plreq).parent_req = NULL;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_CREATE);
@@ -71,6 +72,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
                                        (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
+    MPIDIG_REQUEST(req, req->plreq).parent_req = NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_REQUEST_INIT);
     return req;

@@ -156,6 +156,36 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
             mpi_errno = MPIDIG_do_long_ack(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
+        } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_PIPELINE_RTS) {
+            /* Matching receive is now posted, tell the netmod/shmmod */
+            /* first save the reference to the unexp buffer and data size in it */
+            void *first_seg = MPIDIG_REQUEST(unexp_req, buffer);
+            int first_seg_sz = MPIDIG_REQUEST(unexp_req, first_seg_sz);
+            /* set the rquest with user buffer address, datatype and count */
+            MPIR_Datatype_add_ref_if_not_builtin(datatype);
+            MPIDIG_REQUEST(unexp_req, datatype) = datatype;
+            MPIDIG_REQUEST(unexp_req, buffer) = (char *) buf;
+            MPIDIG_REQUEST(unexp_req, count) = count;
+            if (*request == NULL) {
+                /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
+                 * a request. Here we simply return `unexp_req` */
+                *request = unexp_req;
+                /* Mark `match_req` as NULL so that we know nothing else to complete when
+                 * `unexp_req` finally completes. (See below) */
+                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = NULL;
+            } else {
+                /* Enqueuing path: CH4 already allocated a request.
+                 * Record the passed `*request` to `match_req` so that we can complete it
+                 * later when `unexp_req` completes.
+                 * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
+                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
+            }
+            /* copy the first segment into user buffer */
+            MPIDIG_recv_copy_seg(first_seg, first_seg_sz, unexp_req);
+            MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool, first_seg);
+            mpi_errno = MPIDIG_do_pipeline_cts(unexp_req);
+            MPIR_ERR_CHECK(mpi_errno);
+            goto fn_exit;
         } else {
             mpi_errno =
                 MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
@@ -265,6 +295,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
         MPIDIG_do_long_ack(message);
+    } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_PIPELINE_RTS) {
+        /* Matching receive is now posted, tell the netmod */
+        /* first save the reference to the unexp buffer and data size in it */
+        void *first_seg = MPIDIG_REQUEST(message, buffer);
+        int first_seg_sz = MPIDIG_REQUEST(message, first_seg_sz);
+        MPIDIG_REQUEST(message, datatype) = datatype;
+        MPIDIG_REQUEST(message, buffer) = (char *) buf;
+        MPIDIG_REQUEST(message, count) = count;
+        MPIDIG_recv_copy_seg(first_seg, first_seg_sz, message);
+        MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool, first_seg);
+        MPIDIG_do_pipeline_cts(message);
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
