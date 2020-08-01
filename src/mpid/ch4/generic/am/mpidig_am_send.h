@@ -39,6 +39,12 @@ static inline int MPIDIG_do_pipeline_send(const void *buf, MPI_Aint count, MPI_D
                                           MPIR_Request ** request, MPIR_Errflag_t errflag,
                                           int msg_handler_id, const void *msg_am_hdr,
                                           size_t msg_am_hdr_sz);
+static inline int MPIDIG_do_rdma_read_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                           MPI_Aint data_sz, int rank, int tag, MPIR_Comm * comm,
+                                           int context_offset, MPIDI_av_entry_t * addr,
+                                           MPIR_Request ** request, MPIR_Errflag_t errflag,
+                                           int msg_handler_id, const void *msg_am_hdr,
+                                           size_t msg_am_hdr_sz);
 static inline int MPIDIG_isend_impl_new(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                         int rank, int tag, MPIR_Comm * comm, int context_offset,
                                         MPIDI_av_entry_t * addr, MPIR_Request ** request,
@@ -300,6 +306,110 @@ static inline int MPIDIG_do_pipeline_send(const void *buf, MPI_Aint count, MPI_D
     goto fn_exit;
 }
 
+static inline int MPIDIG_do_rdma_read_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                           MPI_Aint data_sz, int rank, int tag, MPIR_Comm * comm,
+                                           int context_offset, MPIDI_av_entry_t * addr,
+                                           MPIR_Request ** request, MPIR_Errflag_t errflag,
+                                           int msg_handler_id, const void *msg_am_hdr,
+                                           size_t msg_am_hdr_sz)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int c;
+    MPIR_Request *msg_req = NULL;
+    MPIR_Request *sreq = NULL;
+    MPIDIG_send_rdma_read_req_msg_t am_hdr;
+    MPIDIG_send_rdma_read_req_msg_t *carrier_am_hdr = &am_hdr;
+    void *send_am_hdr = &am_hdr;
+    size_t send_am_hdr_sz = sizeof(MPIDIG_send_rdma_read_req_msg_t);
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_RDMA_READ_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_RDMA_READ_SEND);
+
+    if (msg_handler_id != MPIDIG_SEND) {
+        /* this is not a non-regular AM send, create carrier request and message header */
+        msg_req = *request;
+        int c;
+        /* create a carrier request */
+        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 1);
+        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        /* allocate a am_hdr buffer large enough for the long req message and the msg am_hdr */
+        send_am_hdr_sz = sizeof(MPIDIG_send_rdma_read_req_msg_t) + msg_am_hdr_sz;
+        send_am_hdr = MPL_malloc(send_am_hdr_sz, MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDSTMT((send_am_hdr) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
+        /* set am_hdr for carrier request */
+        carrier_am_hdr = (MPIDIG_send_rdma_read_req_msg_t *) send_am_hdr;
+        carrier_am_hdr->hdr.msg_handler_id = msg_handler_id;
+        /* copy msg am_hdr */
+        memcpy((char *) send_am_hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t), msg_am_hdr,
+               msg_am_hdr_sz);
+        MPIDIG_REQUEST(sreq, req->msg_handler_id) = msg_handler_id;
+        MPIDIG_REQUEST(sreq, req->msg_req) = msg_req;
+    } else {
+        sreq = *request;
+        if (sreq == NULL) {
+            sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
+            MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                "**nomemreq");
+            *request = sreq;
+        } else {
+            MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
+        }
+
+        carrier_am_hdr->hdr.msg_handler_id = MPIDIG_SEND;
+        MPIDIG_REQUEST(sreq, req->msg_handler_id) = MPIDIG_SEND;
+        MPIDIG_REQUEST(sreq, req->msg_req) = NULL;
+    }
+
+    carrier_am_hdr->hdr.src_rank = comm->rank;
+    carrier_am_hdr->hdr.tag = tag;
+    carrier_am_hdr->hdr.context_id = comm->context_id + context_offset;
+    carrier_am_hdr->hdr.error_bits = errflag;
+    carrier_am_hdr->data_sz = data_sz;
+    carrier_am_hdr->sreq_ptr = sreq;
+
+    MPIDIG_REQUEST(sreq, req->rdr_req).src_buf = buf;
+    MPIDIG_REQUEST(sreq, req->rdr_req).count = count;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDIG_REQUEST(sreq, req->rdr_req).datatype = datatype;
+    MPIDIG_REQUEST(sreq, req->rdr_req).tag = carrier_am_hdr->hdr.tag;
+    MPIDIG_REQUEST(sreq, req->rdr_req).rank = carrier_am_hdr->hdr.src_rank;
+    MPIDIG_REQUEST(sreq, req->rdr_req).context_id = carrier_am_hdr->hdr.context_id;
+    MPIDIG_REQUEST(sreq, data_sz_left) = data_sz;
+    MPIDIG_REQUEST(sreq, offset) = 0;
+    MPIDIG_REQUEST(sreq, rank) = rank;
+
+    MPIR_cc_incr(sreq->cc_ptr, &c);     /* expect ACK or NAK */
+
+#ifdef HAVE_DEBUGGER_SUPPORT
+    MPIDIG_REQUEST(sreq, datatype) = datatype;
+    MPIDIG_REQUEST(sreq, buffer) = (char *) buf;
+    MPIDIG_REQUEST(sreq, count) = count;
+#endif
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (msg_req) {
+        MPIDI_REQUEST(msg_req, is_local) = MPIDI_av_is_local(addr);
+    }
+    MPIDI_REQUEST(sreq, is_local) = MPIDI_av_is_local(addr);
+
+#endif
+    mpi_errno = MPIDI_NM_am_isend_rdma_read_req(rank, comm, MPIDIG_SEND_RDMA_READ_REQ,
+                                                send_am_hdr, send_am_hdr_sz, buf, count,
+                                                datatype, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    if (msg_handler_id != MPIDIG_SEND) {
+        MPL_free(send_am_hdr);
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_RDMA_READ_SEND);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /* this is the new entry point for sending message. The _new prefix will be removed later */
 static inline int MPIDIG_isend_impl_new(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                         int rank, int tag, MPIR_Comm * comm, int context_offset,
@@ -327,7 +437,9 @@ static inline int MPIDIG_isend_impl_new(const void *buf, MPI_Aint count, MPI_Dat
                                                 msg_handler_id, msg_am_hdr, msg_am_hdr_sz);
             break;
         case MPIDIG_AM_PROTOCOL__RDMA_READ:
-            MPIR_Assert(0);
+            mpi_errno = MPIDIG_do_rdma_read_send(buf, count, datatype, data_sz, rank, tag, comm,
+                                                 context_offset, addr, request, errflag,
+                                                 msg_handler_id, msg_am_hdr, msg_am_hdr_sz);
             break;
         default:
             MPIR_Assert(0);

@@ -14,6 +14,9 @@
 #include "mpidig_am.h"
 
 int MPIDIG_do_pipeline_cts(MPIR_Request * rreq);
+int MPIDIG_do_rdma_read_recv(void *mem_reg_info, size_t recv_data_sz, MPIR_Request * rreq);
+int MPIDIG_do_rdma_read_ack(MPIR_Request * rreq);
+int MPIDIG_do_rdma_read_nak(MPIR_Request * rreq);
 int MPIDIG_check_cmpl_order(MPIR_Request * req);
 void MPIDIG_progress_compl_list(void);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);

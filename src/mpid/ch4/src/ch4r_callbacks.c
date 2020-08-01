@@ -40,6 +40,91 @@ int MPIDIG_do_pipeline_cts(MPIR_Request * rreq)
     goto fn_exit;
 }
 
+int MPIDIG_do_rdma_read_recv(void *mem_reg_info, size_t recv_data_sz, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_am_recv_rdma_read(mem_reg_info, recv_data_sz, rreq);
+#else
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        MPIR_Assert(0); /* SHM should not reach here */
+    } else {
+        mpi_errno = MPIDI_NM_am_recv_rdma_read(mem_reg_info, recv_data_sz, rreq);
+    }
+#endif
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDIG_do_rdma_read_ack(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_send_rdma_read_ack_msg_t am_hdr;
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->peer_req_ptr));
+    MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
+
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_ACK, &am_hdr,
+                                     sizeof(am_hdr));
+#else
+    /* MPIDI_REQUEST(rreq, is_local) is not reliable as this ACK is delayed until RDMA read is done.
+     * By that time, the is_local may be overwritten as a result of handling anysource recv. We must
+     * to a real check on rank's locality here. */
+    if (MPIDIU_rank_is_local(rank, comm)) {
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_ACK, &am_hdr,
+                                          sizeof(am_hdr));
+    } else {
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_ACK, &am_hdr,
+                                         sizeof(am_hdr));
+    }
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDIG_do_rdma_read_nak(MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDIG_send_rdma_read_nak_msg_t am_hdr;
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->peer_req_ptr));
+    am_hdr.rreq_ptr = rreq;
+    MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
+
+    int rank = MPIDIG_REQUEST(rreq, rank);
+    MPIR_Comm *comm = MPIDIG_context_id_to_comm(MPIDIG_REQUEST(rreq, context_id));
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_NAK, &am_hdr,
+                                     sizeof(am_hdr));
+#else
+    if (MPIDI_REQUEST(rreq, is_local)) {
+        mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_NAK, &am_hdr,
+                                          sizeof(am_hdr));
+    } else {
+        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND_RDMA_READ_NAK, &am_hdr,
+                                         sizeof(am_hdr));
+    }
+#endif
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't
  * supposed to finish next, it is appended to a list of requests to be retrieved later. */
 int MPIDIG_check_cmpl_order(MPIR_Request * req)
@@ -699,13 +784,131 @@ int MPIDIG_send_rdma_read_req_target_msg_cb(int handler_id, void *am_hdr, void *
                                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
+    void *pack_buf = NULL;
+    MPIR_Request *rreq = NULL;
+    MPIR_Comm *root_comm;
+    MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     MPIDIG_send_rdma_read_req_msg_t *rdmar_hdr = (MPIDIG_send_rdma_read_req_msg_t *) am_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_TARGET_MSG_CB);
 
-    MPIR_Assert(0);
+    root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
+  root_comm_retry:
+    if (root_comm) {
+        /* MPIDI_CS_ENTER(); */
+        while (TRUE) {
+            rreq = MPIDIG_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
+                                         is_local, &MPIDIG_COMM(root_comm, posted_list));
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            if (rreq) {
+                int is_cancelled;
+                mpi_errno = MPIDI_anysrc_try_cancel_partner(rreq, &is_cancelled);
+                MPIR_ERR_CHECK(mpi_errno);
+                if (!is_cancelled) {
+                    MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
+                    continue;
+                }
+            }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+            break;
+        }
+        /* MPIDI_CS_EXIT(); */
+    }
+
+    if (rreq == NULL) {
+        rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+
+        mpi_errno = MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
+        MPIR_Assert(pack_buf);
+        MPIDIG_REQUEST(rreq, buffer) = pack_buf;
+        MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
+        MPIDIG_REQUEST(rreq, count) = rdmar_hdr->data_sz;
+        MPIDIG_REQUEST(rreq, first_seg_sz) = in_data_sz;        /* save mem reg info size */
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RDMA_READ_REQ;
+        MPIDIG_REQUEST(rreq, req->peer_req_ptr) = rdmar_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+        if (hdr->msg_handler_id != MPIDIG_SEND) {
+            int msg_handler_id = hdr->msg_handler_id;
+            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t);
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+                                                          is_local, 0, &rreq);
+        }
+        MPIDIG_recv_type_init(rdmar_hdr->data_sz, rreq);
+        MPIDIG_recv_setup(rreq);
+        /* receive mem reg info to unexp buffer. Not using MPIDIG_recv_copy_seg to avoid change
+         * internal counter */
+        memcpy(pack_buf, data, in_data_sz);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDI_REQUEST(rreq, is_local) = is_local;
+#endif
+
+        MPID_THREAD_CS_ENTER(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+        if (root_comm) {
+            MPIR_Comm_add_ref(root_comm);
+            MPIDIG_enqueue_unexp(rreq, &MPIDIG_COMM(root_comm, unexp_list));
+        } else {
+            MPIR_Comm *root_comm_again;
+            /* This branch means that last time we checked, there was no communicator
+             * associated with the arriving message.
+             * In a multi-threaded environment, it is possible that the communicator
+             * has been created since we checked root_comm last time.
+             * If that is the case, the new message must be put into a queue in
+             * the new communicator. Otherwise that message will be lost forever.
+             * Here that strategy is to query root_comm again, and if found,
+             * simply re-execute the per-communicator enqueue logic above. */
+            root_comm_again = MPIDIG_context_id_to_comm(hdr->context_id);
+            if (unlikely(root_comm_again != NULL)) {
+                MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+                MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                                  MPIDIG_REQUEST(rreq, buffer));
+                MPIR_Request_free_unsafe(rreq);
+                MPID_Request_complete(rreq);
+                rreq = NULL;
+                root_comm = root_comm_again;
+                goto root_comm_retry;
+            }
+            MPIDIG_enqueue_unexp(rreq,
+                                 MPIDIG_context_id_to_uelist(MPIDIG_REQUEST(rreq, context_id)));
+        }
+        MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+    } else {
+        /* Matching receive was posted */
+        rreq->comm = root_comm;
+        /* NOTE: we are skipping MPIR_Comm_release for taking off posted_list since we are holding
+         * the reference to root_comm in the rreq. We need to hold on to this reference so the comm
+         * may remain valid by the time we send ack (using the comm).
+         */
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RDMA_READ_REQ;
+        MPIDIG_REQUEST(rreq, req->peer_req_ptr) = rdmar_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+        /* Mark `match_req` as NULL so that we know nothing else to complete when
+         * `unexp_req` finally completes. (See MPIDI_recv_target_cmpl_cb) */
+        MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
+        if (hdr->msg_handler_id != MPIDIG_SEND) {
+            int msg_handler_id = hdr->msg_handler_id;
+            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t);
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+                                                          is_local, 0, &rreq);
+        }
+        MPIDIG_recv_type_init(rdmar_hdr->data_sz, rreq);
+        MPIDIG_recv_setup(rreq);
+
+        mpi_errno = MPIDIG_do_rdma_read_recv(data, rdmar_hdr->data_sz, rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_TARGET_MSG_CB);
@@ -720,7 +923,7 @@ int MPIDIG_send_rdma_read_req_origin_cb(MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_ORIGIN_CB);
 
-    MPIR_Assert(0);
+    MPID_Request_complete(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_ORIGIN_CB);
     return mpi_errno;
@@ -731,13 +934,19 @@ int MPIDIG_send_rdma_read_ack_target_msg_cb(int handler_id, void *am_hdr, void *
                                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
+    MPIR_Request *sreq = NULL;
     MPIDIG_send_rdma_read_ack_msg_t *rdmar_hdr = (MPIDIG_send_rdma_read_ack_msg_t *) am_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_RDMA_READ_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_RDMA_READ_ACK_TARGET_MSG_CB);
 
-    MPIR_Assert(0);
+    sreq = (MPIR_Request *) rdmar_hdr->sreq_ptr;
+
+    mpi_errno = MPIDI_NM_am_rdma_read_unreg(sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->rdr_req).datatype);
+    MPID_Request_complete(sreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_RDMA_READ_ACK_TARGET_MSG_CB);
@@ -751,14 +960,65 @@ int MPIDIG_send_rdma_read_nak_target_msg_cb(int handler_id, void *am_hdr, void *
                                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_done = 0;
-    MPIR_Request *rreq;
+    MPIR_Request *sreq = NULL;
+    MPIR_Request *rreq = NULL;
     MPIDIG_send_rdma_read_nak_msg_t *rdmar_hdr = (MPIDIG_send_rdma_read_nak_msg_t *) am_hdr;
+    MPIDIG_send_pipeline_seg_msg_t seg_hdr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_RDMA_READ_NAK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_RDMA_READ_NAK_TARGET_MSG_CB);
 
-    MPIR_Assert(0);
+    sreq = (MPIR_Request *) rdmar_hdr->sreq_ptr;
+    rreq = (MPIR_Request *) rdmar_hdr->rreq_ptr;
+
+    mpi_errno = MPIDI_NM_am_rdma_read_unreg(sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* prepare request for pipeline send */
+    MPIDIG_rdr_req_t rdr_req;
+    rdr_req = MPIDIG_REQUEST(sreq, req->rdr_req);
+
+    MPIDIG_REQUEST(sreq, req->plreq).src_buf = rdr_req.src_buf;
+    MPIDIG_REQUEST(sreq, req->plreq).count = rdr_req.count;
+    MPIDIG_REQUEST(sreq, req->plreq).datatype = rdr_req.datatype;
+    MPIDIG_REQUEST(sreq, req->plreq).rank = rdr_req.rank;
+    MPIDIG_REQUEST(sreq, req->plreq).tag = rdr_req.tag;
+    MPIDIG_REQUEST(sreq, req->plreq).context_id = rdr_req.context_id;
+    MPIDIG_REQUEST(sreq, req->plreq).parent_req = NULL;
+    /* although we are sending seg 0 here, we need set seg_next = 1 to make OFI handle request
+     * correctly */
+    MPIDIG_REQUEST(sreq, req->plreq).seg_next = 1;
+
+    /* request data size and offset tracking for send request */
+    size_t data_sz = 0;
+    MPIDI_Datatype_check_size(rdr_req.datatype, rdr_req.count, data_sz);
+    MPIDIG_REQUEST(sreq, data_sz_left) = data_sz;
+    MPIDIG_REQUEST(sreq, offset) = 0;
+
+    /* prepare pipeline send seg message */
+    seg_hdr.rreq_ptr = rdmar_hdr->rreq_ptr;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_REQUEST(sreq, is_local))
+        mpi_errno =
+            MPIDI_SHM_am_isend_pipeline_seg(MPIDIG_REQUEST(sreq, req->plreq).context_id,
+                                            MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_PIPELINE_SEG,
+                                            &seg_hdr, sizeof(seg_hdr),
+                                            MPIDIG_REQUEST(sreq, req->plreq).src_buf,
+                                            MPIDIG_REQUEST(sreq, req->plreq).count,
+                                            MPIDIG_REQUEST(sreq, req->plreq).datatype, sreq);
+    else
+#endif
+    {
+        mpi_errno =
+            MPIDI_NM_am_isend_pipeline_seg(MPIDIG_REQUEST(sreq, req->plreq).context_id,
+                                           MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_PIPELINE_SEG,
+                                           &seg_hdr, sizeof(seg_hdr),
+                                           MPIDIG_REQUEST(sreq, req->plreq).src_buf,
+                                           MPIDIG_REQUEST(sreq, req->plreq).count,
+                                           MPIDIG_REQUEST(sreq, req->plreq).datatype, sreq);
+    }
+    MPIR_ERR_CHECK(mpi_errno);
+    MPID_Request_complete(sreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_RDMA_READ_NAK_TARGET_MSG_CB);
