@@ -279,7 +279,7 @@ else
 fi
 
 AC_ARG_ENABLE([ch4-am-only],
-              AS_HELP_STRING([--ch4-am-only],[forces AM-only communication]),
+              AS_HELP_STRING([--enable-ch4-am-only],[forces AM-only communication]),
               [],[enable_ch4_am_only=no])
 
 if test "${enable_ch4_am_only}" = "yes"; then
