@@ -80,7 +80,10 @@ AC_ARG_ENABLE(g,
 # enable-g
 # strip off multiple options, separated by commas
 PAC_PUSH_FLAG(IFS)
-IFS=","
+# Change IFS to process enable_g values; save for use after AC_MSG_WARN
+# below to provide single point of maintenance
+enable_g_IFS=","
+IFS="$enable_g_IFS"
 for option in $enable_g ; do
     case "$option" in
 	 log)
@@ -100,7 +103,12 @@ for option in $enable_g ; do
 	 ;;
 
 	 *)
+	 # Default IFS required by AC_MSG_WARN
+	 PAC_POP_FLAG(IFS)
 	 AC_MSG_WARN([Unknown value $option for enable-g])
+	 # Restore previous IFS to process any remaining enable_g values
+	 PAC_PUSH_FLAG(IFS)
+	 IFS="$enable_g_IFS"
 	 ;;
     esac
 done
