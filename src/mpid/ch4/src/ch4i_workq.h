@@ -15,7 +15,7 @@ extern MPIR_Object_alloc_t MPIDI_workq_elemt_mem;
 
 /* Forward declarations of the routines that can be pushed to a work-queue */
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *, int, MPI_Datatype, int, int,
+MPL_STATIC_INLINE_PREFIX int MPIDI_send_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
                                                MPIR_Comm *, int, MPIDI_av_entry_t *,
                                                MPIR_Request **);
 MPL_STATIC_INLINE_PREFIX int MPIDI_isend_unsafe(const void *, MPI_Aint, MPI_Datatype, int, int,
