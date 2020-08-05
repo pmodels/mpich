@@ -541,41 +541,6 @@ AC_SUBST(mpix)
 # to noninst_PROGRAMS to skip building the tests when we do strict MPI test
 AM_CONDITIONAL([BUILD_MPIX_TESTS], [test "$enable_strictmpi" = "no"])
 
-# GPU support
-PAC_PUSH_FLAG([CPPFLAGS])
-PAC_PUSH_FLAG([LDFLAGS])
-PAC_PUSH_FLAG([LIBS])
-PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
-cuda_CPPFLAGS=""
-cuda_LDFLAGS=""
-cuda_LIBS=""
-if test "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
-    if test -n "${with_cuda}" ; then
-        cuda_CPPFLAGS="-I${with_cuda}/include"
-        if test -d ${with_cuda}/lib64 ; then
-            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
-        else
-            cuda_LDFLAGS="-L${with_cuda}/lib"
-        fi
-        cuda_LIBS="-lcudart"
-    fi
-fi
-AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
-AC_SUBST([cuda_CPPFLAGS])
-AC_SUBST([cuda_LDFLAGS])
-AC_SUBST([cuda_LIBS])
-PAC_POP_FLAG([CPPFLAGS])
-PAC_POP_FLAG([LDFLAGS])
-PAC_POP_FLAG([LIBS])
-
-# GPU only tests
-if test $have_cuda = "no" -a $enable_gpu_tests_only = "yes" ; then
-    AC_MSG_ERROR([GPU only test configuration requires CUDA])
-fi
-AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
-
 # preserve these values across a reconfigure
 AC_ARG_VAR([WRAPPER_CFLAGS],[])
 AC_ARG_VAR([WRAPPER_CPPFLAGS],[])
@@ -675,7 +640,7 @@ AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
-# Note that some versions of autoconf will insist that the compiler 
+# Note that some versions of autoconf will insist that the compiler
 # produce executables at this point, which is why we must do something
 # special for building within MPICH
 
@@ -756,6 +721,43 @@ AC_TYPE_UINT64_T
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 AC_CHECK_SIZEOF(void *,8)
+
+# Start of GPU libs check
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_PUSH_FLAG([LDFLAGS])
+PAC_PUSH_FLAG([LIBS])
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+cuda_CPPFLAGS=""
+cuda_LDFLAGS=""
+cuda_LIBS=""
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    if test -n "${with_cuda}" ; then
+        cuda_CPPFLAGS="-I${with_cuda}/include"
+        if test -d ${with_cuda}/lib64 ; then
+            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+        else
+            cuda_LDFLAGS="-L${with_cuda}/lib"
+        fi
+        cuda_LIBS="-lcudart"
+    fi
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AC_SUBST([cuda_CPPFLAGS])
+AC_SUBST([cuda_LDFLAGS])
+AC_SUBST([cuda_LIBS])
+PAC_POP_FLAG([CPPFLAGS])
+PAC_POP_FLAG([LDFLAGS])
+PAC_POP_FLAG([LIBS])
+
+# GPU only tests
+if test $have_cuda = "no" -a $enable_gpu_tests_only = "yes" ; then
+    AC_MSG_ERROR([GPU only test configuration requires CUDA])
+fi
+AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
+# End of GPU libs Check
+
 # for tests that require large mem
 largetest="#"
 if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
