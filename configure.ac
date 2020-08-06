@@ -414,6 +414,7 @@ AC_ARG_ENABLE(fast,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS. (default is -O2)
         ndebug   - Appends -DNDEBUG to MPICHLIB_CFLAGS.
+        no-strict-alignment - relax strict alignment requirement
         all|yes  - "O2" and "ndebug" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=O2)
@@ -913,6 +914,9 @@ for option in $enable_fast ; do
         ndebug)
         enable_fast_ndebug=yes
         ;;
+        no-strict-alignment)
+        enable_fast_no_strict_alignment=yes
+        ;;
         all|yes)
         enable_fast_ndebug=yes
         enable_fast_opts=O2
@@ -949,6 +953,11 @@ if test "$enable_fast_ndebug" = "yes" ; then
     # MPICH does NOT assume any preprocessing support from the Fortran compiler,
     # so no Fortran files contain any preprocessing statements.
     # Don't set FFLAGS or FCFLAGS with any -D.
+fi
+
+if test -z "$enable_fast_no_strict_alignment" ; then
+    # we need observe strict alignment to pass ubsan check
+    AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
 fi
 
 # error-checking
@@ -2935,9 +2944,6 @@ else
     AC_CHECK_ALIGNOF(long double)
     AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_long_double,[Controls byte alignment of structures (for aligning allocated structures)])
 fi
-
-# we need observe strict alignment to pass ubsan check
-AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
 
 # There are further alignment checks after we test for int64_t etc. below.
 
