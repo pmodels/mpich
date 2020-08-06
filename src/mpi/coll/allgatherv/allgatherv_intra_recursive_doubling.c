@@ -37,6 +37,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     void *tmp_buf;
     int mask, dst_tree_root, my_tree_root, position,
         send_offset, recv_offset, nprocs_completed, k, offset, tmp_mask, tree_root;
+    MPL_pointer_attr_t attr;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -59,8 +60,12 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
-                        total_count * recvtype_sz, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_malloc((void **) &tmp_buf, total_count * recvtype_sz, attr.device);
+    else
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
+                            total_count * recvtype_sz, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* copy local data into right location in tmp_buf */
     position = 0;
@@ -246,6 +251,8 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     }
 
   fn_exit:
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

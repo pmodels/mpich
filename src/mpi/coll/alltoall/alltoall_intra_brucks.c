@@ -36,6 +36,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     MPI_Aint newtype_sz;
     void *tmp_buf;
+    MPL_pointer_attr_t attr;
     MPIR_CHKLMEM_DECL(6);
 
     if (recvcount == 0)
@@ -55,7 +56,11 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     /* allocate temporary buffer */
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
     pack_size = recvcount * comm_size * recvtype_sz;
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_malloc((void **) &tmp_buf, pack_size, attr.device);
+    else
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* Do Phase 1 of the algorithim. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
@@ -150,6 +155,8 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
     }
 
   fn_exit:
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

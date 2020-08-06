@@ -40,12 +40,13 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     int scatter_size;
     MPI_Aint curr_size, recv_size = 0;
     int j, k, i, tmp_mask, is_contig;
+    MPL_pointer_attr_t attr;
     MPI_Aint type_size, nbytes = 0;
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
     MPIR_CHKLMEM_DECL(1);
     MPI_Aint true_extent, true_lb;
-    void *tmp_buf;
+    void *tmp_buf = NULL;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -79,7 +80,12 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
 
         tmp_buf = (char *) buffer + true_lb;
     } else {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPL_gpu_query_pointer_attr(buffer, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_malloc((void **) &tmp_buf, nbytes, attr.device);
+        } else {
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        }
 
         if (rank == root) {
             mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
@@ -279,6 +285,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     }
 
   fn_exit:
+    if (tmp_buf && attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)

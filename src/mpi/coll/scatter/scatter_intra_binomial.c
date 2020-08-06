@@ -40,6 +40,7 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
     void *tmp_buf = NULL;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    MPL_pointer_attr_t attr;
     MPIR_CHKLMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
@@ -67,11 +68,17 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
 
     curr_cnt = 0;
 
+    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+
     /* all even nodes other than root need a temporary buffer to
      * receive data of max size (nbytes*comm_size)/2 */
     if (relative_rank && !(relative_rank % 2)) {
         tmp_buf_size = (nbytes * comm_size) / 2;
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        if (attr.type == MPL_GPU_POINTER_DEV)
+            MPL_gpu_malloc((void **) &tmp_buf, tmp_buf_size, attr.device);
+        else
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
+                                MPL_MEM_BUFFER);
     }
 
     /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -81,8 +88,11 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
     if (rank == root) {
         if (root != 0) {
             tmp_buf_size = nbytes * comm_size;
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
-                                MPL_MEM_BUFFER);
+            if (attr.type == MPL_GPU_POINTER_DEV)
+                MPL_gpu_malloc((void **) &tmp_buf, tmp_buf_size, attr.device);
+            else
+                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
+                                    MPL_MEM_BUFFER);
 
             if (recvbuf != MPI_IN_PLACE)
                 mpi_errno = MPIR_Localcopy(((char *) sendbuf + extent * sendcount * rank),
@@ -201,6 +211,8 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
     }
 
   fn_exit:
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

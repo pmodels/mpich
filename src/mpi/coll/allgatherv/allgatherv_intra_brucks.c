@@ -34,6 +34,7 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     MPI_Aint curr_cnt, recv_cnt;
     int dst, total_count;
     void *tmp_buf;
+    MPL_pointer_attr_t attr;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -51,8 +52,12 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     /* allocate a temporary buffer that can hold all the data */
     MPIR_Datatype_get_size_macro(recvtype, recvtype_sz);
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count * recvtype_sz, mpi_errno, "tmp_buf",
-                        MPL_MEM_BUFFER);
+    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_malloc((void **) &tmp_buf, total_count * recvtype_sz, attr.device);
+    else
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count * recvtype_sz, mpi_errno, "tmp_buf",
+                            MPL_MEM_BUFFER);
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {
@@ -145,6 +150,8 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     }
 
   fn_exit:
+    if (attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

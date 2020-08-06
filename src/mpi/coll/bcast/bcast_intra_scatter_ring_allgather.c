@@ -32,9 +32,10 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size;
     int j, i, is_contig;
+    MPL_pointer_attr_t attr;
     MPI_Aint nbytes, type_size;
     int left, right, jnext;
-    void *tmp_buf;
+    void *tmp_buf = NULL;
     MPI_Aint recvd_size, curr_size = 0;
     MPI_Status status;
     MPI_Aint true_extent, true_lb;
@@ -65,7 +66,12 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
 
         tmp_buf = (char *) buffer + true_lb;
     } else {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        MPL_gpu_query_pointer_attr(buffer, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV) {
+            MPL_gpu_malloc((void **) &tmp_buf, nbytes, attr.device);
+        } else {
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+        }
 
         if (rank == root) {
             mpi_errno = MPIR_Localcopy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE);
@@ -150,6 +156,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     }
 
   fn_exit:
+    if (tmp_buf && attr.type == MPL_GPU_POINTER_DEV)
+        MPL_gpu_free(tmp_buf);
     MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
