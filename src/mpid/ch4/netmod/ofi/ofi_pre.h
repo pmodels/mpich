@@ -49,9 +49,7 @@ typedef struct {
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
-    MPIDI_AMTYPE_SHORT,
-    MPIDI_AMTYPE_LMT_REQ,
-    MPIDI_AMTYPE_LMT_ACK
+    MPIDI_AMTYPE_SHORT
 };
 
 typedef struct {

@@ -527,15 +527,6 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
-    switch (msg_hdr->am_type) {
-        case MPIDI_AMTYPE_LMT_ACK:
-        case MPIDI_AMTYPE_LMT_REQ:
-            goto fn_exit;
-
-        default:
-            break;
-    }
-
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
                                       MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
     MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
@@ -611,21 +602,6 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         case MPIDI_AMTYPE_SHORT:
             p_data = (char *) wc->buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
             mpi_errno = MPIDI_OFI_handle_short_am(am_hdr, am_hdr + 1, p_data);
-
-            MPIR_ERR_CHECK(mpi_errno);
-
-            break;
-
-        case MPIDI_AMTYPE_LMT_REQ:
-            p_data = (char *) am_hdr + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
-            mpi_errno = MPIDI_OFI_handle_long_am(am_hdr, am_hdr + 1, p_data);
-
-            MPIR_ERR_CHECK(mpi_errno);
-
-            break;
-
-        case MPIDI_AMTYPE_LMT_ACK:
-            mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr, am_hdr + 1);
 
             MPIR_ERR_CHECK(mpi_errno);
 
