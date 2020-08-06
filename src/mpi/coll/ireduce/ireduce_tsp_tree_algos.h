@@ -53,6 +53,20 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     rank = MPIR_Comm_rank(comm);
     is_root = (rank == root);
 
+    /* take care of trivial cases */
+    if (count == 0) {
+        goto fn_exit;
+    }
+
+    if (size == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            MPIR_TSP_sched_localcopy(sendbuf, count, datatype, recvbuf, count, datatype, sched,
+                                     0, NULL);
+        }
+        goto fn_exit;
+    }
+
+    /* main algorithm */
     MPIR_Datatype_get_size_macro(datatype, type_size);
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &type_lb, &true_extent);
@@ -85,8 +99,10 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
 
     /* identify my locaion in the tree */
     is_tree_root = (rank == tree_root) ? 1 : 0;
-    is_tree_leaf = (num_children == 0 && !is_tree_root) ? 1 : 0;
+    is_tree_leaf = (num_children == 0) ? 1 : 0;
     is_tree_intermediate = (!is_tree_leaf && !is_tree_root);
+    /* ensure exclusiveness */
+    MPIR_Assert(!(is_tree_root && is_tree_leaf));
 
     /* Allocate buffers to receive data from children. Any memory required for execution
      * of the schedule, for example child_buffer, reduce_buffer below, is allocated using
