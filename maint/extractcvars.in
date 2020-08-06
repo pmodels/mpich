@@ -243,24 +243,8 @@ print OUTPUT_C <<EOT;
 EOT
 # Output the definitions
 foreach my $p (@cvars) {
-    my $default = FmtDefault($p->{name}, $p->{default}, $p->{type});
-
-    if ($p->{class} eq 'device') {
-        printf OUTPUT_C "#if defined MPID_%s\n", $p->{name};
-        printf OUTPUT_C "%s ${uc_ns}_%s = MPID_%s;\n", Type2Ctype($p->{type}), $p->{name},
-                       $p->{name};
-        printf OUTPUT_C "#else\n";
-    }
-
-    if ($p->{type} eq 'string') {
-        printf OUTPUT_C "%s ${uc_ns}_%s = (const char*)%s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
-    } else {
-        printf OUTPUT_C "%s ${uc_ns}_%s = %s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
-    }
-
-    if ($p->{class} eq 'device') {
-        printf OUTPUT_C "#endif /* MPID_%s */\n\n", $p->{name};
-    }
+    my $type = Type2Ctype($p->{type});
+    print OUTPUT_C "$type ${uc_ns}_$p->{name};\n";
 }
 
 # Generate the init function.
@@ -293,46 +277,18 @@ foreach my $cat (@categories) {
 
 # Register and init cvars
 foreach my $p (@cvars) {
-    my $count;
-    my $mpi_dtype;
-    my $dftval;
+    my $count = get_cvar_count($p);
+    my $mpi_dtype = get_cvar_mpi_dtype($p);
+    my ($dftvar, $dftval) = get_cvar_dft_var_val($p);
 
-    # Set count and default value of the car
-    if ($p->{type} eq 'string') {
-        $mpi_dtype = "MPI_CHAR";
-        $count = "${uc_ns}_MAX_STRLEN";
-        $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C qq(    defaultval.str = (const char *)%s;\n), $dftval;
-    }
-    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
-        $mpi_dtype = "MPI_INT";
-        $count = 1;
-        $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C qq(    defaultval.d = %s;\n), $dftval;
-    }
-    elsif ($p->{type} eq 'double') {
-        $mpi_dtype = "MPI_DOUBLE";
-        $count = 1;
-        $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C qq(    defaultval.d = %s;\n), $dftval;
-    }
-    elsif ($p->{type} eq 'range') {
-        $mpi_dtype = "MPI_INT";
-        $count = 2;
-        $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C qq(    {\n);
-        printf OUTPUT_C qq(        MPIR_T_cvar_range_value_t tmp = %s;\n), $dftval;
-        printf OUTPUT_C qq(        defaultval.range = tmp;\n);
-        printf OUTPUT_C qq(    }\n);
-    }
-    elsif ($p->{type} eq 'enum') {
-        $mpi_dtype = "MPI_INT";
-        $count = 1;
-        $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C "    defaultval.d = %s;\n", $dftval;
-    }
-    else {
-        die "unknown type $p->{type}, stopped";
+    if ($p->{class} eq 'device') {
+        print OUTPUT_C "#if defined MPID_$p->{name}\n";
+        print OUTPUT_C "    $dftvar = MPID_$p->{name};\n";
+        print OUTPUT_C "#else\n";
+        print OUTPUT_C "    $dftvar = $dftval;\n";
+        print OUTPUT_C "#endif /* MPID_$p->{name} */\n\n";
+    } else {
+        print OUTPUT_C "    $dftvar = $dftval;\n";
     }
 
     # Register the cvar
@@ -350,10 +306,14 @@ foreach my $p (@cvars) {
         qq(        "$p->{category}", /* category */),
         qq(        "$desc");
 
+    my $var_name = "${uc_ns}_" . $p->{name};
+    if ($p->{type} ne 'string') {
+        print OUTPUT_C "    $var_name = $dftvar;\n";
+    }
+
     if ($p->{type} eq 'string') {
-print OUTPUT_C <<EOT;
-    ${uc_ns}_GET_DEFAULT_STRING(${uc_ns}_$p->{name}, &tmp_str);
-EOT
+        # we will strdup the tmp_str
+        print OUTPUT_C "    tmp_str = defaultval.str;\n";
     }
     elsif ($p->{type} eq 'enum') {
         print OUTPUT_C "    tmp_str=NULL;\n";
@@ -362,7 +322,6 @@ EOT
     # Get the env variable value.
     my $env_fn = Type2EnvFn($p->{type});
     my @env_names = ();
-    my $var_name = "${uc_ns}_" . $p->{name};
 
     # Process extra envs first so the primary always wins
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
@@ -530,6 +489,72 @@ close(OUTPUT_README);
 #===============================================================
 # Helper subroutines used in this script
 
+sub get_cvar_count {
+    my $p = shift;
+
+    if ($p->{type} eq "string") {
+        return "${uc_ns}_MAX_STRLEN";
+    }
+    elsif ($p->{type} eq 'range') {
+        return 2;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub get_cvar_mpi_dtype {
+    my $p = shift;
+
+    if ($p->{type} eq 'string') {
+        return "MPI_CHAR";
+    }
+    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
+        return "MPI_INT";
+    }
+    elsif ($p->{type} eq 'double') {
+        return "MPI_DOUBLE";
+    }
+    elsif ($p->{type} eq 'range') {
+        return "MPI_INT";
+    }
+    elsif ($p->{type} eq 'enum') {
+        return "MPI_INT";
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+}
+
+sub get_cvar_dft_var_val {
+    my $p = shift;
+
+    my $dftvar;
+    my $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
+    if ($p->{type} eq 'string') {
+        $dftvar = "defaultval.str";
+        $dftval = "(const char *) $dftval";
+    }
+    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
+        $dftvar = "defaultval.d";
+    }
+    elsif ($p->{type} eq 'double') {
+        $dftvar = "defaultval.f";
+    }
+    elsif ($p->{type} eq 'range') {
+        $dftvar = "defaultval.range";
+        $dftval = "(MPIR_T_cvar_range_value_t) $dftval";
+    }
+    elsif ($p->{type} eq 'enum') {
+        $dftvar = "defaultval.d";
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+    return ($dftvar, $dftval);
+}
+
+#---------------------------------------------------------------
 # Transform a cvar type to a C-language type
 sub Type2Ctype {
     my $type = shift;
