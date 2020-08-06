@@ -11,6 +11,7 @@
 static int issue_deferred_am_isend_hdr(MPIDI_OFI_deferred_am_isend_req_t * dreq);
 static int issue_deferred_am_isend_eager(MPIDI_OFI_deferred_am_isend_req_t * dreq);
 static int issue_deferred_am_isend_pipeline(MPIDI_OFI_deferred_am_isend_req_t * dreq);
+static int issue_deferred_am_isend_rdma_read(MPIDI_OFI_deferred_am_isend_req_t * dreq);
 
 void MPIDI_OFI_deferred_am_isend_dequeue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
 {
@@ -257,6 +258,49 @@ static int issue_deferred_am_isend_pipeline(MPIDI_OFI_deferred_am_isend_req_t * 
     goto fn_exit;
 }
 
+int issue_deferred_am_isend_rdma_read(MPIDI_OFI_deferred_am_isend_req_t * dreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int dt_contig = 0;
+    MPI_Aint data_sz, packed_size;
+    MPI_Aint dt_true_lb, send_size;
+    MPIR_Datatype *dt_ptr;
+    char *send_buf;
+    bool need_packing = false;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ISSUE_DEFERRED_AM_ISEND_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ISSUE_DEFERRED_AM_ISEND_RDMA_READ);
+
+    MPIDI_Datatype_get_info(dreq->count, dreq->datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    send_buf = (char *) dreq->buf + dt_true_lb;
+
+    need_packing = dt_contig ? false : true;
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(dreq->buf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+        /* Force packing of GPU buffer in host memory */
+        need_packing = true;
+    }
+
+    MPIDI_OFI_AMREQUEST_HDR(dreq->sreq, pack_buffer) = NULL;
+
+    mpi_errno = MPIDI_OFI_am_isend_mr_reg(dreq->rank, dreq->comm, dreq->handler_id, send_buf,
+                                          data_sz, dreq->sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIDIG_REQUEST(dreq->sreq, data_sz_left) -= data_sz;
+    MPIDIG_REQUEST(dreq->sreq, offset) += data_sz;
+
+    MPIDI_OFI_deferred_am_isend_dequeue(dreq);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ISSUE_DEFERRED_AM_ISEND_RDMA_READ);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -273,6 +317,9 @@ int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
             break;
         case MPIDI_OFI_DEFERRED_AM_ISEND_OP__PIPELINE:
             mpi_errno = issue_deferred_am_isend_pipeline(dreq);
+            break;
+        case MPIDI_OFI_DEFERRED_AM_ISEND_OP__RDMA_READ:
+            mpi_errno = issue_deferred_am_isend_rdma_read(dreq);
             break;
         default:
             MPIR_Assert(0);

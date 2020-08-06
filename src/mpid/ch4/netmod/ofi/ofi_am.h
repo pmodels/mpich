@@ -161,7 +161,8 @@ static inline int MPIDI_NM_am_isend_rdma_read_req(int rank, MPIR_Comm * comm, in
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
+                                                count, datatype, sreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_RDMA_READ_REQ);
@@ -174,11 +175,40 @@ static inline int MPIDI_NM_am_recv_rdma_read(void *lmt_msg, size_t recv_data_sz,
                                              MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
+    int c;
+    int dt_contig = 0;
+    size_t data_sz = 0;
+    MPI_Aint dt_true_lb = 0;
+    MPIR_Datatype *dt_ptr = NULL;
+    MPL_pointer_attr_t attr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_RECV_RDMA_READ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_RECV_RDMA_READ);
 
-    MPIR_Assert(0);
+    /* check if receive buffer is okay for rdma_read */
+    MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype), dt_contig,
+                            data_sz, dt_ptr, dt_true_lb);
+    MPIR_GPU_query_pointer_attr((char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb, &attr);
+    if (!dt_contig || attr.type == MPL_GPU_POINTER_DEV) {
+        MPIDIG_do_rdma_read_nak(rreq);
+        goto fn_exit;
+    }
+
+    MPIDI_OFI_am_clear_request(rreq);
+    mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_cc_incr(rreq->cc_ptr, &c);
+
+    if (!recv_data_sz) {
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIR_Request_complete(rreq);
+    }
+
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = (*(MPIDI_OFI_lmt_msg_payload_t *) lmt_msg);
+    MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
+
+    do_long_am_recv(recv_data_sz, rreq, lmt_msg);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AM_RECV_RDMA_READ);
@@ -194,7 +224,12 @@ static inline int MPIDI_NM_am_rdma_read_unreg(MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
 
-    MPIR_Assert(0);
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+        uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+        MPIDI_OFI_mr_key_free(mr_key);
+    }
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
+    MPL_atomic_fetch_sub_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RDMA_READ_UNREG);
@@ -277,7 +312,11 @@ static inline int MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
 
     if (!MPIDIG_am_check_size_le_eager_limit
         (data_sz + am_ext_sz, handler_id, MPIDI_NM_am_eager_limit())) {
-        protocol = MPIDIG_AM_PROTOCOL__PIPELINE;
+        if (!dt_contig || attr.type == MPL_GPU_POINTER_DEV) {
+            protocol = MPIDIG_AM_PROTOCOL__PIPELINE;
+        } else {
+            protocol = MPIDIG_AM_PROTOCOL__RDMA_READ;
+        }
     }
 
     return protocol;
