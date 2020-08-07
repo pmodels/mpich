@@ -410,9 +410,6 @@ static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[])
    values are known.  Then pass in the entire array.  This is needed
    to get the correct values for "ties" between the first and last values.
  */
-#undef FC_NAME
-#define FC_NAME "optbalance"
-
 static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
                       int trydims[], int *curbal_p, int optdims[])
 {
