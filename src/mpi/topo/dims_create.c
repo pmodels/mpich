@@ -410,9 +410,6 @@ static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[])
    values are known.  Then pass in the entire array.  This is needed
    to get the correct values for "ties" between the first and last values.
  */
-#undef FC_NAME
-#define FC_NAME "optbalance"
-
 static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
                       int trydims[], int *curbal_p, int optdims[])
 {
@@ -433,8 +430,6 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
         MPIR_CHKLMEM_DECL(1);
         int *newdivs;
         MPIR_CHKLMEM_MALLOC(newdivs, int *, ndivs * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
-        if (mpi_errno)
-            return mpi_errno;
 
         /* At least 3 divisors to set (0...idx).  We try all choices
          * recursively, but stop looking when we can easily tell that
@@ -463,8 +458,11 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             if (q % f == 0) {
                 newdivs[nndivs++] = f;
                 sf = f;
-            } else {
+            } else if (k + 1 < ndivs) {
                 sf = divs[k + 1];
+            } else {
+                /* run out of next factors, bail out */
+                break;
             }
             if (idx < nd - 1 && sf - min > curbal) {
                 MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
@@ -505,8 +503,10 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             }
             MPIR_T_PVAR_TIMER_END(DIMS, dims_div);
             /* recursively try to find the best subset */
-            if (nndivs > 0)
-                optbalance(q, idx - 1, nd, nndivs, newdivs, trydims, curbal_p, optdims);
+            if (nndivs > 0) {
+                mpi_errno = optbalance(q, idx - 1, nd, nndivs, newdivs, trydims, curbal_p, optdims);
+                MPIR_ERR_CHECK(mpi_errno);
+            }
         }
         MPIR_CHKLMEM_FREEALL();
     } else if (idx == 1) {
@@ -534,7 +534,7 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             }
             /* No valid solution.  Exit without changing current optdims */
             MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
-            return 0;
+            goto fn_exit;
         }
         if (MPIR_CVAR_DIMS_VERBOSE) {
             MPL_msg_printf("Found best factors %d,%d, from divs[%d]\n", q, f, k - 1);
@@ -568,9 +568,11 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             *curbal_p = n - min;
         }
     }
-    return 0;
-  fn_fail:
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -800,10 +802,11 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
             MPL_msg_printf("%d%c", chosen[i], (i + 1 < dims_needed) ? 'x' : '\n');
     }
     MPIR_T_PVAR_TIMER_START(DIMS, dims_bal);
-    optbalance(nnodes, dims_needed - nextidx - 1, dims_needed - nextidx,
-               ndivs, divs, trydims, &curbal, chosen + nextidx);
+    mpi_errno = optbalance(nnodes, dims_needed - nextidx - 1, dims_needed - nextidx,
+                           ndivs, divs, trydims, &curbal, chosen + nextidx);
     MPIR_T_PVAR_TIMER_END(DIMS, dims_bal);
     MPIR_CHKLMEM_FREEALL();
+    MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_CVAR_DIMS_VERBOSE) {
         MPL_msg_printf("N: final decomp is: ");
