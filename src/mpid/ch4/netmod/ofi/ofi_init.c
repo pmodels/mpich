@@ -1286,7 +1286,7 @@ static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_
 static int open_fabric(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct fi_info *prov = NULL;
+    struct fi_info *prov_list = NULL;
 
     /* First, find the provider and prepare the hints */
     struct fi_info *hints = fi_allocinfo();
@@ -1296,7 +1296,15 @@ static int open_fabric(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list), getinfo);
+
+    struct fi_info *prov = prov_list;
+    /* fi_getinfo may ignore the addr_format in hints, filter it again */
+    if (hints->addr_format != FI_FORMAT_UNSPEC) {
+        while (prov && prov->addr_format != hints->addr_format) {
+            prov = prov->next;
+        }
+    }
     MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
@@ -1338,8 +1346,9 @@ static int open_fabric(void)
     MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
 
   fn_exit:
-    if (prov)
-        fi_freeinfo(prov);
+    if (prov_list) {
+        fi_freeinfo(prov_list);
+    }
 
     /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
     MPL_free(hints->fabric_attr->prov_name);
