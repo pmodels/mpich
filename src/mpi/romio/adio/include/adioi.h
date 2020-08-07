@@ -904,8 +904,10 @@ char *ADIOI_Strdup(const char *);
 #define ADIOI_Info_delete(info_,key_str_) \
     MPI_Info_delete((info_),((char*)key_str_))
 
+#ifdef ROMIO_INSIDE_MPICH
 /* the I/O related support for MPI_Comm_split_type */
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
+#endif
 
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
