@@ -936,12 +936,6 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 static int cleanup_and_free_sc_plfd(sockconn_t * const sc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_VC_t *const sc_vc = sc->vc;
-    MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
-    const int idx = sc->index;
-    struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
-    freenode_t *node;
-    MPIR_CHKPMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CLEANUP_AND_FREE_SC_PLFD);
@@ -949,18 +943,26 @@ static int cleanup_and_free_sc_plfd(sockconn_t * const sc)
     if (sc == NULL)
         goto fn_exit;
 
+    MPIDI_VC_t *const sc_vc = sc->vc;
+    const int idx = sc->index;
+    struct pollfd *const plfd = &MPID_nem_tcp_plfd_tbl[sc->index];
+    freenode_t *node;
+    MPIR_CHKPMEM_DECL(1);
+
     if (sc_vc) {
+        MPID_nem_tcp_vc_area *const sc_vc_tcp = VC_TCP(sc_vc);
+
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE,
                         (MPL_DBG_FDEST,
                          "about to decr sc_ref_count sc=%p sc->vc=%p sc_ref_count=%d", sc, sc_vc,
                          sc_vc_tcp->sc_ref_count));
         MPIR_Assert(sc_vc_tcp->sc_ref_count > 0);
         --sc_vc_tcp->sc_ref_count;
-    }
 
-    if (sc_vc && sc_vc_tcp->sc == sc) { /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
-        sc_vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
-        ASSIGN_SC_TO_VC(sc_vc_tcp, NULL);
+        if (sc_vc_tcp->sc == sc) { /* this vc may be connecting/accepting with another sc e.g., this sc lost the tie-breaker */
+            sc_vc_tcp->state = MPID_NEM_TCP_VC_STATE_DISCONNECTED;
+            ASSIGN_SC_TO_VC(sc_vc_tcp, NULL);
+        }
     }
 
     CHANGE_STATE(sc, CONN_STATE_TS_CLOSED);

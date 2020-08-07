@@ -563,6 +563,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
+#if NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
@@ -577,6 +578,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         /* confirm it (in case MPL_ATTR_ALIGNED didn't work) */
         MPIR_Assert(((intptr_t) am_hdr & 0x7) == 0);
     }
+#endif
 
     expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
     if (am_hdr->seqno != expected_seqno) {
