@@ -26,6 +26,16 @@ cvars:
       description : >-
         Prints out the configuration of each capability selected via the capability sets interface.
 
+    - name        : MPIR_CVAR_OFI_SKIP_IPV6
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Skip IPv6 providers.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
       type        : int
@@ -1511,11 +1521,11 @@ bool match_global_settings(struct fi_info * prov)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
-#ifdef MPIDI_CH4_OFI_SKIP_IPV6
-    if (prov->addr_format == FI_SOCKADDR_IN6) {
-        return false;
+    if (MPIR_CVAR_OFI_SKIP_IPV6) {
+        if (prov->addr_format == FI_SOCKADDR_IN6) {
+            return false;
+        }
     }
-#endif
     CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
