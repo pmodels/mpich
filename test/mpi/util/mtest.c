@@ -1022,6 +1022,33 @@ void MTestFreeComm(MPI_Comm * comm)
     }
 }
 
+/* Directly calling MTestGetIntercomm maybe insufficient since all the processes
+ * may end up with the same context_id even between different groups of the intercomm.
+ * Radomize it by duplicate MPI_Comm_self different times */
+
+#define MAX_COMM_SELF_DUPS 4
+static MPI_Comm comm_self_dups[MAX_COMM_SELF_DUPS];
+static int num_self_dups;
+
+void MTestGetIntercomm_start(void)
+{
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    srand(rank);
+
+    num_self_dups = rand() % MAX_COMM_SELF_DUPS;
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_dup(MPI_COMM_SELF, &comm_self_dups[i]);
+    }
+}
+
+void MTestGetIntercomm_finish(void)
+{
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_free(&comm_self_dups[i]);
+    }
+}
+
 /* ------------------------------------------------------------------------ */
 void MTestPrintError(int errcode)
 {
