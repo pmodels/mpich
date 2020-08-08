@@ -23,6 +23,10 @@ typedef struct MPIDI_IPC_am_request {
     union {
         MPIDI_XPMEM_am_request_t xpmem;
     } u;
+    void *ipc_buf;
+    MPI_Aint ipc_count;
+    MPI_Datatype ipc_datatype;
+    MPIR_Request *sreq;
     MPIDI_IPC_am_unexp_rreq_t unexp_rreq;
 } MPIDI_IPC_am_request_t;
 

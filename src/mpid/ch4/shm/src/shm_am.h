@@ -138,4 +138,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_REQUEST_FINALIZE);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv_rdma_read(void *lmt_msg, size_t recv_data_sz,
+                                                         MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_RECV_RDMA);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_RECV_RDMA);
+
+    mpi_errno = MPIDI_IPC_am_recv_rdma_read(lmt_msg, recv_data_sz, rreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_RECV_RDMA);
+    return mpi_errno;
+}
 #endif /* SHM_AM_H_INCLUDED */

@@ -20,6 +20,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
                                                       MPIR_Request ** request, bool * done)
 {
     int mpi_errno = MPI_SUCCESS;
+    bool fallback_flag;
+    int flattened_sz;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);
 
@@ -42,8 +45,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint 
         MPIR_ERR_CHECK(mpi_errno);
     }
 
+    if (!MPIR_DATATYPE_IS_PREDEFINED(datatype) && !dt_contig) {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Typerep_flatten_size(dt_ptr, &flattened_sz);
+    } else {
+        flattened_sz = 0;
+    }
+
+    MPIDI_SHM_query_size_fallback(flattened_sz, MPIDIG_IPC_DATATYPE_REQ, &fallback_flag);
+
     if (rank != comm->rank && ipc_attr.ipc_type != MPIDI_IPCI_TYPE__NONE &&
-        data_sz >= ipc_attr.threshold.send_lmt_sz) {
+        data_sz >= ipc_attr.threshold.send_lmt_sz && fallback_flag == false) {
         if (dt_contig) {
             mpi_errno = MPIDI_IPCI_send_lmt(buf, count, datatype, data_sz, rank, tag, comm,
                                             context_offset, addr, ipc_attr, request);

@@ -58,6 +58,10 @@ enum {
 
     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
 
+    /* IPC datatype handle id */
+    MPIDIG_IPC_DATATYPE_REQ,
+    MPIDIG_IPC_DATATYPE_ACK,
+
     MPIDIG_HANDLER_STATIC_MAX
 };
 

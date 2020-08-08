@@ -12,6 +12,7 @@
 #include "ipc_pre.h"
 #include "ipc_types.h"
 #include "ipc_mem.h"
+#include "../posix/posix_am.h"
 
 /* Generic IPC protocols for P2P. */
 
@@ -72,7 +73,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_send_lmt(const void *buf, MPI_Aint count
               slmt_req_hdr->src_lrank, rank, slmt_req_hdr->src_rank, slmt_req_hdr->tag,
               slmt_req_hdr->context_id);
 
-    mpi_errno = MPIDI_SHM_do_ctrl_send(rank, comm, MPIDI_IPC_SEND_LMT_RTS, &ctrl_hdr);
+    mpi_errno =
+        MPIDI_SHM_do_ctrl_send(rank, comm, MPIDIG_IPC_DATATYPE_REQ, sizeof(MPIDI_SHMI_ctrl_hdr_t),
+                               &ctrl_hdr, sreq);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
