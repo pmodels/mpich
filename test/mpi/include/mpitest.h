@@ -32,6 +32,8 @@ void MTestGetDbgInfo(int *dbgflag, int *verbose);
 
 int MTestGetIntracomm(MPI_Comm *, int);
 int MTestGetIntracommGeneral(MPI_Comm *, int, int);
+void MTestGetIntercomm_start(void);
+void MTestGetIntercomm_finish(void);
 int MTestGetIntercomm(MPI_Comm *, int *, int);
 int MTestGetComm(MPI_Comm *, int);
 int MTestTestIntercomm(MPI_Comm intercomm);
