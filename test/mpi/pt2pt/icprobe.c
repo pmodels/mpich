@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    MTestGetIntercomm_start();
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
         if (comm == MPI_COMM_NULL)
             continue;
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
         }
         MTestFreeComm(&comm);
     }
+    MTestGetIntercomm_finish();
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
