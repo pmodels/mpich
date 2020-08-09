@@ -14,12 +14,44 @@ MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
     int vci;
     if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
         req->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {
-        if (req->u.persist.real_request) {
-            vci = MPIDI_Request_get_vci(req->u.persist.real_request);
+        MPIR_Request *real_req = req->u.persist.real_request;
+        if (real_req) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+            if (real_req->kind == MPIR_REQUEST_KIND__WORKQ) {
+                MPIR_Request *workq_req = real_req;
+                /* NOTE: checking cc_ptr is stronger than checking real_request pointer,
+                 * because workq progress will update cc_ptr after setting real_request.
+                 */
+                if (workq_req->cc_ptr == &workq_req->cc) {
+                    /* progress to get real_request pointer */
+                    int mpi_errno = MPIDI_workq_vci_progress();
+                    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+                    MPIR_Assert(workq_req->u.workq.real_request);
+                }
+                /* connect the cc_ptr, but only if it needs to (persistent bsend is an exception)
+                 */
+                if (req->cc_ptr == &workq_req->cc) {
+                    req->cc_ptr = workq_req->cc_ptr;
+                }
+                /* use the real real_req */
+                real_req = workq_req->u.workq.real_request;
+            }
+#endif
+            vci = MPIDI_Request_get_vci(real_req);
         } else {
             /* TODO: skip it in MPIDI_set_progress_vci_n */
             vci = 0;
         }
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    } else if (req->kind == MPIR_REQUEST_KIND__WORKQ) {
+        /* progress so we have a real request */
+        if (!req->u.workq.real_request) {
+            int mpi_errno = MPIDI_workq_vci_progress();
+            MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            MPIR_Assert(req->u.workq.real_request);
+        }
+        vci = MPIDI_Request_get_vci(req->u.workq.real_request);
+#endif
     } else {
         vci = MPIDI_Request_get_vci(req);
     }
