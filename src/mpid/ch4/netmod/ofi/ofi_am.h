@@ -315,7 +315,8 @@ static inline int MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
         if (!dt_contig || attr.type == MPL_GPU_POINTER_DEV) {
             protocol = MPIDIG_AM_PROTOCOL__PIPELINE;
         } else {
-            protocol = MPIDIG_AM_PROTOCOL__RDMA_READ;
+            // protocol = MPIDIG_AM_PROTOCOL__RDMA_READ;
+            protocol = MPIDIG_AM_PROTOCOL__PIPELINE;
         }
     }
 
