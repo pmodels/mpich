@@ -12,7 +12,6 @@ extern MPID_Thread_mutex_t MPIDI_workq_lock;
 static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *req;
     MPI_Datatype datatype, origin_datatype, target_datatype;
 
     MPIR_Assert(workq_elemt != NULL);
@@ -20,10 +19,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
     switch (workq_elemt->op) {
         case SEND:{
                 struct MPIDI_workq_send *wd = &workq_elemt->params.pt2pt.send;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_send_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                  wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                                  wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                  &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -31,10 +32,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case ISEND:{
                 struct MPIDI_workq_send *wd = &workq_elemt->params.pt2pt.send;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_isend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                   &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -42,10 +45,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case SSEND:{
                 struct MPIDI_workq_send *wd = &workq_elemt->params.pt2pt.send;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_ssend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                                   wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                   &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -53,10 +58,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case ISSEND:{
                 struct MPIDI_workq_send *wd = &workq_elemt->params.pt2pt.send;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_issend_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                    wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                                    wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                    &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -64,11 +71,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case CSEND:{
                 struct MPIDI_workq_csend *wd = &workq_elemt->params.pt2pt.csend;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_send_coll_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                       wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
-                                       &(wd->errflag));
+                                       wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                       &(wd->request->u.workq.real_request), &(wd->errflag));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -76,11 +84,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case ICSEND:{
                 struct MPIDI_workq_csend *wd = &workq_elemt->params.pt2pt.csend;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_isend_coll_unsafe(wd->send_buf, wd->count, wd->datatype, wd->rank,
-                                        wd->tag, wd->comm_ptr, wd->context_offset, wd->addr, &req,
-                                        &(wd->errflag));
+                                        wd->tag, wd->comm_ptr, wd->context_offset, wd->addr,
+                                        &(wd->request->u.workq.real_request), &(wd->errflag));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -88,10 +97,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case RECV:{
                 struct MPIDI_workq_recv *wd = &workq_elemt->params.pt2pt.recv;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_recv_unsafe(wd->recv_buf, wd->count, wd->datatype, wd->rank, wd->tag,
-                                  wd->comm_ptr, wd->context_offset, wd->addr, wd->status, &req);
+                                  wd->comm_ptr, wd->context_offset, wd->addr, wd->status,
+                                  &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
@@ -99,10 +110,12 @@ static int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
             }
         case IRECV:{
                 struct MPIDI_workq_irecv *wd = &workq_elemt->params.pt2pt.irecv;
-                req = wd->request;
                 datatype = wd->datatype;
                 MPIDI_irecv_unsafe(wd->recv_buf, wd->count, wd->datatype, wd->rank, wd->tag,
-                                   wd->comm_ptr, wd->context_offset, wd->addr, &req);
+                                   wd->comm_ptr, wd->context_offset, wd->addr,
+                                   &(wd->request->u.workq.real_request));
+                wd->request->status.MPI_ERROR = MPI_SUCCESS;
+                wd->request->cc_ptr = &wd->request->u.workq.real_request->cc;
                 MPIR_Datatype_release_if_not_builtin(datatype);
                 MPIR_Comm_release(wd->comm_ptr);
                 MPIDI_workq_release_pt2pt_elemt(workq_elemt);
