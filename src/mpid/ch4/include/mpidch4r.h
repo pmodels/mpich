@@ -20,5 +20,6 @@
 #include "mpidig_am_msg.h"
 #include "mpidig_am_recv.h"
 #include "mpidig_am_send.h"
+#include "mpidig_am_rma.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */

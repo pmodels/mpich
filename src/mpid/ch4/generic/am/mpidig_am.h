@@ -149,25 +149,69 @@ static inline bool MPIDIG_am_check_size_le_eager_limit(size_t data_sz, int am_op
             return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_ssend_req_msg_t) <= eager_limit);
             break;
         case MPIDIG_SSEND_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_PUT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_put_msg_t) <= eager_limit);
+            break;
         case MPIDIG_PUT_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_PUT_DT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_put_msg_t) <= eager_limit);
+            break;
         case MPIDIG_PUT_DAT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_put_dat_msg_t) <= eager_limit);
+            break;
         case MPIDIG_PUT_DT_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_GET_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_msg_t) <= eager_limit);
+            break;
         case MPIDIG_GET_ACK:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_ack_msg_t) <= eager_limit);
+            break;
         case MPIDIG_ACC_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_acc_req_msg_t) <= eager_limit);
+            break;
         case MPIDIG_ACC_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_ACC_DT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_acc_req_msg_t) <= eager_limit);
+            break;
         case MPIDIG_ACC_DAT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_acc_dat_msg_t) <= eager_limit);
+            break;
         case MPIDIG_ACC_DT_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_GET_ACC_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_acc_req_msg_t)
+                    <= eager_limit);
+            break;
         case MPIDIG_GET_ACC_ACK:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_acc_ack_msg_t)
+                    <= eager_limit);
+            break;
         case MPIDIG_GET_ACC_DT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_acc_req_msg_t)
+                    <= eager_limit);
+            break;
         case MPIDIG_GET_ACC_DAT_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_get_acc_dat_msg_t)
+                    <= eager_limit);
+            break;
         case MPIDIG_GET_ACC_DT_ACK:
+            MPIR_Assert(0);
+            break;
         case MPIDIG_CSWAP_REQ:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_cswap_req_msg_t) <= eager_limit);
+            break;
         case MPIDIG_CSWAP_ACK:
+            return (data_sz + sizeof(MPIDIG_hdr_t) + sizeof(MPIDIG_cswap_ack_msg_t) <= eager_limit);
+            break;
         case MPIDIG_FETCH_OP:
         case MPIDIG_WIN_COMPLETE:
         case MPIDIG_WIN_POST:

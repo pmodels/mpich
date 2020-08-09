@@ -117,6 +117,7 @@ int MPIDIG_put_data_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PUT_DATA_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PUT_DATA_ORIGIN_CB);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->preq.origin_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PUT_DATA_ORIGIN_CB);
     return mpi_errno;
@@ -127,6 +128,7 @@ int MPIDIG_acc_data_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_ACC_DATA_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_ACC_DATA_ORIGIN_CB);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.origin_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ACC_DATA_ORIGIN_CB);
     return mpi_errno;
@@ -137,6 +139,7 @@ int MPIDIG_get_acc_data_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_DATA_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_DATA_ORIGIN_CB);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->areq.origin_datatype));
     MPID_Request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_DATA_ORIGIN_CB);
     return mpi_errno;

@@ -134,6 +134,10 @@ int MPIDIG_check_cmpl_order(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CHECK_CMPL_ORDER);
 
+    uint64_t current_seg_no = MPL_atomic_acquire_load_uint64(&MPIDI_global.exp_seq_no);
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
+                    (MPL_DBG_FDEST, "req seq no %" PRIu64 " exp seq no %" PRIu64,
+                     MPIDIG_REQUEST(req, req->seq_no), current_seg_no));
     if (MPIDIG_REQUEST(req, req->seq_no) == MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)) {
         MPL_atomic_fetch_add_uint64(&MPIDI_global.exp_seq_no, 1);
         ret = 1;
@@ -383,9 +387,30 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     void *pack_buf = NULL;
+    int msg_handler_id = hdr->msg_handler_id;
+    void *msg_am_hdr = (char *) hdr + sizeof(MPIDIG_hdr_t);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_TARGET_MSG_CB);
+
+    /* determine if we need to handle the RTS as RMA or PT2PT */
+    if (msg_handler_id >= MPIDIG_PUT_REQ && msg_handler_id <= MPIDIG_FETCH_OP) {
+        MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, data, in_data_sz,
+                                                      is_local, 0, &rreq);
+
+        MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        rreq->status.MPI_ERROR = hdr->error_bits;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+
+        MPIDIG_recv_copy(data, rreq);
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+
+        goto fn_exit;
+    }
+
+    /* handle as PT2PT */
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
     if (root_comm) {
       root_comm_retry:
@@ -436,9 +461,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, req->seq_no) =
             MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_hdr_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -489,9 +512,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, req->seq_no) =
             MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_hdr_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
     }
@@ -520,10 +541,34 @@ int MPIDIG_send_pipeline_rts_target_msg_cb(int handler_id, void *am_hdr, void *d
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     MPIDIG_send_pipeline_rts_msg_t *rts_hdr = (MPIDIG_send_pipeline_rts_msg_t *) am_hdr;
+    int msg_handler_id = hdr->msg_handler_id;
+    void *msg_am_hdr = (char *) hdr + sizeof(MPIDIG_send_pipeline_rts_msg_t);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_PIPELINE_RTS_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_PIPELINE_RTS_TARGET_MSG_CB);
 
+    /* determine if we need to handle the RTS as RMA or PT2PT */
+    if (msg_handler_id >= MPIDIG_PUT_REQ && msg_handler_id <= MPIDIG_FETCH_OP) {
+        MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, data,
+                                                      rts_hdr->data_sz, is_local, 0, &rreq);
+
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PIPELINE_RTS;
+        MPIDIG_REQUEST(rreq, req->peer_req_ptr) = rts_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+
+        MPIDIG_recv_setup(rreq);
+        MPIDIG_recv_copy_seg(data, in_data_sz, rreq);
+
+        mpi_errno = MPIDIG_do_pipeline_cts(rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        goto fn_exit;
+    }
+
+    /* handle as PT2PT */
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
   root_comm_retry:
     if (root_comm) {
@@ -572,9 +617,7 @@ int MPIDIG_send_pipeline_rts_target_msg_cb(int handler_id, void *am_hdr, void *d
          * payload handler to overwrite it if needed */
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_pipeline_rts_msg_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
         MPIDIG_recv_type_init(rts_hdr->data_sz, rreq);
@@ -639,9 +682,7 @@ int MPIDIG_send_pipeline_rts_target_msg_cb(int handler_id, void *am_hdr, void *d
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_pipeline_rts_msg_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
         MPIDIG_recv_type_init(rts_hdr->data_sz, rreq);
@@ -766,8 +807,10 @@ int MPIDIG_send_pipeline_seg_target_msg_cb(int handler_id, void *am_hdr, void *d
 
     is_done = MPIDIG_recv_copy_seg(data, in_data_sz, rreq);
     if (is_done) {
-        MPIDIG_REQUEST(rreq, req->seq_no) =
-            MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+        if (rreq->kind == MPIR_REQUEST_KIND__RECV) {
+            MPIDIG_REQUEST(rreq, req->seq_no) =
+                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+        }
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
@@ -789,10 +832,33 @@ int MPIDIG_send_rdma_read_req_target_msg_cb(int handler_id, void *am_hdr, void *
     MPIR_Comm *root_comm;
     MPIDIG_hdr_t *hdr = (MPIDIG_hdr_t *) am_hdr;
     MPIDIG_send_rdma_read_req_msg_t *rdmar_hdr = (MPIDIG_send_rdma_read_req_msg_t *) am_hdr;
+    int msg_handler_id = hdr->msg_handler_id;
+    void *msg_am_hdr = (char *) hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_RDMA_READ_REQ_TARGET_MSG_CB);
 
+    /* determine if we need to handle the RTS as RMA or PT2PT */
+    if (msg_handler_id >= MPIDIG_PUT_REQ && msg_handler_id <= MPIDIG_FETCH_OP) {
+        MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, data,
+                                                      rdmar_hdr->data_sz, is_local, 0, &rreq);
+
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RDMA_READ_REQ;
+        MPIDIG_REQUEST(rreq, req->peer_req_ptr) = rdmar_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
+        MPIDIG_REQUEST(rreq, tag) = hdr->tag;
+        MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
+
+        MPIDIG_recv_setup(rreq);
+
+        mpi_errno = MPIDIG_do_rdma_read_recv(data, rdmar_hdr->data_sz, rreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        goto fn_exit;
+    }
+
+    /* handle as PT2PT */
     root_comm = MPIDIG_context_id_to_comm(hdr->context_id);
   root_comm_retry:
     if (root_comm) {
@@ -836,9 +902,7 @@ int MPIDIG_send_rdma_read_req_target_msg_cb(int handler_id, void *am_hdr, void *
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
         MPIDIG_recv_type_init(rdmar_hdr->data_sz, rreq);
@@ -898,9 +962,7 @@ int MPIDIG_send_rdma_read_req_target_msg_cb(int handler_id, void *am_hdr, void *
         MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
         if (hdr->msg_handler_id != MPIDIG_SEND) {
-            int msg_handler_id = hdr->msg_handler_id;
-            void *payload_am_hdr = (char *) hdr + sizeof(MPIDIG_send_rdma_read_req_msg_t);
-            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, payload_am_hdr, NULL, 0,
+            MPIDIG_global.target_msg_cbs[msg_handler_id] (msg_handler_id, msg_am_hdr, NULL, 0,
                                                           is_local, 0, &rreq);
         }
         MPIDIG_recv_type_init(rdmar_hdr->data_sz, rreq);

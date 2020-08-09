@@ -234,6 +234,26 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                       \
     } while (0)
 
+#define MPIDI_Datatype_get_contig_dt_ptr(datatype_, dt_contig_out_, dt_ptr_) \
+    do {                                                                     \
+        if (IS_BUILTIN(datatype_)) {                                         \
+            (dt_ptr_)        = NULL;                                         \
+            (dt_contig_out_) = TRUE;                                         \
+        } else {                                                             \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));                   \
+            (dt_contig_out_) = (dt_ptr_) ? (dt_ptr_)->is_contig : 1;         \
+        }                                                                    \
+    } while (0)
+
+#define MPIDI_Datatype_get_dt_ptr(datatype_, dt_ptr_)      \
+    do {                                                   \
+        if (IS_BUILTIN(datatype_)) {                       \
+            (dt_ptr_)        = NULL;                       \
+        } else {                                           \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_)); \
+        }                                                  \
+    } while (0)
+
 #define MPIDI_Datatype_check_contig(datatype_,dt_contig_out_)           \
     do {                                                                \
         if (IS_BUILTIN(datatype_)) {                                    \
