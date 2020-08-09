@@ -67,6 +67,7 @@ typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_KIND__COLL,
     MPIR_REQUEST_KIND__MPROBE,  /* see NOTE-R1 */
     MPIR_REQUEST_KIND__RMA,
+    MPIR_REQUEST_KIND__WORKQ,
     MPIR_REQUEST_KIND__LAST
 #ifdef MPID_REQUEST_KIND_DECL
         , MPID_REQUEST_KIND_DECL
@@ -204,6 +205,12 @@ struct MPIR_Request {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
         } persist;              /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+        struct {
+#if defined HAVE_DEBUGGER_SUPPORT
+            struct MPIR_Sendq *dbg_next;
+#endif
+            struct MPIR_Request *real_request;
+        } workq;                /* kind : MPIR_REQUEST_KIND__WORKQ */
     } u;
 
     /* Other, device-specific information */
