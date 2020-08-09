@@ -59,30 +59,45 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *e
     MPIR_Handle_obj_free(&MPIDI_workq_elemt_mem, elemt);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
-                                                        const void *send_buf,
-                                                        void *recv_buf,
-                                                        MPI_Aint count,
-                                                        MPI_Datatype datatype,
-                                                        int rank,
-                                                        int tag,
-                                                        MPIR_Comm * comm_ptr,
-                                                        int context_offset,
-                                                        MPIDI_av_entry_t * addr,
-                                                        MPI_Status * status,
-                                                        MPIR_Request * request,
-                                                        int *flag,
-                                                        MPIR_Request ** message,
-                                                        MPL_atomic_int_t * processed)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
+                                                       const void *send_buf,
+                                                       void *recv_buf,
+                                                       MPI_Aint count,
+                                                       MPI_Datatype datatype,
+                                                       int rank,
+                                                       int tag,
+                                                       MPIR_Comm * comm_ptr,
+                                                       int context_offset,
+                                                       MPIDI_av_entry_t * addr,
+                                                       MPI_Status * status,
+                                                       MPIR_Request ** req,
+                                                       int *flag,
+                                                       MPIR_Request ** message,
+                                                       MPL_atomic_int_t * processed)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_workq_elemt_t *pt2pt_elemt;
+    MPIR_Request *request;
 
-    MPIR_Assert(request != NULL);
+    if (op != IMRECV) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__WORKQ, 0);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+        MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+        /* mark the request as incomplete. We'll replace the cc_ptr with real_request's later */
+        MPIR_cc_set(&request->cc, 1);
+        request->cc_ptr = &request->cc;
+        *req = request;
+
+        request->u.workq.real_request = NULL;
+
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
+        MPIR_Comm_add_ref(comm_ptr);
+    } else {
+        request = *message;
+    }
 
     MPIR_Request_add_ref(request);
-    if (op != IMRECV) {
-        MPIR_Comm_add_ref(comm_ptr);
-    }
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
     pt2pt_elemt->processed = processed;
@@ -182,28 +197,44 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
-                                                        const void *send_buf,
-                                                        MPI_Aint count,
-                                                        MPI_Datatype datatype,
-                                                        int rank,
-                                                        int tag,
-                                                        MPIR_Comm * comm_ptr,
-                                                        int context_offset,
-                                                        MPIDI_av_entry_t * addr,
-                                                        MPIR_Request * request,
-                                                        MPIR_Errflag_t * errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
+                                                       const void *send_buf,
+                                                       MPI_Aint count,
+                                                       MPI_Datatype datatype,
+                                                       int rank,
+                                                       int tag,
+                                                       MPIR_Comm * comm_ptr,
+                                                       int context_offset,
+                                                       MPIDI_av_entry_t * addr,
+                                                       MPIR_Request ** req,
+                                                       MPIR_Errflag_t * errflag)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_workq_elemt_t *pt2pt_elemt;
     struct MPIDI_workq_csend *wd;
+    MPIR_Request *request;
 
-    MPIR_Assert(request != NULL);
     MPIR_Assert(op == CSEND || op == ICSEND);
 
-    MPIR_Request_add_ref(request);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+    request = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__WORKQ, 0);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+    MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    *req = request;
+
+    request->u.workq.real_request = NULL;
+
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIR_Comm_add_ref(comm_ptr);
+
+    MPIR_Request_add_ref(request);
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
 
@@ -222,6 +253,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_csend_enqueue(MPIDI_workq_op_t op,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_workq_lock);
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, pt2pt_elemt);
     MPID_THREAD_CS_EXIT(VCI, MPIDI_workq_lock);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
@@ -304,9 +340,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_
 }
 
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
-#define MPIDI_workq_pt2pt_enqueue(...)
-#define MPIDI_workq_rma_enqueue(...)
-#define MPIDI_workq_csend_enqueue(...)
+#define MPIDI_workq_pt2pt_enqueue(...) MPI_SUCCESS
+#define MPIDI_workq_rma_enqueue(...)   MPI_SUCCESS
+#define MPIDI_workq_csend_enqueue(...) MPI_SUCCESS
 
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
