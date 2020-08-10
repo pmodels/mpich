@@ -726,6 +726,8 @@ AC_CHECK_SIZEOF(void *,8)
 PAC_PUSH_FLAG([CPPFLAGS])
 PAC_PUSH_FLAG([LDFLAGS])
 PAC_PUSH_FLAG([LIBS])
+
+# CUDA support
 PAC_SET_HEADER_LIB_PATH([cuda])
 PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
 cuda_CPPFLAGS=""
@@ -747,13 +749,38 @@ AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
 AC_SUBST([cuda_CPPFLAGS])
 AC_SUBST([cuda_LDFLAGS])
 AC_SUBST([cuda_LIBS])
+
+# ZE support
+PAC_SET_HEADER_LIB_PATH([ze])
+PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
+ze_CPPFLAGS=""
+ze_LDFLAGS=""
+ze_LIBS=""
+if test "X${have_ze}" = "Xyes" ; then
+    AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+    if test -n "${with_ze}" ; then
+        ze_CPPFLAGS="-I${with_ze}/include"
+        if test -d ${with_ze}/lib64 ; then
+            ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
+        else
+            ze_LDFLAGS="-L${with_ze}/lib"
+        fi
+        ze_LIBS="-lze_loader"
+    fi
+fi
+AM_CONDITIONAL([HAVE_ZE],[test "X${have_ze}" = "Xyes"])
+AC_SUBST([ze_CPPFLAGS])
+AC_SUBST([ze_LDFLAGS])
+AC_SUBST([ze_LIBS])
+
 PAC_POP_FLAG([CPPFLAGS])
 PAC_POP_FLAG([LDFLAGS])
 PAC_POP_FLAG([LIBS])
 
+AM_CONDITIONAL([HAVE_GPU], [test $have_cuda = "yes" -o $have_ze = "yes"])
 # GPU only tests
-if test $have_cuda = "no" -a $enable_gpu_tests_only = "yes" ; then
-    AC_MSG_ERROR([GPU only test configuration requires CUDA])
+if test $have_cuda = "no" -a $have_ze = "no" -a $enable_gpu_tests_only = "yes" ; then
+    AC_MSG_ERROR([GPU only test configuration requires CUDA or LevelZero])
 fi
 AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
 # End of GPU libs Check
