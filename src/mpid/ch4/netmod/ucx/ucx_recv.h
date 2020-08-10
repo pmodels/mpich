@@ -230,7 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
 {
     int mpi_errno;
 
-    int vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
     mpi_errno =
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
@@ -251,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
 {
     int mpi_errno;
 
-    int vni_dst = MPIDI_UCX_get_vni_dst(comm, comm->rank, tag);
+    int vni_dst = MPIDI_UCX_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_dst).lock);
     mpi_errno =
         MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, vni_dst,
