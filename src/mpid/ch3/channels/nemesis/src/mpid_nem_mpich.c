@@ -50,7 +50,7 @@ MPID_nem_mpich_init(void)
         MPID_nem_fboxq_elem_list[i].prev = NULL;
         MPID_nem_fboxq_elem_list[i].next = NULL;
         MPID_nem_fboxq_elem_list[i].grank = MPID_nem_mem_region.local_procs[i];
-        MPID_nem_fboxq_elem_list[i].fbox = &MPID_nem_mem_region.mailboxes.in[i]->mpich;
+        MPID_nem_fboxq_elem_list[i].fbox = MPID_nem_mem_region.mailboxes.in[i];
     }
 	
     MPID_nem_fboxq_head = NULL;
