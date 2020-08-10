@@ -178,6 +178,7 @@ void MTest_Init(int *argc, char ***argv)
 #endif
 }
 
+static void MTestCommRandomize_cleanup(void);
 /*
   Finalize MTest.  errs is the number of errors on the calling process;
   this routine will write the total number of errors over all of MPI_COMM_WORLD
@@ -206,6 +207,8 @@ void MTest_Finalize(int errs)
     if (usageOutput)
         MTestResourceSummary(stdout);
 
+    /* Clean up any comms from MTestCommRandomize() */
+    MTestCommRandomize_cleanup();
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
@@ -1028,9 +1031,9 @@ void MTestFreeComm(MPI_Comm * comm)
 
 #define MAX_COMM_SELF_DUPS 4
 static MPI_Comm comm_self_dups[MAX_COMM_SELF_DUPS];
-static int num_self_dups;
+static int num_self_dups = 0;
 
-void MTestGetIntercomm_start(void)
+void MTestCommRandomize(void)
 {
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -1042,7 +1045,7 @@ void MTestGetIntercomm_start(void)
     }
 }
 
-void MTestGetIntercomm_finish(void)
+static void MTestCommRandomize_cleanup(void)
 {
     for (int i = 0; i < num_self_dups; i++) {
         MPI_Comm_free(&comm_self_dups[i]);
