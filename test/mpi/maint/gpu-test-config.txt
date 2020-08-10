@@ -3,3 +3,5 @@
 #
 # <test pathname>:<procs#>
 coll/allred2:4
+coll/reduce:5
+coll/reduce:10
