@@ -216,6 +216,14 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         MPID_Progress_end(&progress_state);
     }
 
+    if (sreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(sreq);
+    }
+
+    if (rreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(rreq);
+    }
+
     mpi_errno = rreq->status.MPI_ERROR;
     MPIR_Request_extract_status(rreq, status);
     MPIR_Request_free(rreq);
