@@ -961,15 +961,11 @@ AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda
 
 
 PAC_SET_HEADER_LIB_PATH([ze])
-PAC_SET_HEADER_LIB_PATH([opencl])
 PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
-# ze has dependency on opencl
-PAC_CHECK_HEADER_LIB([CL/cl.h],[OpenCL],[clGetPlatformIDs],[have_cl=yes],[have_cl=no])
-if test "X${have_ze}" = "Xyes" -a \
-    "X${have_cl}" = "Xyes" ; then
+if test "X${have_ze}" = "Xyes" ; then
     AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
 fi
-AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${have_ze}" = "Xyes" -a "X${have_cl}" = "Xyes"])
+AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${have_ze}" = "Xyes"])
 
 #######################################################################
 ## END OF GPU CODE
