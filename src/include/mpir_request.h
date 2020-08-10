@@ -504,6 +504,19 @@ MPL_STATIC_INLINE_PREFIX void MPIR_Request_free(MPIR_Request * req)
     MPIR_Request_free_with_safety(req, 1);
 }
 
+/* On completion, transfer status from real_request back to workq request
+ * for regular completion processing */
+static inline void MPIR_workq_request_completion(MPIR_Request * req)
+{
+    MPIR_Assert(req->kind == MPIR_REQUEST_KIND__WORKQ);
+
+    MPIR_Request *real_req = req->u.workq.real_request;
+    MPIR_Assert(real_req != NULL);
+    req->kind = real_req->kind;
+    req->status = real_req->status;
+    MPIR_Request_free_safe(real_req);
+}
+
 /* Requests that are not created inside device (general requests, nonblocking collective
  * requests such as sched, gentran, hcoll) should call MPIR_Request_complete.
  * MPID_Request_complete are called inside device critical section, therefore, potentially
