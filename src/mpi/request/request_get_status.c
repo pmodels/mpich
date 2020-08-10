@@ -111,6 +111,13 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
     }
 
     if (MPIR_Request_is_complete(request_ptr)) {
+        /* first, collapse workq request */
+        if (request_ptr->kind == MPIR_REQUEST_KIND__WORKQ) {
+            MPIR_workq_request_completion(request_ptr);
+        } else if (MPIR_Request_is_persistent_workq(request_ptr)) {
+            MPIR_workq_request_completion(request_ptr->u.persist.real_request);
+        }
+
         switch (request_ptr->kind) {
             case MPIR_REQUEST_KIND__SEND:
                 {
