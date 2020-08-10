@@ -887,6 +887,9 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             switch (e->type) {
                 case MPIDU_SCHED_ENTRY_SEND:
                     if (e->u.send.sreq != NULL && MPIR_Request_is_complete(e->u.send.sreq)) {
+                        if (e->u.send.sreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+                            MPIR_workq_request_completion(e->u.send.sreq);
+                        }
                         MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                         (MPL_DBG_FDEST, "completed SEND entry %d, sreq=%p\n",
                                          (int) i, e->u.send.sreq));
@@ -902,6 +905,9 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
                 case MPIDU_SCHED_ENTRY_RECV:
                     if (e->u.recv.rreq != NULL && MPIR_Request_is_complete(e->u.recv.rreq)) {
+                        if (e->u.recv.rreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+                            MPIR_workq_request_completion(e->u.recv.rreq);
+                        }
                         MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                         (MPL_DBG_FDEST, "completed RECV entry %d, rreq=%p\n",
                                          (int) i, e->u.recv.rreq));
