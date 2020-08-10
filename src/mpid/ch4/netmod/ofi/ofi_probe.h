@@ -104,8 +104,8 @@ static inline int MPIDI_OFI_do_iprobe(int source,
 #define MPIDI_OFI_PROBE_VNIS(vni_src_, vni_dst_) \
     do { \
         /* NOTE: hashing is based on target rank */ \
-        vni_src_ = MPIDI_OFI_get_vni_src(comm, comm->rank, tag); \
-        vni_dst_ = MPIDI_OFI_get_vni_dst(comm, comm->rank, tag); \
+        vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, comm, source, comm->rank, tag); \
+        vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag); \
     } while (0)
 
 static inline int MPIDI_NM_mpi_improbe(int source,

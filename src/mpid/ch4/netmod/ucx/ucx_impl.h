@@ -122,14 +122,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_vci_to_vni(int vci)
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
  * we may get away with bit mask */
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni_src(MPIR_Comm * comm_ptr, int rank, int tag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni(int flag, MPIR_Comm * comm_ptr,
+                                               int src_rank, int dst_rank, int tag)
 {
-    return MPIDI_vci_get_src(comm_ptr, rank, tag) % MPIDI_UCX_global.num_vnis;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_vni_dst(MPIR_Comm * comm_ptr, int rank, int tag)
-{
-    return MPIDI_vci_get_dst(comm_ptr, rank, tag) % MPIDI_UCX_global.num_vnis;
+    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_UCX_global.num_vnis;
 }
 
 #endif /* UCX_IMPL_H_INCLUDED */

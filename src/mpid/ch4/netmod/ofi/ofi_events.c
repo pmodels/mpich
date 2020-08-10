@@ -187,8 +187,8 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         MPIR_Comm *c = rreq->comm;
         int r = rreq->status.MPI_SOURCE;
         /* NOTE: use target rank, reply to src */
-        int vni_src = MPIDI_OFI_get_vni_src(c, c->rank, rreq->status.MPI_TAG);
-        int vni_dst = MPIDI_OFI_get_vni_dst(c, c->rank, rreq->status.MPI_TAG);
+        int vni_src = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
+        int vni_dst = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, c, r, c->rank, rreq->status.MPI_TAG);
         int vni_local = vni_dst;
         int vni_remote = vni_src;
         MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_local].tx, NULL /* buf */ ,
