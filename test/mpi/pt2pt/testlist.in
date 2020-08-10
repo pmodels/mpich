@@ -17,7 +17,9 @@ issendselfcancel 1 xfail=ticket2276
 isendirecv 10
 bsendfrag 2
 icsend 4
+icsend 4 arg=-randomize=1
 icprobe 4
+icprobe 4 arg=-randomize=1
 rqstatus 2
 rqfreeb 4
 greq1 1
