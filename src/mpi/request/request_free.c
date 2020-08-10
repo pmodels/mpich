@@ -148,6 +148,11 @@ int MPI_Request_free(MPI_Request * request)
                 break;
             }
 
+        case MPIR_REQUEST_KIND__WORKQ:
+            {
+                break;
+            }
+
             /* --BEGIN ERROR HANDLING-- */
         default:
             {
