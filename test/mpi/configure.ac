@@ -267,6 +267,7 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
+AC_CONFIG_COMMANDS([gputests],[$srcdir/maint/generate_gpu_tests.sh])
 #Test collectives algorithms with CVARs
 AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
