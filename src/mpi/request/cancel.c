@@ -100,6 +100,13 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
                 break;
             }
 
+        case MPIR_REQUEST_KIND__WORKQ:
+            /* This is a hack to avoid adding a netmod API. We'll handle the workq case
+             * inside MPID_Cancel_send. */
+            mpi_errno = MPID_Cancel_send(request_ptr);
+            MPIR_ERR_CHECK(mpi_errno);
+            break;
+
             /* --BEGIN ERROR HANDLING-- */
         default:
             {

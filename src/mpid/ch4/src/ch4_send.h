@@ -752,6 +752,27 @@ MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_SEND);
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    if (sreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+        /* HACK: the workq request is not necessarily a send request */
+        if (sreq->u.workq.real_request == NULL) {
+            /* There is no easy way to prevent concurrent progress, so we'll just progress it */
+            mpi_errno = MPIDI_workq_vci_progress();
+            MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            MPIR_Assert(sreq->u.workq.real_request);
+        }
+        MPIR_Request *real_req = sreq->u.workq.real_request;
+        if (real_req->kind == MPIR_REQUEST_KIND__SEND) {
+            sreq = real_req;
+        } else if (real_req->kind == MPIR_REQUEST_KIND__RECV) {
+            return MPID_Cancel_recv(real_req);
+        } else {
+            /* No other request kind possible */
+            MPIR_Assert(0);
+        }
+    }
+#endif
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_cancel_send(sreq);
 #else
