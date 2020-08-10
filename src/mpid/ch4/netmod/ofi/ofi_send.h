@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size &&
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz < MPIDI_OFI_global.max_msg_size &&
             !force_gpu_pack) {
             mpi_errno = MPIDI_OFI_send_iov(buf, count, data_sz, cq_data, dst_rank, match_bits,
                                            comm, addr, vni_src, vni_dst, sreq, dt_ptr);
@@ -235,7 +235,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                             match_bits), vni_local, tinjectdata,
                              FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
+    } else if (data_sz < MPIDI_OFI_global.max_msg_size) {
         MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
