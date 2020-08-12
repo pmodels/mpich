@@ -59,7 +59,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     MPI_Datatype types[2], tmp_type;
     int copy_offset = 0, copy_blks = 0;
     MPL_pointer_attr_t attr;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_COLL_CHKLMEM_DECL(1);
 
 
     comm_size = comm_ptr->local_size;
@@ -111,8 +111,8 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
         if (attr.type == MPL_GPU_POINTER_DEV)
             MPL_gpu_malloc((void **) &tmp_buf, tmp_buf_size, attr.device);
         else
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
-                                MPL_MEM_BUFFER);
+            MPIR_COLL_CHKLMEM_MALLOC(tmp_buf, tmp_buf_size, attr, mpi_errno, "tmp_buf",
+                                     MPL_MEM_BUFFER);
     }
 
     if (rank == root) {
@@ -315,9 +315,7 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype 
     }
 
   fn_exit:
-    if (attr.type == MPL_GPU_POINTER_DEV)
-        MPL_gpu_free(tmp_buf);
-    MPIR_CHKLMEM_FREEALL();
+    MPIR_COLL_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

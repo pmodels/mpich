@@ -32,7 +32,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     MPL_pointer_attr_t attr;
     MPI_Aint type_size;
     void *tmp_buf = NULL;
-    MPIR_CHKLMEM_DECL(1);
+    MPIR_COLL_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -55,11 +55,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
 
     if (!is_contig) {
         MPL_gpu_query_pointer_attr(buffer, &attr);
-        if (attr.type == MPL_GPU_POINTER_DEV) {
-            MPL_gpu_malloc((void **) &tmp_buf, nbytes, attr.device);
-        } else {
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-        }
+        MPIR_COLL_CHKLMEM_MALLOC(tmp_buf, nbytes, attr, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -176,9 +172,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     }
 
   fn_exit:
-    if (tmp_buf && attr.type == MPL_GPU_POINTER_DEV)
-        MPL_gpu_free(tmp_buf);
-    MPIR_CHKLMEM_FREEALL();
+    MPIR_COLL_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
