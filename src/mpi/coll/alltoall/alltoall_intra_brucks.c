@@ -126,10 +126,7 @@ int MPIR_Alltoall_intra_brucks(const void *sendbuf,
         pof2 *= 2;
     }
 
-    /* Rotate blocks in recvbuf upwards by (rank + 1) blocks. Need
-     * a temporary buffer of the same size as recvbuf. */
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
+    /* Rotate blocks in recvbuf upwards by (rank + 1) blocks */
     mpi_errno = MPIR_Localcopy((char *) recvbuf + (rank + 1) * recvcount * recvtype_extent,
                                (comm_size - rank - 1) * recvcount, recvtype, tmp_buf,
                                (comm_size - rank - 1) * recvcount * recvtype_sz, MPI_BYTE);
