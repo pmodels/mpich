@@ -64,6 +64,14 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
+    /* first, collapse workq request */
+    if (request_ptr->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(request_ptr);
+    } else if (MPIR_Request_is_persistent_workq(request_ptr)) {
+        MPIR_workq_request_completion(request_ptr->u.persist.real_request);
+    }
+
+    /* normal request completion */
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
             {
