@@ -100,4 +100,51 @@ int MPII_Coll_finalize(void);
             MPIR_ERR_POP(mpi_errno);                                    \
     } while (0)
 
+#define MPIR_COLL_CHKLMEM_DECL(n_)                      \
+    void *(chklmem_stk_[n_]) = { NULL };                \
+    int chklmem_type_[n_] = { 0 };                      \
+    int chklmem_stk_sp_=0;                              \
+    MPIR_AssertDeclValue(const int chklmem_stk_sz_,n_)
+
+#define MPIR_COLL_CHKLMEM_MALLOC_HOST(pointer_,nbytes_,rc_,name_,class_)   \
+    do {                                                                   \
+        pointer_ = MPL_malloc(nbytes_,class_);                             \
+                                                                           \
+        if (pointer_) {                                                    \
+            MPIR_Assert(chklmem_stk_sp_<chklmem_stk_sz_);                  \
+            chklmem_type_[chklmem_stk_sp_] = MPL_GPU_POINTER_UNREGISTERED_HOST; \
+            chklmem_stk_[chklmem_stk_sp_++] = pointer_;                    \
+        } else if (nbytes_ > 0) {                                          \
+            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                         \
+            goto fn_fail;                                                  \
+        }                                                                  \
+    } while (0)
+
+#define MPIR_COLL_CHKLMEM_MALLOC(pointer_,nbytes_,attr_,rc_,name_,class_)  \
+    do {                                                                   \
+        if (attr_.type == MPL_GPU_POINTER_DEV)                             \
+            MPL_gpu_malloc((void **) &pointer_, nbytes_, attr_.device);    \
+        else                                                               \
+            pointer_ = MPL_malloc(nbytes_,class_);                         \
+                                                                           \
+        if (pointer_) {                                                    \
+            MPIR_Assert(chklmem_stk_sp_<chklmem_stk_sz_);                  \
+            chklmem_type_[chklmem_stk_sp_] = attr_.type;                   \
+            chklmem_stk_[chklmem_stk_sp_++] = pointer_;                    \
+        } else if (nbytes_ > 0) {                                          \
+            MPIR_CHKMEM_SETERR(rc_,nbytes_,name_);                         \
+            goto fn_fail;                                                  \
+        }                                                                  \
+    } while (0)
+
+#define MPIR_COLL_CHKLMEM_FREEALL()                                        \
+    do {                                                                   \
+        while (chklmem_stk_sp_ > 0) {                                      \
+            if (chklmem_type_[chklmem_stk_sp_ - 1] == MPL_GPU_POINTER_DEV) \
+                MPL_gpu_free(chklmem_stk_[--chklmem_stk_sp_]);             \
+            else                                                           \
+                MPL_free(chklmem_stk_[--chklmem_stk_sp_]);                 \
+        }                                                                  \
+    } while (0)
+
 #endif /* COLL_IMPL_H_INCLUDED */
