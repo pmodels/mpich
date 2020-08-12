@@ -29,6 +29,7 @@ noinst_PROGRAMS =  \
     bsendfrag      \
     bsendpending   \
     icsend         \
+    icprobe        \
     rqstatus       \
     rqfreeb        \
     greq1          \

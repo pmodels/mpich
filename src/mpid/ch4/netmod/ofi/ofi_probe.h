@@ -41,7 +41,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         rreq = &r;
     }
 
-    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, tag);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_START;

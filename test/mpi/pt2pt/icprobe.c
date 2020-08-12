@@ -42,10 +42,11 @@ int main(int argc, char *argv[])
             if (rank == 0) {
                 for (i = 0; i < remote_size; i++) {
                     buf = -1;
-                    MPI_Recv(&buf, 1, MPI_INT, i, 0, comm, &status);
-                    if (buf != i) {
+                    MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &status);
+                    MPI_Recv(&buf, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, comm, &status);
+                    if (buf != status.MPI_SOURCE) {
                         errs++;
-                        fprintf(stderr, "buf = %d, should be %d\n", buf, i);
+                        fprintf(stderr, "buf = %d, should be %d\n", buf, status.MPI_SOURCE);
                     }
                 }
             }
@@ -61,10 +62,11 @@ int main(int argc, char *argv[])
             if (rank == 0) {
                 for (i = 0; i < remote_size; i++) {
                     buf = -1;
-                    MPI_Recv(&buf, 1, MPI_INT, i, 0, comm, &status);
-                    if (buf != i) {
+                    MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &status);
+                    MPI_Recv(&buf, 1, MPI_INT, status.MPI_SOURCE, status.MPI_TAG, comm, &status);
+                    if (buf != status.MPI_SOURCE) {
                         errs++;
-                        fprintf(stderr, "buf = %d, should be %d\n", buf, i);
+                        fprintf(stderr, "buf = %d, should be %d\n", buf, status.MPI_SOURCE);
                     }
                 }
             }

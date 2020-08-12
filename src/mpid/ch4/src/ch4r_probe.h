@@ -18,11 +18,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_iprobe(int source, int tag, MPIR_Comm * 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IPROBE);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    root_comm = MPIDIG_context_id_to_comm(comm->context_id);
+    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    root_comm = MPIDIG_context_id_to_comm(context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_find_unexp(source, tag, root_comm->recvcontext_id + context_offset,
-                                  &MPIDIG_COMM(root_comm, unexp_list));
+    unexp_req = MPIDIG_find_unexp(source, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
         *flag = 1;
@@ -54,11 +54,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_improbe(int source, int tag, MPIR_Comm *
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMPROBE);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    root_comm = MPIDIG_context_id_to_comm(comm->context_id);
+    MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
+    root_comm = MPIDIG_context_id_to_comm(context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDIG_dequeue_unexp(source, tag, root_comm->recvcontext_id + context_offset,
-                                     &MPIDIG_COMM(root_comm, unexp_list));
+    unexp_req = MPIDIG_dequeue_unexp(source, tag, context_id, &MPIDIG_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
         *flag = 1;
