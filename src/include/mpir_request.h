@@ -297,6 +297,13 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 }
 
+static inline int MPIR_Request_is_persistent_workq(MPIR_Request * req_ptr)
+{
+    return (MPIR_Request_is_persistent(req_ptr) &&
+            req_ptr->u.persist.real_request &&
+            req_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__WORKQ);
+}
+
 /* Return whether a request is active.
  * A persistent request and the handle to it are "inactive"
  * if the request is not associated with any ongoing communication.
