@@ -40,6 +40,7 @@ int MTestTestComm(MPI_Comm comm);
 const char *MTestGetIntracommName(void);
 const char *MTestGetIntercommName(void);
 void MTestFreeComm(MPI_Comm *);
+void MTestCommRandomize(void);
 
 int MTestSpawnPossible(int *);
 
