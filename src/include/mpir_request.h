@@ -42,6 +42,8 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Add MPIR_REQUEST_KIND__WORKQ */
+
 /* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
