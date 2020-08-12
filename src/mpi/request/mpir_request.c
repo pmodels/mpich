@@ -254,6 +254,16 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
                 break;
             }
 
+        case MPIR_REQUEST_KIND__WORKQ:
+            {
+                if (request_ptr->u.workq.real_request != NULL) {
+                    mpi_errno = request_ptr->u.workq.real_request->status.MPI_ERROR;
+                } else {
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                }
+                break;
+            }
+
         default:
             {
                 /* --BEGIN ERROR HANDLING-- */
