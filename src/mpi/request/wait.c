@@ -73,27 +73,25 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     MPIR_Request_get_ptr(*request, request_ptr);
     MPIR_Assert(request_ptr != NULL);
 
-    if (!MPIR_Request_is_complete(request_ptr)) {
-        /* If this is an anysource request including a communicator with
-         * anysource disabled, convert the call to an MPI_Test instead so we
-         * don't get stuck in the progress engine. */
-        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
-            mpi_errno = MPIR_Test(request, &active_flag, status);
-            goto fn_exit;
-        }
+    /* If this is an anysource request including a communicator with
+     * anysource disabled, convert the call to an MPI_Test instead so we
+     * don't get stuck in the progress engine. */
+    if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+        mpi_errno = MPIR_Test(request, &active_flag, status);
+        goto fn_exit;
+    }
 
-        if (MPIR_Request_has_poll_fn(request_ptr)) {
-            while (!MPIR_Request_is_complete(request_ptr)) {
-                mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-                MPIR_ERR_CHECK(mpi_errno);
-
-                /* Avoid blocking other threads since I am inside an infinite loop */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            }
-        } else {
-            mpi_errno = MPID_Wait(request_ptr, status);
+    if (MPIR_Request_has_poll_fn(request_ptr)) {
+        while (!MPIR_Request_is_complete(request_ptr)) {
+            mpi_errno = MPIR_Grequest_poll(request_ptr, status);
             MPIR_ERR_CHECK(mpi_errno);
+
+            /* Avoid blocking other threads since I am inside an infinite loop */
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         }
+    } else {
+        mpi_errno = MPID_Wait(request_ptr, status);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
