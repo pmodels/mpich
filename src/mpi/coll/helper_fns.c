@@ -64,6 +64,11 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* collapse workq request */
+    if (request_ptr->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(request_ptr);
+    }
+
     if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
         MPIR_Process_status(&request_ptr->status, errflag);
 
