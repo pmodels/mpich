@@ -177,7 +177,6 @@ int MPIDI_CH3U_Recvq_init(void)
         "CH3", /* category name */
         "total buffer size allocated in the unexpected receive queue");
 
-fn_fail:
     return mpi_errno;
 }
 
@@ -1111,13 +1110,10 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
         }
     }
     
- fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 

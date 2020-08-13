@@ -45,9 +45,6 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
     /* Guarantees ordered AM flush. */
     win_pkt_orderings->am_flush_ordered = 1;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
