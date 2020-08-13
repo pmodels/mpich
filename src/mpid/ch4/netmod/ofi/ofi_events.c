@@ -443,11 +443,8 @@ static int am_isend_rdma_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sre
 
     /* RDMA_READ will perform origin side completion when ACK arrives */
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_RDMA_EVENT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)

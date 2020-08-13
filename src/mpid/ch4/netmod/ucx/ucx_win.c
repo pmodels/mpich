@@ -179,11 +179,8 @@ static int win_init(MPIR_Win * win)
 
     memset(&MPIDI_UCX_WIN(win), 0, sizeof(MPIDI_UCX_win_t));
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_WIN_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_UCX_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)

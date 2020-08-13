@@ -981,7 +981,7 @@ int MPID_Free_mem(void *user_buf)
             MPIDIG_mpi_free_mem(container->real_buf);
             break;
     }
-
+    MPIR_ERR_CHECK(mpi_errno);
     MPL_free(container);
 
   fn_exit:
