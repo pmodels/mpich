@@ -44,6 +44,19 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 
 #define MPIR_cc_get(cc_) MPL_atomic_load_int(&(cc_))
 
+/* if we don't need return return - */
+#define MPIR_cc_inc(cc_ptr_) \
+    do { \
+        MPL_atomic_fetch_add_int(cc_ptr_, 1); \
+    } while (0)
+
+#define MPIR_cc_dec(cc_ptr_) \
+    do { \
+        int ctr_;                                               \
+        ctr_ = MPL_atomic_fetch_sub_int(cc_ptr_, 1); \
+        MPIR_Assert(ctr_ >= 1); \
+    } while (0)
+
 /* "publishes" the obj with handle value (handle_) via the handle pointer
  * (hnd_lval_).  That is, it is a version of the following statement that fixes
  * memory consistency issues:
