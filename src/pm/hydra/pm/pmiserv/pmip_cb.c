@@ -764,7 +764,6 @@ static HYD_status launch_procs(void)
     HYDU_ERR_POP(status, "unable to send PID list upstream\n");
     HYDU_ASSERT(!closed, status);
 
-  fn_spawn_complete:
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out, HYD_POLLIN,
