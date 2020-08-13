@@ -494,7 +494,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wmissing-prototypes
         -DGCC_WALL
         -Wno-unused-parameter
-        -Wno-unused-label
         -Wshadow
         -Wmissing-declarations
         -Wno-long-long
