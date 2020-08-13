@@ -556,10 +556,7 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     /* free nodes and buffer objects from remove list */
     gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len);
 
-  fn_exit:
     return mpl_err;
-  fn_fail:
-    goto fn_exit;
 }
 
 static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len, int mode)
