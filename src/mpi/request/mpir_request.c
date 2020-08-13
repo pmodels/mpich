@@ -11,7 +11,7 @@ MPIR_Request MPIR_Request_builtins[MPIR_REQUEST_BUILTIN_COUNT];
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC];
 MPIR_Object_alloc_t MPIR_Request_mem[MPIR_REQUEST_NUM_POOLS];
 
-static void init_builtin_request(MPIR_Request * req, int handle, int kind)
+static void init_builtin_request(MPIR_Request * req, int handle, MPIR_Request_kind_t kind)
 {
     req->handle = handle;
     req->kind = kind;
@@ -42,7 +42,7 @@ void MPII_init_request(void)
     /* lightweight request, one for each kind */
     for (int i = 0; i < MPIR_REQUEST_KIND__LAST; i++) {
         req = &MPIR_Request_builtins[i];
-        init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, i);
+        init_builtin_request(req, MPIR_REQUEST_COMPLETE + i, (MPIR_Request_kind_t) i);
     }
     MPII_REQUEST_CLEAR_DBG(&MPIR_Request_builtins[MPIR_REQUEST_KIND__SEND]);
     MPIR_Request_builtins[MPIR_REQUEST_KIND__COLL].u.nbc.errflag = MPIR_ERR_NONE;
