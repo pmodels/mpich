@@ -25,9 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
     mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
                                  target_rank, target_disp, target_count, target_datatype, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_put(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win);
     else
@@ -60,9 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
     mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
                                  target_rank, target_disp, target_count, target_datatype, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_get(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win);
     else
@@ -97,9 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
                                         target_rank, target_disp, target_count,
                                         target_datatype, op, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win);
@@ -132,9 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
     mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                               datatype, target_rank, target_disp, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                    datatype, target_rank, target_disp, win);
     else
@@ -170,9 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
                                          target_rank, target_disp, target_count,
                                          target_datatype, op, win, av, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win, request);
@@ -213,9 +203,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win, av, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -250,9 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
     mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
                                           datatype, target_rank, target_disp, op, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_fetch_and_op(origin_addr, result_addr,
                                                datatype, target_rank, target_disp, op, win);
     else
@@ -286,9 +272,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
                                   target_rank, target_disp, target_count,
                                   target_datatype, win, av, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win, request);
@@ -324,9 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
                                   target_rank, target_disp, target_count,
                                   target_datatype, win, av, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win, request);
@@ -366,9 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
                                             target_rank, target_disp, target_count, target_datatype,
                                             op, win, av);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+    if (MPIDI_av_is_local(av) && !MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIDI_SHM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
                                                  target_rank, target_disp, target_count,
