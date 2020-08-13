@@ -54,9 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put(const void *origin_addr,
                                  target_rank, target_disp, target_count, target_datatype, win, av,
                                  winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_put(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win,
                                       winattr);
@@ -105,9 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get(void *origin_addr,
                                  target_rank, target_disp, target_count, target_datatype, win, av,
                                  winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_get(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count, target_datatype, win,
                                       winattr);
@@ -152,9 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate(const void *origin_addr,
                                         target_rank, target_disp, target_count,
                                         target_datatype, op, win, av, winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win, winattr);
@@ -195,9 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap(const void *origin_addr,
     mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                               datatype, target_rank, target_disp, win, av, winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                    datatype, target_rank, target_disp, win,
                                                    winattr);
@@ -242,9 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate(const void *origin_addr,
                                          target_rank, target_disp, target_count,
                                          target_datatype, op, win, av, winattr, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
                                               target_datatype, op, win, winattr, request);
@@ -292,9 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate(const void *origin_addr,
                                              target_rank, target_disp, target_count,
                                              target_datatype, op, win, av, winattr, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -336,9 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op(const void *origin_addr,
     mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
                                           datatype, target_rank, target_disp, op, win, av, winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_fetch_and_op(origin_addr, result_addr,
                                                datatype, target_rank, target_disp, op, win,
                                                winattr);
@@ -382,9 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget(void *origin_addr,
                                   target_rank, target_disp, target_count,
                                   target_datatype, win, av, winattr, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_rget(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win, winattr, request);
@@ -428,9 +412,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput(const void *origin_addr,
                                   target_rank, target_disp, target_count,
                                   target_datatype, win, av, winattr, request);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)))
+    if (MPIDI_av_is_local(av))
         mpi_errno = MPIDI_SHM_mpi_rput(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win, winattr, request);
@@ -478,9 +460,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate(const void *origin_addr,
                                             target_rank, target_disp, target_count, target_datatype,
                                             op, win, av, winattr);
 #else
-    int r;
-
-    if ((r = MPIDI_av_is_local(av)) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
+    if (MPIDI_av_is_local(av) && !(winattr & MPIDI_WINATTR_ACCU_NO_SHM))
         mpi_errno = MPIDI_SHM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                  result_addr, result_count, result_datatype,
                                                  target_rank, target_disp, target_count,
