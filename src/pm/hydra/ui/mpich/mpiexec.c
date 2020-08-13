@@ -43,7 +43,6 @@ static void signal_cb(int signum)
     HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
                     HYDU_SOCK_COMM_MSGWAIT);
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return;
 }
