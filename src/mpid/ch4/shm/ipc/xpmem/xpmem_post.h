@@ -60,7 +60,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_XPMEM_get_ipc_attr(const void *vaddr, uintptr
     ipc_attr->ipc_type = MPIDI_IPCI_TYPE__NONE;
     ipc_attr->threshold.send_lmt_sz = MPIR_AINT_MAX;
 
+#ifdef MPIDI_CH4_SHM_ENABLE_XPMEM
   fn_exit:
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_XPMEM_GET_IPC_ATTR);
     return MPI_SUCCESS;
 }

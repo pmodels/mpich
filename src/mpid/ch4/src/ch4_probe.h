@@ -65,6 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe(int source,
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+    MPIR_ERR_CHECK(mpi_errno);
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);

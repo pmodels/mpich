@@ -108,11 +108,8 @@ static int get_map_device(int remote_global_dev_id,
     }
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_MAP_DEVICE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)

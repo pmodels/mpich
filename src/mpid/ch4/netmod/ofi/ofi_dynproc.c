@@ -35,11 +35,8 @@ int MPIDI_OFI_dynproc_init(void)
     MPIDI_OFI_global.conn_mgr.n_free = 0;
     MPIDI_OFI_global.conn_mgr.free_stack = NULL;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONN_MANAGER_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDI_OFI_dynproc_finalize(void)
