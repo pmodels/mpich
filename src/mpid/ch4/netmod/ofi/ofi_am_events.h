@@ -229,7 +229,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
                                                         void *am_hdr,
                                                         MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
-    int c, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
@@ -247,7 +247,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_cc_incr(rreq->cc_ptr, &c);
+    MPIR_cc_inc(rreq->cc_ptr);
 
     /* FIXME: explicit check of data_sz in CH4 region of the request, will fix when adding
      * MPIDIG_am_recv */

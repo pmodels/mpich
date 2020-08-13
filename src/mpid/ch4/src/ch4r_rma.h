@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
                                            MPI_Datatype target_datatype, MPIR_Win * win,
                                            MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
     MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
                                            MPI_Datatype target_datatype, MPIR_Win * win,
                                            MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     size_t offset;
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
@@ -235,7 +235,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
@@ -324,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
                                                   MPI_Op op, MPIR_Win * win,
                                                   MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
@@ -360,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.req_ptr = sreq;
@@ -495,7 +495,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
                                                       MPI_Op op, MPIR_Win * win,
                                                       MPIR_Request ** sreq_ptr)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
@@ -546,7 +546,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIR_Datatype_add_ref_if_not_builtin(result_datatype);
     MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
 
     /* TODO: have common routine for accumulate/get_accumulate */
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
@@ -882,7 +882,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
                                                          int target_rank, MPI_Aint target_disp,
                                                          MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
     MPIDIG_cswap_req_msg_t am_hdr;
     size_t data_sz;
@@ -912,7 +912,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     MPIDIG_REQUEST(sreq, req->creq.result_addr) = result_addr;
     MPIDIG_REQUEST(sreq, req->creq.data) = p_data;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;

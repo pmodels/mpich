@@ -113,9 +113,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq
                 }
             } else {
                 /* NM, cancel SHM partner */
-                int c;
                 /* prevent free, we'll complete it separately */
-                MPIR_cc_incr(anysrc_partner->cc_ptr, &c);
+                MPIR_cc_inc(anysrc_partner->cc_ptr);
                 mpi_errno = MPIDI_SHM_mpi_cancel_recv(anysrc_partner);
                 MPIR_ERR_CHECK(mpi_errno);
 

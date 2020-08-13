@@ -255,7 +255,7 @@ static int ack_put(MPIR_Request * rreq)
 
 static int ack_cswap(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDIG_cswap_ack_msg_t ack_msg;
     void *result_addr;
     MPI_Aint data_sz;
@@ -266,7 +266,7 @@ static int ack_cswap(MPIR_Request * rreq)
     MPIDI_Datatype_check_size(MPIDIG_REQUEST(rreq, req->creq.datatype), 1, data_sz);
     result_addr = ((char *) MPIDIG_REQUEST(rreq, req->creq.data)) + data_sz;
 
-    MPIR_cc_incr(rreq->cc_ptr, &c);
+    MPIR_cc_inc(rreq->cc_ptr);
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->creq.creq_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -332,13 +332,13 @@ static int ack_acc(MPIR_Request * rreq)
 
 static int ack_get_acc(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDIG_acc_ack_msg_t ack_msg;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ACK_GET_ACC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_ACK_GET_ACC);
 
-    MPIR_cc_incr(rreq->cc_ptr, &c);
+    MPIR_cc_inc(rreq->cc_ptr);
     ack_msg.req_ptr = MPIDIG_REQUEST(rreq, req->areq.req_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -734,7 +734,7 @@ static void handle_acc_data(MPI_Aint in_data_sz, MPIR_Request * rreq)
 
 static int get_target_cmpl_cb(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDIG_get_ack_msg_t get_ack;
     MPIR_Win *win;
     MPIR_Context_id_t context_id;
@@ -742,7 +742,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_TARGET_CMPL_CB);
 
-    MPIR_cc_incr(rreq->cc_ptr, &c);
+    MPIR_cc_inc(rreq->cc_ptr);
     get_ack.greq_ptr = MPIDIG_REQUEST(rreq, req->greq.greq_ptr);
     win = MPIDIG_REQUEST(rreq, req->greq.win_ptr);
     context_id = MPIDIG_win_to_context(win);
