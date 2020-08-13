@@ -133,6 +133,11 @@ int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* collapse workq request */
+    if (request_ptr->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(request_ptr);
+    }
+
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
 

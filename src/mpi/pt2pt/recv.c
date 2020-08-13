@@ -149,6 +149,11 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    /* collapse workq request */
+    if (request_ptr->kind == MPIR_REQUEST_KIND__WORKQ) {
+        MPIR_workq_request_completion(request_ptr);
+    }
+
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_extract_status(request_ptr, status);
     MPIR_Request_free(request_ptr);

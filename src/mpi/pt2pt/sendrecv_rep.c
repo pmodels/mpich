@@ -189,6 +189,15 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         mpi_errno = MPID_Wait(sreq, MPI_STATUS_IGNORE);
         MPIR_ERR_CHECK(mpi_errno);
 
+        /* collapse workq request */
+        if (sreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+            MPIR_workq_request_completion(sreq);
+        }
+
+        if (rreq->kind == MPIR_REQUEST_KIND__WORKQ) {
+            MPIR_workq_request_completion(rreq);
+        }
+
         if (status != MPI_STATUS_IGNORE) {
             *status = rreq->status;
         }
