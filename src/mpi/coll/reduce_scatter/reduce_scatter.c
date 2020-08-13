@@ -140,6 +140,7 @@ int MPIR_Reduce_scatter_allcomm_auto(const void *sendbuf, void *recvbuf,
         default:
             MPIR_Assert(0);
     }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;
