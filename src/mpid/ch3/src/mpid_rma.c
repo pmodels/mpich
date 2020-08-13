@@ -153,7 +153,6 @@ int MPID_Free_mem(void *ptr)
 
     MPIDI_CH3I_Free_mem(ptr);
 
-  fn_fail:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FREE_MEM);
     return mpi_errno;
 }

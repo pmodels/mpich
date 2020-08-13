@@ -111,12 +111,8 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
     (*win_ptr)->info_shm_segment_len = 0;
     (*win_ptr)->info_shm_segment_handle = 0;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3I_WIN_INIT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
 }
 
 

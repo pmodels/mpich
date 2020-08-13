@@ -199,11 +199,8 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
 	MPL_free(vcrt);
     }
 
- fn_exit:    
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_VCRT_RELEASE);
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /*@
@@ -849,9 +846,6 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         pg->vct[i].node_id = out_nodemap[i];
     }
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 

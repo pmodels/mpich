@@ -147,13 +147,8 @@ int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 
     /* no op, all of memory is exposed */
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_WIN_ATTACH);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 
@@ -166,13 +161,8 @@ int MPID_Win_detach(MPIR_Win * win, const void *base)
 
     /* no op, all of memory is exposed */
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_WIN_DETACH);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 
@@ -253,13 +243,8 @@ int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * 
     *size = win_ptr->size;
     *disp_unit = win_ptr->disp_unit;
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3U_WIN_SHARED_QUERY);
     return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 

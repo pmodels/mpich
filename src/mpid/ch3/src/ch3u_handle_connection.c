@@ -548,9 +548,6 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
-
- fn_oom: /* out-of-memory handler for utarray operations */
-    MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
  fn_fail:
     goto fn_exit;
 }
@@ -566,8 +563,5 @@ int MPIDI_CH3U_Dump_vc_states(void)
     for (i = 0; i < MPIDI_Process.my_pg->size; ++i)
         printf("  %3d   %s\n", i, MPIDI_VC_GetStateString(MPIDI_Process.my_pg->vct[i].state));
         
- fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
