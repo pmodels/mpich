@@ -584,7 +584,6 @@ int MPIR_Csel_create_from_file(const char *json_file,
 
     MPIR_Csel_create_from_buf(json, create_container, csel_);
 
-  fn_exit:
     return 0;
 }
 
@@ -705,7 +704,6 @@ int MPIR_Csel_prune(void *root_csel, MPIR_Comm * comm_ptr, void **comm_csel_)
         node = node->failure;
     }
 
-  fn_exit:
     *comm_csel_ = comm_csel;
     return mpi_errno;
 }

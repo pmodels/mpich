@@ -127,12 +127,9 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     mpi_errno = MPI_ERR_INTERN;
 #endif
     /* ... end of body of routine ... */
+    goto fn_exit;
 
-#if defined(HAVE_CXX_BINDING) && defined(MPI_MODE_RDONLY)
   fn_exit:
-#else
-  fn_exit:
-#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
     return mpi_errno;
 }

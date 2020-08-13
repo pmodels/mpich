@@ -149,6 +149,7 @@ int MPIR_Allgatherv_allcomm_auto(const void *sendbuf,
         default:
             MPIR_Assert(0);
     }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

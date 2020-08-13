@@ -334,6 +334,7 @@ static int optimized_put(const char *key, const char *val, int is_local)
     int mpi_errno = MPI_SUCCESS;
 #if defined(USE_PMI1_API)
     mpi_errno = MPIR_pmi_kvs_put(key, val);
+    MPIR_ERR_CHECK(mpi_errno);
 #elif defined(USE_PMI2_API)
     if (!is_local) {
         mpi_errno = MPIR_pmi_kvs_put(key, val);

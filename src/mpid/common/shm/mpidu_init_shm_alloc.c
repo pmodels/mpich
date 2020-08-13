@@ -238,9 +238,6 @@ static int check_alloc(MPIDU_shm_seg_t * memory)
         memory->symmetrical = 0;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_ALLOC);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

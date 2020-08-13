@@ -74,6 +74,7 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     mpi_errno = MPIR_Waitall_state(count, request_ptrs, array_of_statuses, requests_property,
                                    &progress_state);
     MPID_Progress_end(&progress_state);
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     return mpi_errno;

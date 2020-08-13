@@ -140,10 +140,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPII_finalize_local_proc_attrs(void)

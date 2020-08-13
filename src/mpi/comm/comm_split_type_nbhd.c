@@ -100,8 +100,10 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
 int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                          MPIR_Comm ** newcomm_ptr)
 {
+#ifndef HAVE_ROMIO
+    return MPI_SUCCESS;
+#else
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ROMIO
     MPI_Comm dummycomm;
     MPIR_Comm *dummycomm_ptr;
 
@@ -113,13 +115,13 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
 
     MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
     *newcomm_ptr = dummycomm_ptr;
-#endif
 
   fn_exit:
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
+#endif
 }
 
 static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
@@ -226,12 +228,7 @@ static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_
     if (subset_size < min_size && i == bitmap_size)
         color = prev_comm_color;
 
-  fn_exit:
     return color;
-
-  fn_fail:
-    goto fn_exit;
-
 }
 
 static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
@@ -480,11 +477,7 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
                                              newcomm_ptr);
     }
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
@@ -522,11 +515,7 @@ static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     }
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *info_args_are_equal)
