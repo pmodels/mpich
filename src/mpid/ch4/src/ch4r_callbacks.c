@@ -32,10 +32,7 @@ int MPIDIG_do_long_ack(MPIR_Request * rreq)
     }
 #endif
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't

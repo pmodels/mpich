@@ -44,8 +44,6 @@ static inline int MPIDU_genq_shmem_pool_cell_alloc(MPIDU_genq_shmem_pool_t pool,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CELL_ALLOC);
     return rc;
-  fn_fail:
-    goto fn_exit;
 }
 
 static inline int MPIDU_genq_shmem_pool_cell_free(void *cell)

@@ -376,7 +376,6 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
 
     ret = (z < size);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_VALID_GROUP_RANK);
     return ret;
 }

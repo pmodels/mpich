@@ -1277,10 +1277,7 @@ static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_
         }
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int open_fabric(void)

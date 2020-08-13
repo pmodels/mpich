@@ -118,7 +118,6 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_queue_t queue,
         }
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_DEQUEUE);
     return rc;
 }
