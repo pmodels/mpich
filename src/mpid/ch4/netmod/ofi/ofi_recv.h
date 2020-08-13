@@ -165,7 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
 
     if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size &&
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz < MPIDI_OFI_global.max_msg_size &&
             !force_gpu_pack) {
             mpi_errno =
                 MPIDI_OFI_recv_iov(buf, count, data_sz, rank, match_bits, mask_bits, comm,
@@ -205,7 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     }
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
 
-    if (unlikely(data_sz > MPIDI_OFI_global.max_msg_size)) {
+    if (unlikely(data_sz >= MPIDI_OFI_global.max_msg_size)) {
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         data_sz = MPIDI_OFI_global.max_msg_size;
     } else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
