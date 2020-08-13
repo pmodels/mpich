@@ -305,11 +305,9 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 	if (MPIDI_Request_get_msg_type(sreq) == MPIDI_REQUEST_RNDV_MSG ||
 	    MPIDI_Request_get_type(sreq) == MPIDI_REQUEST_TYPE_SSEND)
 	{
-	    int cc;
-	    
 	    /* decrement the CC one additional time for the CTS/sync ack that 
 	       is never going to arrive */
-	    MPIDI_CH3U_Request_decrement_cc(sreq, &cc);
+	    MPIDI_CH3U_Request_dec_cc(sreq);
 	}
 		
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"message cancelled");

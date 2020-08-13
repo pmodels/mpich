@@ -140,7 +140,7 @@ static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype 
                                   MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                   MPIR_Errflag_t errflag)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
 
     if (sreq == NULL) {
@@ -167,7 +167,7 @@ static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype 
 
     /* Increment the completion counter once to account for the extra message that needs to come
      * back from the receiver to indicate completion. */
-    MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_cc_inc(sreq->cc_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_av_is_local(addr)) {

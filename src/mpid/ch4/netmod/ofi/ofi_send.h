@@ -155,7 +155,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
-        int c = 1;
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
         ackreq = MPL_malloc(sizeof(MPIDI_OFI_ssendack_request_t), MPL_MEM_OTHER);
@@ -163,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              "**nomem %s", "Ssend ack request alloc");
         ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
         ackreq->signal_req = sreq;
-        MPIR_cc_incr(sreq->cc_ptr, &c);
+        MPIR_cc_inc(sreq->cc_ptr);
         ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni_src].rx, /* endpoint    */
@@ -245,13 +244,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                              vni_local, tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
-        int c;
         uint64_t rma_key = 0;
         struct fid_mr *huge_send_mr;
 
-        c = 1;
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
-        MPIR_cc_incr(sreq->cc_ptr, &c);
+        MPIR_cc_inc(sreq->cc_ptr);
 
         if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
             /* Set up a memory region for the lmt data transfer */

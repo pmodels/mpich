@@ -246,9 +246,8 @@ void MPIDI_OFI_mr_key_allocator_destroy(void);
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
     do {                                                                \
         if (sigreq) {                                                   \
-            int tmp;                                                    \
             MPIDI_OFI_chunk_request *creq;                              \
-            MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                      \
+            MPIR_cc_inc((*sigreq)->cc_ptr);                             \
             creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER); \
             MPIR_ERR_CHKANDSTMT(creq == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem"); \
             creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                \

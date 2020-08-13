@@ -182,7 +182,7 @@ static inline void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
 static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
                                               MPIDI_OFI_lmt_msg_payload_t * lmt_msg, void *am_hdr)
 {
-    int c, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     size_t in_data_sz;
 
@@ -202,7 +202,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_cc_incr(rreq->cc_ptr, &c);
+    MPIR_cc_inc(rreq->cc_ptr);
 
     if (!in_data_sz) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
