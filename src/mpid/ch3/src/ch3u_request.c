@@ -183,9 +183,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_SEND_IOV);
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -572,10 +569,7 @@ int MPID_Request_complete(MPIR_Request *req)
 	MPIR_Request_free(req);
     }
 
- fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 void MPID_Request_free_hook(MPIR_Request *req)

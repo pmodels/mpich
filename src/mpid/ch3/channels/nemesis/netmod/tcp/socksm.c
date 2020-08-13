@@ -1018,8 +1018,6 @@ int close_cleanup_and_free_sc_plfd(sockconn_t * const sc)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CLOSE_CLEANUP_AND_FREE_SC_PLFD);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -1952,9 +1950,6 @@ int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t * const vc, int req_errno)
     if (mpi_errno2)
         MPIR_ERR_ADD(mpi_errno, mpi_errno2);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CLEANUP_ON_ERROR);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

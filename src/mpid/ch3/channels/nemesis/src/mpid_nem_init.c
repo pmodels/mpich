@@ -93,10 +93,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
         "NEMESIS", /* category */
         "Array counting how many times nemesis had to fall back to the regular queue when sending messages between pairs of local processes");
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 int
