@@ -28,6 +28,10 @@ enum {
     INTERSECTION_SEARCH
 };
 
+#ifdef __SUNPRO_C
+#pragma error_messages (off, E_ANONYMOUS_STRUCT_DECL)
+#endif
+
 typedef struct gavl_tree_node {
     union {
         struct {
