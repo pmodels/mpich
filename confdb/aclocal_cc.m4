@@ -514,7 +514,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wtype-limits
         -Werror-implicit-function-declaration
         -Wstack-usage=262144
-        -diag-disable=all
     "
 
     if test -z "$1"; then
