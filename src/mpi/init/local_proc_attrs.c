@@ -130,10 +130,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
     /* Init communicator hints */
     MPIR_Comm_hint_init();
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPII_init_tag_ub(void)

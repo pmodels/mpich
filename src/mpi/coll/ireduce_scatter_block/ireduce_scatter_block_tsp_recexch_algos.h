@@ -37,7 +37,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCATTER_BLOCK_SCHED_INTRA_RECEXCH);
 
     if (recvcount == 0) {
-        return mpi_errno;
+        goto fn_exit;
     }
 
     /* For correctness, transport based collectives need to get the
@@ -61,7 +61,7 @@ int MPIR_TSP_Ireduce_scatter_block_sched_intra_recexch(const void *sendbuf, void
         if (!is_inplace)
             MPIR_TSP_sched_localcopy(sendbuf, total_count, datatype, recvbuf, total_count,
                                      datatype, sched, 0, NULL);
-        return mpi_errno;
+        goto fn_exit;
     }
 
     /* get the neighbors, the function allocates the required memory */
