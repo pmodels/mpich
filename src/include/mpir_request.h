@@ -434,6 +434,13 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
         return;
     }
 
+    /* A corner case with MPI_Bsend + workq: bsend progress will free the workq request
+     * without completion processing, thus we need free the real request here.
+     * A recursive call would be cleaner, but we can't do that with static inline,
+     * therefore, use goto free_it label, and a flag variable  */
+    MPIR_Request *real_req = NULL;
+
+  free_it:
     MPIR_Request_release_ref(req, &inuse);
 
     if (need_safety) {
@@ -449,6 +456,9 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
     if (inuse == 0) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "freeing request, handle=0x%08x", req->handle);
 
+        if (req->kind == MPIR_REQUEST_KIND__WORKQ) {
+            real_req = req->u.workq.real_request;
+        }
 #ifdef MPICH_DBG_OUTPUT
         if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
             int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
@@ -492,6 +502,12 @@ static inline void MPIR_Request_free_with_safety(MPIR_Request * req, int need_sa
     }
     if (need_safety) {
         MPID_THREAD_CS_EXIT(VCI, (*(MPID_Thread_mutex_t *) MPIR_Request_mem[pool].lock));
+    }
+    if (real_req) {
+        /* goto because we can't recurse in static inline */
+        req = real_req;
+        real_req = NULL;
+        goto free_it;
     }
 }
 
