@@ -105,13 +105,15 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
 
+    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
+
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool, (void **) &req_hdr);
         MPIR_Assert(req_hdr);
         MPIDI_OFI_AMREQUEST(sreq, req_hdr) = req_hdr;
 
         req_hdr->am_hdr = (void *) &req_hdr->am_hdr_buf[0];
-        req_hdr->am_hdr_sz = MPIDI_OFI_MAX_AM_HDR_SIZE;
+        req_hdr->am_hdr_sz = am_hdr_sz;
     } else {
         req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
     }
@@ -211,13 +213,12 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
     MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
     msg_hdr->data_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_LMT_REQ;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
@@ -239,7 +240,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
 
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
-    MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
+    MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz)) <=
                 MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
     MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
                              data,
@@ -261,7 +262,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[0].iov_len = sizeof(*msg_hdr);
 
     iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
-    iov[1].iov_len = am_hdr_sz;
+    iov[1].iov_len = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
 
     iov[2].iov_base = lmt_info;
     iov[2].iov_len = sizeof(*lmt_info);
@@ -291,13 +292,12 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
-    MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
     MPIR_Assert(data_sz < (1ULL << MPIDI_OFI_AM_DATA_SZ_BITS));
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     msg_hdr->handler_id = handler_id;
-    msg_hdr->am_hdr_sz = am_hdr_sz;
+    msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
     msg_hdr->data_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
@@ -310,7 +310,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     iov[0].iov_len = sizeof(*msg_hdr);
 
     iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
-    iov[1].iov_len = am_hdr_sz;
+    iov[1].iov_len = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
 
     iov[2].iov_base = (void *) data;
     iov[2].iov_len = data_sz;
@@ -347,7 +347,6 @@ static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm
     deferred_req->rank = rank;
     deferred_req->comm = comm;
     deferred_req->handler_id = handler_id;
-    deferred_req->am_hdr_sz = am_hdr_sz;
     deferred_req->buf = buf;
     deferred_req->count = count;
     deferred_req->datatype = datatype;
@@ -376,7 +375,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
     MPIR_Datatype *dt_ptr;
-    bool data_lt_eager_threshold = false;
+    bool do_eager = false;
     bool need_packing = false;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
@@ -385,7 +384,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
 
-    data_lt_eager_threshold =
+    do_eager =
         (am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
 
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
@@ -415,7 +414,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
          * we should not allocate the entire buffer and do the packing at once. */
         /* TODO: (1) Skip packing for high-density datatypes;
          *       (2) Pipeline allocation for low-density datatypes; */
-        if (data_lt_eager_threshold) {
+        if (do_eager) {
             MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
             if (send_buf == NULL) {
                 mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
@@ -436,7 +435,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    if (data_lt_eager_threshold) {
+    if (do_eager) {
         mpi_errno =
             MPIDI_OFI_am_isend_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                      am_hdr_sz, send_buf, data_sz, sreq);
