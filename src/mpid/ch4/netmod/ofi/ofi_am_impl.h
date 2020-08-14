@@ -197,11 +197,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_am_isend_long(int rank,
-                                          MPIR_Comm * comm,
-                                          int handler_id,
-                                          const void *am_hdr,
-                                          size_t am_hdr_sz,
+static inline int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm, int handler_id,
                                           const void *data, MPI_Aint data_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -277,11 +273,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_am_isend_short(int rank,
-                                           MPIR_Comm * comm,
-                                           int handler_id,
-                                           const void *am_hdr,
-                                           size_t am_hdr_sz,
+static inline int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
                                            const void *data, MPI_Aint data_sz, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
@@ -328,9 +320,9 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
 }
 
 static inline int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm, int handler_id,
-                                                      size_t am_hdr_sz, const void *buf,
-                                                      size_t count, MPI_Datatype datatype,
-                                                      MPIR_Request * sreq, MPI_Aint data_sz)
+                                                      const void *buf, size_t count,
+                                                      MPI_Datatype datatype, MPIR_Request * sreq,
+                                                      MPI_Aint data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -393,8 +385,8 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
     if (MPIDI_OFI_global.deferred_am_isend_q) {
         /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
-                                                        buf, count, datatype, sreq, data_sz);
+        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
+                                                        datatype, sreq, data_sz);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -417,9 +409,8 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         if (do_eager) {
             MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
             if (send_buf == NULL) {
-                mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, am_hdr_sz,
-                                                                buf, count, datatype, sreq,
-                                                                data_sz);
+                mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
+                                                                datatype, sreq, data_sz);
                 MPIR_ERR_CHECK(mpi_errno);
                 goto fn_exit;
             }
@@ -436,13 +427,9 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     }
 
     if (do_eager) {
-        mpi_errno =
-            MPIDI_OFI_am_isend_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
-                                     am_hdr_sz, send_buf, data_sz, sreq);
+        mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, data_sz, sreq);
     } else {
-        mpi_errno =
-            MPIDI_OFI_am_isend_long(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
-                                    am_hdr_sz, send_buf, data_sz, sreq);
+        mpi_errno = MPIDI_OFI_am_isend_long(rank, comm, handler_id, send_buf, data_sz, sreq);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
