@@ -33,9 +33,12 @@ CFLAGS_opt="$pac_opt $CFLAGS"
 pac_result="unknown"
 
 AC_LANG_CONFTEST([
-	AC_LANG_PROGRAM([[#include <stdio.h>
-                          const char hw[] = "Hello, World\n";]],
-		[[fputs (hw, stdout);]])
+	AC_LANG_SOURCE([[#include <stdio.h>
+                          const char hw[] = "Hello, World\n";
+                          int main(void){ 
+                              fputs (hw, stdout);
+                              return 0;
+                          }]])
 ])
 CFLAGS="$CFLAGS_orig"
 rm -f pac_test1.log
@@ -71,10 +74,10 @@ if test "$pac_result" = "yes" ; then
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
         rm -f pac_test4.log
-        PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_PROGRAM()], [
+        PAC_LINK_IFELSE_LOG([pac_test4.log], [AC_LANG_SOURCE([[int main(void){return 0;}]])], [
             CFLAGS="$CFLAGS_opt"
             rm -f pac_test5.log
-            PAC_LINK_IFELSE_LOG([pac_test5.log], [AC_LANG_PROGRAM()], [
+            PAC_LINK_IFELSE_LOG([pac_test5.log], [AC_LANG_SOURCE([[int main(void){return 0;}]])], [
                 PAC_RUNLOG_IFELSE([diff -b pac_test4.log pac_test5.log],
                                   [pac_result=yes], [pac_result=no])
             ],[
