@@ -178,7 +178,9 @@ mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg)
         return MTEST_MEM_TYPE__REGISTERED_HOST;
     else if (strcmp(memtype, "device") == 0)
         return MTEST_MEM_TYPE__DEVICE;
-    else
+    else if (strcmp(memtype, "shared") == 0) {
+        return MTEST_MEM_TYPE__SHARED;
+    } else
         return MTEST_MEM_TYPE__UNSET;
 }
 
@@ -339,6 +341,11 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         }
         device_id++;
         device_id %= ndevices;
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        cudaSetDevice(device_id);
+        cudaMallocManaged(devicebuf, size);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
 #endif
 
 #ifdef HAVE_ZE
@@ -383,6 +390,24 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         }
         /* FIXME: currently ZE only support device 0, so we cannot change device during test.
          * Shifting device_id similar to CUDA should be added in future. */
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        size_t mem_alignment;
+        ze_device_mem_alloc_desc_t device_desc;
+        ze_host_mem_alloc_desc_t host_desc;
+        device_desc.flags = ZE_DEVICE_MEM_ALLOC_FLAG_DEFAULT;
+        device_desc.ordinal = 0;        /* We currently support a single memory type */
+        device_desc.version = ZE_DEVICE_MEM_ALLOC_DESC_VERSION_CURRENT;
+        host_desc.flags = ZE_HOST_MEM_ALLOC_FLAG_DEFAULT;
+        host_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
+        /* Currently ZE ignores this augument and uses an internal alignment
+         * value. However, this behavior can change in the future. */
+        mem_alignment = 1;
+        zerr =
+            zeDriverAllocSharedMem(driver, &device_desc, &host_desc, size, mem_alignment,
+                                   device[device_id], devicebuf);
+        assert(zerr == ZE_RESULT_SUCCESS);
+        if (hostbuf)
+            *hostbuf = *devicebuf;
 #endif
     } else {
         fprintf(stderr, "ERROR: unsupported memory type %d\n", type);
@@ -402,6 +427,8 @@ void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf)
         if (hostbuf) {
             cudaFreeHost(hostbuf);
         }
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        cudaFree(devicebuf);
 #endif
 #ifdef HAVE_ZE
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
@@ -414,6 +441,9 @@ void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf)
             zerr = zeDriverFreeMem(driver, hostbuf);
             assert(zerr == ZE_RESULT_SUCCESS);
         }
+    } else if (type == MTEST_MEM_TYPE__SHARED) {
+        zerr = zeDriverFreeMem(driver, devicebuf);
+        assert(zerr == ZE_RESULT_SUCCESS);
 #endif
     }
 }
