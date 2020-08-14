@@ -162,7 +162,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 
 #endif /* MPL_THREAD_PACKAGE_NAME */
 
-static void init_classes()
+static void init_classes(void)
 {
     int i;
 
@@ -179,7 +179,7 @@ static void init_classes()
    MPL_trinit - Setup the space package.  Only needed for
    error messages and flags.
 +*/
-void MPL_trinit()
+void MPL_trinit(void)
 {
     char *s;
 

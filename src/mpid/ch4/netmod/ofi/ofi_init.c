@@ -710,7 +710,7 @@ static int flush_recv(int src, int nic, int vni, MPIDI_OFI_dynamic_process_reque
     goto fn_exit;
 }
 
-static int flush_send_queue()
+static int flush_send_queue(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
