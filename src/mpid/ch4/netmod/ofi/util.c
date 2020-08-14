@@ -19,7 +19,7 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
     return mpi_errno;
 }
 
-int MPIDI_OFI_retry_progress()
+int MPIDI_OFI_retry_progress(void)
 {
     /* We do not call progress on hooks form netmod level
      * because it is not reentrant safe.
@@ -60,7 +60,7 @@ int MPIDI_OFI_mr_key_allocator_init(void)
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-uint64_t MPIDI_OFI_mr_key_alloc()
+uint64_t MPIDI_OFI_mr_key_alloc(void)
 {
     uint64_t i;
     for (i = mr_key_allocator.last_free_mr_key; i < mr_key_allocator.num_ints; i++) {
@@ -102,7 +102,7 @@ void MPIDI_OFI_mr_key_free(uint64_t idx)
     mr_key_allocator.bitmask[int_index] |= (0x1ULL << bitpos);
 }
 
-void MPIDI_OFI_mr_key_allocator_destroy()
+void MPIDI_OFI_mr_key_allocator_destroy(void)
 {
     MPL_free(mr_key_allocator.bitmask);
 }
@@ -447,7 +447,7 @@ static MPI_Op mpi_ops[] = {
   _TBL.field2 = atomic_count;                  \
     }
 
-static void create_dt_map()
+static void create_dt_map(void)
 {
     int i, j;
     size_t dtsize[FI_DATATYPE_LAST];
@@ -509,7 +509,7 @@ static void add_index(MPI_Datatype datatype, int *idx)
     (*idx)++;
 }
 
-void MPIDI_OFI_index_datatypes()
+void MPIDI_OFI_index_datatypes(void)
 {
     int idx = 0;
 

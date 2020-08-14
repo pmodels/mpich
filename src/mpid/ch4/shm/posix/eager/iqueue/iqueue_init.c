@@ -81,7 +81,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     goto fn_exit;
 }
 
-int MPIDI_POSIX_iqueue_finalize()
+int MPIDI_POSIX_iqueue_finalize(void)
 {
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     int mpi_errno;

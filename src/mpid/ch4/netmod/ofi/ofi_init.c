@@ -386,7 +386,7 @@ static int get_ofi_version(void)
         return FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
 }
 
-static int conn_manager_init()
+static int conn_manager_init(void)
 {
     int mpi_errno = MPI_SUCCESS, i;
 
@@ -422,7 +422,7 @@ static int conn_manager_init()
     goto fn_exit;
 }
 
-static int conn_manager_destroy()
+static int conn_manager_destroy(void)
 {
     int mpi_errno = MPI_SUCCESS, i, j;
     MPIDI_OFI_dynamic_process_request_t *req;

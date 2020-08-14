@@ -35,7 +35,7 @@ typedef struct MPIDI_POSIX_eager_iqueue_transport {
 
 extern MPIDI_POSIX_eager_iqueue_transport_t MPIDI_POSIX_eager_iqueue_transport_global;
 
-static inline MPIDI_POSIX_eager_iqueue_transport_t *MPIDI_POSIX_eager_iqueue_get_transport()
+static inline MPIDI_POSIX_eager_iqueue_transport_t *MPIDI_POSIX_eager_iqueue_get_transport(void)
 {
     return &MPIDI_POSIX_eager_iqueue_transport_global;
 }

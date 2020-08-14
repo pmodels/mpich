@@ -71,7 +71,7 @@ int MPL_gpu_init(int *device_count, int *max_dev_id_ptr)
     return MPL_SUCCESS;
 }
 
-int MPL_gpu_finalize()
+int MPL_gpu_finalize(void)
 {
     return MPL_SUCCESS;
 }
