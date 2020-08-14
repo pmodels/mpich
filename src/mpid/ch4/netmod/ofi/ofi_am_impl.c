@@ -80,15 +80,11 @@ int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
     }
 
     if (do_eager) {
-        mpi_errno =
-            MPIDI_OFI_am_isend_short(dreq->rank, dreq->comm, dreq->handler_id,
-                                     MPIDI_OFI_AMREQUEST_HDR(dreq->sreq, am_hdr), dreq->am_hdr_sz,
-                                     send_buf, dreq->data_sz, dreq->sreq);
+        mpi_errno = MPIDI_OFI_am_isend_short(dreq->rank, dreq->comm, dreq->handler_id, send_buf,
+                                             dreq->data_sz, dreq->sreq);
     } else {
-        mpi_errno =
-            MPIDI_OFI_am_isend_long(dreq->rank, dreq->comm, dreq->handler_id,
-                                    MPIDI_OFI_AMREQUEST_HDR(dreq->sreq, am_hdr), dreq->am_hdr_sz,
-                                    send_buf, dreq->data_sz, dreq->sreq);
+        mpi_errno = MPIDI_OFI_am_isend_long(dreq->rank, dreq->comm, dreq->handler_id, send_buf,
+                                            dreq->data_sz, dreq->sreq);
     }
     MPIR_ERR_CHECK(mpi_errno);
 
