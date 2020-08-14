@@ -228,7 +228,6 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     int rank;
     MPIR_Comm *comm;
     int handler_id;
-    size_t am_hdr_sz;
     const void *buf;
     size_t count;
     MPI_Datatype datatype;

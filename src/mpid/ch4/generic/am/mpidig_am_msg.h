@@ -54,13 +54,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_finish(MPIR_Request * rreq)
 /* Transport-specific data copy, such as RDMA, need explicit iov pointers.
  * Providing helper routine keeps the internal of MPIDIG_rreq_async_t here.
  */
-MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq);
+MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq);
 MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data,
                                                    MPI_Aint * p_data_sz, MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
-        mpidig_convert_datatype(rreq);
+        MPIDIG_convert_datatype(rreq);
         MPIR_Assert(p->recv_type == MPIDIG_RECV_CONTIG || p->recv_type == MPIDIG_RECV_IOV);
     }
 
@@ -267,7 +267,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
 }
 
 /* internal routines */
-MPL_STATIC_INLINE_PREFIX void mpidig_convert_datatype(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
 {
     int dt_contig;
     MPI_Aint data_sz;
