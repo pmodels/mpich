@@ -7,5 +7,4 @@
 #include "ch4_impl.h"
 #include "mpidch4r.h"
 
-MPIDIG_global_t MPIDIG_global = { {0}
-};
+MPIDIG_global_t MPIDIG_global;

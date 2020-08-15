@@ -54,13 +54,12 @@ static int nm_finalize(void)
 }
 
 MPID_nem_netmod_funcs_t MPIDI_nem_none_funcs = {
-    nm_init,
-    nm_finalize,
-    nm_poll,
-    nm_get_business_card,
-    nm_connect_to_root,
-    nm_vc_init,
-    nm_vc_destroy,
-    nm_vc_terminate,
-    NULL        /* anysource iprobe */
+    .init = nm_init,
+    .finalize = nm_finalize,
+    .poll = nm_poll,
+    .get_business_card = nm_get_business_card,
+    .connect_to_root = nm_connect_to_root,
+    .vc_init = nm_vc_init,
+    .vc_destroy = nm_vc_destroy,
+    .vc_terminate = nm_vc_terminate
 };

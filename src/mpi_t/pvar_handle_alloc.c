@@ -29,9 +29,10 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index, void *ob
 /* Define storage for the ALL_HANDLES constant */
 MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj = {
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_T_PVAR_HANDLE, /* pvar handle tag for error checking */
-#endif
+    .kind = MPIR_T_PVAR_HANDLE  /* pvar handle tag for error checking */
+#else
     0
+#endif
 };
 
 MPIR_T_pvar_handle_t *const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
