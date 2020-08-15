@@ -1050,6 +1050,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_comm_shrink %C %p:MPIX_Comm_shrink(%C, new_comm=%p) failed
 **mpix_comm_agree:MPIX_Comm_agree failed
 **mpix_comm_agree %C:MPIX_Comm_agree(%C) failed
+**badgputype:Bad GPU type specified
+**badgputype %d:Bad GPU type (%d) specified
 **mpi_intercomm_create:MPI_Intercomm_create failed
 **mpi_intercomm_create %C %d %C %d %d %p:MPI_Intercomm_create(%C, local_leader=%d, %C, remote_leader=%d, tag=%d, newintercomm=%p) failed
 **mpi_intercomm_merge:MPI_Intercomm_merge failed
