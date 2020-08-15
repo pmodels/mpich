@@ -139,20 +139,12 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
             MPIDIG_REQUEST(unexp_req, datatype) = datatype;
             MPIDIG_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDIG_REQUEST(unexp_req, count) = count;
-            if (*request == NULL) {
-                /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
-                 * a request. Here we simply return `unexp_req` */
-                *request = unexp_req;
-                /* Mark `match_req` as NULL so that we know nothing else to complete when
-                 * `unexp_req` finally completes. (See below) */
-                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = NULL;
-            } else {
-                /* Enqueuing path: CH4 already allocated a request.
-                 * Record the passed `*request` to `match_req` so that we can complete it
-                 * later when `unexp_req` completes.
-                 * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
-                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
-            }
+            /* Here we simply return `unexp_req` */
+            *request = unexp_req;
+            /* Mark `match_req` as NULL so that we know nothing else to complete when
+             * `unexp_req` finally completes. (See below) */
+            MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = NULL;
+
             mpi_errno = MPIDIG_do_long_ack(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
@@ -160,32 +152,14 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
             mpi_errno =
                 MPIDIG_handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
-            if (*request == NULL) {
-                /* Regular (non-enqueuing) path: MPIDIG is responsbile for allocating
-                 * a request. Here we simply return `unexp_req`, which is already completed. */
-                *request = unexp_req;
-            } else {
-                /* Enqueuing path: CH4 already allocated request as `*request`.
-                 * Since the real operations has completed in `unexp_req`, here we
-                 * simply copy the status to `*request` and complete it. */
-                (*request)->status = unexp_req->status;
-                MPIR_Request_add_ref(*request);
-                MPID_Request_complete(*request);
-                /* Need to free here because we don't return this to user */
-                MPIR_Request_free_unsafe(unexp_req);
-            }
+            /* Here we simply return `unexp_req`, which is already completed. */
+            *request = unexp_req;
             goto fn_exit;
         }
     }
 
-    if (*request != NULL) {
-        /* request from workq */
-        rreq = *request;
-        MPIDIG_request_init(rreq, MPIR_REQUEST_KIND__RECV);
-    } else {
-        rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
-        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    }
+    rreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RECV, 2);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = rreq;
 

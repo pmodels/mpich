@@ -93,14 +93,10 @@ static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Data
                                        MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
+    MPIR_Request *sreq;
 
-    if (sreq == NULL) {
-        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
-        MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
-    }
+    sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = sreq;
 
@@ -141,14 +137,10 @@ static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype 
                                   MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, c;
-    MPIR_Request *sreq = *request;
+    MPIR_Request *sreq;
 
-    if (sreq == NULL) {
-        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
-        MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
-    }
+    sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = sreq;
 
@@ -195,14 +187,10 @@ static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datat
                                       MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
+    MPIR_Request *sreq;
 
-    if (sreq == NULL) {
-        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
-        MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
-    }
+    sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = sreq;
 
