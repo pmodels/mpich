@@ -841,7 +841,7 @@ PAC_ARG_ATOMIC_PRIMITIVES
 
 AC_DEFUN([MPL_ATOMIC_TEST_PROGRAM], [AC_LANG_SOURCE([[
     #include "$1"
-    int main()
+    int main(void)
     {
         struct MPL_atomic_int_t a, b;
         int c;
