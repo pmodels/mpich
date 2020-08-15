@@ -209,7 +209,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_recv_safe(void *buf,
                                           status, req, NULL /*flag */ , NULL /*message */ ,
                                           NULL /*processed */);
 #else
-    *(req) = NULL;
     mpi_errno = MPIDI_recv_unsafe(buf, count, datatype, rank, tag, comm,
                                   context_offset, av, status, req);
 #endif
@@ -238,7 +237,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_irecv_safe(void *buf,
                                           NULL /*message */ ,
                                           NULL /*processed */);
 #else
-    *(req) = NULL;
     mpi_errno = MPIDI_irecv_unsafe(buf, count, datatype, rank, tag, comm, context_offset, av, req);
 #endif
 
