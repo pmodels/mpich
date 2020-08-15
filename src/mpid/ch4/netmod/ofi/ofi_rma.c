@@ -98,14 +98,7 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     origin_iov = MPL_malloc(sizeof(struct iovec) * origin_len, MPL_MEM_RMA);
 
     if (sigreq) {
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-        if (*sigreq) {
-            MPIR_Request_add_ref(*sigreq);
-        } else
-#endif
-        {
-            MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-        }
+        MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
         flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
     } else {
         flags = FI_DELIVERY_COMPLETE;

@@ -8,6 +8,7 @@
 
 #include "ofi_impl.h"
 
+/* TODO: mysterious macro names, maybe just "MPIDI_OFI_IS_IMRECV"? */
 #define MPIDI_OFI_ON_HEAP      0
 #define MPIDI_OFI_USE_EXISTING 1
 
@@ -124,27 +125,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-        /* TODO: what cases when *request is NULL under workq? */
-        if (*request) {
-            MPIR_Request_add_ref(*request);
-        } else
-#endif
-        {
-            MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vni_dst);
-        }
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__RECV, vni_dst);
         rreq = *request;
 
         /* Need to set the source to UNDEFINED for anysource matching */
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
     } else if (mode == MPIDI_OFI_USE_EXISTING) {
+        /* imrecv */
         rreq = *request;
     } else {
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
         goto fn_fail;
     }
-
-    *request = rreq;
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, tag);
 
@@ -248,15 +240,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 /* Common macro used by all MPIDI_NM_mpi_recv routines to facilitate tuning */
 #define MPIDI_OFI_RECV_VNIS(vni_src_, vni_dst_) \
     do { \
-        if (*request != NULL) { \
-            /* workq path  or collectives */ \
-            vni_src_ = 0; \
-            vni_dst_ = 0; \
-        } else { \
-            /* NOTE: hashing is based on target rank */ \
-            vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
-            vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
-        } \
+        /* NOTE: hashing is based on target rank */ \
+        vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
+        vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, rank, comm->rank, tag); \
     } while (0)
 
 

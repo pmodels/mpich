@@ -627,11 +627,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     MPIR_Assert(num_vnis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
 #endif
 
-    /* WorkQ only works with single vni for now */
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    MPIR_Assert(num_vnis == 1);
-#endif
-
     MPIDI_OFI_global.num_vnis = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */

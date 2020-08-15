@@ -137,15 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    /* TODO: what cases when *request is NULL under workq? */
-    if (*request) {
-        MPIR_Request_add_ref(*request);
-    } else
-#endif
-    {
-        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vni_src);
-    }
+    MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vni_src);
 
     MPIR_Request *sreq = *request;
 
@@ -353,12 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
              * lightweight_send. */
             MPL_gpu_free_host(send_buf);
         }
-        if (*request == NULL) {
-            *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-        } else {
-            MPIR_Request_add_ref(*request);
-            mpi_errno = MPID_Request_complete(*request);
-        }
+        *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
                                           context_offset, addr, vni_src, vni_dst, request,
@@ -372,14 +359,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
 /* Common macro used by all MPIDI_NM_mpi_send routines to facilitate tuning */
 #define MPIDI_OFI_SEND_VNIS(vni_src_, vni_dst_) \
     do { \
-        if (*request != NULL) { \
-            /* workq path */ \
-            vni_src_ = 0; \
-            vni_dst_ = 0; \
-        } else { \
-            vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-            vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
-        } \
+        vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
     } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
