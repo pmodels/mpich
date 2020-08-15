@@ -1845,5 +1845,5 @@ static struct HYD_arg_match_table match_table[] = {
     {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
     {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
 
-    {"\0", NULL}
+    {"\0", NULL, NULL}
 };
