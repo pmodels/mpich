@@ -515,8 +515,8 @@ if test "$enable_strict_done" != "yes" ; then
         flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
     fi
     add_cflags=yes
-    c_std=c99
-    posix_std=2001
+    c_std=none
+    posix_std=none
     enable_opt=yes
     pac_cc_strict_werror=no
     for flag in ${flags}; do
