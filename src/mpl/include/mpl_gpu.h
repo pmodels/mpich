@@ -28,6 +28,13 @@ typedef struct {
     MPL_gpu_device_handle_t device;
 } MPL_pointer_attr_t;
 
+typedef enum {
+    MPL_GPU_TYPE_NONE = 0,
+    MPL_GPU_TYPE_CUDA,
+    MPL_GPU_TYPE_ZE,
+} MPL_gpu_type_t;
+
+int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
 
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle);

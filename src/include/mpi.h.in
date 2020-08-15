@@ -1552,6 +1552,12 @@ int MPIX_Comm_revoke(MPI_Comm comm) MPICH_API_PUBLIC;
 int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 int MPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 
+/* GPU extensions */
+#define MPIX_GPU_SUPPORT_CUDA  (0)
+#define MPIX_GPU_SUPPORT_ZE    (1)
+int MPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
+int MPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
+
 
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
@@ -2197,6 +2203,9 @@ int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp) MPICH_API_
 int PMPIX_Comm_revoke(MPI_Comm comm) MPICH_API_PUBLIC;
 int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
+
+int PMPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
+int PMPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
 
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
