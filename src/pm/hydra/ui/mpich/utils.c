@@ -1765,5 +1765,5 @@ static struct HYD_arg_match_table match_table[] = {
     {"usize", usize_fn, usize_help_fn},
     {"pmi-port", pmi_port_fn, pmi_port_help_fn},
 
-    {"\0", NULL}
+    {"\0", NULL, NULL}
 };
