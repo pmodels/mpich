@@ -219,12 +219,6 @@ int MPID_Progress_wait(MPID_Progress_state * state)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_WAIT);
 
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-    mpi_errno = MPID_Progress_test(state);
-    MPIR_ERR_CHECK(mpi_errno);
-    MPIDI_PROGRESS_YIELD();
-
-#else
     state->progress_made = 0;
     while (1) {
         mpi_errno = progress_test(state, 1);
@@ -235,7 +229,6 @@ int MPID_Progress_wait(MPID_Progress_state * state)
         MPIDI_PROGRESS_YIELD();
     }
 
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_WAIT);
 
   fn_exit:
