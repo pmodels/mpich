@@ -563,7 +563,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
-#if NEEDS_STRICT_ALIGNMENT
+#ifdef NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
