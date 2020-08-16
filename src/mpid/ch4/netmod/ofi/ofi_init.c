@@ -26,6 +26,16 @@ cvars:
       description : >-
         Prints out the configuration of each capability selected via the capability sets interface.
 
+    - name        : MPIR_CVAR_OFI_SKIP_IPV6
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Skip IPv6 providers.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
       type        : int
@@ -1286,7 +1296,7 @@ static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_
 static int open_fabric(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct fi_info *prov = NULL;
+    struct fi_info *prov_list = NULL;
 
     /* First, find the provider and prepare the hints */
     struct fi_info *hints = fi_allocinfo();
@@ -1296,7 +1306,15 @@ static int open_fabric(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list), getinfo);
+
+    struct fi_info *prov = prov_list;
+    /* fi_getinfo may ignore the addr_format in hints, filter it again */
+    if (hints->addr_format != FI_FORMAT_UNSPEC) {
+        while (prov && prov->addr_format != hints->addr_format) {
+            prov = prov->next;
+        }
+    }
     MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
@@ -1338,8 +1356,9 @@ static int open_fabric(void)
     MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
 
   fn_exit:
-    if (prov)
-        fi_freeinfo(prov);
+    if (prov_list) {
+        fi_freeinfo(prov_list);
+    }
 
     /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
     MPL_free(hints->fabric_attr->prov_name);
@@ -1502,11 +1521,11 @@ bool match_global_settings(struct fi_info * prov)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
-#ifdef MPIDI_CH4_OFI_SKIP_IPV6
-    if (prov->addr_format == FI_SOCKADDR_IN6) {
-        return false;
+    if (MPIR_CVAR_OFI_SKIP_IPV6) {
+        if (prov->addr_format == FI_SOCKADDR_IN6) {
+            return false;
+        }
     }
-#endif
     CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
