@@ -74,6 +74,13 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     MPIDI_OFI_WIN(win).syncQ = req;
     req->sigreq = sigreq;
     req->chunks = NULL;
+    if (rma_type == MPIDI_OFI_PUT) {
+        req->noncontig.put.origin.datatype = MPI_DATATYPE_NULL;
+        req->noncontig.put.target.datatype = MPI_DATATYPE_NULL;
+    } else {
+        req->noncontig.get.origin.datatype = MPI_DATATYPE_NULL;
+        req->noncontig.get.target.datatype = MPI_DATATYPE_NULL;
+    }
 
     /* allocate target iovecs */
     struct iovec *target_iov;
@@ -384,6 +391,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.origin.addr = origin_addr;
     req->noncontig.put.origin.count = origin_count;
     req->noncontig.put.origin.datatype = origin_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
     req->noncontig.put.origin.pack_offset = 0;
     req->noncontig.put.origin.total_bytes = origin_bytes;
 
@@ -391,6 +399,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     req->noncontig.put.target.base = target_base;
     req->noncontig.put.target.count = target_count;
     req->noncontig.put.target.datatype = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     req->noncontig.put.target.iov = target_iov;
     req->noncontig.put.target.iov_len = target_len;
     req->noncontig.put.target.iov_offset = 0;
@@ -446,6 +455,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->noncontig.get.origin.addr = origin_addr;
     req->noncontig.get.origin.count = origin_count;
     req->noncontig.get.origin.datatype = origin_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
     req->noncontig.get.origin.pack_offset = 0;
     req->noncontig.get.origin.total_bytes = origin_bytes;
 
@@ -453,6 +463,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     req->noncontig.get.target.base = target_base;
     req->noncontig.get.target.count = target_count;
     req->noncontig.get.target.datatype = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     req->noncontig.get.target.iov = target_iov;
     req->noncontig.get.target.iov_len = target_len;
     req->noncontig.get.target.iov_offset = 0;
