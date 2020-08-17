@@ -393,6 +393,7 @@ typedef struct MPIDIG_win_info_args_t {
      * and it means the user window buffer is allocated over shared memory,
      * thus RMA operation can use shm routines. */
     int alloc_shm;
+    bool optimized_mr;          /* false by default. */
 } MPIDIG_win_info_args_t;
 
 struct MPIDIG_win_lock {

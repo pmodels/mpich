@@ -218,6 +218,11 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).alloc_shm = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDIG_WIN(win, info_args).alloc_shm = 0;
+        } else if (!strcmp(curr_ptr->key, "optimized_mr")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDIG_WIN(win, info_args).optimized_mr = true;
+            else
+                MPIDIG_WIN(win, info_args).optimized_mr = false;
         }
         /* We allow the user to set the following atomics hint only at window init time,
          * all future updates by win_set_info are ignored. This is because we do not
@@ -334,6 +339,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
     MPIDIG_WIN(win, info_args).coll_attach = false;
+    MPIDIG_WIN(win, info_args).optimized_mr = false;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -818,6 +824,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "perf_preference", buf);
         MPIR_ERR_CHECK(mpi_errno);
     }
+
+    if (MPIDIG_WIN(win, info_args).optimized_mr) {
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "optimized_mr", "true");
+    } else {
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "optimized_mr", "false");
+    }
+    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_GET_INFO);

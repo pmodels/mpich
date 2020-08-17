@@ -280,6 +280,7 @@ typedef struct {
     int major_version;
     int minor_version;
     int num_am_buffers;
+    int num_optimized_memory_regions;
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {
@@ -341,6 +342,10 @@ typedef struct {
     /* huge protocol globals */
     void *huge_send_counters;
     void *huge_recv_counters;
+    /* stores the maximum of last recently used optimized memory region key */
+    uint64_t global_max_optimized_mr_key;
+    /* stores the maximum of last recently used regular memory region key */
+    uint64_t global_max_regular_mr_key;
 
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
