@@ -214,6 +214,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
 
     if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         offset = win->disp_unit * target_disp;
+        /* MPI Standard explicitly noted that concurrent MPI_Put to the same target locations is
+         * undefined, including a potential data corruption. Thus we skip critical section here.
+         */
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
                                    origin_datatype,
@@ -222,13 +225,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_UCX_contig_put((char *) origin_addr + origin_true_lb, origin_bytes,
                                          target_rank, target_disp, target_true_lb, win, addr,
                                          reqptr);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else if (target_contig) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_UCX_noncontig_put(origin_addr, origin_count, origin_datatype, target_rank,
                                             target_bytes, target_disp, target_true_lb, win, addr,
                                             reqptr);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
@@ -278,9 +285,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
         mpi_errno = MPIDI_UCX_contig_get((char *) origin_addr + origin_true_lb, origin_bytes,
                                          target_rank, target_disp, target_true_lb, win, addr,
                                          reqptr);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     } else {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
