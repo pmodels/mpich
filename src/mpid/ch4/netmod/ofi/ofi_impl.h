@@ -346,6 +346,17 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
     MPIDI_OFI_complete_chunks(winreq);
+    if (winreq->rma_type == MPIDI_OFI_PUT &&
+        winreq->noncontig.put.origin.datatype != MPI_DATATYPE_NULL &&
+        winreq->noncontig.put.target.datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.put.origin.datatype);
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.put.target.datatype);
+    } else if (winreq->rma_type == MPIDI_OFI_GET &&
+               winreq->noncontig.get.origin.datatype != MPI_DATATYPE_NULL &&
+               winreq->noncontig.get.target.datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.get.origin.datatype);
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.get.target.datatype);
+    }
     MPL_free(winreq);
 }
 
