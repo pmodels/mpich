@@ -33,7 +33,7 @@ int MPIR_Allgather_intra_brucks(const void *sendbuf,
     MPIR_CHKLMEM_DECL(1);
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
-        return MPI_SUCCESS;
+        goto fn_exit;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
