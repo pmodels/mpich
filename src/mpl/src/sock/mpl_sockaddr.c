@@ -221,6 +221,7 @@ int MPL_listen(int sock_fd, unsigned short port)
         ((struct sockaddr_in6 *) &addr)->sin6_port = htons(port);
         ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
     } else {
+        ret = 0;
         assert(0);
     }
     if (ret) {
@@ -246,6 +247,7 @@ int MPL_listen_anyport(int sock_fd, unsigned short *p_port)
         ((struct sockaddr_in6 *) &addr)->sin6_port = 0;
         ret = bind(sock_fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in6));
     } else {
+        ret = 0;
         assert(0);
     }
     if (ret) {
