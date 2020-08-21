@@ -48,7 +48,7 @@ static MPID_Thread_id_t progress_thread_id;
 
 static void progress_fn(void *data)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;

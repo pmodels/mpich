@@ -320,12 +320,10 @@ static void validate_tree(csel_node_s * node)
 static csel_node_s *parse_json_tree(struct json_object *obj,
                                     void *(*create_container) (struct json_object *))
 {
-    enum json_type type;
     csel_node_s *prevnode = NULL, *tmp, *node = NULL;
 
     json_object_object_foreach(obj, key, val) {
-        type = json_object_get_type(val);
-        MPIR_Assert(type == json_type_object);
+        MPIR_Assert(json_object_get_type(val) == json_type_object);
 
         char *ckey = MPL_strdup_no_spaces(key);
 

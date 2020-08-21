@@ -276,7 +276,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     int i, T, rem, power, step2rank, step2_reverse_rank = 0;
     int pofk = 1, log_pofk = 0;
     int *digit, *digit_reverse;
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS_STEP2);
