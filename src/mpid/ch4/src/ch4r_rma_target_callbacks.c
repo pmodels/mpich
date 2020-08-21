@@ -1898,6 +1898,7 @@ int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     } else {
         MPIDIG_recv_copy(data, rreq);
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        *req = NULL;
     }
 
   fn_exit:
