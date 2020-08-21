@@ -138,6 +138,7 @@ int MPL_get_sockaddr_direct(int type, MPL_sockaddr_t * p_addr)
         return 0;
     } else {
         assert(0);
+        return 0;
     }
 }
 
