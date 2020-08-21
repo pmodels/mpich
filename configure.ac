@@ -2420,6 +2420,12 @@ if test "$enable_fc" = "yes" ; then
     # Check whether additional libraries are needed when linking with C
     PAC_PROG_FC_AND_C_STDIO_LIBS
     AC_SUBST(FC_OTHER_LIBS)
+
+    # Check whether the fortran compiler supports the needed warnings
+    PAC_FC_CHECK_COMPILER_OPTION( ["-Wno-unused-dummy-argument"], [
+                                   FCFLAGS="$FCFLAGS -Wno-unused-dummy-argument"
+                                   ] )
+
     # ------------------------------------------------
 fi
 
