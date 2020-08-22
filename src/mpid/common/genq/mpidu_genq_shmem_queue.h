@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+typedef void *MPIDU_genq_shmem_pool_t;
+
 typedef enum {
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL,
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC,

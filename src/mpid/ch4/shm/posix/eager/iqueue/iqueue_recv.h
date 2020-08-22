@@ -56,12 +56,16 @@ MPL_STATIC_INLINE_PREFIX void
 MPIDI_POSIX_eager_recv_commit(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
     MPIDI_POSIX_eager_iqueue_cell_t *cell;
+    MPIDI_POSIX_eager_iqueue_transport_t *transport;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 
+    /* Get the transport with the global variables */
+    transport = MPIDI_POSIX_eager_iqueue_get_transport();
+
     cell = (MPIDI_POSIX_eager_iqueue_cell_t *) transaction->transport.iqueue.pointer_to_cell;
-    MPIDU_genq_shmem_pool_cell_free(cell);
+    MPIDU_genq_shmem_pool_cell_free(transport->my_terminal, cell);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_EAGER_RECV_COMMIT);
 }

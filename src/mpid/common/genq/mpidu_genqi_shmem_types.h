@@ -9,8 +9,11 @@
 #include "mpl.h"
 #include "mpidu_init_shm.h"
 
+union MPIDU_genq_shmem_queue;
+
 typedef struct MPIDU_genqi_shmem_cell_header {
     uintptr_t handle;
+    int block_idx;
     MPL_atomic_int_t in_use;
     uintptr_t next;
     uintptr_t prev;
@@ -26,6 +29,7 @@ typedef struct MPIDU_genqi_shmem_pool {
     void *slab;
     MPIDU_genqi_shmem_cell_header_s *cell_header_base;
     MPIDU_genqi_shmem_cell_header_s **cell_headers;
+    union MPIDU_genq_shmem_queue *free_queues;
 } MPIDU_genqi_shmem_pool_s;
 
 #define HEADER_TO_CELL(header) \
