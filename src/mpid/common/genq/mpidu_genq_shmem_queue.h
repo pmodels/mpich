@@ -68,18 +68,64 @@ static inline int MPIDU_genqi_serial_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj
 
 static inline int MPIDU_genqi_nem_mpsc_init(MPIDU_genq_shmem_queue_u * queue)
 {
+    MPL_atomic_store_ptr(&queue->q.head.m, NULL);
+    MPL_atomic_store_ptr(&queue->q.tail.m, NULL);
     return 0;
 }
 
 static inline int MPIDU_genqi_nem_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj,
                                                MPIDU_genq_shmem_queue_u * queue, void **cell)
 {
+    void *handle = MPL_atomic_load_ptr(&queue->q.head.m);
+    if (!handle) {
+        /* queue is empty */
+        *cell = NULL;
+    } else {
+        MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
+        cell_h = HANDLE_TO_HEADER(pool_obj, handle);
+        *cell = HEADER_TO_CELL(cell_h);
+
+        void *next_handle = MPL_atomic_load_ptr(&cell_h->u.nem_queue.next_m);
+        if (next_handle != NULL) {
+            /* just dequeue the head */
+            MPL_atomic_store_ptr(&queue->q.head.m, next_handle);
+        } else {
+            /* single element, tail == head,
+             * have to make sure no enqueuing is in progress */
+            MPL_atomic_store_ptr(&queue->q.head.m, NULL);
+            if (MPL_atomic_cas_ptr(&queue->q.tail.m, handle, NULL) == handle) {
+                /* no enqueuing in progress, we are done */
+            } else {
+                /* busy wait for the enqueuing to finish */
+                do {
+                    next_handle = MPL_atomic_load_ptr(&cell_h->u.nem_queue.next_m);
+                } while (next_handle == NULL);
+                /* then set the header */
+                MPL_atomic_store_ptr(&queue->q.head.m, next_handle);
+            }
+        }
+    }
     return 0;
 }
 
 static inline int MPIDU_genqi_nem_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj,
                                                MPIDU_genq_shmem_queue_u * queue, void *cell)
 {
+    MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
+    MPL_atomic_store_ptr(&cell_h->u.nem_queue.next_m, NULL);
+
+    void *handle = (void *) cell_h->handle;
+
+    void *tail_handle = NULL;
+    tail_handle = MPL_atomic_swap_ptr(&queue->q.tail.m, handle);
+    if (tail_handle == NULL) {
+        /* queue was empty */
+        MPL_atomic_store_ptr(&queue->q.head.m, handle);
+    } else {
+        MPIDU_genqi_shmem_cell_header_s *tail_cell_h = NULL;
+        tail_cell_h = HANDLE_TO_HEADER(pool_obj, tail_handle);
+        MPL_atomic_store_ptr(&tail_cell_h->u.nem_queue.next_m, handle);
+    }
     return 0;
 }
 
@@ -146,7 +192,6 @@ static inline int MPIDU_genqi_inv_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_o
         queue->q.head.s = cell_h->u.inverse_queue.next;
     }
 
-  fn_exit:
     return rc;
 }
 
