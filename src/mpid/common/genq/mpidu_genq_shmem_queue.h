@@ -85,13 +85,6 @@ static inline int MPIDU_genqi_nem_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_o
 
 /* INVERSE QUEUE */
 
-static inline void *MPIDU_genq_shmem_queue_head(MPIDU_genq_shmem_queue_t queue);
-static inline void *MPIDU_genq_shmem_queue_next(void *cell);
-
-#define MPIDU_GENQ_SHMEM_QUEUE_FOREACH(queue, cell) \
-    for (void *tmp = MPIDU_genq_shmem_queue_head((queue)), cell = tmp; tmp; \
-         tmp = MPIDU_genq_shmem_queue_next(tmp))
-
 static inline int MPIDU_genqi_inv_mpsc_init(MPIDU_genq_shmem_queue_u * queue)
 {
     queue->q.head.s = 0;
@@ -174,32 +167,6 @@ static inline int MPIDU_genqi_inv_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_o
     } while (MPL_atomic_cas_ptr(&queue->q.tail.m, prev_handle, handle) != prev_handle);
 
     return rc;
-}
-
-static inline void *MPIDU_genq_shmem_queue_head(MPIDU_genq_shmem_queue_t queue)
-{
-    MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
-
-    if (queue->q.flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL) {
-        cell_h = HANDLE_TO_HEADER(queue->q.pool, queue->q.head.s);
-    } else {    /* MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC */
-        if (!queue->q.head.s) {
-            cell_h = MPIDU_genqi_shmem_get_head_cell_header(queue);
-        } else {
-            cell_h = HANDLE_TO_HEADER(queue->q.pool, queue->q.head.s);
-        }
-
-    }
-    if (cell_h) {
-        return HEADER_TO_CELL(cell_h);
-    } else {
-        return NULL;
-    }
-}
-
-static inline void *MPIDU_genq_shmem_queue_next(void *cell)
-{
-    return HEADER_TO_CELL(CELL_TO_HEADER(cell)->next);
 }
 
 /* EXTERNAL INTERFACE */
