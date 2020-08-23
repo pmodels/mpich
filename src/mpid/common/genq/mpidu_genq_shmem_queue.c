@@ -8,14 +8,12 @@
 #include "mpidu_genq_shmem_queue.h"
 #include "mpidu_genqi_shmem_types.h"
 
-int MPIDU_genq_shmem_queue_init(MPIDU_genq_shmem_queue_t queue, MPIDU_genq_shmem_pool_t pool,
-                                int flags)
+int MPIDU_genq_shmem_queue_init(MPIDU_genq_shmem_queue_t queue, int flags)
 {
     int rc = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_INIT);
 
-    queue->q.pool = (MPIDU_genqi_shmem_pool_s *) pool;
     queue->q.flags = flags;
 
     if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL) {
