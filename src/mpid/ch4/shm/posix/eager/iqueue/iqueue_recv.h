@@ -22,7 +22,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     /* Get the transport with the global variables */
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
-    MPIDU_genq_shmem_queue_dequeue(transport->my_terminal, (void **) &cell);
+    MPIDU_genq_shmem_queue_dequeue(transport->cell_pool, transport->my_terminal, (void **) &cell);
 
     if (cell) {
         transaction->src_local_rank = cell->from;
