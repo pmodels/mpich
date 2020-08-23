@@ -13,8 +13,6 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef void *MPIDU_genq_shmem_pool_t;
-
 int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per_proc,
                                         uintptr_t num_proc, int rank,
                                         MPIDU_genq_shmem_pool_t * pool);

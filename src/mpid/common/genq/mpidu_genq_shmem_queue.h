@@ -7,9 +7,8 @@
 #define MPIDU_GENQ_SHMEM_QUEUE_H_INCLUDED
 
 #include "mpidimpl.h"
-#include "mpidu_genq_shmem_pool.h"
 #include "mpidu_genqi_shmem_types.h"
-#include "mpidu_init_shm.h"
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -21,30 +20,9 @@ typedef enum {
     MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC,
 } MPIDU_genq_shmem_queue_type_e;
 
-typedef union MPIDU_genq_shmem_queue {
-    struct {
-        union {
-            uintptr_t s;
-            MPL_atomic_ptr_t m;
-            uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];
-        } head;
-        union {
-            uintptr_t s;
-            MPL_atomic_ptr_t m;
-            uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];
-        } tail;
-        unsigned flags;
-    } q;
-    uint8_t pad[3 * MPIDU_SHM_CACHE_LINE_LEN];
-} MPIDU_genq_shmem_queue_u;
-
-typedef MPIDU_genq_shmem_queue_u *MPIDU_genq_shmem_queue_t;
-
-int MPIDU_genq_shmem_queue_init(MPIDU_genq_shmem_queue_t queue, int flags);
-
 /* SERIAL */
 
-static inline int MPIDU_genqi_serial_init(MPIDU_genq_shmem_queue_t queue)
+static inline int MPIDU_genqi_serial_init(MPIDU_genq_shmem_queue_u * queue)
 {
     queue->q.head.s = 0;
     queue->q.tail.s = 0;
@@ -52,7 +30,7 @@ static inline int MPIDU_genqi_serial_init(MPIDU_genq_shmem_queue_t queue)
 }
 
 static inline int MPIDU_genqi_serial_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                             MPIDU_genq_shmem_queue_t queue, void **cell)
+                                             MPIDU_genq_shmem_queue_u * queue, void **cell)
 {
     MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
     cell_h = HANDLE_TO_HEADER(pool_obj, queue->q.head.s);
@@ -69,7 +47,7 @@ static inline int MPIDU_genqi_serial_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj
 }
 
 static inline int MPIDU_genqi_serial_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                             MPIDU_genq_shmem_queue_t queue, void *cell)
+                                             MPIDU_genq_shmem_queue_u * queue, void *cell)
 {
     MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
     cell_h->u.serial_queue.next = 0;
@@ -88,19 +66,19 @@ static inline int MPIDU_genqi_serial_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj
 
 /* NEMESIS QUEUE */
 
-static inline int MPIDU_genqi_nem_mpsc_init(MPIDU_genq_shmem_queue_t queue)
+static inline int MPIDU_genqi_nem_mpsc_init(MPIDU_genq_shmem_queue_u * queue)
 {
     return 0;
 }
 
 static inline int MPIDU_genqi_nem_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                               MPIDU_genq_shmem_queue_t queue, void **cell)
+                                               MPIDU_genq_shmem_queue_u * queue, void **cell)
 {
     return 0;
 }
 
 static inline int MPIDU_genqi_nem_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                               MPIDU_genq_shmem_queue_t queue, void *cell)
+                                               MPIDU_genq_shmem_queue_u * queue, void *cell)
 {
     return 0;
 }
@@ -114,7 +92,7 @@ static inline void *MPIDU_genq_shmem_queue_next(void *cell);
     for (void *tmp = MPIDU_genq_shmem_queue_head((queue)), cell = tmp; tmp; \
          tmp = MPIDU_genq_shmem_queue_next(tmp))
 
-static inline int MPIDU_genqi_inv_mpsc_init(MPIDU_genq_shmem_queue_t queue)
+static inline int MPIDU_genqi_inv_mpsc_init(MPIDU_genq_shmem_queue_u * queue)
 {
     queue->q.head.s = 0;
     /* sp and mp all use atomic tail */
@@ -125,7 +103,7 @@ static inline int MPIDU_genqi_inv_mpsc_init(MPIDU_genq_shmem_queue_t queue)
 
 static inline MPIDU_genqi_shmem_cell_header_s
     * MPIDU_genqi_shmem_get_head_cell_header(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                             MPIDU_genq_shmem_queue_t queue)
+                                             MPIDU_genq_shmem_queue_u * queue)
 {
     void *tail = NULL;
     MPIDU_genqi_shmem_cell_header_s *head_cell_h = NULL;
@@ -156,7 +134,7 @@ static inline MPIDU_genqi_shmem_cell_header_s
 }
 
 static inline int MPIDU_genqi_inv_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                               MPIDU_genq_shmem_queue_t queue, void **cell)
+                                               MPIDU_genq_shmem_queue_u * queue, void **cell)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
@@ -180,7 +158,7 @@ static inline int MPIDU_genqi_inv_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_o
 }
 
 static inline int MPIDU_genqi_inv_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj,
-                                               MPIDU_genq_shmem_queue_t queue, void *cell)
+                                               MPIDU_genq_shmem_queue_u * queue, void *cell)
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
@@ -234,13 +212,14 @@ static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_INIT);
 
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
-    int flags = queue->q.flags;
+    MPIDU_genq_shmem_queue_u *queue_obj = (MPIDU_genq_shmem_queue_u *) queue;
+    int flags = queue_obj->q.flags;
     if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL) {
-        rc = MPIDU_genqi_serial_dequeue(pool_obj, queue, cell);
+        rc = MPIDU_genqi_serial_dequeue(pool_obj, queue_obj, cell);
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__INV_MPSC) {
-        rc = MPIDU_genqi_inv_mpsc_dequeue(pool_obj, queue, cell);
-    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC) {
-        rc = MPIDU_genqi_nem_mpsc_dequeue(pool_obj, queue, cell);
+        rc = MPIDU_genqi_inv_mpsc_dequeue(pool_obj, queue_obj, cell);
+    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
+        rc = MPIDU_genqi_nem_mpsc_dequeue(pool_obj, queue_obj, cell);
     } else {
         MPIR_Assert(0 && "Invalid GenQ flag");
     }
@@ -257,13 +236,14 @@ static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_QUEUE_INIT);
 
     MPIDU_genqi_shmem_pool_s *pool_obj = (MPIDU_genqi_shmem_pool_s *) pool;
-    int flags = queue->q.flags;
+    MPIDU_genq_shmem_queue_u *queue_obj = (MPIDU_genq_shmem_queue_u *) queue;
+    int flags = queue_obj->q.flags;
     if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__SERIAL) {
-        rc = MPIDU_genqi_serial_enqueue(pool_obj, queue, cell);
+        rc = MPIDU_genqi_serial_enqueue(pool_obj, queue_obj, cell);
     } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__INV_MPSC) {
-        rc = MPIDU_genqi_inv_mpsc_enqueue(pool_obj, queue, cell);
-    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC) {
-        rc = MPIDU_genqi_nem_mpsc_enqueue(pool_obj, queue, cell);
+        rc = MPIDU_genqi_inv_mpsc_enqueue(pool_obj, queue_obj, cell);
+    } else if (flags == MPIDU_GENQ_SHMEM_QUEUE_TYPE__NEM_MPSC) {
+        rc = MPIDU_genqi_nem_mpsc_enqueue(pool_obj, queue_obj, cell);
     } else {
         MPIR_Assert(0 && "Invalid GenQ flag");
     }

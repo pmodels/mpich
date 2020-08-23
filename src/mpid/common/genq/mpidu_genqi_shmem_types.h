@@ -9,6 +9,9 @@
 #include "mpl.h"
 #include "mpidu_init_shm.h"
 
+typedef void *MPIDU_genq_shmem_pool_t;
+typedef void *MPIDU_genq_shmem_queue_t;
+
 typedef struct MPIDU_genqi_shmem_cell_header {
     uintptr_t handle;
     MPL_atomic_int_t in_use;
@@ -25,6 +28,23 @@ typedef struct MPIDU_genqi_shmem_cell_header {
         } nem_queue;
     } u;
 } MPIDU_genqi_shmem_cell_header_s;
+
+typedef union MPIDU_genq_shmem_queue {
+    struct {
+        union {
+            uintptr_t s;
+            MPL_atomic_ptr_t m;
+            uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];
+        } head;
+        union {
+            uintptr_t s;
+            MPL_atomic_ptr_t m;
+            uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];
+        } tail;
+        unsigned flags;
+    } q;
+    uint8_t pad[3 * MPIDU_SHM_CACHE_LINE_LEN];
+} MPIDU_genq_shmem_queue_u;
 
 typedef struct MPIDU_genqi_shmem_pool {
     uintptr_t cell_size;
@@ -49,5 +69,13 @@ typedef struct MPIDU_genqi_shmem_pool {
 #define HANDLE_TO_HEADER(pool, handle) \
     ((MPIDU_genqi_shmem_cell_header_s *) ((char *) (pool)->cell_header_base + (uintptr_t) (handle) \
                                           - 1))
+
+/* declare static inline prototypes to avoid circular inclusion */
+
+int MPIDU_genq_shmem_queue_init(MPIDU_genq_shmem_queue_t queue, int flags);
+static inline int MPIDU_genq_shmem_queue_dequeue(MPIDU_genq_shmem_pool_t pool,
+                                                 MPIDU_genq_shmem_queue_t queue, void **cell);
+static inline int MPIDU_genq_shmem_queue_enqueue(MPIDU_genq_shmem_pool_t pool,
+                                                 MPIDU_genq_shmem_queue_t queue, void *cell);
 
 #endif /* ifndef MPIDU_GENQI_SHMEM_TYPES_H_INCLUDED */
