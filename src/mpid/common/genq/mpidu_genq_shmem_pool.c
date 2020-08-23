@@ -34,8 +34,6 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
         pool->cell_headers[i] =
             (MPIDU_genqi_shmem_cell_header_s *) ((char *) pool->cell_header_base
                                                  + (idx + i) * pool->cell_alloc_size);
-        pool->cell_headers[i]->next = 0;
-        pool->cell_headers[i]->prev = 0;
         /* The handle value is the one being stored in the next, prev, head, tail pointers.
          * All valid handle must to be non-zero, a zero handle is equivalent to a NULL pointer. */
         pool->cell_headers[i]->handle =
