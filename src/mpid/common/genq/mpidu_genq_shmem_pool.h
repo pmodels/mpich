@@ -56,8 +56,6 @@ static inline int MPIDU_genq_shmem_pool_cell_free(void *cell)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CELL_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CELL_FREE);
 
-    cell_h->next = 0;
-    cell_h->prev = 0;
     MPL_atomic_store_int(&cell_h->in_use, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_GENQ_SHMEM_POOL_CELL_FREE);

@@ -12,8 +12,18 @@
 typedef struct MPIDU_genqi_shmem_cell_header {
     uintptr_t handle;
     MPL_atomic_int_t in_use;
-    uintptr_t next;
-    uintptr_t prev;
+    union {
+        struct {
+            uintptr_t next;
+        } serial_queue;
+        struct {
+            uintptr_t prev;     /* used in the tail queue */
+            uintptr_t next;     /* used in the detached header queue */
+        } inverse_queue;
+        struct {
+            MPL_atomic_ptr_t next_m;
+        } nem_queue;
+    } u;
 } MPIDU_genqi_shmem_cell_header_s;
 
 typedef struct MPIDU_genqi_shmem_pool {

@@ -57,8 +57,8 @@ static inline int MPIDU_genqi_serial_dequeue(MPIDU_genqi_shmem_pool_s * pool_obj
     MPIDU_genqi_shmem_cell_header_s *cell_h = NULL;
     cell_h = HANDLE_TO_HEADER(pool_obj, queue->q.head.s);
     if (queue->q.head.s) {
-        queue->q.head.s = cell_h->next;
-        if (!cell_h->next) {
+        queue->q.head.s = cell_h->u.serial_queue.next;
+        if (!cell_h->u.serial_queue.next) {
             queue->q.tail.s = 0;
         }
         *cell = HEADER_TO_CELL(cell_h);
@@ -72,12 +72,13 @@ static inline int MPIDU_genqi_serial_enqueue(MPIDU_genqi_shmem_pool_s * pool_obj
                                              MPIDU_genq_shmem_queue_t queue, void *cell)
 {
     MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
+    cell_h->u.serial_queue.next = 0;
+
     uintptr_t handle = cell_h->handle;
 
     if (queue->q.tail.s) {
-        HANDLE_TO_HEADER(pool_obj, queue->q.tail.s)->next = handle;
+        HANDLE_TO_HEADER(pool_obj, queue->q.tail.s)->u.serial_queue.next = handle;
     }
-    cell_h->prev = queue->q.tail.s;
     queue->q.tail.s = handle;
     if (!queue->q.head.s) {
         queue->q.head.s = queue->q.tail.s;
@@ -141,11 +142,11 @@ static inline MPIDU_genqi_shmem_cell_header_s
 
     if (head_cell_h != NULL) {
         uintptr_t curr_handle = head_cell_h->handle;
-        while (head_cell_h->prev) {
+        while (head_cell_h->u.inverse_queue.prev) {
             MPIDU_genqi_shmem_cell_header_s *prev_cell_h;
-            prev_cell_h = HANDLE_TO_HEADER(pool_obj, head_cell_h->prev);
-            prev_cell_h->next = curr_handle;
-            curr_handle = head_cell_h->prev;
+            prev_cell_h = HANDLE_TO_HEADER(pool_obj, head_cell_h->u.inverse_queue.prev);
+            prev_cell_h->u.inverse_queue.next = curr_handle;
+            curr_handle = head_cell_h->u.inverse_queue.prev;
             head_cell_h = prev_cell_h;
         }
         return head_cell_h;
@@ -164,14 +165,14 @@ static inline int MPIDU_genqi_inv_mpsc_dequeue(MPIDU_genqi_shmem_pool_s * pool_o
         cell_h = MPIDU_genqi_shmem_get_head_cell_header(pool_obj, queue);
         if (cell_h) {
             *cell = HEADER_TO_CELL(cell_h);
-            queue->q.head.s = cell_h->next;
+            queue->q.head.s = cell_h->u.inverse_queue.next;
         } else {
             *cell = NULL;
         }
     } else {
         cell_h = HANDLE_TO_HEADER(pool_obj, queue->q.head.s);
         *cell = HEADER_TO_CELL(cell_h);
-        queue->q.head.s = cell_h->next;
+        queue->q.head.s = cell_h->u.inverse_queue.next;
     }
 
   fn_exit:
@@ -183,13 +184,15 @@ static inline int MPIDU_genqi_inv_mpsc_enqueue(MPIDU_genqi_shmem_pool_s * pool_o
 {
     int rc = MPI_SUCCESS;
     MPIDU_genqi_shmem_cell_header_s *cell_h = CELL_TO_HEADER(cell);
+    cell_h->u.inverse_queue.next = 0;
+    cell_h->u.inverse_queue.prev = 0;
 
     void *prev_handle = NULL;
     void *handle = (void *) cell_h->handle;
 
     do {
         prev_handle = MPL_atomic_load_ptr(&queue->q.tail.m);
-        cell_h->prev = (uintptr_t) prev_handle;
+        cell_h->u.inverse_queue.prev = (uintptr_t) prev_handle;
     } while (MPL_atomic_cas_ptr(&queue->q.tail.m, prev_handle, handle) != prev_handle);
 
     return rc;
