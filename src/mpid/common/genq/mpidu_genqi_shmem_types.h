@@ -14,7 +14,7 @@ typedef void *MPIDU_genq_shmem_queue_t;
 
 typedef struct MPIDU_genqi_shmem_cell_header {
     uintptr_t handle;
-    MPL_atomic_int_t in_use;
+    int block_idx;
     union {
         struct {
             uintptr_t next;
@@ -56,6 +56,7 @@ typedef struct MPIDU_genqi_shmem_pool {
     void *slab;
     MPIDU_genqi_shmem_cell_header_s *cell_header_base;
     MPIDU_genqi_shmem_cell_header_s **cell_headers;
+    union MPIDU_genq_shmem_queue *free_queues;
 } MPIDU_genqi_shmem_pool_s;
 
 #define HEADER_TO_CELL(header) \
