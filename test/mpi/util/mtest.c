@@ -216,6 +216,7 @@ void MTest_Finalize(int errs)
     MPI_Finalize();
 
     MTest_finalize_thread_pkg();
+    MTest_finalize_gpu();
 }
 
 /* ------------------------------------------------------------------------ */

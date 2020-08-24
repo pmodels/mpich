@@ -11,14 +11,14 @@
 
 # these CPPFLAGS are only used when building C/C++ source files, not for actual
 # F77 code itself
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
 
 # This is right for many platforms, but not all.  The right fix involves a
 # configure test, but this version is no worse than the simplemake version was.
 AM_FFLAGS = -I.
 
 LDADD = $(top_builddir)/util/mtest_f77.$(OBJEXT)
-mtest_c_objects = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_single.$(OBJEXT)
+mtest_c_objects = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_single.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT)
 
 ## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
 ## prog_DEPENDENCIES variable, but it would be better to figure out the right
