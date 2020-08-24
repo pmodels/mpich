@@ -62,9 +62,9 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl) (struct MPIDI_VC * vc,
     REQ_OFI(rreq)->match_state = PEEK_INIT;
     OFI_ADDR_INIT(source, vc, remote_proc);
 #if API_SET == API_SET_1
-    match_bits = init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
+    match_bits = init_recvtag(&mask_bits, comm->recvcontext_id + context_offset, source, tag);
 #elif API_SET == API_SET_2
-    match_bits = init_recvtag_2(&mask_bits, comm->context_id + context_offset, tag);
+    match_bits = init_recvtag_2(&mask_bits, comm->recvcontext_id + context_offset, tag);
 #endif
 
     /* ------------------------------------------------------------------------- */
