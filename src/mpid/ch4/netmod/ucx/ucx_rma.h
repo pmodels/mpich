@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
                                                   int target_rank,
                                                   MPI_Aint target_disp, MPI_Aint true_lb,
                                                   MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                  MPIR_Request ** reqptr)
+                                                  MPIR_Request ** reqptr, int vni)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     uint64_t base;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
+    ucp_ep_h ep = MPIDI_UCX_WIN_AV_TO_EP(addr, vni);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
@@ -94,14 +94,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
                                                      int target_rank, size_t size,
                                                      MPI_Aint target_disp, MPI_Aint true_lb,
                                                      MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** reqptr ATTRIBUTE((unused)))
+                                                     MPIR_Request ** reqptr ATTRIBUTE((unused)),
+                                                     int vni)
 {
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
     char *buffer = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
+    ucp_ep_h ep = MPIDI_UCX_WIN_AV_TO_EP(addr, vni);
 
     buffer = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(buffer);
@@ -134,14 +135,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
                                                   int target_rank,
                                                   MPI_Aint target_disp, MPI_Aint true_lb,
                                                   MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                  MPIR_Request ** reqptr)
+                                                  MPIR_Request ** reqptr, int vni)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request ATTRIBUTE((unused)) = NULL;
-    ucp_ep_h ep = MPIDI_UCX_AV_TO_EP(addr, 0, 0);
+    ucp_ep_h ep = MPIDI_UCX_WIN_AV_TO_EP(addr, vni);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
@@ -225,17 +226,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        int vni = MPIDI_UCX_get_win_vni(win);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno = MPIDI_UCX_contig_put((char *) origin_addr + origin_true_lb, origin_bytes,
                                          target_rank, target_disp, target_true_lb, win, addr,
-                                         reqptr);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+                                         reqptr, vni);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else if (target_contig) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        int vni = MPIDI_UCX_get_win_vni(win);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno = MPIDI_UCX_noncontig_put(origin_addr, origin_count, origin_datatype, target_rank,
                                             target_bytes, target_disp, target_true_lb, win, addr,
-                                            reqptr);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+                                            reqptr, vni);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
@@ -285,11 +288,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
     }
 
     if (origin_contig && target_contig) {
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
+        int vni = MPIDI_UCX_get_win_vni(win);
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni).lock);
         mpi_errno = MPIDI_UCX_contig_get((char *) origin_addr + origin_true_lb, origin_bytes,
                                          target_rank, target_disp, target_true_lb, win, addr,
-                                         reqptr);
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
+                                         reqptr, vni);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni).lock);
     } else {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
