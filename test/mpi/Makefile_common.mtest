@@ -12,9 +12,9 @@
 ## Makefile.am
 
 # AM_CPPFLAGS are used for C++ code as well
-AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@
-AM_LDFLAGS = @cuda_LDFLAGS@
-LDADD = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT) @cuda_LIBS@
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
+AM_LDFLAGS = @cuda_LDFLAGS@ @ze_LDFLAGS@
+LDADD = $(top_builddir)/util/mtest.$(OBJEXT) $(top_builddir)/util/mtest_common.$(OBJEXT) @cuda_LIBS@ @ze_LIBS@
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_srcdir)/dtpools/include
@@ -29,7 +29,7 @@ $(top_builddir)/util/mtest_common.$(OBJEXT): $(top_srcdir)/util/mtest_common.c
 $(top_builddir)/dtpools/src/libdtpools.la:
 	(cd $(top_builddir)/dtpools && $(MAKE))
 
-if HAVE_CUDA
+if HAVE_GPU
 if GPU_ONLY
 TESTDIRS ?= coll,pt2pt,rma
 TESTLIST ?= testlist.gpu
