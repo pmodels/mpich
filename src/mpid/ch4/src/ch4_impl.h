@@ -985,13 +985,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_rank_to_intra_rank(MPIR_Win * win, int r
 }
 
 /* Wait until active message acc ops are done. */
+/* NOTE: this function is currently only called from ofi_rma.h, it is being called
+ * outside per-vci critical section */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_target_t *target_ptr = MPIDIG_win_target_find(win, target_rank);
+    MPID_Progress_state state;
+    state.vci_count = 1;
+    state.vci[0] = 0;   /* MPIDIG only uses vci 0 for now */
+    state.flag = MPIDI_PROGRESS_ALL;
+    /* skip other state fields for MPID_Progress_test */
     while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) ||
            MPIR_cc_get(MPIDIG_WIN(win, remote_acc_cmpl_cnts)) != 0) {
-        MPIDIU_PROGRESS();
+        mpi_errno = MPID_Progress_test(&state);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   fn_exit:
     return mpi_errno;
