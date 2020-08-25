@@ -94,6 +94,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
      * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
      * then we need our fallback-solution */
 
+    int vni = MPIDI_UCX_get_win_vni(win);
     bool all_reachable = true;
     for (i = 0; i < comm_ptr->local_size; i++) {
         /* Skip unmapped remote region. */
@@ -103,7 +104,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
             continue;
         }
 
-        status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i, 0, 0),
+        status = ucp_ep_rkey_unpack(MPIDI_UCX_WIN_TO_EP(win, i, vni),
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
         if (status == UCS_ERR_UNREACHABLE) {
