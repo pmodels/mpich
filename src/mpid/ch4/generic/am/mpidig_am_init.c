@@ -164,9 +164,8 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_SEND_RDMA_READ_ACK, NULL, &MPIDIG_send_rdma_read_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_RDMA_READ_NAK, NULL, &MPIDIG_send_rdma_read_nak_target_msg_cb);
 
-    MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ, &MPIDIG_send_origin_cb, &MPIDIG_ssend_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK,
-                     &MPIDIG_ssend_ack_origin_cb, &MPIDIG_ssend_ack_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ, NULL, &MPIDIG_ssend_target_msg_cb);
+    MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK, NULL, &MPIDIG_ssend_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDIG_put_origin_cb, &MPIDIG_put_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_ACK, NULL, &MPIDIG_put_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_GET_REQ, &MPIDIG_get_origin_cb, &MPIDIG_get_target_msg_cb);

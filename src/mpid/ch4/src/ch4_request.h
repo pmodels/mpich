@@ -85,6 +85,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
     /* if we hit a zero completion count, free up AM-related
      * objects */
     if (!incomplete) {
+        /* if the msg_req exists, it means its origin cb has not been called.
+         * This is mainly for pipeline request. EAGER/RDMA_READ will call this
+         * int callback. */
+        if (MPIDIG_REQUEST(req, req->msg_req)) {
+            int msg_handler_id = MPIDIG_REQUEST(req, req->msg_handler_id);
+            if (MPIDIG_global.origin_cbs[msg_handler_id]) {
+                MPIDIG_global.origin_cbs[msg_handler_id] (MPIDIG_REQUEST(req, req->msg_req));
+            }
+            MPIDIG_REQUEST(req, req->msg_req) = NULL;
+        }
         /* decrement completion_notification counter */
         if (req->completion_notification)
             MPIR_cc_decr(req->completion_notification, &notify_counter);

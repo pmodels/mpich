@@ -105,7 +105,6 @@ typedef struct MPIDIG_send_rdma_read_nak_msg_t {
 } MPIDIG_send_rdma_read_nak_msg_t;
 
 typedef struct MPIDIG_ssend_req_msg_t {
-    MPIDIG_hdr_t hdr;
     MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_req_msg_t;
 

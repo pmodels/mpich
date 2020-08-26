@@ -17,7 +17,6 @@ int MPIDIG_do_pipeline_cts(MPIR_Request * rreq);
 int MPIDIG_check_cmpl_order(MPIR_Request * req);
 void MPIDIG_progress_compl_list(void);
 int MPIDIG_send_origin_cb(MPIR_Request * sreq);
-int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req);
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
                               int is_local, int is_async, MPIR_Request ** req);
 /* pipeline protocol */

@@ -101,7 +101,6 @@ typedef struct MPIDIG_rreq_t {
     MPI_Datatype mrcv_datatype;
 
     uint64_t ignore;
-    MPIR_Request *peer_req_ptr;
     MPIR_Request *match_req;
     MPIR_Request *request;
 
@@ -187,6 +186,10 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_acc_req_t areq;
     };
 
+    MPIR_Request *peer_req_ptr;
+    MPIR_Request *peer_msg_req_ptr;
+    int msg_handler_id;
+    MPIR_Request *msg_req;
     MPIDIG_rreq_async_t async;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
