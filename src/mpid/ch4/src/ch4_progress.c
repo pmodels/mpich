@@ -25,7 +25,7 @@ static int global_vci_poll_count = 0;
 MPL_STATIC_INLINE_PREFIX int do_global_progress(void)
 {
     if (MPIDI_global.n_vcis == 1) {
-        return 1;
+        return 0;
     } else {
         global_vci_poll_count++;
         return ((global_vci_poll_count & POLL_MASK) == 0);
