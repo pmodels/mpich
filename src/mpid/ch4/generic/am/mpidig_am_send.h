@@ -45,67 +45,10 @@ static inline int MPIDIG_isend_impl_new(const void *buf, MPI_Aint count, MPI_Dat
                                         MPIR_Errflag_t errflag, int msg_handler_id,
                                         const void *msg_am_hdr, size_t msg_am_hdr_sz, int protocol);
 
-static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  MPIR_Errflag_t errflag);
 static inline int MPIDIG_do_ssend_new(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
                                       MPIR_Errflag_t errflag, int protocol);
-
-static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  MPIR_Errflag_t errflag)
-{
-    int mpi_errno = MPI_SUCCESS, c;
-    MPIR_Request *sreq = *request;
-
-    if (sreq == NULL) {
-        sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__SEND, 2);
-        MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    } else {
-        MPIDIG_request_init(sreq, MPIR_REQUEST_KIND__SEND);
-    }
-
-    *request = sreq;
-
-    MPIDIG_ssend_req_msg_t am_hdr;
-    am_hdr.hdr.src_rank = comm->rank;
-    am_hdr.hdr.tag = tag;
-    am_hdr.hdr.context_id = comm->context_id + context_offset;
-    am_hdr.hdr.error_bits = errflag;
-    am_hdr.sreq_ptr = sreq;
-
-#ifdef HAVE_DEBUGGER_SUPPORT
-    MPIDIG_REQUEST(sreq, datatype) = datatype;
-    MPIDIG_REQUEST(sreq, buffer) = (char *) buf;
-    MPIDIG_REQUEST(sreq, count) = count;
-#endif
-
-    /* Increment the completion counter once to account for the extra message that needs to come
-     * back from the receiver to indicate completion. */
-    MPIR_cc_incr(sreq->cc_ptr, &c);
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDI_av_is_local(addr)) {
-        mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SSEND_REQ, &am_hdr, sizeof(am_hdr),
-                                       buf, count, datatype, sreq);
-    } else
-#endif
-    {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SSEND_REQ, &am_hdr, sizeof(am_hdr),
-                                      buf, count, datatype, sreq);
-    }
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
 
 static inline int MPIDIG_do_ssend_new(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
