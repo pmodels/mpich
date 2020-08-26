@@ -246,6 +246,8 @@ int MPIDIU_avt_release_ref(int avtid)
     return MPI_SUCCESS;
 }
 
+#define AVT_SIZE (8 * 4 * 1024) /* FIXME: what is this size? */
+
 int MPIDIU_avt_init(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -253,21 +255,17 @@ int MPIDIU_avt_init(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_INIT);
 
-    MPIDI_global.avt_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_global.avt_mgr.max_n_avts = 1;
     MPIDI_global.avt_mgr.next_avtid = 0;
     MPIDI_global.avt_mgr.n_avts = 0;
 
     MPIDI_av_table = (MPIDI_av_table_t **)
-        MPL_mmap(NULL, MPIDI_global.avt_mgr.mmapped_size,
-                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_av_table == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
-                        goto fn_fail, "**nomem");
+        MPL_malloc(AVT_SIZE, MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_av_table == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
     MPIDI_global.node_map = (int **)
-        MPL_mmap(NULL, MPIDI_global.avt_mgr.mmapped_size,
-                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_global.node_map == MAP_FAILED, mpi_errno,
+        MPL_malloc(AVT_SIZE, MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_global.node_map == NULL, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
     MPIDI_global.avt_mgr.free_avtid =
@@ -296,8 +294,8 @@ int MPIDIU_avt_destroy(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
 
-    MPL_munmap((void *) MPIDI_global.node_map, MPIDI_global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
-    MPL_munmap((void *) MPIDI_av_table, MPIDI_global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
+    MPL_free(MPIDI_global.node_map);
+    MPL_free(MPIDI_av_table);
     MPL_free(MPIDI_global.avt_mgr.free_avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_DESTROY);

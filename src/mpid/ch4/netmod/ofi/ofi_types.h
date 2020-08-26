@@ -317,7 +317,6 @@ typedef struct {
 } MPIDI_OFI_conn_t;
 
 typedef struct MPIDI_OFI_conn_manager_t {
-    int mmapped_size;           /* Size of the connection list memory which is mmapped */
     int max_n_conn;             /* Maximum number of connections up to this point */
     int n_conn;                 /* Current number of open connections */
     int next_conn_id;           /* The next connection id to be used. */
