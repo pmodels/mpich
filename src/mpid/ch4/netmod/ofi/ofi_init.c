@@ -470,6 +470,47 @@ cvars:
       description : >-
         This is the threshold to start using GPU direct RDMA.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE
+      category    : CH4_OFI
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable pipeline for GPU data transfer.
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ
+      category    : CH4_OFI
+      type        : int
+      default     : 262144
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the buffer size (in bytes) for GPU pipeline data transfer.
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK
+      category    : CH4_OFI
+      type        : int
+      default     : 8
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for GPU pipeline data transfer in
+        each block/chunk of the pool.
+
+    - name        : MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS
+      category    : CH4_OFI
+      type        : int
+      default     : 1024
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the total number of buffers for GPU pipeline data transfer
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -849,6 +890,20 @@ int MPIDI_OFI_init_local(int *tag_bits)
     MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
     MPIDI_OFI_global.gdr_mrs = NULL;
+
+    /* Create pack buffer pool for GPU pipeline */
+    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIR_CVAR_CH4_OFI_GPU_PIPELINE_BUFFER_SZ,
+                                                  MPIR_CVAR_CH4_OFI_GPU_PIPELINE_NUM_BUFFERS_PER_CHUNK,
+                                                  MPIR_CVAR_CH4_OFI_GPU_PIPELINE_MAX_NUM_BUFFERS,
+                                                  host_alloc_registered,
+                                                  host_free_registered,
+                                                  &MPIDI_OFI_global.gpu_pipeline_pool);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_OFI_global.gpu_send_queue = NULL;
+        MPIDI_OFI_global.gpu_recv_queue = NULL;
+    }
 
     /* Initialize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -1241,6 +1296,10 @@ int MPIDI_OFI_mpi_finalize_hook(void)
 
     for (int vni = 0; vni < MPIDI_OFI_global.num_vnis; vni++) {
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.per_vni[vni].pack_buf_pool);
+    }
+
+    if (MPIR_CVAR_CH4_OFI_ENABLE_GPU_PIPELINE) {
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.gpu_pipeline_pool);
     }
 
     int err;

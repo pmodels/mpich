@@ -39,6 +39,7 @@
 
 struct MPIR_Comm;
 struct MPIR_Request;
+struct MPIDI_OFI_gpu_task;
 
 typedef struct {
     int dummy;
@@ -262,6 +263,20 @@ typedef struct {
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
+    struct {
+        fi_addr_t remote_addr;
+        int ctx_idx;
+        int vni_local;
+        uint64_t cq_data;
+        bool is_sync;
+        uint64_t match_bits;
+        uint64_t mask_bits;
+        size_t offset;
+        size_t data_sz;
+        char *pack_recv_buf;
+        void *usm_host_buf;     /* recv */
+        MPIR_Request *req;
+    } pipeline_info;
 } MPIDI_OFI_request_t;
 
 typedef struct {

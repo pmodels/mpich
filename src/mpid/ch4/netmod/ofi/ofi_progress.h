@@ -86,6 +86,8 @@ static inline int MPIDI_NM_progress(int vci, int blocking)
         return MPI_SUCCESS;
     }
 
+    mpi_errno = MPIDI_OFI_gpu_progress(vni);
+
     if (unlikely(MPIDI_OFI_has_cq_buffered(vni))) {
         int num = MPIDI_OFI_get_buffered(vni, wc);
         mpi_errno = MPIDI_OFI_handle_cq_entries(vni, wc, num);
