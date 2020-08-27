@@ -290,6 +290,25 @@ static void update_type_blockindexed(int count, int blocklength, const void *dis
     }
 }
 
+static MPI_Aint struct_alignsize(int count, const MPI_Datatype * oldtype_array)
+{
+    MPI_Aint max_alignsize = 0, tmp_alignsize;
+
+    for (int i = 0; i < count; i++) {
+        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
+            tmp_alignsize = MPIR_Datatype_builtintype_alignment(oldtype_array[i]);
+        } else {
+            MPIR_Datatype *dtp;
+            MPIR_Datatype_get_ptr(oldtype_array[i], dtp);
+            tmp_alignsize = dtp->alignsize;
+        }
+        if (max_alignsize < tmp_alignsize)
+            max_alignsize = tmp_alignsize;
+    }
+
+    return max_alignsize;
+}
+
 /* end static functions */
 
 int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
@@ -627,8 +646,152 @@ int MPIR_Typerep_create_struct(int count, const int *array_of_blocklengths,
                                const MPI_Aint * array_of_displacements,
                                const MPI_Datatype * array_of_types, MPIR_Datatype * newtype)
 {
+    int i, old_are_contig = 1, definitely_not_contig = 0;
+    int found_true_lb = 0, found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
+    MPI_Aint el_sz = 0;
+    MPI_Aint size = 0;
+    MPI_Datatype el_type = MPI_DATATYPE_NULL;
+    MPI_Aint true_lb_disp = 0, true_ub_disp = 0, lb_disp = 0, ub_disp = 0;
+
+    for (i = 0; i < count; i++) {
+        MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
+        MPI_Aint tmp_el_sz;
+        MPI_Datatype tmp_el_type;
+        MPIR_Datatype *old_dtp = NULL;
+        int old_is_contig;
+
+        /* Interpreting typemap to not include 0 blklen things. -- Rob
+         * Ross, 10/31/2005
+         */
+        if (array_of_blocklengths[i] == 0)
+            continue;
+
+        if (HANDLE_IS_BUILTIN(array_of_types[i])) {
+            tmp_el_sz = MPIR_Datatype_get_basic_size(array_of_types[i]);
+            tmp_el_type = array_of_types[i];
+
+            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) (array_of_blocklengths[i]),
+                                      array_of_displacements[i],
+                                      0, tmp_el_sz, tmp_el_sz, tmp_lb, tmp_ub);
+            tmp_true_lb = tmp_lb;
+            tmp_true_ub = tmp_ub;
+
+            size += tmp_el_sz * array_of_blocklengths[i];
+        } else {
+            MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
+
+            /* Ensure that "builtin_element_size" fits into an int datatype. */
+            MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
+
+            tmp_el_sz = old_dtp->builtin_element_size;
+            tmp_el_type = old_dtp->basic_type;
+
+            MPII_DATATYPE_BLOCK_LB_UB((MPI_Aint) array_of_blocklengths[i],
+                                      array_of_displacements[i],
+                                      old_dtp->lb, old_dtp->ub, old_dtp->extent, tmp_lb, tmp_ub);
+            tmp_true_lb = tmp_lb + (old_dtp->true_lb - old_dtp->lb);
+            tmp_true_ub = tmp_ub + (old_dtp->true_ub - old_dtp->ub);
+
+            size += old_dtp->size * array_of_blocklengths[i];
+        }
+
+        /* element size and type */
+        if (found_el_type == 0) {
+            el_sz = tmp_el_sz;
+            el_type = tmp_el_type;
+            found_el_type = 1;
+        } else if (el_sz != tmp_el_sz) {
+            el_sz = -1;
+            el_type = MPI_DATATYPE_NULL;
+        } else if (el_type != tmp_el_type) {
+            /* Q: should we set el_sz = -1 even though the same? */
+            el_type = MPI_DATATYPE_NULL;
+        }
+
+        /* keep lowest lb/true_lb and highest ub/true_ub
+         *
+         * note: checking for contiguity at the same time, to avoid
+         *       yet another pass over the arrays
+         */
+        if (!found_true_lb) {
+            found_true_lb = 1;
+            true_lb_disp = tmp_true_lb;
+        } else if (true_lb_disp > tmp_true_lb) {
+            /* element starts before previous */
+            true_lb_disp = tmp_true_lb;
+            definitely_not_contig = 1;
+        }
+
+        if (!found_lb) {
+            found_lb = 1;
+            lb_disp = tmp_lb;
+        } else if (lb_disp > tmp_lb) {
+            /* lb before previous */
+            lb_disp = tmp_lb;
+            definitely_not_contig = 1;
+        }
+
+        if (!found_true_ub) {
+            found_true_ub = 1;
+            true_ub_disp = tmp_true_ub;
+        } else if (true_ub_disp < tmp_true_ub) {
+            true_ub_disp = tmp_true_ub;
+        } else {
+            /* element ends before previous ended */
+            definitely_not_contig = 1;
+        }
+
+        if (!found_ub) {
+            found_ub = 1;
+            ub_disp = tmp_ub;
+        } else if (ub_disp < tmp_ub) {
+            ub_disp = tmp_ub;
+        } else {
+            /* ub before previous */
+            definitely_not_contig = 1;
+        }
+
+        MPIR_Datatype_is_contig(array_of_types[i], &old_is_contig);
+        if (!old_is_contig)
+            old_are_contig = 0;
+    }
+
+    newtype->n_builtin_elements = -1;   /* TODO */
+    newtype->builtin_element_size = el_sz;
+    newtype->basic_type = el_type;
+
+    newtype->true_lb = true_lb_disp;
+    newtype->lb = lb_disp;
+
+    newtype->true_ub = true_ub_disp;
+    newtype->ub = ub_disp;
+
+    newtype->alignsize = struct_alignsize(count, array_of_types);
+
+    newtype->extent = newtype->ub - newtype->lb;
+    /* account for padding */
+    MPI_Aint epsilon = (newtype->alignsize > 0) ?
+        newtype->extent % ((MPI_Aint) (newtype->alignsize)) : 0;
+
+    if (epsilon) {
+        newtype->ub += ((MPI_Aint) (newtype->alignsize) - epsilon);
+        newtype->extent = newtype->ub - newtype->lb;
+    }
+
+    newtype->size = size;
+
+    /* new type is contig for N types if its size and extent are the
+     * same, and the old type was also contiguous, and we didn't see
+     * something noncontiguous based on true ub/ub.
+     */
+    if (((MPI_Aint) (newtype->size) == newtype->extent) &&
+        old_are_contig && (!definitely_not_contig)) {
+        newtype->is_contig = 1;
+    } else {
+        newtype->is_contig = 0;
+    }
     newtype->typerep.num_contig_blocks = 0;
-    for (int i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
         if (HANDLE_IS_BUILTIN(array_of_types[i])) {
             newtype->typerep.num_contig_blocks++;
         } else {
