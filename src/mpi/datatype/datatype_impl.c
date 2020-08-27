@@ -931,44 +931,6 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
 
     new_dtp->typerep.handle = NULL;
 
-    /* if oldtype is a basic, we build a contiguous typerep of count = 1 */
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        int oldsize = MPIR_Datatype_get_basic_size(oldtype);
-
-        new_dtp->size = oldsize;
-        new_dtp->true_lb = 0;
-        new_dtp->lb = lb;
-        new_dtp->true_ub = oldsize;
-        new_dtp->ub = lb + extent;
-        new_dtp->extent = extent;
-        new_dtp->alignsize = oldsize;   /* FIXME ??? */
-        new_dtp->n_builtin_elements = 1;
-        new_dtp->builtin_element_size = oldsize;
-        new_dtp->is_contig = (extent == oldsize) ? 1 : 0;
-        new_dtp->basic_type = oldtype;
-    } else {
-        /* user-defined base type */
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        new_dtp->size = old_dtp->size;
-        new_dtp->true_lb = old_dtp->true_lb;
-        new_dtp->lb = lb;
-        new_dtp->true_ub = old_dtp->true_ub;
-        new_dtp->ub = lb + extent;
-        new_dtp->extent = extent;
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        if (extent == old_dtp->size)
-            MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
-        else
-            new_dtp->is_contig = 0;
-    }
-
     mpi_errno = MPIR_Typerep_create_resized(oldtype, lb, extent, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 

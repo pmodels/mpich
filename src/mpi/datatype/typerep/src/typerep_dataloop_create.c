@@ -246,10 +246,39 @@ int MPIR_Typerep_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint exte
                                 MPIR_Datatype * newtype)
 {
     if (HANDLE_IS_BUILTIN(oldtype)) {
+        int oldsize = MPIR_Datatype_get_basic_size(oldtype);
+
+        newtype->size = oldsize;
+        newtype->true_lb = 0;
+        newtype->lb = lb;
+        newtype->true_ub = oldsize;
+        newtype->ub = lb + extent;
+        newtype->extent = extent;
+        newtype->alignsize = oldsize;   /* FIXME ??? */
+        newtype->n_builtin_elements = 1;
+        newtype->builtin_element_size = oldsize;
+        newtype->is_contig = (extent == oldsize) ? 1 : 0;
+        newtype->basic_type = oldtype;
         newtype->typerep.num_contig_blocks = 3; /* lb, data, ub */
     } else {
         MPIR_Datatype *old_dtp;
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
+
+        newtype->size = old_dtp->size;
+        newtype->true_lb = old_dtp->true_lb;
+        newtype->lb = lb;
+        newtype->true_ub = old_dtp->true_ub;
+        newtype->ub = lb + extent;
+        newtype->extent = extent;
+        newtype->alignsize = old_dtp->alignsize;
+        newtype->n_builtin_elements = old_dtp->n_builtin_elements;
+        newtype->builtin_element_size = old_dtp->builtin_element_size;
+        newtype->basic_type = old_dtp->basic_type;
+
+        if (extent == old_dtp->size)
+            MPIR_Datatype_is_contig(oldtype, &newtype->is_contig);
+        else
+            newtype->is_contig = 0;
         newtype->typerep.num_contig_blocks = old_dtp->typerep.num_contig_blocks;
     }
 
