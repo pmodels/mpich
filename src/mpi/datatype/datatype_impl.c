@@ -441,48 +441,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
 
     new_dtp->typerep.handle = NULL;
 
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
-
-        new_dtp->size = count * el_sz;
-        new_dtp->true_lb = 0;
-        new_dtp->lb = 0;
-        new_dtp->true_ub = count * el_sz;
-        new_dtp->ub = new_dtp->true_ub;
-        new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-        new_dtp->alignsize = el_sz;
-        new_dtp->n_builtin_elements = count;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = oldtype;
-        new_dtp->is_contig = 1;
-    } else {
-        /* user-defined base type (oldtype) */
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        new_dtp->size = count * old_dtp->size;
-
-        MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
-                                   old_dtp->lb,
-                                   old_dtp->ub, old_dtp->extent, new_dtp->lb, new_dtp->ub);
-
-        /* easiest to calc true lb/ub relative to lb/ub; doesn't matter
-         * if there are sticky lb/ubs or not when doing this.
-         */
-        new_dtp->true_lb = new_dtp->lb + (old_dtp->true_lb - old_dtp->lb);
-        new_dtp->true_ub = new_dtp->ub + (old_dtp->true_ub - old_dtp->ub);
-        new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = count * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
-    }
-
     mpi_errno = MPIR_Typerep_create_contig(count, oldtype, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 

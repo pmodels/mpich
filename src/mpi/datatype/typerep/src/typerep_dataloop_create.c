@@ -65,6 +65,48 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
 int MPIR_Typerep_create_contig(int count, MPI_Datatype oldtype, MPIR_Datatype * newtype)
 {
     if (HANDLE_IS_BUILTIN(oldtype)) {
+        MPI_Aint el_sz = MPIR_Datatype_get_basic_size(oldtype);
+
+        newtype->size = count * el_sz;
+        newtype->true_lb = 0;
+        newtype->lb = 0;
+        newtype->true_ub = count * el_sz;
+        newtype->ub = newtype->true_ub;
+        newtype->extent = newtype->ub - newtype->lb;
+
+        newtype->alignsize = el_sz;
+        newtype->n_builtin_elements = count;
+        newtype->builtin_element_size = el_sz;
+        newtype->basic_type = oldtype;
+        newtype->is_contig = 1;
+    } else {
+        /* user-defined base type (oldtype) */
+        MPIR_Datatype *old_dtp;
+
+        MPIR_Datatype_get_ptr(oldtype, old_dtp);
+
+        newtype->size = count * old_dtp->size;
+
+        MPII_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
+                                   old_dtp->lb,
+                                   old_dtp->ub, old_dtp->extent, newtype->lb, newtype->ub);
+
+        /* easiest to calc true lb/ub relative to lb/ub; doesn't matter
+         * if there are sticky lb/ubs or not when doing this.
+         */
+        newtype->true_lb = newtype->lb + (old_dtp->true_lb - old_dtp->lb);
+        newtype->true_ub = newtype->ub + (old_dtp->true_ub - old_dtp->ub);
+        newtype->extent = newtype->ub - newtype->lb;
+
+        newtype->alignsize = old_dtp->alignsize;
+        newtype->n_builtin_elements = count * old_dtp->n_builtin_elements;
+        newtype->builtin_element_size = old_dtp->builtin_element_size;
+        newtype->basic_type = old_dtp->basic_type;
+
+        MPIR_Datatype_is_contig(oldtype, &newtype->is_contig);
+    }
+
+    if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = 1;
     } else if (newtype->is_contig) {
         newtype->typerep.num_contig_blocks = 1;
