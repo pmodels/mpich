@@ -2074,10 +2074,6 @@ int MPIR_Type_vector(int count,
                      int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int old_is_contig;
-    MPI_Aint old_sz;
-    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
-
     MPIR_Datatype *new_dtp;
 
     if (count == 0)
@@ -2102,68 +2098,6 @@ int MPIR_Type_vector(int count,
     new_dtp->flattened = NULL;
 
     new_dtp->typerep.handle = NULL;
-
-    if (HANDLE_IS_BUILTIN(oldtype)) {
-        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-
-        old_lb = 0;
-        old_true_lb = 0;
-        old_ub = el_sz;
-        old_true_ub = el_sz;
-        old_sz = el_sz;
-        old_extent = el_sz;
-        old_is_contig = 1;
-
-        new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
-
-        new_dtp->alignsize = el_sz;     /* ??? */
-        new_dtp->n_builtin_elements = count * blocklength;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = oldtype;
-
-        eff_stride = (strideinbytes) ? stride : (stride * el_sz);
-    } else {    /* user-defined base type (oldtype) */
-
-        MPIR_Datatype *old_dtp;
-
-        MPIR_Datatype_get_ptr(oldtype, old_dtp);
-
-        old_lb = old_dtp->lb;
-        old_true_lb = old_dtp->true_lb;
-        old_ub = old_dtp->ub;
-        old_true_ub = old_dtp->true_ub;
-        old_sz = old_dtp->size;
-        old_extent = old_dtp->extent;
-        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
-
-        new_dtp->size = count * blocklength * old_dtp->size;
-
-        new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
-
-        eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
-    }
-
-    MPII_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
-                               eff_stride,
-                               (MPI_Aint) blocklength,
-                               old_lb, old_ub, old_extent, new_dtp->lb, new_dtp->ub);
-    new_dtp->true_lb = new_dtp->lb + (old_true_lb - old_lb);
-    new_dtp->true_ub = new_dtp->ub + (old_true_ub - old_ub);
-    new_dtp->extent = new_dtp->ub - new_dtp->lb;
-
-    /* new type is only contig for N types if old one was, and
-     * size and extent of new type are equivalent, and stride is
-     * equal to blocklength * size of old type.
-     */
-    if ((MPI_Aint) (new_dtp->size) == new_dtp->extent &&
-        eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
-        new_dtp->is_contig = 1;
-    } else {
-        new_dtp->is_contig = 0;
-    }
 
     if (strideinbytes) {
         mpi_errno = MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, new_dtp);

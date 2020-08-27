@@ -8,11 +8,83 @@
 #include "dataloop.h"
 #include "mpir_typerep.h"
 
+static void update_type_vector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
+                               MPIR_Datatype * newtype, int strideinbytes)
+{
+    int old_is_contig;
+    MPI_Aint old_sz;
+    MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
+
+    if (HANDLE_IS_BUILTIN(oldtype)) {
+        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
+
+        old_lb = 0;
+        old_true_lb = 0;
+        old_ub = el_sz;
+        old_true_ub = el_sz;
+        old_sz = el_sz;
+        old_extent = el_sz;
+        old_is_contig = 1;
+
+        newtype->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
+
+        newtype->alignsize = el_sz;     /* ??? */
+        newtype->n_builtin_elements = count * blocklength;
+        newtype->builtin_element_size = el_sz;
+        newtype->basic_type = oldtype;
+
+        eff_stride = (strideinbytes) ? stride : (stride * el_sz);
+    } else {    /* user-defined base type (oldtype) */
+
+        MPIR_Datatype *old_dtp;
+
+        MPIR_Datatype_get_ptr(oldtype, old_dtp);
+
+        old_lb = old_dtp->lb;
+        old_true_lb = old_dtp->true_lb;
+        old_ub = old_dtp->ub;
+        old_true_ub = old_dtp->true_ub;
+        old_sz = old_dtp->size;
+        old_extent = old_dtp->extent;
+        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
+
+        newtype->size = count * blocklength * old_dtp->size;
+
+        newtype->alignsize = old_dtp->alignsize;
+        newtype->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
+        newtype->builtin_element_size = old_dtp->builtin_element_size;
+        newtype->basic_type = old_dtp->basic_type;
+
+        eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
+    }
+
+    MPII_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
+                               eff_stride,
+                               (MPI_Aint) blocklength,
+                               old_lb, old_ub, old_extent, newtype->lb, newtype->ub);
+    newtype->true_lb = newtype->lb + (old_true_lb - old_lb);
+    newtype->true_ub = newtype->ub + (old_true_ub - old_ub);
+    newtype->extent = newtype->ub - newtype->lb;
+
+    /* new type is only contig for N types if old one was, and
+     * size and extent of new type are equivalent, and stride is
+     * equal to blocklength * size of old type.
+     */
+    if ((MPI_Aint) (newtype->size) == newtype->extent &&
+        eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
+        newtype->is_contig = 1;
+    } else {
+        newtype->is_contig = 0;
+    }
+}
+
 int MPIR_Typerep_create_vector(int count, int blocklength, int stride, MPI_Datatype oldtype,
                                MPIR_Datatype * newtype)
 {
     int old_is_contig;
     MPI_Aint old_extent;
+
+    update_type_vector(count, blocklength, stride, oldtype, newtype, 0);
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
@@ -40,6 +112,8 @@ int MPIR_Typerep_create_hvector(int count, int blocklength, MPI_Aint stride, MPI
 {
     int old_is_contig;
     MPI_Aint old_extent;
+
+    update_type_vector(count, blocklength, stride, oldtype, newtype, 1);
 
     if (HANDLE_IS_BUILTIN(oldtype)) {
         newtype->typerep.num_contig_blocks = count;
