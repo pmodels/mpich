@@ -52,23 +52,12 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         /* fill in datatype */
         MPIR_Object_set_ref(new_dtp, 1);
         /* new_dtp->handle is filled in by MPIR_Handle_obj_alloc() */
-        new_dtp->is_contig = old_dtp->is_contig;
-        new_dtp->size = old_dtp->size;
-        new_dtp->extent = old_dtp->extent;
-        new_dtp->ub = old_dtp->ub;
-        new_dtp->lb = old_dtp->lb;
-        new_dtp->true_ub = old_dtp->true_ub;
-        new_dtp->true_lb = old_dtp->true_lb;
-        new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->is_committed = old_dtp->is_committed;
 
         new_dtp->attributes = NULL;     /* Attributes are copied in the
                                          * top-level MPI_Type_dup routine */
         new_dtp->name[0] = 0;   /* The Object name is not copied on
                                  * a dup */
-        new_dtp->n_builtin_elements = old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
-        new_dtp->basic_type = old_dtp->basic_type;
 
         new_dtp->typerep.handle = NULL;
         *newtype = new_dtp->handle;

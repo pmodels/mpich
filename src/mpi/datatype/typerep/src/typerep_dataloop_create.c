@@ -85,6 +85,19 @@ int MPIR_Typerep_create_dup(MPI_Datatype oldtype, MPIR_Datatype * newtype)
     if (dtp->is_committed)
         MPIR_Dataloop_dup(dtp->typerep.handle, &newtype->typerep.handle);
 
+    newtype->is_contig = dtp->is_contig;
+    newtype->size = dtp->size;
+    newtype->extent = dtp->extent;
+    newtype->ub = dtp->ub;
+    newtype->lb = dtp->lb;
+    newtype->true_ub = dtp->true_ub;
+    newtype->true_lb = dtp->true_lb;
+    newtype->alignsize = dtp->alignsize;
+
+    newtype->n_builtin_elements = dtp->n_builtin_elements;
+    newtype->builtin_element_size = dtp->builtin_element_size;
+    newtype->basic_type = dtp->basic_type;
+
     newtype->typerep.num_contig_blocks = dtp->typerep.num_contig_blocks;
 
     return MPI_SUCCESS;
