@@ -11,7 +11,6 @@ mpi_sources +=                 \
     src/mpi/init/ismain.c      \
     src/mpi/init/finalize.c    \
     src/mpi/init/finalized.c   \
-    src/mpi/init/get_function_table.c   \
     src/mpi/init/querythread.c
 
 mpi_core_sources += \

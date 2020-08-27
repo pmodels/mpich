@@ -2207,19 +2207,26 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 int PMPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
 int PMPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
 
-typedef struct {
-    int (* send)(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                 MPI_Comm comm, int layer_id);
-    int (* recv)(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-                 MPI_Comm comm, MPI_Status *status, int layer_id);
-} QMPI_Function_pointers_t;
+typedef enum QMPI_Functions_enum {
+    MPI_SEND_T = 0,
+    MPI_RECV_T,
+    MPI_LAST_FUNC
+} QMPI_Functions_enum_t;
 
-QMPI_Function_pointers_t ** QMPIX_Get_function_table() MPICH_API_PUBLIC;
+int QMPIX_Register_tool(void * tool_context, int * tool_id) MPICH_API_PUBLIC;
+int QMPIX_Register_function(int calling_tool_id, int function_enum, void (* function_ptr)(void)) MPICH_API_PUBLIC;
+int QMPIX_Get_function(int calling_tool_id, int function_enum, void (** function_ptr)(void),
+                       void **next_tool_context) MPICH_API_PUBLIC;
 
 int QMPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-              MPI_Comm comm, int layer_id);
+              MPI_Comm comm, void * context);
 int QMPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-              MPI_Comm comm, MPI_Status *status, int layer_id);
+              MPI_Comm comm, MPI_Status *status, void * context);
+
+typedef int (QMPI_Send_t)(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                            MPI_Comm comm, void * context);
+typedef int (QMPI_Recv_t)(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+                            MPI_Comm comm, MPI_Status *status, void * context);
 
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */

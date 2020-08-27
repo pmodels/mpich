@@ -63,15 +63,19 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
              MPI_Comm comm, MPI_Status * status)
 {
     /* Call the first layer in the QMPI stack that contains the correct function. */
-    for (int i = 0; i <= MPIR_QMPI_num_tools; i++) {
-        if (MPIR_QMPI_pointers[i]->recv) {
-            return MPIR_QMPI_pointers[i]->recv(buf, count, datatype, source, tag, comm, status, i);
+    for (int i = MPIR_QMPI_num_tools; i >= 0; i--) {
+        if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC + MPI_RECV_T] != NULL) {
+            QMPI_Recv_t *recv_fn =
+                (QMPI_Recv_t *) MPIR_QMPI_pointers[i * MPI_LAST_FUNC + MPI_RECV_T];
+            return recv_fn(buf, count, datatype, source, tag, comm, status, MPIR_QMPI_contexts[i]);
         }
     }
+
+    return MPI_SUCCESS;
 }
 
 int QMPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-              MPI_Comm comm, MPI_Status * status, int layer_id)
+              MPI_Comm comm, MPI_Status * status, void *context)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

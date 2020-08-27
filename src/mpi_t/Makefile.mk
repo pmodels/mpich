@@ -34,7 +34,8 @@ mpi_sources +=                \
         src/mpi_t/pvar_write.c          \
         src/mpi_t/cat_get_index.c       \
         src/mpi_t/cvar_get_index.c      \
-        src/mpi_t/pvar_get_index.c
+        src/mpi_t/pvar_get_index.c      \
+        src/mpi_t/qmpi_register.c
 
 
 mpi_core_sources += src/mpi_t/mpit.c

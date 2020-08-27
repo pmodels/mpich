@@ -96,10 +96,8 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 
 static void qmpi_teardown()
 {
-    MPL_free(MPIR_QMPI_pointers[MPIR_QMPI_num_tools]);
     MPL_free(MPIR_QMPI_pointers);
-
-    /* WB TODO - Close the libraries opened in qmpi_setup */
+    MPL_free(MPIR_QMPI_contexts);
 }
 
 /*@
