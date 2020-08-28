@@ -7,163 +7,6 @@
 #include <libgen.h>
 #include <uuid/uuid.h>
 #include <gurt/common.h>
-#include <daos_uns.h>
-
-#define OID_SEED 5731
-
-#define UINT64ENCODE(p, n) {						      \
-   uint64_t _n = (n);							      \
-   size_t _i;								      \
-   uint8_t *_p = (uint8_t*)(p);						      \
-									      \
-   for (_i = 0; _i < sizeof(uint64_t); _i++, _n >>= 8)			      \
-      *_p++ = (uint8_t)(_n & 0xff);					      \
-   for (/*void*/; _i < 8; _i++)						      \
-      *_p++ = 0;							      \
-   (p) = (uint8_t*)(p) + 8;						      \
-}
-
-#define UINT64DECODE(p, n) {						      \
-   /* WE DON'T CHECK FOR OVERFLOW! */					      \
-   size_t _i;								      \
-									      \
-   n = 0;								      \
-   (p) += 8;								      \
-   for (_i = 0; _i < sizeof(uint64_t); _i++)				      \
-      n = (n << 8) | *(--p);						      \
-   (p) += 8;								      \
-}
-
-/* Decode a variable-sized buffer */
-/* (Assumes that the high bits of the integer will be zero) */
-#define DECODE_VAR(p, n, l) {						      \
-   size_t _i;								      \
-									      \
-   n = 0;								      \
-   (p) += l;								      \
-   for (_i = 0; _i < l; _i++)						      \
-      n = (n << 8) | *(--p);						      \
-   (p) += l;								      \
-}
-
-/* Decode a variable-sized buffer into a 64-bit unsigned integer */
-/* (Assumes that the high bits of the integer will be zero) */
-#define UINT64DECODE_VAR(p, n, l)     DECODE_VAR(p, n, l)
-
-/* Multiply two 128 bit unsigned integers to yield a 128 bit unsigned integer */
-static void
-duuid_mult128(uint64_t x_lo, uint64_t x_hi, uint64_t y_lo, uint64_t y_hi,
-              uint64_t * ans_lo, uint64_t * ans_hi)
-{
-    uint64_t xlyl;
-    uint64_t xlyh;
-    uint64_t xhyl;
-    uint64_t xhyh;
-    uint64_t temp;
-
-    /*
-     * First calculate x_lo * y_lo
-     */
-    /* Compute 64 bit results of multiplication of each combination of high and
-     * low 32 bit sections of x_lo and y_lo */
-    xlyl = (x_lo & 0xffffffff) * (y_lo & 0xffffffff);
-    xlyh = (x_lo & 0xffffffff) * (y_lo >> 32);
-    xhyl = (x_lo >> 32) * (y_lo & 0xffffffff);
-    xhyh = (x_lo >> 32) * (y_lo >> 32);
-
-    /* Calculate lower 32 bits of the answer */
-    *ans_lo = xlyl & 0xffffffff;
-
-    /* Calculate second 32 bits of the answer. Use temp to keep a 64 bit result
-     * of the calculation for these 32 bits, to keep track of overflow past
-     * these 32 bits. */
-    temp = (xlyl >> 32) + (xlyh & 0xffffffff) + (xhyl & 0xffffffff);
-    *ans_lo += temp << 32;
-
-    /* Calculate third 32 bits of the answer, including overflowed result from
-     * the previous operation */
-    temp >>= 32;
-    temp += (xlyh >> 32) + (xhyl >> 32) + (xhyh & 0xffffffff);
-    *ans_hi = temp & 0xffffffff;
-
-    /* Calculate highest 32 bits of the answer. No need to keep track of
-     * overflow because it has overflowed past the end of the 128 bit answer */
-    temp >>= 32;
-    temp += (xhyh >> 32);
-    *ans_hi += temp << 32;
-
-    /*
-     * Now add the results from multiplying x_lo * y_hi and x_hi * y_lo. No need
-     * to consider overflow here, and no need to consider x_hi * y_hi because
-     * those results would overflow past the end of the 128 bit answer.
-     */
-    *ans_hi += (x_lo * y_hi) + (x_hi * y_lo);
-
-    return;
-}       /* end duuid_mult128() */
-
-/* Implementation of the FNV hash algorithm */
-static void duuid_hash128(const char *name, void *hash, uint64_t * hi, uint64_t * lo)
-{
-    const uint8_t *name_p = (const uint8_t *) name;
-    uint8_t *hash_p = (uint8_t *) hash;
-    uint64_t name_lo;
-    uint64_t name_hi;
-    /* Initialize hash value in accordance with the FNV algorithm */
-    uint64_t hash_lo = 0x62b821756295c58d;
-    uint64_t hash_hi = 0x6c62272e07bb0142;
-    /* Initialize FNV prime number in accordance with the FNV algorithm */
-    const uint64_t fnv_prime_lo = 0x13b;
-    const uint64_t fnv_prime_hi = 0x1000000;
-    size_t name_len_rem = strlen(name);
-
-    while (name_len_rem > 0) {
-        /* "Decode" lower 64 bits of this 128 bit section of the name, so the
-         * numberical value of the integer is the same on both little endian and
-         * big endian systems */
-        if (name_len_rem >= 8) {
-            UINT64DECODE(name_p, name_lo)
-                name_len_rem -= 8;
-        } /* end if */
-        else {
-            name_lo = 0;
-            UINT64DECODE_VAR(name_p, name_lo, name_len_rem)
-                name_len_rem = 0;
-        }       /* end else */
-
-        /* "Decode" second 64 bits */
-        if (name_len_rem > 0) {
-            if (name_len_rem >= 8) {
-                UINT64DECODE(name_p, name_hi)
-                    name_len_rem -= 8;
-            } /* end if */
-            else {
-                name_hi = 0;
-                UINT64DECODE_VAR(name_p, name_hi, name_len_rem)
-                    name_len_rem = 0;
-            }   /* end else */
-        } /* end if */
-        else
-            name_hi = 0;
-
-        /* FNV algorithm - XOR hash with name then multiply by fnv_prime */
-        hash_lo ^= name_lo;
-        hash_hi ^= name_hi;
-        duuid_mult128(hash_lo, hash_hi, fnv_prime_lo, fnv_prime_hi, &hash_lo, &hash_hi);
-    }   /* end while */
-
-    /* "Encode" hash integers to char buffer, so the buffer is the same on both
-     * little endian and big endian systems */
-    UINT64ENCODE(hash_p, hash_lo)
-        UINT64ENCODE(hash_p, hash_hi)
-
-        if (hi)
-        *hi = hash_hi;
-    if (lo)
-        *lo = hash_lo;
-
-    return;
-}       /* end duuid_hash128() */
 
 static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
 {
@@ -186,7 +29,7 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
     fname = basename(f1);
     cont_name = dirname(f2);
 
-    if (cont_name[0] == '.' || cont_name[0] != '/') {
+    if (cont_name[0] == '.') {
         char *ptr;
         char cwd[PATH_MAX];
 
@@ -202,23 +45,6 @@ static int parse_filename(const char *path, char **_obj_name, char **_cont_name)
                 rc = ENOMEM;
                 goto out;
             }
-        } else {
-            char *new_dir = ADIOI_Calloc(strlen(cwd) + strlen(cont_name) + 1,
-                                         sizeof(char));
-
-            if (new_dir == NULL) {
-                rc = ENOMEM;
-                goto out;
-            }
-
-            strcpy(new_dir, cwd);
-            if (cont_name[0] == '.')
-                strcat(new_dir, &cont_name[1]);
-            else {
-                strcat(new_dir, "/");
-                strcat(new_dir, cont_name);
-            }
-            cont_name = new_dir;
         }
         *_cont_name = cont_name;
     } else {
@@ -246,10 +72,10 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
 {
     int rc;
 
-    cont->c = adio_daos_coh_lookup(cont->cuuid);
+    cont->c = adio_daos_coh_lookup(cont->attr.da_cuuid);
     if (cont->c == NULL) {
         /** insert handle into container hashtable */
-        rc = adio_daos_coh_insert(cont->cuuid, cont->coh, &cont->c);
+        rc = adio_daos_coh_insert(cont->attr.da_cuuid, cont->coh, &cont->c);
     } else {
         /** g2l handle not needed, already cached */
         rc = daos_cont_close(cont->coh, NULL);
@@ -258,10 +84,10 @@ static int cache_handles(struct ADIO_DAOS_cont *cont)
     if (rc)
         return rc;
 
-    cont->p = adio_daos_poh_lookup(cont->puuid);
+    cont->p = adio_daos_poh_lookup(cont->attr.da_puuid);
     if (cont->p == NULL) {
         /** insert handle into pool hashtable */
-        rc = adio_daos_poh_insert(cont->puuid, cont->poh, &cont->p);
+        rc = adio_daos_poh_insert(cont->attr.da_puuid, cont->poh, &cont->p);
     } else {
         /** g2l handle not needed, already cached */
         rc = daos_pool_disconnect(cont->poh, NULL);
@@ -313,9 +139,9 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     if (rank == 0) {
         char *ptr = buf;
 
-        uuid_unparse(cont->puuid, ptr);
+        uuid_unparse(cont->attr.da_puuid, ptr);
         ptr += 37;
-        uuid_unparse(cont->cuuid, ptr);
+        uuid_unparse(cont->attr.da_cuuid, ptr);
         ptr += 37;
 
         *((daos_size_t *) ptr) = pool_hdl.iov_buf_len;
@@ -361,12 +187,12 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     if (rank != 0) {
         char *ptr = buf;
 
-        rc = uuid_parse(ptr, cont->puuid);
+        rc = uuid_parse(ptr, cont->attr.da_puuid);
         if (rc)
             goto out;
         ptr += 37;
 
-        rc = uuid_parse(ptr, cont->cuuid);
+        rc = uuid_parse(ptr, cont->attr.da_cuuid);
         if (rc)
             goto out;
         ptr += 37;
@@ -425,134 +251,21 @@ static int share_cont_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
     return rc;
 }
 
-enum {
-    HANDLE_POOL,
-    HANDLE_CO,
-    HANDLE_DFS,
-    HANDLE_OBJ
-};
-
-static inline int
-handle_share(daos_handle_t * poh, daos_handle_t * coh, dfs_t ** dfs,
-             dfs_obj_t ** obj, int type, int rank, MPI_Comm comm)
+static int get_pool_cont_uuids(const char *path, struct duns_attr_t *attr)
 {
-    d_iov_t ghdl = { NULL, 0, 0 };
-    int rc;
-
-    if (rank == 0) {
-        switch (type) {
-            case HANDLE_POOL:
-                rc = daos_pool_local2global(*poh, &ghdl);
-                break;
-            case HANDLE_CO:
-                rc = daos_cont_local2global(*coh, &ghdl);
-                break;
-            case HANDLE_DFS:
-                rc = dfs_local2global(*dfs, &ghdl);
-                break;
-            case HANDLE_OBJ:
-                rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
-                break;
-            default:
-                assert(0);
-        }
-        if (rc)
-            ghdl.iov_buf_len = 0;
-    }
-
-    /** broadcast size of global handle to all peers */
-    rc = MPI_Bcast(&ghdl.iov_buf_len, 1, MPI_UINT64_T, 0, comm);
-    if (rc != MPI_SUCCESS)
-        return -1;
-
-    if (ghdl.iov_buf_len == 0)
-        return -1;
-
-    /** allocate buffer for global handle */
-    ghdl.iov_buf = ADIOI_Malloc(ghdl.iov_buf_len);
-    ghdl.iov_len = ghdl.iov_buf_len;
-
-    if (rank == 0) {
-        /** generate actual global handle to share with peer tasks */
-        switch (type) {
-            case HANDLE_POOL:
-                rc = daos_pool_local2global(*poh, &ghdl);
-                break;
-            case HANDLE_CO:
-                rc = daos_cont_local2global(*coh, &ghdl);
-                break;
-            case HANDLE_DFS:
-                rc = dfs_local2global(*dfs, &ghdl);
-                break;
-            case HANDLE_OBJ:
-                rc = dfs_obj_local2global(*dfs, *obj, &ghdl);
-                break;
-            default:
-                assert(0);
-        }
-    }
-
-    /** broadcast global handle to all peers */
-    rc = MPI_Bcast(ghdl.iov_buf, ghdl.iov_len, MPI_BYTE, 0, comm);
-    if (rc != MPI_SUCCESS) {
-        ADIOI_Free(ghdl.iov_buf);
-        return -1;
-    }
-
-    if (rank != 0) {
-        /** unpack global handle */
-        switch (type) {
-            case HANDLE_POOL:
-                rc = daos_pool_global2local(ghdl, poh);
-                break;
-            case HANDLE_CO:
-                rc = daos_cont_global2local(*poh, ghdl, coh);
-                break;
-            case HANDLE_DFS:
-                rc = dfs_global2local(*poh, *coh, O_RDWR, ghdl, dfs);
-                break;
-            case HANDLE_OBJ:
-                rc = dfs_obj_global2local(*dfs, 0, ghdl, obj);
-                break;
-            default:
-                assert(0);
-        }
-    }
-
-    ADIOI_Free(ghdl.iov_buf);
-    return rc;
-}
-
-static int
-get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
-                    daos_oclass_id_t * oclass, daos_size_t * chunk_size)
-{
-    bool use_duns = false;
+    bool bypass_duns = false;
     char *uuid_str;
-    struct duns_attr_t attr;
     int rc;
 
-    d_getenv_bool("DAOS_USE_DUNS", &use_duns);
+    d_getenv_bool("DAOS_BYPASS_DUNS", &bypass_duns);
 
-    if (use_duns) {
-        /* TODO: This works only for the DAOS pool/container info on the direct
-         * parent dir. we still don't support nested dirs in the UNS. */
-        rc = duns_resolve_path(path, &attr);
+    if (!bypass_duns) {
+        attr->da_no_prefix = true;
+        rc = duns_resolve_path(path, attr);
         if (rc) {
             PRINT_MSG(stderr, "duns_resolve_path() failed on path %s (%d)\n", path, rc);
-            return -DER_INVAL;
+            return rc;
         }
-
-        if (attr.da_type != DAOS_PROP_CO_LAYOUT_POSIX) {
-            PRINT_MSG(stderr, "Invalid DAOS container type\n");
-            return -DER_INVAL;
-        }
-
-        uuid_copy(*puuid, attr.da_puuid);
-        uuid_copy(*cuuid, attr.da_cuuid);
-        *oclass = (attr.da_oclass_id == OC_UNKNOWN) ? OC_SX : attr.da_oclass_id;
-        *chunk_size = attr.da_chunk_size;
-
         return 0;
     }
 
@@ -560,27 +273,25 @@ get_pool_cont_uuids(const char *path, uuid_t * puuid, uuid_t * cuuid,
     uuid_str = getenv("DAOS_POOL");
     if (uuid_str == NULL) {
         PRINT_MSG(stderr, "Can't retrieve DAOS pool uuid\n");
-        return -DER_INVAL;
+        return EINVAL;
     }
-    if (uuid_parse(uuid_str, *puuid) < 0) {
+    if (uuid_parse(uuid_str, attr->da_puuid) < 0) {
         PRINT_MSG(stderr, "Failed to parse pool uuid\n");
-        return -DER_INVAL;
+        return EINVAL;
     }
 
     uuid_str = getenv("DAOS_CONT");
     if (uuid_str == NULL) {
-        /* TODO: remove this later and fail in this case. */
-        /* Hash container name to create uuid */
-        duuid_hash128(path, cuuid, NULL, NULL);
-    } else {
-        if (uuid_parse(uuid_str, *cuuid) < 0) {
-            PRINT_MSG(stderr, "Failed to parse container uuid\n");
-            return -DER_INVAL;
-        }
+        PRINT_MSG(stderr, "Can't retrieve DAOS cont uuid\n");
+        return EINVAL;
+    }
+    if (uuid_parse(uuid_str, attr->da_cuuid) < 0) {
+        PRINT_MSG(stderr, "Failed to parse container uuid\n");
+        return EINVAL;
     }
 
-    *oclass = OC_UNKNOWN;
-    *chunk_size = 0;
+    attr->da_oclass_id = OC_UNKNOWN;
+    attr->da_chunk_size = 0;
 
     return 0;
 }
@@ -589,13 +300,19 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_DAOS_OPEN";
+    dfs_obj_t *parent = NULL;
     int perm, old_mask, amode;
     int rc;
 
     *error_code = MPI_SUCCESS;
 
-    rc = get_pool_cont_uuids(cont->cont_name, &cont->puuid, &cont->cuuid,
-                             &cont->obj_class, &cont->chunk_size);
+    rc = parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
+    if (rc) {
+        *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
+        return;
+    }
+
+    rc = get_pool_cont_uuids(cont->cont_name, &cont->attr);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
         return;
@@ -603,23 +320,23 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     /** Info object setting should override */
     if (fd->hints->fs_hints.daos.obj_class != OC_UNKNOWN)
-        cont->obj_class = fd->hints->fs_hints.daos.obj_class;
+        cont->attr.da_oclass_id = fd->hints->fs_hints.daos.obj_class;
     if (fd->hints->fs_hints.daos.chunk_size != 0)
-        cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
+        cont->attr.da_chunk_size = fd->hints->fs_hints.daos.chunk_size;
 
 #if 0
     {
         char uuid_str[37];
-        uuid_unparse(cont->cuuid, uuid_str);
+        uuid_unparse(cont->attr.da_cuuid, uuid_str);
 
         fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
         fprintf(stderr, "File %s\n", cont->obj_name);
     }
-    fprintf(stderr, "chunk_size  = %d\n", cont->chunk_size);
-    fprintf(stderr, "OCLASS  = %d\n", cont->obj_class);
+    fprintf(stderr, "chunk_size  = %d\n", cont->attr.da_chunk_size);
+    fprintf(stderr, "OCLASS  = %d\n", cont->attr.da_oclass_id);
 #endif
 
-    rc = adio_daos_poh_lookup_connect(cont->puuid, &cont->p);
+    rc = adio_daos_poh_lookup_connect(cont->attr.da_puuid, &cont->p);
     if (rc) {
         PRINT_MSG(stderr, "Failed to connect to DAOS Pool (%d)\n", rc);
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
@@ -628,7 +345,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     cont->poh = cont->p->open_hdl;
 
-    rc = adio_daos_coh_lookup_create(cont->poh, cont->cuuid, O_RDWR,
+    rc = adio_daos_coh_lookup_create(cont->poh, cont->attr.da_cuuid, O_RDWR,
                                      (fd->access_mode & ADIO_CREATE), &cont->c);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->cont_name, __LINE__, rc);
@@ -663,8 +380,21 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     }
     perm = S_IFREG | perm;
 
-    rc = dfs_open(cont->dfs, NULL, cont->obj_name, perm, amode,
-                  cont->obj_class, cont->chunk_size, NULL, &cont->obj);
+    /* Lookup the parent directory. this will be NULL in case of root */
+    if (cont->attr.da_rel_path) {
+        rc = dfs_lookup(cont->dfs, cont->attr.da_rel_path, amode, &parent, NULL, NULL);
+        if (rc) {
+            *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
+            goto err_cont;
+        }
+    }
+
+    rc = dfs_open(cont->dfs, parent, cont->obj_name, perm, amode,
+                  cont->attr.da_oclass_id, cont->attr.da_chunk_size, NULL, &cont->obj);
+
+    if (parent)
+        dfs_release(parent);
+
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont->obj_name, __LINE__, rc);
         goto err_cont;
@@ -682,32 +412,10 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
   err_pool:
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
+  err_free:
+    ADIOI_Free(cont->obj_name);
+    ADIOI_Free(cont->cont_name);
     goto out;
-}
-
-static int share_uuid_info(struct ADIO_DAOS_cont *cont, int rank, MPI_Comm comm)
-{
-    char buf[74];
-    int rc;
-
-    if (rank == 0) {
-        uuid_unparse(cont->puuid, buf);
-        uuid_unparse(cont->cuuid, buf + 37);
-    }
-    rc = MPI_Bcast(buf, sizeof(buf), MPI_BYTE, 0, comm);
-    if (rc != MPI_SUCCESS)
-        return rc;
-
-    if (rank != 0) {
-        rc = uuid_parse(buf, cont->puuid);
-        if (rc)
-            return rc;
-
-        rc = uuid_parse(buf + 37, cont->cuuid);
-        if (rc)
-            return rc;
-    }
-    return 0;
 }
 
 void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_code)
@@ -738,7 +446,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
     else
         amode = DAOS_COO_RW;
 
-    cont = (struct ADIO_DAOS_cont *) ADIOI_Malloc(sizeof(struct ADIO_DAOS_cont));
+    cont = (struct ADIO_DAOS_cont *) ADIOI_Calloc(1, sizeof(struct ADIO_DAOS_cont));
     if (cont == NULL) {
         *error_code = MPI_ERR_NO_MEM;
         return;
@@ -746,14 +454,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
 
     fd->access_mode = access_mode;
     cont->amode = amode;
-    rc = parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
-    if (rc) {
-        *error_code = MPI_ERR_NO_MEM;
-        return;
-    }
-
-    cont->p = NULL;
-    cont->c = NULL;
     fd->fs_ptr = cont;
 
     if (rank == 0) {
@@ -795,10 +495,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank, int access_mode, int *error_cod
     return;
 
   err_free:
-    if (cont->obj_name)
-        ADIOI_Free(cont->obj_name);
-    if (cont->cont_name)
-        ADIOI_Free(cont->cont_name);
     ADIOI_Free(cont);
     return;
 }
@@ -812,11 +508,9 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
     struct adio_daos_hdl *p, *c;
-    uuid_t puuid, cuuid;
     dfs_t *dfs;
     char *obj_name, *cont_name;
-    daos_oclass_id_t oclass;
-    daos_size_t chunk_size;
+    struct duns_attr_t attr = { };
     static char myname[] = "ADIOI_DAOS_DELETE";
     int rc;
 
@@ -830,20 +524,20 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
         return;
     }
 
-    rc = get_pool_cont_uuids(cont_name, &puuid, &cuuid, &oclass, &chunk_size);
+    rc = get_pool_cont_uuids(cont_name, &attr);
     if (rc) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         return;
     }
 
-    rc = adio_daos_poh_lookup_connect(puuid, &p);
+    rc = adio_daos_poh_lookup_connect(attr.da_puuid, &p);
     if (rc || p == NULL) {
         PRINT_MSG(stderr, "Failed to connect to pool\n");
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         goto out_free;
     }
 
-    rc = adio_daos_coh_lookup_create(p->open_hdl, cuuid, O_RDWR, false, &c);
+    rc = adio_daos_coh_lookup_create(p->open_hdl, attr.da_cuuid, O_RDWR, false, &c);
     if (rc || c == NULL) {
         *error_code = ADIOI_DAOS_err(myname, cont_name, __LINE__, rc);
         goto out_pool;
