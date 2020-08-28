@@ -116,7 +116,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->size = type_size;
     new_dtp->ub = type_extent;  /* possible padding */
     new_dtp->extent = type_extent;
-    new_dtp->alignsize = alignsize;
 
     MPI_Aint epsilon = type_extent % alignsize;
     if (epsilon) {
@@ -125,6 +124,8 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     }
 
     new_dtp->is_contig = (((MPI_Aint) type_size) == type_extent) ? 1 : 0;
+
+    mpi_errno = MPIR_Typerep_create_pairtype(type, new_dtp);
 
     return mpi_errno;
 }
