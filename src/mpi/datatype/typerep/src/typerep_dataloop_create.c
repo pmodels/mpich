@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "datatype.h"
 #include "dataloop.h"
 #include "mpir_typerep.h"
 
