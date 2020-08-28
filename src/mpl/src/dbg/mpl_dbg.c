@@ -537,6 +537,9 @@ int MPL_dbg_init(int wnum, int wrank)
 
     dbg_initialized = DBG_INITIALIZED;
 
+    /* updating dbg_initialized may alter where dbg_fp is stored, set it again */
+    set_fp(dbg_fp);
+
   fn_exit:
     return MPL_SUCCESS;
   fn_fail:
