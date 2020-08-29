@@ -202,12 +202,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
                                           int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMPROBE);
 
     *flag = 0;
-    av = MPIDIU_comm_rank_to_av(comm, source);
+    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
 
     mpi_errno = MPIDI_improbe_safe(source, tag, comm, context_offset, av, flag, message, status);
     MPIR_ERR_CHECK(mpi_errno);
@@ -231,12 +230,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
 {
 
     int mpi_errno;
-    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
 
     *flag = 0;
-    av = MPIDIU_comm_rank_to_av(comm, source);
+    MPIDI_av_entry_t *av = (source == MPI_ANY_SOURCE ? NULL : MPIDIU_comm_rank_to_av(comm, source));
 
     mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, flag, status);
     MPIR_ERR_CHECK(mpi_errno);
