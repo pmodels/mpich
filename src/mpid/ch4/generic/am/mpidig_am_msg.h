@@ -25,6 +25,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Re
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
     p->recv_type = MPIDIG_RECV_DATATYPE;
     p->in_data_sz = in_data_sz;
+
+    MPI_Aint max_data_size;
+    MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(rreq, datatype), max_data_size);
+    max_data_size *= MPIDIG_REQUEST(rreq, count);
+    if (in_data_sz > max_data_size) {
+        rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(max_data_size, in_data_sz);
+    }
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
@@ -101,21 +108,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         /* otherwise if recv size = 0, it is at least a truncation error */
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
     } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
-        MPI_Aint max_data_size;
-        MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(rreq, datatype), max_data_size);
-        max_data_size *= MPIDIG_REQUEST(rreq, count);
-
         MPI_Aint actual_unpack_bytes;
         MPIR_Typerep_unpack(in_data, in_data_sz,
                             MPIDIG_REQUEST(rreq, buffer),
                             MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
-        if (in_data_sz > max_data_size) {
-            /* if we received more data than what the receive buffer
-             * can accommodate, it's a truncation error */
-            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(actual_unpack_bytes, in_data_sz);
-        } else if (in_data_sz > actual_unpack_bytes) {
-            /* If the receive buffer had enough space, but we still
+        if (!rreq->status.MPI_ERROR && in_data_sz > actual_unpack_bytes) {
+            /* Truncation error has been checked at MPIDIG_recv_type_init.
+             * If the receive buffer had enough space, but we still
              * couldn't unpack the data, it means that the basic
              * datatype from the sender doesn't match that of the
              * receiver.  This doesn't catch all errors; for example,
@@ -201,30 +201,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
                                                   MPIR_Request * rreq)
 {
     MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async));
+    p->in_data_sz -= payload_sz;
 
-    if (p->recv_type == MPIDIG_RECV_DATATYPE) {
-        MPI_Aint max_data_size;
-        MPIR_Datatype_get_size_macro(MPIDIG_REQUEST(rreq, datatype), max_data_size);
-        max_data_size *= MPIDIG_REQUEST(rreq, count);
-
+    if (rreq->status.MPI_ERROR) {
+        /* we already detected error, don't bother copying data, just check whether
+         * it's the last segment */
+        return (p->in_data_sz == 0);
+    } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint actual_unpack_bytes;
         MPIR_Typerep_unpack(payload, payload_sz,
                             MPIDIG_REQUEST(rreq, buffer),
                             MPIDIG_REQUEST(rreq, count),
                             MPIDIG_REQUEST(rreq, datatype), p->offset, &actual_unpack_bytes);
-        p->in_data_sz -= actual_unpack_bytes;
-        p->offset += actual_unpack_bytes;
-        if (payload_sz + p->offset - actual_unpack_bytes > max_data_size) {
-            /* did not fit */
-            rreq->status.MPI_ERROR = MPIDIG_ERR_TRUNCATE(p->offset, p->offset + p->in_data_sz);
-            MPIR_STATUS_SET_COUNT(rreq->status, p->offset);
-            return 1;
-        } else if (payload_sz > actual_unpack_bytes) {
+        p->offset += payload_sz;
+        if (payload_sz > actual_unpack_bytes) {
             /* basic element size mismatch */
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_TYPE, "**dtypemismatch", 0);
-            return 1;
+            return (p->in_data_sz == 0);
         } else if (p->in_data_sz == 0) {
             /* done */
             MPIR_STATUS_SET_COUNT(rreq->status, p->offset);
@@ -235,7 +230,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
         }
     } else {
         /* MPIDIG_RECV_CONTIG and MPIDIG_RECV_IOV */
-        p->in_data_sz -= payload_sz;
         p->offset += payload_sz;
         int iov_done = 0;
         for (int i = 0; i < p->iov_num; i++) {
