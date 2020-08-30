@@ -36,6 +36,8 @@ static void am_handle_recv(int idx);
 static int am_post_recv(int idx);
 static int am_cancel_recv(int idx);
 static void am_recv_cb(void *request, ucs_status_t status, ucp_tag_recv_info_t * info);
+static void am_recv_payload(int source, void *p_data, size_t data_sz, int payload_seq);
+
 /* exposed functions */
 
 int MPIDI_UCX_am_init(void)
@@ -93,10 +95,29 @@ static void am_handle_recv(int idx)
     MPI_Aint am_hdr_sz = msg_hdr->am_hdr_sz;
 
     void *temp_buf = NULL;
-    if (1) {    /* always assume we got evertthing in a single packet */
+    if (msg_hdr->pack_type == MPIDI_UCX_AM_PACK_ONE) {
         /* got entire message */
         p_header = msg_hdr + 1;
         p_data = (char *) msg_hdr + sizeof(*msg_hdr) + am_hdr_sz;
+    } else if (msg_hdr->pack_type == MPIDI_UCX_AM_PACK_TWO_A) {
+        /* got msg_hdr and am_hdr */
+        temp_buf = MPL_malloc(data_sz, MPL_MEM_BUFFER);
+        MPIR_Assert(temp_buf != NULL);
+        am_recv_payload(idx, temp_buf, data_sz, msg_hdr->payload_seq);
+
+        p_header = msg_hdr + 1;
+        p_data = temp_buf;
+    } else if (msg_hdr->pack_type == MPIDI_UCX_AM_PACK_TWO_B) {
+        /* only got msg_hdr */
+        temp_buf = MPL_malloc(am_hdr_sz + data_sz, MPL_MEM_BUFFER);
+        MPIR_Assert(temp_buf != NULL);
+        am_recv_payload(idx, temp_buf, am_hdr_sz + data_sz, msg_hdr->payload_seq);
+
+        p_header = temp_buf;
+        p_data = (char *) temp_buf + am_hdr_sz;
+    } else {
+        /* bad pack_type */
+        MPIR_Assert(0);
     }
 
     /* note: setting is_local, is_async to 0, 0 */
@@ -110,6 +131,21 @@ static void am_handle_recv(int idx)
     MPIDI_UCX_ucp_request_free(MPIDI_UCX_global.am_ucp_reqs[idx]);
     int mpi_errno = am_post_recv(idx);
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
+}
+
+static void am_recv_payload(int idx, void *p_data, size_t data_sz, int payload_seq)
+{
+    ucs_status_ptr_t ret;
+    int source = MPIDI_UCX_global.am_ucp_reqs[idx]->am.source;
+    uint64_t tag = MPIDI_UCX_am_init_data_tag(source, payload_seq);
+    ret = ucp_tag_recv_nb(MPIDI_UCX_global.ctx[0].worker,
+                          p_data, data_sz, ucp_dt_make_contig(1),
+                          tag, MPIDI_UCX_AM_DATA_MASK, MPIDI_UCX_dummy_recv_cb);
+    MPIR_Assert(!UCS_PTR_IS_ERR(ret));
+    while (!ucp_request_is_completed(ret)) {
+        ucp_worker_progress(MPIDI_UCX_global.ctx[0].worker);
+    }
+    MPIDI_UCX_ucp_request_free(ret);
 }
 
 static void am_recv_cb(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
