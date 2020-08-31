@@ -17,7 +17,7 @@
 #define MPIDI_POSIX_AM_DATA_SZ_BITS     (48)
 
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
-#define MPIDI_POSIX_MAX_IOV_NUM         (2)
+#define MPIDI_POSIX_MAX_IOV_NUM         (3)     /* am_hdr, [padding], payload */
 
 typedef enum {
     MPIDI_POSIX_AM_HDR_SHM = 0, /* SHM internal AM header */
