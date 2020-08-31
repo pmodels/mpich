@@ -49,6 +49,10 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
     transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
+    /* ensure 8-byte alignment for payload */
+    MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & 0x7) == 0);
+    MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & 0x7) == 0);
+
     mpi_errno = MPIDU_genq_shmem_pool_create_unsafe(transport->size_of_cell, transport->num_cells,
                                                     MPIDI_POSIX_global.num_local,
                                                     MPIDI_POSIX_global.my_local_rank,
