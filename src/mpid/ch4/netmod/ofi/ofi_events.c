@@ -169,9 +169,9 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         MPI_Count elements;
 
         /* Check to see if there are any bytes that don't fit into the datatype basic elements */
-        MPIR_Get_elements_x_impl(((MPI_Count *) & count), MPIDI_OFI_REQUEST(rreq, datatype),
-                                 &elements);
-        if (count)
+        MPI_Count count_x = count;      /* need a MPI_Count variable (consider 32-bit OS) */
+        MPIR_Get_elements_x_impl(&count_x, MPIDI_OFI_REQUEST(rreq, datatype), &elements);
+        if (count_x)
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
 
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
