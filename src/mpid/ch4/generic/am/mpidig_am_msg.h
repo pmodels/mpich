@@ -109,10 +109,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
     } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(in_data, in_data_sz,
-                            MPIDIG_REQUEST(rreq, buffer),
-                            MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+        /* RECV in MPI allows NULL recv buffer with non-zero data_sz, here we skip the attempt of
+         * unpacking and just count the recv counters */
+        if (MPIDIG_REQUEST(rreq, buffer)) {
+            MPIR_Typerep_unpack(in_data, in_data_sz,
+                                MPIDIG_REQUEST(rreq, buffer),
+                                MPIDIG_REQUEST(rreq, count),
+                                MPIDIG_REQUEST(rreq, datatype), 0, &actual_unpack_bytes);
+        } else {
+            actual_unpack_bytes = in_data_sz;
+        }
         if (!rreq->status.MPI_ERROR && in_data_sz > actual_unpack_bytes) {
             /* Truncation error has been checked at MPIDIG_recv_type_init.
              * If the receive buffer had enough space, but we still
@@ -209,10 +215,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payloa
         return (p->in_data_sz == 0);
     } else if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint actual_unpack_bytes;
-        MPIR_Typerep_unpack(payload, payload_sz,
-                            MPIDIG_REQUEST(rreq, buffer),
-                            MPIDIG_REQUEST(rreq, count),
-                            MPIDIG_REQUEST(rreq, datatype), p->offset, &actual_unpack_bytes);
+        /* RECV in MPI allows NULL recv buffer with non-zero data_sz, here we skip the attempt of
+         * unpacking and just count the recv counters */
+        if (MPIDIG_REQUEST(rreq, buffer)) {
+            MPIR_Typerep_unpack(payload, payload_sz,
+                                MPIDIG_REQUEST(rreq, buffer),
+                                MPIDIG_REQUEST(rreq, count),
+                                MPIDIG_REQUEST(rreq, datatype), p->offset, &actual_unpack_bytes);
+        } else {
+            actual_unpack_bytes = payload_sz;
+        }
         p->offset += payload_sz;
         if (payload_sz > actual_unpack_bytes) {
             /* basic element size mismatch */
