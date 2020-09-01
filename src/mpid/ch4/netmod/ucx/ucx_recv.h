@@ -24,10 +24,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 
-    if (ucp_request->req)
+    if (ucp_request->req) {
         rreq = ucp_request->req;
-    else
+    } else {
         rreq = MPL_malloc(sizeof(MPIR_Request), MPL_MEM_OTHER);
+        rreq->status.MPI_ERROR = MPI_SUCCESS;
+        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
+    }
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
