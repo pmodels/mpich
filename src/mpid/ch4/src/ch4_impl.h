@@ -18,7 +18,7 @@ uint64_t MPIDIG_generate_win_id(MPIR_Comm * comm_ptr);
 
 /* Reconstruct context offset associated with a persistent request.
  * Input must be a persistent request. */
-static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
 {
     int context_offset;
 
@@ -35,7 +35,7 @@ static inline int MPIDI_prequest_get_context_offset(MPIR_Request * preq)
     return context_offset;
 }
 
-static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
+MPL_STATIC_INLINE_PREFIX MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
 {
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
@@ -53,7 +53,7 @@ static inline MPIR_Comm *MPIDIG_context_id_to_comm(uint64_t context_id)
     return ret;
 }
 
-static inline MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
+MPL_STATIC_INLINE_PREFIX MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
 {
     int comm_idx = MPIDIG_get_context_index(context_id);
     int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
@@ -72,7 +72,7 @@ static inline MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t context_id)
     return ret;
 }
 
-static inline MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
+MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
 {
     MPIR_Context_id_t ret;
 
@@ -86,7 +86,7 @@ static inline MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
     return ret;
 }
 
-static inline MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_to_context(const MPIR_Win * win)
 {
     MPIR_Context_id_t ret;
 
@@ -359,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     (HANDLE_IS_BUILTIN(_datatype))
 
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
-static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
+MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
     int size = grp->size;
@@ -600,7 +600,7 @@ static inline int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group
   Return zero to let the target side calculate the actual address
   (only offset from window base is given to the target in this case)
 */
-static inline uintptr_t MPIDIG_win_base_at_origin(const MPIR_Win * win, int target_rank)
+MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_origin(const MPIR_Win * win, int target_rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_WIN_BASE_AT_ORIGIN);
@@ -618,7 +618,7 @@ static inline uintptr_t MPIDIG_win_base_at_origin(const MPIR_Win * win, int targ
   If MPIDIG_win_base_at_origin calculates the full virtual address
   this function must return zero
 */
-static inline uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * win)
 {
     uintptr_t ret;
 
@@ -631,8 +631,8 @@ static inline uintptr_t MPIDIG_win_base_at_target(const MPIR_Win * win)
     return ret;
 }
 
-static inline void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
-                                             MPIR_cc_t ** local_cmpl_cnts_ptr)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
+                                                        MPIR_cc_t ** local_cmpl_cnts_ptr)
 {
     int c = 0;
 
@@ -703,7 +703,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win
 
 }
 
-static inline void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
 
@@ -725,7 +725,8 @@ static inline void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_ra
     }
 }
 
-static inline void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win, int *allcompleted)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
+                                                                            int *allcompleted)
 {
     int rank = 0;
 
@@ -743,7 +744,8 @@ static inline void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
     }
 }
 
-static inline void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win, int *allcompleted)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win,
+                                                                           int *allcompleted)
 {
     int rank = 0;
 
@@ -760,9 +762,9 @@ static inline void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win, 
     }
 }
 
-static inline void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
-                                                          int *ranks_in_win_grp,
-                                                          int grp_siz, int *allcompleted)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
+                                                                     int *ranks_in_win_grp,
+                                                                     int grp_siz, int *allcompleted)
 {
     int i = 0;
 

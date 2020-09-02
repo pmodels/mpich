@@ -20,11 +20,11 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
                             goto fn_fail, "**nomemreq");                \
     } while (0)
 
-static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
-                                MPI_Datatype origin_datatype, int target_rank,
-                                MPI_Aint target_disp, int target_count,
-                                MPI_Datatype target_datatype, MPIR_Win * win,
-                                MPIR_Request ** sreq_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_count,
+                                           MPI_Datatype origin_datatype, int target_rank,
+                                           MPI_Aint target_disp, int target_count,
+                                           MPI_Datatype target_datatype, MPIR_Win * win,
+                                           MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
@@ -181,10 +181,11 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-                                int target_rank, MPI_Aint target_disp, int target_count,
-                                MPI_Datatype target_datatype, MPIR_Win * win,
-                                MPIR_Request ** sreq_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
+                                           MPI_Datatype origin_datatype, int target_rank,
+                                           MPI_Aint target_disp, int target_count,
+                                           MPI_Datatype target_datatype, MPIR_Win * win,
+                                           MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     size_t offset;
