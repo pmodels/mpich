@@ -10,7 +10,8 @@
 #include "posix_impl.h"
 #include "mpidu_genq.h"
 
-static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t ** req_hdr_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t **
+                                                            req_hdr_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
@@ -27,10 +28,10 @@ static inline int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_request_header_t
     return mpi_errno;
 }
 
-static inline int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
-                                              size_t am_hdr_sz,
-                                              MPIDI_POSIX_am_request_header_t ** req_hdr_ptr,
-                                              MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
+                                                         size_t am_hdr_sz,
+                                                         MPIDI_POSIX_am_request_header_t **
+                                                         req_hdr_ptr, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_am_request_header_t *req_hdr = *req_hdr_ptr;
