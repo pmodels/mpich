@@ -9,7 +9,8 @@
 #include "stubshm_impl.h"
 
 
-static inline int MPIDI_STUBSHM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_start(MPIR_Group * group, int assert,
+                                                         MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_START);
@@ -21,7 +22,7 @@ static inline int MPIDI_STUBSHM_mpi_win_start(MPIR_Group * group, int assert, MP
 }
 
 
-static inline int MPIDI_STUBSHM_mpi_win_complete(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_complete(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_COMPLETE);
@@ -32,7 +33,8 @@ static inline int MPIDI_STUBSHM_mpi_win_complete(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_post(MPIR_Group * group, int assert,
+                                                        MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_POST);
@@ -44,7 +46,7 @@ static inline int MPIDI_STUBSHM_mpi_win_post(MPIR_Group * group, int assert, MPI
 }
 
 
-static inline int MPIDI_STUBSHM_mpi_win_wait(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_wait(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_WAIT);
@@ -56,7 +58,7 @@ static inline int MPIDI_STUBSHM_mpi_win_wait(MPIR_Win * win)
 }
 
 
-static inline int MPIDI_STUBSHM_mpi_win_test(MPIR_Win * win, int *flag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_test(MPIR_Win * win, int *flag)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_TEST);
@@ -67,7 +69,8 @@ static inline int MPIDI_STUBSHM_mpi_win_test(MPIR_Win * win, int *flag)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_lock(int lock_type, int rank, int assert,
+                                                        MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_LOCK);
@@ -79,7 +82,7 @@ static inline int MPIDI_STUBSHM_mpi_win_lock(int lock_type, int rank, int assert
 }
 
 
-static inline int MPIDI_STUBSHM_mpi_win_unlock(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_UNLOCK);
@@ -90,7 +93,7 @@ static inline int MPIDI_STUBSHM_mpi_win_unlock(int rank, MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_fence(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_fence(int assert, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FENCE);
@@ -101,9 +104,10 @@ static inline int MPIDI_STUBSHM_mpi_win_fence(int assert, MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_shared_query(MPIR_Win * win,
-                                                     int rank,
-                                                     MPI_Aint * size, int *disp_unit, void *baseptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_shared_query(MPIR_Win * win,
+                                                                int rank,
+                                                                MPI_Aint * size, int *disp_unit,
+                                                                void *baseptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SHARED_QUERY);
@@ -114,7 +118,7 @@ static inline int MPIDI_STUBSHM_mpi_win_shared_query(MPIR_Win * win,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_flush(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_flush(int rank, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH);
@@ -125,7 +129,7 @@ static inline int MPIDI_STUBSHM_mpi_win_flush(int rank, MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_flush_local_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_flush_local_all(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -136,7 +140,7 @@ static inline int MPIDI_STUBSHM_mpi_win_flush_local_all(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_unlock_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_unlock_all(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_UNLOCK_ALL);
@@ -147,7 +151,7 @@ static inline int MPIDI_STUBSHM_mpi_win_unlock_all(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_flush_local(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_LOCAL);
@@ -158,7 +162,7 @@ static inline int MPIDI_STUBSHM_mpi_win_flush_local(int rank, MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_sync(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_sync(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SYNC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_SYNC);
@@ -169,7 +173,7 @@ static inline int MPIDI_STUBSHM_mpi_win_sync(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_flush_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_flush_all(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_FLUSH_ALL);
@@ -180,7 +184,7 @@ static inline int MPIDI_STUBSHM_mpi_win_flush_all(MPIR_Win * win)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_win_lock_all(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_WIN_LOCK_ALL);
