@@ -8,7 +8,7 @@
 
 #include "ch4_impl.h"
 
-static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDIG_ssend_ack_msg_t ack_msg;
@@ -41,7 +41,7 @@ static inline int MPIDIG_reply_ssend(MPIR_Request * rreq)
 }
 
 
-static inline int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t message_sz;

@@ -10,9 +10,10 @@
 #include "ch4r_proc.h"
 #include "ch4r_recv.h"
 
-static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
-                                           void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                           MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
+                                                      MPIR_Context_id_t context_id, void *buf,
+                                                      MPI_Aint count, MPI_Datatype datatype,
+                                                      MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
@@ -27,9 +28,9 @@ static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 }
 
-static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                           MPIR_Comm * comm, int context_offset,
-                                           MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
+                                                      MPI_Datatype datatype, MPIR_Comm * comm,
+                                                      int context_offset, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -115,9 +116,10 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                                  int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIR_Request ** request, int alloc_req, uint64_t flags)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                             int rank, int tag, MPIR_Comm * comm,
+                                             int context_offset, MPIR_Request ** request,
+                                             int alloc_req, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;

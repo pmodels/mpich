@@ -46,8 +46,9 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 
-static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
-                                               int *ranks_in_win_grp)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
+                                                          MPIR_Group * group_ptr,
+                                                          int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp = NULL;
@@ -80,7 +81,7 @@ static inline int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * 
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -110,7 +111,7 @@ static inline int MPIDIG_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win 
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_cntrl_msg_t msg;
@@ -187,7 +188,7 @@ static inline int MPIDIG_mpi_win_complete(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDIG_win_cntrl_msg_t msg;
@@ -247,7 +248,7 @@ static inline int MPIDIG_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win *
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_wait(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group;
@@ -271,7 +272,7 @@ static inline int MPIDIG_mpi_win_wait(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -303,7 +304,8 @@ static inline int MPIDIG_mpi_win_test(MPIR_Win * win, int *flag)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert,
+                                                 MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned locked;
@@ -355,7 +357,7 @@ static inline int MPIDIG_mpi_win_lock(int lock_type, int rank, int assert, MPIR_
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     unsigned unlocked;
@@ -434,7 +436,7 @@ static inline int MPIDIG_mpi_win_unlock(int rank, MPIR_Win * win)
 
 }
 
-static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -483,8 +485,8 @@ static inline int MPIDIG_mpi_win_fence(int massert, MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
-                                              int *disp_unit, void *baseptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size,
+                                                         int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int offset = rank;
@@ -529,7 +531,7 @@ static inline int MPIDIG_mpi_win_shared_query(MPIR_Win * win, int rank, MPI_Aint
     return mpi_errno;
 }
 
-static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
@@ -567,7 +569,7 @@ static inline int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int all_local_completed = 0;
@@ -601,7 +603,7 @@ static inline int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
@@ -671,7 +673,7 @@ static inline int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
@@ -708,7 +710,7 @@ static inline int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_sync(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_SYNC);
@@ -724,7 +726,7 @@ static inline int MPIDIG_mpi_win_sync(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int all_remote_completed = 0;
@@ -758,7 +760,7 @@ static inline int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
 
