@@ -415,7 +415,8 @@ AC_ARG_ENABLE(fast,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS. (default is -O2)
         ndebug   - Appends -DNDEBUG to MPICHLIB_CFLAGS.
         no-strict-alignment - relax strict alignment requirement
-        all|yes  - "O2" and "ndebug" are enabled
+        alwaysinline - Force compiler to always inline performance critical routines
+        all|yes  - "O2", "ndebug", and "alwaysinline" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=O2)
 
@@ -916,6 +917,8 @@ for option in $enable_fast ; do
         ;;
         no-strict-alignment)
         enable_fast_no_strict_alignment=yes
+        ;;
+        alwaysinline) # No op in MPICH. See mpl/configure.ac
         ;;
         all|yes)
         enable_fast_ndebug=yes
