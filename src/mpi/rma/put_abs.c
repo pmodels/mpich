@@ -5,30 +5,31 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPI_Put */
+/* -- Begin Profiling Symbol Block for routine MPIX_Put_abs */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Put = PMPI_Put
+#pragma weak MPIX_Put_abs = PMPIX_Put_abs
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Put  MPI_Put
+#pragma _HP_SECONDARY_DEF PMPIX_Put_abs  MPIX_Put_abs
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Put as PMPI_Put
+#pragma _CRI duplicate MPIX_Put_abs as PMPIX_Put_abs
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count,
-            MPI_Datatype target_datatype, MPI_Win win) __attribute__ ((weak, alias("PMPI_Put")));
+int MPIX_Put_abs(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                 int target_rank, MPI_Aint target_disp, int target_count,
+                 MPI_Datatype target_datatype, MPI_Win win)
+    __attribute__ ((weak, alias("PMPIX_Put_abs")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Put
-#define MPI_Put PMPI_Put
+#undef MPIX_Put_abs
+#define MPIX_Put_abs PMPIX_Put_abs
 
 #endif
 
 /*@
-   MPI_Put - Put data into a memory window on a remote process
+   MPIX_Put_abs - Put data into a memory window on a remote process
 
 Input Parameters:
 + origin_addr -initial address of origin buffer (choice)
@@ -55,18 +56,18 @@ Input Parameters:
 
 .seealso: MPI_Rput
 @*/
-int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
-            int target_count, MPI_Datatype target_datatype, MPI_Win win)
+int MPIX_Put_abs(const void *origin_addr, int origin_count, MPI_Datatype
+                 origin_datatype, int target_rank, MPI_Aint target_disp,
+                 int target_count, MPI_Datatype target_datatype, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PUT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_PUT_ABS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_PUT);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPIX_PUT_ABS);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -142,14 +143,14 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
     mpi_errno = MPID_Put(origin_addr, origin_count, origin_datatype,
                          target_rank, target_disp, target_count, target_datatype, win_ptr,
-                         false /*target_abs_flag */);
+                         true /*target_abs_flag */);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_PUT);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPIX_PUT_ABS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

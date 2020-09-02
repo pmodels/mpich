@@ -288,7 +288,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
                                                  int target_rank,
                                                  MPI_Aint target_disp,
                                                  int target_count, MPI_Datatype target_datatype,
-                                                 MPIR_Win * win)
+                                                 MPIR_Win * win, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_PUT);

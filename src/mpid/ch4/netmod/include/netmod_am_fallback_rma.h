@@ -120,7 +120,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                               int target_rank,
                                               MPI_Aint target_disp,
                                               int target_count, MPI_Datatype target_datatype,
-                                              MPIR_Win * win, MPIDI_av_entry_t * addr)
+                                              MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                              bool target_abs_flag)
 {
     return MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                           target_count, target_datatype, win);

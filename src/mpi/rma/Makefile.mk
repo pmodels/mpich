@@ -12,6 +12,7 @@ mpi_sources +=                          \
     src/mpi/rma/get.c                   \
     src/mpi/rma/get_accumulate.c        \
     src/mpi/rma/put.c                   \
+    src/mpi/rma/put_abs.c               \
     src/mpi/rma/raccumulate.c           \
     src/mpi/rma/rget.c                  \
     src/mpi/rma/rget_accumulate.c       \

@@ -144,7 +144,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int orig
                                                MPI_Datatype origin_datatype, int target_rank,
                                                MPI_Aint target_disp, int target_count,
                                                MPI_Datatype target_datatype,
-                                               MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+                                               MPIR_Win * win,
+                                               bool target_abs_flag) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_start(MPIR_Group * group, int assert,
                                                      MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_complete(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;

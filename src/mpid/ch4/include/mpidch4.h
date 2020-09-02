@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group *, int, MPIR_Win *) MPL_ST
 MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win *, int *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                                      MPI_Datatype, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
+                                      MPI_Datatype, MPIR_Win *, bool) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Win_set_info(MPIR_Win *, MPIR_Info *);
 int MPID_Comm_reenable_anysource(MPIR_Comm *, MPIR_Group **);
 int MPID_Comm_remote_group_failed(MPIR_Comm *, MPIR_Group **);
