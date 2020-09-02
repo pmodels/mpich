@@ -8,7 +8,7 @@
 
 #include "ofi_impl.h"
 
-static inline int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
 
@@ -21,7 +21,7 @@ static inline int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-static inline int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret = 0;
 
@@ -34,8 +34,8 @@ static inline int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
     return ret;
 }
 
-static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                         int idx, int *lpid_ptr, bool is_remote)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
+                                                    int idx, int *lpid_ptr, bool is_remote)
 {
     int avtid = 0, lpid = 0;
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
