@@ -89,9 +89,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
             *count = MPIDI_OFI_global.win_op_table[dt_index][op_index].max_compare_atomic_count;
             break;
         default:
-            MPIR_Assert(*count == MPIDI_OFI_QUERY_ATOMIC_COUNT ||
-                        *count == MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT ||
-                        *count == MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT);
+            MPIR_Assert(query_type == MPIDI_OFI_QUERY_ATOMIC_COUNT ||
+                        query_type == MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT ||
+                        query_type == MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT);
             break;
     }
 
