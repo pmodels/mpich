@@ -265,7 +265,11 @@ MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
 
-    if (MPIDI_OFI_WIN(win).winfo)
+    if (MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+        /* Always use winfo[rank].disp_unit if any of PROV_KEY and VIRT_ADDRESS is on.
+         * Compiler can eliminate the branch in such a case. */
+        ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
+    } else if (MPIDI_OFI_WIN(win).winfo)
         ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
     else
         ret = win->disp_unit;
