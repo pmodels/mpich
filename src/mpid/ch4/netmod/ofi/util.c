@@ -109,7 +109,7 @@ void MPIDI_OFI_mr_key_allocator_destroy()
 
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
-static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
+static int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv_elem = NULL;
     MPIR_Comm *comm_ptr;
@@ -253,7 +253,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr, void *data, MPI_Aint
 #define isDOUBLE_COMPLEX(x) ((x) == MPI_DOUBLE_COMPLEX || (x) == MPI_COMPLEX8 || \
                               (x) == MPI_C_DOUBLE_COMPLEX)
 
-MPL_STATIC_INLINE_PREFIX bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
+static bool check_mpi_acc_valid(MPI_Datatype dtype, MPI_Op op)
 {
     bool valid_flag = false;
 
