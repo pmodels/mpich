@@ -3,7 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-static inline void MPIDI_OFI_unused_gen_catalog()
+static void MPIDI_OFI_unused_gen_catalog()
 {
 #if 0
     char *a;
