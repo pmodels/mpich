@@ -992,6 +992,7 @@ static int create_vni_context(int vni)
     MPIDI_OFI_global.ctx[vni].domain = domain;
     MPIDI_OFI_global.ctx[vni].av = av;
     MPIDI_OFI_global.ctx[vni].rma_cmpl_cntr = rma_cmpl_cntr;
+    MPIDI_OFI_global.ctx[vni].rma_issued_cntr = 0;
     MPIDI_OFI_global.ctx[vni].ep = ep;
     MPIDI_OFI_global.ctx[vni].cq = cq;
     MPIDI_OFI_global.ctx[vni].tx = tx;

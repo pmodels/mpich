@@ -225,6 +225,7 @@ typedef struct {
     struct fid_av *av;
     struct fid_ep *ep;
     struct fid_cntr *rma_cmpl_cntr;
+    uint64_t rma_issued_cntr;
 
     struct fid_ep *tx;
     struct fid_ep *rx;
@@ -330,7 +331,6 @@ typedef struct {
 
     /* Window/RMA Globals */
     void *win_map;
-    uint64_t rma_issued_cntr;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
     MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
