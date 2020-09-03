@@ -1041,6 +1041,10 @@ static int create_vni_context(int vni)
         MPIDI_OFI_global.ctx[0].av = av;
         MPIDI_OFI_global.ctx[0].rma_cmpl_cntr = rma_cmpl_cntr;
         MPIDI_OFI_global.ctx[0].ep = ep;
+    } else {
+        /* non-zero vni share most fields with vni 0, copy them
+         * so we don't have to switch during runtime */
+        MPIDI_OFI_global.ctx[vni] = MPIDI_OFI_global.ctx[0];
     }
     MPIDI_OFI_global.ctx[vni].cq = cq;
     MPIDI_OFI_global.ctx[vni].tx = tx;
