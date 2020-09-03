@@ -86,8 +86,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_am_unordered_msg_t
     return NULL;
 }
 
-static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr,
-                                            void *p_data)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr,
+                                                       void *am_hdr, void *p_data)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -103,7 +103,8 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr, voi
     return mpi_errno;
 }
 
-static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
+                                                           void *am_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -118,11 +119,11 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
     return mpi_errno;
 }
 
-static inline int MPIDI_OFI_do_rdma_read(void *dst,
-                                         uint64_t src,
-                                         size_t data_sz,
-                                         MPIR_Context_id_t context_id,
-                                         int src_rank, MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
+                                                    uint64_t src,
+                                                    size_t data_sz,
+                                                    MPIR_Context_id_t context_id,
+                                                    int src_rank, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t done = 0, curr_len, rem = 0;
@@ -179,10 +180,11 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
     goto fn_exit;
 }
 
-static inline void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                   MPIDI_OFI_lmt_msg_payload_t * lmt_msg);
-static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
-                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg, void *am_hdr)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg);
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
+                                                         MPIDI_OFI_lmt_msg_payload_t * lmt_msg,
+                                                         void *am_hdr)
 {
     int c, mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -227,8 +229,8 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr,
-                                           void *p_data)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr,
+                                                      void *p_data)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
@@ -246,7 +248,7 @@ static inline int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr, void
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -280,8 +282,8 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr, void
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request * sreq_ptr,
-                                         int am_type)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_ack(int rank, int context_id,
+                                                    MPIR_Request * sreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;
@@ -309,9 +311,9 @@ static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, MPIR_Request 
 }
 
 /* internal routines */
-static inline void do_long_am_recv_contig(void *p_data, MPI_Aint data_sz,
-                                          MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                          MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv_contig(void *p_data, MPI_Aint data_sz,
+                                                     MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                                     MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
     if (in_data_sz > data_sz) {
@@ -325,9 +327,9 @@ static inline void do_long_am_recv_contig(void *p_data, MPI_Aint data_sz,
     MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
 }
 
-static inline void do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov_len,
-                                       MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                       MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov_len,
+                                                  MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                                  MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_IOV;
     MPI_Aint rem, curr_len;
@@ -361,8 +363,8 @@ static inline void do_long_am_recv_iov(struct iovec *iov, MPI_Aint iov_len,
     MPIR_STATUS_SET_COUNT(rreq->status, done);
 }
 
-static inline void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                          MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                                     MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_UNPACK;
     MPIDIG_recv_setup(rreq);
@@ -409,8 +411,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
     }
 }
 
-static inline void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                   MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
+                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     int num_iov = MPIDIG_get_recv_iov_count(rreq);
     if (num_iov > 1 && in_data_sz / num_iov < MPIR_CVAR_CH4_IOV_DENSITY_MIN) {

@@ -258,7 +258,7 @@ void MPIDI_OFI_mr_key_allocator_destroy(void);
         MPIDI_OFI_win_cntr_incr(win);                                   \
     } while (0)
 
-static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
+MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
 {
     uint32_t ret;
 
@@ -274,7 +274,7 @@ static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
     return ret;
 }
 
-static inline void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
 {
     if (sigreq) {
         /* If sigreq is not NULL, *sigreq should be a valid object now. */
@@ -283,9 +283,9 @@ static inline void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
     }
 }
 
-static inline void MPIDI_OFI_load_iov(const void *buffer, int count, MPI_Datatype datatype,
-                                      MPI_Aint max_len,
-                                      MPI_Aint * loaded_iov_offset, struct iovec *iov)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, int count,
+                                                 MPI_Datatype datatype, MPI_Aint max_len,
+                                                 MPI_Aint * loaded_iov_offset, struct iovec *iov)
 {
     MPI_Aint outlen;
     MPIR_Typerep_to_iov_offset(buffer, count, datatype, *loaded_iov_offset, iov, max_len, &outlen);

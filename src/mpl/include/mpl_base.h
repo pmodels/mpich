@@ -42,8 +42,13 @@
 #endif /* ATTRIBUTE */
 
 #define MPL_UNUSED ATTRIBUTE((unused))
+#ifdef MPL_ENABLE_ALWAYS_INLINE
 #define MPL_STATIC_INLINE_PREFIX ATTRIBUTE((always_inline)) static inline
 #define MPL_STATIC_INLINE_SUFFIX ATTRIBUTE((always_inline))
+#else
+#define MPL_STATIC_INLINE_PREFIX static inline
+#define MPL_STATIC_INLINE_SUFFIX
+#endif
 
 #ifdef MPL_HAVE_FUNC_ATTRIBUTE_FALLTHROUGH
 #define MPL_FALLTHROUGH __attribute__((fallthrough))

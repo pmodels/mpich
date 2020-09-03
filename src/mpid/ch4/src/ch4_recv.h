@@ -9,9 +9,10 @@
 #include "ch4_impl.h"
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-static inline int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * av, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int anysource_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                             int rank, int tag, MPIR_Comm * comm,
+                                             int context_offset, MPIDI_av_entry_t * av,
+                                             MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int need_unlock = 0;
