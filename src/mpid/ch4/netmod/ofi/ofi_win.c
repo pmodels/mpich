@@ -134,6 +134,9 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
+    /* we need register mr on the correct domain for the vni */
+    int vni = MPIDI_OFI_get_win_vni(win);
+
     /* Register the allocated win buffer or MPI_BOTTOM (NULL) for dynamic win.
      * It is clear that we cannot register NULL when FI_MR_ALLOCATED is set, thus
      * we skip trial and return immediately. When FI_MR_ALLOCATED is not set, however,
@@ -148,7 +151,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         if (MPIR_GPU_query_pointer_is_dev(base))
             rc = -1;
         else
-            MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,     /* In:  Domain Object */
+            MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[vni].domain,   /* In:  Domain Object */
                                             base,       /* In:  Lower memory address */
                                             win->size,  /* In:  Length              */
                                             FI_REMOTE_READ | FI_REMOTE_WRITE,   /* In:  Expose MR for read  */
