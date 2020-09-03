@@ -123,6 +123,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               bool target_abs_flag)
 {
+    MPIR_Assert(target_abs_flag == false);
     return MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                           target_count, target_datatype, win);
 }
@@ -136,6 +137,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
                                               bool target_abs_flag)
 {
+    MPIR_Assert(target_abs_flag == false);
     return MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank, target_disp,
                           target_count, target_datatype, win);
 }
