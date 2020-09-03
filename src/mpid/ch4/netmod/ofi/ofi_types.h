@@ -47,7 +47,8 @@
 #define MPIDI_OFI_ERR_PROC_FAILED (0x2ULL)
 
 /* Set the error bits */
-static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field,
+                                                             MPIR_Errflag_t errflag)
 {
     switch (errflag) {
         case MPIR_ERR_OTHER:
@@ -63,7 +64,7 @@ static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Er
 }
 
 /* Get the error flag from the OFI data field. */
-static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 {
     if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_OTHER) {
         return MPIR_ERR_OTHER;
@@ -134,7 +135,7 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 /* Convert the address vector entry to an endpoint index.
  * This conversion depends on the data structure which could change based on
  * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
 {
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return (av)->ep_idx;
@@ -146,7 +147,7 @@ static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
 /* Convert a communicator and rank to an endpoint index.
  * This conversion depends on the data structure which could change based on
  * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 {
 #if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
     return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;

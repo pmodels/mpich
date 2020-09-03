@@ -8,10 +8,11 @@
 
 #include "ofi_am_impl.h"
 
-static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
-                                            char *send_buf,
-                                            size_t msgsize,
-                                            int rank, MPIR_Comm * comm_ptr, MPIR_Request * ackreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
+                                                       char *send_buf,
+                                                       size_t msgsize,
+                                                       int rank, MPIR_Comm * comm_ptr,
+                                                       MPIR_Request * ackreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);

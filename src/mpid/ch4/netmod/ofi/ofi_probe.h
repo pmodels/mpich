@@ -8,14 +8,14 @@
 
 #include "ofi_impl.h"
 
-static inline int MPIDI_OFI_do_iprobe(int source,
-                                      int tag,
-                                      MPIR_Comm * comm,
-                                      int context_offset,
-                                      MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
-                                      int *flag,
-                                      MPI_Status * status,
-                                      MPIR_Request ** message, uint64_t peek_flags)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
+                                                 int tag,
+                                                 MPIR_Comm * comm,
+                                                 int context_offset,
+                                                 MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                                 int *flag,
+                                                 MPI_Status * status,
+                                                 MPIR_Request ** message, uint64_t peek_flags)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc;
@@ -108,11 +108,12 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_RECVER, comm, source, comm->rank, tag); \
     } while (0)
 
-static inline int MPIDI_NM_mpi_improbe(int source,
-                                       int tag,
-                                       MPIR_Comm * comm,
-                                       int context_offset, MPIDI_av_entry_t * addr,
-                                       int *flag, MPIR_Request ** message, MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source,
+                                                  int tag,
+                                                  MPIR_Comm * comm,
+                                                  int context_offset, MPIDI_av_entry_t * addr,
+                                                  int *flag, MPIR_Request ** message,
+                                                  MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -145,11 +146,11 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_mpi_iprobe(int source,
-                                      int tag,
-                                      MPIR_Comm * comm,
-                                      int context_offset, MPIDI_av_entry_t * addr, int *flag,
-                                      MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source,
+                                                 int tag,
+                                                 MPIR_Comm * comm,
+                                                 int context_offset, MPIDI_av_entry_t * addr,
+                                                 int *flag, MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);

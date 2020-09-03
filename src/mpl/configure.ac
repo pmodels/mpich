@@ -144,6 +144,37 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 AC_HEADER_STDBOOL
 
+AC_ARG_ENABLE(fast,
+[  --enable-fast=option - Control the level of fast execution supported by MPL.
+        alwaysinline   - Force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX
+        all|yes  - Same as "alwaysinline"
+        none     - Disable alwaysinline (default)
+],,enable_fast=none)
+
+# enable-fast
+# only alwaysinline option is valid but still need break down multiple options
+# transferred from MPICH separated by commas
+enable_fast_alwaysinline=no
+save_IFS="$IFS"
+IFS=","
+for option in $enable_fast ; do
+    case "$option" in
+        alwaysinline)
+        enable_fast_alwaysinline=yes
+        ;;
+        all|yes)
+        enable_fast_alwaysinline=yes
+        ;;
+        *) # do not change default value (no) for other fast options
+        ;;
+    esac
+done
+IFS="$save_IFS"
+
+if test "$enable_fast_alwaysinline" = "yes"; then
+    AC_DEFINE(ENABLE_ALWAYS_INLINE,1,[Define if force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX])
+fi
+
 #######################################################################
 # valgrind support
 AC_ARG_WITH([valgrind],

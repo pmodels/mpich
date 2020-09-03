@@ -9,7 +9,8 @@
 #include "ch4_types.h"
 #include "mpidu_genq.h"
 
-static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int ref_count)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind,
+                                                             int ref_count)
 {
     MPIR_Request *req;
     int i;
@@ -89,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
  * are unsafe. This assumes netmod, shmmod and am share the same vci. If that changes,
  * here we need be called outside lock and shift the lock responsibility into netmod,
  * shmmod, and am */
-static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
+MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -139,7 +140,7 @@ static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_c
     goto fn_exit;
 }
 
-static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
 {
     MPIR_Request *anysrc_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
     if (unlikely(anysrc_partner)) {

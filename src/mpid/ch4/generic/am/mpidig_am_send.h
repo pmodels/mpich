@@ -29,7 +29,7 @@ cvars:
 
 #define MPIDIG_AM_SEND_HDR_SIZE  sizeof(MPIDIG_hdr_t)
 
-static inline int mpidig_eager_limit(int is_local)
+MPL_STATIC_INLINE_PREFIX int mpidig_eager_limit(int is_local)
 {
     if (MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE > 0) {
         return MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE;
@@ -51,24 +51,26 @@ static inline int mpidig_eager_limit(int is_local)
     return thresh;
 }
 
-static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                       MPIR_Errflag_t errflag);
-static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                      MPI_Aint data_sz,
-                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                      MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                      MPIR_Errflag_t errflag);
-static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  MPIR_Errflag_t errflag);
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint count,
+                                                  MPI_Datatype datatype, int rank, int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                  MPIR_Errflag_t errflag);
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, MPI_Aint data_sz, int rank,
+                                                 int tag, MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                 MPIR_Errflag_t errflag);
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                             int rank, int tag, MPIR_Comm * comm,
+                                             int context_offset, MPIDI_av_entry_t * addr,
+                                             MPIR_Request ** request, MPIR_Errflag_t errflag);
 
-static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                    int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                    MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                    int type, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
+                                               MPI_Datatype datatype, int rank, int tag,
+                                               MPIR_Comm * comm, int context_offset,
+                                               MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                               int type, MPIR_Errflag_t errflag)
 {
     MPI_Aint data_sz;
     MPIR_Datatype *dt_ptr;
@@ -87,10 +89,11 @@ static inline int MPIDIG_isend_impl(const void *buf, MPI_Aint count, MPI_Datatyp
     }
 }
 
-static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                       int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                       MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                       MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint count,
+                                                  MPI_Datatype datatype, int rank, int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                  MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
@@ -135,10 +138,10 @@ static inline int MPIDIG_do_eager_send(const void *buf, MPI_Aint count, MPI_Data
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                  MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                             int rank, int tag, MPIR_Comm * comm,
+                                             int context_offset, MPIDI_av_entry_t * addr,
+                                             MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = *request;
@@ -188,11 +191,11 @@ static inline int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype 
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                      MPI_Aint data_sz,
-                                      int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                      MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                      MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype, MPI_Aint data_sz, int rank,
+                                                 int tag, MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                 MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
