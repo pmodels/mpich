@@ -927,8 +927,7 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
 static int create_cq(struct fid_domain *domain, struct fid_cq **p_cq);
 static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
                          struct fid_cq *cq, struct fid_cntr *cntr);
-static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx,
-                         struct fid_cq *cq, struct fid_cntr *cntr);
+static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq);
 static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av);
 static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_stx_ctx);
 
@@ -978,7 +977,7 @@ static int create_vni_context(int vni)
 
         mpi_errno = create_sep_tx(ep, 0, &tx, cq, rma_cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = create_sep_rx(ep, 0, &rx, cq, rma_cmpl_cntr);
+        mpi_errno = create_sep_rx(ep, 0, &rx, cq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         MPIDI_OFI_CALL(fi_endpoint(domain, prov_use, &ep, NULL), ep);
@@ -1030,7 +1029,7 @@ static int create_vni_context(int vni)
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         mpi_errno = create_sep_tx(ep, vni, &tx, cq, rma_cmpl_cntr);
         MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = create_sep_rx(ep, vni, &rx, cq, rma_cmpl_cntr);
+        mpi_errno = create_sep_rx(ep, vni, &rx, cq);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         tx = ep;
@@ -1245,8 +1244,7 @@ static int create_sep_tx(struct fid_ep *ep, int idx, struct fid_ep **p_tx,
     goto fn_exit;
 }
 
-static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx,
-                         struct fid_cq *cq, struct fid_cntr *cntr)
+static int create_sep_rx(struct fid_ep *ep, int idx, struct fid_ep **p_rx, struct fid_cq *cq)
 {
     int mpi_errno = MPI_SUCCESS;
 
