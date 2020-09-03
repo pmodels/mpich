@@ -86,12 +86,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
                                                 int target_rank,
                                                 MPI_Aint target_disp,
                                                 int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win)
+                                                MPIR_Win * win, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
-    int disp_unit = 0;
-    void *base = NULL;
+    void *target_addr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PUT);
 
@@ -104,18 +103,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
         goto fn_exit;
 
     if (target_rank == win->comm_ptr->rank) {
-        base = win->base;
-        disp_unit = win->disp_unit;
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) win->base + win->disp_unit * target_disp;
+        }
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
         int local_target_rank = win->comm_ptr->intranode_table[target_rank];
-        disp_unit = shared_table[local_target_rank].disp_unit;
-        base = shared_table[local_target_rank].shm_base_addr;
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) shared_table[local_target_rank].shm_base_addr +
+                shared_table[local_target_rank].disp_unit * target_disp;
+        }
     }
 
     mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
-                               (char *) base + disp_unit * target_disp, target_count,
-                               target_datatype);
+                               target_addr, target_count, target_datatype);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PUT);
@@ -130,12 +135,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
                                                 int target_rank,
                                                 MPI_Aint target_disp,
                                                 int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win)
+                                                MPIR_Win * win, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
-    int disp_unit = 0;
-    void *base = NULL;
+    void *target_addr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_GET);
 
@@ -148,16 +152,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
         goto fn_exit;
 
     if (target_rank == win->comm_ptr->rank) {
-        base = win->base;
-        disp_unit = win->disp_unit;
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) win->base + win->disp_unit * target_disp;
+        }
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
         int local_target_rank = win->comm_ptr->intranode_table[target_rank];
-        disp_unit = shared_table[local_target_rank].disp_unit;
-        base = shared_table[local_target_rank].shm_base_addr;
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) shared_table[local_target_rank].shm_base_addr +
+                shared_table[local_target_rank].disp_unit * target_disp;
+        }
     }
 
-    mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp, target_count,
+    mpi_errno = MPIR_Localcopy(target_addr, target_count,
                                target_datatype, origin_addr, origin_count, origin_datatype);
 
   fn_exit:
@@ -301,7 +312,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win);
     } else {
         mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                       target_disp, target_count, target_datatype, win);
+                                       target_disp, target_count, target_datatype, win,
+                                       target_abs_flag);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_PUT);
@@ -327,7 +339,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
                                    target_rank, target_disp, target_count, target_datatype, win);
     } else {
         mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                       target_disp, target_count, target_datatype, win);
+                                       target_disp, target_count, target_datatype, win,
+                                       target_abs_flag);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET);
@@ -358,7 +371,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     }
 
     mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win,
+                                   false);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
@@ -623,7 +637,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     }
 
     mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win,
+                                   false);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
