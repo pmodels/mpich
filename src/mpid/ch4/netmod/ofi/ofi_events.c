@@ -328,7 +328,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
         int vni_local = vni_dst;
         int vni_remote = vni_src;
 
-        MPIDI_OFI_cntr_incr();
+        MPIDI_OFI_cntr_incr(vni_local);
         MPIDI_OFI_CALL_RETRY(fi_read(MPIDI_OFI_global.ctx[vni_local].tx,        /* endpoint     */
                                      (void *) ((uintptr_t) recv_elem->wc.buf + recv_elem->cur_offset),  /* local buffer */
                                      bytesToGet,        /* bytes        */

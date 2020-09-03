@@ -225,9 +225,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr(int vni)
 {
-    MPIDI_OFI_global.rma_issued_cntr++;
+    MPIDI_OFI_global.ctx[vni].rma_issued_cntr++;
 }
 
 /* Externs:  see util.c for definition */
