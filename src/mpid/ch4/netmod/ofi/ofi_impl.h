@@ -298,17 +298,18 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
                             MPI_Aint target_disp, int target_count,
                             MPI_Datatype target_datatype, MPIR_Win * win,
-                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq);
+                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq,
+                            bool target_abs_flag);
 int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
                        MPI_Aint target_disp, int target_count,
                        MPI_Datatype target_datatype, MPIR_Win * win,
-                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq, bool target_abs_flag);
 int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
                        MPI_Aint target_disp, int target_count,
                        MPI_Datatype target_datatype, MPIR_Win * win,
-                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq, bool target_abs_flag);
 
 /* Common Utility functions used by the
  * C and C++ components

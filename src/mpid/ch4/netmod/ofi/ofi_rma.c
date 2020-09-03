@@ -53,7 +53,8 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
                             MPI_Datatype origin_datatype, int target_rank,
                             MPI_Aint target_disp, int target_count,
                             MPI_Datatype target_datatype, MPIR_Win * win,
-                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq)
+                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq,
+                            bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t flags;
@@ -91,9 +92,12 @@ int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
     MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
-    target_base =
-        (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
-                  (target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    if (target_abs_flag) {
+        target_base = (void *) target_disp;
+    } else {
+        target_base = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                (target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    }
 
     /* allocate origin iovecs */
     struct iovec *origin_iov;
@@ -355,7 +359,7 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
                        MPI_Aint target_disp, int target_count,
                        MPI_Datatype target_datatype, MPIR_Win * win,
-                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t target_bytes, origin_bytes;
@@ -378,9 +382,12 @@ int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
     MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
-    target_base =
-        (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
-                  +(target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    if (target_abs_flag) {
+        target_base = (void *) target_disp;
+    } else {
+        target_base = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                (target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    }
 
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);
@@ -419,7 +426,7 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
                        MPI_Datatype origin_datatype, int target_rank,
                        MPI_Aint target_disp, int target_count,
                        MPI_Datatype target_datatype, MPIR_Win * win,
-                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t target_bytes, origin_bytes;
@@ -442,9 +449,12 @@ int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
     MPIR_Typerep_iov_len(target_count, target_datatype, target_bytes, &total_target_iov_len);
     target_len = MPL_MIN(total_target_iov_len, MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX);
     target_iov = MPL_malloc(sizeof(struct iovec) * target_len, MPL_MEM_RMA);
-    target_base =
-        (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
-                  +(target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    if (target_abs_flag) {
+        target_base = (void *) target_disp;
+    } else {
+        target_base = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                (target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank)));
+    }
 
     /* put on deferred list */
     DL_APPEND(MPIDI_OFI_WIN(win).deferredQ, req);

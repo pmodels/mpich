@@ -129,10 +129,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
                                               int target_count,
                                               MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIR_Request ** sigreq)
+                                              MPIR_Request ** sigreq, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t offset;
+    void *target_addr;
     uint64_t flags;
     struct fi_msg_rma msg;
     int target_contig, origin_contig;
@@ -160,25 +160,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
 
     /* self messages */
     if (target_rank == win->comm_ptr->rank) {
-        offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) win->base +
+                target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        }
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
-                                   origin_datatype,
-                                   (char *) win->base + offset, target_count, target_datatype);
+                                   origin_datatype, target_addr, target_count, target_datatype);
         goto null_op_exit;
     }
 
     /* small contiguous messages */
     if (origin_contig && target_contig && (origin_bytes <= MPIDI_OFI_global.max_buffered_write)) {
         MPIDI_OFI_win_cntr_incr(win);
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                    target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank));
+        }
         MPIDI_OFI_CALL_RETRY(fi_inject_write(MPIDI_OFI_WIN(win).ep,
                                              (char *) origin_addr + origin_true_lb, target_bytes,
                                              MPIDI_OFI_av_to_phys(addr, 0, 0),
-                                             (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
-                                             + target_disp * MPIDI_OFI_winfo_disp_unit(win,
-                                                                                       target_rank)
-                                             + target_true_lb, MPIDI_OFI_winfo_mr_key(win,
-                                                                                      target_rank)),
+                                             (uint64_t) target_addr + target_true_lb,
+                                             MPIDI_OFI_winfo_mr_key(win, target_rank)),
                              0, rdma_inject_write, FALSE);
         goto null_op_exit;
     }
@@ -198,7 +205,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         } else {
             flags = FI_DELIVERY_COMPLETE;
         }
-        offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        if (target_abs_flag) {
+            target_addr = (char *) target_disp;
+        } else {
+            target_addr = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                    target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank));
+        }
         msg.desc = NULL;
         msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
         msg.context = NULL;
@@ -209,7 +221,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         msg.rma_iov_count = 1;
         iov.iov_base = (char *) origin_addr + origin_true_lb;
         iov.iov_len = target_bytes;
-        riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_true_lb);
+        riov.addr = (uint64_t) target_addr + target_true_lb;
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
@@ -229,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         mpi_errno =
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, addr,
-                                    MPIDI_OFI_PUT, sigreq);
+                                    MPIDI_OFI_PUT, sigreq, target_abs_flag);
         goto fn_exit;
     }
 
@@ -237,9 +249,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         mpi_errno =
             MPIDI_OFI_pack_put(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_disp, target_count, target_datatype, win, addr, sigreq);
+                               target_disp, target_count, target_datatype, win, addr, sigreq,
+                               target_abs_flag);
         goto fn_exit;
     }
+
+    MPIR_Assert(target_abs_flag == false);
 
     if (sigreq)
         mpi_errno =
@@ -277,6 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
 
     if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+        MPIR_Assert(target_abs_flag == false || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC);
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
         goto fn_exit;
@@ -286,7 +302,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, NULL);
+                                 target_disp, target_count, target_datatype, win, av, NULL,
+                                 target_abs_flag);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
@@ -301,10 +318,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
                                               int target_count,
                                               MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIR_Request ** sigreq)
+                                              MPIR_Request ** sigreq, bool target_abs_flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t offset;
+    void *target_addr;
     uint64_t flags;
     struct fi_msg_rma msg;
     int origin_contig, target_contig;
@@ -332,8 +349,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
 
     /* self messages */
     if (target_rank == win->comm_ptr->rank) {
-        offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
-        mpi_errno = MPIR_Localcopy((char *) win->base + offset,
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (char *) win->base +
+                target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        }
+        mpi_errno = MPIR_Localcopy(target_addr,
                                    target_count,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
         goto null_op_exit;
@@ -341,7 +363,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
 
     /* contiguous messages */
     if (origin_contig && target_contig) {
-        offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        if (target_abs_flag) {
+            target_addr = (void *) target_disp;
+        } else {
+            target_addr = (void *) (MPIDI_OFI_winfo_base(win, target_rank) +
+                                    target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank));
+        }
         if (sigreq) {
             if (sigreq) {
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
@@ -369,7 +396,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         msg.data = 0;
         iov.iov_base = (char *) origin_addr + origin_true_lb;
         iov.iov_len = target_bytes;
-        riov.addr = (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_true_lb);
+        riov.addr = (uint64_t) target_addr + target_true_lb;
         riov.len = target_bytes;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
@@ -389,7 +416,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         mpi_errno =
             MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, addr,
-                                    MPIDI_OFI_GET, sigreq);
+                                    MPIDI_OFI_GET, sigreq, target_abs_flag);
         goto fn_exit;
     }
 
@@ -397,9 +424,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         target_density >= MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         mpi_errno =
             MPIDI_OFI_pack_get(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_disp, target_count, target_datatype, win, addr, sigreq);
+                               target_disp, target_count, target_datatype, win, addr, sigreq,
+                               target_abs_flag);
         goto fn_exit;
     }
+
+    MPIR_Assert(target_abs_flag == false);
 
     if (sigreq)
         mpi_errno =
@@ -437,6 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
     if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+        MPIR_Assert(target_abs_flag == false || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC);
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
         goto fn_exit;
@@ -446,7 +477,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, NULL);
+                                 target_disp, target_count, target_datatype, win, av, NULL,
+                                 target_abs_flag);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
@@ -477,7 +509,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, request);
+                                 target_disp, target_count, target_datatype, win, av, request,
+                                 false);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
@@ -933,7 +966,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, request);
+                                 target_disp, target_count, target_datatype, win, av, request,
+                                 false);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
