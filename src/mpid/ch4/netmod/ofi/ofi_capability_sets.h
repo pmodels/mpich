@@ -496,7 +496,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_DEFAULT
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
-#define MPIDI_OFI_ENABLE_ENDPOINTS_BITS     1
 
 #define MPIDI_OFI_ENABLE_AV_TABLE           MPIDI_OFI_global.settings.enable_av_table
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS MPIDI_OFI_global.settings.enable_scalable_endpoints
@@ -531,7 +530,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #endif
 
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
-#define MPIDI_OFI_ENABLE_ENDPOINTS_BITS     MPIDI_OFI_MAX_ENDPOINTS_BITS
 
 #endif
 

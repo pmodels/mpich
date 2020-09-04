@@ -885,9 +885,6 @@ int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_
                                             1, &addr, 0ULL, NULL), 0, avmap);
             MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
-#endif
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);

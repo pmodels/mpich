@@ -387,9 +387,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrna
     MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni].av, addrname, 1, &addr, 0ULL, NULL),
                    avmap);
     MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).dest[0][0] = addr;
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).ep_idx = 0;
-#endif
 
   fn_exit:
     return mpi_errno;
@@ -402,8 +399,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
 {
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
-        return fi_rx_addr(MPIDI_OFI_AV(av).dest[vni_local][vni_remote], ep_num,
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[vni_local][vni_remote], 0,
                           MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_AV(av).dest[vni_local][vni_remote];

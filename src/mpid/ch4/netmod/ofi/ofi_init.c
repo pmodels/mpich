@@ -1282,9 +1282,6 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
@@ -1963,9 +1960,6 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
         for (int i = 0; i < num_nodes; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
-#endif
         }
         MPL_free(mapped_table);
         /* Then, allgather all address names using init_comm */
@@ -1990,9 +1984,6 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
         for (int i = 0; i < size; i++) {
             MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
         }
         MPL_free(mapped_table);
         MPIDU_bc_table_destroy();

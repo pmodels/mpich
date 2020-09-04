@@ -22,7 +22,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t 
     control->send_buf = (uintptr_t) send_buf;
     control->msgsize = msgsize;
     control->comm_id = comm_ptr->context_id;
-    control->endpoint_id = MPIDI_OFI_comm_to_ep(comm_ptr, comm_ptr->rank);
     control->ackreq = ackreq;
 
     mpi_errno = MPIDI_OFI_do_inject(rank, comm_ptr,
