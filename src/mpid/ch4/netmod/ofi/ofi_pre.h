@@ -173,12 +173,8 @@ struct MPIDI_OFI_win_hint;
 /* Stores per-rank information for RMA */
 typedef struct {
     int32_t disp_unit;
-    /* For MR_BASIC mode we need to store an MR key and a base address of the target window */
-    /* TODO - Ideally, we'd like to not have these fields compiled in if not
-     * using MR_BASIC. In practice, doing so makes the code very complex
-     * elsewhere for very little payoff. */
-    uint64_t mr_key;
-    uintptr_t base;
+    uint64_t mr_key;            /* needed if MPIDI_OFI_ENABLE_MR_PROV_KEY (target mr_key may be different) */
+    uintptr_t base;             /* needed if MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS (need to calc target addr) */
 } MPIDI_OFI_win_targetinfo_t;
 
 typedef struct {

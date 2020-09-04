@@ -274,7 +274,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                        MPL_MEM_BUFFER);
 
         if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
-            /* MR_BASIC */
             ctrl.rma_key = fi_mr_key(huge_send_mr);
         }
 
