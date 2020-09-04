@@ -38,19 +38,23 @@ typedef int (*MPIDI_NM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_i
                                        const void *am_hdr, size_t am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
                                     size_t am_hdr_sz, const void *data, MPI_Count count,
-                                    MPI_Datatype datatype, MPIR_Request * sreq);
+                                    MPI_Datatype datatype, MPIR_Request * sreq, uint8_t protocol);
 typedef int (*MPIDI_NM_am_isendv_t) (int rank, MPIR_Comm * comm, int handler_id,
                                      struct iovec * am_hdrs, size_t iov_len, const void *data,
-                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq);
+                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq,
+                                     uint8_t protocol);
 typedef int (*MPIDI_NM_am_send_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                              int handler_id, const void *am_hdr, size_t am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                           int handler_id, const void *am_hdr, size_t am_hdr_sz,
                                           const void *data, MPI_Count count, MPI_Datatype datatype,
-                                          MPIR_Request * sreq);
+                                          MPIR_Request * sreq, uint8_t protocol);
 typedef size_t(*MPIDI_NM_am_hdr_max_sz_t) (void);
 typedef size_t(*MPIDI_NM_am_eager_limit_t) (void);
 typedef size_t(*MPIDI_NM_am_eager_buf_limit_t) (void);
+typedef int (*MPIDI_NM_am_choose_protocol_t) (const void *buf, MPI_Count count,
+                                              MPI_Datatype datatype, size_t am_ext_sz,
+                                              int handler_id);
 typedef int (*MPIDI_NM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
                                          bool is_remote);
 typedef int (*MPIDI_NM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
@@ -408,6 +412,7 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_NM_am_eager_limit_t am_eager_limit;
     MPIDI_NM_am_eager_buf_limit_t am_eager_buf_limit;
+    MPIDI_NM_am_choose_protocol_t am_choose_protocol;
 } MPIDI_NM_funcs_t;
 
 typedef struct MPIDI_NM_native_funcs {
@@ -541,13 +546,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, in
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                const void *am_hdr, size_t am_hdr_sz,
                                                const void *data, MPI_Count count,
-                                               MPI_Datatype datatype,
-                                               MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
+                                               MPI_Datatype datatype, MPIR_Request * sreq,
+                                               uint8_t protocol) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                 struct iovec *am_hdrs, size_t iov_len,
                                                 const void *data, MPI_Count count,
                                                 MPI_Datatype datatype,
-                                                MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
+                                                MPIR_Request * sreq, uint8_t protocol)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                                         int handler_id, const void *am_hdr,
                                                         size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
@@ -555,10 +561,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      int handler_id, const void *am_hdr,
                                                      size_t am_hdr_sz, const void *data,
                                                      MPI_Count count, MPI_Datatype datatype,
-                                                     MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
+                                                     MPIR_Request * sreq, uint8_t protocol)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                             MPI_Datatype datatype,
+                                                             size_t am_ext_sz, int handler_id)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                     int *lpid_ptr,
                                                     bool is_remote) MPL_STATIC_INLINE_SUFFIX;

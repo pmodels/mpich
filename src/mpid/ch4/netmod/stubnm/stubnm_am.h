@@ -15,7 +15,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                size_t am_hdr_sz,
                                                const void *data,
                                                MPI_Count count, MPI_Datatype datatype,
-                                               MPIR_Request * sreq)
+                                               MPIR_Request * sreq, uint8_t protocol)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 size_t iov_len,
                                                 const void *data,
                                                 MPI_Count count, MPI_Datatype datatype,
-                                                MPIR_Request * sreq)
+                                                MPIR_Request * sreq, uint8_t protocol)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -40,7 +40,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      size_t am_hdr_sz,
                                                      const void *data,
                                                      MPI_Count count,
-                                                     MPI_Datatype datatype, MPIR_Request * sreq)
+                                                     MPI_Datatype datatype, MPIR_Request * sreq,
+                                                     uint8_t protocol)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -79,6 +80,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                             MPI_Datatype datatype,
+                                                             size_t am_ext_sz, int handler_id)
+{
+    uint8_t protocol = 0;
+
+    MPIR_Assert(0);
+
+    return protocol;
 }
 
 #endif /* STUBNM_AM_H_INCLUDED */

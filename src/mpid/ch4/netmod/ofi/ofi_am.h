@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                size_t am_hdr_sz,
                                                const void *data,
                                                MPI_Count count, MPI_Datatype datatype,
-                                               MPIR_Request * sreq)
+                                               MPIR_Request * sreq, uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND);
@@ -49,7 +49,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 size_t iov_len,
                                                 const void *data,
                                                 MPI_Count count, MPI_Datatype datatype,
-                                                MPIR_Request * sreq)
+                                                MPIR_Request * sreq, uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS, is_allocated;
     size_t am_hdr_sz = 0, i;
@@ -98,7 +98,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      size_t am_hdr_sz,
                                                      const void *data,
                                                      MPI_Count count,
-                                                     MPI_Datatype datatype, MPIR_Request * sreq)
+                                                     MPI_Datatype datatype, MPIR_Request * sreq,
+                                                     uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
@@ -169,6 +170,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                             MPI_Datatype datatype,
+                                                             size_t am_ext_sz, int handler_id)
+{
+    uint8_t protocol = 0;
+
+    MPIR_Assert(0);
+
+    return protocol;
 }
 
 #endif /* OFI_AM_H_INCLUDED */

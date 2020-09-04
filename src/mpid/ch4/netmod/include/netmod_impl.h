@@ -28,7 +28,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, in
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                const void *am_hdr, size_t am_hdr_sz,
                                                const void *data, MPI_Count count,
-                                               MPI_Datatype datatype, MPIR_Request * sreq)
+                                               MPI_Datatype datatype, MPIR_Request * sreq,
+                                               uint8_t protocol)
 {
     int ret;
 
@@ -36,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int h
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
     ret = MPIDI_NM_func->am_isend(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype,
-                                  sreq);
+                                  sreq, protocol);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND);
     return ret;
@@ -45,7 +46,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank, MPIR_Comm * comm, int h
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                 struct iovec *am_hdrs, size_t iov_len,
                                                 const void *data, MPI_Count count,
-                                                MPI_Datatype datatype, MPIR_Request * sreq)
+                                                MPI_Datatype datatype, MPIR_Request * sreq,
+                                                uint8_t protocol)
 {
     int ret;
 
@@ -53,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank, MPIR_Comm * comm, int 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
 
     ret = MPIDI_NM_func->am_isendv(rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype,
-                                   sreq);
+                                   sreq, protocol);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISENDV);
     return ret;
@@ -78,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      int handler_id, const void *am_hdr,
                                                      size_t am_hdr_sz, const void *data,
                                                      MPI_Count count, MPI_Datatype datatype,
-                                                     MPIR_Request * sreq)
+                                                     MPIR_Request * sreq, uint8_t protocol)
 {
     int ret;
 
@@ -86,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
 
     ret = MPIDI_NM_func->am_isend_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data,
-                                        count, datatype, sreq);
+                                        count, datatype, sreq, protocol);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
     return ret;
@@ -113,6 +115,13 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
 {
     return MPIDI_NM_func->am_eager_buf_limit();
+}
+
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_NM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                             MPI_Datatype datatype,
+                                                             size_t am_ext_sz, int handler_id)
+{
+    return MPIDI_NM_func->am_choose_protocol(buf, count, datatype, am_ext_sz, handler_id);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
