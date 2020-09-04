@@ -450,6 +450,8 @@ typedef enum {
     MPIDI_WINATTR_NM_REACHABLE = 16,    /* whether a netmod may reach the window. Set by netmod at win init.
                                          * It only indicates whether the win type is supported. Per-target check
                                          * may be required separately. */
+    MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
+                                         * dynamic window. Set by netmod. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 
