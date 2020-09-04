@@ -172,6 +172,9 @@ static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
 #endif
 }
 
+/* A sentinel to communicate that we do not support direct RMA */
+#define MPIDI_OFI_INVALID_MR_KEY 0xffffffffffffffff
+
 static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
 {
     int i, same_disp, mpi_errno = MPI_SUCCESS;
@@ -189,56 +192,73 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
-    /* It is unclear whether we can register NULL and what that means even in the case
-     * we can. So until there is clear documentation, we take the conservative measure
-     * and do not register a NULL base. */
+    /* fi_mr_reg may fail for legitimate reason, for example, with dynamic window, we
+     * are trying to register MPI_BOTTOM, some providers can legitimately reject.
+     *
+     * When fi_mr_reg fails, we should ensure always fallback to active message.
+     */
 
-    /* Implication for dynamic window: since we are not registering mr here, we currently
-     * always fall-back to active messages for dynamic window. In any way, dynamic window
-     * probably will need per-attachment registration and a mechanism for dynamic
-     * synchronization to work with direct RMA. That is difficult without extra sematics or
-     * hints, unfortunately. Until then, we fall back. */
-
-    if (base) {
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
-                                 base,  /* In:  Lower memory address */
-                                 win->size,     /* In:  Length              */
-                                 FI_REMOTE_READ | FI_REMOTE_WRITE,      /* In:  Expose MR for read  */
-                                 0ULL,  /* In:  offset(not used)    */
-                                 MPIDI_OFI_WIN(win).mr_key,     /* In:  requested key       */
-                                 0ULL,  /* In:  flags               */
-                                 &MPIDI_OFI_WIN(win).mr,        /* Out: memregion object    */
-                                 NULL), mr_reg);        /* In:  context             */
+    if (win->size > 0) {
+        int rc = fi_mr_reg(MPIDI_OFI_global.ctx[0].domain, base, win->size,
+                           FI_REMOTE_READ | FI_REMOTE_WRITE, 0ULL /* offset */ ,
+                           MPIDI_OFI_WIN(win).mr_key, 0ULL /* flags */ ,
+                           &MPIDI_OFI_WIN(win).mr, NULL /* context */);
+        if (rc < 0) {
+            /* Failed for whatever reason. Set mr_key to 0, which will enforce the fallback */
+            MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_INVALID_MR_KEY;
+        } else if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+            /* retrieve provider key */
+            MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
+        }
+    } else {
+        /* note: this is "valid", we just won't use it */
+        MPIDI_OFI_WIN(win).mr_key = 0;
     }
+
     MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
 
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
-
-    if ((MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) && MPIDI_OFI_WIN(win).mr) {
-        /* MR_BASIC */
-        MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
-        winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
-        winfo[comm_ptr->rank].base = (uintptr_t) base;
-    }
+    winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
+    winfo[comm_ptr->rank].base = (uintptr_t) base;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
                                winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
-        first = winfo[0].disp_unit;
-        same_disp = 1;
-        for (i = 1; i < comm_ptr->local_size; i++) {
-            if (winfo[i].disp_unit != first) {
-                same_disp = 0;
-                break;
-            }
+    /* check we all got mr_key, or force fallback by setting mr to 0 */
+    for (i = 0; i < comm_ptr->local_size; i++) {
+        if (winfo[i].mr_key == MPIDI_OFI_INVALID_MR_KEY) {
+            MPIDI_OFI_WIN(win).mr = 0;
+            MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_INVALID_MR_KEY;
+            break;
         }
-        if (same_disp) {
-            MPL_free(MPIDI_OFI_WIN(win).winfo);
-            MPIDI_OFI_WIN(win).winfo = NULL;
+    }
+
+    if (!MPIDI_OFI_WIN(win).mr) {
+        /* always fallback, skip winfo array */
+        MPL_free(MPIDI_OFI_WIN(win).winfo);
+        MPIDI_OFI_WIN(win).winfo = NULL;
+    } else {
+        if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS && !MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+            /* offset will be used, remote bases not needed,
+             * win_id will be used for mr_key, remote mr_key not needed,
+             * Let's check do we need remote disp_unit ...
+             */
+            first = winfo[0].disp_unit;
+            same_disp = 1;
+            for (i = 1; i < comm_ptr->local_size; i++) {
+                if (winfo[i].disp_unit != first) {
+                    same_disp = 0;
+                    break;
+                }
+            }
+            /* ... then we can skip winfo altogether */
+            if (same_disp) {
+                MPL_free(MPIDI_OFI_WIN(win).winfo);
+                MPIDI_OFI_WIN(win).winfo = NULL;
+            }
         }
     }
 
