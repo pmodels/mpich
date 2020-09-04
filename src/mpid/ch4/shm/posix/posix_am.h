@@ -84,7 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   size_t am_hdr_sz,
                                                   const void *data,
                                                   MPI_Count count,
-                                                  MPI_Datatype datatype, MPIR_Request * sreq)
+                                                  MPI_Datatype datatype, MPIR_Request * sreq,
+                                                  uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS;
     int result = MPIDI_POSIX_OK;
@@ -207,7 +208,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    size_t iov_len,
                                                    const void *data,
                                                    MPI_Count count,
-                                                   MPI_Datatype datatype, MPIR_Request * sreq)
+                                                   MPI_Datatype datatype, MPIR_Request * sreq,
+                                                   uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_allocated;
@@ -241,7 +243,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     }
 
     mpi_errno = MPIDI_POSIX_am_isend(rank, comm, kind, handler_id, am_hdr_buf, am_hdr_sz,
-                                     data, count, datatype, sreq);
+                                     data, count, datatype, sreq, protocol);
 
     if (is_allocated)
         MPL_free(am_hdr_buf);
@@ -260,7 +262,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
                                                         size_t am_hdr_sz,
                                                         const void *data,
                                                         MPI_Count count,
-                                                        MPI_Datatype datatype, MPIR_Request * sreq)
+                                                        MPI_Datatype datatype, MPIR_Request * sreq,
+                                                        uint8_t protocol)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -268,7 +271,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
     mpi_errno = MPIDI_POSIX_am_isend(src_rank, MPIDIG_context_id_to_comm(context_id), kind,
-                                     handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq);
+                                     handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq,
+                                     protocol);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
@@ -403,6 +407,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t con
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
 
     return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_POSIX_am_choose_protocol(const void *buf, MPI_Count count,
+                                                                MPI_Datatype datatype,
+                                                                size_t am_ext_sz, int handler_id)
+{
+    uint8_t protocol = 0;
+
+    MPIR_Assert(0);
+
+    return protocol;
 }
 
 #endif /* POSIX_AM_H_INCLUDED */

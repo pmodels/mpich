@@ -15,7 +15,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_am_isend(int rank,
                                                     size_t am_hdr_sz,
                                                     const void *data,
                                                     MPI_Count count,
-                                                    MPI_Datatype datatype, MPIR_Request * sreq)
+                                                    MPI_Datatype datatype, MPIR_Request * sreq,
+                                                    uint8_t protocol)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_ISEND);
@@ -33,7 +34,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_am_isendv(int rank,
                                                      size_t iov_len,
                                                      const void *data,
                                                      MPI_Count count,
-                                                     MPI_Datatype datatype, MPIR_Request * sreq)
+                                                     MPI_Datatype datatype, MPIR_Request * sreq,
+                                                     uint8_t protocol)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_ISENDV);
@@ -49,7 +51,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_am_isend_reply(MPIR_Context_id_t cont
                                                           const void *am_hdr, size_t am_hdr_sz,
                                                           const void *data, MPI_Count count,
                                                           MPI_Datatype datatype,
-                                                          MPIR_Request * sreq)
+                                                          MPIR_Request * sreq, uint8_t protocol)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AM_ISEND_REPLY);
@@ -108,6 +110,17 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_STUBSHM_am_eager_buf_limit(void)
 {
     MPIR_Assert(0);
     return 0;
+}
+
+MPL_STATIC_INLINE_PREFIX uint8_t MPIDI_STUBSHM_am_choose_protocol(const void *buf, MPI_Count count,
+                                                                  MPI_Datatype datatype,
+                                                                  size_t am_ext_sz, int handler_id)
+{
+    uint8_t protocol = 0;
+
+    MPIR_Assert(0);
+
+    return protocol;
 }
 
 #endif /* STUBSHM_AM_H_INCLUDED */
