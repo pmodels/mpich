@@ -380,20 +380,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
     return vni;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrname)
-{
-    int mpi_errno = MPI_SUCCESS;
-    fi_addr_t addr;
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni].av, addrname, 1, &addr, 0ULL, NULL),
-                   avmap);
-    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).dest[0][0] = addr;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
                                                         int vni_local, int vni_remote)
 {
