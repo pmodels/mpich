@@ -1969,8 +1969,11 @@ static int addr_exchange_root_vni(MPIR_Comm * init_comm)
         /* Insert the rest of the addresses */
         for (int i = 0; i < MPIR_Process.size; i++) {
             if (rank_map[i] >= 0) {
-                mpi_errno = MPIDI_OFI_av_insert(0, i, (char *) table + recv_bc_len * rank_map[i]);
-                MPIR_ERR_CHECK(mpi_errno);
+                fi_addr_t addr;
+                char *addrname = (char *) table + recv_bc_len * rank_map[i];
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
+                                            addrname, 1, &addr, 0ULL, NULL), avmap);
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0] = addr;
             }
         }
         MPIDU_bc_table_destroy();
