@@ -567,8 +567,8 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
-    char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(8);
-    if ((intptr_t) am_hdr & 0x7) {
+    char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
         if (temp_size > wc->len) {
             temp_size = wc->len;
@@ -576,7 +576,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         memcpy(temp, wc->buf, temp_size);
         am_hdr = (void *) temp;
         /* confirm it (in case MPL_ATTR_ALIGNED didn't work) */
-        MPIR_Assert(((intptr_t) am_hdr & 0x7) == 0);
+        MPIR_Assert(((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) == 0);
     }
 #endif
 
