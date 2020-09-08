@@ -140,15 +140,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
 
-    static char padding[8];     /* in case we need pad to alignment */
+    static char padding[MAX_ALIGNMENT]; /* in case we need pad to alignment */
     iov_left[0].iov_base = (void *) am_hdr;
     iov_left[0].iov_len = am_hdr_sz;
     iov_num_left = 1;
     if (data_sz > 0) {
-        if (am_hdr_sz & 7) {
-            /* need padding to ensure minimum alignment of 8 */
+        if (am_hdr_sz & (MAX_ALIGNMENT - 1)) {
+            /* need padding to ensure maximum alignment (typically 16 on x86-64) */
             iov_left[1].iov_base = (void *) padding;
-            iov_left[1].iov_len = 8 - (am_hdr_sz & 7);
+            iov_left[1].iov_len = MAX_ALIGNMENT - (am_hdr_sz & (MAX_ALIGNMENT - 1));
             msg_hdr.am_hdr_sz += iov_left[1].iov_len;
             iov_num_left++;
         }
