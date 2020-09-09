@@ -156,7 +156,6 @@ int MPIDIG_am_init(void)
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_ACK, NULL, &MPIDIG_send_long_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SEND_LONG_LMT,
                      &MPIDIG_send_long_lmt_origin_cb, &MPIDIG_send_long_lmt_target_msg_cb);
-    MPIDIG_am_reg_cb(MPIDIG_SSEND_REQ, &MPIDIG_send_origin_cb, &MPIDIG_ssend_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_SSEND_ACK,
                      &MPIDIG_ssend_ack_origin_cb, &MPIDIG_ssend_ack_target_msg_cb);
     MPIDIG_am_reg_cb(MPIDIG_PUT_REQ, &MPIDIG_put_origin_cb, &MPIDIG_put_target_msg_cb);
