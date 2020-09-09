@@ -169,9 +169,9 @@ static int recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq, int ev
         MPI_Count elements;
 
         /* Check to see if there are any bytes that don't fit into the datatype basic elements */
-        MPIR_Get_elements_x_impl(((MPI_Count *) & count), MPIDI_OFI_REQUEST(rreq, datatype),
-                                 &elements);
-        if (count)
+        MPI_Count count_x = count;      /* need a MPI_Count variable (consider 32-bit OS) */
+        MPIR_Get_elements_x_impl(&count_x, MPIDI_OFI_REQUEST(rreq, datatype), &elements);
+        if (count_x)
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
 
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
@@ -567,8 +567,8 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
 #define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
-    char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(8);
-    if ((intptr_t) am_hdr & 0x7) {
+    char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
         if (temp_size > wc->len) {
             temp_size = wc->len;
@@ -576,7 +576,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         memcpy(temp, wc->buf, temp_size);
         am_hdr = (void *) temp;
         /* confirm it (in case MPL_ATTR_ALIGNED didn't work) */
-        MPIR_Assert(((intptr_t) am_hdr & 0x7) == 0);
+        MPIR_Assert(((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) == 0);
     }
 #endif
 
