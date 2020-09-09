@@ -52,18 +52,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     curr_sreq_hdr->iov_num = iov_num_left;
     curr_sreq_hdr->iov_ptr = curr_sreq_hdr->iov;
 
-    /* If we haven't made it through the header yet, make sure we include it in the iovec */
-    if (iov_num_left == 2) {
+    if (iov_num_left == 1 && data_sz > 0) {
+        /* this is the payload */
+        curr_sreq_hdr->iov[0] = iov_left_ptr[0];
+    } else {
+        /* the first iov is am_hdr, now points to curr_sreq_hdr */
         curr_sreq_hdr->iov[0].iov_base = curr_sreq_hdr->am_hdr;
         curr_sreq_hdr->iov[0].iov_len = curr_sreq_hdr->am_hdr_sz;
-
-        curr_sreq_hdr->iov[1] = iov_left_ptr[1];
-    } else if (iov_num_left == 1) {
-        if (data_sz == 0) {
-            curr_sreq_hdr->iov[0].iov_base = curr_sreq_hdr->am_hdr;
-            curr_sreq_hdr->iov[0].iov_len = curr_sreq_hdr->am_hdr_sz;
-        } else {
-            curr_sreq_hdr->iov[0] = iov_left_ptr[0];
+        /* copy the rest */
+        for (int i = 1; i < iov_num_left; i++) {
+            curr_sreq_hdr->iov[i] = iov_left_ptr[i];
         }
     }
 
@@ -99,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     MPIDI_POSIX_am_header_t *msg_hdr_p = &msg_hdr;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     const int grank = MPIDIU_rank_to_lpid(rank, comm);
-    struct iovec iov_left[2];
+    struct iovec iov_left[MPIDI_POSIX_MAX_IOV_NUM];
     struct iovec *iov_left_ptr;
     size_t iov_num_left;
 
@@ -142,19 +140,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
 
+    static char padding[MAX_ALIGNMENT]; /* in case we need pad to alignment */
     iov_left[0].iov_base = (void *) am_hdr;
     iov_left[0].iov_len = am_hdr_sz;
-    iov_left[1].iov_base = (void *) send_buf;
-    iov_left[1].iov_len = data_sz;
+    iov_num_left = 1;
+    if (data_sz > 0) {
+        if (am_hdr_sz & (MAX_ALIGNMENT - 1)) {
+            /* need padding to ensure maximum alignment (typically 16 on x86-64) */
+            iov_left[1].iov_base = (void *) padding;
+            iov_left[1].iov_len = MAX_ALIGNMENT - (am_hdr_sz & (MAX_ALIGNMENT - 1));
+            msg_hdr.am_hdr_sz += iov_left[1].iov_len;
+            iov_num_left++;
+        }
+        iov_left[iov_num_left].iov_base = (void *) send_buf;
+        iov_left[iov_num_left].iov_len = data_sz;
+        iov_num_left++;
+    }
 
     iov_left_ptr = iov_left;
-
-    iov_num_left = 2;
-
-    /* If there's no data to send, the second iov can be empty and doesn't need to be transfered. */
-    if (data_sz == 0) {
-        iov_num_left = 1;
-    }
 
     /* If we already have messages in the postponed queue, this one will probably also end up being
      * queued so save some cycles and do it now. */
