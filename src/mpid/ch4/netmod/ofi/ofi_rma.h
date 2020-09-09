@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
                                               int target_count,
                                               MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIR_Request ** sigreq)
+                                              MPIDI_winattr_t winattr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t offset;
@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
 
     /* self messages */
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
@@ -286,7 +286,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, NULL);
+                                 target_disp, target_count, target_datatype, win, av,
+                                 winattr, NULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
@@ -301,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
                                               int target_count,
                                               MPI_Datatype target_datatype,
                                               MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIR_Request ** sigreq)
+                                              MPIDI_winattr_t winattr, MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t offset;
@@ -331,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         goto null_op_exit;
 
     /* self messages */
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
@@ -446,7 +447,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, NULL);
+                                 target_disp, target_count, target_datatype, win, av, winattr,
+                                 NULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
@@ -477,7 +479,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, request);
+                                 target_disp, target_count, target_datatype, win, av, winattr,
+                                 request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
@@ -937,7 +940,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, av, request);
+                                 target_disp, target_count, target_datatype, win, av, winattr,
+                                 request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
