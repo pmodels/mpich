@@ -135,7 +135,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 
 #include "mpl.h"
 #include "mpi.h"
-
+#include "qmpi.h"
 
 /*****************************************************************************/
 /*********************** PART 2: FORWARD DECLARATION *************************/
@@ -167,6 +167,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 /******************* PART 3: DEVICE INDEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
+#include "qmpi_impl.h"
 #include "mpir_misc.h"
 #include "mpir_dbg.h"
 #include "mpir_objects.h"

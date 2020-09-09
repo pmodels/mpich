@@ -41,12 +41,4 @@ static inline void MPIR_Debugger_set_aborting(const char *dummy)
 #define MPII_REQUEST_CLEAR_DBG(_r)
 #endif
 
-/* TODO WB - This should become a CVAR to allow the user to change it easily */
-#define MPIR_QMPI_DEFAULT_NUM_TOOLS 5
-extern void (**MPIR_QMPI_pointers) (void);
-extern void **MPIR_QMPI_contexts;
-extern int MPIR_QMPI_num_tools;
-extern int MPIR_QMPI_is_initialized;
-int MPII_qmpi_setup(void);
-
 #endif /* MPIR_DEBUGGER_H_INCLUDED */
