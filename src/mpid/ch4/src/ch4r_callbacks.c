@@ -402,6 +402,11 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
     }
 
+    if (hdr->flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
+        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
+    }
+
     rreq->status.MPI_ERROR = hdr->error_bits;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
@@ -469,7 +474,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         MPIDIG_REQUEST(rreq, count) = lreq_hdr->data_sz;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_LONG_RTS;
-        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
@@ -522,7 +527,7 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
          * may remain valid by the time we send ack (using the comm).
          */
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_LONG_RTS;
-        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
@@ -574,38 +579,6 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_LMT_TARGET_MSG_CB);
 
     return mpi_errno;
-}
-
-int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                               int is_local, int is_async, MPIR_Request ** req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIDIG_ssend_req_msg_t *msg_hdr = (MPIDIG_ssend_req_msg_t *) am_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
-
-    /* receive message as normal send. Set is_async to 1 so we can update status */
-    MPIR_Request *rreq;
-    mpi_errno = MPIDIG_send_target_msg_cb(handler_id, am_hdr, data, in_data_sz, is_local, 1, &rreq);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_Assert(rreq);
-    MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = msg_hdr->sreq_ptr;
-    MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
-
-    if (is_async) {
-        *req = rreq;
-    } else {
-        MPIDIG_recv_copy(data, rreq);
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SSEND_TARGET_MSG_CB);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
