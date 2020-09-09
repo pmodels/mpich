@@ -27,8 +27,6 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
 int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
                                        MPIR_Request ** req);
-int MPIDIG_ssend_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint p_data_sz,
-                               int is_local, int is_async, MPIR_Request ** req);
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                    MPI_Aint p_data_sz, int is_local, int is_async,
                                    MPIR_Request ** req);
