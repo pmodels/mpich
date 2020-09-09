@@ -28,6 +28,7 @@ cvars:
 */
 
 #define MPIDIG_AM_SEND_HDR_SIZE  sizeof(MPIDIG_hdr_t)
+#define MPIDIG_AM_SEND_FLAGS_NONE (0)
 
 MPL_STATIC_INLINE_PREFIX int mpidig_eager_limit(int is_local)
 {
@@ -54,13 +55,13 @@ MPL_STATIC_INLINE_PREFIX int mpidig_eager_limit(int is_local)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint count,
                                                   MPI_Datatype datatype, int rank, int tag,
                                                   MPIR_Comm * comm, int context_offset,
-                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                  MPIR_Errflag_t errflag);
+                                                  MPIDI_av_entry_t * addr, uint8_t flags,
+                                                  MPIR_Request ** request, MPIR_Errflag_t errflag);
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Aint data_sz, int rank,
                                                  int tag, MPIR_Comm * comm, int context_offset,
-                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                 MPIR_Errflag_t errflag);
+                                                 MPIDI_av_entry_t * addr, uint8_t flags,
+                                                 MPIR_Request ** request, MPIR_Errflag_t errflag);
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                              int rank, int tag, MPIR_Comm * comm,
                                              int context_offset, MPIDI_av_entry_t * addr,
@@ -69,8 +70,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MP
 MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                               int type, MPIR_Errflag_t errflag)
+                                               MPIDI_av_entry_t * addr, uint8_t flags,
+                                               MPIR_Request ** request, int type,
+                                               MPIR_Errflag_t errflag)
 {
     MPI_Aint data_sz;
     MPIR_Datatype *dt_ptr;
@@ -82,18 +84,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
                                addr, request, errflag);
     } else if (data_sz > mpidig_eager_limit(is_local)) {
         return MPIDIG_do_rndv_send(buf, count, datatype, data_sz, rank, tag, comm, context_offset,
-                                   addr, request, errflag);
+                                   addr, flags, request, errflag);
     } else {
         return MPIDIG_do_eager_send(buf, count, datatype, rank, tag, comm, context_offset,
-                                    addr, request, errflag);
+                                    addr, flags, request, errflag);
     }
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint count,
                                                   MPI_Datatype datatype, int rank, int tag,
                                                   MPIR_Comm * comm, int context_offset,
-                                                  MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                  MPIR_Errflag_t errflag)
+                                                  MPIDI_av_entry_t * addr, uint8_t flags,
+                                                  MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
@@ -112,6 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint coun
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
     am_hdr.error_bits = errflag;
+    am_hdr.flags = flags;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIDIG_REQUEST(sreq, datatype) = datatype;
@@ -194,8 +197,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_ssend(const void *buf, MPI_Aint count, MP
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPI_Aint data_sz, int rank,
                                                  int tag, MPIR_Comm * comm, int context_offset,
-                                                 MPIDI_av_entry_t * addr, MPIR_Request ** request,
-                                                 MPIR_Errflag_t errflag)
+                                                 MPIDI_av_entry_t * addr, uint8_t flags,
+                                                 MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;
@@ -214,6 +217,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count
     am_hdr.hdr.tag = tag;
     am_hdr.hdr.context_id = comm->context_id + context_offset;
     am_hdr.hdr.error_bits = errflag;
+    am_hdr.hdr.flags = flags;
     am_hdr.data_sz = data_sz;
     am_hdr.sreq_ptr = sreq;
     MPIDIG_REQUEST(sreq, req->lreq).src_buf = buf;
@@ -261,8 +265,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_SEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SEND, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_SEND);
@@ -281,8 +286,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_send_coll(const void *buf, MPI_Aint count,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
-        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
-                          MPIDIG_SEND, *errflag);
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, *errflag);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_COLL);
@@ -301,8 +306,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ISEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SEND, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ISEND);
@@ -322,8 +328,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_coll(const void *buf, MPI_Aint count,
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
-        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
-                          MPIDIG_SEND, *errflag);
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, *errflag);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_ISEND_COLL);
@@ -343,8 +349,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RSEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SEND, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RSEND);
@@ -364,8 +371,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IRSEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SEND, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SEND, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IRSEND);
@@ -384,8 +392,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_SSEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SSEND_REQ, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SSEND_REQ, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_SSEND);
@@ -404,8 +413,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_ISSEND);
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
-    mpi_errno = MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
-                                  request, MPIDIG_SSEND_REQ, MPIR_ERR_NONE);
+    mpi_errno =
+        MPIDIG_isend_impl(buf, count, datatype, rank, tag, comm, context_offset, addr,
+                          MPIDIG_AM_SEND_FLAGS_NONE, request, MPIDIG_SSEND_REQ, MPIR_ERR_NONE);
 
     MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_ISSEND);
