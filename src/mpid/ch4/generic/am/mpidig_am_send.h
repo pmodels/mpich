@@ -162,8 +162,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_rndv_send(const void *buf, MPI_Aint count
     am_hdr.hdr.context_id = comm->context_id + context_offset;
     am_hdr.hdr.error_bits = errflag;
     am_hdr.hdr.flags = flags;
+    am_hdr.hdr.sreq_ptr = sreq;
     am_hdr.data_sz = data_sz;
-    am_hdr.sreq_ptr = sreq;
     MPIDIG_REQUEST(sreq, req->lreq).src_buf = buf;
     MPIDIG_REQUEST(sreq, req->lreq).count = count;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
