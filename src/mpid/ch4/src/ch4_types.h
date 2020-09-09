@@ -67,6 +67,7 @@ typedef struct MPIDIG_hdr_t {
     int tag;
     MPIR_Context_id_t context_id;
     int error_bits;
+    uint8_t flags;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_long_req_msg_t {
