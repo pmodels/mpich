@@ -67,12 +67,13 @@ typedef struct MPIDIG_hdr_t {
     int tag;
     MPIR_Context_id_t context_id;
     int error_bits;
+    uint8_t flags;
+    MPIR_Request *sreq_ptr;
 } MPIDIG_hdr_t;
 
 typedef struct MPIDIG_send_long_req_msg_t {
     MPIDIG_hdr_t hdr;
     size_t data_sz;             /* Message size in bytes */
-    MPIR_Request *sreq_ptr;     /* Pointer value of the request object at the sender side */
 } MPIDIG_send_long_req_msg_t;
 
 typedef struct MPIDIG_send_long_ack_msg_t {
@@ -83,11 +84,6 @@ typedef struct MPIDIG_send_long_ack_msg_t {
 typedef struct MPIDIG_send_long_lmt_msg_t {
     MPIR_Request *rreq_ptr;
 } MPIDIG_send_long_lmt_msg_t;
-
-typedef struct MPIDIG_ssend_req_msg_t {
-    MPIDIG_hdr_t hdr;
-    MPIR_Request *sreq_ptr;
-} MPIDIG_ssend_req_msg_t;
 
 typedef struct MPIDIG_ssend_ack_msg_t {
     MPIR_Request *sreq_ptr;
