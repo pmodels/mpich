@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr, int orig
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_PUT);
 
     ret = MPIDI_POSIX_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
-                              target_disp, target_count, target_datatype, win);
+                              target_disp, target_count, target_datatype, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_PUT);
     return ret;
@@ -146,7 +146,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_GET);
 
     ret = MPIDI_POSIX_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
-                              target_disp, target_count, target_datatype, win);
+                              target_disp, target_count, target_datatype, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GET);
     return ret;
@@ -178,7 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, i
 
     ret = MPIDI_POSIX_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count,
-                                     target_datatype, op, win);
+                                     target_datatype, op, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ACCUMULATE);
     return ret;
@@ -196,7 +196,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rput(const void *origin_addr, int ori
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RPUT);
 
     ret = MPIDI_POSIX_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_disp, target_count, target_datatype, win, request);
+                               target_disp, target_count, target_datatype, win, winattr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RPUT);
     return ret;
@@ -228,7 +228,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_a
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_COMPARE_AND_SWAP);
 
     ret = MPIDI_POSIX_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                           datatype, target_rank, target_disp, win);
+                                           datatype, target_rank, target_disp, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_COMPARE_AND_SWAP);
     return ret;
@@ -249,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_raccumulate(const void *origin_addr, 
 
     ret = MPIDI_POSIX_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, op, win, request);
+                                      target_datatype, op, win, winattr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RACCUMULATE);
     return ret;
@@ -274,7 +274,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget_accumulate(const void *origin_ad
     ret = MPIDI_POSIX_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype,
                                           target_rank, target_disp, target_count,
-                                          target_datatype, op, win, request);
+                                          target_datatype, op, win, winattr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RGET_ACCUMULATE);
     return ret;
@@ -292,7 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_fetch_and_op(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_FETCH_AND_OP);
 
     ret = MPIDI_POSIX_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank,
-                                       target_disp, op, win);
+                                       target_disp, op, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_FETCH_AND_OP);
     return ret;
@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_co
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RGET);
 
     ret = MPIDI_POSIX_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
-                               target_disp, target_count, target_datatype, win, request);
+                               target_disp, target_count, target_datatype, win, winattr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RGET);
     return ret;
@@ -399,7 +399,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
     ret = MPIDI_POSIX_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
-                                         target_datatype, op, win);
+                                         target_datatype, op, win, winattr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_GET_ACCUMULATE);
     return ret;

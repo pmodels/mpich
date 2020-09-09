@@ -907,6 +907,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_win_comm_rank(MPIR_Win * win, MPIDI_winattr_
         return win->comm_ptr->rank;
 }
 
+/* Return the corresponding rank in intranode for a RMA target.
+ * This is an optimized path for direct intra comm (comm_world or dup from comm_world) by
+ * eliminating pointer dereferences into dynamic allocated objects (i.e., win->comm_ptr).*/
+MPL_STATIC_INLINE_PREFIX int MPIDIU_win_rank_to_intra_rank(MPIR_Win * win, int rank,
+                                                           MPIDI_winattr_t winattr)
+{
+    if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM)
+        return MPIR_Process.comm_world->intranode_table[rank];
+    else
+        return win->comm_ptr->intranode_table[rank];
+}
+
 /* Wait until active message acc ops are done. */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
 {
