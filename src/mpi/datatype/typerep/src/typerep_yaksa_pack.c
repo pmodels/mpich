@@ -163,7 +163,7 @@ int MPIR_Typerep_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, MPI_Ai
     int mpi_errno = MPI_SUCCESS;
     int rc;
 
-    if (outcount == 0) {
+    if (insize == 0) {
         *actual_unpack_bytes = 0;
         goto fn_exit;
     }
