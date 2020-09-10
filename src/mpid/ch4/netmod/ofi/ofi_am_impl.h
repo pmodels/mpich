@@ -85,10 +85,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
     if (!req_hdr)
         goto fn_exit;
 
-    if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0]) {
-        MPL_free(req_hdr->am_hdr);
-    }
-
     MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
 
@@ -116,15 +112,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_request(const void *am_hdr,
         req_hdr->am_hdr_sz = am_hdr_sz;
     } else {
         req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
-    }
-
-    if (am_hdr_sz > req_hdr->am_hdr_sz) {
-        if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0])
-            MPL_free(req_hdr->am_hdr);
-
-        req_hdr->am_hdr = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
-        MPIR_Assert(req_hdr->am_hdr);
-        req_hdr->am_hdr_sz = am_hdr_sz;
     }
 
     if (am_hdr) {
