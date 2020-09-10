@@ -288,17 +288,6 @@ int MPIDIG_send_long_lmt_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-int MPIDIG_ssend_ack_origin_cb(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SSEND_ACK_ORIGIN_CB);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SSEND_ACK_ORIGIN_CB);
-    MPID_Request_complete(req);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SSEND_ACK_ORIGIN_CB);
-    return mpi_errno;
-}
-
-
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
                               int is_local, int is_async, MPIR_Request ** req)
 {
