@@ -132,6 +132,8 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_POSIX_am_request_header_t)
+                            < MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE);
     mpi_errno = MPIDU_genq_private_pool_create_unsafe(MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE,
                                                       MPIDI_POSIX_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
                                                       MPIDI_POSIX_AM_HDR_POOL_MAX_NUM_CELLS,

@@ -9,7 +9,7 @@
 #include <mpi.h>
 #include "release_gather_types.h"
 
-#define MPIDI_POSIX_MAX_AM_HDR_SIZE     (32)
+#define MPIDI_POSIX_MAX_AM_HDR_SIZE     ((1 << MPIDI_POSIX_AM_HDR_SZ_BITS) - 1)
 
 #define MPIDI_POSIX_AM_KIND_BITS  (1)   /* 0 or 1 */
 #define MPIDI_POSIX_AM_HANDLER_ID_BITS  (7)     /* up to 64 */
