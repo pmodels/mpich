@@ -24,7 +24,7 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
-#define MPIDI_OFI_MAX_AM_HDR_SIZE    128
+#define MPIDI_OFI_MAX_AM_HDR_SIZE      ((1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1)
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
