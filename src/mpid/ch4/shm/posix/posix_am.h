@@ -282,10 +282,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     size_t max_shortsend = MPIDI_POSIX_eager_payload_limit();
 
     /* Maximum payload size representable by MPIDI_POSIX_am_header_t::am_hdr_sz field */
-
-    size_t max_representable = (1 << MPIDI_POSIX_AM_HDR_SZ_BITS) - 1;
-
-    return MPL_MIN(max_shortsend, max_representable);
+    return MPL_MIN(max_shortsend, MPIDI_POSIX_MAX_AM_HDR_SIZE);
 }
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
