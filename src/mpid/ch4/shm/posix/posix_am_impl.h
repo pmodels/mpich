@@ -17,9 +17,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_release_req_hdr(MPIDI_POSIX_am_reque
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_RELEASE_REQ_HDR);
 
-    if ((*req_hdr_ptr)->am_hdr != &(*req_hdr_ptr)->am_hdr_buf[0]) {
-        MPL_free((*req_hdr_ptr)->am_hdr);
-    }
 #ifndef POSIX_AM_REQUEST_INLINE
     MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.am_hdr_buf_pool, (*req_hdr_ptr));
 #endif
@@ -52,17 +49,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_init_req_hdr(const void *am_hdr,
         req_hdr->am_hdr_sz = am_hdr_sz;
 
         req_hdr->pack_buffer = NULL;
-    }
-
-    /* If the header is larger than what we'd preallocated, get rid of the preallocated buffer and
-     * create a new one of the correct size. */
-    if (am_hdr_sz > MPIDI_POSIX_MAX_AM_HDR_SIZE) {
-        if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0])
-            MPL_free(req_hdr->am_hdr);
-
-        req_hdr->am_hdr = MPL_malloc(am_hdr_sz, MPL_MEM_SHM);
-        MPIR_ERR_CHKANDJUMP(!(req_hdr->am_hdr), mpi_errno, MPI_ERR_OTHER, "**nomem");
-        req_hdr->am_hdr_sz = am_hdr_sz;
     }
 
     if (am_hdr) {
