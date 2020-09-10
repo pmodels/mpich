@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef enum {
     MTEST_MEM_TYPE__UNSET,
@@ -31,7 +32,8 @@ long MTestArgListGetLong_with_default(MTestArgList * head, const char *arg, long
 mtest_mem_type_e MTestArgListGetMemType(MTestArgList * head, const char *arg);
 void MTestArgListDestroy(MTestArgList * head);
 
-void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf);
+void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf,
+                bool is_calloc);
 void MTestFree(mtest_mem_type_e type, void *hostbuf, void *devicebuf);
 void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_e type);
 void MTest_finalize_gpu();
