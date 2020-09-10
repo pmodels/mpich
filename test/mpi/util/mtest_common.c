@@ -213,7 +213,8 @@ ze_event_handle_t event = NULL;
 #endif
 
 /* allocates memory of specified type */
-void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf)
+void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devicebuf,
+                bool is_calloc)
 {
 #ifdef HAVE_CUDA
     if (device_id == -1) {
@@ -315,19 +316,27 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
 #endif
 
     if (type == MTEST_MEM_TYPE__UNREGISTERED_HOST) {
-        *devicebuf = malloc(size);
+        if (is_calloc)
+            *devicebuf = calloc(size, 1);
+        else
+            *devicebuf = malloc(size);
         if (hostbuf)
             *hostbuf = *devicebuf;
 #ifdef HAVE_CUDA
     } else if (type == MTEST_MEM_TYPE__REGISTERED_HOST) {
         cudaMallocHost(devicebuf, size);
+        if (is_calloc)
+            memset(*devicebuf, 0, size);
         if (hostbuf)
             *hostbuf = *devicebuf;
     } else if (type == MTEST_MEM_TYPE__DEVICE) {
         cudaSetDevice(device_id);
         cudaMalloc(devicebuf, size);
-        if (hostbuf)
+        if (hostbuf) {
             cudaMallocHost(hostbuf, size);
+            if (is_calloc)
+                memset(*hostbuf, 0, size);
+        }
         device_id++;
         device_id %= ndevices;
 #endif
@@ -344,6 +353,8 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         mem_alignment = 1;
         zerr = zeDriverAllocHostMem(driver, &host_desc, size, mem_alignment, devicebuf);
         assert(zerr == ZE_RESULT_SUCCESS);
+        if (is_calloc)
+            memset(*devicebuf, 0, size);
 
         if (hostbuf)
             *hostbuf = *devicebuf;
@@ -367,6 +378,8 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
             host_desc.version = ZE_HOST_MEM_ALLOC_DESC_VERSION_CURRENT;
             zerr = zeDriverAllocHostMem(driver, &host_desc, size, mem_alignment, hostbuf);
             assert(zerr == ZE_RESULT_SUCCESS);
+            if (is_calloc)
+                memset(*devicebuf, 0, size);
         }
         /* FIXME: currently ZE only support device 0, so we cannot change device during test.
          * Shifting device_id similar to CUDA should be added in future. */
