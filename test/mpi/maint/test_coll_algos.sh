@@ -125,8 +125,8 @@ for algo_name in ${algo_names}; do
                     env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_TYPE=${tree_type} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096"
                     env="${env} env=MPIR_CVAR_IALLREDUCE_TREE_KVAL=${kval}"
 
-                    echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
-                    echo "allred 7 ${env}" >> ${testlist_cvar}
+                    echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
+                    echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
                     echo "allredmany 4 ${env}" >> ${testlist_cvar}
                     echo "allred2 4 ${env}" >> ${testlist_cvar}
                     echo "allred3 10 ${env}" >> ${testlist_cvar}
@@ -141,8 +141,8 @@ for algo_name in ${algo_names}; do
                 env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
                 env="${env} env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval}"
 
-                echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
-                echo "allred 7 ${env}" >> ${testlist_cvar}
+                echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
+                echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
                 echo "allredmany 4 ${env}" >> ${testlist_cvar}
                 echo "allred2 4 ${env}" >> ${testlist_cvar}
                 echo "allred3 10 ${env}" >> ${testlist_cvar}
@@ -157,8 +157,8 @@ for algo_name in ${algo_names}; do
         #set the environment
         env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name}"
 
-        echo "allred 4 arg=100 ${env}" >> ${testlist_cvar}
-        echo "allred 7 ${env}" >> ${testlist_cvar}
+        echo "allred 4 arg=-count=100 ${env}" >> ${testlist_cvar}
+        echo "allred 7 arg=-count=10 ${env}" >> ${testlist_cvar}
         echo "allredmany 4 ${env}" >> ${testlist_cvar}
         echo "allred2 4 ${env}" >> ${testlist_cvar}
         echo "allred3 10 ${env}" >> ${testlist_cvar}
@@ -689,7 +689,7 @@ for buf_size in ${buffer_sizes}; do
         env="${testing_env} env=MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE=${buf_size}"
         env="${env} env=MPIR_CVAR_REDUCE_INTRANODE_TREE_KVAL=${kval}"
 
-        echo "allred 4 ${env}" >> ${testlist_cvar}
+        echo "allred 4 arg=-count=10 ${env}" >> ${testlist_cvar}
         echo "allred2 4 ${env}" >> ${testlist_cvar}
         env=""
     done
