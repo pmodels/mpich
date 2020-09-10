@@ -17,6 +17,7 @@ while read -r line ; do
         # the line is not a comment
         pathname=`echo $line | cut -f1 -d':'`
         procs=`echo $line | cut -f2 -d':'`
+        count=`echo $line | cut -f3 -d':'`
         other_args=""
     else
         # the line is a comment
@@ -54,8 +55,14 @@ while read -r line ; do
     done
 
     printf "generating tests for: ${testname}... "
-    echo "${testname} $procs arg=-evenmemtype=host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
-    echo "${testname} $procs arg=-evenmemtype=reg_host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
-    echo "${testname} $procs arg=-evenmemtype=device arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
-
+    if [ ${testname} == 'allred' ]
+    then
+        echo "${testname} $procs arg=-count=$count arg=-evenmemtype=host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+        echo "${testname} $procs arg=-count=$count arg=-evenmemtype=reg_host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+        echo "${testname} $procs arg=-count=$count arg=-evenmemtype=device arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+    else
+        echo "${testname} $procs arg=-evenmemtype=host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+        echo "${testname} $procs arg=-evenmemtype=reg_host arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+        echo "${testname} $procs arg=-evenmemtype=device arg=-oddmemtype=device" >> ${builddir}/${testdir}/testlist.gpu
+    fi
 done < ${srcdir}/gpu-test-config.txt
