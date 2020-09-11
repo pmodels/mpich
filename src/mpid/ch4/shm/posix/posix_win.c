@@ -176,11 +176,11 @@ int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
         MPIDU_shm_alloc(shm_comm_ptr, sizeof(MPL_proc_mutex_t), (void **) &posix_win->shm_mutex_ptr,
                         &mapfail_flag);
 
-    /* disable shm_allocated optimization if mutex allocation fails */
+    /* disable SHM_ALLOCATED optimization if mutex allocation fails */
     if (!mapfail_flag) {
         if (shm_comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
-        MPIDIG_WIN(win, shm_allocated) = 1;
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_SHM_ALLOCATED;
     }
 
     /* No barrier is needed here, because the CH4 generic routine does it */
@@ -213,11 +213,11 @@ int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
         MPIDU_shm_alloc(win->comm_ptr, sizeof(MPL_proc_mutex_t),
                         (void **) &posix_win->shm_mutex_ptr, &mapfail_flag);
 
-    /* disable shm_allocated optimization if mutex allocation fails */
+    /* disable SHM_ALLOCATED optimization if mutex allocation fails */
     if (!mapfail_flag) {
         if (win->comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
-        MPIDIG_WIN(win, shm_allocated) = 1;
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_SHM_ALLOCATED;
     }
 
     /* No barrier is needed here, because the CH4 generic routine does it */
@@ -288,7 +288,7 @@ int MPIDI_POSIX_shm_win_init_hook(MPIR_Win * win)
         if (shm_comm_ptr->rank == 0)
             MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
 
-        MPIDIG_WIN(win, shm_allocated) = 1;
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_SHM_ALLOCATED;
     }
 
   fn_exit:
@@ -304,7 +304,7 @@ int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE_HOOK);
 
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
         MPIR_Assert(posix_win->shm_mutex_ptr != NULL);
 
