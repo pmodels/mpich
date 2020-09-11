@@ -30,7 +30,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win)
 
         while (tcount > donecount) {
             MPIR_Assert(donecount <= tcount);
-            MPIDI_OFI_PROGRESS(0);
             donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
             itercount++;
 
