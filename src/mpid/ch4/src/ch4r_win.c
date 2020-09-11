@@ -328,7 +328,8 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* set winattr for performance optimization at fast path:
      * - check if comm is COMM_WORLD or dup of COMM_WORLD
-     * - check if disable_shm_accumulate hint is set */
+     * - check if disable_shm_accumulate hint is set
+     * - check if SAME_OP_NO_OP is set for accumulates */
     MPIDI_WIN(win, winattr) = 0;
 
     int comm_compare_result = MPI_UNEQUAL;
@@ -340,6 +341,9 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
+
+    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
