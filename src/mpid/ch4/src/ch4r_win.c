@@ -284,7 +284,6 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     win->copySize = 0;
     MPIDIG_WIN(win, shared_table) = NULL;
     MPIDIG_WIN(win, sync).assert_mode = 0;
-    MPIDIG_WIN(win, shm_allocated) = 0;
 
     /* Initialize the info (hint) flags per window */
     MPIDIG_WIN(win, info_args).no_locks = 0;

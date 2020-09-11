@@ -431,17 +431,17 @@ typedef struct MPIDIG_win_t {
     MPIDIG_win_sync_t sync;
     MPIDIG_win_info_args_t info_args;
     MPIDIG_win_shared_info_t *shared_table;
-    unsigned shm_allocated;     /* shm optimized flag (0 or 1), set at shmmod win initialization time.
-                                 * Equal to 1 if the window has a shared memory region associated with it
-                                 * and the shmmod supports load/store based RMA operations over the window
-                                 * (e.g., may rely on support of interprocess mutex). */
 
     /* per-target structure for sync and OP completion. */
     MPIDIG_win_target_t *targets;
 } MPIDIG_win_t;
 
 typedef enum {
-    MPIDI_WINATTR_DIRECT_INTRA_COMM = 1
+    MPIDI_WINATTR_DIRECT_INTRA_COMM = 1,
+    MPIDI_WINATTR_SHM_ALLOCATED = 2,    /* shm optimized flag (0 or 1), set at shmmod win initialization time.
+                                         * Equal to 1 if the window has a shared memory region associated with it
+                                         * and the shmmod supports load/store based RMA operations over the window
+                                         * (e.g., may rely on support of interprocess mutex). */
 } MPIDI_winattr_bit_t;
 
 typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple integer attributes defined in MPIDI_winattr_bit_t. */
