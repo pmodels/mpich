@@ -513,9 +513,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -732,9 +732,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -780,9 +780,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -829,9 +829,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -971,9 +971,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -1013,9 +1013,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
            /* We have to disable network-based atomics in auto mode.
             * Because concurrent atomics may be performed by CPU (e.g., op
             * over shared memory, or op issues to process-self.
-            * If disable_shm_accumulate == TRUE is set, then all above ops are issued
+            * If ACCU_NO_SHM is set, then all above ops are issued
             * via network thus we can safely use network-based atomics. */
-           !MPIDIG_WIN(win, info_args).disable_shm_accumulate ||
+           !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
            win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {

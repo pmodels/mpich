@@ -327,7 +327,8 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIU_map_set(MPIDI_global.win_map, MPIDIG_WIN(win, win_id), win, MPL_MEM_RMA);
 
     /* set winattr for performance optimization at fast path:
-     * - check if comm is COMM_WORLD or dup of COMM_WORLD */
+     * - check if comm is COMM_WORLD or dup of COMM_WORLD
+     * - check if disable_shm_accumulate hint is set */
     MPIDI_WIN(win, winattr) = 0;
 
     int comm_compare_result = MPI_UNEQUAL;
@@ -336,6 +337,9 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     if (comm_compare_result == MPI_CONGRUENT || comm_compare_result == MPI_IDENT)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_DIRECT_INTRA_COMM;
+
+    if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
