@@ -17,7 +17,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_UNSAFE);
 
@@ -52,7 +53,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_UNSAFE);
 
@@ -88,7 +90,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
                                                      MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
 
@@ -124,7 +127,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
                                                            MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
 
@@ -161,7 +165,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
                                                       MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
 
@@ -203,7 +208,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
                                                           MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
 
@@ -242,7 +248,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
                                                        MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
 
@@ -277,7 +284,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
                                                MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_UNSAFE);
 
@@ -315,7 +323,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
                                                MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RPUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RPUT_UNSAFE);
 
@@ -356,7 +365,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
                                                          MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(win->comm_ptr, target_rank);
+    MPIDI_winattr_t winattr = MPIDI_WIN(win, winattr);
+    MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
 

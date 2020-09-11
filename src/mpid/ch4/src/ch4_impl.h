@@ -9,6 +9,7 @@
 #include "ch4_types.h"
 #include "mpidig_am.h"
 #include "mpidu_shm.h"
+#include "ch4r_proc.h"
 
 int MPIDI_Progress_test(int flags);
 int MPIDIG_get_context_index(uint64_t context_id);
@@ -878,6 +879,32 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_update(void *in_map, uint64_t id, void
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
     return rc;
+}
+
+/* Return the associated av for a RMA target.
+ * This is an optimized path for direct intra comm (comm_world or dup from comm_world) by
+ * eliminating pointer dereferences into dynamic allocated objects (i.e., win->comm_ptr).*/
+MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_win_rank_to_av(MPIR_Win * win, int rank,
+                                                                 MPIDI_winattr_t winattr)
+{
+    MPIDI_av_entry_t *av = NULL;
+
+    if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM) {
+        av = &MPIDI_av_table0->table[rank];
+    } else
+        av = MPIDIU_comm_rank_to_av(win->comm_ptr, rank);
+    return av;
+}
+
+/* Return the local process's rank in the window.
+ * This is an optimized path for direct intra comm (comm_world or dup from comm_world) by
+ * eliminating pointer dereferences into dynamic allocated objects (i.e., win->comm_ptr).*/
+MPL_STATIC_INLINE_PREFIX int MPIDIU_win_comm_rank(MPIR_Win * win, MPIDI_winattr_t winattr)
+{
+    if (winattr & MPIDI_WINATTR_DIRECT_INTRA_COMM)
+        return MPIR_Process.comm_world->rank;
+    else
+        return win->comm_ptr->rank;
 }
 
 /* Wait until active message acc ops are done. */
