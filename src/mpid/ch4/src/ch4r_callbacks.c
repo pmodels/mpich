@@ -405,6 +405,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -529,8 +530,10 @@ int MPIDIG_send_long_req_target_msg_cb(int handler_id, void *am_hdr, void *data,
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    if (is_async)
+    if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = NULL;
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_LONG_REQ_TARGET_MSG_CB);
@@ -559,6 +562,7 @@ int MPIDIG_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr, void *data,
     MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);

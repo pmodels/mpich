@@ -1180,6 +1180,7 @@ int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, M
     MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1212,6 +1213,7 @@ int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = cswap_ack_target_cmpl_cb;
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1342,6 +1344,7 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     }
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1397,6 +1400,7 @@ int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = flattened_dt;
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1611,6 +1615,7 @@ int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1642,6 +1647,7 @@ int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = acc_target_cmpl_cb;
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1670,6 +1676,7 @@ int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = get_acc_target_cmpl_cb;
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1729,6 +1736,7 @@ int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ain
     MPIDIG_recv_init(1, in_data_sz, p_data, data_sz * 2, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1805,6 +1813,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     }
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1894,6 +1903,7 @@ int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
 #endif
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -1982,6 +1992,7 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     }
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -2021,6 +2032,7 @@ int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_A
     MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
+        MPIDIG_recv_setup(rreq);
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
