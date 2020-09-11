@@ -452,6 +452,7 @@ typedef struct {
 } MPIDI_Devwin_t;
 
 #define MPIDIG_WIN(win,field)        (((win)->dev.am).field)
+#define MPIDI_WIN(win,field)         ((win)->dev).field
 
 typedef unsigned MPIDI_locality_t;
 
