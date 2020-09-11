@@ -130,6 +130,19 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
         strncpy(buf, "none", maxlen);
 }
 
+static void update_winattr_after_set_info(MPIR_Win * win)
+{
+    if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_NO_SHM);
+
+    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_SAME_OP_NO_OP);
+}
+
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -339,11 +352,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     if (comm_compare_result == MPI_CONGRUENT || comm_compare_result == MPI_IDENT)
         MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_DIRECT_INTRA_COMM;
 
-    if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
-        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
-
-    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
-        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
+    update_winattr_after_set_info(win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
@@ -645,6 +654,8 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 
     mpi_errno = win_set_info(win, info, FALSE /* is_init */);
     MPIR_ERR_CHECK(mpi_errno);
+
+    update_winattr_after_set_info(win);
 
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
   fn_exit:
