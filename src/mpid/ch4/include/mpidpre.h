@@ -442,6 +442,8 @@ typedef enum {
                                          * Equal to 1 if the window has a shared memory region associated with it
                                          * and the shmmod supports load/store based RMA operations over the window
                                          * (e.g., may rely on support of interprocess mutex). */
+    MPIDI_WINATTR_ACCU_NO_SHM = 4,      /* shortcut of disable_shm_accumulate in MPIDIG_win_info_args_t. */
+    MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 
 typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple integer attributes defined in MPIDI_winattr_bit_t. */
