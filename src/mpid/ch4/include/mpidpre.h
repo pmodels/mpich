@@ -443,6 +443,7 @@ typedef enum {
                                          * and the shmmod supports load/store based RMA operations over the window
                                          * (e.g., may rely on support of interprocess mutex). */
     MPIDI_WINATTR_ACCU_NO_SHM = 4,      /* shortcut of disable_shm_accumulate in MPIDIG_win_info_args_t. */
+    MPIDI_WINATTR_ACCU_SAME_OP_NO_OP = 8,
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 
