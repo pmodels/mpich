@@ -440,7 +440,14 @@ typedef struct MPIDIG_win_t {
     MPIDIG_win_target_t *targets;
 } MPIDIG_win_t;
 
+typedef enum {
+    MPIDI_WINATTR_DIRECT_INTRA_COMM = 1
+} MPIDI_winattr_bit_t;
+
+typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple integer attributes defined in MPIDI_winattr_bit_t. */
+
 typedef struct {
+    MPIDI_winattr_t winattr;    /* attributes for performance optimization at fast path. */
     MPIDIG_win_t am;
     union {
     MPIDI_NM_WIN_DECL} netmod;
