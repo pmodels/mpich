@@ -61,6 +61,10 @@ enum {
     MPIDIG_HANDLER_STATIC_MAX
 };
 
+enum {
+    MPIDIG_AM_PROTOCOL__SEND_ALL
+};
+
 typedef int (*MPIDIG_am_target_cmpl_cb) (MPIR_Request * req);
 typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
 

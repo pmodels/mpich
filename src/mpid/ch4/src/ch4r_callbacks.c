@@ -613,7 +613,8 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                      &send_hdr, sizeof(send_hdr),
                                      MPIDIG_REQUEST(sreq, req->lreq).src_buf,
                                      MPIDIG_REQUEST(sreq, req->lreq).count,
-                                     MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+                                     MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq,
+                                     MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -623,7 +624,8 @@ int MPIDIG_send_long_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                     &send_hdr, sizeof(send_hdr),
                                     MPIDIG_REQUEST(sreq, req->lreq).src_buf,
                                     MPIDIG_REQUEST(sreq, req->lreq).count,
-                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq);
+                                    MPIDIG_REQUEST(sreq, req->lreq).datatype, sreq,
+                                    MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

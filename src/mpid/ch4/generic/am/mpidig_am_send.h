@@ -122,12 +122,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_eager_send(const void *buf, MPI_Aint coun
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_av_is_local(addr)) {
         mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr),
-                                       buf, count, datatype, sreq);
+                                       buf, count, datatype, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     } else
 #endif
     {
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr),
-                                      buf, count, datatype, sreq);
+                                      buf, count, datatype, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
     MPIR_ERR_CHECK(mpi_errno);
 

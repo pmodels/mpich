@@ -276,7 +276,8 @@ static int ack_cswap(MPIR_Request * rreq)
                                      (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &ack_msg,
                                      sizeof(ack_msg), result_addr, 1,
-                                     MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
+                                     MPIDIG_REQUEST(rreq, req->creq.datatype), rreq,
+                                     MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -285,7 +286,8 @@ static int ack_cswap(MPIR_Request * rreq)
                                     (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &ack_msg,
                                     sizeof(ack_msg), result_addr, 1,
-                                    MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
+                                    MPIDIG_REQUEST(rreq, req->creq.datatype), rreq,
+                                    MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -349,7 +351,8 @@ static int ack_get_acc(MPIR_Request * rreq)
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
                                      &ack_msg, sizeof(ack_msg),
                                      MPIDIG_REQUEST(rreq, req->areq.data),
-                                     MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq);
+                                     MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq,
+                                     MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -359,7 +362,8 @@ static int ack_get_acc(MPIR_Request * rreq)
                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
                                     &ack_msg, sizeof(ack_msg),
                                     MPIDIG_REQUEST(rreq, req->areq.data),
-                                    MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq);
+                                    MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq,
+                                    MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -751,7 +755,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                                  MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                                  (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                                  MPIDIG_REQUEST(rreq, req->greq.count),
-                                                 MPIDIG_REQUEST(rreq, req->greq.datatype), rreq);
+                                                 MPIDIG_REQUEST(rreq, req->greq.datatype), rreq,
+                                                 MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
@@ -759,7 +764,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                                 (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                                 MPIDIG_REQUEST(rreq, req->greq.count),
-                                                MPIDIG_REQUEST(rreq, req->greq.datatype), rreq);
+                                                MPIDIG_REQUEST(rreq, req->greq.datatype), rreq,
+                                                MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
 
         MPID_Request_complete(rreq);
@@ -784,7 +790,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                              MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                              MPIDIG_REQUEST(rreq, req->greq.addr),
                                              MPIDIG_REQUEST(rreq, req->greq.count), dt->handle,
-                                             rreq);
+                                             rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -792,7 +798,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
                                             MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
                                             MPIDIG_REQUEST(rreq, req->greq.addr),
                                             MPIDIG_REQUEST(rreq, req->greq.count), dt->handle,
-                                            rreq);
+                                            rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPID_Request_complete(rreq);
@@ -1439,7 +1445,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
-                                             rreq);
+                                             rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -1449,7 +1455,7 @@ int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
-                                            rreq);
+                                            rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -1495,7 +1501,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                             rreq);
+                                             rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -1506,7 +1512,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                            rreq);
+                                            rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -1553,7 +1559,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                             rreq);
+                                             rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
@@ -1564,7 +1570,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
-                                            rreq);
+                                            rreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

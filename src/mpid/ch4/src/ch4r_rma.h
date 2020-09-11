@@ -99,13 +99,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
                                            &am_hdr, sizeof(am_hdr), origin_addr,
-                                           origin_count, origin_datatype, sreq);
+                                           origin_count, origin_datatype, sreq,
+                                           MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
                                           &am_hdr, sizeof(am_hdr), origin_addr,
-                                          origin_count, origin_datatype, sreq);
+                                          origin_count, origin_datatype, sreq,
+                                          MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
 
         MPIR_ERR_CHECK(mpi_errno);
@@ -134,13 +136,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
                                             am_iov, 2, origin_addr, origin_count,
-                                            origin_datatype, sreq);
+                                            origin_datatype, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_PUT_REQ,
                                            am_iov, 2, origin_addr, origin_count,
-                                           origin_datatype, sreq);
+                                           origin_datatype, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     } else {
         MPIDIG_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
@@ -152,13 +154,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_DT_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+                                           am_iov[1].iov_len, MPI_BYTE, sreq,
+                                           MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_PUT_DT_REQ,
                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                          am_iov[1].iov_len, MPI_BYTE, sreq);
+                                          am_iov[1].iov_len, MPI_BYTE, sreq,
+                                          MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -262,13 +266,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr,
                                            MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                           NULL, 0, MPI_DATATYPE_NULL, sreq);
+                                           NULL, 0, MPI_DATATYPE_NULL, sreq,
+                                           MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr,
                                           MPIDIG_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                          NULL, 0, MPI_DATATYPE_NULL, sreq);
+                                          NULL, 0, MPI_DATATYPE_NULL, sreq,
+                                          MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
 
         MPIR_ERR_CHECK(mpi_errno);
@@ -285,13 +291,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
     if (is_local)
         mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
                                        &am_hdr, sizeof(am_hdr), flattened_dt,
-                                       flattened_sz, MPI_BYTE, sreq);
+                                       flattened_sz, MPI_BYTE, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_REQ,
                                       &am_hdr, sizeof(am_hdr), flattened_dt,
-                                      flattened_sz, MPI_BYTE, sreq);
+                                      flattened_sz, MPI_BYTE, sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -396,14 +402,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
                                            &am_hdr, sizeof(am_hdr), origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
                                           &am_hdr, sizeof(am_hdr), origin_addr,
                                           (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                          sreq);
+                                          sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
 
         MPIR_ERR_CHECK(mpi_errno);
@@ -433,14 +439,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
                                             am_iov, 2, origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                            sreq);
+                                            sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_ACC_REQ,
                                            am_iov, 2, origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     } else {
         MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
@@ -452,13 +458,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_DT_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+                                           am_iov[1].iov_len, MPI_BYTE, sreq,
+                                           MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_ACC_DT_REQ,
                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                          am_iov[1].iov_len, MPI_BYTE, sreq);
+                                          am_iov[1].iov_len, MPI_BYTE, sreq,
+                                          MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -586,14 +594,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
                                            &am_hdr, sizeof(am_hdr), origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
                                           &am_hdr, sizeof(am_hdr), origin_addr,
                                           (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                          sreq);
+                                          sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
 
         MPIR_ERR_CHECK(mpi_errno);
@@ -623,14 +631,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
             mpi_errno = MPIDI_SHM_am_isendv(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
                                             am_iov, 2, origin_addr,
                                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                            sreq);
+                                            sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDIG_GET_ACC_REQ,
                                            am_iov, 2, origin_addr,
                                            (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype,
-                                           sreq);
+                                           sreq, MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     } else {
         MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
@@ -642,13 +650,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
         if (is_local)
             mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_DT_REQ,
                                            &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                           am_iov[1].iov_len, MPI_BYTE, sreq);
+                                           am_iov[1].iov_len, MPI_BYTE, sreq,
+                                           MPIDIG_AM_PROTOCOL__SEND_ALL);
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_GET_ACC_DT_REQ,
                                           &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                          am_iov[1].iov_len, MPI_BYTE, sreq);
+                                          am_iov[1].iov_len, MPI_BYTE, sreq,
+                                          MPIDIG_AM_PROTOCOL__SEND_ALL);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
@@ -911,12 +921,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_rank_is_local(target_rank, win->comm_ptr))
         mpi_errno = MPIDI_SHM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
-                                       &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq);
+                                       &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq,
+                                       MPIDIG_AM_PROTOCOL__SEND_ALL);
     else
 #endif
     {
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDIG_CSWAP_REQ,
-                                      &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq);
+                                      &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq,
+                                      MPIDIG_AM_PROTOCOL__SEND_ALL);
     }
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
