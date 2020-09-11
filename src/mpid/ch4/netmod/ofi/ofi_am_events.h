@@ -367,7 +367,6 @@ MPL_STATIC_INLINE_PREFIX void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_R
                                                      MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_type) = MPIDI_OFI_AM_LMT_UNPACK;
-    MPIDIG_recv_setup(rreq);
 
     MPI_Aint pack_size = 100 * 1024;
     if (pack_size > MPIDI_OFI_global.max_msg_size) {
