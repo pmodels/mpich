@@ -93,9 +93,6 @@ static int progress_recv(int blocking)
             MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
             goto fn_exit;
         } else {
-            /* prepare for asynchronous transfer */
-            MPIDIG_recv_setup(rreq);
-
             MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
             MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
         }
