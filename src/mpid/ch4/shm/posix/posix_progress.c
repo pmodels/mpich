@@ -56,7 +56,7 @@ static int progress_recv(int blocking)
 
     if (!msg_hdr) {
         /* Fragment handling. Set currently active recv request */
-        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
+        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_local_rank];
     } else {
         /* First segment */
         am_hdr = payload;
@@ -96,14 +96,14 @@ static int progress_recv(int blocking)
             /* prepare for asynchronous transfer */
             MPIDIG_recv_setup(rreq);
 
-            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
-            MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
+            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] == NULL);
+            MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = rreq;
         }
     }
 
     int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
     if (is_done) {
-        MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
+        MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 

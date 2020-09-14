@@ -162,11 +162,11 @@ int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *tag_bits)
     /* This is used to track messages that the eager submodule was not ready to send. */
     MPIDI_POSIX_global.postponed_queue = NULL;
 
-    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq,
-                        MPIR_Request **,
-                        size * sizeof(MPIR_Request *), mpi_errno, "active recv req", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq, MPIR_Request **,
+                        MPIR_Process.local_size * sizeof(MPIR_Request *), mpi_errno,
+                        "active recv req", MPL_MEM_SHM);
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < MPIR_Process.local_size; i++) {
         MPIDI_POSIX_global.active_rreq[i] = NULL;
     }
 

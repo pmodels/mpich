@@ -25,7 +25,7 @@ MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
     MPIDU_genq_shmem_queue_dequeue(transport->my_terminal, (void **) &cell);
 
     if (cell) {
-        transaction->src_grank = MPIDI_POSIX_global.local_procs[cell->from];
+        transaction->src_local_rank = cell->from;
         transaction->payload = MPIDI_POSIX_EAGER_IQUEUE_CELL_PAYLOAD(cell);
         transaction->payload_sz = cell->payload_size;
 
