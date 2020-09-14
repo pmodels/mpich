@@ -70,7 +70,7 @@ typedef enum {
 #define MPIDIG_REQ_UNEXP_CLAIMED  (0x1 << 4)
 #define MPIDIG_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDIG_REQ_MATCHED (0x1 << 6)
-#define MPIDIG_REQ_LONG_RTS (0x1 << 7)
+#define MPIDIG_REQ_RTS (0x1 << 7)
 #define MPIDIG_REQ_IN_PROGRESS (0x1 << 8)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
@@ -78,18 +78,12 @@ typedef enum {
 
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
-    char dummy;                 /* some compilers (suncc) does not like empty struct */
-} MPIDIG_sreq_t;
-
-typedef struct MPIDIG_lreq_t {
-    /* Long send fields */
     const void *src_buf;
     MPI_Count count;
     MPI_Datatype datatype;
     int rank;
-    int tag;
     MPIR_Context_id_t context_id;
-} MPIDIG_lreq_t;
+} MPIDIG_sreq_t;
 
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
@@ -176,7 +170,6 @@ typedef struct MPIDIG_req_async {
 typedef struct MPIDIG_req_ext_t {
     union {
         MPIDIG_sreq_t sreq;
-        MPIDIG_lreq_t lreq;
         MPIDIG_rreq_t rreq;
         MPIDIG_put_req_t preq;
         MPIDIG_get_req_t greq;
