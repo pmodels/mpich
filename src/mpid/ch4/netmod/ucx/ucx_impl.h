@@ -98,17 +98,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_get_source(uint64_t match_bits)
                              ucs_status_string(UCS_PTR_STATUS(_req)));  \
     } while (0)
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_win(MPIR_Win * win)
-{
-    /* UCX only enables HW RMA for create and allocate windows. */
-    return win->create_flavor == MPI_WIN_FLAVOR_CREATE ||
-        win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE;
-}
-
-MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_is_reachable_target(int rank, MPIR_Win * win,
+                                                            MPIDI_winattr_t winattr)
 {
     /* zero win target does not have rkey. */
-    return MPIDI_UCX_is_reachable_win(win) && MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
+    return (winattr & MPIDI_WINATTR_NM_REACHABLE) && MPIDI_UCX_WIN_INFO(win, rank).rkey != NULL;
 }
 
 /* This function implements netmod vci to vni(context) mapping.
