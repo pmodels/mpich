@@ -98,7 +98,7 @@ int MPL_get_sockaddr(const char *s_hostname, MPL_sockaddr_t * p_addr)
     ai_hint.ai_family = af_type;
     ai_hint.ai_socktype = SOCK_STREAM;
     ai_hint.ai_protocol = IPPROTO_TCP;
-    ai_hint.ai_flags = AI_ADDRCONFIG | AI_V4MAPPED;
+    ai_hint.ai_flags = AI_V4MAPPED;
     ret = getaddrinfo(s_hostname, NULL, &ai_hint, &ai_list);
     if (ret) {
         return ret;
