@@ -208,9 +208,8 @@ int device_id = -1;
 ze_driver_handle_t driver = NULL;
 ze_device_handle_t *device = NULL;
 ze_result_t zerr = ZE_RESULT_SUCCESS;
-ze_command_list_handle_t command_list = NULL;
-ze_event_pool_handle_t event_pool = NULL;
-ze_event_handle_t event = NULL;
+ze_command_list_handle_t *command_lists = NULL;
+ze_event_pool_handle_t *event_pools = NULL;
 #endif
 #endif
 
@@ -294,8 +293,12 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         descriptor.priority = ZE_COMMAND_QUEUE_PRIORITY_NORMAL;
         descriptor.ordinal = 0; /* computeQueueGroupOrdinal */
 
-        zerr = zeCommandListCreateImmediate(device[0], &descriptor, &command_list);
-        assert(zerr == ZE_RESULT_SUCCESS);
+        command_lists =
+            (ze_command_list_handle_t *) malloc(sizeof(ze_command_list_handle_t) * ndevices);
+        for (int i = 0; i < ndevices; i++) {
+            zerr = zeCommandListCreateImmediate(device[i], &descriptor, &command_lists[i]);
+            assert(zerr == ZE_RESULT_SUCCESS);
+        }
 
         /* Create event pool and event */
         ze_event_pool_desc_t pool_desc;
@@ -303,17 +306,11 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
         pool_desc.flags = 0;
         pool_desc.count = 1;
 
-        zerr = zeEventPoolCreate(driver, &pool_desc, 1, &(device[0]), &event_pool);
-        assert(zerr == ZE_RESULT_SUCCESS);
-
-        ze_event_desc_t event_desc = {
-            ZE_EVENT_DESC_VERSION_CURRENT,
-            0,
-            ZE_EVENT_SCOPE_FLAG_NONE,
-            ZE_EVENT_SCOPE_FLAG_HOST
-        };
-        zerr = zeEventCreate(event_pool, &event_desc, &event);
-        assert(zerr == ZE_RESULT_SUCCESS);
+        event_pools = (ze_event_pool_handle_t *) malloc(sizeof(ze_event_pool_handle_t) * ndevices);
+        for (int i = 0; i < ndevices; i++) {
+            zerr = zeEventPoolCreate(driver, &pool_desc, 1, &(device[i]), &event_pools[i]);
+            assert(zerr == ZE_RESULT_SUCCESS);
+        }
     }
 #endif
 
@@ -388,8 +385,8 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
             if (is_calloc)
                 memset(*hostbuf, 0, size);
         }
-        /* FIXME: currently ZE only support device 0, so we cannot change device during test.
-         * Shifting device_id similar to CUDA should be added in future. */
+        device_id++;
+        device_id %= ndevices;
     } else if (type == MTEST_MEM_TYPE__SHARED) {
         size_t mem_alignment;
         ze_device_mem_alloc_desc_t device_desc;
@@ -455,13 +452,63 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
         cudaMemcpy(dbuf, sbuf, size, cudaMemcpyDefault);
 #endif
 #ifdef HAVE_ZE
-        zerr = zeCommandListReset(command_list);
+        int dev_id = -1, s_dev_id = -1, d_dev_id = -1;
+        struct {
+            ze_memory_allocation_properties_t prop;
+            ze_device_handle_t device;
+        } s_attr, d_attr;
+        zerr = zeDriverGetMemAllocProperties(driver, sbuf, &s_attr.prop, &s_attr.device);
         assert(zerr == ZE_RESULT_SUCCESS);
-        zerr = zeCommandListAppendMemoryCopy(command_list, dbuf, sbuf, size, NULL);
+        if (s_attr.device) {
+            for (int i = 0; i < ndevices; i++) {
+                if (device[i] == s_attr.device) {
+                    s_dev_id = i;
+                    break;
+                }
+            }
+        }
+        zerr = zeDriverGetMemAllocProperties(driver, dbuf, &d_attr.prop, &d_attr.device);
         assert(zerr == ZE_RESULT_SUCCESS);
-        zerr = zeCommandListAppendSignalEvent(command_list, event);
+        if (d_attr.device) {
+            for (int i = 0; i < ndevices; i++) {
+                if (device[i] == d_attr.device) {
+                    d_dev_id = i;
+                    break;
+                }
+            }
+        }
+        if (s_dev_id != -1 || d_dev_id != -1) {
+            if (s_dev_id != -1)
+                dev_id = s_dev_id;
+            if (d_dev_id != -1) {
+                if (dev_id != -1)
+                    assert(s_dev_id == d_dev_id);
+                else
+                    dev_id = d_dev_id;
+            }
+        }
+        assert(dev_id != -1);
+
+        ze_event_handle_t event;
+        ze_event_desc_t event_desc = {
+            ZE_EVENT_DESC_VERSION_CURRENT,
+            0,
+            ZE_EVENT_SCOPE_FLAG_NONE,
+            ZE_EVENT_SCOPE_FLAG_HOST
+        };
+        zerr = zeEventCreate(event_pools[dev_id], &event_desc, &event);
+        assert(zerr == ZE_RESULT_SUCCESS);
+
+        zerr = zeCommandListReset(command_lists[dev_id]);
+        assert(zerr == ZE_RESULT_SUCCESS);
+        zerr = zeCommandListAppendMemoryCopy(command_lists[dev_id], dbuf, sbuf, size, NULL);
+        assert(zerr == ZE_RESULT_SUCCESS);
+        zerr = zeCommandListAppendSignalEvent(command_lists[dev_id], event);
         assert(zerr == ZE_RESULT_SUCCESS);
         zerr = zeEventHostSynchronize(event, UINT32_MAX);
+        assert(zerr == ZE_RESULT_SUCCESS);
+
+        zerr = zeEventDestroy(event);
         assert(zerr == ZE_RESULT_SUCCESS);
 #endif
     }
@@ -473,12 +520,15 @@ void MTest_finalize_gpu()
     if (device_id != -1) {
         /* Free GPU resource */
         free(device);
-        zerr = zeEventDestroy(event);
-        assert(zerr == ZE_RESULT_SUCCESS);
-        zerr = zeEventPoolDestroy(event_pool);
-        assert(zerr == ZE_RESULT_SUCCESS);
-        zeCommandListDestroy(command_list);
-        assert(zerr == ZE_RESULT_SUCCESS);
+        assert(event_pools && command_lists);
+        for (int i = 0; i < ndevices; i++) {
+            zerr = zeEventPoolDestroy(event_pools[i]);
+            assert(zerr == ZE_RESULT_SUCCESS);
+            zerr = zeCommandListDestroy(command_lists[i]);
+            assert(zerr == ZE_RESULT_SUCCESS);
+        }
+        free(event_pools);
+        free(command_lists);
     }
 #endif
 }
