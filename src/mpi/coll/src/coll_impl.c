@@ -208,3 +208,51 @@ int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
   fn_fail:
     goto fn_exit;
 }
+
+void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
+                                 MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf)
+{
+    MPL_pointer_attr_t attr;
+    *host_sendbuf = NULL;
+    *host_recvbuf = NULL;
+    MPI_Aint extent = 0;
+
+    if (sendbuf != MPI_IN_PLACE) {
+        MPL_gpu_query_pointer_attr(sendbuf, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV) {
+            MPI_Aint true_extent;
+            MPI_Aint true_lb;
+
+            MPIR_Datatype_get_extent_macro(datatype, extent);
+            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+            extent = MPL_MAX(extent, true_extent);
+
+            *host_sendbuf = MPL_malloc(extent * count, MPL_MEM_COLL);
+            MPIR_Assert(*host_sendbuf);
+            MPIR_Localcopy(sendbuf, count, datatype, *host_sendbuf, count, datatype);
+        }
+    }
+
+    MPL_gpu_query_pointer_attr(recvbuf, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV) {
+        if (!extent) {
+            MPI_Aint true_extent;
+            MPI_Aint true_lb;
+
+            MPIR_Datatype_get_extent_macro(datatype, extent);
+            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+            extent = MPL_MAX(extent, true_extent);
+        }
+
+        *host_recvbuf = MPL_malloc(extent * count, MPL_MEM_COLL);
+        MPIR_Assert(*host_recvbuf);
+        if (sendbuf == MPI_IN_PLACE)
+            MPIR_Localcopy(recvbuf, count, datatype, host_recvbuf, count, datatype);
+    }
+}
+
+void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf)
+{
+    MPL_free(host_sendbuf);
+    MPL_free(host_recvbuf);
+}

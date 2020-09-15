@@ -100,4 +100,9 @@ int MPII_Coll_finalize(void);
             MPIR_ERR_POP(mpi_errno);                                    \
     } while (0)
 
+/* functions for supporting GPU buffers in reduce collectives */
+void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_Aint count,
+                                 MPI_Datatype datatype, void **host_sendbuf, void **host_recvbuf);
+void MPIR_Coll_host_buffer_free(void *host_sendbuf, void *host_recvbuf);
+
 #endif /* COLL_IMPL_H_INCLUDED */
