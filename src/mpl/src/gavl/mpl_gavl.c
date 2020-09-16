@@ -14,47 +14,47 @@
  * h_p - 2 height right child; therefore, the worse case nodes N(h_p) = N(h_p - 1) + N(h_p - 2) + 1.
  * Since we know N(1) = 1 and N(2) = 2, we can use iteration to compute N(64) = 27777890035287.
  */
-#define MAX_STACK_SIZE 64
+#define MPLI_GAVL_MAX_STACK_SIZE 64
 
 enum {
-    SEARCH_LEFT,
-    SEARCH_RIGHT,
-    BUFFER_MATCH,
-    NO_BUFFER_MATCH
+    MPLI_GAVL_SEARCH_LEFT,
+    MPLI_GAVL_SEARCH_RIGHT,
+    MPLI_GAVL_BUFFER_MATCH,
+    MPLI_GAVL_NO_BUFFER_MATCH
 };
 
 enum {
-    SUBSET_SEARCH,
-    INTERSECTION_SEARCH
+    MPLI_GAVL_SUBSET_SEARCH,
+    MPLI_GAVL_INTERSECTION_SEARCH
 };
 
-typedef struct gavl_tree_node {
+typedef struct MPLI_gavl_tree_node {
     union {
         struct {
-            struct gavl_tree_node *parent;
-            struct gavl_tree_node *left;
-            struct gavl_tree_node *right;
+            struct MPLI_gavl_tree_node *parent;
+            struct MPLI_gavl_tree_node *left;
+            struct MPLI_gavl_tree_node *right;
         };
-        struct gavl_tree_node *next;
+        struct MPLI_gavl_tree_node *next;
     };
     uintptr_t height;
     uintptr_t addr;
     uintptr_t len;
     const void *val;
-} gavl_tree_node_s;
+} MPLI_gavl_tree_node_s;
 
-typedef struct gavl_tree {
-    gavl_tree_node_s *root;
+typedef struct MPLI_gavl_tree {
+    MPLI_gavl_tree_node_s *root;
     void (*gavl_free_fn) (void *);
     /* internal stack structure. used to track the traverse trace for
      * tree rebalance at node insertion or deletion */
-    gavl_tree_node_s *stack[MAX_STACK_SIZE];
+    MPLI_gavl_tree_node_s *stack[MPLI_GAVL_MAX_STACK_SIZE];
     int stack_sp;
     /* cur_node points to the starting node of tree rebalance */
-    gavl_tree_node_s *cur_node;
+    MPLI_gavl_tree_node_s *cur_node;
     /* store nodes that are removed from tree but haven't been freed */
-    gavl_tree_node_s *remove_list;
-} gavl_tree_s;
+    MPLI_gavl_tree_node_s *remove_list;
+} MPLI_gavl_tree_s;
 
 #define GAVL_TREE_NODE_INIT(node_ptr, addr, len, val)   \
     do {                                                \
@@ -66,18 +66,18 @@ typedef struct gavl_tree {
 
 #define GAVL_TREE_NODE_CMP(node_ptr, addr, len, mode, ret)      \
     do {                                                        \
-        if (mode == SUBSET_SEARCH) {                            \
-            ret = gavl_subset_cmp_func(node_ptr, addr, len);    \
+        if (mode == MPLI_GAVL_SUBSET_SEARCH) {                            \
+            ret = MPLI_gavl_subset_cmp_func(node_ptr, addr, len);    \
         }                                                       \
-        else if (mode == INTERSECTION_SEARCH) {                 \
-            ret = gavl_intersect_cmp_func(node_ptr, addr, len); \
+        else if (mode == MPLI_GAVL_INTERSECTION_SEARCH) {                 \
+            ret = MPLI_gavl_intersect_cmp_func(node_ptr, addr, len); \
         }                                                       \
     } while (0)
 
 /* STACK is needed to rebalance the tree */
 #define TREE_STACK_PUSH(tree_ptr, value)               \
     do {                                               \
-        assert(tree_ptr->stack_sp < MAX_STACK_SIZE);   \
+        assert(tree_ptr->stack_sp < MPLI_GAVL_MAX_STACK_SIZE);   \
         tree_ptr->stack[tree_ptr->stack_sp++] = value; \
     } while (0)
 
@@ -90,10 +90,12 @@ typedef struct gavl_tree {
 #define TREE_STACK_START(tree_ptr) (tree_ptr)->stack_sp = 0
 #define TREE_STACK_IS_EMPTY(tree_ptr) (!(tree_ptr)->stack_sp)
 
-static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len, int mode);
-static void gavl_tree_delete_removed_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len);
+static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len,
+                                   int mode);
+static void gavl_tree_delete_removed_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr,
+                                           uintptr_t len);
 
-static void gavl_update_node_info(gavl_tree_node_s * node_iptr)
+static void gavl_update_node_info(MPLI_gavl_tree_node_s * node_iptr)
 {
     int lheight = node_iptr->left == NULL ? 0 : node_iptr->left->height;
     int rheight = node_iptr->right == NULL ? 0 : node_iptr->right->height;
@@ -101,7 +103,7 @@ static void gavl_update_node_info(gavl_tree_node_s * node_iptr)
     return;
 }
 
-static void gavl_right_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s * lchild)
+static void gavl_right_rotation(MPLI_gavl_tree_node_s * parent_ptr, MPLI_gavl_tree_node_s * lchild)
 {
     parent_ptr->left = lchild->right;
     lchild->right = parent_ptr;
@@ -122,7 +124,7 @@ static void gavl_right_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s 
     return;
 }
 
-static void gavl_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s * rchild)
+static void gavl_left_rotation(MPLI_gavl_tree_node_s * parent_ptr, MPLI_gavl_tree_node_s * rchild)
 {
     parent_ptr->right = rchild->left;
     rchild->left = parent_ptr;
@@ -143,24 +145,26 @@ static void gavl_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s *
     return;
 }
 
-static void gavl_left_right_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s * lchild)
+static void gavl_left_right_rotation(MPLI_gavl_tree_node_s * parent_ptr,
+                                     MPLI_gavl_tree_node_s * lchild)
 {
-    gavl_tree_node_s *rlchild = lchild->right;
+    MPLI_gavl_tree_node_s *rlchild = lchild->right;
     gavl_left_rotation(lchild, rlchild);
     gavl_right_rotation(parent_ptr, rlchild);
     return;
 }
 
-static void gavl_right_left_rotation(gavl_tree_node_s * parent_ptr, gavl_tree_node_s * rchild)
+static void gavl_right_left_rotation(MPLI_gavl_tree_node_s * parent_ptr,
+                                     MPLI_gavl_tree_node_s * rchild)
 {
-    gavl_tree_node_s *lrchild = rchild->left;
+    MPLI_gavl_tree_node_s *lrchild = rchild->left;
     gavl_right_rotation(rchild, lrchild);
     gavl_left_rotation(parent_ptr, lrchild);
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int gavl_subset_cmp_func(gavl_tree_node_s * tnode, uintptr_t ustart,
-                                                  uintptr_t len)
+MPL_STATIC_INLINE_PREFIX int MPLI_gavl_subset_cmp_func(MPLI_gavl_tree_node_s * tnode,
+                                                       uintptr_t ustart, uintptr_t len)
 {
     int cmp_ret;
     uintptr_t uend = ustart + len;
@@ -168,17 +172,17 @@ MPL_STATIC_INLINE_PREFIX int gavl_subset_cmp_func(gavl_tree_node_s * tnode, uint
     uintptr_t tend = tnode->addr + tnode->len;
 
     if (tstart <= ustart && uend <= tend)
-        cmp_ret = BUFFER_MATCH;
+        cmp_ret = MPLI_GAVL_BUFFER_MATCH;
     else if (ustart < tstart)
-        cmp_ret = SEARCH_LEFT;
+        cmp_ret = MPLI_GAVL_SEARCH_LEFT;
     else
-        cmp_ret = SEARCH_RIGHT;
+        cmp_ret = MPLI_GAVL_SEARCH_RIGHT;
 
     return cmp_ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int gavl_intersect_cmp_func(gavl_tree_node_s * tnode, uintptr_t ustart,
-                                                     uintptr_t len)
+MPL_STATIC_INLINE_PREFIX int MPLI_gavl_intersect_cmp_func(MPLI_gavl_tree_node_s * tnode,
+                                                          uintptr_t ustart, uintptr_t len)
 {
     int cmp_ret;
     uintptr_t uend = ustart + len;
@@ -186,11 +190,11 @@ MPL_STATIC_INLINE_PREFIX int gavl_intersect_cmp_func(gavl_tree_node_s * tnode, u
     uintptr_t tend = tnode->addr + tnode->len;
 
     if (uend <= tstart)
-        cmp_ret = SEARCH_LEFT;
+        cmp_ret = MPLI_GAVL_SEARCH_LEFT;
     else if (tend <= ustart)
-        cmp_ret = SEARCH_RIGHT;
+        cmp_ret = MPLI_GAVL_SEARCH_RIGHT;
     else
-        cmp_ret = BUFFER_MATCH;
+        cmp_ret = MPLI_GAVL_BUFFER_MATCH;
 
     return cmp_ret;
 }
@@ -205,9 +209,9 @@ MPL_STATIC_INLINE_PREFIX int gavl_intersect_cmp_func(gavl_tree_node_s * tnode, u
 int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
-    gavl_tree_s *tree_ptr;
+    MPLI_gavl_tree_s *tree_ptr;
 
-    tree_ptr = (gavl_tree_s *) MPL_calloc(1, sizeof(gavl_tree_s), MPL_MEM_OTHER);
+    tree_ptr = (MPLI_gavl_tree_s *) MPL_calloc(1, sizeof(MPLI_gavl_tree_s), MPL_MEM_OTHER);
     if (tree_ptr == NULL) {
         mpl_err = MPL_ERR_NOMEM;
         goto fn_fail;
@@ -222,17 +226,17 @@ int MPL_gavl_tree_create(void (*free_fn) (void *), MPL_gavl_tree_t * gavl_tree)
     goto fn_exit;
 }
 
-static gavl_tree_node_s *gavl_tree_search_internal(gavl_tree_s * tree_ptr, uintptr_t addr,
-                                                   uintptr_t len, int mode, int *cmp_ret_ptr)
+static MPLI_gavl_tree_node_s *gavl_tree_search_internal(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr,
+                                                        uintptr_t len, int mode, int *cmp_ret_ptr)
 {
     /* this function assumes there is at least one node in the tree */
-    int cmp_ret = NO_BUFFER_MATCH;
-    gavl_tree_node_s *cur_node = tree_ptr->root;
+    int cmp_ret = MPLI_GAVL_NO_BUFFER_MATCH;
+    MPLI_gavl_tree_node_s *cur_node = tree_ptr->root;
 
     TREE_STACK_START(tree_ptr);
     do {
         GAVL_TREE_NODE_CMP(cur_node, addr, len, mode, cmp_ret);
-        if (cmp_ret == SEARCH_LEFT) {
+        if (cmp_ret == MPLI_GAVL_SEARCH_LEFT) {
             if (cur_node->left != NULL) {
                 TREE_STACK_PUSH(tree_ptr, cur_node);
                 cur_node = cur_node->left;
@@ -240,7 +244,7 @@ static gavl_tree_node_s *gavl_tree_search_internal(gavl_tree_s * tree_ptr, uintp
             } else {
                 break;
             }
-        } else if (cmp_ret == SEARCH_RIGHT) {
+        } else if (cmp_ret == MPLI_GAVL_SEARCH_RIGHT) {
             if (cur_node->right != NULL) {
                 TREE_STACK_PUSH(tree_ptr, cur_node);
                 cur_node = cur_node->right;
@@ -262,9 +266,9 @@ static gavl_tree_node_s *gavl_tree_search_internal(gavl_tree_s * tree_ptr, uintp
 /* if avl tree is possibly unbalanced, gavl_tree_rebalance should be called to rebalance
  * it. In unbalanced avl tree, the height difference between left and right child is at
  * most 2; gavl_tree_rebalance takes it as a premise in order to rebalance tree correcly */
-static void gavl_tree_rebalance(gavl_tree_s * tree_ptr)
+static void gavl_tree_rebalance(MPLI_gavl_tree_s * tree_ptr)
 {
-    gavl_tree_node_s *cur_node = tree_ptr->cur_node;
+    MPLI_gavl_tree_node_s *cur_node = tree_ptr->cur_node;
 
     if (cur_node) {
         do {
@@ -274,7 +278,7 @@ static void gavl_tree_rebalance(gavl_tree_s * tree_ptr)
             int rheight = cur_node->right == NULL ? 0 : cur_node->right->height;
             if (lheight - rheight > 1) {
                 /* find imbalance: left child is 2 level higher than right child */
-                gavl_tree_node_s *lnode = cur_node->left;
+                MPLI_gavl_tree_node_s *lnode = cur_node->left;
                 int llheight = lnode->left == NULL ? 0 : lnode->left->height;
                 /* if left child's (lnode's) left child causes this imbalance, we need to perform right
                  * rotation to reduce the height of lnode's left child;
@@ -291,7 +295,7 @@ static void gavl_tree_rebalance(gavl_tree_s * tree_ptr)
                     gavl_left_right_rotation(cur_node, lnode);
             } else if (rheight - lheight > 1) {
                 /* find imbalance: right child is 2 level higher than left child */
-                gavl_tree_node_s *rnode = cur_node->right;
+                MPLI_gavl_tree_node_s *rnode = cur_node->right;
                 int rlheight = rnode->left == NULL ? 0 : rnode->left->height;
                 /* the purpose of gavl_right_left_rotation and gavl_left_rotation is similar to
                  * gavl_right_rotation and gavl_left_right_rotation mention above; the difference
@@ -334,14 +338,15 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                          const void *val)
 {
     int mpl_err = MPL_SUCCESS;
-    gavl_tree_node_s *node_ptr;
-    gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
+    MPLI_gavl_tree_node_s *node_ptr;
+    MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
 
     /* we remove all nodes that are subset of input key (addr, len) from the tree and add them
      * into tree remove_list */
-    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, SUBSET_SEARCH);
+    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, MPLI_GAVL_SUBSET_SEARCH);
 
-    node_ptr = (gavl_tree_node_s *) MPL_calloc(1, sizeof(gavl_tree_node_s), MPL_MEM_OTHER);
+    node_ptr = (MPLI_gavl_tree_node_s *) MPL_calloc(1,
+                                                    sizeof(MPLI_gavl_tree_node_s), MPL_MEM_OTHER);
     if (node_ptr == NULL) {
         mpl_err = MPL_ERR_NOMEM;
         goto fn_fail;
@@ -352,15 +357,15 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     if (tree_ptr->root == NULL) {
         tree_ptr->root = node_ptr;
     } else {
-        gavl_tree_node_s *pnode;
+        MPLI_gavl_tree_node_s *pnode;
         int cmp_ret;
 
         /* search the node which will become the parent of new node */
         pnode = gavl_tree_search_internal(tree_ptr, (uintptr_t) node_ptr->addr, node_ptr->len,
-                                          SUBSET_SEARCH, &cmp_ret);
+                                          MPLI_GAVL_SUBSET_SEARCH, &cmp_ret);
 
         /* find which side the new node should be inserted */
-        if (cmp_ret == BUFFER_MATCH) {
+        if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
             /* new node is duplicate, we need to delete new node and exit */
             tree_ptr->gavl_free_fn((void *) node_ptr->val);
             MPL_free(node_ptr);
@@ -368,7 +373,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
         }
 
         /* insert new node into pnode */
-        if (cmp_ret == SEARCH_LEFT)
+        if (cmp_ret == MPLI_GAVL_SEARCH_LEFT)
             pnode->left = node_ptr;
         else
             pnode->right = node_ptr;
@@ -397,17 +402,17 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len, void **val)
 {
     int mpl_err = MPL_SUCCESS;
-    gavl_tree_node_s *cur_node;
-    gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
+    MPLI_gavl_tree_node_s *cur_node;
+    MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
 
     *val = NULL;
     cur_node = tree_ptr->root;
     while (cur_node) {
-        int cmp_ret = gavl_subset_cmp_func(cur_node, (uintptr_t) addr, len);
-        if (cmp_ret == BUFFER_MATCH) {
+        int cmp_ret = MPLI_gavl_subset_cmp_func(cur_node, (uintptr_t) addr, len);
+        if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
             *val = (void *) cur_node->val;
             break;
-        } else if (cmp_ret == SEARCH_LEFT) {
+        } else if (cmp_ret == MPLI_GAVL_SEARCH_LEFT) {
             cur_node = cur_node->left;
         } else {
             cur_node = cur_node->right;
@@ -426,9 +431,9 @@ int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
 int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
 {
     int mpl_err = MPL_SUCCESS;
-    gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
-    gavl_tree_node_s *cur_node = tree_ptr->root;
-    gavl_tree_node_s *dnode = NULL;
+    MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
+    MPLI_gavl_tree_node_s *cur_node = tree_ptr->root;
+    MPLI_gavl_tree_node_s *dnode = NULL;
     while (cur_node) {
         if (cur_node->left) {
             cur_node = cur_node->left;
@@ -452,9 +457,10 @@ int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree)
     return mpl_err;
 }
 
-static void gavl_tree_remove_node_internal(gavl_tree_s * tree_ptr, gavl_tree_node_s * dnode)
+static void gavl_tree_remove_node_internal(MPLI_gavl_tree_s * tree_ptr,
+                                           MPLI_gavl_tree_node_s * dnode)
 {
-    gavl_tree_node_s *inorder_node;
+    MPLI_gavl_tree_node_s *inorder_node;
 
     if (dnode->right == NULL) {
         /* no right child, next inorder node is parent */
@@ -544,10 +550,10 @@ static void gavl_tree_remove_node_internal(gavl_tree_s * tree_ptr, gavl_tree_nod
 int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
 {
     int mpl_err = MPL_SUCCESS;
-    gavl_tree_s *tree_ptr = (gavl_tree_s *) gavl_tree;
+    MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
 
     /* move all nodes intersecting input buffer (addr, len) to remove_list */
-    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, INTERSECTION_SEARCH);
+    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, MPLI_GAVL_INTERSECTION_SEARCH);
 
     /* free nodes and buffer objects from remove list */
     gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len);
@@ -558,17 +564,18 @@ int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
     goto fn_exit;
 }
 
-static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len, int mode)
+static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len,
+                                   int mode)
 {
     int cmp_ret;
-    gavl_tree_node_s *dnode;
+    MPLI_gavl_tree_node_s *dnode;
 
     while (tree_ptr->root) {
         /* search and return the node to be deleted */
         dnode = gavl_tree_search_internal(tree_ptr, (uintptr_t) addr, len, mode, &cmp_ret);
 
         /* check whether dnode matches (addr, len) */
-        if (cmp_ret != BUFFER_MATCH) {
+        if (cmp_ret != MPLI_GAVL_BUFFER_MATCH) {
             /* we didn't find deleted node and exit */
             goto fn_exit;
         }
@@ -587,16 +594,17 @@ static void gavl_tree_remove_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintp
 }
 
 /* gavl_tree_delete_removed_nodes delete all nodes that intersect input key (addr, len) in remove_list */
-static void gavl_tree_delete_removed_nodes(gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len)
+static void gavl_tree_delete_removed_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr,
+                                           uintptr_t len)
 {
     int cmp_ret;
-    gavl_tree_node_s *prev, *cur, *dnode;
+    MPLI_gavl_tree_node_s *prev, *cur, *dnode;
 
     cur = tree_ptr->remove_list;
     prev = NULL;
     while (cur) {
-        cmp_ret = gavl_intersect_cmp_func(cur, addr, len);
-        if (cmp_ret == BUFFER_MATCH) {
+        cmp_ret = MPLI_gavl_intersect_cmp_func(cur, addr, len);
+        if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
             if (prev)
                 prev->next = cur->next;
             else
