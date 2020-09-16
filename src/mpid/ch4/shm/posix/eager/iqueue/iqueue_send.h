@@ -112,7 +112,7 @@ MPIDI_POSIX_eager_send(int grank,
 
     cell->payload_size = capacity - available;
 
-    MPIDU_genq_shmem_queue_enqueue(terminal, (void *) cell);
+    MPIDU_genq_shmem_queue_enqueue(transport->cell_pool, terminal, (void *) cell);
 
     /* Update the user counter for number of iovecs left */
     *iov_num -= iov_done;

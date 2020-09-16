@@ -68,7 +68,7 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
 
     transport->my_terminal = &transport->terminals[MPIDI_POSIX_global.my_local_rank];
 
-    mpi_errno = MPIDU_genq_shmem_queue_init(transport->my_terminal, transport->cell_pool,
+    mpi_errno = MPIDU_genq_shmem_queue_init(transport->my_terminal,
                                             MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
     MPIR_ERR_CHECK(mpi_errno);
 

@@ -34,13 +34,14 @@ static int cell_block_alloc(MPIDU_genqi_shmem_pool_s * pool, int block_idx)
         pool->cell_headers[i] =
             (MPIDU_genqi_shmem_cell_header_s *) ((char *) pool->cell_header_base
                                                  + (idx + i) * pool->cell_alloc_size);
-        pool->cell_headers[i]->next = 0;
-        pool->cell_headers[i]->prev = 0;
         /* The handle value is the one being stored in the next, prev, head, tail pointers.
          * All valid handle must to be non-zero, a zero handle is equivalent to a NULL pointer. */
         pool->cell_headers[i]->handle =
             (uintptr_t) pool->cell_headers[i] - (uintptr_t) pool->cell_header_base + 1;
-        MPL_atomic_store_int(&pool->cell_headers[i]->in_use, 0);
+        pool->cell_headers[i]->block_idx = block_idx;
+        rc = MPIDU_genq_shmem_queue_enqueue(pool, &pool->free_queues[block_idx],
+                                            HEADER_TO_CELL(pool->cell_headers[i]));
+        MPIR_ERR_CHECK(rc);
     }
 
   fn_exit:
@@ -72,7 +73,9 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     pool_obj->rank = rank;
 
     /* the global_block_index is at the end of the slab to avoid extra need of alignment */
-    slab_size = num_proc * cells_per_proc * pool_obj->cell_alloc_size + sizeof(MPL_atomic_int_t);
+    int total_cells_size = num_proc * cells_per_proc * pool_obj->cell_alloc_size;
+    int free_queue_size = num_proc * sizeof(MPIDU_genq_shmem_queue_u);
+    slab_size = total_cells_size + free_queue_size;
 
     rc = MPIDU_Init_shm_alloc(slab_size, &pool_obj->slab);
     MPIR_ERR_CHECK(rc);
@@ -81,11 +84,17 @@ int MPIDU_genq_shmem_pool_create_unsafe(uintptr_t cell_size, uintptr_t cells_per
     MPIR_ERR_CHECK(rc);
 
     pool_obj->cell_header_base = (MPIDU_genqi_shmem_cell_header_s *) pool_obj->slab;
+    pool_obj->free_queues =
+        (MPIDU_genq_shmem_queue_u *) ((char *) pool_obj->slab + total_cells_size);
 
-    rc = MPIDU_Init_shm_barrier();
+    rc = MPIDU_genq_shmem_queue_init(&pool_obj->free_queues[rank],
+                                     MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
     MPIR_ERR_CHECK(rc);
 
     rc = cell_block_alloc(pool_obj, rank);
+    MPIR_ERR_CHECK(rc);
+
+    rc = MPIDU_Init_shm_barrier();
     MPIR_ERR_CHECK(rc);
 
     *pool = (MPIDU_genq_shmem_pool_t) pool_obj;
