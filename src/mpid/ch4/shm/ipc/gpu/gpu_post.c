@@ -125,8 +125,9 @@ static int ipc_handle_cache_delete(MPL_gavl_tree_t gavl_tree, const void *addr, 
 #ifdef MPIDI_CH4_SHM_ENABLE_GPU
     int mpl_err = MPL_SUCCESS;
     if (MPIR_CVAR_CH4_IPC_GPU_HANDLE_CACHE) {
-        mpl_err = MPL_gavl_tree_delete(gavl_tree, addr, len);
-        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**mpl_gavl_delete");
+        mpl_err = MPL_gavl_tree_delete_range(gavl_tree, addr, len);
+        MPIR_ERR_CHKANDJUMP(mpl_err != MPL_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**mpl_gavl_delete_range");
     }
 #endif
 

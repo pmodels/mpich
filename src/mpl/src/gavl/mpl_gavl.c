@@ -419,16 +419,16 @@ static void gavl_tree_remove_node_internal(MPLI_gavl_tree_s * tree_ptr,
 }
 
 /*
- * MPL_gavl_tree_delete
- * Description: delete all intersecting nodes with input buffer in gavl tree and free
- *              corresponding buffer objects using user-provided free function. This
- *              function is not thread-safe.
+ * MPL_gavl_tree_delete_range
+ * Description: delete all nodes containing the address range intersecting with the
+ *              input buffer in gavl tree and free corresponding buffer objects
+ *              using user-provided free function. This function is not thread-safe.
  * Parameters:
  * gavl_tree        - (IN) gavl tree object
  * addr             - (IN) input buffer starting addr
  * len              - (IN) input buffer length
  */
-int MPL_gavl_tree_delete(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
+int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len)
 {
     int mpl_err = MPL_SUCCESS;
     MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
