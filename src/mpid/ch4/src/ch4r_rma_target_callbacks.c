@@ -571,7 +571,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->areq.origin_count) = MPIDIG_REQUEST(rreq, req->areq.target_count);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -591,7 +591,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -640,7 +640,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->areq.data_sz) = data_sz;
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
         shm_locked = 1;
@@ -666,7 +666,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -961,7 +961,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     /* MPIDI_CS_ENTER(); */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     win = MPIDIG_REQUEST(rreq, req->creq.win_ptr);
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -976,7 +976,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
