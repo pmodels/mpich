@@ -72,10 +72,9 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 
 .seealso: MPI_Accumulate
 @*/
-int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                    origin_datatype, int target_rank, MPI_Aint
-                    target_disp, int target_count, MPI_Datatype
-                    target_datatype, MPI_Op op, MPI_Win win, MPI_Request * request)
+int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                    int target_rank, MPI_Aint target_disp, int target_count,
+                    MPI_Datatype target_datatype, MPI_Op op, MPI_Win win, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
