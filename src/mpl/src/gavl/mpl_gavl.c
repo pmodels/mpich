@@ -16,12 +16,17 @@
 
 #define GAVL_TREE_NODE_CMP(node_ptr, addr, len, mode, ret)      \
     do {                                                        \
-        if (mode == MPLI_GAVL_SUBSET_SEARCH) {                            \
-            ret = MPLI_gavl_subset_cmp_func(node_ptr, addr, len);    \
-        }                                                       \
-        else if (mode == MPLI_GAVL_INTERSECTION_SEARCH) {                 \
-            ret = MPLI_gavl_intersect_cmp_func(node_ptr, addr, len); \
-        }                                                       \
+        switch(mode) {                                                  \
+            case MPLI_GAVL_SUBSET_SEARCH:                               \
+                ret = MPLI_gavl_subset_cmp_func(node_ptr, addr, len);   \
+                break;                                                  \
+            case MPLI_GAVL_INTERSECTION_SEARCH:                         \
+                ret = MPLI_gavl_intersect_cmp_func(node_ptr, addr, len);\
+                break;                                                  \
+            case MPLI_GAVL_START_ADDR_SEARCH:                           \
+                ret = MPLI_gavl_start_addr_cmp_func(node_ptr, addr);    \
+                break;                                                  \
+        }                                                               \
     } while (0)
 
 /* STACK is needed to rebalance the tree */
@@ -43,7 +48,7 @@
 static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, uintptr_t len,
                                    int mode);
 static void gavl_tree_delete_removed_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr,
-                                           uintptr_t len);
+                                           uintptr_t len, int mode);
 
 static void gavl_update_node_info(MPLI_gavl_tree_node_s * node_iptr)
 {
@@ -437,7 +442,32 @@ int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uint
     gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, len, MPLI_GAVL_INTERSECTION_SEARCH);
 
     /* free nodes and buffer objects from remove list */
-    gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len);
+    gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, len, MPLI_GAVL_INTERSECTION_SEARCH);
+
+  fn_exit:
+    return mpl_err;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+/* MPL_gavl_tree_delete_start_addr
+ * Description: delete all nodes containing the starting address strictly matching
+ *              the input address. This function is not thread-safe.
+ * Parameters:
+ * gavl_tree        - (IN) gavl tree object
+ * addr             - (IN) input buffer starting addr
+ */
+int MPL_gavl_tree_delete_start_addr(MPL_gavl_tree_t gavl_tree, const void *addr)
+{
+    int mpl_err = MPL_SUCCESS;
+    MPLI_gavl_tree_s *tree_ptr = (MPLI_gavl_tree_s *) gavl_tree;
+
+    /* move all nodes intersecting input buffer (addr, len) to remove_list */
+    gavl_tree_remove_nodes(tree_ptr, (uintptr_t) addr, 0, MPLI_GAVL_START_ADDR_SEARCH);
+
+    /* free nodes and buffer objects from remove list */
+    gavl_tree_delete_removed_nodes(tree_ptr, (uintptr_t) addr, 0, MPLI_GAVL_START_ADDR_SEARCH);
 
   fn_exit:
     return mpl_err;
@@ -474,9 +504,10 @@ static void gavl_tree_remove_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr, 
     return;
 }
 
-/* gavl_tree_delete_removed_nodes delete all nodes that intersect input key (addr, len) in remove_list */
+/* gavl_tree_delete_removed_nodes searches all nodes that match with the
+ * input key (addr, len) and search mode in remove_list and delete them.*/
 static void gavl_tree_delete_removed_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_t addr,
-                                           uintptr_t len)
+                                           uintptr_t len, int mode)
 {
     int cmp_ret;
     MPLI_gavl_tree_node_s *prev, *cur, *dnode;
@@ -484,7 +515,7 @@ static void gavl_tree_delete_removed_nodes(MPLI_gavl_tree_s * tree_ptr, uintptr_
     cur = tree_ptr->remove_list;
     prev = NULL;
     while (cur) {
-        cmp_ret = MPLI_gavl_intersect_cmp_func(cur, addr, len);
+        GAVL_TREE_NODE_CMP(cur, addr, len, mode, cmp_ret);
         if (cmp_ret == MPLI_GAVL_BUFFER_MATCH) {
             if (prev)
                 prev->next = cur->next;

@@ -13,6 +13,7 @@ int MPL_gavl_tree_insert(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t 
                          const void *val);
 int MPL_gavl_tree_destory(MPL_gavl_tree_t gavl_tree);
 int MPL_gavl_tree_delete_range(MPL_gavl_tree_t gavl_tree, const void *addr, uintptr_t len);
+int MPL_gavl_tree_delete_start_addr(MPL_gavl_tree_t gavl_tree, const void *addr);
 MPL_STATIC_INLINE_PREFIX int MPL_gavl_tree_search(MPL_gavl_tree_t gavl_tree, const void *addr,
                                                   uintptr_t len, void **val);
 
@@ -34,8 +35,11 @@ enum {
 };
 
 enum {
+    /* range search */
     MPLI_GAVL_SUBSET_SEARCH,
-    MPLI_GAVL_INTERSECTION_SEARCH
+    MPLI_GAVL_INTERSECTION_SEARCH,
+    /* address search */
+    MPLI_GAVL_START_ADDR_SEARCH
 };
 
 typedef struct MPLI_gavl_tree_node {
@@ -98,6 +102,22 @@ MPL_STATIC_INLINE_PREFIX int MPLI_gavl_intersect_cmp_func(MPLI_gavl_tree_node_s 
         cmp_ret = MPLI_GAVL_SEARCH_RIGHT;
     else
         cmp_ret = MPLI_GAVL_BUFFER_MATCH;
+
+    return cmp_ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPLI_gavl_start_addr_cmp_func(MPLI_gavl_tree_node_s * tnode,
+                                                           uintptr_t ustart)
+{
+    int cmp_ret;
+    uintptr_t tstart = tnode->addr;
+
+    if (tstart == ustart)
+        cmp_ret = MPLI_GAVL_BUFFER_MATCH;
+    else if (ustart < tstart)
+        cmp_ret = MPLI_GAVL_SEARCH_LEFT;
+    else
+        cmp_ret = MPLI_GAVL_SEARCH_RIGHT;
 
     return cmp_ret;
 }
