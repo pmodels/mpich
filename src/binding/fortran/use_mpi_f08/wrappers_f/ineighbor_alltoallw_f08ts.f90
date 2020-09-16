@@ -22,7 +22,7 @@ subroutine MPI_Ineighbor_alltoallw_f08ts(sendbuf, sendcounts, sdispls, sendtypes
     type(MPI_Datatype), intent(in)  :: sendtypes(*)
     type(MPI_Datatype), intent(in)  :: recvtypes(*)
     type(MPI_Comm), intent(in)  :: comm
-    type(MPI_Request), intent(in)  :: request
+    type(MPI_Request), intent(out)  :: request
     integer, optional, intent(out)  :: ierror
 
     integer(c_int), allocatable :: sendcounts_c(:)
