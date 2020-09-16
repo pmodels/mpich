@@ -1513,7 +1513,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpl_gavl_search: mpl_gavl_search failed
 **mpl_gavl_insert: mpl_gavl_insert failed
 **mpl_gavl_create: mpl_gavl_create failed
-**mpl_gavl_delete: mpl_gavl_delete failed
+**mpl_gavl_delete_range: mpl_gavl_delete_range failed
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)
