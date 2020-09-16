@@ -6,6 +6,7 @@
 #include "mpioimpl.h"
 #include "adio_extern.h"
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -21,6 +22,7 @@ int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function * 
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
     __attribute__ ((weak, alias("PMPI_Register_datarep")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING

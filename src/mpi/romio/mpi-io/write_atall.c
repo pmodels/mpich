@@ -5,6 +5,7 @@
 
 #include "mpioimpl.h"
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -19,6 +20,7 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
                           MPI_Datatype datatype, MPI_Status * status)
     __attribute__ ((weak, alias("PMPI_File_write_at_all")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING

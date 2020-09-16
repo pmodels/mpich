@@ -5,6 +5,7 @@
 
 #include "mpioimpl.h"
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -19,6 +20,7 @@ int MPI_File_write_ordered(MPI_File fh, const void *buf, int count, MPI_Datatype
                            MPI_Status * status)
     __attribute__ ((weak, alias("PMPI_File_write_ordered")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING

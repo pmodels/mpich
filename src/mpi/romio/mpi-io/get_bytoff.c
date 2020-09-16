@@ -6,6 +6,7 @@
 #include "mpioimpl.h"
 #include "adioi.h"      /* ADIOI_Get_byte_offset() prototype */
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -19,6 +20,7 @@
 int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
     __attribute__ ((weak, alias("PMPI_File_get_byte_offset")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING

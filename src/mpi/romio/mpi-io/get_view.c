@@ -5,6 +5,7 @@
 
 #include "mpioimpl.h"
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -18,6 +19,7 @@
 int MPI_File_get_view(MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype, MPI_Datatype * filetype,
                       char *datarep) __attribute__ ((weak, alias("PMPI_File_get_view")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING

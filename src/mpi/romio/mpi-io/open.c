@@ -5,6 +5,7 @@
 
 #include "mpioimpl.h"
 
+/* -- Begin Profiling Symbol Block */
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
@@ -18,6 +19,7 @@
 int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File * fh)
     __attribute__ ((weak, alias("PMPI_File_open")));
 #endif
+/* -- End Profiling Symbol Block */
 
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING
