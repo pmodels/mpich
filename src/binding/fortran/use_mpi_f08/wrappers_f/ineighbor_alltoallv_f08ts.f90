@@ -21,7 +21,7 @@ subroutine MPI_Ineighbor_alltoallv_f08ts(sendbuf, sendcounts, sdispls, sendtype,
     type(MPI_Datatype), intent(in)  :: sendtype
     type(MPI_Datatype), intent(in)  :: recvtype
     type(MPI_Comm), intent(in)  :: comm
-    type(MPI_Request), intent(in)  :: request
+    type(MPI_Request), intent(out)  :: request
     integer, optional, intent(out)  :: ierror
 
     integer(c_int), allocatable :: sendcounts_c(:)
