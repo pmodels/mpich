@@ -81,11 +81,6 @@ typedef struct MPIDIG_send_data_msg_t {
     MPIR_Request *rreq_ptr;
 } MPIDIG_send_data_msg_t;
 
-typedef struct MPIDIG_ssend_req_msg_t {
-    MPIDIG_hdr_t hdr;
-    MPIR_Request *sreq_ptr;
-} MPIDIG_ssend_req_msg_t;
-
 typedef struct MPIDIG_ssend_ack_msg_t {
     MPIR_Request *sreq_ptr;
 } MPIDIG_ssend_ack_msg_t;
