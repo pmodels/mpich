@@ -8,3 +8,4 @@ coll/allred:7:10
 coll/allred2:4
 coll/reduce:5
 coll/reduce:10
+coll/op_coll:4
