@@ -88,7 +88,7 @@ int main(int argc, char **argv)
         extent = 1;
     }
 
-    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf);
+    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
     assert(targetbuf && targetbuf_h);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
                 break;
             }
 
-            MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf);
+            MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
             assert(origbuf && origbuf_h);
 
             err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
