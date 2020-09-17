@@ -41,7 +41,6 @@ noinst_PROGRAMS =      \
     coll8              \
     coll9              \
     coll10             \
-    coll11             \
     coll12             \
     coll13             \
     exscan             \
