@@ -8,25 +8,6 @@
 
 #include "ch4_impl.h"
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE
-      category    : CH4
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        If set to positive number, this cvar controls the message size at which CH4 switches from eager to rendezvous mode.
-        If the number is negative, underlying netmod or shmmod automatically uses an optimal number depending on
-        the underlying fabric or shared memory architecture.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-
 #define MPIDIG_AM_SEND_HDR_SIZE  sizeof(MPIDIG_hdr_t)
 #define MPIDIG_AM_SEND_FLAGS_NONE (0)
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
@@ -34,10 +15,6 @@ cvars:
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
 {
-    if (MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE > 0) {
-        return MPIR_CVAR_CH4_EAGER_MAX_MSG_SIZE;
-    }
-
     int thresh;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     thresh = MPIDI_NM_am_eager_limit();
