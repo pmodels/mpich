@@ -31,7 +31,6 @@
       character*1024 str    ! used to store the filename
       integer errs, toterrs
       @FORTRAN_MPI_OFFSET@ disp
-      @FTESTDEFINE@
 
       errs = 0
       call MPI_INIT(ierr)
