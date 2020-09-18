@@ -418,6 +418,7 @@ for algo_name in ${algo_names}; do
     env="${testing_env} env=MPIR_CVAR_ISCAN_INTRA_ALGORITHM=${algo_name}"
 
     echo "scantst 4 ${env}" >> ${testlist_cvar}
+    echo "op_coll 4 ${env}" >> ${testlist_cvar}
     env=""
 done
 
