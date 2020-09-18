@@ -338,6 +338,28 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                  \
     } while (0)
 
+#define MPIDI_Datatype_check_contig_size_extent_lb(datatype_,count_,   \
+                                                   dt_contig_out_,     \
+                                                   data_sz_out_,       \
+                                                   dt_extent_out_,     \
+                                                   dt_true_lb_)        \
+    do {                                                        \
+        if (IS_BUILTIN(datatype_)) {                            \
+            (dt_contig_out_) = TRUE;                            \
+            (data_sz_out_) = (size_t)(count_) * MPIR_Datatype_get_basic_size(datatype_);  \
+            (dt_extent_out_) = (data_sz_out_);                  \
+            (dt_true_lb_) = 0;                                  \
+        } else {                                                \
+            MPIR_Datatype *dt_ptr_;                             \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_));      \
+            MPIR_Assert(dt_ptr_);                               \
+            (dt_contig_out_) = (dt_ptr_)->is_contig;            \
+            (data_sz_out_) = (size_t)(count_) * (dt_ptr_)->size;    \
+            (dt_extent_out_) = (size_t)(count_) * (dt_ptr_)->extent;\
+            (dt_true_lb_) = (dt_ptr_)->true_lb;                 \
+        }                                                       \
+    } while (0)
+
 /* Check both origin|target buffers' size. */
 #define MPIDI_Datatype_check_origin_target_size(o_datatype_, t_datatype_,         \
                                                 o_count_, t_count_,               \
