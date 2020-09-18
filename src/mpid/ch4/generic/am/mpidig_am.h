@@ -9,13 +9,11 @@
 #define MPIDI_AM_HANDLERS_MAX (64)
 
 enum {
-    MPIDIG_SEND = 0,            /* Eager send */
+    MPIDIG_SEND = 0,
 
-    MPIDIG_SEND_LONG_REQ,       /* Rendezvous send RTS (request to send) */
-    MPIDIG_SEND_LONG_ACK,       /* Rendezvous send CTS (clear to send) */
-    MPIDIG_SEND_LONG_LMT,       /* Rendezvous send LMT */
+    MPIDIG_SEND_CTS,    /* CTS (clear to send) for send message */
+    MPIDIG_SEND_DATA,   /* data for send message */
 
-    MPIDIG_SSEND_REQ,
     MPIDIG_SSEND_ACK,
 
     MPIDIG_PUT_REQ,
