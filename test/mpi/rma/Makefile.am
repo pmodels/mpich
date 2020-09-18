@@ -91,6 +91,7 @@ noinst_PROGRAMS =          \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
+    win_dynamic_acc_collattach \
     get_acc_local          \
     compare_and_swap       \
     linked_list            \
@@ -201,7 +202,8 @@ noinst_PROGRAMS =          \
     putpscw1
 
 if BUILD_MPIX_TESTS
-noinst_PROGRAMS += aint
+noinst_PROGRAMS += aint   \
+                   aint_collattach
 endif
 
 atomic_get_short_int_SOURCES      = atomic_get.c
@@ -417,3 +419,9 @@ lockall_dt_flushlocalall_SOURCES = lock_x_dt.c
 
 putpscw1_CPPFLAGS = $(AM_CPPFLAGS)
 putpscw1_SOURCES = putpscw1.c
+
+win_dynamic_acc_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+win_dynamic_acc_collattach_SOURCES = win_dynamic_acc.c
+
+aint_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+aint_collattach_SOURCES = aint.c
