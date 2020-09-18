@@ -88,13 +88,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
     }
 
     MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-    if (MPIDIG_REQUEST(rreq, count) <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE) {
-        /* unexp pack buf is MPI_BYTE type, count == data size */
-        MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
-                                          MPIDIG_REQUEST(rreq, buffer));
-    } else {
-        MPL_gpu_free_host(MPIDIG_REQUEST(rreq, buffer));
-    }
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                      MPIDIG_REQUEST(rreq, buffer));
 
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
@@ -135,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
-        } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_LONG_RTS) {
+        } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_RTS) {
             /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDIG_REQUEST(unexp_req, datatype) = datatype;
@@ -155,7 +150,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                  * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
-            mpi_errno = MPIDIG_do_long_ack(unexp_req);
+            MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+            mpi_errno = MPIDIG_do_cts(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
@@ -261,12 +257,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
-    } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_LONG_RTS) {
+    } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_RTS) {
         /* Matching receive is now posted, tell the netmod */
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
-        MPIDIG_do_long_ack(message);
+        MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+        MPIDIG_do_cts(message);
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
