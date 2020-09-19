@@ -227,7 +227,7 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
                                winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
     MPIR_ERR_CHECK(mpi_errno);
 
-    if (!MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY && !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
         first = winfo[0].disp_unit;
         same_disp = 1;
         for (i = 1; i < comm_ptr->local_size; i++) {
