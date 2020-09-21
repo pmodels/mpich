@@ -264,7 +264,7 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
         mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
 
-    /* Copy out data from host recv buffer to GPU buffer after allreduce is complete. */
+    /* Copy out data from host recv buffer to GPU buffer */
     if (host_recvbuf) {
         recvbuf = in_recvbuf;
         MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);

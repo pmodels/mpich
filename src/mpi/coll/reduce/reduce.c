@@ -298,7 +298,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                                      errflag);
     }
 
-    /* Copy out data from host recv buffer to GPU buffer after reduce is complete */
+    /* Copy out data from host recv buffer to GPU buffer */
     if (host_recvbuf) {
         recvbuf = in_recvbuf;
         MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);
