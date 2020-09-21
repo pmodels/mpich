@@ -244,6 +244,16 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *in_recvbuf = recvbuf;
+    void *host_sendbuf;
+    void *host_recvbuf;
+    int count = recvcounts[MPIR_Comm_rank(comm_ptr)];
+
+    MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf, &host_recvbuf);
+    if (host_sendbuf)
+        sendbuf = host_sendbuf;
+    if (host_recvbuf)
+        recvbuf = host_recvbuf;
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
         ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
@@ -254,6 +264,14 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
         mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
                                              errflag);
     }
+
+    /* Copy out data from host recv buffer to GPU buffer */
+    if (host_recvbuf) {
+        recvbuf = in_recvbuf;
+        MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);
+    }
+
+    MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
 
     return mpi_errno;
 }
