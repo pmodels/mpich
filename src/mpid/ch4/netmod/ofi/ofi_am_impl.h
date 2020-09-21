@@ -14,35 +14,6 @@ void MPIDI_OFI_deferred_am_isend_dequeue(MPIDI_OFI_deferred_am_isend_req_t * dre
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
-/* Acquire a sequence number to send, and record the next number */
-MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm * comm,
-                                                                     int dest_rank)
-{
-    fi_addr_t addr = MPIDI_OFI_comm_to_phys(comm, dest_rank, 0, 0);
-    uint64_t id = addr;
-    uint16_t seq, old_seq;
-    void *ret;
-    ret = MPIDIU_map_lookup(MPIDI_OFI_global.am_send_seq_tracker, id);
-    if (ret == MPIDIU_MAP_NOT_FOUND)
-        old_seq = 0;
-    else
-        old_seq = (uint16_t) (uintptr_t) ret;
-
-    seq = old_seq + 1;
-    MPIDIU_map_update(MPIDI_OFI_global.am_send_seq_tracker, id, (void *) (uintptr_t) seq,
-                      MPL_MEM_OTHER);
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST,
-                     "Generated seqno=%d for dest_rank=%d "
-                     "(context_id=0x%08x, src_addr=%" PRIx64 ", dest_addr=%" PRIx64 ")\n",
-                     old_seq, dest_rank, comm->context_id,
-                     MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank,
-                                            0, 0), addr));
-
-    return old_seq;
-}
-
 /*
   Per-object lock for OFI
 
@@ -205,7 +176,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
     msg_hdr->data_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_LMT_REQ;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, 0, 0);
 
@@ -281,7 +251,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
     msg_hdr->data_sz = data_sz;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
-    msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, 0, 0);
 
@@ -484,7 +453,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_inject(int rank,
     msg_hdr.am_hdr_sz = am_hdr_sz;
     msg_hdr.data_sz = 0;
     msg_hdr.am_type = MPIDI_AMTYPE_SHORT_HDR;
-    msg_hdr.seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr.fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, 0, 0);
 

@@ -417,7 +417,6 @@ typedef struct {
 
 typedef struct {
     int16_t type;
-    int16_t seqno;
     int origin_rank;
     MPIR_Request *ackreq;
     uintptr_t send_buf;

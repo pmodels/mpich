@@ -294,7 +294,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
-        ctrl.seqno = 0;
         ctrl.tag = tag;
         ctrl.vni_src = vni_src;
         ctrl.vni_dst = vni_dst;
