@@ -9,8 +9,6 @@
 #include "ofi_impl.h"
 #include "mpidu_genq.h"
 
-int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq);
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
