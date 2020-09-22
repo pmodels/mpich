@@ -8,20 +8,6 @@
 #include "ofi_am_impl.h"
 #include "ofi_noinline.h"
 
-
-void MPIDI_OFI_deferred_am_isend_dequeue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
-{
-    MPIDI_OFI_deferred_am_isend_req_t *curr_req = dreq;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_DEQUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_DEQUEUE);
-
-    DL_DELETE(MPIDI_OFI_global.deferred_am_isend_q, curr_req);
-    MPL_free(dreq);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_DEQUEUE);
-}
-
 int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -88,7 +74,8 @@ int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
     }
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_OFI_deferred_am_isend_dequeue(dreq);
+    DL_DELETE(MPIDI_OFI_global.deferred_am_isend_q, dreq);
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, dreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ISSUE);

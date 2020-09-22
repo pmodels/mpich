@@ -10,7 +10,6 @@
 #include "mpidu_genq.h"
 
 int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq);
-void MPIDI_OFI_deferred_am_isend_dequeue(MPIDI_OFI_deferred_am_isend_req_t * dreq);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
@@ -308,43 +307,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_deferred_am_isend_enqueue(int rank, MPIR_Comm * comm,
-                                                                 int handler_id, const void *buf,
-                                                                 size_t count,
-                                                                 MPI_Datatype datatype,
-                                                                 MPIR_Request * sreq,
-                                                                 MPI_Aint data_sz)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIDI_OFI_deferred_am_isend_req_t *deferred_req = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
-
-    deferred_req =
-        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
-                                                         MPL_MEM_OTHER);
-    MPIR_ERR_CHKANDJUMP(!deferred_req, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    deferred_req->rank = rank;
-    deferred_req->comm = comm;
-    deferred_req->handler_id = handler_id;
-    deferred_req->buf = buf;
-    deferred_req->count = count;
-    deferred_req->datatype = datatype;
-    deferred_req->sreq = sreq;
-    deferred_req->data_sz = data_sz;
-
-    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, deferred_req);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DEFERRED_AM_ISEND_ENQUEUE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend(int rank,
                                                    MPIR_Comm * comm,
                                                    int handler_id,
@@ -377,10 +339,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend(int rank,
 
     if (MPIDI_OFI_global.deferred_am_isend_q) {
         /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
-                                                        datatype, sreq, data_sz);
-        MPIR_ERR_CHECK(mpi_errno);
-        goto fn_exit;
+        goto fn_deferred;
     }
 
     need_packing = dt_contig ? false : true;
@@ -401,10 +360,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend(int rank,
         if (do_eager) {
             MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
             if (send_buf == NULL) {
-                mpi_errno = MPIDI_OFI_deferred_am_isend_enqueue(rank, comm, handler_id, buf, count,
-                                                                datatype, sreq, data_sz);
-                MPIR_ERR_CHECK(mpi_errno);
-                goto fn_exit;
+                goto fn_deferred;
             }
         } else {
             /* only for large message RDMA read */
@@ -429,6 +385,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend(int rank,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
     return mpi_errno;
   fn_fail:
+    goto fn_exit;
+  fn_deferred:
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool,
+                                       (void **) &MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing;
+    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
     goto fn_exit;
 }
 
