@@ -323,6 +323,21 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
         }                                                       \
     } while (0)
 
+#define MPIDI_Datatype_check_lb(datatype_, dt_true_lb_)    \
+    do {                                                   \
+        if (IS_BUILTIN(datatype_)) {                       \
+            (dt_true_lb_)    = 0;                          \
+        } else {                                           \
+            MPIR_Datatype *dt_ptr_;                        \
+            MPIR_Datatype_get_ptr((datatype_), (dt_ptr_)); \
+            if (dt_ptr_) {                                 \
+                (dt_true_lb_)    = (dt_ptr_)->true_lb;     \
+            } else {                                       \
+                (dt_true_lb_)    = 0;                      \
+            }                                              \
+        }                                                  \
+    } while (0)
+
 /* Check both origin|target buffers' size. */
 #define MPIDI_Datatype_check_origin_target_size(o_datatype_, t_datatype_,         \
                                                 o_count_, t_count_,               \
