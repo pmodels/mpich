@@ -8,6 +8,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/generic/am
 noinst_HEADERS += src/mpid/ch4/generic/am/mpidig_am_send.h \
                   src/mpid/ch4/generic/am/mpidig_am_recv.h \
                   src/mpid/ch4/generic/am/mpidig_am_msg.h \
+                  src/mpid/ch4/generic/am/mpidig_am_send_utils.h \
                   src/mpid/ch4/generic/am/mpidig_am.h
 
 mpi_core_sources += src/mpid/ch4/generic/am/mpidig_am_globals.c \

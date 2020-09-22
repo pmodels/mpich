@@ -18,6 +18,7 @@
 #include "ch4r_rma.h"
 #include "ch4r_win.h"
 #include "mpidig_am_msg.h"
+#include "mpidig_am_send_utils.h"
 #include "mpidig_am_recv.h"
 #include "mpidig_am_send.h"
 
