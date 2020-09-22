@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
         int c;
         MPIR_cc_incr(sreq->cc_ptr, &c); /* expecting SSEND_ACK */
     }
-    size_t data_sz;
+    MPI_Aint data_sz;
     MPIDI_Datatype_check_size(datatype, count, data_sz);
     am_hdr.data_sz = data_sz;
 
