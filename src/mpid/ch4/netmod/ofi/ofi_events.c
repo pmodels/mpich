@@ -596,6 +596,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_AM_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_RECV_EVENT);
 
+    void *orig_buf = wc->buf;   /* needed in case we will copy the header for alignment fix */
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
 #if NEEDS_STRICT_ALIGNMENT
@@ -608,7 +609,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
         if (temp_size > wc->len) {
             temp_size = wc->len;
         }
-        memcpy(temp, wc->buf, temp_size);
+        memcpy(temp, orig_buf, temp_size);
         am_hdr = (void *) temp;
         /* confirm it (in case MPL_ATTR_ALIGNED didn't work) */
         MPIR_Assert(((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) == 0);
@@ -624,7 +625,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
                          "Expected seqno=%d but got %d (am_type=%d addr=%" PRIx64 "). "
                          "Enqueueing it to the queue.\n",
                          expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
-        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(am_hdr);
+        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(orig_buf);
         MPIR_ERR_CHECK(mpi_errno);
         goto fn_exit;
     }
@@ -644,7 +645,8 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             break;
 
         case MPIDI_AMTYPE_SHORT:
-            p_data = (char *) wc->buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            /* payload always in orig_buf */
+            p_data = (char *) orig_buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
             mpi_errno = MPIDI_OFI_handle_short_am(am_hdr, am_hdr + 1, p_data);
 
             MPIR_ERR_CHECK(mpi_errno);
@@ -657,6 +659,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             break;
 
         case MPIDI_AMTYPE_LMT_REQ:
+            /* buffer always copied together (there is no payload, just LMT header) */
             p_data = (char *) am_hdr + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
             mpi_errno = MPIDI_OFI_handle_long_am(am_hdr, am_hdr + 1, p_data);
 
@@ -683,6 +686,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
     /* See if we can process other messages in the queue */
     if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
         am_hdr = &uo_msg->am_hdr;
+        orig_buf = am_hdr;
         goto repeat;
     }
 
