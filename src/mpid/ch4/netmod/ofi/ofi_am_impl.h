@@ -307,88 +307,95 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend(int rank,
-                                                   MPIR_Comm * comm,
-                                                   int handler_id,
-                                                   const void *am_hdr,
-                                                   size_t am_hdr_sz,
-                                                   const void *buf,
-                                                   size_t count, MPI_Datatype datatype,
-                                                   MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * comm,
+                                                         int handler_id, const void *am_hdr,
+                                                         size_t am_hdr_sz, const void *buf,
+                                                         size_t count, MPI_Datatype datatype,
+                                                         MPIR_Request * sreq, bool issue_deferred)
 {
     int dt_contig, mpi_errno = MPI_SUCCESS;
     char *send_buf;
     MPI_Aint data_sz;
     MPI_Aint dt_true_lb, last;
-    MPIR_Datatype *dt_ptr;
-    bool do_eager = false;
     bool need_packing = false;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
 
-    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    send_buf = (char *) buf + dt_true_lb;
+    /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
+     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
+     * issue_deferred is set to true. They should have been saved in the request. */
 
-    do_eager =
-        (am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+    if (!issue_deferred) {
+        MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
+        mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
+        MPIR_ERR_CHECK(mpi_errno);
 
-    MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
-    mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
-    MPIR_ERR_CHECK(mpi_errno);
+        MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
 
-    if (MPIDI_OFI_global.deferred_am_isend_q) {
-        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
-        goto fn_deferred;
+        need_packing = dt_contig ? false : true;
+
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(buf, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+            /* Force packing of GPU buffer in host memory */
+            need_packing = true;
+        }
+    } else {
+        data_sz = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz;
+        need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
     }
 
-    need_packing = dt_contig ? false : true;
-
-    MPL_pointer_attr_t attr;
-    MPIR_GPU_query_pointer_attr(buf, &attr);
-    if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
-        /* Force packing of GPU buffer in host memory */
-        need_packing = true;
+    if (!issue_deferred && MPIDI_OFI_global.deferred_am_isend_q) {
+        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
+        goto fn_deferred;
     }
 
     if (need_packing) {
         /* FIXME: currently we always do packing, also for high density types. However,
          * we should not do packing unless needed. Also, for large low-density types
          * we should not allocate the entire buffer and do the packing at once. */
-        /* TODO: (1) Skip packing for high-density datatypes;
-         *       (2) Pipeline allocation for low-density datatypes; */
-        if (do_eager) {
-            MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
-            if (send_buf == NULL) {
+        /* TODO: (1) Skip packing for high-density datatypes; */
+        MPIR_Assert(data_sz <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.pack_buf_pool, (void **) &send_buf);
+        if (send_buf == NULL) {
+            if (!issue_deferred) {
                 goto fn_deferred;
+            } else {
+                goto fn_exit;
             }
-        } else {
-            /* only for large message RDMA read */
-            MPL_gpu_malloc_host((void **) &send_buf, data_sz);
         }
         mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
         MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(data_sz == last);
 
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = send_buf;
     } else {
+        MPIDI_Datatype_check_lb(datatype, dt_true_lb);
+        send_buf = (char *) buf + dt_true_lb;
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    if (do_eager) {
-        mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, data_sz, sreq);
-    } else {
-        mpi_errno = MPIDI_OFI_am_isend_long(rank, comm, handler_id, send_buf, data_sz, sreq);
-    }
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST,
+                     "issue eager seg for req handle=0x%x send_size %ld", sreq->handle, data_sz));
+
+    mpi_errno = MPIDI_OFI_am_isend_short(rank, comm, handler_id, send_buf, data_sz, sreq);
     MPIR_ERR_CHECK(mpi_errno);
+    if (issue_deferred) {
+        DL_DELETE(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+        MPL_free(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_EAGER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
   fn_deferred:
-    MPIDU_genq_private_pool_alloc_cell(MPIDI_OFI_global.am_hdr_buf_pool,
-                                       (void **) &MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req) =
+        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
+                                                         MPL_MEM_OTHER);
     MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
     MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER;
     MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
