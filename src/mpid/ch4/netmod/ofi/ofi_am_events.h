@@ -103,6 +103,45 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
     return mpi_errno;
 }
 
+/* this is called in am_recv_event in ofi_event.c on receiver side */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * msg_hdr,
+                                                       void *am_hdr, void *p_data)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int is_done = 0;
+    MPIR_Request *rreq = NULL;
+    MPIR_Request *cache_rreq = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
+
+    cache_rreq = MPIDIG_req_cache_lookup(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "cached req %p handle=0x%x", cache_rreq,
+                     cache_rreq ? cache_rreq->handle : 0));
+
+    rreq = cache_rreq;
+
+    if (!rreq) {
+        /* no cached request, this must be the first segment */
+        /* note: setting is_local, is_async, req to 0, 1, rreq */
+        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr, p_data,
+                                                           msg_hdr->data_sz, 0, 1, &rreq);
+        MPIDIG_recv_setup(rreq);
+        MPIDIG_req_cache_add(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr, rreq);
+    }
+
+    is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->seg_sz, rreq);
+    if (is_done) {
+        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
+        MPIDIG_req_cache_remove(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_PIPELINE);
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
                                                            void *am_hdr)
 {
@@ -379,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_R
     p->src_offset = lmt_msg->src_offset;
     MPL_gpu_malloc_host(&p->unpack_buffer, pack_size);
 
-    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async.recv).in_data_sz;
     p->pack_size = pack_size;
     if (p->pack_size > remain) {
         p->pack_size = remain;
@@ -393,8 +432,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
 {
     MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.unpack);
     int ret = MPIDIG_recv_copy_seg(p->unpack_buffer, p->pack_size, rreq);
-    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
-    MPI_Aint offset = MPIDIG_REQUEST(rreq, req->async).offset;
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async.recv).in_data_sz;
+    MPI_Aint offset = MPIDIG_REQUEST(rreq, req->async.recv).offset;
 
     if (!ret && remain) {
         /* more to go */

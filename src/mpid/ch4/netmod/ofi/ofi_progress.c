@@ -19,7 +19,21 @@ static int handle_deferred_ops(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_DEFERRED_OPS);
 
     if (dreq) {
-        mpi_errno = MPIDI_OFI_deferred_am_isend_issue(dreq);
+        switch (dreq->op) {
+            case MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER:
+                mpi_errno = MPIDI_OFI_do_am_isend_eager(dreq->rank, dreq->comm, dreq->handler_id,
+                                                        NULL, 0, dreq->buf, dreq->count,
+                                                        dreq->datatype, dreq->sreq, true);
+                break;
+            case MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE:
+                mpi_errno = MPIDI_OFI_do_am_isend_pipeline(dreq->rank, dreq->comm, dreq->handler_id,
+                                                           NULL, 0, dreq->buf, dreq->count,
+                                                           dreq->datatype, dreq->sreq,
+                                                           dreq->data_sz, true);
+                break;
+            default:
+                MPIR_Assert(0);
+        }
         MPIR_ERR_CHECK(mpi_errno);
     }
 
