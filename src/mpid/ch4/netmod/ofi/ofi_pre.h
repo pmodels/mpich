@@ -54,6 +54,11 @@ enum {
     MPIDI_AMTYPE_LMT_ACK
 };
 
+typedef enum {
+    MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER,
+    MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE
+} MPIDI_OFI_deferred_am_op_e;
+
 typedef struct {
     /* context id and src rank so the target side can
      * issue RDMA read operation */
@@ -132,10 +137,32 @@ typedef struct {
     struct iovec iov[3];
 } MPIDI_OFI_am_request_header_t;
 
+typedef struct MPIDI_OFI_deferred_am_isend_req {
+    int op;
+    int rank;
+    MPIR_Comm *comm;
+    int handler_id;
+    const void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+    MPIR_Request *sreq;
+    bool need_packing;
+
+    MPI_Aint data_sz;
+
+    struct MPIDI_OFI_deferred_am_isend_req *prev;
+    struct MPIDI_OFI_deferred_am_isend_req *next;
+} MPIDI_OFI_deferred_am_isend_req_t;
+
+/* forward decl for am_send_request in ofi_types.h */
+typedef struct MPIDI_OFI_am_send_request MPIDI_OFI_am_send_request_t;
+
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIDI_OFI_am_request_header_t *req_hdr;
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_req;    /* saving information when an AM isend is
+                                                         * deferred */
 } MPIDI_OFI_am_request_t;
 
 

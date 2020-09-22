@@ -225,21 +225,6 @@ typedef struct {
     uint64_t msglen;
 } MPIDI_OFI_dynamic_process_request_t;
 
-typedef struct MPIDI_OFI_deferred_am_isend_req {
-    int rank;
-    MPIR_Comm *comm;
-    int handler_id;
-    const void *buf;
-    size_t count;
-    MPI_Datatype datatype;
-    MPIR_Request *sreq;
-
-    MPI_Aint data_sz;
-
-    struct MPIDI_OFI_deferred_am_isend_req *prev;
-    struct MPIDI_OFI_deferred_am_isend_req *next;
-} MPIDI_OFI_deferred_am_isend_req_t;
-
 typedef struct {
     uint8_t op;
     uint8_t dt;
