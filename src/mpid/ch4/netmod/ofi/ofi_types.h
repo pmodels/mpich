@@ -170,6 +170,7 @@ enum {
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
     MPIDI_OFI_EVENT_AM_SEND,
+    MPIDI_OFI_EVENT_AM_SEND_PIPELINE,
     MPIDI_OFI_EVENT_AM_RECV,
     MPIDI_OFI_EVENT_AM_READ,
     MPIDI_OFI_EVENT_PEEK,
@@ -208,6 +209,21 @@ typedef struct {
     int index;
 } MPIDI_OFI_am_repost_request_t;
 
+/* chunked request for AM eager/pipeline send operation */
+typedef struct MPIDI_OFI_am_send_pipeline_request {
+    char pad[MPIDI_REQUEST_HDR_SIZE];
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
+    int event_id;               /* fixed field, do not move */
+    MPIR_Request *sreq;
+    void *pack_buffer;
+    void *am_hdr;
+    uint16_t am_hdr_sz;
+    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
+    struct iovec iov[3];
+} MPIDI_OFI_am_send_pipeline_request_t;
+
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
@@ -224,21 +240,6 @@ typedef struct {
     uint32_t source;
     uint64_t msglen;
 } MPIDI_OFI_dynamic_process_request_t;
-
-typedef struct MPIDI_OFI_deferred_am_isend_req {
-    int rank;
-    MPIR_Comm *comm;
-    int handler_id;
-    const void *buf;
-    size_t count;
-    MPI_Datatype datatype;
-    MPIR_Request *sreq;
-
-    MPI_Aint data_sz;
-
-    struct MPIDI_OFI_deferred_am_isend_req *prev;
-    struct MPIDI_OFI_deferred_am_isend_req *next;
-} MPIDI_OFI_deferred_am_isend_req_t;
 
 typedef struct {
     uint8_t op;
@@ -403,6 +404,7 @@ typedef struct {
     /* Communication info for dynamic processes */
     MPIDI_OFI_conn_manager_t conn_mgr;
 
+    void *req_map;
     MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
     /* Capability settings */

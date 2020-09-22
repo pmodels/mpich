@@ -19,6 +19,7 @@ static int inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 static int accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq);
+static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
 static int am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me);
 static int am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq);
@@ -551,6 +552,40 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     goto fn_exit;
 }
 
+static int am_isend_pipeline_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_am_header_t *msg_hdr;
+    MPIDI_OFI_am_send_pipeline_request_t *ofi_req;
+    MPIR_Request *sreq = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_AM_ISEND_PIPELINE_EVENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_ISEND_PIPELINE_EVENT);
+
+    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_send_pipeline_request_t, context);
+    msg_hdr = &ofi_req->msg_hdr;
+    sreq = ofi_req->sreq;
+    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
+
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool, ofi_req->pack_buffer);
+
+    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.am_hdr_buf_pool, ofi_req);
+
+    int is_done = MPIDIG_am_send_async_finish_seg(sreq);
+
+    if (is_done) {
+        mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+    }
+
+    MPIR_ERR_CHECK(mpi_errno);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_PIPELINE_EVENT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -614,6 +649,11 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 
             MPIR_ERR_CHECK(mpi_errno);
 
+            break;
+        case MPIDI_AMTYPE_PIPELINE:
+            p_data = (char *) wc->buf + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
+            mpi_errno = MPIDI_OFI_handle_pipeline(am_hdr, am_hdr + 1, p_data);
+            MPIR_ERR_CHECK(mpi_errno);
             break;
 
         case MPIDI_AMTYPE_LMT_REQ:
@@ -725,6 +765,9 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
         mpi_errno = am_isend_event(wc, req);
+        goto fn_exit;
+    } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND_PIPELINE)) {
+        mpi_errno = am_isend_pipeline_event(wc, req);
         goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
         if (wc->flags & FI_RECV)

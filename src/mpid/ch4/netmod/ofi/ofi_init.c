@@ -683,6 +683,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* Create the id to object maps     */
     /* -------------------------------- */
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -693,6 +694,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
         MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_request_header_t)
                                 < MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
+        MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
+                                >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
         mpi_errno =
             MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
                                                   MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
@@ -818,6 +821,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     fi_freeinfo(MPIDI_OFI_global.prov_use);
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
+    MPIDIU_map_destroy(MPIDI_OFI_global.req_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         while (MPIDI_OFI_global.am_unordered_msgs) {
