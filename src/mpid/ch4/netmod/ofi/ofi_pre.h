@@ -50,6 +50,7 @@ typedef struct {
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
     MPIDI_AMTYPE_SHORT,
+    MPIDI_AMTYPE_PIPELINE,
     MPIDI_AMTYPE_LMT_REQ,
     MPIDI_AMTYPE_LMT_ACK
 };
@@ -80,6 +81,7 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
     uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
     uint64_t data_sz:MPIDI_OFI_AM_DATA_SZ_BITS;
+    int32_t seg_sz;             /* size of current pipeline segment */
     uint16_t seqno;             /* Sequence number of this message.
                                  * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
     fi_addr_t fi_src_addr;      /* OFI address of the sender */
@@ -153,9 +155,6 @@ typedef struct MPIDI_OFI_deferred_am_isend_req {
     struct MPIDI_OFI_deferred_am_isend_req *prev;
     struct MPIDI_OFI_deferred_am_isend_req *next;
 } MPIDI_OFI_deferred_am_isend_req_t;
-
-/* forward decl for am_send_request in ofi_types.h */
-typedef struct MPIDI_OFI_am_send_request MPIDI_OFI_am_send_request_t;
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */

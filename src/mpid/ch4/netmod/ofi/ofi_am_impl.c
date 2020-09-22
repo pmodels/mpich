@@ -22,6 +22,11 @@ int MPIDI_OFI_deferred_am_isend_issue(MPIDI_OFI_deferred_am_isend_req_t * dreq)
                                                     dreq->sreq, true);
             break;
         case MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE:
+            mpi_errno = MPIDI_OFI_do_am_isend_pipeline(dreq->rank, dreq->comm, dreq->handler_id,
+                                                       NULL, 0, dreq->buf, dreq->count,
+                                                       dreq->datatype, dreq->sreq, dreq->data_sz,
+                                                       true);
+            break;
         default:
             MPIR_Assert(0);
     }
