@@ -379,7 +379,7 @@ MPL_STATIC_INLINE_PREFIX void do_long_am_recv_unpack(MPI_Aint in_data_sz, MPIR_R
     p->src_offset = lmt_msg->src_offset;
     MPL_gpu_malloc_host(&p->unpack_buffer, pack_size);
 
-    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async.recv).in_data_sz;
     p->pack_size = pack_size;
     if (p->pack_size > remain) {
         p->pack_size = remain;
@@ -393,8 +393,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
 {
     MPIDI_OFI_lmt_unpack_t *p = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_u.unpack);
     int ret = MPIDIG_recv_copy_seg(p->unpack_buffer, p->pack_size, rreq);
-    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async).in_data_sz;
-    MPI_Aint offset = MPIDIG_REQUEST(rreq, req->async).offset;
+    MPI_Aint remain = MPIDIG_REQUEST(rreq, req->async.recv).in_data_sz;
+    MPI_Aint offset = MPIDIG_REQUEST(rreq, req->async.recv).offset;
 
     if (!ret && remain) {
         /* more to go */
