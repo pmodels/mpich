@@ -708,6 +708,8 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
     }
 
   fn_exit:
@@ -731,6 +733,8 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
     }
 
   fn_exit:
@@ -754,6 +758,8 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
     }
 
   fn_exit:
