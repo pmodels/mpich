@@ -42,7 +42,6 @@ subroutine MPI_Ineighbor_alltoallv_f08ts(sendbuf, sendcounts, sdispls, sendtype,
         sendtype_c = sendtype%MPI_VAL
         recvtype_c = recvtype%MPI_VAL
         comm_c = comm%MPI_VAL
-        request_c = request%MPI_VAL
         err = MPIR_Dist_graph_neighbors_count_c(comm_c, indegree, outdegree, weighted)
         sendcounts_c = sendcounts(1:outdegree)
         sdispls_c = sdispls(1:outdegree)
@@ -51,6 +50,7 @@ subroutine MPI_Ineighbor_alltoallv_f08ts(sendbuf, sendcounts, sdispls, sendtype,
 
         ierror_c = MPIR_Ineighbor_alltoallv_cdesc(sendbuf, sendcounts_c, sdispls_c, sendtype_c, recvbuf, recvcounts_c, &
             rdispls_c, recvtype_c, comm_c, request_c)
+        request%MPI_VAL = request_c
     end if
 
     if(present(ierror)) ierror = ierror_c
