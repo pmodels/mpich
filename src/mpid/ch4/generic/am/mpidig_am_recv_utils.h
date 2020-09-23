@@ -22,7 +22,7 @@
 /* caching recv buffer information */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->recv_type = MPIDIG_RECV_DATATYPE;
     p->in_data_sz = in_data_sz;
 
@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_type_init(MPI_Aint in_data_sz, MPIR_Re
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_init(int is_contig, MPI_Aint in_data_sz,
                                                void *data, MPI_Aint data_sz, MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->in_data_sz = in_data_sz;
     if (is_contig) {
         p->recv_type = MPIDIG_RECV_CONTIG;
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq);
 MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data,
                                                    MPI_Aint * p_data_sz, MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPIDIG_convert_datatype(rreq);
         MPIR_Assert(p->recv_type == MPIDIG_RECV_CONTIG || p->recv_type == MPIDIG_RECV_IOV);
@@ -85,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_get_recv_data(int *is_contig, void **p_data
 /* Sometime the transport just need info to make algorithm choice */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         MPI_Aint num_iov;
         MPIR_Typerep_iov_len(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_get_recv_iov_count(MPIR_Request * rreq)
 /* TODO: if transport flag callback, synchronous copy can/should be done inside the callback */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     MPI_Aint in_data_sz = p->in_data_sz;
     if (in_data_sz == 0) {
         /* otherwise if recv size = 0, it is at least a truncation error */
@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_copy(void *in_data, MPIR_Request * rre
 /* setup for asynchronous multi-segment data transfer (ref posix_progress) */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->offset = 0;
     if (p->recv_type == MPIDIG_RECV_DATATYPE) {
         /* it's ready, rreq status to be set */
@@ -200,7 +200,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_recv_setup(MPIR_Request * rreq)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_recv_copy_seg(void *payload, MPI_Aint payload_sz,
                                                   MPIR_Request * rreq)
 {
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     p->in_data_sz -= payload_sz;
 
     if (rreq->status.MPI_ERROR) {
@@ -270,7 +270,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_convert_datatype(MPIR_Request * rreq)
     MPIDI_Datatype_get_info(MPIDIG_REQUEST(rreq, count), MPIDIG_REQUEST(rreq, datatype),
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->async.recv));
+    MPIDIG_rreq_async_t *p = &(MPIDIG_REQUEST(rreq, req->recv_async));
     if (dt_contig) {
         p->recv_type = MPIDIG_RECV_CONTIG;
         p->iov_one.iov_base = (char *) MPIDIG_REQUEST(rreq, buffer) + dt_true_lb;
