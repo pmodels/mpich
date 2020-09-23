@@ -277,7 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PUT);
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+    if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
         goto fn_exit;
@@ -438,7 +438,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
-    if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+    if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
         goto fn_exit;
@@ -470,7 +470,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+    if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
@@ -519,7 +519,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
                                         target_rank, target_disp, win);
@@ -738,7 +738,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, op, win, request);
@@ -786,7 +786,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget_accumulate(const void *origin_add
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                        result_count, result_datatype, target_rank, target_disp,
@@ -835,7 +835,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp,
                                     op, win);
@@ -931,7 +931,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPIDI_OFI_ENABLE_RMA || win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+    if (!MPIDI_OFI_ENABLE_RMA || !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
         goto fn_exit;
@@ -977,7 +977,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get_accumulate(const void *origin_addr
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
                                       result_count, result_datatype, target_rank, target_disp,
@@ -1019,7 +1019,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
            !(winattr & MPIDI_WINATTR_ACCU_NO_SHM) ||
 #endif
            !MPIDI_OFI_ENABLE_RMA || !MPIDI_OFI_ENABLE_ATOMICS ||
-           win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           !(winattr & MPIDI_WINATTR_NM_REACHABLE)) {
         mpi_errno =
             MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                   target_disp, target_count, target_datatype, op, win);
