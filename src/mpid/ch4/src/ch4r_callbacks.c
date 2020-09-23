@@ -15,7 +15,7 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
 
     MPIDIG_send_cts_msg_t am_hdr;
-    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr));
+    am_hdr.sreq_ptr = (MPIDIG_REQUEST(rreq, req->u.rreq.peer_req_ptr));
     am_hdr.rreq_ptr = rreq;
     MPIR_Assert((void *) am_hdr.sreq_ptr != NULL);
 
@@ -124,7 +124,7 @@ static int handle_unexp_cmpl(MPIR_Request * rreq)
 
     /* If this request was previously matched, but not handled */
     if (MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_MATCHED) {
-        match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        match_req = (MPIR_Request *) MPIDIG_REQUEST(rreq, req->u.rreq.match_req);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         int is_cancelled;
@@ -254,12 +254,12 @@ static int recv_target_cmpl_cb(MPIR_Request * rreq)
 
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, datatype));
     if ((MPIDIG_REQUEST(rreq, req->status) & MPIDIG_REQ_RTS) &&
-        MPIDIG_REQUEST(rreq, req->rreq.match_req) != NULL) {
+        MPIDIG_REQUEST(rreq, req->u.rreq.match_req) != NULL) {
         /* This block is executed only when the receive is enqueued (handoff) &&
          * receive was matched with an unexpected long RTS message.
          * `rreq` is the unexpected message received and `sigreq` is the message
          * that came from CH4 (e.g. MPIDI_recv_safe) */
-        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->rreq.match_req);
+        MPIR_Request *sigreq = MPIDIG_REQUEST(rreq, req->u.rreq.match_req);
         sigreq->status = rreq->status;
         MPIR_Request_add_ref(sigreq);
         MPID_Request_complete(sigreq);
@@ -290,7 +290,7 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
-    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->sreq).datatype);
+    MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(sreq, req->u.sreq).datatype);
     MPID_Request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_SEND_DATA_ORIGIN_CB);
     return mpi_errno;
@@ -356,9 +356,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_UNEXPECTED;
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
             /* this is unexpected RNDV */
-            MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
+            MPIDIG_REQUEST(rreq, req->u.rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
-            MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+            MPIDIG_REQUEST(rreq, req->u.rreq.match_req) = NULL;
         } else {
             /* this is unexpected EAGER */
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
@@ -408,15 +408,15 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
             /* this is expected RNDV, init a special recv into unexp buffer */
-            MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
+            MPIDIG_REQUEST(rreq, req->u.rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
-            MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+            MPIDIG_REQUEST(rreq, req->u.rreq.match_req) = NULL;
             MPIDIG_do_cts(rreq);
         }
     }
 
     if (hdr->flags & MPIDIG_AM_SEND_FLAGS_SYNC) {
-        MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
+        MPIDIG_REQUEST(rreq, req->u.rreq.peer_req_ptr) = hdr->sreq_ptr;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
     }
 
@@ -524,23 +524,21 @@ int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(sreq, is_local))
-        mpi_errno =
-            MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->sreq).context_id,
-                                     MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
-                                     &send_hdr, sizeof(send_hdr),
-                                     MPIDIG_REQUEST(sreq, req->sreq).src_buf,
-                                     MPIDIG_REQUEST(sreq, req->sreq).count,
-                                     MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq);
+        mpi_errno = MPIDI_SHM_am_isend_reply(MPIDIG_REQUEST(sreq, req->u.sreq).context_id,
+                                             MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
+                                             &send_hdr, sizeof(send_hdr),
+                                             MPIDIG_REQUEST(sreq, req->u.sreq).src_buf,
+                                             MPIDIG_REQUEST(sreq, req->u.sreq).count,
+                                             MPIDIG_REQUEST(sreq, req->u.sreq).datatype, sreq);
     else
 #endif
     {
-        mpi_errno =
-            MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->sreq).context_id,
-                                    MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
-                                    &send_hdr, sizeof(send_hdr),
-                                    MPIDIG_REQUEST(sreq, req->sreq).src_buf,
-                                    MPIDIG_REQUEST(sreq, req->sreq).count,
-                                    MPIDIG_REQUEST(sreq, req->sreq).datatype, sreq);
+        mpi_errno = MPIDI_NM_am_isend_reply(MPIDIG_REQUEST(sreq, req->u.sreq).context_id,
+                                            MPIDIG_REQUEST(sreq, rank), MPIDIG_SEND_DATA,
+                                            &send_hdr, sizeof(send_hdr),
+                                            MPIDIG_REQUEST(sreq, req->u.sreq).src_buf,
+                                            MPIDIG_REQUEST(sreq, req->u.sreq).count,
+                                            MPIDIG_REQUEST(sreq, req->u.sreq).datatype, sreq);
     }
 
     MPIR_ERR_CHECK(mpi_errno);

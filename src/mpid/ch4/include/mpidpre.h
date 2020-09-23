@@ -183,7 +183,7 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_get_req_t greq;
         MPIDIG_cswap_req_t creq;
         MPIDIG_acc_req_t areq;
-    };
+    } u;
 
     MPIDIG_rreq_async_t recv_async;
     MPIDIG_sreq_async_t send_async;

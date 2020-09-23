@@ -65,8 +65,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
      * then put needs to free the second ref_count.*/
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    MPIDIG_REQUEST(sreq, req->preq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
+    MPIDIG_REQUEST(sreq, req->u.preq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->u.preq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -143,9 +143,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
                                            origin_datatype, sreq);
         }
     } else {
-        MPIDIG_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
-        MPIDIG_REQUEST(sreq, req->preq.origin_count) = origin_count;
-        MPIDIG_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
+        MPIDIG_REQUEST(sreq, req->u.preq.origin_addr) = (void *) origin_addr;
+        MPIDIG_REQUEST(sreq, req->u.preq.origin_count) = origin_count;
+        MPIDIG_REQUEST(sreq, req->u.preq.origin_datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -224,11 +224,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
-    MPIDIG_REQUEST(sreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->greq.addr) = origin_addr;
-    MPIDIG_REQUEST(sreq, req->greq.count) = origin_count;
-    MPIDIG_REQUEST(sreq, req->greq.datatype) = origin_datatype;
-    MPIDIG_REQUEST(sreq, req->greq.target_datatype) = target_datatype;
+    MPIDIG_REQUEST(sreq, req->u.greq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->u.greq.addr) = origin_addr;
+    MPIDIG_REQUEST(sreq, req->u.greq.count) = origin_count;
+    MPIDIG_REQUEST(sreq, req->u.greq.datatype) = origin_datatype;
+    MPIDIG_REQUEST(sreq, req->u.greq.target_datatype) = target_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
@@ -354,8 +354,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
      * then acc needs to free the second ref_count.*/
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-    MPIDIG_REQUEST(sreq, req->areq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
+    MPIDIG_REQUEST(sreq, req->u.areq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->u.areq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -386,7 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
-    MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
+    MPIDIG_REQUEST(sreq, req->u.areq.data_sz) = data_sz;
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -443,9 +443,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
                                            sreq);
         }
     } else {
-        MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
-        MPIDIG_REQUEST(sreq, req->areq.origin_count) = origin_count;
-        MPIDIG_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_addr) = (void *) origin_addr;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_count) = origin_count;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -538,12 +538,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
-    MPIDIG_REQUEST(sreq, req->areq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->areq.result_addr) = result_addr;
-    MPIDIG_REQUEST(sreq, req->areq.result_count) = result_count;
-    MPIDIG_REQUEST(sreq, req->areq.result_datatype) = result_datatype;
+    MPIDIG_REQUEST(sreq, req->u.areq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->u.areq.result_addr) = result_addr;
+    MPIDIG_REQUEST(sreq, req->u.areq.result_count) = result_count;
+    MPIDIG_REQUEST(sreq, req->u.areq.result_datatype) = result_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(result_datatype);
-    MPIDIG_REQUEST(sreq, req->areq.target_datatype) = target_datatype;
+    MPIDIG_REQUEST(sreq, req->u.areq.target_datatype) = target_datatype;
     MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
@@ -576,7 +576,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
-    MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
+    MPIDIG_REQUEST(sreq, req->u.areq.data_sz) = data_sz;
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -633,9 +633,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
                                            sreq);
         }
     } else {
-        MPIDIG_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
-        MPIDIG_REQUEST(sreq, req->areq.origin_count) = origin_count;
-        MPIDIG_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_addr) = (void *) origin_addr;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_count) = origin_count;
+        MPIDIG_REQUEST(sreq, req->u.areq.origin_datatype) = origin_datatype;
         MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -888,11 +888,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
-    MPIDIG_REQUEST(sreq, req->creq.win_ptr) = win;
-    MPIDIG_REQUEST(sreq, req->creq.addr) = result_addr;
-    MPIDIG_REQUEST(sreq, req->creq.datatype) = datatype;
-    MPIDIG_REQUEST(sreq, req->creq.result_addr) = result_addr;
-    MPIDIG_REQUEST(sreq, req->creq.data) = p_data;
+    MPIDIG_REQUEST(sreq, req->u.creq.win_ptr) = win;
+    MPIDIG_REQUEST(sreq, req->u.creq.addr) = result_addr;
+    MPIDIG_REQUEST(sreq, req->u.creq.datatype) = datatype;
+    MPIDIG_REQUEST(sreq, req->u.creq.result_addr) = result_addr;
+    MPIDIG_REQUEST(sreq, req->u.creq.data) = p_data;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIR_cc_incr(sreq->cc_ptr, &c);
 

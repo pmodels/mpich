@@ -142,13 +142,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
                 *request = unexp_req;
                 /* Mark `match_req` as NULL so that we know nothing else to complete when
                  * `unexp_req` finally completes. (See below) */
-                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = NULL;
+                MPIDIG_REQUEST(unexp_req, req->u.rreq.match_req) = NULL;
             } else {
                 /* Enqueuing path: CH4 already allocated a request.
                  * Record the passed `*request` to `match_req` so that we can complete it
                  * later when `unexp_req` completes.
                  * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
-                MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
+                MPIDIG_REQUEST(unexp_req, req->u.rreq.match_req) = *request;
             }
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
             mpi_errno = MPIDIG_do_cts(unexp_req);
@@ -200,7 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
         MPIDIG_enqueue_posted(rreq, &MPIDIG_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
     } else {
-        MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = rreq;
+        MPIDIG_REQUEST(unexp_req, req->u.rreq.match_req) = rreq;
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
     }
   fn_exit:
@@ -249,9 +249,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 #endif
     MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
-    MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
-    MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
-    MPIDIG_REQUEST(message, req->rreq.mrcv_datatype) = datatype;
+    MPIDIG_REQUEST(message, req->u.rreq.mrcv_buffer) = buf;
+    MPIDIG_REQUEST(message, req->u.rreq.mrcv_count) = count;
+    MPIDIG_REQUEST(message, req->u.rreq.mrcv_datatype) = datatype;
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     /* MPIDI_CS_ENTER(); */
@@ -320,7 +320,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 
         /* MPIDI_CS_ENTER(); */
         found =
-            MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->rreq),
+            MPIDIG_delete_posted(&MPIDIG_REQUEST(rreq, req->u.rreq),
                                  &MPIDIG_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
 

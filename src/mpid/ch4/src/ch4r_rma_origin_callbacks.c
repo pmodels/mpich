@@ -35,7 +35,7 @@ int MPIDIG_get_acc_ack_origin_cb(MPIR_Request * req)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACC_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACC_ACK_ORIGIN_CB);
-    MPL_free(MPIDIG_REQUEST(req, req->areq.data));
+    MPL_free(MPIDIG_REQUEST(req, req->u.areq.data));
 
     MPID_Request_complete(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACC_ACK_ORIGIN_CB);
@@ -49,7 +49,7 @@ int MPIDIG_cswap_ack_origin_cb(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_CSWAP_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_CSWAP_ACK_ORIGIN_CB);
 
-    MPL_free(MPIDIG_REQUEST(req, req->creq.data));
+    MPL_free(MPIDIG_REQUEST(req, req->u.creq.data));
     MPID_Request_complete(req);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_CSWAP_ACK_ORIGIN_CB);
@@ -63,9 +63,9 @@ int MPIDIG_get_ack_origin_cb(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);
 
-    MPL_free(MPIDIG_REQUEST(req, req->greq.flattened_dt));
-    if (MPIDIG_REQUEST(req, req->greq.dt))
-        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(req, req->greq.dt));
+    MPL_free(MPIDIG_REQUEST(req, req->u.greq.flattened_dt));
+    if (MPIDIG_REQUEST(req, req->u.greq.dt))
+        MPIR_Datatype_ptr_release(MPIDIG_REQUEST(req, req->u.greq.dt));
 
     MPID_Request_complete(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_GET_ACK_ORIGIN_CB);

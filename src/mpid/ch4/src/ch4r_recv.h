@@ -14,7 +14,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_reply_ssend(MPIR_Request * rreq)
     MPIDIG_ssend_ack_msg_t ack_msg;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REPLY_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REPLY_SSEND);
-    ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr);
+    ack_msg.sreq_ptr = MPIDIG_REQUEST(rreq, req->u.rreq.peer_req_ptr);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
@@ -58,9 +58,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexp_mrecv(MPIR_Request * rreq)
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
 
-    buf = MPIDIG_REQUEST(rreq, req->rreq.mrcv_buffer);
-    count = MPIDIG_REQUEST(rreq, req->rreq.mrcv_count);
-    datatype = MPIDIG_REQUEST(rreq, req->rreq.mrcv_datatype);
+    buf = MPIDIG_REQUEST(rreq, req->u.rreq.mrcv_buffer);
+    count = MPIDIG_REQUEST(rreq, req->u.rreq.mrcv_count);
+    datatype = MPIDIG_REQUEST(rreq, req->u.rreq.mrcv_datatype);
 
     message_sz = MPIDIG_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);

@@ -75,11 +75,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
     int is_local = MPIDI_av_is_local(addr);
     if (data_sz > MPIDIG_eager_limit(is_local)) {
         /* RNDV send */
-        MPIDIG_REQUEST(sreq, req->sreq).src_buf = buf;
-        MPIDIG_REQUEST(sreq, req->sreq).count = count;
-        MPIDIG_REQUEST(sreq, req->sreq).datatype = datatype;
-        MPIDIG_REQUEST(sreq, req->sreq).rank = am_hdr.src_rank;
-        MPIDIG_REQUEST(sreq, req->sreq).context_id = am_hdr.context_id;
+        MPIDIG_REQUEST(sreq, req->u.sreq).src_buf = buf;
+        MPIDIG_REQUEST(sreq, req->u.sreq).count = count;
+        MPIDIG_REQUEST(sreq, req->u.sreq).datatype = datatype;
+        MPIDIG_REQUEST(sreq, req->u.sreq).rank = am_hdr.src_rank;
+        MPIDIG_REQUEST(sreq, req->u.sreq).context_id = am_hdr.context_id;
         MPIDIG_REQUEST(sreq, rank) = rank;
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         am_hdr.flags |= MPIDIG_AM_SEND_FLAGS_RTS;
