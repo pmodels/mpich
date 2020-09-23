@@ -54,8 +54,8 @@ static void ipc_handle_free_hook(void *dptr)
         HASH_FIND_INT(MPIDI_GPUI_global.local_to_global_map, &local_dev_id, tmp);
 
         for (int i = 0; i < MPIR_Process.local_size; ++i) {
-            mpl_err = MPL_gavl_tree_delete(MPIDI_GPUI_global.ipc_handle_track_trees[i]
-                                           [tmp->global_dev_id], pbase, len);
+            mpl_err = MPL_gavl_tree_delete_range(MPIDI_GPUI_global.ipc_handle_track_trees[i]
+                                                 [tmp->global_dev_id], pbase, len);
             MPIR_Assert(mpl_err == MPL_SUCCESS);
         }
     }
