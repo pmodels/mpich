@@ -10,6 +10,24 @@
 #include "ofi_am_events.h"
 #include "mpidu_genq.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        For long message to be sent using pipeline rather than default
+        RDMA read.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
@@ -44,10 +62,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                 count, datatype, sreq,
                                                 false /* not for issue deferred */);
     } else {
-        /* PIPELINE */
-        mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
-                                                   count, datatype, sreq, data_sz,
-                                                   false /* not for issue deferred */);
+        if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
+            /* RDMA READ */
+            mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                                        data, count, datatype, sreq,
+                                                        false /* not for issue deferred */);
+        } else {
+            /* PIPELINE */
+            mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                                       data, count, datatype, sreq, data_sz,
+                                                       false /* not for issue deferred */);
+        }
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND);
