@@ -14,7 +14,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_init(MPIR_Request * sreq, MPI
                                                         MPI_Aint data_sz)
 {
     int c;
-    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->async.send);
+    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->send_async);
     send_async->datatype = datatype;
     send_async->data_sz_left = data_sz;
     send_async->offset = 0;
@@ -32,24 +32,24 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_init(MPIR_Request * sreq, MPI
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDIG_am_send_async_get_data_sz_left(MPIR_Request * sreq)
 {
-    return MPIDIG_REQUEST(sreq, req->async.send).data_sz_left;
+    return MPIDIG_REQUEST(sreq, req->send_async).data_sz_left;
 }
 
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDIG_am_send_async_get_offset(MPIR_Request * sreq)
 {
-    return MPIDIG_REQUEST(sreq, req->async.send).offset;
+    return MPIDIG_REQUEST(sreq, req->send_async).offset;
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_am_send_async_is_done(MPIR_Request * sreq)
 {
-    return MPIDIG_REQUEST(sreq, req->async.send).data_sz_left == 0;
+    return MPIDIG_REQUEST(sreq, req->send_async).data_sz_left == 0;
 }
 
 /* indicating one segment is issued, update counter with actual send_size */
 MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_issue_seg(MPIR_Request * sreq,
                                                              MPI_Aint send_size)
 {
-    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->async.send);
+    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->send_async);
     send_async->data_sz_left -= send_size;
     MPIR_Assert(send_async->data_sz_left >= 0);
     send_async->offset += send_size;
@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_am_send_async_issue_seg(MPIR_Request * sreq
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_am_send_async_finish_seg(MPIR_Request * sreq)
 {
     bool is_done = false;
-    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->async.send);
+    MPIDIG_sreq_async_t *send_async = &MPIDIG_REQUEST(sreq, req->send_async);
     send_async->seg_completed += 1;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST,

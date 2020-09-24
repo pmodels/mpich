@@ -185,10 +185,8 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_acc_req_t areq;
     };
 
-    union {
-        MPIDIG_rreq_async_t recv;
-        MPIDIG_sreq_async_t send;
-    } async;
+    MPIDIG_rreq_async_t recv_async;
+    MPIDIG_sreq_async_t send_async;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
