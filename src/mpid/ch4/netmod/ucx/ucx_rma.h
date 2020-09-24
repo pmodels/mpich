@@ -308,7 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PUT);
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
     } else {
@@ -334,7 +334,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype, target_rank,
                                    target_disp, target_count, target_datatype, win);
     } else {
@@ -367,7 +367,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rput(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
     } else {
@@ -477,7 +477,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rget(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
 
-    if (!MPIDI_UCX_is_reachable_target(target_rank, win)) {
+    if (!MPIDI_UCX_is_reachable_target(target_rank, win, winattr)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype, target_rank,
                                     target_disp, target_count, target_datatype, win, request);
     } else {

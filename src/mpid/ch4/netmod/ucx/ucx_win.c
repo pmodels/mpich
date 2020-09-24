@@ -222,6 +222,8 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_CREATE_HOOK);
     return mpi_errno;
@@ -243,6 +245,8 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
     mpi_errno = win_allgather(win, win->size, win->disp_unit, &win->base);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
+
+    MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_ALLOCATE_HOOK);
@@ -277,7 +281,7 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_MPI_WIN_FREE_HOOK);
 
-    if (MPIDI_UCX_is_reachable_win(win)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) {
         int i;
         for (i = 0; i < win->comm_ptr->local_size; i++) {
             if (MPIDI_UCX_WIN_INFO(win, i).rkey) {
