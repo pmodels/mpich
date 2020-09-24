@@ -146,7 +146,7 @@ while read -r line ; do
                 # limit the mixed pool case to only one
                 # TODO: this should be defined in the config file
                 for recvcount in $sendcount $((sendcount * 2)) ; do
-                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} arg=-sendmem=host arg=-recvmem=host $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                    echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
                     echo "${testname} $procs arg=-type=${type} arg=-sendcnt=${sendcount} arg=-recvcnt=${recvcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-sendmem=host arg=-recvmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
                     seed=$((seed + 1))
@@ -161,7 +161,7 @@ while read -r line ; do
                 done
             elif [ $testdir = "rma" ] ; then
                 if [ $gacc = "1" ] ; then # specify resultmem for MPI_GET_ACCUMULATE tests
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} arg=-origmem=host arg=-targetmem=host arg=-resultmem=host $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
                     echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=host arg=-targetmem=device arg=-resultmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
                     seed=$((seed + 1))
@@ -178,7 +178,7 @@ while read -r line ; do
                     echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=device arg=-targetmem=host arg=-resultmem=reg_host $timelimit" >> ${builddir}/${testdir}/testlist.gpu
                     seed=$((seed + 1))
                 else
-                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} arg=-origmem=host arg=-targetmem=host $timelimit" >> ${builddir}/${testdir}/testlist.dtp
+                    echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${testsize} ${other_args} $timelimit" >> ${builddir}/${testdir}/testlist.dtp
                     seed=$((seed + 1))
                     echo "${testname} $procs arg=-type=${type} arg=-count=${sendcount} arg=-seed=$seed arg=-testsize=${gputestsize} ${other_args} arg=-origmem=host arg=-targetmem=device $timelimit" >> ${builddir}/${testdir}/testlist.gpu
                     seed=$((seed + 1))
