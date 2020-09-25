@@ -360,6 +360,18 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     update_winattr_after_set_info(win);
 
+    /* If no local processes on each node, set ACCU_NO_SHM to enable native atomics */
+    bool no_local = false, all_no_local = false;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    if (!comm_ptr->node_comm)
+        no_local = true;
+
+    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL,
+                               MPI_LAND, comm_ptr, &errflag);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (all_no_local)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
+
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
     return mpi_errno;
