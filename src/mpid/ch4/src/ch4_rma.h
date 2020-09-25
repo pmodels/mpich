@@ -8,6 +8,24 @@
 
 #include "ch4_impl.h"
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_dbg_dump_winattr(MPIDI_winattr_t winattr)
+{
+#ifndef CHECK_WINATTR
+#define CHECK_WINATTR(attr, flag) ((attr) & flag ? 1 : 0)
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "winattr=0x%x (DIRECT_INTRA_COMM %d, SHM_ALLOCATED %d,"
+                     "ACCU_NO_SHM %d, ACCU_SAME_OP_NO_OP %d, NM_REACHABLE %d, NM_DYNAMIC_MR %d)",
+                     winattr, CHECK_WINATTR(winattr, MPIDI_WINATTR_DIRECT_INTRA_COMM),
+                     CHECK_WINATTR(winattr, MPIDI_WINATTR_SHM_ALLOCATED),
+                     CHECK_WINATTR(winattr, MPIDI_WINATTR_ACCU_NO_SHM),
+                     CHECK_WINATTR(winattr, MPIDI_WINATTR_ACCU_SAME_OP_NO_OP),
+                     CHECK_WINATTR(winattr, MPIDI_WINATTR_NM_REACHABLE),
+                     CHECK_WINATTR(winattr, MPIDI_WINATTR_NM_DYNAMIC_MR)));
+#undef CHECK_WINATTR
+#endif
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
@@ -21,6 +39,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put_unsafe(const void *origin_addr,
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
@@ -59,6 +79,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_unsafe(void *origin_addr,
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
@@ -99,6 +121,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_accumulate_unsafe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACCUMULATE_UNSAFE);
 
+    MPIDI_dbg_dump_winattr(winattr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count,
@@ -135,6 +159,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_compare_and_swap_unsafe(const void *origin_ad
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
@@ -175,6 +201,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_raccumulate_unsafe(const void *origin_addr,
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RACCUMULATE_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
@@ -219,6 +247,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_accumulate_unsafe(const void *origin_add
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE_UNSAFE);
 
+    MPIDI_dbg_dump_winattr(winattr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                              result_addr, result_count, result_datatype,
@@ -259,6 +289,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_fetch_and_op_unsafe(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP_UNSAFE);
 
+    MPIDI_dbg_dump_winattr(winattr);
+
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_fetch_and_op(origin_addr, result_addr,
                                           datatype, target_rank, target_disp, op, win, av, winattr);
@@ -296,6 +328,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rget_unsafe(void *origin_addr,
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RGET_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RGET_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_rget(origin_addr, origin_count, origin_datatype,
@@ -335,6 +369,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_rput_unsafe(const void *origin_addr,
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RPUT_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RPUT_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_rput(origin_addr, origin_count, origin_datatype,
@@ -377,6 +413,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get_accumulate_unsafe(const void *origin_addr
     MPIDI_av_entry_t *av = MPIDIU_win_rank_to_av(win, target_rank, winattr);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE_UNSAFE);
+
+    MPIDI_dbg_dump_winattr(winattr);
 
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
