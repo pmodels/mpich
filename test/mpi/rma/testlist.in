@@ -145,6 +145,22 @@ manyget 2 timeLimit=300
 derived_acc_flush_local 3
 large_acc_flush_local 3
 large_small_acc 2
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=gacc
 win_shared_put_flush_load 3
 win_shared_acc_flush_load 3
 win_shared_gacc_flush_load 3
