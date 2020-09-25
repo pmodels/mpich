@@ -62,6 +62,8 @@ strided_getacc_indexed_shared 4
 window_creation 2
 window_allocation 4
 window_noncontig_allocation 4
+window_attach 4
+window_attach_collattach 4
 contention_put 4
 contention_putget 4
 put_base 2

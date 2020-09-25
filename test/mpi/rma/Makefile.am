@@ -81,6 +81,8 @@ noinst_PROGRAMS =          \
     window_creation        \
     window_allocation      \
     window_noncontig_allocation  \
+    window_attach                   \
+    window_attach_collattach        \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
@@ -425,3 +427,6 @@ win_dynamic_acc_collattach_SOURCES = win_dynamic_acc.c
 
 aint_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
 aint_collattach_SOURCES = aint.c
+
+window_attach_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+window_attach_collattach_SOURCES = window_attach.c
