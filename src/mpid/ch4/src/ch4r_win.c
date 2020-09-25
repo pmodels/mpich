@@ -661,7 +661,8 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     mpi_errno = win_set_info(win, info, FALSE /* is_init */);
     MPIR_ERR_CHECK(mpi_errno);
 
-    update_winattr_after_set_info(win);
+    /* Do not update winattr except for info set at window creation.
+     * Because it will change RMA's behavior which requires collective synchronization. */
 
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
   fn_exit:
