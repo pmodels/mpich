@@ -141,12 +141,19 @@ int main(int argc, char **argv)
     win_info_set(win, "same_disp_unit", "true");
     errors += check_win_info_get(win, "same_disp_unit", "true");
 
+    /* Test#8: setting "optimized_mr" (no default value) */
+    win_info_set(win, "optimized_mr", "false");
+    errors += check_win_info_get(win, "optimized_mr", "false");
+
+    win_info_set(win, "optimized_mr", "true");
+    errors += check_win_info_get(win, "optimized_mr", "true");
+
     /* TODO: check alloc_shm as implementation-specific test */
 
-    /* Test#8: setting "alloc_shared_noncontig" (no default value) in shared window. */
+    /* Test#9: setting "alloc_shared_noncontig" (no default value) in shared window. */
     MPI_Win_free(&win);
 
-    /*   #8.1: setting at window allocation */
+    /*   #9.1: setting at window allocation */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
     MPI_Info_create(&info_in);
@@ -155,7 +162,7 @@ int main(int argc, char **argv)
     errors += check_win_info_get(win, "alloc_shared_noncontig", "true");
     MPI_Info_free(&info_in);
 
-    /*   #8.2: setting info */
+    /*   #9.2: setting info */
     win_info_set(win, "alloc_shared_noncontig", "false");
     errors += check_win_info_get(win, "alloc_shared_noncontig", "false");
     MPI_Comm_free(&shm_comm);
