@@ -94,6 +94,8 @@ noinst_PROGRAMS =          \
     win_large_shm          \
     win_dynamic_acc        \
     win_dynamic_acc_collattach \
+    win_dynamic_rma_flush_get             \
+    win_dynamic_rma_flush_get_collattach  \
     get_acc_local          \
     compare_and_swap       \
     linked_list            \
@@ -424,6 +426,9 @@ putpscw1_SOURCES = putpscw1.c
 
 win_dynamic_acc_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
 win_dynamic_acc_collattach_SOURCES = win_dynamic_acc.c
+
+win_dynamic_rma_flush_get_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+win_dynamic_rma_flush_get_collattach_SOURCES = win_dynamic_rma_flush_get.c
 
 aint_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
 aint_collattach_SOURCES = aint.c
