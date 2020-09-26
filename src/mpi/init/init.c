@@ -48,9 +48,6 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 #undef MPI_Init
 #define MPI_Init PMPI_Init
 
-/* Fortran logical values. extern'd in mpiimpl.h */
-/* MPI_Fint MPII_F_TRUE, MPII_F_FALSE; */
-
 /* Any internal routines can go here.  Make them static if possible */
 
 #endif

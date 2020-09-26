@@ -49,7 +49,6 @@ int MPII_init_local_proc_attrs(int *p_thread_required);
 int MPII_finalize_local_proc_attrs(void);
 
 void MPII_init_windows(void);
-void MPII_init_binding_fortran(void);
 void MPII_init_binding_cxx(void);
 void MPII_init_binding_f08(void);
 void MPII_pre_init_dbg_logging(int *argc, char ***argv);

@@ -1044,7 +1044,7 @@ EOT
 
     # The definitions for the Fortran wrappers are special
     print MAKEFD <<EOT;
-mpi_core_sources += src/binding/fortran/mpif_h/fdebug.c \\
+mpi_f77_sources += src/binding/fortran/mpif_h/fdebug.c \\
 		src/binding/fortran/mpif_h/setbot.c \\
 		src/binding/fortran/mpif_h/setbotf.f
 mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h/statusc2f.c
@@ -4118,12 +4118,6 @@ sub build_specials {
     # Gcc only allows attributes on the prototypes, not the function
     # definitions
     print $OUTFD "{\n";
-    print $OUTFD "#ifndef F77_RUNTIME_VALUES
-    /* any compile/link time values go here */
-#else
-#   error \"Fortran values must be determined at configure time\"
-#endif
-";
     # See the discussion on MPIR_F_NeedInit at the head of this file
     print $OUTFD "    mpirinitf_(); MPIR_F_NeedInit = 0;\n";
     print $OUTFD "    *ierr = MPI_Init( 0, 0 );\n";
