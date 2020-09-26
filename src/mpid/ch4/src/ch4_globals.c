@@ -25,6 +25,17 @@ MPIR_Object_alloc_t MPIDI_workq_elemt_mem = {
 };
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
+/* progress */
+
+#ifdef MPL_TLS
+MPL_TLS int global_vci_poll_count = 0;
+#else
+/* We just need ensure global progress happen, so some race condition or even corruption
+ * can be tolerated.  */
+int global_vci_poll_count = 0;
+#endif
+
+/* PVAR */
 unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
 unsigned PVAR_LEVEL_unexpected_recvq_length ATTRIBUTE((unused));
 unsigned long long PVAR_COUNTER_posted_recvq_match_attempts ATTRIBUTE((unused));
