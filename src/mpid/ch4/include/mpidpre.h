@@ -335,6 +335,7 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+    bool coll_attach;           /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
@@ -449,6 +450,8 @@ typedef enum {
     MPIDI_WINATTR_NM_REACHABLE = 16,    /* whether a netmod may reach the window. Set by netmod at win init.
                                          * It only indicates whether the win type is supported. Per-target check
                                          * may be required separately. */
+    MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
+                                         * dynamic window. Set by netmod. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 

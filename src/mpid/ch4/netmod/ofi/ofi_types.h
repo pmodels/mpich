@@ -515,6 +515,13 @@ typedef struct {
     MPIR_Request *parent;       /* Parent request           */
 } MPIDI_OFI_chunk_request;
 
+typedef struct MPIDI_OFI_target_mr {
+    uint64_t addr;              /* Unlikely used. Needed for calculating relative offset
+                                 * only when FI_MR_VIRT_ADDRESS is off but registration with MPI_BOTTOM fails
+                                 * at win creation. However, we always store it for code simplicity. */
+    uint64_t mr_key;
+} MPIDI_OFI_target_mr_t;
+
 typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */

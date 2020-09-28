@@ -62,6 +62,8 @@ strided_getacc_indexed_shared 4
 window_creation 2
 window_allocation 4
 window_noncontig_allocation 4
+window_attach 4
+window_attach_collattach 4
 contention_put 4
 contention_putget 4
 put_base 2
@@ -80,6 +82,7 @@ win_zero 4
 @largetest@win_large_shm 4
 @largetest@win_large_shm 3
 win_dynamic_acc 4
+win_dynamic_acc_collattach 4
 get_acc_local 1
 linked_list 4
 linked_list_fop 4
@@ -135,12 +138,29 @@ atomic_get_float_int 3 timeLimit=300
 atomic_get_double_int 3 timeLimit=300
 atomic_get_long_double_int 3 timeLimit=300
 aint 2
+aint_collattach 2
 acc_pairtype 2
 acc_pairtype_shm 2
 manyget 2 timeLimit=300
 derived_acc_flush_local 3
 large_acc_flush_local 3
 large_small_acc 2
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=gacc
 win_shared_put_flush_load 3
 win_shared_acc_flush_load 3
 win_shared_gacc_flush_load 3
