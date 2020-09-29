@@ -682,4 +682,104 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_pipeline(int rank, MPIR_Comm 
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_rdma_read(int rank, MPIR_Comm * comm,
+                                                             int handler_id, const void *am_hdr,
+                                                             size_t am_hdr_sz, const void *buf,
+                                                             size_t count, MPI_Datatype datatype,
+                                                             MPIR_Request * sreq,
+                                                             bool issue_deferred)
+{
+    int dt_contig, mpi_errno = MPI_SUCCESS;
+    char *send_buf;
+    MPI_Aint data_sz;
+    MPI_Aint dt_true_lb, last;
+    bool need_packing = false;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_RDMA_READ);
+
+    /* NOTE: issue_deferred is set to true when progress use this function for deferred operations.
+     * we need to skip some code path in the scenario. Also am_hdr and am_hdr_sz are ignored when
+     * issue_deferred is set to true. They should have been saved in the request. */
+
+    if (!issue_deferred) {
+        MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
+        mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
+
+        need_packing = dt_contig ? false : true;
+
+        MPL_pointer_attr_t attr;
+        MPIR_GPU_query_pointer_attr(buf, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM) {
+            /* Force packing of GPU buffer in host memory */
+            need_packing = true;
+        }
+    } else {
+        data_sz = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz;
+        need_packing = MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing;
+    }
+
+    if (!issue_deferred && MPIDI_OFI_global.deferred_am_isend_q) {
+        /* if the deferred queue is not empty, all new ops must be deferred to maintain ordering */
+        goto fn_deferred;
+    }
+
+    if (need_packing) {
+        /* FIXME: currently we always do packing, also for high density types. However,
+         * we should not do packing unless needed. Also, for large low-density types
+         * we should not allocate the entire buffer and do the packing at once. */
+        /* TODO: (1) Skip packing for high-density datatypes; */
+        /* FIXME: currently always allocate pack buffer for any size. This should be removed in next
+         * step when we work on ZCOPY protocol support. Basically, if the src buf and datatype needs
+         * packing, we should not be doing RDMA read. */
+        MPL_gpu_malloc_host((void **) &send_buf, data_sz);
+        mpi_errno = MPIR_Typerep_pack(buf, count, datatype, 0, send_buf, data_sz, &last);
+        MPIR_ERR_CHECK(mpi_errno);
+        MPIR_Assert(data_sz == last);
+
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = send_buf;
+    } else {
+        MPIDI_Datatype_check_lb(datatype, dt_true_lb);
+        send_buf = (char *) buf + dt_true_lb;
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST,
+                     "send RDMA read for req handle=0x%x send_size %ld", sreq->handle, data_sz));
+
+    mpi_errno = MPIDI_OFI_am_isend_long(rank, comm, handler_id, send_buf, data_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+    if (issue_deferred) {
+        DL_DELETE(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+        MPL_free(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_RDMA_READ);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+  fn_deferred:
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req) =
+        (MPIDI_OFI_deferred_am_isend_req_t *) MPL_malloc(sizeof(MPIDI_OFI_deferred_am_isend_req_t),
+                                                         MPL_MEM_OTHER);
+    MPIR_Assert(MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->op = MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->rank = rank;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->comm = comm;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->handler_id = handler_id;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->buf = buf;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->count = count;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->datatype = datatype;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->sreq = sreq;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->data_sz = data_sz;
+    MPIDI_OFI_AMREQUEST(sreq, deferred_req)->need_packing = need_packing;
+    DL_APPEND(MPIDI_OFI_global.deferred_am_isend_q, MPIDI_OFI_AMREQUEST(sreq, deferred_req));
+    goto fn_exit;
+}
+
 #endif /* OFI_AM_IMPL_H_INCLUDED */
