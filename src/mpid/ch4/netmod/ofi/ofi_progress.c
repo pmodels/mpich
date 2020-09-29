@@ -31,6 +31,12 @@ static int handle_deferred_ops(void)
                                                            dreq->datatype, dreq->sreq,
                                                            dreq->data_sz, true);
                 break;
+            case MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ:
+                mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(dreq->rank, dreq->comm,
+                                                            dreq->handler_id, NULL, 0, dreq->buf,
+                                                            dreq->count, dreq->datatype, dreq->sreq,
+                                                            true);
+                break;
             default:
                 MPIR_Assert(0);
         }
