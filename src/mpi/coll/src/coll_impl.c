@@ -247,7 +247,7 @@ void MPIR_Coll_host_buffer_alloc(const void *sendbuf, const void *recvbuf, MPI_A
         *host_recvbuf = MPL_malloc(extent * count, MPL_MEM_COLL);
         MPIR_Assert(*host_recvbuf);
         if (sendbuf == MPI_IN_PLACE)
-            MPIR_Localcopy(recvbuf, count, datatype, host_recvbuf, count, datatype);
+            MPIR_Localcopy(recvbuf, count, datatype, *host_recvbuf, count, datatype);
     }
 }
 
