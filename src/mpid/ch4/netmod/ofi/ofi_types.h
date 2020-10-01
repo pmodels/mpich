@@ -132,30 +132,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
-/* Convert the address vector entry to an endpoint index.
- * This conversion depends on the data structure which could change based on
- * whether we're using scalable endpoints or not. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
-{
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    return (av)->ep_idx;
-#else
-    return 0;
-#endif
-}
-
-/* Convert a communicator and rank to an endpoint index.
- * This conversion depends on the data structure which could change based on
- * whether we're using scalable endpoints or not. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
-{
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
-#else
-    return 0;
-#endif
-}
-
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
 
 /* Typedefs */
@@ -425,7 +401,6 @@ typedef struct {
     uintptr_t send_buf;
     size_t msgsize;
     int comm_id;
-    int endpoint_id;
     uint64_t rma_key;
     int tag;
     int vni_src;
