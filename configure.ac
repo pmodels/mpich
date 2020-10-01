@@ -1613,15 +1613,14 @@ else
     # Make device_name available to subdirs
 fi
 
-if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
+PAC_CHECK_HEADER_LIB_EXPLICIT(pmix, pmix.h, pmix, PMIx_Init)
+if test "$pac_have_pmix" = "yes" ; then
     # disable built-in PMI and process managers
     with_pmi="no"
     with_pm="no"
     if test "${device_name}" != "ch4" ; then
         AC_MSG_ERROR([$device_name does not support PMIx])
     fi
-    PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
-    PAC_LIBS_ADD([-lpmix])
     AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
 fi
 
@@ -4781,7 +4780,6 @@ AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_LIBS_ADD([-lcr])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
 )
