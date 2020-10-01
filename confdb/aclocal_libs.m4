@@ -79,12 +79,20 @@ dnl macro (or equivalent logic) to be used before this macro is used.
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
+    PAC_PUSH_FLAG(LIBS)
     AC_CHECK_LIB($2,$3,,failure=yes)
+    PAC_POP_FLAG(LIBS)
     if test "$failure" = "no" ; then
        $4
     else
        $5
     fi
+])
+
+dnl PAC_LIBS_ADD(libname)
+dnl Explicitly add -llibname to LIBS or WRAPPER_LIBS
+AC_DEFUN([PAC_LIBS_ADD], [
+    m4_ifdef([use_wrapper_flags],[PAC_APPEND_FLAG([$1],[WRAPPER_LIBS])],[PAC_APPEND_FLAG([$1],[LIBS])])
 ])
 
 dnl PAC_CHECK_HEADER_LIB_FATAL(with_option, header.h, libname, function)
