@@ -287,14 +287,9 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	pbs)
 		hydra_bss_external=true
 		# Check if TM library support is available
-		PAC_SET_HEADER_LIB_PATH(pbs)
-		PAC_PUSH_FLAG(LIBS)
-		PAC_CHECK_HEADER_LIB(tm.h, torque, tm_init, have_pbs_launcher=yes,
-					   have_pbs_launcher=no)
-		PAC_POP_FLAG(LIBS)
-                if test "$have_pbs_launcher" = "yes" ; then
+		PAC_CHECK_HEADER_LIB_OPTIONAL(pbs, tm.h, torque, tm_init)
+                if test "$pac_have_pbs" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
-		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
 		available_rmks="$available_rmks pbs"
 		;;
@@ -326,10 +321,10 @@ if test "$hydra_bss_persist" ; then
 fi
 
 ## Launchers
-if test "$have_pbs_launcher" = "yes" ; then
+if test "$pac_have_pbs" = "yes" ; then
    AC_DEFINE(HAVE_TM_H, 1, [Define if tm.h and library are usable.])
 fi
-AM_CONDITIONAL([hydra_pbs_launcher], [test "$have_pbs_launcher" = "yes"])
+AM_CONDITIONAL([hydra_pbs_launcher], [test "$pac_have_pbs" = "yes"])
 
 tmp_list=
 for hydra_launcher in ${available_launchers} ; do
@@ -488,9 +483,8 @@ AC_MSG_RESULT([$available_topolibs])
 # Slurm hostlist parsing
 #########################################################################
 AC_CHECK_HEADERS(slurm/slurm.h)
-AC_CHECK_LIB([slurm],[slurm_hostlist_create],have_libslurm=yes)
-if test "$have_libslurm" = "yes" -a "$ac_cv_header_slurm_slurm_h" = "yes" ; then
-    PAC_PREPEND_FLAG([-lslurm],[LIBS])
+PAC_CHECK_HEADER_LIB_OPTIONAL([libslurm],[slurm/slurm.h],[slurm],[slurm_hostlist_create])
+if test "$pac_have_libslurm" = "yes" ; then
     AC_DEFINE(HAVE_LIBSLURM,1,[Define if libslurm is available])
 fi
 
