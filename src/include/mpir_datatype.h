@@ -12,8 +12,6 @@
  * here. */
 /* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
 #define MPIR_DATATYPE_N_BUILTIN 71
-#define MPIR_DTYPE_BEGINNING  0
-#define MPIR_DTYPE_END       -1
 
 #ifndef MPIR_DATATYPE_PREALLOC
 #define MPIR_DATATYPE_PREALLOC 8
