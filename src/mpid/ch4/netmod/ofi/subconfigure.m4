@@ -36,11 +36,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     ofilib=""
     AC_SUBST([ofilib])
 
-    ofi_embedded=""
-    if test $have_libfabric = no ; then
-        ofi_embedded="yes"
-    fi
-
     runtime_capabilities="no"
     no_providers="no"
     # $netmod_args - contains the OFI provider
@@ -263,7 +258,11 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         esac
     fi
 
-    if test "${ofi_embedded}" = "yes" ; then
+    if test "$pac_have_libfabric" = "no" ; then
+        with_libfabric=embedded
+    fi
+    if test "$with_libfabric" = "embedded" ; then
+        ofi_embedded="yes"
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
         ofi_subdir_args="--enable-embedded"
 
@@ -314,7 +313,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
-        PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
+        PAC_LIBS_ADD([-lfabric])
     fi
 
     # check for libfabric depedence libs
