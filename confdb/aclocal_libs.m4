@@ -76,6 +76,10 @@ dnl The xxx is specified in the "with_option" parameter.
 dnl
 dnl NOTE: This macro expects a corresponding PAC_SET_HEADER_LIB_PATH
 dnl macro (or equivalent logic) to be used before this macro is used.
+dnl
+dnl NOTE: since setting LIBS may break runtime checks (e.g. AC_CHECK_SIZEOF), we
+dnl prepend the library to WRAPPER_LIBS instead.
+
 AC_DEFUN([PAC_CHECK_HEADER_LIB],[
     failure=no
     AC_CHECK_HEADER([$1],,failure=yes)
@@ -95,14 +99,74 @@ AC_DEFUN([PAC_LIBS_ADD], [
     m4_ifdef([use_wrapper_flags],[PAC_APPEND_FLAG([$1],[WRAPPER_LIBS])],[PAC_APPEND_FLAG([$1],[LIBS])])
 ])
 
+dnl PAC_CHECK_HEADER_LIB_OPTIONAL(with_option, header.h, libname, function)
+dnl Check optional library. The results are in $pac_have_$1.
+AC_DEFUN([PAC_CHECK_HEADER_LIB_OPTIONAL],[
+    PAC_SET_HEADER_LIB_PATH($1)
+    if test "${with_$1}" = "embedded" ; then
+        dnl Caller still need configure the embedded version
+        pac_have_$1=yes
+    elif test "${with_$1}" = "no" ; then
+        pac_have_$1=no
+    else
+        dnl Other than "embedded" or "no", we check ...
+        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no)
+        if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
+            dnl user asks for it, so missing is an error
+            AC_MSG_ERROR([--with-$1 is given but not found])
+        fi
+        if test "${pac_have_$1}" = "yes" ; then
+            PAC_LIBS_ADD(-l$3)
+        fi
+    fi
+])
+
+dnl PAC_PROBE_HEADER_LIB(with_option, header.h, libname, function)
+dnl Similar to PAC_CHECK_HEADER_LIB_OPTIONAL, but will not set LIBS.
+dnl Results are in $pac_have_$1.
+dnl This is used in more complex situation, e.g. checking libfabric
+dnl to decide default netmod options
+AC_DEFUN([PAC_PROBE_HEADER_LIB],[
+    PAC_SET_HEADER_LIB_PATH($1)
+    if test "${with_$1}" = "embedded" ; then
+        dnl Caller still need configure the embedded version
+        pac_have_$1=yes
+    elif test "${with_$1}" = "no" ; then
+        pac_have_$1=no
+    else
+        dnl Other than "embedded" or "no", we check ...
+        PAC_CHECK_HEADER_LIB($2,$3,$4,pac_have_$1=yes,pac_have_$1=no)
+        if test "${pac_have_$1}" = "no" -a -n "${with_$1}" ; then
+            dnl user asks for it, so missing is an error
+            AC_MSG_ERROR([--with-$1 is given but not found])
+        fi
+    fi
+])
+
+dnl PAC_CHECK_HEADER_LIB_EXPLICIT(with_option, header.h, libname, function)
+dnl Similar to PAC_CHECK_HEADER_LIB_OPTIONAL, but only with explicit --with-libname 
+AC_DEFUN([PAC_CHECK_HEADER_LIB_EXPLICIT],[
+    pac_have_$1=no
+    if test -n "${with_$1}" -a "${with_$1}" != "no" ; then
+        PAC_CHECK_HEADER_LIB_OPTIONAL($1, $2, $3, $4)
+    fi
+    dnl Use embedded version by default
+    m4_ifdef([$1_embedded_dir],[
+        if test "$pac_have_$1" = "no" ; then
+            with_$1=embedded
+        fi
+    ])
+])
+
 dnl PAC_CHECK_HEADER_LIB_FATAL(with_option, header.h, libname, function)
 dnl Similar to PAC_CHECK_HEADER_LIB, but errors out on failure
 AC_DEFUN([PAC_CHECK_HEADER_LIB_FATAL],[
-	PAC_SET_HEADER_LIB_PATH($1)
-	PAC_CHECK_HEADER_LIB($2,$3,$4,success=yes,success=no)
-	if test "$success" = "no" ; then
-	   AC_MSG_ERROR(['$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?'])
-	fi
+    PAC_SET_HEADER_LIB_PATH($1)
+    PAC_CHECK_HEADER_LIB($2,$3,$4,success=yes,success=no)
+    if test "$success" = "no" ; then
+        AC_MSG_ERROR([$2 or lib$3 library not found. Did you specify --with-$1= or --with-$1-include= or --with-$1-lib=?])
+    fi
+    PAC_LIBS_ADD(-l$3)
 ])
 
 dnl PAC_CHECK_PREFIX(with_option,prefixvar)
