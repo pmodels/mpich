@@ -431,17 +431,15 @@ static int conn_manager_init()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INIT);
 
-    MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
     MPIDI_OFI_global.conn_mgr.next_conn_id = 0;
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
 
     MPIDI_OFI_global.conn_mgr.conn_list =
-        (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_OFI_global.conn_mgr.mmapped_size,
-                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0,
-                                      MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
-                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+        (MPIDI_OFI_conn_t *) MPL_malloc(8 * 4 * 1024 /* FIXME: what is this size? */ ,
+                                        MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == NULL, mpi_errno, MPI_ERR_NO_MEM,
+                        goto fn_fail, "**nomem");
 
     MPIDI_OFI_global.conn_mgr.free_conn_id =
         (int *) MPL_malloc(MPIDI_OFI_global.conn_mgr.max_n_conn * sizeof(int), MPL_MEM_ADDRESS);
@@ -526,8 +524,7 @@ static int conn_manager_destroy()
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPL_munmap((void *) MPIDI_OFI_global.conn_mgr.conn_list, MPIDI_OFI_global.conn_mgr.mmapped_size,
-               MPL_MEM_ADDRESS);
+    MPL_free(MPIDI_OFI_global.conn_mgr.conn_list);
     MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:

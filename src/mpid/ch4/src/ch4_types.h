@@ -176,7 +176,6 @@ typedef struct MPIDIG_comm_req_list_t {
 } MPIDIG_comm_req_list_t;
 
 typedef struct {
-    int mmapped_size;
     int max_n_avts;
     int n_avts;
     int next_avtid;
