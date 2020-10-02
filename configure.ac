@@ -1003,21 +1003,15 @@ AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (de
 MPLLIBNAME=${MPLLIBNAME:-"mpl"}
 export MPLLIBNAME
 AC_SUBST(MPLLIBNAME)
-AC_ARG_WITH([mpl-prefix],
-            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
-                            [use the MPL library installed in DIR,
-                             rather than the one included in src/mpl.  Pass
-                             "embedded" to force usage of the MPL source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_mpl_prefix=embedded]) dnl action-if-not-given
 mplsrcdir=""
 AC_SUBST([mplsrcdir])
 mpllibdir=""
 AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
-if test "$with_mpl_prefix" = "embedded" ; then
+m4_define([mpl_embedded_dir],[src/mpl])
+PAC_CHECK_HEADER_LIB_EXPLICIT([mpl],[mplconfig.h],[$MPLLIBNAME],[mpl_str_get_int_arg])
+if test "$with_mpl" = "embedded" ; then
     # no need for libtool versioning when embedding MPL
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
@@ -1026,15 +1020,6 @@ if test "$with_mpl_prefix" = "embedded" ; then
 
     mplsrcdir="src/mpl"
     mpllib="src/mpl/lib${MPLLIBNAME}.la"
-else
-    # The user specified an already-installed MPL; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
-          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
-    PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
-    mpllibdir="-L${with_mpl_prefix}/lib"
 fi
 
 # Izem
@@ -1048,16 +1033,6 @@ AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (de
 ZMLIBNAME=${ZMLIBNAME:-"zm"}
 export ZMLIBNAME
 AC_SUBST(ZMLIBNAME)
-AC_ARG_WITH([zm-prefix],
-[  --with-zm-prefix@<:@=ARG@:>@
-                          specify the Izem library to use. No argument implies "yes".
-                          Accepted values for ARG are:
-                          yes|embedded - use the embedded Izem
-                          system       - search system paths for an Izem installation
-                          no           - disable Izem
-                          <PATH>       - use the Izem at PATH],,
-[with_zm_prefix=no])
-
 zmsrcdir=""
 AC_SUBST([zmsrcdir])
 zmlibdir=""
@@ -1065,8 +1040,10 @@ AC_SUBST([zmlibdir])
 zmlib=""
 AC_SUBST([zmlib])
 
+m4_define([zm_embedded_dir],[modules/izem])
+PAC_CHECK_HEADER_LIB_EXPLICIT([zm],[lock/zm_ticket.h],[$ZMLIBNAME],[zm_ticket_init])
 if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
-    if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
+    if test "$with_zm" = "embedded" ; then
         if test -e "${use_top_srcdir}/modules/izem" ; then
             zm_subdir_args="--enable-embedded"
             PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
@@ -1077,45 +1054,6 @@ if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; the
         else
             AC_MSG_WARN([Attempted to use the embedded Izem source tree in "modules/izem", but it is missing.  Configuration or compilation may fail later.])
         fi
-    elif test "$with_zm_prefix" = "system"; then
-        # check if an Izem installation exists on this system
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [AC_MSG_ERROR([No usable Izem installation was found on this system])],
-                       [PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])])
-        PAC_POP_FLAG([LIBS])
-    elif test "$with_zm_prefix" = "no"; then
-        AC_MSG_ERROR([Izem features were requested with --enable-izem but Izem was disabled.])
-    else
-        # The user specified an already-installed Izem; just sanity check, don't
-        # subconfigure it
-
-        AS_IF([test -s "${with_zm_prefix}/include/lock/zm_lock.h" -a -s "${with_zm_prefix}/include/cond/zm_cond.h"],
-              [:],[AC_MSG_ERROR([Izem headers at "${with_zm_prefix}/include" are missing])])
-        PAC_APPEND_FLAG([-I${with_zm_prefix}/include],[CPPFLAGS])
-
-        PAC_PUSH_FLAG([LIBS])
-        PAC_PUSH_FLAG([LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[LDFLAGS])
-        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
-                                        ],
-                                        [zm_ticket_t lock;
-                                         zm_ticket_init(&lock);
-                                         zm_ticket_acquire(&lock);
-                                         zm_ticket_release(&lock);])],
-                       [],[AC_MSG_ERROR([The Izem installation at "${with_zm_prefix}" seems broken])])
-        PAC_POP_FLAG([LIBS])
-        PAC_POP_FLAG([LDFLAGS])
-        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[WRAPPER_LDFLAGS])
-        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])
-        zmlibdir="-L${with_zm_prefix}/lib"
     fi
 fi
 
@@ -1170,6 +1108,7 @@ hwloclib=""
 AC_SUBST([hwloclib])
 
 m4_define([hwloc_embedded_dir],[modules/hwloc])
+dnl minor difference from e.g. mpl and zm -- we'll prioritize system hwloc by default
 PAC_CHECK_HEADER_LIB_OPTIONAL([hwloc],[hwloc.h],[hwloc],[hwloc_topology_set_pid])
 PAC_CHECK_HEADER_LIB_OPTIONAL([netloc],[netloc.h],[netloc],[netloc_get_all_host_nodes])
 if test "$pac_have_hwloc" = "no" ; then
