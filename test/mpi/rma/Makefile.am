@@ -203,7 +203,8 @@ noinst_PROGRAMS =          \
     lockall_dt_flushlocal  \
     lockall_dt_flushlocalall \
     putfence1              \
-    putpscw1
+    putpscw1               \
+    get_acc_flush
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint   \
@@ -435,3 +436,6 @@ aint_collattach_SOURCES = aint.c
 
 window_attach_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
 window_attach_collattach_SOURCES = window_attach.c
+
+get_acc_flush_SOURCES  = get_acc_flush.c
+get_acc_flush_CPPFLAGS = $(AM_CPPFLAGS)
