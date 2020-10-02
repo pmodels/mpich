@@ -6,9 +6,10 @@
   select a netmod in order to build ch4, else configure will prompt
   the user to choose.
 
-# Add support for Yaksa datatype engine.
+# Add support for Yaksa datatype engine (default in ch4).
 
-# Add support for GPU buffers in pt2pt communication.
+# Add support for GPU buffers (CUDA, Level Zero) in pt2pt,
+  collectives, and one-sided communication.
 
 # Add support for XPMEM.
 
@@ -17,9 +18,16 @@
 
 # Add DAOS ADIO driver to ROMIO (contributed by Intel).
 
+# Add Quobyte ADIO driver to ROMIO (contributed by Quobyte).
+
 # Add support for Arm compiler toolchain
 
+# Add support for NVIDIA HPC compilers
+
 # Add support for flang/f18 Fortran compiler
+
+# Add support for AddressSanitizer and UndefinedBehaviorSanitizer to
+  debug configuration
 
 # Remove mxm, llc, and portals4 netmods from ch3.
 
