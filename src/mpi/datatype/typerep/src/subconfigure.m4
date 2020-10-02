@@ -35,15 +35,6 @@ AC_ARG_VAR([YAKSALIBNAME],[can be used to override the name of the YAKSA library
 YAKSALIBNAME=${YAKSALIBNAME:-"yaksa"}
 export YAKSALIBNAME
 AC_SUBST(YAKSALIBNAME)
-AC_ARG_WITH([yaksa-prefix],
-            [AS_HELP_STRING([[--with-yaksa-prefix[=DIR]]],
-                            [use the YAKSA library installed in DIR,
-                             rather than the one included in modules/yaksa.  Pass
-                             "embedded" to force usage of the YAKSA source
-                             distributed with MPICH.])],
-            [],dnl action-if-given
-            [with_yaksa_prefix=embedded]) dnl action-if-not-given
-
 yaksasrcdir=""
 AC_SUBST([yaksasrcdir])
 yaksalibdir=""
@@ -52,7 +43,9 @@ yaksalib=""
 AC_SUBST([yaksalib])
 
 AM_COND_IF([BUILD_YAKSA_ENGINE], [
-if test "$with_yaksa_prefix" = "embedded" ; then
+m4_define([yaksa_embedded_dir],[modules/yaksa])
+PAC_CHECK_HEADER_LIB_EXPLICIT([yaksa],[yaksa_config.h],[$YAKSALIBNAME],[yaksa_init])
+if test "$with_yaksa" = "embedded" ; then
     PAC_PUSH_ALL_FLAGS()
     PAC_RESET_ALL_FLAGS()
     # no need for libtool versioning when embedding YAKSA
@@ -64,15 +57,6 @@ if test "$with_yaksa_prefix" = "embedded" ; then
 
     yaksasrcdir="modules/yaksa"
     yaksalib="modules/yaksa/lib${YAKSALIBNAME}.la"
-else
-    # The user specified an already-installed YAKSA; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_yaksa_prefix}/include/yaksa.h"],
-          [:],[AC_MSG_ERROR([the YAKSA installation in "${with_yaksa_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_yaksa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${YAKSALIBNAME}],[WRAPPER_LIBS])
-    PAC_APPEND_FLAG([-L${with_yaksa_prefix}/lib],[WRAPPER_LDFLAGS])
-    yaksalibdir="-L${with_yaksa_prefix}/lib"
 fi
 ])
 
