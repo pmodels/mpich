@@ -15,7 +15,6 @@
 # Please submit bugfixes or comments via https://bugs.opensuse.org/
 #
 
-%global cart_major 4
 %global daos_major 0
 
 # Static libraries are disabled by default
@@ -63,7 +62,7 @@
 
 Name:           %{package_name}%{?testsuite:-testsuite}
 Version:        %{vers}
-Release:        2
+Release:        3
 Summary:        High-performance and widely portable implementation of MPI
 License:        MIT
 Group:          Development/Libraries/Parallel
@@ -104,7 +103,7 @@ BuildRequires:  python-devel
 BuildRequires:  sysfsutils
 BuildRequires:  libfabric-devel
 BuildRequires:  daos-devel
-Provides:       %{package_name}-cart-%{cart_major}-daos-%{daos_major}
+Provides:       %{package_name}-daos-%{daos_major}
 
 Provides:       mpi
 %if %{without hpc}
@@ -153,6 +152,7 @@ Requires:       libstdc++-devel
 %hpc_requires_devel
 %endif
 Requires:       %{name} = %{version}
+Requires:       daos-devel
 
 %description devel
 MPICH is a freely available, portable implementation of MPI, the
@@ -461,6 +461,9 @@ fi
 %endif # !testsuite
 
 %changelog
+* Mon Jun 22 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-3
+- Add Requires: daos-devel to devel subpackage
+
 * Mon Jun 22 2020 Brian J. Murrell <brian.murrell@intel.com> - 3.4~a2-2
 - Port Python functoinality from EL 7 spec
 - Use configure options from EL 7 spec to get a build that works
