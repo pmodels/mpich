@@ -106,7 +106,7 @@ typedef struct MPIR_Op {
      MPID_DEV_OP_DECL
 #endif
 } MPIR_Op;
-#define MPIR_OP_N_BUILTIN 15
+#define MPIR_OP_N_BUILTIN 14
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
