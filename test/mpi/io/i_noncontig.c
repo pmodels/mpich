@@ -30,13 +30,13 @@ static char MTEST_Descrip[] = "Test nonblocking I/O";
 
 int main(int argc, char **argv)
 {
-    int *buf, i, mynod, nprocs, len, b[3];
+    int *buf, i, mynod, nprocs, len, blocklength;
     int err, errs = 0;
-    MPI_Aint d[3];
+    MPI_Aint displacement;
     MPI_File fh;
     MPI_Status status;
     char *filename;
-    MPI_Datatype typevec, newtype, t[3];
+    MPI_Datatype typevec, typevec2, newtype;
     MPI_Request req;
 
     MTest_Init(&argc, &argv);
@@ -82,17 +82,14 @@ int main(int argc, char **argv)
 
     MPI_Type_vector(SIZE / 2, 1, 2, MPI_INT, &typevec);
 
-    b[0] = b[1] = b[2] = 1;
-    d[0] = 0;
-    d[1] = mynod * sizeof(int);
-    d[2] = SIZE * sizeof(int);
-    t[0] = MPI_LB;
-    t[1] = typevec;
-    t[2] = MPI_UB;
+    blocklength = 1;
+    displacement = mynod * sizeof(int);
 
-    MPI_Type_struct(3, b, d, t, &newtype);
+    MPI_Type_create_struct(1, &blocklength, &displacement, &typevec, &typevec2);
+    MPI_Type_create_resized(typevec2, 0, SIZE * sizeof(int), &newtype);
     MPI_Type_commit(&newtype);
     MPI_Type_free(&typevec);
+    MPI_Type_free(&typevec2);
 
     if (!mynod) {
 #if VERBOSE

@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /*test comm_size for NULL variable */
     mpi_errno = MPI_Comm_size(MPI_COMM_WORLD, NULL);

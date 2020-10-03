@@ -31,9 +31,8 @@ int MPIR_Type_vector(int count,
                      int strideinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_builtin, old_is_contig;
-    MPI_Aint el_sz, old_sz;
-    MPI_Datatype el_type;
+    int old_is_contig;
+    MPI_Aint old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
 
     MPIR_Datatype *new_dtp;
@@ -59,13 +58,10 @@ int MPIR_Type_vector(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
-        el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-        el_type = oldtype;
+    if (HANDLE_IS_BUILTIN(oldtype)) {
+        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
 
         old_lb = 0;
         old_true_lb = 0;
@@ -76,15 +72,11 @@ int MPIR_Type_vector(int count,
         old_is_contig = 1;
 
         new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
-        new_dtp->has_sticky_lb = 0;
-        new_dtp->has_sticky_ub = 0;
 
         new_dtp->alignsize = el_sz;     /* ??? */
         new_dtp->n_builtin_elements = count * blocklength;
         new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = el_type;
-
-        new_dtp->max_contig_blocks = count;
+        new_dtp->basic_type = oldtype;
 
         eff_stride = (strideinbytes) ? stride : (stride * el_sz);
     } else {    /* user-defined base type (oldtype) */
@@ -92,8 +84,6 @@ int MPIR_Type_vector(int count,
         MPIR_Datatype *old_dtp;
 
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        el_sz = old_dtp->builtin_element_size;
-        el_type = old_dtp->basic_type;
 
         old_lb = old_dtp->lb;
         old_true_lb = old_dtp->true_lb;
@@ -104,15 +94,11 @@ int MPIR_Type_vector(int count,
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         new_dtp->size = count * blocklength * old_dtp->size;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = el_type;
-
-        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks * count * blocklength;
+        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
+        new_dtp->basic_type = old_dtp->basic_type;
 
         eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
@@ -132,18 +118,15 @@ int MPIR_Type_vector(int count,
     if ((MPI_Aint) (new_dtp->size) == new_dtp->extent &&
         eff_stride == (MPI_Aint) blocklength * old_sz && old_is_contig) {
         new_dtp->is_contig = 1;
-        new_dtp->max_contig_blocks = 1;
     } else {
         new_dtp->is_contig = 0;
     }
 
     if (strideinbytes) {
-        mpi_errno =
-            MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_hvector(count, blocklength, stride, oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-        mpi_errno =
-            MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_vector(count, blocklength, stride, oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

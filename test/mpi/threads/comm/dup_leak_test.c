@@ -15,13 +15,11 @@
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
-#ifndef NITER
-#define NITER 12345
-#endif /* ! NITER */
-
 #ifndef NTHREADS
 #define NTHREADS 4
 #endif /* ! NTHREADS */
+
+int num_iter;
 
 MTEST_THREAD_RETURN_TYPE do_thread(void *v);
 MTEST_THREAD_RETURN_TYPE do_thread(void *v)
@@ -29,7 +27,7 @@ MTEST_THREAD_RETURN_TYPE do_thread(void *v)
     int x;
     MPI_Comm comm = *(MPI_Comm *) v;
     MPI_Comm newcomm;
-    for (x = 0; x < NITER; ++x) {
+    for (x = 0; x < num_iter; ++x) {
         MPI_Comm_dup(comm, &newcomm);
         MPI_Comm_free(&newcomm);
     }
@@ -49,6 +47,10 @@ int main(int argc, char **argv)
         printf("unable to initialize with MPI_THREAD_MULTIPLE\n");
         goto fn_fail;
     }
+
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    num_iter = MTestArgListGetInt(head, "iter");
+    MTestArgListDestroy(head);
 
     for (x = 0; x < NTHREADS; ++x) {
         MPI_Comm_dup(MPI_COMM_WORLD, &comms[x]);

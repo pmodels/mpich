@@ -19,7 +19,7 @@ all_lang_subdirs = f77 cxx f90 f08
 DIST_SUBDIRS = $(static_subdirs) io $(all_lang_subdirs) threads spawn .
 SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) $(ckpointdir) $(ftdir) .
 
-EXTRA_DIST = maint/common.defn maint/f77tof90 maint/testmerge.in maint/updatefiles testlist.in
+EXTRA_DIST = maint/common.defn maint/f77tof90 maint/testmerge.in maint/updatefiles maint/gentests_dtp.sh maint/test_coll_algos.sh maint/dtp-test-config.txt testlist.in
 
 DISTCLEANFILES = config.system
 

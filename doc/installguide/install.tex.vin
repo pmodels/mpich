@@ -333,7 +333,7 @@ can be specified.  Do
 \end{verbatim}
 for details. A typical example is:
 \begin{verbatim}
-    mpiexec -f machinefile -n 1 ./master : -n 19 ./slave
+    mpiexec -f machinefile -n 1 ./main : -n 19 ./child
 \end{verbatim}
 to ensure that the process with rank 0 runs on your workstation.
 

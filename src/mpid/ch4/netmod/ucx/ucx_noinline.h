@@ -87,6 +87,7 @@ int MPIDI_UCX_mpi_win_free_hook(MPIR_Win * win);
 /* ucx_init.h */
 int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm);
 int MPIDI_UCX_mpi_finalize_hook(void);
+int MPIDI_UCX_post_init(void);
 int MPIDI_UCX_get_vci_attr(int vci);
 void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_UCX_mpi_free_mem(void *ptr);
@@ -98,6 +99,7 @@ int MPIDI_UCX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, con
 #ifdef NETMOD_INLINE
 #define MPIDI_NM_mpi_init_hook MPIDI_UCX_mpi_init_hook
 #define MPIDI_NM_mpi_finalize_hook MPIDI_UCX_mpi_finalize_hook
+#define MPIDI_NM_post_init MPIDI_UCX_post_init
 #define MPIDI_NM_get_vci_attr MPIDI_UCX_get_vci_attr
 #define MPIDI_NM_mpi_alloc_mem MPIDI_UCX_mpi_alloc_mem
 #define MPIDI_NM_mpi_free_mem MPIDI_UCX_mpi_free_mem

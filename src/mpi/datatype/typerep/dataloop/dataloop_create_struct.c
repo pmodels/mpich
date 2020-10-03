@@ -65,29 +65,27 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
         if (blklens[i] == 0)
             continue;
 
-        if (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB) {
-            int is_builtin;
+        int is_builtin;
 
-            is_builtin = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
+        is_builtin = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
 
-            if (is_builtin) {
-                if (nr_basics == 0) {
-                    first_basic = oldtypes[i];
-                    type_pos = i;
-                } else if (oldtypes[i] != first_basic) {
-                    first_basic = MPI_DATATYPE_NULL;
-                }
-                nr_basics++;
-            } else {    /* derived type */
-
-                if (nr_derived == 0) {
-                    first_derived = oldtypes[i];
-                    type_pos = i;
-                } else if (oldtypes[i] != first_derived) {
-                    first_derived = MPI_DATATYPE_NULL;
-                }
-                nr_derived++;
+        if (is_builtin) {
+            if (nr_basics == 0) {
+                first_basic = oldtypes[i];
+                type_pos = i;
+            } else if (oldtypes[i] != first_basic) {
+                first_basic = MPI_DATATYPE_NULL;
             }
+            nr_basics++;
+        } else {        /* derived type */
+
+            if (nr_derived == 0) {
+                first_derived = oldtypes[i];
+                type_pos = i;
+            } else if (oldtypes[i] != first_derived) {
+                first_derived = MPI_DATATYPE_NULL;
+            }
+            nr_derived++;
         }
     }
 
@@ -98,11 +96,6 @@ int MPIR_Dataloop_create_struct(MPI_Aint count,
      * here.
      */
 
-    /* optimization:
-     *
-     * if there were only MPI_LBs and MPI_UBs in the struct type,
-     * treat it as a zero-element contiguous (just as count == 0).
-     */
     if (nr_basics == 0 && nr_derived == 0) {
         err = MPIR_Dataloop_create_contiguous(0, MPI_INT, (void **) dlp_p);
         return err;
@@ -247,7 +240,7 @@ static int create_basic_all_bytes_struct(MPI_Aint count,
     /* --END ERROR HANDLING-- */
 
     for (i = 0; i < count; i++) {
-        if (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB && blklens[i] != 0) {
+        if (blklens[i] != 0) {
             MPI_Aint sz;
 
             MPIR_Datatype_get_size_macro(oldtypes[i], sz);
@@ -291,7 +284,7 @@ static int create_flattened_struct(MPI_Aint count,
 
         is_basic = (MPII_DATALOOP_HANDLE_HASLOOP(oldtypes[i])) ? 0 : 1;
 
-        if (is_basic && (oldtypes[i] != MPI_LB && oldtypes[i] != MPI_UB)) {
+        if (is_basic) {
             nr_blks++;
         } else {        /* derived type; get a count of contig blocks */
 
@@ -363,8 +356,7 @@ static int create_flattened_struct(MPI_Aint count,
          * Note that we're going to get back values in bytes, so that will
          * be our new element type.
          */
-        if (oldtypes[i] != MPI_UB &&
-            oldtypes[i] != MPI_LB && blklens[i] != 0 && (is_basic || sz > 0)) {
+        if (blklens[i] != 0 && (is_basic || sz > 0)) {
             segp = MPIR_Segment_alloc((char *) disps[i], (MPI_Aint) blklens[i], oldtypes[i]);
 
             last_ind = nr_blks - first_ind;

@@ -476,7 +476,7 @@ static int MPIR_Bsend_check_active(void)
     int mpi_errno = MPI_SUCCESS;
 
     if (BsendBuffer.active) {
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Bsend_progress();
     }
@@ -537,8 +537,9 @@ static void MPIR_Bsend_take_buffer(MPII_Bsend_data_t * p, size_t size)
     /* Compute the remaining size.  This must include any padding
      * that must be added to make the new block properly aligned */
     alloc_size = size;
-    if (alloc_size & 0x7)
-        alloc_size += (8 - (alloc_size & 0x7));
+    if (alloc_size & (MAX_ALIGNMENT - 1)) {
+        alloc_size += (MAX_ALIGNMENT - (alloc_size & (MAX_ALIGNMENT - 1)));
+    }
     /* alloc_size is the amount of space (out of size) that we will
      * allocate for this buffer. */
 

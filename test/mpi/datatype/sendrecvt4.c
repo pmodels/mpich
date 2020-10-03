@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     char *obuf;
     MPI_Datatype offsettype;
     int blen;
-    MPI_Aint displ, extent, natural_extent;
+    MPI_Aint displ, extent, natural_extent, tmp_lb;
     char myname[MPI_MAX_OBJECT_NAME];
     int mynamelen;
 
@@ -62,14 +62,14 @@ int main(int argc, char **argv)
                  * simple shift of the offset won't work.  For now, we skip
                  * types whose extents are negative; the correct solution is
                  * to add, where required, an explicit MPI_UB */
-                MPI_Type_extent(offsettype, &extent);
+                MPI_Type_get_extent(offsettype, &tmp_lb, &extent);
                 if (extent < 0) {
                     if (world_rank == 0)
                         MTestPrintfMsg(10, "... skipping (appears to have explicit MPI_UB\n");
                     MPI_Type_free(&offsettype);
                     continue;
                 }
-                MPI_Type_extent(types[j], &natural_extent);
+                MPI_Type_get_extent(types[j], &tmp_lb, &natural_extent);
                 if (natural_extent != extent) {
                     MPI_Type_free(&offsettype);
                     continue;
@@ -90,12 +90,12 @@ int main(int argc, char **argv)
                  * simple shift of the offset won't work.  For now, we skip
                  * types whose extents are negative; the correct solution is
                  * to add, where required, an explicit MPI_UB */
-                MPI_Type_extent(offsettype, &extent);
+                MPI_Type_get_extent(offsettype, &tmp_lb, &extent);
                 if (extent < 0) {
                     MPI_Type_free(&offsettype);
                     continue;
                 }
-                MPI_Type_extent(types[j], &natural_extent);
+                MPI_Type_get_extent(types[j], &tmp_lb, &natural_extent);
                 if (natural_extent != extent) {
                     MPI_Type_free(&offsettype);
                     continue;

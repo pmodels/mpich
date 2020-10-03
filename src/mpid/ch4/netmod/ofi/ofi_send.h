@@ -13,20 +13,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         uint64_t cq_data,
                                                         int dst_rank,
                                                         int tag, MPIR_Comm * comm,
-                                                        int context_offset, MPIDI_av_entry_t * addr)
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        int vni_src, int vni_dst)
 {
     int mpi_errno = MPI_SUCCESS;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
     uint64_t match_bits;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, 0);
-    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
+    MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_src].tx,
                                         buf,
                                         data_sz,
                                         cq_data,
-                                        MPIDI_OFI_av_to_phys(addr),
+                                        MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                         match_bits),
-                         tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
+                         vni_local, tinjectdata, comm->hints[MPIR_COMM_HINT_EAGAIN]);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     return mpi_errno;
@@ -50,14 +54,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,
                                                 uint64_t cq_data,
                                                 int dst_rank, uint64_t match_bits, MPIR_Comm * comm,
-                                                MPIDI_av_entry_t * addr, MPIR_Request * sreq,
-                                                MPIR_Datatype * dt_ptr)
+                                                MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                                MPIR_Request * sreq, MPIR_Datatype * dt_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL;
     struct fi_msg_tagged msg;
     uint64_t flags;
     MPI_Aint num_contig, size;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -78,8 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_malloc(size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
-    int actual_iov_len;
-    MPI_Aint actual_iov_bytes;
+    MPI_Aint actual_iov_len, actual_iov_bytes;
     MPIR_Typerep_to_iov(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), 0,
                         MPIDI_OFI_REQUEST(sreq, noncontig.nopack), num_contig, dt_ptr->size * count,
                         &actual_iov_len, &actual_iov_bytes);
@@ -94,9 +99,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     msg.ignore = 0ULL;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
     msg.data = cq_data;
-    msg.addr = MPIDI_OFI_av_to_phys(addr);
+    msg.addr = MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote);
 
-    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg, flags), tsendv, FALSE);
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[vni_local].tx, &msg, flags), vni_local,
+                         tsendv, FALSE);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
@@ -114,21 +120,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    MPI_Datatype datatype,
                                                    uint64_t cq_data, int dst_rank, int tag,
                                                    MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * addr, MPIR_Request ** request,
+                                                   MPIDI_av_entry_t * addr, int vni_src,
+                                                   int vni_dst, MPIR_Request ** request,
                                                    int dt_contig, size_t data_sz,
                                                    MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
                                                    uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = *request;
     char *send_buf;
     uint64_t match_bits;
+    MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
+    bool force_gpu_pack = false;
+    int vni_local = vni_src;
+    int vni_remote = vni_dst;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
 
-    MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
-    *request = sreq;
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    /* TODO: what cases when *request is NULL under workq? */
+    if (*request) {
+        MPIR_Request_add_ref(*request);
+    } else
+#endif
+    {
+        MPIDI_OFI_REQUEST_CREATE(*request, MPIR_REQUEST_KIND__SEND, vni_src);
+    }
+
+    MPIR_Request *sreq = *request;
+
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
@@ -146,23 +166,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_cc_incr(sreq->cc_ptr, &c);
         ssend_match = MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[0].rx,       /* endpoint    */
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_global.ctx[vni_src].rx, /* endpoint    */
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_av_to_phys(addr),       /* remote proc */
+                                      MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),        /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
-                                      (void *) &(ackreq->context)), trecvsync, FALSE);
+                                      (void *) &(ackreq->context)), vni_local, trecvsync, FALSE);
     }
 
     send_buf = (char *) buf + dt_true_lb;
+    MPIR_GPU_query_pointer_attr(send_buf, &attr);
+    if (data_sz && attr.type == MPL_GPU_POINTER_DEV) {
+        if (!MPIDI_OFI_ENABLE_HMEM) {
+            /* Force packing of GPU buffer in host memory */
+            /* FIXME: at this point, GPU data takes host-buffer staging
+             * path for the whole chunk. For large memory size, pipeline
+             * transfer should be applied. */
+            dt_contig = 0;
+            force_gpu_pack = true;
+        }
+    }
 
     if (!dt_contig && data_sz) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_OFI_global.max_msg_size) {
-            mpi_errno =
-                MPIDI_OFI_send_iov(buf, count, data_sz, cq_data, dst_rank,
-                                   match_bits, comm, addr, sreq, dt_ptr);
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz < MPIDI_OFI_global.max_msg_size &&
+            !force_gpu_pack) {
+            mpi_errno = MPIDI_OFI_send_iov(buf, count, data_sz, cq_data, dst_rank, match_bits,
+                                           comm, addr, vni_src, vni_dst, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS)       /* Send posted using iov */
                 goto fn_exit;
             else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
@@ -176,7 +207,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
-        MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) = MPL_malloc(data_sz, MPL_MEM_BUFFER);
+        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
+         * However, once the new buffer pool infrastructure is setup, we would simply be
+         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
+         * registered buffer should be equivalent with respect to performance. */
+        MPL_gpu_malloc_host((void **) &MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer),
+                            data_sz);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack.pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
@@ -191,21 +227,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     }
 
     if (data_sz <= MPIDI_OFI_global.max_buffered_send) {
-        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[0].tx,
+        MPIDI_OFI_CALL_RETRY(fi_tinjectdata(MPIDI_OFI_global.ctx[vni_src].tx,
                                             send_buf,
                                             data_sz,
                                             cq_data,
-                                            MPIDI_OFI_av_to_phys(addr),
-                                            match_bits), tinjectdata, FALSE /* eagain */);
+                                            MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
+                                            match_bits), vni_local, tinjectdata,
+                             FALSE /* eagain */);
         MPIDI_OFI_send_event(NULL, sreq, MPIDI_OFI_REQUEST(sreq, event_id));
-    } else if (data_sz <= MPIDI_OFI_global.max_msg_size) {
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+    } else if (data_sz < MPIDI_OFI_global.max_msg_size) {
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
                                           send_buf, data_sz, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr),
+                                          MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_local, tsenddata, FALSE /* eagain */);
     } else if (unlikely(1)) {
         MPIDI_OFI_send_control_t ctrl;
         int c;
@@ -222,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             rma_key = ctrl.rma_key;
         }
 
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,        /* In:  Domain Object */
+        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[vni_src].domain,  /* In:  Domain Object */
                                  send_buf,      /* In:  Lower memory address */
                                  data_sz,       /* In:  Length              */
                                  FI_REMOTE_READ,        /* In:  Expose MR for read  */
@@ -249,16 +286,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         MPIR_Comm_add_ref(comm);
         MPIDI_OFI_REQUEST(sreq, util_id) = dst_rank;
         match_bits |= MPIDI_OFI_HUGE_SEND;      /* Add the bit for a huge message */
-        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[0].tx,
+        MPIDI_OFI_CALL_RETRY(fi_tsenddata(MPIDI_OFI_global.ctx[vni_src].tx,
                                           send_buf, MPIDI_OFI_global.max_msg_size, NULL /* desc */ ,
                                           cq_data,
-                                          MPIDI_OFI_av_to_phys(addr),
+                                          MPIDI_OFI_av_to_phys(addr, vni_local, vni_remote),
                                           match_bits,
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
-                             tsenddata, FALSE /* eagain */);
+                             vni_local, tsenddata, FALSE /* eagain */);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;
+        ctrl.vni_src = vni_src;
+        ctrl.vni_dst = vni_dst;
 
         /* Send information about the memory region here to get the lmt going. */
         mpi_errno = MPIDI_OFI_do_control_send(&ctrl, send_buf, data_sz, dst_rank, comm, sreq);
@@ -275,6 +314,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                             int dst_rank, int tag, MPIR_Comm * comm,
                                             int context_offset, MPIDI_av_entry_t * addr,
+                                            int vni_src, int vni_dst,
                                             MPIR_Request ** request, int noreq,
                                             uint64_t syncflag, MPIR_Errflag_t err_flag)
 {
@@ -292,20 +332,52 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_OFI_global.max_buffered_send))) {
-        mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
-                                               cq_data, dst_rank, tag, comm, context_offset, addr);
+        MPL_pointer_attr_t attr = { MPL_GPU_POINTER_UNREGISTERED_HOST, MPL_GPU_DEVICE_INVALID };
+        MPI_Aint actual_pack_bytes = 0;
+        void *send_buf = (char *) buf + dt_true_lb;
+        MPIR_GPU_query_pointer_attr(send_buf, &attr);
+        if (attr.type == MPL_GPU_POINTER_DEV) {
+            if (!MPIDI_OFI_ENABLE_HMEM) {
+                /* Force pack for GPU buffer. */
+                void *host_buf = NULL;
+                MPL_gpu_malloc_host(&host_buf, data_sz);
+                MPIR_Typerep_pack(buf, count, datatype, 0, host_buf, data_sz, &actual_pack_bytes);
+                MPIR_Assert(actual_pack_bytes == data_sz);
+                send_buf = host_buf;
+            }
+        }
+        mpi_errno = MPIDI_OFI_send_lightweight(send_buf, data_sz, cq_data, dst_rank, tag, comm,
+                                               context_offset, addr, vni_src, vni_dst);
+        if (actual_pack_bytes > 0) {
+            /* Free stage host buf (asigned to send_buf already) after
+             * lightweight_send. */
+            MPL_gpu_free_host(send_buf);
+        }
         if (!noreq) {
             *request = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
         }
     } else {
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, cq_data, dst_rank, tag, comm,
-                                          context_offset, addr, request, dt_contig,
-                                          data_sz, dt_ptr, dt_true_lb, syncflag);
+                                          context_offset, addr, vni_src, vni_dst, request,
+                                          dt_contig, data_sz, dt_ptr, dt_true_lb, syncflag);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND);
     return mpi_errno;
 }
+
+/* Common macro used by all MPIDI_NM_mpi_send routines to facilitate tuning */
+#define MPIDI_OFI_SEND_VNIS(vni_src_, vni_dst_) \
+    do { \
+        if (*request != NULL) { \
+            /* workq path */ \
+            vni_src_ = 0; \
+            vni_dst_ = 0; \
+        } else { \
+            vni_src_ = MPIDI_OFI_get_vni(SRC_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+            vni_dst_ = MPIDI_OFI_get_vni(DST_VCI_FROM_SENDER, comm, comm->rank, rank, tag); \
+        } \
+    } while (0)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
                                                MPI_Datatype datatype, int rank, int tag,
@@ -316,16 +388,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, (*request == NULL), 0ULL,
-                                   MPIR_ERR_NONE);
+                                   context_offset, addr, vni_src, vni_dst, request,
+                                   (*request == NULL), 0ULL, MPIR_ERR_NONE);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
@@ -348,7 +421,7 @@ Input Parameters:
     errflag - the error flag to be passed along with the message
 @*/
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int d_rank, int tag,
+                                                MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm * comm, int context_offset,
                                                 MPIDI_av_entry_t * addr,
                                                 MPIR_Request ** request, MPIR_Errflag_t * errflag)
@@ -357,16 +430,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_coll(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_SEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_SEND_COLL);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
+    /* NOTE: collective use vci 0 and critical section taken at ch4-layer */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
-            MPIDIG_send_coll(buf, count, datatype, d_rank, tag, comm, context_offset, addr, request,
+            MPIDIG_send_coll(buf, count, datatype, rank, tag, comm, context_offset, addr, request,
                              errflag);
-    } else
-#endif
-    {
-        mpi_errno = MPIDI_OFI_send(buf, count, datatype, d_rank, tag, comm, context_offset,
-                                   addr, request, (*request == NULL), 0ULL, *errflag);
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
+        mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm, context_offset,
+                                   addr, vni_src, vni_dst, request, (*request == NULL), 0ULL,
+                                   *errflag);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_SEND_COLL);
@@ -382,16 +458,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND,
-                                   MPIR_ERR_NONE);
+                                   context_offset, addr, vni_src, vni_dst, request, 0,
+                                   MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
@@ -408,15 +485,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, 0, 0ULL, MPIR_ERR_NONE);
+                                   context_offset, addr, vni_src, vni_dst,
+                                   request, 0, 0ULL, MPIR_ERR_NONE);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
@@ -448,16 +527,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_isend_coll(const void *buf, MPI_Aint count
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_ISEND_COLL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_ISEND_COLL);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
+    /* NOTE: collective use vci 0 and critical section taken at ch4-layer */
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_isend_coll(buf, count, datatype, rank, tag, comm, context_offset, addr,
                               request, errflag);
-    } else
-#endif
-    {
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, 0, 0ULL, *errflag);
+                                   context_offset, addr, vni_src, vni_dst, request, 0, 0ULL,
+                                   *errflag);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_ISEND_COLL);
@@ -473,16 +555,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISSEND);
 
-#ifdef MPIDI_ENABLE_LEGACY_OFI
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         mpi_errno =
             MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
-    } else
-#endif
-    {
+    } else {
+        int vni_src, vni_dst;
+        MPIDI_OFI_SEND_VNIS(vni_src, vni_dst);  /* defined just above */
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vni_src).lock);
         mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                                   context_offset, addr, request, 0, MPIDI_OFI_SYNC_SEND,
-                                   MPIR_ERR_NONE);
+                                   context_offset, addr, vni_src, vni_dst, request, 0,
+                                   MPIDI_OFI_SYNC_SEND, MPIR_ERR_NONE);
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vni_src).lock);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISSEND);

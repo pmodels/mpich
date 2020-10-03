@@ -23,13 +23,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
     fi
 
-        AC_ARG_ENABLE(ch4-ofi-ipv6,
-            AC_HELP_STRING([--disable-ch4-ofi-ipv6], [Skip providers with addr_format FI_SOCKADDR_IN6])
-        )
-
-        if test "x$enable_ch4_ofi_ipv6" = "xno" ; then
-            AC_DEFINE(MPIDI_CH4_OFI_SKIP_IPV6, 1, [CH4-OFI should skip providers with IPv6])
-        fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 ])dnl
@@ -77,6 +70,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_perf="no"
         enable_rstream="no"
         enable_mrail="no"
+        enable_efa="no"
+        enable_netdir="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -94,6 +89,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_perf="yes"
         enable_rstream="yes"
         enable_mrail="yes"
+        enable_efa="yes"
+        enable_netdir="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -115,12 +112,20 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             "bgq")
                 enable_bgq="yes"
                 ;;
+            "verbs;ofi_rxm")
+                enable_verbs="yes"
+                enable_rxm="yes"
+                ;;
 
             dnl For these providers, we don't know exactly which capabilities we
             dnl want to select by default so we turn on runtime checks. At some point
             dnl in the future, we may create a specific capability set for them.
             "verbs")
                 enable_verbs="yes"
+                runtime_capabilities="yes"
+                ;;
+            "efa")
+                enable_efa="yes"
                 runtime_capabilities="yes"
                 ;;
             "usnic")
@@ -149,6 +154,22 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "mlx")
                 enable_mlx="yes"
+                runtime_capabilities="yes"
+                ;;
+            "perf")
+                enable_perf="yes"
+                runtime_capabilities="yes"
+                ;;
+            "rstream")
+                enable_rstream="yes"
+                runtime_capabilities="yes"
+                ;;
+            "mrail")
+                enable_mrail="yes"
+                runtime_capabilities="yes"
+                ;;
+            "netdir")
+                enable_netdir="yes"
                 runtime_capabilities="yes"
                 ;;
             *)
@@ -212,6 +233,31 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_mlx="yes"
                 ;;
+            "perf")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_perf="yes"
+                ;;
+            "rstream")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_rstream="yes"
+                ;;
+            "mrail")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_mrail="yes"
+                ;;
+            "efa")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_efa="yes"
+                ;;
+            "netdir")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_netdir="yes"
+                ;;
+            "verbs;ofi_rxm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_VERBS_RXM], [1], [Define to use verbs;ofi_rxm capability set])
+                enable_verbs="yes"
+                enable_rxm="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -223,47 +269,49 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
 
         prov_config=""
         if test "x${netmod_args}" != "x" ; then
-            prov_config+=" --enable-psm=${enable_psm}"
-            prov_config+=" --enable-psm2=${enable_psm2}"
-            prov_config+=" --enable-sockets=${enable_sockets}"
-            prov_config+=" --enable-verbs=${enable_verbs}"
-            prov_config+=" --enable-usnic=${enable_usnic}"
-            prov_config+=" --enable-gni=${enable_gni}"
-            prov_config+=" --enable-bgq=${enable_bgq}"
-            prov_config+=" --enable-udp=${enable_udp}"
-            prov_config+=" --enable-rxm=${enable_rxm}"
-            prov_config+=" --enable-rxd=${enable_rxd}"
-            prov_config+=" --enable-tcp=${enable_tcp}"
-            prov_config+=" --enable-shm=${enable_shm}"
-            prov_config+=" --enable-mlx=${enable_mlx}"
-            prov_config+=" --enable-perf=${enable_perf}"
-            prov_config+=" --enable-rstream=${enable_rstream}"
-            prov_config+=" --enable-mrail=${enable_mrail}"
+            prov_config="$prov_config --enable-psm=${enable_psm}"
+            prov_config="$prov_config --enable-psm2=${enable_psm2}"
+            prov_config="$prov_config --enable-sockets=${enable_sockets}"
+            prov_config="$prov_config --enable-verbs=${enable_verbs}"
+            prov_config="$prov_config --enable-usnic=${enable_usnic}"
+            prov_config="$prov_config --enable-gni=${enable_gni}"
+            prov_config="$prov_config --enable-bgq=${enable_bgq}"
+            prov_config="$prov_config --enable-udp=${enable_udp}"
+            prov_config="$prov_config --enable-rxm=${enable_rxm}"
+            prov_config="$prov_config --enable-rxd=${enable_rxd}"
+            prov_config="$prov_config --enable-tcp=${enable_tcp}"
+            prov_config="$prov_config --enable-shm=${enable_shm}"
+            prov_config="$prov_config --enable-mlx=${enable_mlx}"
+            prov_config="$prov_config --enable-perf=${enable_perf}"
+            prov_config="$prov_config --enable-rstream=${enable_rstream}"
+            prov_config="$prov_config --enable-mrail=${enable_mrail}"
+            prov_config="$prov_config --enable-efa=${enable_efa}"
+            prov_config="$prov_config --enable-netdir=${enable_netdir}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
-            prov_config+=" --enable-direct=${ofi_direct_provider}"
+            prov_config="$prov_config --enable-direct=${ofi_direct_provider}"
             AC_MSG_NOTICE([Enabling direct embedded provider: ${ofi_direct_provider}])
         fi
 
-        ofi_subdir_args+=" $prov_config"
+        ofi_subdir_args="$ofi_subdir_args $prov_config"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
         PAC_PUSH_ALL_FLAGS()
         PAC_RESET_ALL_FLAGS()
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
+        PAC_CONFIG_SUBDIR_ARGS([modules/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
         PAC_POP_ALL_FLAGS()
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/include], [CPPFLAGS])
 
         if test "x$ofi_direct_provider" != "x" ; then
-            PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
-            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${main_top_builddir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
 
-        ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
-        ofilib="src/mpid/ch4/netmod/ofi/libfabric/src/libfabric.la"
+        ofisrcdir="${main_top_builddir}/modules/libfabric"
+        ofilib="modules/libfabric/src/libfabric.la"
     else
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
         PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
@@ -272,7 +320,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     # check for libfabric depedence libs
     pcdir=""
     if test "${ofi_embedded}" = "yes" ; then
-        pcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
+        pcdir="${main_top_builddir}/modules/libfabric"
     elif test -f ${with_libfabric}/lib/pkgconfig/libfabric.pc ; then
         pcdir="${with_libfabric}/lib/pkgconfig"
     fi
@@ -291,21 +339,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
 
     if test "$enable_ofi_domain" = "yes"; then
         AC_DEFINE(MPIDI_OFI_VNI_USE_DOMAIN, 1, [CH4/OFI should use domain for vni contexts])
-    fi
-
-    AC_ARG_ENABLE(legacy-ofi,
-    [--enable-legacy-ofi
-       Allows OFI providers which do not support the minimum requirements for tagged communication.
-       Specifically, FI_TAGGED, completion queue data support of at least 4 bytes, FI_DIRECTED_RECV,
-       FI_DELIVERY_COMPLETE, FI_REMOTE_READ, FI_REMOTE_WRITE. Without enabling this, older or less
-       capable providers will have runtime failures.
-       level:
-         yes        - Enabled
-         no         - Disabled (default)
-    ],,enable_legacy_ofi=no)
-
-    if test "$enable_legacy_ofi" = "yes"; then
-        AC_DEFINE(MPIDI_ENABLE_LEGACY_OFI, 1, [CH4/OFI should build in support for legacy OFI providers])
     fi
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)

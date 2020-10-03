@@ -35,10 +35,10 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
     if (datatype_ptr->is_committed == 0) {
         datatype_ptr->is_committed = 1;
 
-        MPIR_Typerep_commit(*datatype_p, &datatype_ptr->typerep);
+        MPIR_Typerep_commit(*datatype_p);
 
         MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
-                      (int) datatype_ptr->max_contig_blocks);
+                      (int) datatype_ptr->typerep.num_contig_blocks);
 
         MPID_Type_commit_hook(datatype_ptr);
 

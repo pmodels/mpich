@@ -13,7 +13,6 @@ typedef struct MPID_nem_tcp_send_q_element {
     size_t len;                 /* number of bytes left to send */
     char *start;                /* pointer to next byte to send */
     MPID_nem_cell_ptr_t cell;
-    /*     char buf[MPID_NEM_MAX_PACKET_LEN]; *//* data to be sent */
 } MPID_nem_tcp_send_q_element_t;
 
 static struct {
@@ -355,7 +354,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert(sreq != NULL);
     MPIR_Object_set_ref(sreq, 2);
 
@@ -438,7 +437,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t * vc, void *hdr, intptr_t hdr
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert(sreq != NULL);
     MPIR_Object_set_ref(sreq, 2);
 

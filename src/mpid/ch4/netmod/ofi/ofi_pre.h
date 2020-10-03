@@ -24,7 +24,7 @@
 #define MPIDI_OFI_VNI_USE_SEPCTX       1
 #endif
 
-#define MPIDI_OFI_MAX_AM_HDR_SIZE    128
+#define MPIDI_OFI_MAX_AM_HDR_SIZE      ((1 << MPIDI_OFI_AM_HDR_SZ_BITS) - 1)
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
@@ -50,9 +50,16 @@ typedef struct {
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
     MPIDI_AMTYPE_SHORT,
+    MPIDI_AMTYPE_PIPELINE,
     MPIDI_AMTYPE_LMT_REQ,
     MPIDI_AMTYPE_LMT_ACK
 };
+
+typedef enum {
+    MPIDI_OFI_DEFERRED_AM_OP__ISEND_EAGER,
+    MPIDI_OFI_DEFERRED_AM_OP__ISEND_PIPELINE,
+    MPIDI_OFI_DEFERRED_AM_OP__ISEND_RDMA_READ
+} MPIDI_OFI_deferred_am_op_e;
 
 typedef struct {
     /* context id and src rank so the target side can
@@ -75,6 +82,7 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
     uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
     uint64_t data_sz:MPIDI_OFI_AM_DATA_SZ_BITS;
+    int32_t seg_sz;             /* size of current pipeline segment */
     uint16_t seqno;             /* Sequence number of this message.
                                  * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
     fi_addr_t fi_src_addr;      /* OFI address of the sender */
@@ -101,9 +109,11 @@ typedef struct {
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
-    MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
     void *unpack_buffer;
     MPI_Aint pack_size;
+    uint64_t src_offset;
+    MPIR_Context_id_t context_id;
+    int src_rank;
 } MPIDI_OFI_lmt_unpack_t;
 
 typedef enum {
@@ -130,10 +140,29 @@ typedef struct {
     struct iovec iov[3];
 } MPIDI_OFI_am_request_header_t;
 
+typedef struct MPIDI_OFI_deferred_am_isend_req {
+    int op;
+    int rank;
+    MPIR_Comm *comm;
+    int handler_id;
+    const void *buf;
+    size_t count;
+    MPI_Datatype datatype;
+    MPIR_Request *sreq;
+    bool need_packing;
+
+    MPI_Aint data_sz;
+
+    struct MPIDI_OFI_deferred_am_isend_req *prev;
+    struct MPIDI_OFI_deferred_am_isend_req *next;
+} MPIDI_OFI_deferred_am_isend_req_t;
+
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIDI_OFI_am_request_header_t *req_hdr;
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_req;    /* saving information when an AM isend is
+                                                         * deferred */
 } MPIDI_OFI_am_request_t;
 
 
@@ -191,7 +220,12 @@ typedef struct {
     struct fid_cntr *cmpl_cntr;
     uint64_t win_id;
     struct MPIDI_OFI_win_request *syncQ;
+    struct MPIDI_OFI_win_request *deferredQ;
     MPIDI_OFI_win_targetinfo_t *winfo;
+
+    MPL_gavl_tree_t *dwin_target_mrs;   /* MR key and address pairs registered to remote processes.
+                                         * One AVL tree per process. */
+    MPL_gavl_tree_t dwin_mrs;   /* Single AVL tree to store locally attached MRs */
 
     /* Accumulate related info. The struct internally uses MPIDI_OFI_DT_SIZES
      * defined in ofi_types.h to allocate the max_count array. The struct
@@ -205,9 +239,10 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 typedef struct {
-    fi_addr_t dest;
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    fi_addr_t dest[MPIDI_CH4_MAX_VCIS][MPIDI_CH4_MAX_VCIS];     /* [local_vni][remote_vni] */
+#else
+    fi_addr_t dest[1][1];
 #endif
 } MPIDI_OFI_addr_t;
 

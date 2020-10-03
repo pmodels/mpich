@@ -207,7 +207,7 @@ void MPIR_Dataloop_printf(MPI_Datatype type, int depth, int header)
         MPII_Dataloop *loop_p;
 
         MPIR_Datatype_get_ptr(type, dt_p);
-        loop_p = (MPII_Dataloop *) dt_p->typerep;
+        loop_p = (MPII_Dataloop *) dt_p->typerep.handle;
 
         dot_printf(loop_p, depth, header);
         return;

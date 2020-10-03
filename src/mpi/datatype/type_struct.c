@@ -27,125 +27,37 @@ int MPI_Type_struct(int count, int *array_of_blocklengths,
 #undef MPI_Type_struct
 #define MPI_Type_struct PMPI_Type_struct
 
-static MPI_Aint MPII_Type_struct_alignsize(int count,
-                                           const MPI_Datatype * oldtype_array,
-                                           const MPI_Aint * displacement_array);
-
-/* MPII_Type_struct_alignsize
- *
- * This function guesses at how the C compiler would align a structure
- * with the given components.
- *
- * It uses these configure-time defines to do its magic:
- * - HAVE_MAX_INTEGER_ALIGNMENT - maximum byte alignment of integers
- * - HAVE_MAX_FP_ALIGNMENT      - maximum byte alignment of floating points
- * - HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT - maximum byte alignment with long
- *                                   doubles (if different from FP_ALIGNMENT)
- * - HAVE_MAX_DOUBLE_FP_ALIGNMENT - maximum byte alignment with doubles (if
- *                                  long double is different from FP_ALIGNMENT)
- * - HAVE_DOUBLE_POS_ALIGNMENT  - indicates that structures with doubles
- *                                are aligned differently if double isn't
- *                                at displacement 0 (e.g. PPC32/64).
- * - HAVE_LLINT_POS_ALIGNMENT   - same as above, for MPI_LONG_LONG_INT
- *
- * The different FP, DOUBLE, LONG_DOUBLE alignment case are necessary for
- * Cygwin on X86 (because long_double is 12 bytes, so double and long double
- * have different natural alignments).  Linux on X86, however, does not have
- * different rules for this case.
- */
-static MPI_Aint MPII_Type_struct_alignsize(int count,
-                                           const MPI_Datatype * oldtype_array,
-                                           const MPI_Aint * displacement_array)
+static MPI_Aint struct_alignsize(int count, const MPI_Datatype * oldtype_array)
 {
-    int i;
-    MPI_Aint max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
+    MPI_Aint max_alignsize = 0, tmp_alignsize;
 
-    for (i = 0; i < count; i++) {
-        /* shouldn't be called with an LB or UB, but we'll handle it nicely */
-        if (oldtype_array[i] == MPI_LB || oldtype_array[i] == MPI_UB)
-            continue;
-        else if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
-            tmp_alignsize = MPIR_Datatype_get_basic_size(oldtype_array[i]);
-
-#ifdef HAVE_DOUBLE_ALIGNMENT_EXCEPTION
-            if (oldtype_array[i] == MPI_DOUBLE) {
-                tmp_alignsize = HAVE_DOUBLE_ALIGNMENT_EXCEPTION;
-            }
-#endif
-
-            switch (oldtype_array[i]) {
-                case MPI_FLOAT:
-                case MPI_DOUBLE:
-                case MPI_LONG_DOUBLE:
-#if defined(HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT) && \
-    defined(HAVE_MAX_DOUBLE_FP_ALIGNMENT)
-                    if (oldtype_array[i] == MPI_LONG_DOUBLE) {
-                        if (tmp_alignsize > HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT)
-                            tmp_alignsize = HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT;
-                    } else if (oldtype_array[i] == MPI_DOUBLE) {
-                        if (tmp_alignsize > HAVE_MAX_DOUBLE_FP_ALIGNMENT)
-                            tmp_alignsize = HAVE_MAX_DOUBLE_FP_ALIGNMENT;
-                    } else {
-                        /* HAVE_MAX_FP_ALIGNMENT may not be defined, hence commented */
-                        /*
-                         * if (tmp_alignsize > HAVE_MAX_FP_ALIGNMENT)
-                         * tmp_alignsize = HAVE_MAX_FP_ALIGNMENT;
-                         */
-                    }
-#elif defined(HAVE_MAX_FP_ALIGNMENT)
-                    if (tmp_alignsize > HAVE_MAX_FP_ALIGNMENT)
-                        tmp_alignsize = HAVE_MAX_FP_ALIGNMENT;
-#endif
-#ifdef HAVE_DOUBLE_POS_ALIGNMENT
-                    /* sort of a hack, but so is this rule */
-                    if (oldtype_array[i] == MPI_DOUBLE && displacement_array[i] != (MPI_Aint) 0) {
-                        tmp_alignsize = 4;
-                    }
-#endif
-                    break;
-                default:
-#ifdef HAVE_MAX_INTEGER_ALIGNMENT
-                    if (tmp_alignsize > HAVE_MAX_INTEGER_ALIGNMENT)
-                        tmp_alignsize = HAVE_MAX_INTEGER_ALIGNMENT;
-#endif
-                    break;
-#ifdef HAVE_LLINT_POS_ALIGNMENT
-                    if (oldtype_array[i] == MPI_LONG_LONG_INT &&
-                        displacement_array[i] != (MPI_Aint) 0) {
-                        tmp_alignsize = 4;
-                    }
-#endif
-            }
+    for (int i = 0; i < count; i++) {
+        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
+            tmp_alignsize = MPIR_Datatype_builtintype_alignment(oldtype_array[i]);
         } else {
             MPIR_Datatype *dtp;
-
             MPIR_Datatype_get_ptr(oldtype_array[i], dtp);
             tmp_alignsize = dtp->alignsize;
-            if (derived_alignsize < tmp_alignsize)
-                derived_alignsize = tmp_alignsize;
         }
         if (max_alignsize < tmp_alignsize)
             max_alignsize = tmp_alignsize;
-
     }
 
     return max_alignsize;
 }
 
-int MPIR_Type_struct(int count,
-                     const int *blocklength_array,
-                     const MPI_Aint * displacement_array,
-                     const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
+static int type_struct(int count,
+                       const int *blocklength_array,
+                       const MPI_Aint * displacement_array,
+                       const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, old_are_contig = 1, definitely_not_contig = 0;
-    int found_sticky_lb = 0, found_sticky_ub = 0, found_true_lb = 0,
-        found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
+    int found_true_lb = 0, found_true_ub = 0, found_el_type = 0, found_lb = 0, found_ub = 0;
     MPI_Aint el_sz = 0;
     MPI_Aint size = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
-    MPI_Aint true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
-        sticky_ub_disp = 0, lb_disp = 0, ub_disp = 0;
+    MPI_Aint true_lb_disp = 0, true_ub_disp = 0, lb_disp = 0, ub_disp = 0;
 
     MPIR_Datatype *new_dtp;
 
@@ -177,7 +89,7 @@ int MPIR_Type_struct(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     /* check for junk struct with all zero blocks */
     for (i = 0; i < count; i++)
@@ -189,22 +101,20 @@ int MPIR_Type_struct(int count,
         return MPII_Type_zerolen(newtype);
     }
 
-    new_dtp->max_contig_blocks = 0;
     for (i = 0; i < count; i++) {
-        int is_builtin = (HANDLE_IS_BUILTIN(oldtype_array[i]));
         MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
         MPI_Aint tmp_el_sz;
         MPI_Datatype tmp_el_type;
         MPIR_Datatype *old_dtp = NULL;
         int old_is_contig;
 
-        /* Interpreting typemap to not include 0 blklen things, including
-         * MPI_LB and MPI_UB. -- Rob Ross, 10/31/2005
+        /* Interpreting typemap to not include 0 blklen things. -- Rob
+         * Ross, 10/31/2005
          */
         if (blocklength_array[i] == 0)
             continue;
 
-        if (is_builtin) {
+        if (HANDLE_IS_BUILTIN(oldtype_array[i])) {
             tmp_el_sz = MPIR_Datatype_get_basic_size(oldtype_array[i]);
             tmp_el_type = oldtype_array[i];
 
@@ -215,8 +125,6 @@ int MPIR_Type_struct(int count,
             tmp_true_ub = tmp_ub;
 
             size += tmp_el_sz * blocklength_array[i];
-
-            new_dtp->max_contig_blocks++;
         } else {
             MPIR_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
@@ -233,43 +141,19 @@ int MPIR_Type_struct(int count,
             tmp_true_ub = tmp_ub + (old_dtp->true_ub - old_dtp->ub);
 
             size += old_dtp->size * blocklength_array[i];
-
-            new_dtp->max_contig_blocks += old_dtp->max_contig_blocks * blocklength_array[i];
         }
 
         /* element size and type */
-        if (oldtype_array[i] != MPI_LB && oldtype_array[i] != MPI_UB) {
-            if (found_el_type == 0) {
-                el_sz = tmp_el_sz;
-                el_type = tmp_el_type;
-                found_el_type = 1;
-            } else if (el_sz != tmp_el_sz) {
-                el_sz = -1;
-                el_type = MPI_DATATYPE_NULL;
-            } else if (el_type != tmp_el_type) {
-                /* Q: should we set el_sz = -1 even though the same? */
-                el_type = MPI_DATATYPE_NULL;
-            }
-        }
-
-        /* keep lowest sticky lb */
-        if ((oldtype_array[i] == MPI_LB) || (!is_builtin && old_dtp->has_sticky_lb)) {
-            if (!found_sticky_lb) {
-                found_sticky_lb = 1;
-                sticky_lb_disp = tmp_lb;
-            } else if (sticky_lb_disp > tmp_lb) {
-                sticky_lb_disp = tmp_lb;
-            }
-        }
-
-        /* keep highest sticky ub */
-        if ((oldtype_array[i] == MPI_UB) || (!is_builtin && old_dtp->has_sticky_ub)) {
-            if (!found_sticky_ub) {
-                found_sticky_ub = 1;
-                sticky_ub_disp = tmp_ub;
-            } else if (sticky_ub_disp < tmp_ub) {
-                sticky_ub_disp = tmp_ub;
-            }
+        if (found_el_type == 0) {
+            el_sz = tmp_el_sz;
+            el_type = tmp_el_type;
+            found_el_type = 1;
+        } else if (el_sz != tmp_el_sz) {
+            el_sz = -1;
+            el_type = MPI_DATATYPE_NULL;
+        } else if (el_type != tmp_el_type) {
+            /* Q: should we set el_sz = -1 even though the same? */
+            el_type = MPI_DATATYPE_NULL;
         }
 
         /* keep lowest lb/true_lb and highest ub/true_ub
@@ -277,44 +161,42 @@ int MPIR_Type_struct(int count,
          * note: checking for contiguity at the same time, to avoid
          *       yet another pass over the arrays
          */
-        if (oldtype_array[i] != MPI_UB && oldtype_array[i] != MPI_LB) {
-            if (!found_true_lb) {
-                found_true_lb = 1;
-                true_lb_disp = tmp_true_lb;
-            } else if (true_lb_disp > tmp_true_lb) {
-                /* element starts before previous */
-                true_lb_disp = tmp_true_lb;
-                definitely_not_contig = 1;
-            }
+        if (!found_true_lb) {
+            found_true_lb = 1;
+            true_lb_disp = tmp_true_lb;
+        } else if (true_lb_disp > tmp_true_lb) {
+            /* element starts before previous */
+            true_lb_disp = tmp_true_lb;
+            definitely_not_contig = 1;
+        }
 
-            if (!found_lb) {
-                found_lb = 1;
-                lb_disp = tmp_lb;
-            } else if (lb_disp > tmp_lb) {
-                /* lb before previous */
-                lb_disp = tmp_lb;
-                definitely_not_contig = 1;
-            }
+        if (!found_lb) {
+            found_lb = 1;
+            lb_disp = tmp_lb;
+        } else if (lb_disp > tmp_lb) {
+            /* lb before previous */
+            lb_disp = tmp_lb;
+            definitely_not_contig = 1;
+        }
 
-            if (!found_true_ub) {
-                found_true_ub = 1;
-                true_ub_disp = tmp_true_ub;
-            } else if (true_ub_disp < tmp_true_ub) {
-                true_ub_disp = tmp_true_ub;
-            } else {
-                /* element ends before previous ended */
-                definitely_not_contig = 1;
-            }
+        if (!found_true_ub) {
+            found_true_ub = 1;
+            true_ub_disp = tmp_true_ub;
+        } else if (true_ub_disp < tmp_true_ub) {
+            true_ub_disp = tmp_true_ub;
+        } else {
+            /* element ends before previous ended */
+            definitely_not_contig = 1;
+        }
 
-            if (!found_ub) {
-                found_ub = 1;
-                ub_disp = tmp_ub;
-            } else if (ub_disp < tmp_ub) {
-                ub_disp = tmp_ub;
-            } else {
-                /* ub before previous */
-                definitely_not_contig = 1;
-            }
+        if (!found_ub) {
+            found_ub = 1;
+            ub_disp = tmp_ub;
+        } else if (ub_disp < tmp_ub) {
+            ub_disp = tmp_ub;
+        } else {
+            /* ub before previous */
+            definitely_not_contig = 1;
         }
 
         MPIR_Datatype_is_contig(oldtype_array[i], &old_is_contig);
@@ -326,26 +208,22 @@ int MPIR_Type_struct(int count,
     new_dtp->builtin_element_size = el_sz;
     new_dtp->basic_type = el_type;
 
-    new_dtp->has_sticky_lb = found_sticky_lb;
     new_dtp->true_lb = true_lb_disp;
-    new_dtp->lb = (found_sticky_lb) ? sticky_lb_disp : lb_disp;
+    new_dtp->lb = lb_disp;
 
-    new_dtp->has_sticky_ub = found_sticky_ub;
     new_dtp->true_ub = true_ub_disp;
-    new_dtp->ub = (found_sticky_ub) ? sticky_ub_disp : ub_disp;
+    new_dtp->ub = ub_disp;
 
-    new_dtp->alignsize = MPII_Type_struct_alignsize(count, oldtype_array, displacement_array);
+    new_dtp->alignsize = struct_alignsize(count, oldtype_array);
 
     new_dtp->extent = new_dtp->ub - new_dtp->lb;
-    if ((!found_sticky_lb) && (!found_sticky_ub)) {
-        /* account for padding */
-        MPI_Aint epsilon = (new_dtp->alignsize > 0) ?
-            new_dtp->extent % ((MPI_Aint) (new_dtp->alignsize)) : 0;
+    /* account for padding */
+    MPI_Aint epsilon = (new_dtp->alignsize > 0) ?
+        new_dtp->extent % ((MPI_Aint) (new_dtp->alignsize)) : 0;
 
-        if (epsilon) {
-            new_dtp->ub += ((MPI_Aint) (new_dtp->alignsize) - epsilon);
-            new_dtp->extent = new_dtp->ub - new_dtp->lb;
-        }
+    if (epsilon) {
+        new_dtp->ub += ((MPI_Aint) (new_dtp->alignsize) - epsilon);
+        new_dtp->extent = new_dtp->ub - new_dtp->lb;
     }
 
     new_dtp->size = size;
@@ -362,10 +240,79 @@ int MPIR_Type_struct(int count,
     }
 
     mpi_errno = MPIR_Typerep_create_struct(count, blocklength_array, displacement_array,
-                                           oldtype_array, &new_dtp->typerep);
+                                           oldtype_array, new_dtp);
     MPIR_ERR_CHECK(mpi_errno);
 
     *newtype = new_dtp->handle;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Type_struct(int count,
+                     const int *blocklength_array,
+                     const MPI_Aint * displacement_array,
+                     const MPI_Datatype * oldtype_array, MPI_Datatype * newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* detect if the old MPI_LB/MPI_UB API is used */
+    bool using_old_api = false;
+    for (int i = 0; i < count; i++) {
+        if (oldtype_array[i] == MPI_LB || oldtype_array[i] == MPI_UB) {
+            using_old_api = true;
+            break;
+        }
+    }
+
+    if (!using_old_api) {
+        mpi_errno =
+            type_struct(count, blocklength_array, displacement_array, oldtype_array, newtype);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        int *real_blocklength_array = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_DATATYPE);
+        MPI_Aint *real_displacement_array = (MPI_Aint *) MPL_malloc(count * sizeof(MPI_Aint),
+                                                                    MPL_MEM_DATATYPE);
+        MPI_Datatype *real_oldtype_array = (MPI_Datatype *) MPL_malloc(count * sizeof(MPI_Datatype),
+                                                                       MPL_MEM_DATATYPE);
+
+        int real_count = 0;
+        for (int i = 0; i < count; i++) {
+            if (oldtype_array[i] != MPI_LB && oldtype_array[i] != MPI_UB) {
+                real_blocklength_array[real_count] = blocklength_array[i];
+                real_displacement_array[real_count] = displacement_array[i];
+                real_oldtype_array[real_count] = oldtype_array[i];
+                real_count++;
+            }
+        }
+
+        MPI_Datatype tmptype;
+        mpi_errno = type_struct(real_count, real_blocklength_array, real_displacement_array,
+                                real_oldtype_array, &tmptype);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPL_free(real_oldtype_array);
+        MPL_free(real_displacement_array);
+        MPL_free(real_blocklength_array);
+
+        MPIR_Datatype *tmptype_ptr;
+        MPIR_Datatype_get_ptr(tmptype, tmptype_ptr);
+
+        MPI_Aint lb = tmptype_ptr->lb, ub = tmptype_ptr->ub;
+        for (int i = 0; i < count; i++) {
+            if (oldtype_array[i] == MPI_LB)
+                lb = displacement_array[i];
+            else if (oldtype_array[i] == MPI_UB)
+                ub = displacement_array[i];
+        }
+
+        mpi_errno = MPIR_Type_create_resized(tmptype, lb, ub - lb, newtype);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        MPIR_Type_free_impl(&tmptype);
+    }
 
   fn_exit:
     return mpi_errno;

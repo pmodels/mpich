@@ -10,7 +10,7 @@
 #include "hwloc/topo_hwloc.h"
 #endif /* HAVE_HWLOC */
 
-struct HYDT_topo_info HYDT_topo_info = { 0 };
+struct HYDT_topo_info HYDT_topo_info = {.topolib = NULL,.debug = -1 };
 
 static int ignore_binding = 0;
 
@@ -45,9 +45,6 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
         membind = user_membind;
     else if (MPL_env2str("HYDRA_MEMBIND", &membind) == 0)
         membind = NULL;
-
-    if (MPL_env2bool("HYDRA_TOPO_DEBUG", &HYDT_topo_info.debug) == 0)
-        HYDT_topo_info.debug = 0;
 
     if (!binding || !strcmp(binding, "none")) {
         ignore_binding = 1;

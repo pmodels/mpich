@@ -101,7 +101,7 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Defines the threshold of high-density datatype. The
-        density is calculated by (datatype_size / datatype_max_contig_blocks).
+        density is calculated by (datatype_size / datatype_num_contig_blocks).
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -564,13 +564,22 @@ int MPID_Init(int requested, int *provided)
     /* Initialize multiple VCIs */
     /* TODO: add checks to ensure MPIDI_vci_t is padded or aligned to MPL_CACHELINE_SIZE */
     MPIDI_global.n_vcis = 1;
-    if (MPIR_CVAR_CH4_NUM_VCIS > 1)
+    if (MPIR_CVAR_CH4_NUM_VCIS > 1) {
         MPIDI_global.n_vcis = MPIR_CVAR_CH4_NUM_VCIS;
+        /* There are configured maxes that we need observe. */
+        /* TODO: check them at configure time to avoid discrepancy */
+        MPIR_Assert(MPIDI_global.n_vcis <= MPIDI_CH4_MAX_VCIS);
+        MPIR_Assert(MPIDI_global.n_vcis <= MPIR_REQUEST_NUM_POOLS);
+    }
 
     for (int i = 0; i < MPIDI_global.n_vcis; i++) {
         MPID_Thread_mutex_create(&MPIDI_VCI(i).lock, &err);
         MPIR_Assert(err == 0);
-        /* TODO: lw_req, workq */
+
+        /* NOTE: 1-1 vci-pool mapping */
+        MPIR_Request_register_pool_lock(i, &MPIDI_VCI(i).lock);
+
+        /* TODO: workq */
     }
 
     {
@@ -592,6 +601,8 @@ int MPID_Init(int requested, int *provided)
         MPIR_Process.tag_bits = MPL_MIN(shm_tag_bits, nm_tag_bits);
     }
 
+    MPIDIG_am_check_init();
+
     /* Initialize collective selection */
     if (!strcmp(MPIR_CVAR_CH4_COLL_SELECTION_TUNING_JSON_FILE, "")) {
         mpi_errno = MPIR_Csel_create_from_buf(MPIDI_coll_generic_json,
@@ -607,7 +618,6 @@ int MPID_Init(int requested, int *provided)
     MPIR_Comm_fns = &MPIDI_global.MPIR_Comm_fns_store;
 
     MPIR_Process.attrs.appnum = appnum;
-    MPIR_Process.attrs.wtime_is_global = 1;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     destroy_init_comm(&init_comm);
@@ -615,9 +625,6 @@ int MPID_Init(int requested, int *provided)
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDI_global.is_initialized = 0;
-
-    mpi_errno = MPIDU_Init_shm_finalize();
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
@@ -634,6 +641,9 @@ int MPID_InitCompleted(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INITCOMPLETED);
 
+    mpi_errno = MPIDI_NM_post_init();
+    MPIR_ERR_CHECK(mpi_errno);
+
     if (MPIR_Process.has_parent) {
         mpi_errno = MPIR_pmi_kvs_get(-1, MPIDI_PARENT_PORT_KVSKEY, parent_port, MPI_MAX_PORT_NAME);
         MPIR_ERR_CHECK(mpi_errno);
@@ -647,7 +657,7 @@ int MPID_InitCompleted(void)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INITCOMPLETED);
 
   fn_exit:
-    return MPI_SUCCESS;
+    return mpi_errno;
 
   fn_fail:
     goto fn_exit;
@@ -704,6 +714,9 @@ int MPID_Finalize(void)
     generic_finalize();
 
     finalize_av_table();
+
+    mpi_errno = MPIDU_Init_shm_finalize();
+    MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_pmi_finalize();
 

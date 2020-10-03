@@ -14,7 +14,6 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/eager/include/posix_eager.h \
                   src/mpid/ch4/shm/posix/eager/include/posix_eager_impl.h
 
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/src/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/fbox/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/iqueue/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/shm/posix/eager/stub/Makefile.mk
 

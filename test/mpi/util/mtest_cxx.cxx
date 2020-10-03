@@ -107,6 +107,7 @@ void MTest_Finalize(int errs)
     MTestRMACleanup();
 
     MPI::Finalize();
+    MTest_finalize_gpu();
 }
 
 /* ----------------------------------------------------------------------- */

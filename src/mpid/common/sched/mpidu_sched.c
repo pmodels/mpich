@@ -470,7 +470,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPIR_Assert(s->entries != NULL);
 
     /* now create and populate the request */
-    r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
+    r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* FIXME is this right when comm/datatype GC is used? */
@@ -962,8 +962,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
             }
 
-            mpi_errno = MPID_Request_complete(s->req);
-            MPIR_ERR_CHECK(mpi_errno);
+            MPIR_Request_complete(s->req);
 
             s->req = NULL;
             MPL_free(s->entries);

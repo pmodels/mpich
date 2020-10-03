@@ -10,6 +10,6 @@ EXTRA_DIST = testlist
 ## for all programs that are just built from the single corresponding source
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
-noinst_PROGRAMS = proberank truncmsg1 truncmsg2 \
+noinst_PROGRAMS = proberank truncmsg1 truncmsg2 truncmsg_mrecv \
                   errinstatts errinstatta errinstatws errinstatwa
 

@@ -32,7 +32,7 @@ program ring
   next = mod((rank + 1), size)
   from = mod((rank + size - 1), size)
 
-! If we are the "master" process (i.e., MPI_COMM_WORLD rank 0), put
+! If we are the "main" process (i.e., MPI_COMM_WORLD rank 0), put
 ! the number of times to go around the ring in the message.
 
   if (rank .eq. 0) then

@@ -130,6 +130,19 @@ static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
         strncpy(buf, "none", maxlen);
 }
 
+static void update_winattr_after_set_info(MPIR_Win * win)
+{
+    if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_NO_SHM);
+
+    if (MPIDIG_WIN(win, info_args).accumulate_ops == MPIDIG_ACCU_SAME_OP_NO_OP)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_SAME_OP_NO_OP;
+    else
+        MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_ACCU_SAME_OP_NO_OP);
+}
+
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -234,6 +247,11 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
             else
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "coll_attach")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDIG_WIN(win, info_args).coll_attach = true;
+            else
+                MPIDIG_WIN(win, info_args).coll_attach = false;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -284,7 +302,6 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     win->copySize = 0;
     MPIDIG_WIN(win, shared_table) = NULL;
     MPIDIG_WIN(win, sync).assert_mode = 0;
-    MPIDIG_WIN(win, shm_allocated) = 0;
 
     /* Initialize the info (hint) flags per window */
     MPIDIG_WIN(win, info_args).no_locks = 0;
@@ -310,6 +327,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+    MPIDIG_WIN(win, info_args).coll_attach = false;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -326,6 +344,33 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     MPIDIG_WIN(win, win_id) = MPIDIG_generate_win_id(comm_ptr);
     MPIDIU_map_set(MPIDI_global.win_map, MPIDIG_WIN(win, win_id), win, MPL_MEM_RMA);
+
+    /* set winattr for performance optimization at fast path:
+     * - check if comm is COMM_WORLD or dup of COMM_WORLD
+     * - check if disable_shm_accumulate hint is set
+     * - check if SAME_OP_NO_OP is set for accumulates */
+    MPIDI_WIN(win, winattr) = 0;
+
+    int comm_compare_result = MPI_UNEQUAL;
+    mpi_errno = MPIR_Comm_compare_impl(comm_ptr, MPIR_Process.comm_world, &comm_compare_result);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (comm_compare_result == MPI_CONGRUENT || comm_compare_result == MPI_IDENT)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_DIRECT_INTRA_COMM;
+
+    update_winattr_after_set_info(win);
+
+    /* If no local processes on each node, set ACCU_NO_SHM to enable native atomics */
+    bool no_local = false, all_no_local = false;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    if (!comm_ptr->node_comm)
+        no_local = true;
+
+    mpi_errno = MPIR_Allreduce(&no_local, &all_no_local, 1, MPI_C_BOOL,
+                               MPI_LAND, comm_ptr, &errflag);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (all_no_local)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_ACCU_NO_SHM;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDIG_WIN_INIT);
@@ -352,7 +397,7 @@ static int win_finalize(MPIR_Win ** win_ptr)
         int all_local_completed = 0, all_remote_completed = 0;
 
         /* NOTE: MPID_Win_free does not take on locks */
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
         MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
@@ -628,6 +673,9 @@ int MPIDIG_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     mpi_errno = win_set_info(win, info, FALSE /* is_init */);
     MPIR_ERR_CHECK(mpi_errno);
 
+    /* Do not update winattr except for info set at window creation.
+     * Because it will change RMA's behavior which requires collective synchronization. */
+
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_SET_INFO);
@@ -744,6 +792,12 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDIG_WIN(win, info_args).coll_attach)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "false");
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:

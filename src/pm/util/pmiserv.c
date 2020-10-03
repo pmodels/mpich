@@ -55,8 +55,8 @@ int snprintf(char *, size_t, const char *, ...);
 #define PMI_MAX_INFO_KEY       256
 #define PMI_MAX_INFO_VAL      1025
 
-/* There is only a single PMI master, so we allocate it here */
-static PMIMaster pmimaster = { 0, 0, 0 };
+/* There is only a single PMI main, so we allocate it here */
+static PMIMain pmimain = { 0, 0, 0 };
 
 /* Allow the user to register a routine to be used for the PMI spawn
    command */
@@ -264,7 +264,7 @@ int PMISetupNewGroup(int nProcess, PMIKVSpace * kvs)
         return 1;
 
     curPMIGroup->nProcess = nProcess;
-    curPMIGroup->groupID = pmimaster.nGroups++;
+    curPMIGroup->groupID = pmimain.nGroups++;
     curPMIGroup->nInBarrier = 0;
     curPMIGroup->pmiProcess =
         (PMIProcess **) MPL_malloc(sizeof(PMIProcess *) * nProcess, MPL_MEM_PM);
@@ -273,10 +273,10 @@ int PMISetupNewGroup(int nProcess, PMIKVSpace * kvs)
     curPMIGroup->nextGroup = 0;
     curNprocess = 0;
 
-    /* Add to PMIMaster */
-    g = pmimaster.groups;
+    /* Add to PMIMain */
+    g = pmimain.groups;
     if (!g) {
-        pmimaster.groups = curPMIGroup;
+        pmimain.groups = curPMIGroup;
     } else {
         while (g) {
             if (!g->nextGroup) {
@@ -470,8 +470,8 @@ static PMIKVSpace *fPMIKVSAllocate(void)
     kvs->lastIdx = -1;
 
     /* Insert into the list of KV spaces */
-    kPrev = &pmimaster.kvSpaces;
-    k = pmimaster.kvSpaces;
+    kPrev = &pmimain.kvSpaces;
+    k = pmimain.kvSpaces;
     while (k) {
         rc = strcmp(k->kvsname, kvs->kvsname);
         if (rc > 0)
@@ -560,7 +560,7 @@ static int fPMIKVSAddPair(PMIKVSpace * kvs, const char key[], const char val[])
 
 static PMIKVSpace *fPMIKVSFindSpace(const char kvsname[])
 {
-    PMIKVSpace *kvs = pmimaster.kvSpaces;
+    PMIKVSpace *kvs = pmimain.kvSpaces;
     int rc;
 
     /* We require the kvs spaces to be stored in a sorted order */
@@ -594,9 +594,9 @@ static int PMIKVSFree(PMIKVSpace * kvs)
         p = pNext;
     }
 
-    /* Recover the KVS space, and remove it from the master's list */
-    kPrev = &pmimaster.kvSpaces;
-    k = pmimaster.kvSpaces;
+    /* Recover the KVS space, and remove it from the main process's list */
+    kPrev = &pmimain.kvSpaces;
+    k = pmimain.kvSpaces;
     rc = 1;
     while (k) {
         rc = strcmp(k->kvsname, kvs->kvsname);
@@ -610,7 +610,7 @@ static int PMIKVSFree(PMIKVSpace * kvs)
     }
 
     /* Note that if we did not find the kvs, we have an internal
-     * error, since all kv spaces are maintained within the pmimaster list */
+     * error, since all kv spaces are maintained within the pmimain list */
     if (rc != 0) {
         MPL_internal_error_printf("Could not find KV Space %s\n", kvs->kvsname);
         return 1;

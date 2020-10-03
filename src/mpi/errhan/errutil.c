@@ -149,6 +149,7 @@ MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
     sizeof(MPIR_Errhandler),
     MPIR_Errhandler_direct,
     MPIR_ERRHANDLER_PREALLOC,
+    NULL
 };
 
 void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr)

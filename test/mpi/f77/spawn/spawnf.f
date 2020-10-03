@@ -44,7 +44,7 @@ C   We now have a valid intercomm
         call MPI_Comm_rank( intercomm, rank, ierr )
 
         if (parentcomm .eq. MPI_COMM_NULL) then
-C           Master
+C           Parent
            if (rsize .ne. np) then
               errs = errs + 1
               print *, "Did not create ", np, " processes (got ", rsize,
@@ -80,7 +80,7 @@ C             Child
             print *, "Unexpected rank on child ", rank, "(",i,")"
          endif
 
-C       Send the errs back to the master process 
+C       Send the errs back to the parent process 
          call MPI_Ssend( errs, 1, MPI_INTEGER, 0, 1, intercomm, ierr )
         endif
 

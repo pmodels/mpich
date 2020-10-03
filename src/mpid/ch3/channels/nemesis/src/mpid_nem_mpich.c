@@ -50,7 +50,7 @@ MPID_nem_mpich_init(void)
         MPID_nem_fboxq_elem_list[i].prev = NULL;
         MPID_nem_fboxq_elem_list[i].next = NULL;
         MPID_nem_fboxq_elem_list[i].grank = MPID_nem_mem_region.local_procs[i];
-        MPID_nem_fboxq_elem_list[i].fbox = &MPID_nem_mem_region.mailboxes.in[i]->mpich;
+        MPID_nem_fboxq_elem_list[i].fbox = MPID_nem_mem_region.mailboxes.in[i];
     }
 	
     MPID_nem_fboxq_head = NULL;
@@ -87,7 +87,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, struct iovec *iov
     if (*sreq_ptr == NULL)
     {
 	/* create a request */
-	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
 	MPIR_Assert(sreq != NULL);
 	MPIR_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_KIND__SEND;

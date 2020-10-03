@@ -259,11 +259,6 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
         disps[1] = (MPI_Aint) rank *(MPI_Aint) blksize *orig_extent;
         disps[2] = orig_extent * (MPI_Aint) (array_of_gsizes[dim]);
 
-/* Instead of using MPI_LB/MPI_UB, which have been removed from MPI in MPI-3,
-   use MPI_Type_create_resized. Use hindexed_block to set the starting displacement
-   of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
-   and extent to disps[2], which makes ub = disps[2].
- */
         mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1], 1,  /* 1 means disp is in bytes */
                                            *type_new, &type_indexed);
 
@@ -621,11 +616,6 @@ int MPI_Type_create_darray(int size,
 
     disps[0] = 0;
 
-/* Instead of using MPI_LB/MPI_UB, which have been removed from MPI in MPI-3,
-   use MPI_Type_create_resized. Use hindexed_block to set the starting displacement
-   of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
-   and extent to disps[2], which makes ub = disps[2].
- */
     mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1], 1,      /* 1 means disp is in bytes */
                                        type_new, &tmp_type);
 
@@ -681,7 +671,7 @@ int MPI_Type_create_darray(int size,
 
     mpi_errno = MPIR_Typerep_create_darray(size, rank, ndims, array_of_gsizes, array_of_distribs,
                                            array_of_dargs, array_of_psizes, order, oldtype,
-                                           &datatype_ptr->typerep);
+                                           datatype_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);

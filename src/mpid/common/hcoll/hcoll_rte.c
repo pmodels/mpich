@@ -50,7 +50,7 @@ static void progress(void)
     int made_progress;
 
     if (0 == world_comm_destroying) {
-        MPID_Progress_test();
+        MPID_Progress_test(NULL);
     } else {
         /* FIXME: The hcoll library needs to be updated to return
          * error codes.  The progress function pointer right now
@@ -267,7 +267,7 @@ static int group_id(rte_grp_handle_t group)
 static void *get_coll_handle(void)
 {
     MPIR_Request *req;
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
     MPIR_Request_add_ref(req);
     return (void *) req;
 }
@@ -295,7 +295,7 @@ static void coll_handle_complete(void *handle)
     MPIR_Request *req;
     if (NULL != handle) {
         req = (MPIR_Request *) handle;
-        MPID_Request_complete(req);
+        MPIR_Request_complete(req);
     }
 }
 

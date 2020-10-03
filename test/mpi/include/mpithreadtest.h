@@ -68,10 +68,9 @@ int MTest_thread_yield(void);
 int MTest_thread_barrier_init(void);
 int MTest_thread_barrier(int);
 int MTest_thread_barrier_free(void);
+#endif
 
 void MTest_init_thread_pkg(void);
 void MTest_finalize_thread_pkg(void);
-
-#endif
 
 #endif /* MPITHREADTEST_H_INCLUDED */

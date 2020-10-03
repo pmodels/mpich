@@ -29,6 +29,7 @@ noinst_PROGRAMS =  \
     bsendfrag      \
     bsendpending   \
     icsend         \
+    icprobe        \
     rqstatus       \
     rqfreeb        \
     greq1          \
@@ -63,7 +64,9 @@ noinst_PROGRAMS =  \
     pingping  \
     pingping_barrier  \
     sendrecv1 \
-    sendself
+    sendself \
+    precv_anysrc \
+    precv_anysrc_exp
 
 irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
 irecv_any_SOURCES  = recv_any.c

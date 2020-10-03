@@ -19,4 +19,4 @@ icgathervx 5
 icscattervx 5
 icalltoallx 5
 reduceboolx 5
-redscatblk 4 mpiversion=2.2
+redscatblk 4

@@ -79,7 +79,7 @@ struct dloop_flatten_hdr {
 
 int MPIR_Dataloop_flatten_size(MPIR_Datatype * dtp, int *flattened_loop_size)
 {
-    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep;
+    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep.handle;
 
     *flattened_loop_size = sizeof(struct dloop_flatten_hdr) + dloop->dloop_sz;
 
@@ -90,7 +90,7 @@ int MPIR_Dataloop_flatten(MPIR_Datatype * dtp, void *flattened_dataloop)
 {
     struct dloop_flatten_hdr *dloop_flatten_hdr = (struct dloop_flatten_hdr *) flattened_dataloop;
     int mpi_errno = MPI_SUCCESS;
-    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep;
+    MPII_Dataloop *dloop = (MPII_Dataloop *) dtp->typerep.handle;
 
     /*
      * Our flattened layout contains three elements:
@@ -114,16 +114,17 @@ int MPIR_Dataloop_unflatten(MPIR_Datatype * dtp, void *flattened_dataloop)
     MPI_Aint ptrdiff;
     int mpi_errno = MPI_SUCCESS;
 
-    dtp->typerep = MPL_malloc(dloop_flatten_hdr->dloop_sz, MPL_MEM_DATATYPE);
-    MPIR_ERR_CHKANDJUMP1(dtp->typerep == NULL, mpi_errno, MPI_ERR_INTERN, "**nomem", "**nomem %s",
-                         "dataloop flatten hdr");
+    dtp->typerep.handle = MPL_malloc(dloop_flatten_hdr->dloop_sz, MPL_MEM_DATATYPE);
+    MPIR_ERR_CHKANDJUMP1(dtp->typerep.handle == NULL, mpi_errno, MPI_ERR_INTERN, "**nomem",
+                         "**nomem %s", "dataloop flatten hdr");
 
-    MPIR_Memcpy(dtp->typerep, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
+    MPIR_Memcpy(dtp->typerep.handle, (char *) flattened_dataloop + sizeof(struct dloop_flatten_hdr),
                 dloop_flatten_hdr->dloop_sz);
 
     ptrdiff =
-        (MPI_Aint) ((char *) (dtp->typerep) - (char *) dloop_flatten_hdr->dataloop_local_addr);
-    MPII_Dataloop_update(dtp->typerep, ptrdiff);
+        (MPI_Aint) ((char *) (dtp->typerep.handle) -
+                    (char *) dloop_flatten_hdr->dataloop_local_addr);
+    MPII_Dataloop_update(dtp->typerep.handle, ptrdiff);
 
   fn_exit:
     return mpi_errno;
@@ -339,7 +340,6 @@ void MPII_Dataloop_alloc_and_copy(int kind,
                                   MPII_Dataloop * old_loop, MPII_Dataloop ** new_loop_p)
 {
     MPI_Aint new_loop_sz = 0;
-    int align_sz;
     int epsilon;
     MPI_Aint loop_sz = sizeof(MPII_Dataloop);
     MPI_Aint off_sz = 0, blk_sz = 0, ptr_sz = 0, extent_sz = 0;
@@ -348,14 +348,8 @@ void MPII_Dataloop_alloc_and_copy(int kind,
     MPII_Dataloop *new_loop;
     MPI_Aint old_loop_sz = old_loop ? old_loop->dloop_sz : 0;
 
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;       /* default aligns everything to 8-byte boundaries */
-#endif
-
     if (old_loop != NULL) {
-        MPIR_Assert((old_loop_sz % align_sz) == 0);
+        MPIR_Assert((old_loop_sz % MAX_ALIGNMENT) == 0);
     }
 
     /* calculate the space that we actually need for everything */
@@ -380,25 +374,25 @@ void MPII_Dataloop_alloc_and_copy(int kind,
     }
 
     /* pad everything that we're going to allocate */
-    epsilon = loop_sz % align_sz;
+    epsilon = loop_sz % MAX_ALIGNMENT;
     if (epsilon)
-        loop_sz += align_sz - epsilon;
+        loop_sz += MAX_ALIGNMENT - epsilon;
 
-    epsilon = off_sz % align_sz;
+    epsilon = off_sz % MAX_ALIGNMENT;
     if (epsilon)
-        off_sz += align_sz - epsilon;
+        off_sz += MAX_ALIGNMENT - epsilon;
 
-    epsilon = blk_sz % align_sz;
+    epsilon = blk_sz % MAX_ALIGNMENT;
     if (epsilon)
-        blk_sz += align_sz - epsilon;
+        blk_sz += MAX_ALIGNMENT - epsilon;
 
-    epsilon = ptr_sz % align_sz;
+    epsilon = ptr_sz % MAX_ALIGNMENT;
     if (epsilon)
-        ptr_sz += align_sz - epsilon;
+        ptr_sz += MAX_ALIGNMENT - epsilon;
 
-    epsilon = extent_sz % align_sz;
+    epsilon = extent_sz % MAX_ALIGNMENT;
     if (epsilon)
-        extent_sz += align_sz - epsilon;
+        extent_sz += MAX_ALIGNMENT - epsilon;
 
     new_loop_sz += loop_sz + off_sz + blk_sz + ptr_sz + extent_sz + old_loop_sz;
 

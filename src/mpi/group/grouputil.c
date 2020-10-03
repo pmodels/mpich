@@ -16,7 +16,8 @@ MPIR_Group MPIR_Group_direct[MPID_GROUP_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPIR_GROUP,
     sizeof(MPIR_Group), MPIR_Group_direct,
-    MPID_GROUP_PREALLOC
+    MPID_GROUP_PREALLOC,
+    NULL
 };
 
 MPIR_Group *const MPIR_Group_empty = &MPIR_Group_builtin[0];
@@ -194,7 +195,7 @@ static int mergesort_lpidarray(MPII_Group_pmap_t maparray[], int n)
  *
  * Called by group_compare, group_translate_ranks, group_union
  *
- * In the case of a single master thread lock, the lock must
+ * In the case of a single main thread lock, the lock must
  * be held on entry to this routine.  This forces some of the routines
  * noted above to hold the SINGLE_CS; which would otherwise not be required.
  */

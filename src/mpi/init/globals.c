@@ -3,9 +3,7 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#define MPIR_GLOBAL     /* instantiate MPIR layer globals here */
 #include <mpiimpl.h>
-#undef MPIR_GLOBAL
 
 MPIR_Process_t MPIR_Process = { MPL_ATOMIC_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
 

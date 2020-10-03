@@ -56,102 +56,122 @@ strided_acc_onelock 2
 strided_acc_subarray 2
 strided_get_indexed 2
 strided_putget_indexed 4
-strided_putget_indexed_shared 4 mpiversion=3.0
-strided_getacc_indexed 4 mpiversion=3.0
-strided_getacc_indexed_shared 4 mpiversion=3.0
+strided_putget_indexed_shared 4
+strided_getacc_indexed 4
+strided_getacc_indexed_shared 4
 window_creation 2
-window_allocation 4 mpiversion=3.0
-window_noncontig_allocation 4 mpiversion=3.0
+window_allocation 4
+window_noncontig_allocation 4
+window_attach 4
+window_attach_collattach 4
 contention_put 4
 contention_putget 4
 put_base 2
 put_bottom 2
-win_flavors 4 mpiversion=3.0
-win_flavors 3 mpiversion=3.0
+win_flavors 4
+win_flavors 3
 manyrma2 2 timeLimit=500
 manyrma2_shm 2 timeLimit=500
 manyrma3 2
-win_shared 4 mpiversion=3.0
-win_shared_create_allocshm 4 mpiversion=3.0
-win_shared_create_no_allocshm 4 mpiversion=3.0
-win_shared_noncontig 4 mpiversion=3.0
-win_shared_noncontig_put 4 mpiversion=3.0
-win_zero 4 mpiversion=3.0
-@largetest@win_large_shm 4 mpiversion=3.0
-@largetest@win_large_shm 3 mpiversion=3.0
-win_dynamic_acc 4 mpiversion=3.0
-get_acc_local 1 mpiversion=3.0
-linked_list 4 mpiversion=3.0
-linked_list_fop 4 mpiversion=3.0
-compare_and_swap 4 mpiversion=3.0
-fetch_and_op_char 4 mpiversion=3.0
-fetch_and_op_short 4 mpiversion=3.0
-fetch_and_op_int 4 mpiversion=3.0
-fetch_and_op_long 4 mpiversion=3.0
-fetch_and_op_double 4 mpiversion=3.0
-fetch_and_op_long_double 4 mpiversion=3.0
-get_accumulate_double 4 mpiversion=3.0
-get_accumulate_double_derived 4 mpiversion=3.0
-get_accumulate_int 4 mpiversion=3.0
-get_accumulate_int_derived 4 mpiversion=3.0
-get_accumulate_long 4 mpiversion=3.0
-get_accumulate_long_derived 4 mpiversion=3.0
-get_accumulate_short 4 mpiversion=3.0
-get_accumulate_short_derived 4 mpiversion=3.0
-flush 4 mpiversion=3.0
-reqops 4 mpiversion=3.0
-req_example 4 mpiversion=3.0
-req_example_shm 4 mpiversion=3.0
-rput_local_comp 2 mpiversion=3.0
-racc_local_comp 2 mpiversion=3.0
-win_info 4 mpiversion=3.0
-linked_list_lockall 4 mpiversion=3.0
-pscw_ordering 4 mpiversion=3.0
-pscw_ordering_shm 4 mpiversion=3.0
-linked_list_bench_lock_all 4 mpiversion=3.0
-linked_list_bench_lock_excl 4 mpiversion=3.0
-linked_list_bench_lock_shr 4 mpiversion=3.0
-linked_list_bench_lock_shr_nocheck 4 mpiversion=3.0
-mutex_bench 4 mpiversion=3.0
-mutex_bench_shared 4 mpiversion=3.0
-mutex_bench_shm 4 mpiversion=3.0
-mutex_bench_shm_ordered 4 mpiversion=3.0
-rma_contig 2 mpiversion=3.0 timeLimit=720
-badrma 2 mpiversion=3.0
+win_shared 4
+win_shared_create_allocshm 4
+win_shared_create_no_allocshm 4
+win_shared_noncontig 4
+win_shared_noncontig_put 4
+win_zero 4
+@largetest@win_large_shm 4
+@largetest@win_large_shm 3
+win_dynamic_acc 4
+win_dynamic_acc_collattach 4
+get_acc_local 1
+linked_list 4
+linked_list_fop 4
+compare_and_swap 4
+fetch_and_op_char 4
+fetch_and_op_short 4
+fetch_and_op_int 4
+fetch_and_op_long 4
+fetch_and_op_double 4
+fetch_and_op_long_double 4
+get_accumulate_double 4
+get_accumulate_double_derived 4
+get_accumulate_int 4
+get_accumulate_int_derived 4
+get_accumulate_long 4
+get_accumulate_long_derived 4
+get_accumulate_short 4
+get_accumulate_short_derived 4
+flush 4
+reqops 4
+req_example 4
+req_example_shm 4
+rput_local_comp 2
+racc_local_comp 2
+win_info 4
+linked_list_lockall 4
+pscw_ordering 4
+pscw_ordering_shm 4
+linked_list_bench_lock_all 4
+linked_list_bench_lock_excl 4
+linked_list_bench_lock_shr 4
+linked_list_bench_lock_shr_nocheck 4
+mutex_bench 4
+mutex_bench_shared 4
+mutex_bench_shm 4
+mutex_bench_shm_ordered 4
+rma_contig 2 timeLimit=720
+badrma 2
 acc_loc 4
-acc_ordering 2 mpiversion=3.0
-fence_shm 2 mpiversion=3.0
-win_shared_zerobyte 4 mpiversion=3.0
-win_shared_put_flush_get 4 mpiversion=3.0
+acc_ordering 2
+fence_shm 2
+win_shared_zerobyte 4
+win_shared_put_flush_get 4
 get_struct 2
 at_complete 2
 atomic_rmw_fop 3
 atomic_rmw_cas 3
 atomic_rmw_gacc 3
-atomic_get_short_int 3 mpiversion=3.0 timeLimit=300
-atomic_get_2int 3 mpiversion=3.0 timeLimit=300
-atomic_get_long_int 3 mpiversion=3.0 timeLimit=300
-atomic_get_float_int 3 mpiversion=3.0 timeLimit=300
-atomic_get_double_int 3 mpiversion=3.0 timeLimit=300
-atomic_get_long_double_int 3 mpiversion=3.0 timeLimit=300
-aint 2 mpiversion=3.1
+atomic_get_short_int 3 timeLimit=300
+atomic_get_2int 3 timeLimit=300
+atomic_get_long_int 3 timeLimit=300
+atomic_get_float_int 3 timeLimit=300
+atomic_get_double_int 3 timeLimit=300
+atomic_get_long_double_int 3 timeLimit=300
+aint 2
+aint_collattach 2
 acc_pairtype 2
 acc_pairtype_shm 2
 manyget 2 timeLimit=300
-derived_acc_flush_local 3 mpiversion=3.0
-large_acc_flush_local 3 mpiversion=3.0
+derived_acc_flush_local 3
+large_acc_flush_local 3
 large_small_acc 2
-win_shared_put_flush_load 3 mpiversion=3.0
-win_shared_acc_flush_load 3 mpiversion=3.0
-win_shared_gacc_flush_load 3 mpiversion=3.0
-win_shared_fop_flush_load 3 mpiversion=3.0
-win_shared_cas_flush_load 3 mpiversion=3.0
-put_flush_get 3 mpiversion=3.0
-acc_flush_get 3 mpiversion=3.0
-gacc_flush_get 3 mpiversion=3.0
-fop_flush_get 3 mpiversion=3.0
-cas_flush_get 3 mpiversion=3.0
-rget_unlock 2 mpiversion=3.0
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get 2 arg=-count=9216 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=4096 arg=-op=gacc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=fop
+win_dynamic_rma_flush_get_collattach 2 arg=-count=1 arg=-op=cas
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=put
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=acc
+win_dynamic_rma_flush_get_collattach 2 arg=-count=9216 arg=-op=gacc
+win_shared_put_flush_load 3
+win_shared_acc_flush_load 3
+win_shared_gacc_flush_load 3
+win_shared_fop_flush_load 3
+win_shared_cas_flush_load 3
+put_flush_get 3
+acc_flush_get 3
+gacc_flush_get 3
+fop_flush_get 3
+cas_flush_get 3
+rget_unlock 2
 overlap_wins_put 3
 overlap_wins_acc 3
 overlap_wins_gacc 3
@@ -159,9 +179,9 @@ overlap_wins_fop 3
 overlap_wins_cas 3
 lock_nested 3
 rget_testall 2
-get_flushlocal 4 mpiversion=3.0
-get_flushlocal_shm 4 mpiversion=3.0
-win_shared_query_null 4 mpiversion=3.0
+get_flushlocal 4
+get_flushlocal_shm 4
+win_shared_query_null 4
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
@@ -169,4 +189,4 @@ win_shared_query_null 4 mpiversion=3.0
 ## specified by the standard and might not be true.  Commenting this
 ## out till be find a better way to test the original problem with
 ## MPI_Test.
-# nb_test 2 mpiversion=3.0
+# nb_test 2

@@ -97,7 +97,7 @@ int probetest_invoke_probe(int sender_rank, int tag, MPI_Comm comm, int *recv_co
             }
             break;
         default:
-            fprintf(stderr, "thread: %d: Probe type not defined \n");
+            fprintf(stderr, "Probe type not defined \n");
             MPI_Abort(MPI_COMM_WORLD, 1);
     }
     /* Find data count */

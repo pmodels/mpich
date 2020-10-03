@@ -148,13 +148,6 @@ int MPI_Finalize(void)
     mpi_errno = MPID_Finalize();
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* MPID_Finalize or MPIDI_OFI_mpi_finalize_hook will call MPIR_Allreduce
-     * which will still depend on lw_req.
-     * FIXME: there should not be MPIR collective calls inside MPID_Finaize.
-     */
-    /* Free complete request */
-    MPIR_Request_free(MPIR_Process.lw_req);
-
     mpi_errno = MPII_Coll_finalize();
     MPIR_ERR_CHECK(mpi_errno);
 

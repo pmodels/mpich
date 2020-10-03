@@ -25,8 +25,9 @@ void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
     static char myname[] = "ADIOI_XFS_WRITECONTIG";
 
     if (count == 0) {
-        *error_code = MPI_SUCCESS;
-        return;
+        err = 0;
+        len = 0;
+        goto leaving;
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
@@ -113,11 +114,11 @@ void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL)
         fd->fp_ind += len;
 
+  leaving:
 #ifdef HAVE_STATUS_SET_BYTES
-    if (err != -1)
+    if (status && err != -1)
         MPIR_Status_set_bytes(status, datatype, len);
 #endif
-  leaving:
     if (err == -1) {
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__, MPI_ERR_IO, "**io",

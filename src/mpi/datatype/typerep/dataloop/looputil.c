@@ -775,7 +775,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
                                int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
 {
     int nr_ints, nr_aints, nr_types, combiner;
-    int types_sz, struct_sz, ints_sz, epsilon, align_sz;
+    int types_sz, struct_sz, ints_sz, epsilon;
     MPIR_Datatype *dtp;
     MPIR_Datatype_contents *cp;
 
@@ -788,24 +788,18 @@ void MPIR_Type_access_contents(MPI_Datatype type,
     cp = dtp->contents;
     MPIR_Assert(cp != NULL);
 
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
-
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = nr_types * sizeof(MPI_Datatype);
     ints_sz = nr_ints * sizeof(int);
 
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = ints_sz % align_sz)) {
-        ints_sz += align_sz - epsilon;
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
     }
     *types_p = (MPI_Datatype *) (((char *) cp) + struct_sz);
     *ints_p = (int *) (((char *) (*types_p)) + types_sz);
@@ -872,7 +866,7 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 {
     int el_size, last_idx;
     MPI_Aint size;
-    char *last_end = NULL;
+    intptr_t last_end = 0;
     struct piece_params *paramp = v_paramp;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONTIG_PACK_TO_IOV);
 
@@ -890,11 +884,11 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
 
     last_idx = paramp->u.pack_vector.index - 1;
     if (last_idx >= 0) {
-        last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+        last_end = ((intptr_t) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
             paramp->u.pack_vector.vectorp[last_idx].iov_len;
     }
 
-    if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((char *) bufp + rel_off))) {
+    if ((last_idx == paramp->u.pack_vector.length - 1) && (last_end != ((intptr_t) bufp + rel_off))) {
         /* we have used up all our entries, and this region doesn't fit on
          * the end of the last one.  setting blocks to 0 tells manipulation
          * function that we are done (and that we didn't process any blocks).
@@ -902,11 +896,11 @@ static int contig_pack_to_iov(MPI_Aint * blocks_p,
         *blocks_p = 0;
         MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONTIG_PACK_TO_IOV);
         return 1;
-    } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+    } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
         /* add this size to the last vector rather than using up another one */
         paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
     } else {
-        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+        paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (void *) ((intptr_t) bufp + rel_off);
         paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
         paramp->u.pack_vector.index++;
     }
@@ -959,7 +953,7 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
-        char *last_end = NULL;
+        intptr_t last_end = 0;
 
         if (blocks_left > (MPI_Aint) blksz) {
             size = ((MPI_Aint) blksz) * basic_size;
@@ -972,12 +966,12 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 
         last_idx = paramp->u.pack_vector.index - 1;
         if (last_idx >= 0) {
-            last_end = ((char *) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
+            last_end = ((intptr_t) paramp->u.pack_vector.vectorp[last_idx].iov_base) +
                 paramp->u.pack_vector.vectorp[last_idx].iov_len;
         }
 
         if ((last_idx == paramp->u.pack_vector.length - 1) &&
-            (last_end != ((char *) bufp + rel_off))) {
+            (last_end != ((intptr_t) bufp + rel_off))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
@@ -991,11 +985,12 @@ static int vector_pack_to_iov(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint blks
 #endif
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_VECTOR_PACK_TO_IOV);
             return 1;
-        } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+        } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
             /* add this size to the last vector rather than using up new one */
             paramp->u.pack_vector.vectorp[last_idx].iov_len += size;
         } else {
-            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base = (char *) bufp + rel_off;
+            paramp->u.pack_vector.vectorp[last_idx + 1].iov_base =
+                (void *) ((intptr_t) bufp + rel_off);
             paramp->u.pack_vector.vectorp[last_idx + 1].iov_len = size;
             paramp->u.pack_vector.index++;
         }

@@ -78,14 +78,14 @@ typedef struct PMIKVSpace {
 } PMIKVSpace;
 
 /*
-   The master PMI structure contains the "shared" objects:
+   The main PMI structure contains the "shared" objects:
    groups and key-value spaces (kvs)
 */
-typedef struct PMIMaster {
+typedef struct PMIMain {
     int nGroups;                /* Number of groups allocated (non-decreasing) */
     PMIGroup *groups;           /* Pointer to allocated groups */
     PMIKVSpace *kvSpaces;       /* Pointer to allocated KV spaces */
-} PMIMaster;
+} PMIMain;
 
 typedef struct {
     int fdpair[2];              /* fd's used to communicate between the

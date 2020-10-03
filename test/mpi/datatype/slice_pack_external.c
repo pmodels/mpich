@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     /* Variable declarations */
     MPI_Datatype oneslice, twoslice, threeslice;
     int errs = 0;
-    MPI_Aint sizeofint, bufsize, position;
+    MPI_Aint sizeofint, bufsize, position, tmp_lb;
     void *buffer;
 
     int i, j, k;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     /* Initialize MPI */
     MTest_Init(&argc, &argv);
-    MPI_Type_extent(MPI_INT, &sizeofint);
+    MPI_Type_get_extent(MPI_INT, &tmp_lb, &sizeofint);
 
     parse_args(argc, argv);
 
@@ -48,8 +48,8 @@ int main(int argc, char *argv[])
     /* On the sheet, the slice is a[0, 2, 4, ..., 16][2-10][1-9]. */
     /* Below, the slice is a[0-8][2-10][1, 3, 5, ..., 17]. */
     MPI_Type_vector(9, 1, 2, MPI_INT, &oneslice);
-    MPI_Type_hvector(9, 1, 100 * sizeofint, oneslice, &twoslice);
-    MPI_Type_hvector(9, 1, 100 * 100 * sizeofint, twoslice, &threeslice);
+    MPI_Type_create_hvector(9, 1, 100 * sizeofint, oneslice, &twoslice);
+    MPI_Type_create_hvector(9, 1, 100 * 100 * sizeofint, twoslice, &threeslice);
 
     MPI_Type_commit(&threeslice);
 

@@ -77,8 +77,8 @@ typedef struct MPIDI_CH3I_VC
 
     int is_local;
     unsigned short send_seqno;
-    MPID_nem_fbox_mpich_t *fbox_out;
-    MPID_nem_fbox_mpich_t *fbox_in;
+    MPID_nem_fastbox_t *fbox_out;
+    MPID_nem_fastbox_t *fbox_in;
     MPID_nem_queue_ptr_t recv_queue;
     MPID_nem_queue_ptr_t free_queue;
 

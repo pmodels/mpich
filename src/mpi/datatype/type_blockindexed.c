@@ -33,10 +33,8 @@ int MPIR_Type_blockindexed(int count,
                            int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS, i;
-    int is_builtin, old_is_contig;
+    int old_is_contig;
     MPI_Aint contig_count;
-    MPI_Aint el_sz;
-    MPI_Datatype el_type;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
 
@@ -63,13 +61,10 @@ int MPIR_Type_blockindexed(int count,
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
-    is_builtin = (HANDLE_IS_BUILTIN(oldtype));
-
-    if (is_builtin) {
-        el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
-        el_type = oldtype;
+    if (HANDLE_IS_BUILTIN(oldtype)) {
+        MPI_Aint el_sz = (MPI_Aint) MPIR_Datatype_get_basic_size(oldtype);
 
         old_lb = 0;
         old_true_lb = 0;
@@ -79,22 +74,16 @@ int MPIR_Type_blockindexed(int count,
         old_is_contig = 1;
 
         new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *el_sz;
-        new_dtp->has_sticky_lb = 0;
-        new_dtp->has_sticky_ub = 0;
 
         new_dtp->alignsize = el_sz;     /* ??? */
         new_dtp->n_builtin_elements = count * blocklength;
         new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = el_type;
-
-        new_dtp->max_contig_blocks = count;
+        new_dtp->basic_type = oldtype;
     } else {
         /* user-defined base type (oldtype) */
         MPIR_Datatype *old_dtp;
 
         MPIR_Datatype_get_ptr(oldtype, old_dtp);
-        el_sz = old_dtp->builtin_element_size;
-        el_type = old_dtp->basic_type;
 
         old_lb = old_dtp->lb;
         old_true_lb = old_dtp->true_lb;
@@ -104,15 +93,11 @@ int MPIR_Type_blockindexed(int count,
         MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         new_dtp->size = (MPI_Aint) count *(MPI_Aint) blocklength *(MPI_Aint) old_dtp->size;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
 
         new_dtp->alignsize = old_dtp->alignsize;
         new_dtp->n_builtin_elements = count * blocklength * old_dtp->n_builtin_elements;
-        new_dtp->builtin_element_size = el_sz;
-        new_dtp->basic_type = el_type;
-
-        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks * count * blocklength;
+        new_dtp->builtin_element_size = old_dtp->builtin_element_size;
+        new_dtp->basic_type = old_dtp->basic_type;
     }
 
     /* priming for loop */
@@ -152,7 +137,6 @@ int MPIR_Type_blockindexed(int count,
                                                                blocklength,
                                                                displacement_array,
                                                                dispinbytes, old_extent);
-        new_dtp->max_contig_blocks = contig_count;
         if ((contig_count == 1) && ((MPI_Aint) new_dtp->size == new_dtp->extent)) {
             new_dtp->is_contig = 1;
         }
@@ -160,11 +144,11 @@ int MPIR_Type_blockindexed(int count,
 
     if (dispinbytes) {
         mpi_errno = MPIR_Typerep_create_hindexed_block(count, blocklength, displacement_array,
-                                                       oldtype, &new_dtp->typerep);
+                                                       oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
         mpi_errno = MPIR_Typerep_create_indexed_block(count, blocklength, displacement_array,
-                                                      oldtype, &new_dtp->typerep);
+                                                      oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

@@ -117,7 +117,7 @@ int MPIR_Find_local(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
 
 /* MPIR_Find_external -- from the list of processes in comm,
  * builds a list of external processes, i.e., one process from each node.
- * You can think of this as the root or master process for each node.
+ * You can think of this as the root or main process for each node.
  *
  * Note that this will not work correctly for spawned or attached
  * processes.

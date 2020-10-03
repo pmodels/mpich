@@ -1050,6 +1050,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_comm_shrink %C %p:MPIX_Comm_shrink(%C, new_comm=%p) failed
 **mpix_comm_agree:MPIX_Comm_agree failed
 **mpix_comm_agree %C:MPIX_Comm_agree(%C) failed
+**badgputype:Bad GPU type specified
+**badgputype %d:Bad GPU type (%d) specified
 **mpi_intercomm_create:MPI_Intercomm_create failed
 **mpi_intercomm_create %C %d %C %d %d %p:MPI_Intercomm_create(%C, local_leader=%d, %C, remote_leader=%d, tag=%d, newintercomm=%p) failed
 **mpi_intercomm_merge:MPI_Intercomm_merge failed
@@ -1138,7 +1140,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_spawn_multiple:MPI_Comm_spawn_multiple failed
 **mpi_comm_spawn_multiple %d %p %p %p %p %d %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%d, %C, intercomm=%p, errors=%p) failed
 **mpi_lookup_name:MPI_Lookup_name failed
-**mpi_lookup_name %s %I %s:MPI_Lookup_name(service=\"%s\", %I, port=%s) failed
+**mpi_lookup_name %s %I:MPI_Lookup_name(service=\"%s\", %I) failed
 **mpi_open_port:MPI_Open_port failed
 **mpi_open_port %I %p:MPI_Open_port(%I, port=%p) failed
 **mpi_publish_name:MPI_Publish_name failed
@@ -1489,11 +1491,30 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 ## XPMEM related error messages
 **xpmem_make: xpmem_make failed
+**xpmem_segid: xpmem remote segid is unset
 **xpmem_get: xpmem_get failed
 **xpmem_attach: xpmem_attach failed
 **xpmem_detach: xpmem_detach failed
 **xpmem_release: xpmem_release failed
 **xpmem_remove: xpmem_remove failed
+**xpmem_segtree_init: xpmem_segtree_init failed
+
+## GPU related error messages
+**gpu_query_ptr: gpu_query_pointer_attr failed
+**gpu_ipc_handle_map: gpu_ipc_handle_map failed
+**gpu_ipc_handle_create: gpu_ipc_handle_create failed
+**gpu_ipc_handle_unmap: gpu_ipc_handle_unmap failed
+**gpu_init: gpu_init failed
+**gpu_finalize: gpu_finalize failed
+**gpu_get_global_dev_ids: gpu_get_global_dev_ids failed
+**gpu_get_buffer_info: gpu_get_buffer_info failed
+
+## GAVL tree related error messages
+**mpl_gavl_search: mpl_gavl_search failed
+**mpl_gavl_insert: mpl_gavl_insert failed
+**mpl_gavl_create: mpl_gavl_create failed
+**mpl_gavl_delete_range: mpl_gavl_delete_range failed
+**mpl_gavl_delete_start_addr: mpl_gavl_delete_start_addr failed
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)

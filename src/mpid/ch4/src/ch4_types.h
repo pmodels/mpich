@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "ch4i_workq_types.h"
+#include "mpidu_genq.h"
 
 /* Macros and inlines */
 #define MPIDIU_MAP_NOT_FOUND      ((void*)(-1UL))
@@ -20,8 +21,9 @@ enum {
     MPIDI_VCI_RX = 0x2, /* Can receive */
 };
 
-#define MPIDIU_BUF_POOL_NUM (1024)
-#define MPIDIU_BUF_POOL_SZ (256)
+#define MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK (1024)
+#define MPIDIU_REQUEST_POOL_MAX_NUM_CELLS (257 * 1024)
+#define MPIDIU_REQUEST_POOL_CELL_SIZE (256)
 
 /* Flags for MPIDI_Progress_test
  *
@@ -65,27 +67,19 @@ typedef struct MPIDIG_hdr_t {
     int tag;
     MPIR_Context_id_t context_id;
     int error_bits;
+    uint8_t flags;
+    MPIR_Request *sreq_ptr;
+    size_t data_sz;
 } MPIDIG_hdr_t;
 
-typedef struct MPIDIG_send_long_req_msg_t {
-    MPIDIG_hdr_t hdr;
-    size_t data_sz;             /* Message size in bytes */
-    MPIR_Request *sreq_ptr;     /* Pointer value of the request object at the sender side */
-} MPIDIG_send_long_req_msg_t;
-
-typedef struct MPIDIG_send_long_ack_msg_t {
+typedef struct MPIDIG_send_cts_msg_t {
     MPIR_Request *sreq_ptr;
     MPIR_Request *rreq_ptr;
-} MPIDIG_send_long_ack_msg_t;
+} MPIDIG_send_cts_msg_t;
 
-typedef struct MPIDIG_send_long_lmt_msg_t {
+typedef struct MPIDIG_send_data_msg_t {
     MPIR_Request *rreq_ptr;
-} MPIDIG_send_long_lmt_msg_t;
-
-typedef struct MPIDIG_ssend_req_msg_t {
-    MPIDIG_hdr_t hdr;
-    MPIR_Request *sreq_ptr;
-} MPIDIG_ssend_req_msg_t;
+} MPIDIG_send_data_msg_t;
 
 typedef struct MPIDIG_ssend_ack_msg_t {
     MPIR_Request *sreq_ptr;
@@ -102,7 +96,9 @@ typedef struct MPIDIG_put_msg_t {
     uint64_t win_id;
     MPIR_Request *preq_ptr;
     MPI_Aint target_disp;
-    MPI_Aint data_sz;
+    MPI_Aint target_count;
+    MPI_Aint target_datatype;
+    MPI_Aint target_true_lb;
     int flattened_sz;
 } MPIDIG_put_msg_t;
 
@@ -129,7 +125,9 @@ typedef struct MPIDIG_get_msg_t {
     uint64_t win_id;
     MPIR_Request *greq_ptr;
     MPI_Aint target_disp;
-    MPI_Aint data_sz;
+    MPI_Aint target_count;
+    MPI_Aint target_datatype;
+    MPI_Aint target_true_lb;
     int flattened_sz;
 } MPIDIG_get_msg_t;
 
@@ -177,23 +175,7 @@ typedef struct MPIDIG_comm_req_list_t {
     MPIDIG_rreq_t *uelist[2][4];
 } MPIDIG_comm_req_list_t;
 
-typedef struct MPIDIU_buf_pool_t {
-    int size;
-    int num;
-    void *memory_region;
-    struct MPIDIU_buf_pool_t *next;
-    struct MPIDIU_buf_t *head;
-    MPID_Thread_mutex_t lock;
-} MPIDIU_buf_pool_t;
-
-typedef struct MPIDIU_buf_t {
-    struct MPIDIU_buf_t *next;
-    MPIDIU_buf_pool_t *pool;
-    char data[];
-} MPIDIU_buf_t;
-
 typedef struct {
-    int mmapped_size;
     int max_n_avts;
     int n_avts;
     int next_avtid;
@@ -266,16 +248,18 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDIG_req_ext_t *cmpl_list;
     MPL_atomic_uint64_t exp_seq_no;
     MPL_atomic_uint64_t nxt_seq_no;
-    MPIDIU_buf_pool_t *buf_pool;
+    MPIDU_genq_private_pool_t request_pool;
+    MPIDU_genq_private_pool_t unexp_pack_buf_pool;
 #ifdef HAVE_SIGNAL
     void (*prev_sighandler) (int);
     volatile int sigusr1_count;
     int my_sigusr1_count;
 #endif
-    MPL_atomic_int_t progress_count;
 
     int n_vcis;
     MPIDI_vci_t vci[MPIDI_CH4_MAX_VCIS];
+    int progress_counts[MPIDI_CH4_MAX_VCIS];
+
 #if defined(MPIDI_CH4_USE_WORK_QUEUES)
     /* TODO: move into MPIDI_vci to have per-vci workqueue */
     MPIDI_workq_t workqueue;

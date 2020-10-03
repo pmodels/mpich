@@ -18,7 +18,7 @@
 
 #define ROMIO_THREAD_CS_ENTER() MPIR_Ext_cs_enter()
 #define ROMIO_THREAD_CS_EXIT() MPIR_Ext_cs_exit()
-#define ROMIO_THREAD_CS_YIELD() MPIR_Ext_cs_yield()
+#define ROMIO_THREAD_CS_YIELD() MPL_thread_yield()
 
 /* committed datatype checking support in ROMIO */
 #define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)        \
@@ -51,7 +51,7 @@ MPI_Delete_function ADIOI_End_call;
 /* common initialization routine */
 void MPIR_MPIOInit(int *error_code);
 
-#ifdef HAVE_MPIIO_CONST
+#if MPI_VERSION >= 3
 #define ROMIO_CONST const
 #else
 #define ROMIO_CONST

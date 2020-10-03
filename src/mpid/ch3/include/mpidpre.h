@@ -28,9 +28,6 @@ typedef struct {
 } MPIDI_Devdt_t;
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 
-/* FIXME: Include here? */
-#include "opa_primitives.h"
-
 #include "mpid_thread.h"
 
 #include "mpid_sched.h"

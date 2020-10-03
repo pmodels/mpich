@@ -24,7 +24,7 @@
 #define MAX(x, y)	(((x) > (y))?(x):(y))
 #endif
 
-#define DEFAULT_NUM_SLAVES 3    /* default number of children to spawn */
+#define DEFAULT_NUM_CHILDREN 3  /* default number of children to spawn */
 #define DEFAULT_PORT 7470       /* default port to listen on */
 #define NOVALUE 99999   /* indicates a parameter is as of yet unspecified */
 #define MAX_ITERATIONS 10000    /* maximum 'depth' to look for mandelbrot value */
@@ -160,8 +160,8 @@ int main(int argc, char *argv[])
     color_t *colors = NULL;
     MPI_Status status;
     int save_image = 0;
-    int num_children = DEFAULT_NUM_SLAVES;
-    int master = 1;
+    int num_children = DEFAULT_NUM_CHILDREN;
+    int parent = 1;
     MPI_Comm parent, *child_comm = NULL;
     MPI_Request *child_request = NULL;
     int error_code, error;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
     if (parent == MPI_COMM_NULL) {
         if (numprocs > 1) {
-            printf("Error: only one process allowed for the master.\n");
+            printf("Error: only one process allowed for the parent.\n");
             PrintUsage();
             error_code = MPI_Abort(MPI_COMM_WORLD, -1);
             exit(error_code);
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
 
         printf("Welcome to the Mandelbrot/Julia set explorer.\n");
 
-        master = 1;
+        parent = 1;
 
         /* Get inputs-- region to view (must be within x/ymin to x/ymax, make sure
          * xmax>xmin and ymax>ymin) and resolution (number of pixels along an edge,
@@ -205,18 +205,18 @@ int main(int argc, char *argv[])
         if (julia == 1) /* we're doing a julia figure */
             check_julia_params(&julia_constant.real, &julia_constant.imaginary);
 
-        /* spawn slaves */
+        /* spawn children */
         child_comm = (MPI_Comm *) malloc(num_children * sizeof(MPI_Comm));
         child_request = (MPI_Request *) malloc(num_children * sizeof(MPI_Request));
         result = (header_t *) malloc(num_children * sizeof(header_t));
         if (child_comm == NULL || child_request == NULL || result == NULL) {
             printf
-                ("Error: unable to allocate an array of %d communicators, requests and work objects for the slaves.\n",
+                ("Error: unable to allocate an array of %d communicators, requests and work objects for the children.\n",
                  num_children);
             error_code = MPI_Abort(MPI_COMM_WORLD, -1);
             exit(error_code);
         }
-        printf("Spawning %d slaves.\n", num_children);
+        printf("Spawning %d children.\n", num_children);
         for (i = 0; i < num_children; i++) {
             error = MPI_Comm_spawn(argv[0], MPI_ARGV_NULL, 1,
                                    MPI_INFO_NULL, 0, MPI_COMM_WORLD, &child_comm[i], &error_code);
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
             MPI_Send(&alternate_equation, 1, MPI_INT, 0, 0, child_comm[i]);
         }
     } else {
-        master = 0;
+        parent = 0;
         MPI_Recv(&num_colors, 1, MPI_INT, 0, 0, parent, MPI_STATUS_IGNORE);
         MPI_Recv(&imax_iterations, 1, MPI_INT, 0, 0, parent, MPI_STATUS_IGNORE);
         MPI_Recv(&ipixels_across, 1, MPI_INT, 0, 0, parent, MPI_STATUS_IGNORE);
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
         MPI_Recv(&alternate_equation, 1, MPI_INT, 0, 0, parent, MPI_STATUS_IGNORE);
     }
 
-    if (master) {
+    if (parent) {
         colors = malloc((num_colors + 1) * sizeof(color_t));
         if (colors == NULL) {
             MPI_Abort(MPI_COMM_WORLD, -1);
@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    if (master) {
+    if (parent) {
         int istep, jstep;
         int i1[400], i2[400], j1[400], j2[400];
         int ii, jj;
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
 
             /* check for the end condition */
             if (x_min == x_max && y_min == y_max) {
-                /*printf("slave done.\n");fflush(stdout); */
+                /*printf("child done.\n");fflush(stdout); */
                 break;
             }
 
@@ -566,7 +566,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (master && save_image) {
+    if (parent && save_image) {
         imax_iterations = 0;
         for (i = 0; i < ipixels_across * ipixels_down; ++i) {
             /* look for "brightest" pixel value, for image use */
@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
                   file_message, num_colors, colors);
     }
 
-    if (master) {
+    if (parent) {
         for (i = 0; i < num_children; i++) {
             MPI_Comm_disconnect(&child_comm[i]);
         }
@@ -614,7 +614,7 @@ void PrintUsage()
 {
     printf("usage: mpiexec -n 1 pmandel [options]\n");
     printf
-        ("options:\n -n # slaves\n -xmin # -xmax #\n -ymin # -ymax #\n -depth #\n -xscale # -yscale #\n -out filename\n -i\n");
+        ("options:\n -n # children\n -xmin # -xmax #\n -ymin # -ymax #\n -depth #\n -xscale # -yscale #\n -out filename\n -i\n");
     printf("All options are optional.\n");
     printf
         ("-i will allow you to input the min/max parameters from stdin and output the resulting image to a ppm file.");
@@ -750,7 +750,7 @@ void read_mand_args(int argc, char *argv[], int *o_max_iterations,
     *o_divergent_limit = INFINITE_LIMIT;        /* default total range is assumed
                                                  * if not explicitly overwritten */
 
-    *num_children = DEFAULT_NUM_SLAVES;
+    *num_children = DEFAULT_NUM_CHILDREN;
 
     /* We just cycle through all given parameters, matching what we can.
      * Note that we force casting, because we expect that a nonsensical
@@ -894,12 +894,12 @@ void check_mand_params(int *m_max_iterations,
     }
 
     if (*m_num_children < 1) {
-        printf("Error, invalid number of slaves (%d), setting to %d\n", *m_num_children,
-               DEFAULT_NUM_SLAVES);
-        *m_num_children = DEFAULT_NUM_SLAVES;
+        printf("Error, invalid number of children (%d), setting to %d\n", *m_num_children,
+               DEFAULT_NUM_CHILDREN);
+        *m_num_children = DEFAULT_NUM_CHILDREN;
     }
     if (*m_num_children > 400) {
-        printf("Error, number of slaves (%d) exceeds the maximum, setting to 400.\n",
+        printf("Error, number of children (%d) exceeds the maximum, setting to 400.\n",
                *m_num_children);
         *m_num_children = 400;
     }

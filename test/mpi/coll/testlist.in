@@ -1,6 +1,6 @@
-allred 4
-allred 7
-allred 4 arg=100
+allred 4 arg=-count=10
+allred 7 arg=-count=10
+allred 4 arg=-count=100
 allredmany 4
 allred2 4
 allred3 10
@@ -11,7 +11,8 @@ allred6 4
 allred6 7
 reduce 5
 reduce 10
-reduce_local 2 mpiversion=2.2
+reduce_local 2
+op_coll 4
 op_commutative 2
 red3 10
 red4 10
@@ -48,7 +49,6 @@ coll7 5
 coll8 4
 coll9 4
 coll10 4
-coll11 4
 coll12 4
 coll13 4
 longuser 4
@@ -59,16 +59,16 @@ redscat2 5
 redscat2 10
 redscat3 8
 redscatinter 8
-red_scat_block 4 mpiversion=2.2
-red_scat_block 5 mpiversion=2.2
-red_scat_block 8 mpiversion=2.2
-red_scat_block2 4 mpiversion=2.2
-red_scat_block2 5 mpiversion=2.2
-red_scat_block2 10 mpiversion=2.2
-redscatblk3 8 mpiversion=2.2
-redscatblk3 10 mpiversion=2.2
-redscatbkinter 8 mpiversion=2.2
-redscatbkinter 10 mpiversion=2.2
+red_scat_block 4
+red_scat_block 5
+red_scat_block 8
+red_scat_block2 4
+red_scat_block2 5
+red_scat_block2 10
+redscatblk3 8
+redscatblk3 10
+redscatbkinter 8
+redscatbkinter 10
 scantst 4
 exscan 10
 exscan2 5
@@ -125,46 +125,46 @@ opmaxloc 5
 uoplong 4
 uoplong 11
 uoplong 16 mem=1.4
-nonblocking 4 mpiversion=3.0
-nonblocking 5 mpiversion=3.0
-nonblocking 10 mpiversion=3.0
-nonblocking2 1 mpiversion=3.0
-nonblocking2 4 mpiversion=3.0
-nonblocking2 5 mpiversion=3.0
-nonblocking2 10 mpiversion=3.0
-nonblocking3 1 mpiversion=3.0
-nonblocking3 4 mpiversion=3.0
-nonblocking3 5 mpiversion=3.0
-nonblocking3 10 mpiversion=3.0
-iallred 2 mpiversion=3.0
+nonblocking 4
+nonblocking 5
+nonblocking 10
+nonblocking2 1
+nonblocking2 4
+nonblocking2 5
+nonblocking2 10
+nonblocking3 1
+nonblocking3 4
+nonblocking3 5
+nonblocking3 10
+iallred 2
 # ibarrier will hang forever if it fails, but will complete quickly if it
 # succeeds
-ibarrier 2 mpiversion=3.0 timeLimit=30
+ibarrier 2 timeLimit=30
 
 # run some of the tests, relinked with the nbc_pmpi_adaptor.o file
-nballtoall1 8 mpiversion=3.0
-nbcoll2 5     mpiversion=3.0
-nbredscat 4   mpiversion=3.0
-nbredscat 8   mpiversion=3.0
-nbredscat3 8  mpiversion=3.0
-nbredscatinter 8 mpiversion=3.0
+nballtoall1 8
+nbcoll2 5
+nbredscat 4
+nbredscat 8
+nbredscat3 8
+nbredscatinter 8
 
-nbicbcast 8 mpiversion=3.0
-nbicallreduce 8 mpiversion=3.0
-nbicreduce 8 mpiversion=3.0
-nbicscatter 8 mpiversion=3.0
-nbicgather 8 mpiversion=3.0
-nbicallgather 8 mpiversion=3.0
-nbicbarrier 8  mpiversion=3.0
-nbicallgatherv 8 mpiversion=3.0
-nbicgatherv 8 mpiversion=3.0
-nbicscatterv 8 mpiversion=3.0
-nbicalltoall 8 mpiversion=3.0
-nbicalltoallv 8 mpiversion=3.0
-nbicalltoallw 8 mpiversion=3.0
+nbicbcast 8
+nbicallreduce 8
+nbicreduce 8
+nbicscatter 8
+nbicgather 8
+nbicallgather 8
+nbicbarrier 8
+nbicallgatherv 8
+nbicgatherv 8
+nbicscatterv 8
+nbicalltoall 8
+nbicalltoallv 8
+nbicalltoallw 8
 
-neighb_allgather 4 mpiversion=3.0
-neighb_allgatherv 4 mpiversion=3.0
-neighb_alltoall 4 mpiversion=3.0
-neighb_alltoallv 4 mpiversion=3.0
-neighb_alltoallw 4 mpiversion=3.0
+neighb_allgather 4
+neighb_allgatherv 4
+neighb_alltoall 4
+neighb_alltoallv 4
+neighb_alltoallw 4

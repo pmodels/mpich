@@ -6,36 +6,6 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
-/* ** FORTRAN binding **************/
-#if defined(HAVE_FORTRAN_BINDING) && defined(HAVE_MPI_F_INIT_WORKS_WITH_C)
-#ifdef F77_NAME_UPPER
-#define mpirinitf_ MPIRINITF
-#elif defined(F77_NAME_LOWER) || defined(F77_NAME_MIXED)
-#define mpirinitf_ mpirinitf
-#endif
-void mpirinitf_(void);
-
-void MPII_init_binding_fortran(void)
-{
-    /* Initialize the C versions of the Fortran link-time constants.
-     *
-     * We now initialize the Fortran symbols from within the Fortran
-     * interface in the routine that first needs the symbols.
-     * This fixes a problem with symbols added by a Fortran compiler that
-     * are not part of the C runtime environment (the Portland group
-     * compilers would do this)
-     */
-    mpirinitf_();
-}
-
-#else
-
-void MPII_init_binding_fortran(void)
-{
-}
-
-#endif /* HAVE_FORTRAN_BINDING && HAVE_MPI_F_INIT_WORKS_WITH_C */
-
 /* ** CXX binding **************/
 void MPII_init_binding_cxx(void)
 {

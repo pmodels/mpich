@@ -50,7 +50,7 @@ else
     # come up with (see tt#1007) [goodell@]
     AS_CASE(["$INSTALL"],
             [/*],[:],
-            [*install-sh*],[INSTALL="$master_top_srcdir/$INSTALL"])
+            [*install-sh*],[INSTALL="$main_top_srcdir/$INSTALL"])
 
     # Check that this install really works
     rm -f conftest

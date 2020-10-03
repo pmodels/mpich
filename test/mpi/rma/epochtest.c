@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Put with Fences used to separate epochs";
@@ -50,7 +51,10 @@ int main(int argc, char **argv)
     DTP_pool_s dtp;
     DTP_obj_s orig_obj, target_obj;
     void *origbuf, *targetbuf;
+    void *origbuf_h, *targetbuf_h;
     char *basic_type;
+    mtest_mem_type_e origmem;
+    mtest_mem_type_e targetmem;
 
     MTest_Init(&argc, &argv);
 
@@ -59,6 +63,8 @@ int main(int argc, char **argv)
     testsize = MTestArgListGetInt(head, "testsize");
     count = MTestArgListGetLong(head, "count");
     basic_type = MTestArgListGetString(head, "type");
+    origmem = MTestArgListGetMemType(head, "origmem");
+    targetmem = MTestArgListGetMemType(head, "targetmem");
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
@@ -82,9 +88,8 @@ int main(int argc, char **argv)
         extent = 1;
     }
 
-    targetbuf = malloc(maxbufsize);
-    if (targetbuf == NULL)
-        errs++;
+    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
+    assert(targetbuf && targetbuf_h);
 
     while (MTestGetIntracommGeneral(&comm, minsize, 1)) {
         if (comm == MPI_COMM_NULL) {
@@ -120,23 +125,22 @@ int main(int argc, char **argv)
                 break;
             }
 
-            origbuf = malloc(orig_obj.DTP_bufsize);
-            if (origbuf == NULL) {
-                errs++;
-                break;
-            }
+            MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
+            assert(origbuf && origbuf_h);
 
-            err = DTP_obj_buf_init(orig_obj, origbuf, 0, 1, count);
+            err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
             if (err != DTP_SUCCESS) {
                 errs++;
                 break;
             }
+            MTestCopyContent(origbuf_h, origbuf, orig_obj.DTP_bufsize, origmem);
 
-            err = DTP_obj_buf_init(target_obj, targetbuf, -1, -1, count);
+            err = DTP_obj_buf_init(target_obj, targetbuf_h, -1, -1, count);
             if (err != DTP_SUCCESS) {
                 errs++;
                 break;
             }
+            MTestCopyContent(targetbuf_h, targetbuf, target_obj.DTP_bufsize, targetmem);
 
             origcount = orig_obj.DTP_type_count;
             origtype = orig_obj.DTP_datatype;
@@ -178,7 +182,8 @@ int main(int argc, char **argv)
             }
             /* target checks data, then target puts */
             if (rank == target) {
-                err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
+                MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
+                err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err) {
                     if (errs++ < MAX_PERR) {
                         PrintRecvedError("fence2", orig_desc, target_desc);
@@ -202,7 +207,8 @@ int main(int argc, char **argv)
             }
             /* src checks data, then Src and target puts */
             if (rank == orig) {
-                err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
+                MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
+                err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
                         PrintRecvedError("fence3", orig_desc, target_desc);
@@ -235,7 +241,8 @@ int main(int argc, char **argv)
             }
             /* src and target checks data */
             if (rank == orig) {
-                err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
+                MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
+                err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
                         PrintRecvedError("src fence4", orig_desc, target_desc);
@@ -243,7 +250,8 @@ int main(int argc, char **argv)
                 }
             }
             if (rank == target) {
-                err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
+                MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
+                err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     if (errs++ < MAX_PERR) {
                         PrintRecvedError("target fence4", orig_desc, target_desc);
@@ -253,7 +261,7 @@ int main(int argc, char **argv)
 
             free(orig_desc);
             free(target_desc);
-            free(origbuf);
+            MTestFree(origmem, origbuf_h, origbuf);
             DTP_obj_free(orig_obj);
             DTP_obj_free(target_obj);
 
@@ -268,7 +276,7 @@ int main(int argc, char **argv)
             break;
     }
 
-    free(targetbuf);
+    MTestFree(targetmem, targetbuf_h, targetbuf);
     DTP_pool_free(dtp);
 
     MTest_Finalize(errs);

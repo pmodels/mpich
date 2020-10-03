@@ -16,7 +16,8 @@ MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
-    MPIR_DATATYPE_PREALLOC
+    MPIR_DATATYPE_PREALLOC,
+    NULL
 };
 
 static int pairtypes_finalize_cb(void *dummy);
@@ -190,10 +191,7 @@ int MPIR_Datatype_init_predefined(void)
         /* XXX DJG it does work, but only because MPI_LONG_DOUBLE_INT is the
          * only one that is ever optional and it comes last */
 
-        /* we use the _unsafe version because we are still in MPI_Init, before
-         * multiple threads are permitted and possibly before support for
-         * critical sections is entirely setup */
-        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc_unsafe(&MPIR_Datatype_mem);
+        dptr = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
 
         MPIR_Assert(dptr);
         MPIR_Assert(dptr->handle == mpi_pairtypes[i].dtype);
@@ -209,6 +207,98 @@ int MPIR_Datatype_init_predefined(void)
 
   fn_fail:
     return mpi_errno;
+}
+
+int MPIR_Datatype_builtintype_alignment(MPI_Datatype type)
+{
+    if (type == MPI_DATATYPE_NULL)
+        return 1;
+
+    int size = MPIR_Datatype_get_basic_size(type);
+
+    if (type == MPI_CHAR || type == MPI_UNSIGNED_CHAR || type == MPI_SIGNED_CHAR) {
+        return ALIGNOF_CHAR;
+    } else if (type == MPI_BYTE || type == MPI_UINT8_T || type == MPI_INT8_T ||
+               type == MPI_PACKED || type == MPI_LB || type == MPI_UB) {
+        return ALIGNOF_INT8_T;
+    } else if (type == MPI_WCHAR) {
+        return ALIGNOF_WCHAR_T;
+    } else if (type == MPI_SHORT || type == MPI_UNSIGNED_SHORT) {
+        return ALIGNOF_SHORT;
+    } else if (type == MPI_INT || type == MPI_UNSIGNED || type == MPI_2INT) {
+        return ALIGNOF_INT;
+    } else if (type == MPI_LONG || type == MPI_UNSIGNED_LONG) {
+        return ALIGNOF_LONG;
+    } else if (type == MPI_FLOAT || type == MPI_C_COMPLEX) {
+        return ALIGNOF_FLOAT;
+    } else if (type == MPI_DOUBLE || type == MPI_C_DOUBLE_COMPLEX) {
+        return ALIGNOF_DOUBLE;
+    } else if (type == MPI_LONG_DOUBLE || type == MPI_C_LONG_DOUBLE_COMPLEX) {
+        return ALIGNOF_LONG_DOUBLE;
+    } else if (type == MPI_LONG_LONG_INT || type == MPI_UNSIGNED_LONG_LONG) {
+        return ALIGNOF_LONG_LONG;
+    } else if (type == MPI_INT16_T || type == MPI_UINT16_T) {
+        return ALIGNOF_INT16_T;
+    } else if (type == MPI_INT32_T || type == MPI_UINT32_T) {
+        return ALIGNOF_INT32_T;
+    } else if (type == MPI_INT64_T || type == MPI_UINT64_T) {
+        return ALIGNOF_INT64_T;
+    } else if (type == MPI_C_BOOL) {
+        return ALIGNOF_BOOL;
+    } else if (type == MPI_AINT || type == MPI_OFFSET || type == MPI_COUNT) {
+        if (size == sizeof(int8_t))
+            return ALIGNOF_INT8_T;
+        else if (size == sizeof(int16_t))
+            return ALIGNOF_INT16_T;
+        else if (size == sizeof(int32_t))
+            return ALIGNOF_INT32_T;
+        else if (size == sizeof(int64_t))
+            return ALIGNOF_INT64_T;
+#ifdef HAVE_FORTRAN_BINDING
+    } else if (type == MPI_CHARACTER) {
+        return ALIGNOF_CHAR;
+    } else if (type == MPI_LOGICAL || type == MPI_INTEGER || type == MPI_2INTEGER ||
+               type == MPI_INTEGER1 || type == MPI_INTEGER2 || type == MPI_INTEGER4 ||
+               type == MPI_INTEGER8 || type == MPI_INTEGER16) {
+        if (size == sizeof(int8_t))
+            return ALIGNOF_INT8_T;
+        else if (size == sizeof(int16_t))
+            return ALIGNOF_INT16_T;
+        else if (size == sizeof(int32_t))
+            return ALIGNOF_INT32_T;
+        else if (size == sizeof(int64_t))
+            return ALIGNOF_INT64_T;
+    } else if (type == MPI_COMPLEX || type == MPI_DOUBLE_COMPLEX || type == MPI_REAL ||
+               type == MPI_DOUBLE_PRECISION || type == MPI_2REAL || type == MPI_2DOUBLE_PRECISION ||
+               type == MPI_REAL4 || type == MPI_REAL8 || type == MPI_REAL16) {
+        if (size == sizeof(float))
+            return ALIGNOF_FLOAT;
+        else if (size == sizeof(double))
+            return ALIGNOF_DOUBLE;
+        else if (size == sizeof(long double))
+            return ALIGNOF_LONG_DOUBLE;
+    } else if (type == MPI_COMPLEX8 || type == MPI_COMPLEX16 || type == MPI_COMPLEX32) {
+        if (size / 2 == sizeof(float))
+            return ALIGNOF_FLOAT;
+        else if (size / 2 == sizeof(double))
+            return ALIGNOF_DOUBLE;
+        else if (size / 2 == sizeof(long double))
+            return ALIGNOF_LONG_DOUBLE;
+#endif /* HAVE_FORTRAN_BINDING */
+
+#ifdef HAVE_CXX_BINDING
+    } else if (type == MPI_CXX_BOOL) {
+        return ALIGNOF_BOOL;
+    } else if (type == MPI_CXX_FLOAT_COMPLEX) {
+        return ALIGNOF_FLOAT;
+    } else if (type == MPI_CXX_DOUBLE_COMPLEX) {
+        return ALIGNOF_DOUBLE;
+    } else if (type == MPI_CXX_LONG_DOUBLE_COMPLEX) {
+        return ALIGNOF_LONG_DOUBLE;
+#endif /* HAVE_CXX_BINDING */
+    }
+
+    return 1;
 }
 
 int MPIR_Datatype_commit_pairtypes(void)
@@ -309,11 +399,9 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
     new_dtp->contents = NULL;
     new_dtp->flattened = NULL;
 
-    new_dtp->typerep = NULL;
+    new_dtp->typerep.handle = NULL;
 
     new_dtp->size = 0;
-    new_dtp->has_sticky_ub = 0;
-    new_dtp->has_sticky_lb = 0;
     new_dtp->lb = 0;
     new_dtp->ub = 0;
     new_dtp->true_lb = 0;
@@ -333,14 +421,8 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
 void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints)
 {
     char *ptr;
-    int align_sz, epsilon;
+    int epsilon;
     int struct_sz, types_sz;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = cp->nr_types * sizeof(MPI_Datatype);
@@ -350,11 +432,11 @@ void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints
      * note: it's not necessary that we pad the aints,
      *       because they are last in the region.
      */
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
 
     ptr = ((char *) cp) + struct_sz + types_sz;
@@ -366,14 +448,8 @@ void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints
 void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * user_aints)
 {
     char *ptr;
-    int align_sz = 8, epsilon;
+    int epsilon;
     int struct_sz, ints_sz, types_sz;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = cp->nr_types * sizeof(MPI_Datatype);
@@ -384,14 +460,14 @@ void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * us
      * note: it's not necessary that we pad the aints,
      *       because they are last in the region.
      */
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = ints_sz % align_sz)) {
-        ints_sz += align_sz - epsilon;
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
     }
 
     ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
@@ -403,14 +479,8 @@ void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * us
 void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype * user_types)
 {
     char *ptr;
-    int align_sz = 8, epsilon;
+    int epsilon;
     int struct_sz;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
 
@@ -419,8 +489,8 @@ void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype 
      * note: it's not necessary that we pad the aints,
      *       because they are last in the region.
      */
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
 
     ptr = ((char *) cp) + struct_sz;
@@ -562,8 +632,8 @@ void MPIR_Datatype_free(MPIR_Datatype * ptr)
     if (ptr->contents) {
         MPIR_Datatype_free_contents(ptr);
     }
-    if (ptr->typerep) {
-        MPIR_Typerep_free(&(ptr->typerep));
+    if (ptr->typerep.handle) {
+        MPIR_Typerep_free(ptr);
     }
     MPL_free(ptr->flattened);
     MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);

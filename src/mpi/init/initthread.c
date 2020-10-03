@@ -106,7 +106,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPII_hwtopo_init();
     MPII_nettopo_init();
     MPII_init_windows();
-    MPII_init_binding_fortran();
     MPII_init_binding_cxx();
     MPII_init_binding_f08();
 
@@ -202,6 +201,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
+
     return mpi_errno;
 
   fn_fail:

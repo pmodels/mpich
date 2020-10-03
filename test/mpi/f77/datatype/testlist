@@ -1,5 +1,5 @@
 typenamef 1
-typename3f 1 mpiversion=3.0
+typename3f 1
 typesnamef 1
 typecntsf 1
 typem2f 1
@@ -8,5 +8,5 @@ packef 1
 gaddressf 1
 allctypesf 1
 hindex1f 1
-hindexed_blockf 1 mpiversion=3.0
+hindexed_blockf 1
 bottom 2

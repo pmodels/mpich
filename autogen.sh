@@ -600,24 +600,24 @@ echo "###########################################################"
 echo
 
 # hwloc is always required
-check_submodule_presence src/hwloc
+check_submodule_presence modules/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/pm/hydra2 src/mpi/romio src/openpa src/hwloc test/mpi modules/json-c modules/yaksa"
+externals="src/pm/hydra src/pm/hydra2 src/mpi/romio modules/hwloc test/mpi modules/json-c modules/yaksa"
 
 if [ "yes" = "$do_izem" ] ; then
-    check_submodule_presence src/izem
-    externals="${externals} src/izem"
+    check_submodule_presence modules/izem
+    externals="${externals} modules/izem"
 fi
 
 if [ "yes" = "$do_ucx" ] ; then
-    check_submodule_presence src/mpid/ch4/netmod/ucx/ucx
-    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
+    check_submodule_presence modules/ucx
+    externals="${externals} modules/ucx"
 fi
 
 if [ "yes" = "$do_ofi" ] ; then
-    check_submodule_presence src/mpid/ch4/netmod/ofi/libfabric
-    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+    check_submodule_presence modules/libfabric
+    externals="${externals} modules/libfabric"
 fi
 
 if [ "yes" = "$do_json" ] ; then
@@ -645,7 +645,6 @@ confdb_dirs=
 confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
 confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/openpa/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra2/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
@@ -666,8 +665,8 @@ for destdir in $confdb_dirs ; do
 done
 
 # Copying hwloc to hydra
-sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
-sync_external src/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
+sync_external modules/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+sync_external modules/hwloc src/pm/hydra2/libhydra/topo/hwloc/hwloc
 # remove .git directories to avoid confusing git clean
 rm -rf src/pm/hydra/tools/topo/hwloc/hwloc/.git
 rm -rf src/pm/hydra2/libhydra/topo/hwloc/hwloc/.git
@@ -991,6 +990,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 flang_patch_requires_rebuild=no
                 arm_patch_requires_rebuild=no
                 ibm_patch_requires_rebuild=no
+                nvc_patch_requires_rebuild=no
                 sys_lib_dlsearch_path_patch_requires_rebuild=no
                 echo_n "Patching libtool.m4 for system dynamic library search path..."
                 patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/sys_lib_dlsearch_path_spec.patch
@@ -1053,10 +1053,21 @@ if [ "$do_build_configure" = "yes" ] ; then
                     else
                         echo "failed"
                     fi
+                    echo_n "Patching libtool.m4 for compatibility with NVIDIA HPC compilers..."
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/nv-compiler.patch
+                    if [ $? -eq 0 ] ; then
+                        nvc_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                    else
+                        echo "failed"
+                    fi
                 fi
 
                 if [ $ifort_patch_requires_rebuild = "yes" ] || [ $oracle_patch_requires_rebuild = "yes" ] \
                     || [ $arm_patch_requires_rebuild = "yes" ] || [ $ibm_patch_requires_rebuild = "yes" ] \
+                    || [ $nvc_patch_requires_rebuild = "yes" ] \
                     || [ $sys_lib_dlsearch_path_patch_requires_rebuild = "yes" ] || [ $flang_patch_requires_rebuild = "yes" ]; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1

@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     double temp;
     int myrank, mysize, errs = 0;
     MPI_Status status;
-    MPI_Aint sizeofreal;
+    MPI_Aint sizeofreal, tmp_lb;
 
     MPI_Datatype col, xpose;
 
@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    MPI_Type_extent(MPI_DOUBLE, &sizeofreal);
+    MPI_Type_get_extent(MPI_DOUBLE, &tmp_lb, &sizeofreal);
 
     MPI_Type_vector(SIZE, 1, SIZE, MPI_DOUBLE, &col);
-    MPI_Type_hvector(SIZE, 1, sizeofreal, col, &xpose);
+    MPI_Type_create_hvector(SIZE, 1, sizeofreal, col, &xpose);
     MPI_Type_commit(&xpose);
 
     /* Preset the arrays so that they're in memory */

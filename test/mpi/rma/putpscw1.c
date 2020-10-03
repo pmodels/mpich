@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 #include "dtpools.h"
+#include <assert.h>
 
 /*
 static char MTEST_Descrip[] = "Put with Post/Start/Complete/Wait";
@@ -31,7 +32,10 @@ int main(int argc, char *argv[])
     DTP_pool_s dtp;
     DTP_obj_s orig_obj, target_obj;
     void *origbuf, *targetbuf;
+    void *origbuf_h, *targetbuf_h;
     char *basic_type;
+    mtest_mem_type_e origmem;
+    mtest_mem_type_e targetmem;
 
     MTest_Init(&argc, &argv);
 
@@ -40,6 +44,8 @@ int main(int argc, char *argv[])
     testsize = MTestArgListGetInt(head, "testsize");
     count = MTestArgListGetLong(head, "count");
     basic_type = MTestArgListGetString(head, "type");
+    origmem = MTestArgListGetMemType(head, "origmem");
+    targetmem = MTestArgListGetMemType(head, "targetmem");
 
     maxbufsize = MTestDefaultMaxBufferSize();
 
@@ -59,9 +65,8 @@ int main(int argc, char *argv[])
         extent = 1;
     }
 
-    targetbuf = malloc(maxbufsize);
-    if (targetbuf == NULL)
-        errs++;
+    MTestAlloc(maxbufsize, targetmem, &targetbuf_h, &targetbuf, 0);
+    assert(targetbuf && targetbuf_h);
 
     /* The following illustrates the use of the routines to
      * run through a selection of communicators and datatypes.
@@ -99,11 +104,12 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            err = DTP_obj_buf_init(target_obj, targetbuf, -1, -1, count);
+            err = DTP_obj_buf_init(target_obj, targetbuf_h, -1, -1, count);
             if (err != DTP_SUCCESS) {
                 errs++;
                 break;
             }
+            MTestCopyContent(targetbuf_h, targetbuf, maxbufsize, targetmem);
 
             targetcount = target_obj.DTP_type_count;
             targettype = target_obj.DTP_datatype;
@@ -113,17 +119,15 @@ int main(int argc, char *argv[])
             MPI_Win_set_errhandler(win, MPI_ERRORS_RETURN);
 
             if (rank == orig) {
-                origbuf = malloc(orig_obj.DTP_bufsize);
-                if (origbuf == NULL) {
-                    errs++;
-                    break;
-                }
+                MTestAlloc(orig_obj.DTP_bufsize, origmem, &origbuf_h, &origbuf, 0);
+                assert(origbuf && origbuf_h);
 
-                err = DTP_obj_buf_init(orig_obj, origbuf, 0, 1, count);
+                err = DTP_obj_buf_init(orig_obj, origbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
                     break;
                 }
+                MTestCopyContent(origbuf_h, origbuf, orig_obj.DTP_bufsize, origmem);
 
                 origcount = orig_obj.DTP_type_count;
                 origtype = orig_obj.DTP_datatype;
@@ -153,7 +157,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                free(origbuf);
+                MTestFree(origmem, origbuf_h, origbuf);
             } else if (rank == target) {
                 MPI_Group_incl(wingroup, 1, &orig, &neighbors);
                 MPI_Win_post(neighbors, 0, win);
@@ -161,7 +165,8 @@ int main(int argc, char *argv[])
                 MPI_Win_wait(win);
                 /* This should have the same effect, in terms of
                  * transfering data, as a send/recv pair */
-                err = DTP_obj_buf_check(target_obj, targetbuf, 0, 1, count);
+                MTestCopyContent(targetbuf, targetbuf_h, maxbufsize, targetmem);
+                err = DTP_obj_buf_check(target_obj, targetbuf_h, 0, 1, count);
                 if (err != DTP_SUCCESS) {
                     errs++;
                     if (errs < 10) {
@@ -189,7 +194,7 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
 
-    free(targetbuf);
+    MTestFree(targetmem, targetbuf_h, targetbuf);
     DTP_pool_free(dtp);
 
     MTest_Finalize(errs);

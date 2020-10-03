@@ -69,7 +69,8 @@ void ADIOI_NFS_WriteContig(ADIO_File fd, const void *buf, int count,
 
   fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
-    MPIR_Status_set_bytes(status, datatype, bytes_xfered);
+    if (status && err != -1)
+        MPIR_Status_set_bytes(status, datatype, bytes_xfered);
 #endif
 
     *error_code = MPI_SUCCESS;

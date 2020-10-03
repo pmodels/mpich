@@ -72,7 +72,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
 
   fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
-    if (err != -1)
+    if (status && err != -1)
         MPIR_Status_set_bytes(status, datatype, bytes_xfered);
 #endif
 

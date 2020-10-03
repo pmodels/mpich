@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     MPI_Alloc_mem(DATA_SZ, MPI_INFO_NULL, &base_ptr[1]);
     MPI_Win_create(base_ptr[1], DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &windows[1]);
 
-    MPI_Win_create_keyval(MPI_NULL_COPY_FN, delete_fn, &keyval, NULL);
+    MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, delete_fn, &keyval, NULL);
     keyval_copy = keyval;
 
     MPI_Win_set_attr(windows[0], keyval, NULL);

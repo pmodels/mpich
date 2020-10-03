@@ -9,7 +9,7 @@
 #include <string.h>
 #include "mpitest.h"
 
-#define COUNT		14
+#define COUNT		2
 #define SIZE		340
 #define EL_COUNT	1131
 
@@ -21,20 +21,20 @@ int main(int argc, char **argv)
     int rank, size, ret;
     MPI_Status Status;
     MPI_Request request;
-    MPI_Datatype struct_type, type1[COUNT];
-    MPI_Aint disp1[COUNT] = { 0, 0, 332, 340 };
-    int block1[COUNT] = { 1, 56, 2, 1 };
+    MPI_Datatype tmp_type, struct_type, type1[COUNT];
+    MPI_Aint disp1[COUNT] = { 0, 332 };
+    int block1[COUNT] = { 56, 2 };
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    type1[0] = MPI_LB;
+    type1[0] = MPI_FLOAT;
     type1[1] = MPI_FLOAT;
-    type1[2] = MPI_FLOAT;
-    type1[3] = MPI_UB;
 
-    MPI_Type_struct(4, block1, disp1, type1, &struct_type);
+    MPI_Type_create_struct(2, block1, disp1, type1, &tmp_type);
+    MPI_Type_create_resized(tmp_type, 0, 340, &struct_type);
+    MPI_Type_free(&tmp_type);
 
     ret = MPI_Type_commit(&struct_type);
     if (ret != MPI_SUCCESS) {

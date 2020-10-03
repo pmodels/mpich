@@ -63,7 +63,7 @@ typedef struct MPIR_Datatype_contents {
   efficiency was outweighed by the added complexity of the implementation.
 
   A number of fields contain only boolean inforation ('is_contig',
-  'has_sticky_ub', 'has_sticky_lb', 'is_committed').  These
+  'is_committed').  These
   could be combined and stored in a single bit vector.
 
   'MPI_Type_dup' could be implemented with a shallow copy, where most of the
@@ -100,7 +100,6 @@ struct MPIR_Datatype {
     /* private fields */
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;
-    int has_sticky_ub, has_sticky_lb;
     int is_committed;
 
     /* element information; used for accumulate and get elements
@@ -123,11 +122,6 @@ struct MPIR_Datatype {
      * contiguous.
      */
     int is_contig;
-    /* Upper bound on the number of contig blocks for one instance.
-     * It is not trivial to calculate the *real* number of contig
-     * blocks in the case where old datatype is non-contiguous
-     */
-    MPI_Aint max_contig_blocks;
 
     /* pointer to contents and envelope data for the datatype */
     MPIR_Datatype_contents *contents;
@@ -136,8 +130,12 @@ struct MPIR_Datatype {
     void *flattened;
     int flattened_sz;
 
-    /* internal type representation */
-    void *typerep;              /* might be optimized for homogenous */
+    /* handle to the backend datatype engine + some content that we
+     * query from it and cache over here for performance reasons */
+    struct {
+        void *handle;
+        MPI_Aint num_contig_blocks;     /* contig blocks in one datatype element */
+    } typerep;
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
@@ -267,6 +265,21 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
         }                                                                      \
     } while (0)
 
+#define MPIR_Datatype_get_density(datatype_, density_)          \
+    do {                                                        \
+        int is_contig_;                                         \
+        MPIR_Datatype_is_contig((datatype_), &is_contig_);      \
+        if (is_contig_) {                                       \
+            (density_) = INT_MAX;                               \
+        } else {                                                \
+            MPIR_Datatype *dt_ptr_;                             \
+            MPIR_Datatype_get_ptr((datatype_), dt_ptr_);        \
+            MPI_Aint size_;                                     \
+            MPIR_Datatype_get_size_macro((datatype_), size_);   \
+            (density_) = size_ / dt_ptr_->typerep.num_contig_blocks;    \
+        }                                                       \
+    } while (0)
+
 /* MPIR_Datatype_ptr_release decrements the reference count on the MPIR_Datatype
  * and, if the refct is then zero, frees the MPIR_Datatype and associated
  * structures.
@@ -316,7 +329,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 #define MPIR_Datatype_add_ref_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        !HANDLE_IS_BUILTIN((datatype_)))                            \
+        !MPIR_DATATYPE_IS_PREDEFINED((datatype_)))                  \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
@@ -328,7 +341,7 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 #define MPIR_Datatype_release_if_not_builtin(datatype_)             \
     do {                                                            \
     if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-        !HANDLE_IS_BUILTIN((datatype_)))                            \
+        !MPIR_DATATYPE_IS_PREDEFINED((datatype_)))                  \
     {                                                               \
         MPIR_Datatype *dtp_ = NULL;                                 \
         MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
@@ -340,12 +353,12 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);
-    int align_sz = 8, epsilon;
+    int epsilon;
     MPIR_Datatype *old_dtp;
     MPI_Datatype *array_of_types;
 
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
 
     /* note: relies on types being first after structure */
@@ -377,17 +390,11 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              const MPI_Aint array_of_aints[],
                                              const MPI_Datatype array_of_types[])
 {
-    int i, contents_size, align_sz, epsilon, mpi_errno;
+    int i, contents_size, epsilon, mpi_errno;
     int struct_sz, ints_sz, aints_sz, types_sz;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
     char *ptr;
-
-#ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-#else
-    align_sz = 8;
-#endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
     types_sz = nr_types * sizeof(MPI_Datatype);
@@ -399,14 +406,14 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
      * note: it's not necessary that we pad the aints,
      *       because they are last in the region.
      */
-    if ((epsilon = struct_sz % align_sz)) {
-        struct_sz += align_sz - epsilon;
+    if ((epsilon = struct_sz % MAX_ALIGNMENT)) {
+        struct_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = types_sz % align_sz)) {
-        types_sz += align_sz - epsilon;
+    if ((epsilon = types_sz % MAX_ALIGNMENT)) {
+        types_sz += MAX_ALIGNMENT - epsilon;
     }
-    if ((epsilon = ints_sz % align_sz)) {
-        ints_sz += align_sz - epsilon;
+    if ((epsilon = ints_sz % MAX_ALIGNMENT)) {
+        ints_sz += MAX_ALIGNMENT - epsilon;
     }
 
     contents_size = struct_sz + types_sz + ints_sz + aints_sz;

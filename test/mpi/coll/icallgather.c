@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
-        MPI_Errhandler_set(comm, MPI_ERRORS_RETURN);
+        MPI_Comm_set_errhandler(comm, MPI_ERRORS_RETURN);
 
         for (count = 1; count < 65000; count = 2 * count) {
             /* The left group will send rank to the right group;

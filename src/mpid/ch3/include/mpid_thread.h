@@ -19,6 +19,7 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
+#define MPID_THREAD_ASSERT_IN_CS   MPIDU_THREAD_ASSERT_IN_CS
 
 #define MPID_Thread_init         MPIDU_Thread_init
 #define MPID_Thread_finalize     MPIDU_Thread_finalize

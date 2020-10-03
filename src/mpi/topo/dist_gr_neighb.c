@@ -39,14 +39,21 @@ int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr,
                         topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY,
                         "**notdistgraphtopo");
 
-    MPIR_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree * sizeof(int));
-    MPIR_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree * sizeof(int));
-
-    if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIR_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree * sizeof(int));
+    if (maxindegree > 0) {
+        MPIR_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree * sizeof(int));
+        if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
+            MPIR_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights,
+                        maxindegree * sizeof(int));
+        }
     }
-    if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIR_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree * sizeof(int));
+
+    if (maxoutdegree > 0) {
+        MPIR_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree * sizeof(int));
+
+        if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
+            MPIR_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights,
+                        maxoutdegree * sizeof(int));
+        }
     }
 
   fn_exit:

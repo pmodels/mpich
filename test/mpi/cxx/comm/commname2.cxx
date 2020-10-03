@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     }
     // Test a few other communicators
     n = 0;
-    while (MTestGetComm(&comm[n], 1) && n < 4) {
+    while (n < 4 && MTestGetComm(&comm[n], 1)) {
         sprintf(name, "test%d", n);
         comm[n]->Set_name(name);
         n++;
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
             cout << "comm[" << i << "] gave name " << name << "\n";
         }
         MTestFreeComm(*comm[i]);
+        delete comm[i];
     }
 
     MTest_Finalize(errs);

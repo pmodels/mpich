@@ -46,6 +46,9 @@ use File::Copy qw(move);
 # Use high resolution timers
 use Time::HiRes qw(gettimeofday tv_interval);
 
+# Import flock constants
+use Fcntl qw(:flock);
+
 # Global variables
 our $g_opt = {};   # global options. TODO: migrate global option vars into the hash
 $g_opt->{memory_total} = 20;      # Total memory in GB
@@ -61,8 +64,6 @@ our $g_total_seen = 0;
 our $g_num_timeout;
 our $g_num_timeout_thresh = 5;
 
-$MPIMajorVersion = "@MPI_VERSION@";
-$MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
 # ppnMax is the maximum number of processes per node.  -1 means ignore.
 # ppnArg is the argument to use to mpiexec - format is "string%d"; e.g.,
@@ -196,15 +197,6 @@ if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
     $timelimitArg = $ENV{'MPITEST_TIMELIMITARG'};
 }
 
-# MPI version for testing
-if (defined($ENV{'MPITEST_MPIVERSION'})) {
-    $_ = $ENV{'MPITEST_MPIVERSION'};
-    if (/(\d+)\.(\d+)/) {
-        $MPIMajorVersion = $1;
-        $MPIMinorVersion = $2;
-    }
-}
-
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
 #---------------------------------------------------------------------------
@@ -214,14 +206,13 @@ foreach $_ (@ARGV) {
         # we don't want to bother to try and find it.
         $mpiexec = $1; 
     }
-    elsif (/--?mpiversion=(\d+)\.(\d+)/) { $MPIMajorVersion = $1;
-                                           $MPIMinorVersion = $2; }
     elsif (/--?np=(\d+)/)   { $np_default = $1; }
     elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
     elsif (/--?ppnarg=(.*)/) { $ppnArg = $1; }
     elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
     elsif (/--?timelimitarg=(.*)/) { $timelimitArg = $1; }
     elsif (/--?tests=(.*)/) { $listfiles = $1; }
+    elsif (/--?testdirs=(.*)/) { $testdirs = $1; }
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
     elsif (/--?showprogress/) { $showProgress = 1; }
@@ -289,11 +280,10 @@ foreach $_ (@ARGV) {
     }
     else {
         print STDERR "Unrecognized argument $_\n";
-        print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
+        print STDERR "runtests [-tests=testfile] [-testdirs=dirs] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-ppn=max-proc-per-node] [-ppnarg=string] \
-        [-timelimitarg=string] [-mpiversion=major.minor] \
-        [-xmlfile=filename ] [-tapfile=filename ] \
+        [-timelimitarg=string] [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
         [-verbose] [-showprogress] [-debug] [-batch]\n";
         exit(1);
@@ -326,8 +316,11 @@ if ($listfiles eq "") {
         &ProcessImplicitList;
     }
 }
-elsif (-d $listfiles) { 
-    print STDERR "Testing by directories not yet supported\n";
+elsif ($testdirs ne "") {
+    my @all_testdirs = split /,\s*/, $testdirs;
+    foreach my $_d (@all_testdirs) {
+        &ProcessDir( $_d, $listfiles );
+    }
 }
 else {
     &RunList( $listfiles );
@@ -412,9 +405,8 @@ sub ProcessDir {
     }
 
     print "Processing directory $dir\n" if ($verbose || $debug);
-    chdir $dir;
-    if ($dir =~ /\//) {
-        print STDERR "only direct subdirectories allowed in list files";
+    unless(chdir $dir) {
+        die "Error: Cannot find directory $dir";
     }
     $curdir .= "/$dir";
 
@@ -493,7 +485,6 @@ sub RunList {
             my $np = "";
             my $requiresStrict = "";
             my $requiresMPIX   = "";
-            my $mpiVersion = "";
 
             my $dtp_match_type = 0;
             my $dtp_test_type = "";    # this test type
@@ -528,9 +519,6 @@ sub RunList {
                     }
                     elsif ($key eq "env") {
                         push @{$test_opt->{envs}}, $value;
-                    }
-                    elsif ($key eq "mpiversion") {
-                        $mpiVersion = $value;
                     }
                     elsif ($key eq "strict") {
                         $requiresStrict = $value
@@ -576,21 +564,6 @@ sub RunList {
                 $g_total_seen++;
             }
 
-            # If a minimum MPI version is specified, check against the
-            # available MPI.  If the version is unknown, we ignore this
-            # test (thus, all tests will be run).  
-            if ($mpiVersion ne "" && $MPIMajorVersion ne "unknown" &&
-                $MPIMinorVersion ne "unknown") {
-                my ($majorReq,$minorReq) = split(/\./,$mpiVersion);
-                if ($majorReq > $MPIMajorVersion or
-                    ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
-                {
-                    unless (-d $programname) {
-                        SkippedTest($programname, $np, $test_opt, $curdir, "requires MPI version $mpiVersion");
-                    }
-                    next;
-                }
-            }
             # Check whether strict is required by MPI but not by the
             # test (use strict=false for tests that use non-standard extensions)
             if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
@@ -798,15 +771,14 @@ sub RunMPIProgram {
 
     # acquire lock if requested
     my ($lockfile, $got_lock);
-    my ($lock_sh, $lock_ex) = (1, 2);
     if ($test_opt->{lock}) {
         # explict lock by setting "lock=[shared|name]" on testline directly
         my $name = $test_opt->{lock};
         $lockfile = "/tmp/runtests-$name.lock";
         if ($name eq "shared") {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         } else {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         }
     } elsif ($test_opt->{mem}) {
         # implicit lock by checking memory annotation
@@ -815,9 +787,9 @@ sub RunMPIProgram {
             SkippedTest($programname, $np, $test_opt, $curdir, "xfail due to memory requirement");
             next;
         } elsif ($test_opt->{mem} * $g_opt->{memory_multiplier} > $g_opt->{memory_total} ) {
-            $got_lock = get_lock($lockfile, $lock_ex);
+            $got_lock = get_lock($lockfile, LOCK_EX);
         } else {
-            $got_lock = get_lock($lockfile, $lock_sh);
+            $got_lock = get_lock($lockfile, LOCK_SH);
         }
     }
 
@@ -1416,7 +1388,14 @@ sub get_lock {
     if (! -e $lockfile) {
         system "touch $lockfile";
     }
-    if(open LOCK, "$lockfile"){
+
+    my $lock = $lockfile;
+    if ($lock_type == LOCK_EX) {
+        # To obtain exclusive lock, some platform require open the file for writing
+        $lock = "> $lockfile"
+    }
+
+    if(open LOCK, $lock){
         # flock blocks until the lock is taken
         flock(LOCK, $lock_type);
         return 1;

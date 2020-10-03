@@ -22,7 +22,7 @@ subroutine MPI_Ineighbor_alltoallw_f08ts(sendbuf, sendcounts, sdispls, sendtypes
     type(MPI_Datatype), intent(in)  :: sendtypes(*)
     type(MPI_Datatype), intent(in)  :: recvtypes(*)
     type(MPI_Comm), intent(in)  :: comm
-    type(MPI_Request), intent(in)  :: request
+    type(MPI_Request), intent(out)  :: request
     integer, optional, intent(out)  :: ierror
 
     integer(c_int), allocatable :: sendcounts_c(:)
@@ -43,13 +43,13 @@ subroutine MPI_Ineighbor_alltoallw_f08ts(sendbuf, sendcounts, sdispls, sendtypes
         ierror_c = MPIR_Ineighbor_alltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes(1:outdegree)%MPI_VAL, recvbuf, &
             recvcounts, rdispls, recvtypes(1:indegree)%MPI_VAL, comm%MPI_VAL, request%MPI_VAL)
     else
-        request_c = request%MPI_VAL
         sendtypes_c = sendtypes(1:outdegree)%MPI_VAL
         recvtypes_c = recvtypes(1:indegree)%MPI_VAL
         sendcounts_c = sendcounts(1:outdegree)
         recvcounts_c = recvcounts(1:indegree)
         ierror_c = MPIR_Ineighbor_alltoallw_cdesc(sendbuf, sendcounts_c, sdispls, sendtypes_c, recvbuf, recvcounts_c, &
             rdispls, recvtypes_c, comm_c, request_c)
+        request%MPI_VAL = request_c
     end if
 
     if(present(ierror)) ierror = ierror_c

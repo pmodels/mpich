@@ -10,9 +10,10 @@
 #include "ch4r_proc.h"
 #include "ch4r_recv.h"
 
-static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t context_id,
-                                           void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                           MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
+                                                      MPIR_Context_id_t context_id, void *buf,
+                                                      MPI_Aint count, MPI_Datatype datatype,
+                                                      MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
@@ -27,9 +28,9 @@ static inline void MPIDIG_prepare_recv_req(int rank, int tag, MPIR_Context_id_t 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 }
 
-static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                           MPIR_Comm * comm, int context_offset,
-                                           MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
+                                                      MPI_Datatype datatype, MPIR_Comm * comm,
+                                                      int context_offset, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -82,12 +83,13 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
         if (nbytes > 0) {
             char *addr = (char *) buf + dt_true_lb;
             assert(addr);       /* to supress gcc-8 warning: -Wnonnull */
-            MPIR_Memcpy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
+            MPIR_Typerep_copy(addr, MPIDIG_REQUEST(rreq, buffer), nbytes);
         }
     }
 
     MPIDIG_REQUEST(rreq, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
-    MPL_free(MPIDIG_REQUEST(rreq, buffer));
+    MPIDU_genq_private_pool_free_cell(MPIDI_global.unexp_pack_buf_pool,
+                                      MPIDIG_REQUEST(rreq, buffer));
 
     rreq->status.MPI_SOURCE = MPIDIG_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDIG_REQUEST(rreq, tag);
@@ -109,9 +111,10 @@ static inline int MPIDIG_handle_unexpected(void *buf, MPI_Aint count, MPI_Dataty
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                                  int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIR_Request ** request, int alloc_req, uint64_t flags)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                             int rank, int tag, MPIR_Comm * comm,
+                                             int context_offset, MPIR_Request ** request,
+                                             int alloc_req, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -127,7 +130,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
         MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_BUSY) {
             MPIDIG_REQUEST(unexp_req, req->status) |= MPIDIG_REQ_MATCHED;
-        } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_LONG_RTS) {
+        } else if (MPIDIG_REQUEST(unexp_req, req->status) & MPIDIG_REQ_RTS) {
             /* Matching receive is now posted, tell the netmod/shmmod */
             MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDIG_REQUEST(unexp_req, datatype) = datatype;
@@ -147,7 +150,8 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
                  * See MPIDI_recv_target_cmpl_cb for actual completion handler. */
                 MPIDIG_REQUEST(unexp_req, req->rreq.match_req) = *request;
             }
-            mpi_errno = MPIDIG_do_long_ack(unexp_req);
+            MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+            mpi_errno = MPIDIG_do_cts(unexp_req);
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
@@ -166,7 +170,7 @@ static inline int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype dataty
                 MPIR_Request_add_ref(*request);
                 MPID_Request_complete(*request);
                 /* Need to free here because we don't return this to user */
-                MPIR_Request_free(unexp_req);
+                MPIR_Request_free_unsafe(unexp_req);
             }
             goto fn_exit;
         }
@@ -213,17 +217,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
                                              int tag,
                                              MPIR_Comm * comm,
                                              int context_offset, MPI_Status * status,
-                                             MPIR_Request ** request)
+                                             MPIR_Request ** request, int is_local)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV);
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);
 
     mpi_errno =
         MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
+    MPIDI_REQUEST_SET_LOCAL(*request, is_local, NULL);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV);
     return mpi_errno;
   fn_fail:
@@ -237,6 +244,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IMRECV);
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
+    int vci = MPIDI_Request_get_vci(message);
+#endif
+    MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci).lock);
 
     MPIDIG_REQUEST(message, req->rreq.mrcv_buffer) = buf;
     MPIDIG_REQUEST(message, req->rreq.mrcv_count) = count;
@@ -246,12 +257,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_ENTER(); */
     if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_BUSY) {
         MPIDIG_REQUEST(message, req->status) |= MPIDIG_REQ_UNEXP_CLAIMED;
-    } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_LONG_RTS) {
+    } else if (MPIDIG_REQUEST(message, req->status) & MPIDIG_REQ_RTS) {
         /* Matching receive is now posted, tell the netmod */
         MPIDIG_REQUEST(message, datatype) = datatype;
         MPIDIG_REQUEST(message, buffer) = (char *) buf;
         MPIDIG_REQUEST(message, count) = count;
-        MPIDIG_do_long_ack(message);
+        MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
+        MPIDIG_do_cts(message);
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);
@@ -259,6 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IMRECV);
     return mpi_errno;
   fn_fail:
@@ -271,16 +284,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
                                               int rank,
                                               int tag,
                                               MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request)
+                                              MPIR_Request ** request,
+                                              int is_local, MPIR_Request * partner)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_IRECV);
+    /* For anysource recv, we may be called while holding the vci lock of shm request (to
+     * prevent shm progress). Therefore, recursive locking is allowed here */
+    MPID_THREAD_CS_ENTER_REC_VCI(MPIDI_VCI(0).lock);
 
     mpi_errno =
         MPIDIG_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     MPIR_ERR_CHECK(mpi_errno);
   fn_exit:
+    MPIDI_REQUEST_SET_LOCAL(*request, is_local, partner);
+    MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_IRECV);
     return mpi_errno;
   fn_fail:

@@ -153,8 +153,8 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
     char *p;
 
     if (count == 0) {
-        *error_code = MPI_SUCCESS;
-        return;
+        err = 0;
+        goto fn_exit;
     }
 
     MPI_Type_size_x(datatype, &datatype_size);
@@ -214,8 +214,10 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL) {
         fd->fp_ind += bytes_xfered;
     }
+
+  fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
-    if (status)
+    if (status && err != -1)
         MPIR_Status_set_bytes(status, datatype, bytes_xfered);
 #endif
     *error_code = MPI_SUCCESS;

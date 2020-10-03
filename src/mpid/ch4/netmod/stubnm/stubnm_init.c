@@ -22,6 +22,13 @@ int MPIDI_STUBNM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
+int MPIDI_STUBNM_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Assert(0);
+    return mpi_errno;
+}
+
 int MPIDI_STUBNM_get_vci_attr(int vci)
 {
     MPIR_Assert(0);

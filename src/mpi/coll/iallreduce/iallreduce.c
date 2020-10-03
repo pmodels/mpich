@@ -481,6 +481,15 @@ int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    void *in_recvbuf = recvbuf;
+    void *host_sendbuf;
+    void *host_recvbuf;
+
+    MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf, &host_recvbuf);
+    if (host_sendbuf)
+        sendbuf = host_sendbuf;
+    if (host_recvbuf)
+        recvbuf = host_recvbuf;
 
     if ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_all) ||
         ((MPIR_CVAR_DEVICE_COLLECTIVES == MPIR_CVAR_DEVICE_COLLECTIVES_percoll) &&
@@ -489,6 +498,14 @@ int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     } else {
         mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     }
+
+    /* Copy out data from host recv buffer to GPU buffer */
+    if (host_recvbuf) {
+        recvbuf = in_recvbuf;
+        MPIR_Localcopy(host_recvbuf, count, datatype, recvbuf, count, datatype);
+    }
+
+    MPIR_Coll_host_buffer_free(host_sendbuf, host_recvbuf);
 
     return mpi_errno;
 }

@@ -56,7 +56,7 @@ static int progress_recv(int blocking)
 
     if (!msg_hdr) {
         /* Fragment handling. Set currently active recv request */
-        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
+        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_local_rank];
     } else {
         /* First segment */
         am_hdr = payload;
@@ -68,7 +68,7 @@ static int progress_recv(int blocking)
         /* TODO: internal control can use the generic am interface,
          *       just need register callbacks */
         if (msg_hdr->kind == MPIDI_POSIX_AM_HDR_SHM) {
-            mpi_errno = MPIDI_SHM_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
+            mpi_errno = MPIDI_SHMI_ctrl_dispatch(msg_hdr->handler_id, am_hdr);
 
             /* TODO: discard payload for now as we only handle header in
              * current internal control protocols. */
@@ -96,14 +96,14 @@ static int progress_recv(int blocking)
             /* prepare for asynchronous transfer */
             MPIDIG_recv_setup(rreq);
 
-            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
-            MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
+            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] == NULL);
+            MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = rreq;
         }
     }
 
     int is_done = MPIDIG_recv_copy_seg(payload, payload_left, rreq);
     if (is_done) {
-        MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
+        MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = NULL;
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
     }
 
@@ -128,18 +128,6 @@ static int progress_send(int blocking)
     if (MPIDI_POSIX_global.postponed_queue) {
         /* Drain postponed queue */
         curr_sreq_hdr = MPIDI_POSIX_global.postponed_queue;
-
-        POSIX_TRACE("Queue OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                    ", data_sz %" PRIu64 ", seq_num = %d], request=%p] to %d\n",
-                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->handler_id : (uint64_t) - 1,
-                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->am_hdr_sz : (uint64_t) - 1,
-                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->data_sz : (uint64_t) - 1,
-#ifdef POSIX_AM_DEBUG
-                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->seq_num : -1,
-#else /* POSIX_AM_DEBUG */
-                    -1,
-#endif /* POSIX_AM_DEBUG */
-                    curr_sreq_hdr->request, curr_sreq_hdr->dst_grank);
 
         result = MPIDI_POSIX_eager_send(curr_sreq_hdr->dst_grank,
                                         &curr_sreq_hdr->msg_hdr,

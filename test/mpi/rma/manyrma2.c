@@ -231,6 +231,10 @@ void RunAccFence(MPI_Win win, int destRank, int cnt, int sz)
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
 
+    for (i = 0; i < sz; i++) {
+        buf[i] = i;
+    }
+
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Win_fence(0, win);
@@ -249,6 +253,10 @@ void RunAccLock(MPI_Win win, int destRank, int cnt, int sz)
 {
     int k, i, j;
     int *buf = malloc(sz * sizeof(int));
+
+    for (i = 0; i < sz; i++) {
+        buf[i] = i;
+    }
 
     for (k = 0; k < MAX_RUNS; k++) {
         MPI_Barrier(MPI_COMM_WORLD);

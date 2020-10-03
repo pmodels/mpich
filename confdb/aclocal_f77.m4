@@ -1441,7 +1441,7 @@ if test "X$pac_cv_prog_f77_mismatched_args" = X ; then
 	# The best solution is to turn off errors on particular routines
 	# if that isn't possible (e.g., too many of them), then
 	# just try arguments that turn off all checking
-	for flags in ifelse($2,yes,,"-wmismatch=foo1") "-mismatch" ; do
+	for flags in ifelse($2,yes,,"-wmismatch=foo1") "-mismatch" "-fallow-argument-mismatch" ; do
             testok=no
             FFLAGS="$FFLAGS $flags"
             AC_COMPILE_IFELSE([

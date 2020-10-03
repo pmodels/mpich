@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
                                                 int target_rank,
                                                 MPI_Aint target_disp,
                                                 int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win)
+                                                MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
@@ -103,12 +103,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
@@ -130,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
                                                 int target_rank,
                                                 MPI_Aint target_disp,
                                                 int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win)
+                                                MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
@@ -147,12 +147,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
@@ -177,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
                                                            MPI_Aint target_disp,
                                                            int target_count,
                                                            MPI_Datatype target_datatype, MPI_Op op,
-                                                           MPIR_Win * win)
+                                                           MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
@@ -195,17 +195,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     if (target_data_sz == 0 || (origin_data_sz == 0 && result_data_sz == 0))
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
 
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED) {
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
         shm_locked = 1;
     }
@@ -239,7 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
                                                        MPI_Aint target_disp,
                                                        int target_count,
                                                        MPI_Datatype target_datatype, MPI_Op op,
-                                                       MPIR_Win * win)
+                                                       MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
@@ -256,23 +256,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
     if (origin_data_sz == 0 || target_data_sz == 0)
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
 
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
 
     mpi_errno = MPIDI_POSIX_compute_accumulate((void *) origin_addr, origin_count, origin_datatype,
                                                (char *) base + disp_unit * target_disp,
                                                target_count, target_datatype, op);
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
 
   fn_exit:
@@ -288,7 +288,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
                                                  int target_rank,
                                                  MPI_Aint target_disp,
                                                  int target_count, MPI_Datatype target_datatype,
-                                                 MPIR_Win * win)
+                                                 MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_PUT);
@@ -296,12 +296,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_put(const void *origin_addr,
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_put(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
     } else {
         mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype, target_rank,
-                                       target_disp, target_count, target_datatype, win);
+                                       target_disp, target_count, target_datatype, win, winattr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_PUT);
@@ -314,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
                                                  int target_rank,
                                                  MPI_Aint target_disp,
                                                  int target_count, MPI_Datatype target_datatype,
-                                                 MPIR_Win * win)
+                                                 MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET);
@@ -322,12 +323,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get(void *origin_addr,
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_get(origin_addr, origin_count, origin_datatype,
                                    target_rank, target_disp, target_count, target_datatype, win);
     } else {
         mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype, target_rank,
-                                       target_disp, target_count, target_datatype, win);
+                                       target_disp, target_count, target_datatype, win, winattr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET);
@@ -341,7 +343,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
                                                   MPI_Aint target_disp,
                                                   int target_count,
                                                   MPI_Datatype target_datatype,
-                                                  MPIR_Win * win, MPIR_Request ** request)
+                                                  MPIR_Win * win, MPIDI_winattr_t winattr,
+                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
@@ -350,7 +353,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_rput(origin_addr, origin_count, origin_datatype,
                                     target_rank, target_disp, target_count,
                                     target_datatype, win, request);
@@ -358,11 +362,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rput(const void *origin_addr,
     }
 
     mpi_errno = MPIDI_POSIX_do_put(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win,
+                                   winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -381,7 +386,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
                                                               void *result_addr,
                                                               MPI_Datatype datatype,
                                                               int target_rank, MPI_Aint target_disp,
-                                                              MPIR_Win * win)
+                                                              MPIR_Win * win,
+                                                              MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
@@ -394,7 +400,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                                 datatype, target_rank, target_disp, win);
         goto fn_exit;
@@ -406,12 +413,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     if (data_sz == 0)
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
@@ -419,15 +426,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_compare_and_swap(const void *origin
     target_addr = (char *) base + disp_unit * target_disp;
     MPIR_Datatype_get_size_macro(datatype, dtype_sz);
 
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
 
-    MPIR_Memcpy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
     if (MPIR_Compare_equal(compare_addr, target_addr, datatype)) {
-        MPIR_Memcpy(target_addr, origin_addr, dtype_sz);
+        MPIR_Typerep_copy(target_addr, origin_addr, dtype_sz);
     }
 
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
 
   fn_exit:
@@ -445,6 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
                                                          int target_count,
                                                          MPI_Datatype target_datatype,
                                                          MPI_Op op, MPIR_Win * win,
+                                                         MPIDI_winattr_t winattr,
                                                          MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -454,7 +462,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                            target_rank, target_disp, target_count,
                                            target_datatype, op, win, request);
@@ -463,11 +472,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr
 
     mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
-                                          target_datatype, op, win);
+                                          target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -492,6 +501,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
                                                              int target_count,
                                                              MPI_Datatype target_datatype,
                                                              MPI_Op op, MPIR_Win * win,
+                                                             MPIDI_winattr_t winattr,
                                                              MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -501,7 +511,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                result_addr, result_count, result_datatype,
                                                target_rank, target_disp, target_count,
@@ -512,11 +523,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_
     mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
+                                              target_datatype, op, win, winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -535,7 +546,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
                                                           MPI_Datatype datatype,
                                                           int target_rank,
                                                           MPI_Aint target_disp, MPI_Op op,
-                                                          MPIR_Win * win)
+                                                          MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
@@ -548,7 +559,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype,
                                             target_rank, target_disp, op, win);
         goto fn_exit;
@@ -560,12 +572,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     if (data_sz == 0)
         goto fn_exit;
 
-    if (target_rank == win->comm_ptr->rank) {
+    if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
         base = win->base;
         disp_unit = win->disp_unit;
     } else {
         MPIDIG_win_shared_info_t *shared_table = MPIDIG_WIN(win, shared_table);
-        int local_target_rank = win->comm_ptr->intranode_table[target_rank];
+        int local_target_rank = MPIDIU_win_rank_to_intra_rank(win, target_rank, winattr);
         disp_unit = shared_table[local_target_rank].disp_unit;
         base = shared_table[local_target_rank].shm_base_addr;
     }
@@ -573,10 +585,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
     target_addr = (char *) base + disp_unit * target_disp;
     MPIR_Datatype_get_size_macro(datatype, dtype_sz);
 
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
 
-    MPIR_Memcpy(result_addr, target_addr, dtype_sz);
+    MPIR_Typerep_copy(result_addr, target_addr, dtype_sz);
 
     if (op != MPI_NO_OP) {
         /* We need to make sure op is valid here.
@@ -589,7 +601,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_add
         (*uop) ((void *) origin_addr, target_addr, &one, &datatype);
     }
 
-    if (MPIDIG_WIN(win, shm_allocated))
+    if (winattr & MPIDI_WINATTR_SHM_ALLOCATED)
         MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
 
   fn_exit:
@@ -606,7 +618,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
                                                   MPI_Aint target_disp,
                                                   int target_count,
                                                   MPI_Datatype target_datatype,
-                                                  MPIR_Win * win, MPIR_Request ** request)
+                                                  MPIR_Win * win, MPIDI_winattr_t winattr,
+                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = NULL;
@@ -615,7 +628,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_rget(origin_addr, origin_count, origin_datatype,
                                     target_rank, target_disp, target_count,
                                     target_datatype, win, request);
@@ -623,11 +637,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_rget(void *origin_addr,
     }
 
     mpi_errno = MPIDI_POSIX_do_get(origin_addr, origin_count, origin_datatype,
-                                   target_rank, target_disp, target_count, target_datatype, win);
+                                   target_rank, target_disp, target_count, target_datatype, win,
+                                   winattr);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* create a completed request for user. */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA, 0);
+    sreq = MPIR_Request_create_from_pool(MPIR_REQUEST_KIND__RMA, 0);
     MPIR_Assert(sreq);
 
     MPIR_Request_add_ref(sreq);
@@ -651,7 +666,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
                                                             MPI_Aint target_disp,
                                                             int target_count,
                                                             MPI_Datatype target_datatype, MPI_Op op,
-                                                            MPIR_Win * win)
+                                                            MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
@@ -659,7 +674,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
                                               target_rank, target_disp, target_count,
@@ -668,7 +684,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_get_accumulate(const void *origin_a
         mpi_errno = MPIDI_POSIX_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
-                                                  target_datatype, op, win);
+                                                  target_datatype, op, win, winattr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
@@ -682,7 +698,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
                                                         MPI_Aint target_disp,
                                                         int target_count,
                                                         MPI_Datatype target_datatype, MPI_Op op,
-                                                        MPIR_Win * win)
+                                                        MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
@@ -690,14 +706,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
 
     /* CH4 schedules operation only based on process locality.
      * Thus the target might not be in shared memory of the window.*/
-    if (!MPIDIG_WIN(win, shm_allocated) && target_rank != win->comm_ptr->rank) {
+    if (!(winattr & MPIDI_WINATTR_SHM_ALLOCATED) &&
+        target_rank != MPIDIU_win_comm_rank(win, winattr)) {
         mpi_errno = MPIDIG_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                           target_rank, target_disp, target_count,
                                           target_datatype, op, win);
     } else {
         mpi_errno = MPIDI_POSIX_do_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count,
-                                              target_datatype, op, win);
+                                              target_datatype, op, win, winattr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);

@@ -20,6 +20,14 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
+    int do_randomize;
+    MTestArgList *head = MTestArgListCreate(argc, argv);
+    do_randomize = MTestArgListGetInt_with_default(head, "randomize", 0);
+    MTestArgListDestroy(head);
+
+    if (do_randomize) {
+        MTestCommRandomize();
+    }
     while (MTestGetIntercomm(&comm, &leftGroup, 4)) {
         if (comm == MPI_COMM_NULL)
             continue;

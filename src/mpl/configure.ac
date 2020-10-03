@@ -80,7 +80,10 @@ AC_ARG_ENABLE(g,
 # enable-g
 # strip off multiple options, separated by commas
 PAC_PUSH_FLAG(IFS)
-IFS=","
+# Change IFS to process enable_g values; save for use after AC_MSG_WARN
+# below to provide single point of maintenance
+enable_g_IFS=","
+IFS="$enable_g_IFS"
 for option in $enable_g ; do
     case "$option" in
 	 log)
@@ -100,7 +103,12 @@ for option in $enable_g ; do
 	 ;;
 
 	 *)
+	 # Default IFS required by AC_MSG_WARN
+	 PAC_POP_FLAG(IFS)
 	 AC_MSG_WARN([Unknown value $option for enable-g])
+	 # Restore previous IFS to process any remaining enable_g values
+	 PAC_PUSH_FLAG(IFS)
+	 IFS="$enable_g_IFS"
 	 ;;
     esac
 done
@@ -135,6 +143,37 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
 AC_HEADER_STDBOOL
+
+AC_ARG_ENABLE(fast,
+[  --enable-fast=option - Control the level of fast execution supported by MPL.
+        alwaysinline   - Force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX
+        all|yes  - Same as "alwaysinline"
+        none     - Disable alwaysinline (default)
+],,enable_fast=none)
+
+# enable-fast
+# only alwaysinline option is valid but still need break down multiple options
+# transferred from MPICH separated by commas
+enable_fast_alwaysinline=no
+save_IFS="$IFS"
+IFS=","
+for option in $enable_fast ; do
+    case "$option" in
+        alwaysinline)
+        enable_fast_alwaysinline=yes
+        ;;
+        all|yes)
+        enable_fast_alwaysinline=yes
+        ;;
+        *) # do not change default value (no) for other fast options
+        ;;
+    esac
+done
+IFS="$save_IFS"
+
+if test "$enable_fast_alwaysinline" = "yes"; then
+    AC_DEFINE(ENABLE_ALWAYS_INLINE,1,[Define if force compiler to always inline functions with MPL_STATIC_INLINE_PREFIX|SUFFIX])
+fi
 
 #######################################################################
 # valgrind support
@@ -868,7 +907,9 @@ if test "$with_mpl_atomic_primitives" = "auto" \
 fi
 PAC_POP_FLAG([CFLAGS])
 
-if test "$with_mpl_atomic_primitives" = "auto" \
+if test "$mpl_atomic_primitives_set" = "true" ; then
+    : # got native atomic support already
+elif test "$with_mpl_atomic_primitives" = "auto" \
         -o "$with_mpl_atomic_primitives" = "lock" ; then
     AC_DEFINE(USE_LOCK_BASED_PRIMITIVES, 1,
              [Define to 1 if mutex-based synchronization is used])
@@ -917,21 +958,6 @@ AC_CHECK_FUNCS(getpid)
 dnl Check for shm
 PAC_ARG_SHARED_MEMORY
 
-case $with_shared_memory in
-    sysv)
-        AC_DEFINE(MPL_USE_SYSV_SHM,1,[Define if use SYSV shared memory])
-        ;;
-    mmap)
-        AC_DEFINE(MPL_USE_MMAP_SHM,1,[Define if use MMAP shared memory])
-        ;;
-    nt)
-        AC_DEFINE(MPL_USE_NT_SHM,1,[Define if use Windows shared memory])
-        ;;
-    *)
-        AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
-esac
-
-
 #######################################################################
 ## END OF SHM CODE
 #######################################################################
@@ -954,14 +980,28 @@ AC_SUBST(libmpl_so_versionflags)
 #######################################################################
 ## START OF GPU CODE
 #######################################################################
-
+have_gpu="no"
+# Check CUDA availability
 PAC_SET_HEADER_LIB_PATH([cuda])
-PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
-if test "X${have_cuda}" = "Xyes" ; then
-    AC_DEFINE([MPL_HAVE_CUDA],[1],[Define if CUDA is available])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cudart=yes],[have_cudart=no])
+PAC_CHECK_HEADER_LIB([cuda.h],[cuda],[cuMemGetAddressRange],[have_cuda=yes],[have_cuda=no])
+if test "X${have_cudart}" = "Xyes" -a \
+    "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    have_gpu="yes"
 fi
-AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AM_CONDITIONAL([MPL_HAVE_CUDA],[test "X${have_cudart}" = "Xyes" -a "X${have_cuda}" = "Xyes"])
 
+if test "$have_gpu" = "no" ; then
+    # Check Level Zero availability when no other GPU library is available
+    PAC_SET_HEADER_LIB_PATH([ze])
+    PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
+    if test "X${have_ze}" = "Xyes" ; then
+        AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+        have_gpu="yes"
+    fi
+fi
+AM_CONDITIONAL([MPL_HAVE_ZE],[test "X${have_ze}" = "Xyes"])
 #######################################################################
 ## END OF GPU CODE
 #######################################################################

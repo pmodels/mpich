@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(intercomm, &rank);
 
         if (parentcomm == MPI_COMM_NULL) {
-            /* Master */
+            /* Parent */
             if (rsize != np) {
                 errs++;
                 printf("Did not create %d processes (got %d)\n", np, rsize);
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Unexpected rank on child %d (%d)\n", rank, i);
             }
-            /* Send the errs back to the master process */
+            /* Send the errs back to the parent process */
             MPI_Ssend(&errs, 1, MPI_INT, 0, 1, intercomm);
         }
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(intercomm2, &rank);
 
         if (parentcomm == MPI_COMM_NULL) {
-            /* Master */
+            /* Parent */
             if (rsize != np) {
                 errs++;
                 printf("Did not create %d processes (got %d)\n", np, rsize);

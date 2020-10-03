@@ -1,19 +1,19 @@
-[submodule "src/izem"]
-	path = src/izem
+[submodule "modules/izem"]
+	path = modules/izem
 	url = https://github.com/pmodels/izem
-[submodule "src/mpid/ch4/netmod/ofi/libfabric"]
-	path = src/mpid/ch4/netmod/ofi/libfabric
+[submodule "modules/libfabric"]
+	path = modules/libfabric
 	url = https://github.com/pmodels/libfabric
-[submodule "src/hwloc"]
-	path = src/hwloc
+[submodule "modules/hwloc"]
+	path = modules/hwloc
 	url = https://github.com/pmodels/hwloc
-[submodule "src/mpid/ch4/netmod/ucx/ucx"]
-	path = src/mpid/ch4/netmod/ucx/ucx
+[submodule "modules/ucx"]
+	path = modules/ucx
 	url = https://github.com/pmodels/ucx
 [submodule "modules/json-c"]
 	path = modules/json-c
 	url = https://github.com/pmodels/json-c
-        branch = mpich/master
+        branch = mpich/main
 [submodule "modules/yaksa"]
 	path = modules/yaksa
 	url = https://github.com/pmodels/yaksa

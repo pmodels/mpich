@@ -60,8 +60,6 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->true_ub = old_dtp->true_ub;
         new_dtp->true_lb = old_dtp->true_lb;
         new_dtp->alignsize = old_dtp->alignsize;
-        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
-        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
         new_dtp->is_committed = old_dtp->is_committed;
 
         new_dtp->attributes = NULL;     /* Attributes are copied in the
@@ -72,16 +70,14 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type = old_dtp->basic_type;
 
-        new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
-
-        new_dtp->typerep = NULL;
+        new_dtp->typerep.handle = NULL;
         *newtype = new_dtp->handle;
 
         if (old_dtp->is_committed) {
             MPID_Type_commit_hook(new_dtp);
         }
 
-        mpi_errno = MPIR_Typerep_create_dup(oldtype, &new_dtp->typerep);
+        mpi_errno = MPIR_Typerep_create_dup(oldtype, new_dtp);
         MPIR_ERR_CHECK(mpi_errno);
     }
 

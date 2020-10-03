@@ -105,7 +105,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 
     if (!MPIR_Request_is_complete(request_ptr)) {
         /* request not complete. poke the progress engine. Req #3130 */
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(NULL);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
     }

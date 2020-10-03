@@ -24,11 +24,12 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #undef MPI_Test
 #define MPI_Test PMPI_Test
 
-int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
+int MPIR_Test_state(MPIR_Request * request_ptr, int *flag, MPI_Status * status,
+                    MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (MPIR_Request_has_poll_fn(request_ptr)) {
@@ -46,6 +47,11 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
+{
+    return MPIR_Test_state(request_ptr, flag, status, NULL);
 }
 
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)

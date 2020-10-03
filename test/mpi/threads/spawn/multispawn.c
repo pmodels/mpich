@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        /* The master thread (this thread) checks the created communicators */
+        /* The parent thread (this thread) checks the created communicators */
         for (i = 0; i < NTHREADS; i++) {
             MPI_Bcast(&i, 1, MPI_INT, MPI_ROOT, intercomms[i]);
         }

@@ -20,11 +20,11 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
                             goto fn_fail, "**nomemreq");                \
     } while (0)
 
-static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
-                                MPI_Datatype origin_datatype, int target_rank,
-                                MPI_Aint target_disp, int target_count,
-                                MPI_Datatype target_datatype, MPIR_Win * win,
-                                MPIR_Request ** sreq_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_count,
+                                           MPI_Datatype origin_datatype, int target_rank,
+                                           MPI_Aint target_disp, int target_count,
+                                           MPI_Datatype target_datatype, MPIR_Win * win,
+                                           MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
@@ -67,12 +67,19 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     MPIDIG_REQUEST(sreq, req->preq.win_ptr) = win;
     MPIDIG_REQUEST(sreq, req->preq.target_datatype) = target_datatype;
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
-    am_hdr.data_sz = data_sz;
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+        am_hdr.target_count = target_count;
+        am_hdr.target_datatype = target_datatype;
+    } else {
+        am_hdr.target_count = data_sz;
+        am_hdr.target_datatype = MPI_BYTE;
+    }
     am_hdr.preq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
 
@@ -81,8 +88,11 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
     MPIDIG_REQUEST(sreq, rank) = target_rank;
 
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    int is_contig;
+    MPIR_Datatype_is_contig(target_datatype, &is_contig);
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
         am_hdr.flattened_sz = 0;
+        MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -106,7 +116,6 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     void *flattened_dt;
     MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     am_iov[0].iov_base = &am_hdr;
     am_iov[0].iov_len = sizeof(am_hdr);
@@ -158,7 +167,7 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free(sreq);
+        MPIR_Request_free_unsafe(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_PUT);
     return mpi_errno;
@@ -172,10 +181,11 @@ static inline int MPIDIG_do_put(const void *origin_addr, int origin_count,
     goto fn_exit;
 }
 
-static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-                                int target_rank, MPI_Aint target_disp, int target_count,
-                                MPI_Datatype target_datatype, MPIR_Win * win,
-                                MPIR_Request ** sreq_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
+                                           MPI_Datatype origin_datatype, int target_rank,
+                                           MPI_Aint target_disp, int target_count,
+                                           MPI_Datatype target_datatype, MPIR_Win * win,
+                                           MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c;
     size_t offset;
@@ -221,11 +231,18 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     MPIDIG_REQUEST(sreq, req->greq.target_datatype) = target_datatype;
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
-    am_hdr.data_sz = data_sz;
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+        am_hdr.target_count = target_count;
+        am_hdr.target_datatype = target_datatype;
+    } else {
+        am_hdr.target_count = data_sz;
+        am_hdr.target_datatype = MPI_BYTE;
+    }
     am_hdr.greq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
@@ -234,8 +251,11 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
      * counter in request, thus it can be decreased at request completion. */
     MPIDIG_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    int is_contig;
+    MPIR_Datatype_is_contig(target_datatype, &is_contig);
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) || is_contig) {
         am_hdr.flattened_sz = 0;
+        MPIR_Datatype_get_true_lb(target_datatype, &am_hdr.target_true_lb);
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -259,7 +279,6 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     void *flattened_dt;
     MPIR_Datatype_get_flattened(target_datatype, &flattened_dt, &flattened_sz);
     am_hdr.flattened_sz = flattened_sz;
-    MPIR_Datatype_add_ref_if_not_builtin(target_datatype);
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -281,7 +300,7 @@ static inline int MPIDIG_do_get(void *origin_addr, int origin_count, MPI_Datatyp
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free(sreq);
+        MPIR_Request_free_unsafe(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_GET);
     return mpi_errno;
@@ -368,7 +387,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
@@ -448,7 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free(sreq);
+        MPIR_Request_free_unsafe(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_ACCUMULATE);
     return mpi_errno;
@@ -463,8 +482,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
-                                                      int origin_count,
-                                                      MPI_Datatype origin_datatype,
+                                                      int origin_count_,
+                                                      MPI_Datatype origin_datatype_,
                                                       void *result_addr,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
@@ -483,6 +502,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
+    int origin_count = origin_count_;
+    MPI_Datatype origin_datatype = origin_datatype_;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
@@ -496,7 +517,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+    if (op == MPI_NO_OP) {
+        origin_count = 0;
+        origin_datatype = MPI_DATATYPE_NULL;
+        data_sz = 0;
+        dt_ptr = NULL;
+    } else {
+        MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+    }
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     MPIDI_Datatype_check_size(result_datatype, result_count, result_data_sz);
 
@@ -549,7 +577,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
     MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
-    if (HANDLE_IS_BUILTIN(target_datatype)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
@@ -629,7 +657,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     if (sreq_ptr)
         *sreq_ptr = sreq;
     else if (sreq != NULL)
-        MPIR_Request_free(sreq);
+        MPIR_Request_free_unsafe(sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_GET_ACCUMULATE);
     return mpi_errno;
@@ -854,8 +882,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_compare_and_swap(const void *origin_addr
 
     p_data = MPL_malloc(data_sz * 2, MPL_MEM_BUFFER);
     MPIR_Assert(p_data);
-    MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
-    MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
+    MPIR_Typerep_copy(p_data, (char *) origin_addr, data_sz);
+    MPIR_Typerep_copy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
 
     sreq = MPIDIG_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");

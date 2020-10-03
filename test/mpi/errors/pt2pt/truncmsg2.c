@@ -68,11 +68,11 @@ int main(int argc, char *argv[])
         exit(RESFAIL_ERROR);
     }
 
-    ret = MPI_Type_struct(small_non_contig_struct_count,
-                          small_non_contig_struct_blocklens,
-                          small_non_contig_struct_disps,
-                          small_non_contig_struct_types, &small_non_contig_struct_type);
-    if_error("MPI_Type_struct", "small_non_contig_struct_type", ret);
+    ret = MPI_Type_create_struct(small_non_contig_struct_count,
+                                 small_non_contig_struct_blocklens,
+                                 small_non_contig_struct_disps,
+                                 small_non_contig_struct_types, &small_non_contig_struct_type);
+    if_error("MPI_Type_create_struct", "small_non_contig_struct_type", ret);
 
     ret = MPI_Type_commit(&small_non_contig_struct_type);
     if_error("MPI_Type_commit", "small_non_contig_struct_type", ret);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     if (myrank == 1) {
         MPI_Send(src, 1, small_non_contig_struct_type, 0, 0xabc, MPI_COMM_WORLD);
     } else {
-        MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+        MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
         ret = MPI_Recv(sendrec, 1, contig_indexed_type, 1, 0xabc, MPI_COMM_WORLD, &status);
         if (ret == MPI_SUCCESS) {
             printf("MPI_Recv succeeded with non-matching datatype signature\n");

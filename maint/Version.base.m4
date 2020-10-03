@@ -23,8 +23,8 @@ dnl $MPICH_VERSION as before
 MPICH_VERSION=MPICH_VERSION_m4
 export MPICH_VERSION
 
-if [[ -f src/mpid/ch4/netmod/ofi/libfabric/autogen.sh ]]; then
-    cd src/mpid/ch4/netmod/ofi/libfabric
+if [[ -f modules/libfabric/autogen.sh ]]; then
+    cd modules/libfabric
     LIBFABRIC_VERSION=`git describe --tags`
     export LIBFABRIC_VERSION
     cd -

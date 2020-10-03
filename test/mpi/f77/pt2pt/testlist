@@ -11,4 +11,4 @@ prsendf 2
 pssendf 2
 sendrecvf 2
 sendrecvreplf 2
-mprobef 2 mpiversion=3.0
+mprobef 2
