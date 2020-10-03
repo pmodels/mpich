@@ -28,89 +28,90 @@ static int datatype_attr_finalize_cb(void *dummy);
 typedef struct mpi_names_t {
     MPI_Datatype dtype;
     const char *name;
+    const char *short_name;     /* used in info */
 } mpi_names_t;
-#define type_name_entry(x_) { x_, #x_ }
+#define type_name_entry(x_, shtnm) { x_, #x_, shtnm }
 
 static mpi_names_t mpi_dtypes[] = {
-    type_name_entry(MPI_CHAR),
-    type_name_entry(MPI_UNSIGNED_CHAR),
-    type_name_entry(MPI_SIGNED_CHAR),
-    type_name_entry(MPI_BYTE),
-    type_name_entry(MPI_WCHAR),
-    type_name_entry(MPI_SHORT),
-    type_name_entry(MPI_UNSIGNED_SHORT),
-    type_name_entry(MPI_INT),
-    type_name_entry(MPI_UNSIGNED),
-    type_name_entry(MPI_LONG),
-    type_name_entry(MPI_UNSIGNED_LONG),
-    type_name_entry(MPI_FLOAT),
-    type_name_entry(MPI_DOUBLE),
-    type_name_entry(MPI_LONG_DOUBLE),
-    type_name_entry(MPI_LONG_LONG_INT),
-    type_name_entry(MPI_UNSIGNED_LONG_LONG),
-    type_name_entry(MPI_PACKED),
-    type_name_entry(MPI_LB),
-    type_name_entry(MPI_UB),
-    type_name_entry(MPI_2INT),
+    type_name_entry(MPI_CHAR, "char"),
+    type_name_entry(MPI_UNSIGNED_CHAR, "uchar"),
+    type_name_entry(MPI_SIGNED_CHAR, "char"),
+    type_name_entry(MPI_BYTE, "byte"),
+    type_name_entry(MPI_WCHAR, "wchar"),
+    type_name_entry(MPI_SHORT, "short"),
+    type_name_entry(MPI_UNSIGNED_SHORT, "ushort"),
+    type_name_entry(MPI_INT, "int"),
+    type_name_entry(MPI_UNSIGNED, "uint"),
+    type_name_entry(MPI_LONG, "long"),
+    type_name_entry(MPI_UNSIGNED_LONG, "ulong"),
+    type_name_entry(MPI_FLOAT, "float"),
+    type_name_entry(MPI_DOUBLE, "double"),
+    type_name_entry(MPI_LONG_DOUBLE, "longdouble"),
+    type_name_entry(MPI_LONG_LONG_INT, "longlongint"),
+    type_name_entry(MPI_UNSIGNED_LONG_LONG, "ulonglong"),
+    type_name_entry(MPI_PACKED, "packed"),
+    type_name_entry(MPI_LB, "lb"),
+    type_name_entry(MPI_UB, "ub"),
+    type_name_entry(MPI_2INT, "2int"),
 
     /* C99 types */
-    type_name_entry(MPI_INT8_T),
-    type_name_entry(MPI_INT16_T),
-    type_name_entry(MPI_INT32_T),
-    type_name_entry(MPI_INT64_T),
-    type_name_entry(MPI_UINT8_T),
-    type_name_entry(MPI_UINT16_T),
-    type_name_entry(MPI_UINT32_T),
-    type_name_entry(MPI_UINT64_T),
-    type_name_entry(MPI_C_BOOL),
-    type_name_entry(MPI_C_COMPLEX),
-    type_name_entry(MPI_C_DOUBLE_COMPLEX),
-    type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
+    type_name_entry(MPI_INT8_T, "int8"),
+    type_name_entry(MPI_INT16_T, "int16"),
+    type_name_entry(MPI_INT32_T, "int32"),
+    type_name_entry(MPI_INT64_T, "int64"),
+    type_name_entry(MPI_UINT8_T, "uint8"),
+    type_name_entry(MPI_UINT16_T, "uint16"),
+    type_name_entry(MPI_UINT32_T, "uint32"),
+    type_name_entry(MPI_UINT64_T, "uint64"),
+    type_name_entry(MPI_C_BOOL, "cbool"),
+    type_name_entry(MPI_C_COMPLEX, "ccomplex"),
+    type_name_entry(MPI_C_DOUBLE_COMPLEX, "cdoublecomplex"),
+    type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX, "clongdoublecomplex"),
 
     /* address/offset/count types */
-    type_name_entry(MPI_AINT),
-    type_name_entry(MPI_OFFSET),
-    type_name_entry(MPI_COUNT),
+    type_name_entry(MPI_AINT, "aint"),
+    type_name_entry(MPI_OFFSET, "offset"),
+    type_name_entry(MPI_COUNT, "count"),
 
     /* Fortran types */
-    type_name_entry(MPI_COMPLEX),
-    type_name_entry(MPI_DOUBLE_COMPLEX),
-    type_name_entry(MPI_LOGICAL),
-    type_name_entry(MPI_REAL),
-    type_name_entry(MPI_DOUBLE_PRECISION),
-    type_name_entry(MPI_INTEGER),
-    type_name_entry(MPI_2INTEGER),
-    type_name_entry(MPI_2REAL),
-    type_name_entry(MPI_2DOUBLE_PRECISION),
-    type_name_entry(MPI_CHARACTER),
+    type_name_entry(MPI_COMPLEX, "complex"),
+    type_name_entry(MPI_DOUBLE_COMPLEX, "doublecomplex"),
+    type_name_entry(MPI_LOGICAL, "logical"),
+    type_name_entry(MPI_REAL, "real"),
+    type_name_entry(MPI_DOUBLE_PRECISION, "doubleprecision"),
+    type_name_entry(MPI_INTEGER, "integer"),
+    type_name_entry(MPI_2INTEGER, "2integer"),
+    type_name_entry(MPI_2REAL, "2real"),
+    type_name_entry(MPI_2DOUBLE_PRECISION, "2doubleprecision"),
+    type_name_entry(MPI_CHARACTER, "character"),
     /* Size-specific types; these are in section 10.2.4 (Extended Fortran
      * Support) as well as optional in MPI-1
      */
-    type_name_entry(MPI_REAL4),
-    type_name_entry(MPI_REAL8),
-    type_name_entry(MPI_REAL16),
-    type_name_entry(MPI_COMPLEX8),
-    type_name_entry(MPI_COMPLEX16),
-    type_name_entry(MPI_COMPLEX32),
-    type_name_entry(MPI_INTEGER1),
-    type_name_entry(MPI_INTEGER2),
-    type_name_entry(MPI_INTEGER4),
-    type_name_entry(MPI_INTEGER8),
-    type_name_entry(MPI_INTEGER16),
+    type_name_entry(MPI_REAL4, "real4"),
+    type_name_entry(MPI_REAL8, "real8"),
+    type_name_entry(MPI_REAL16, "real16"),
+    type_name_entry(MPI_COMPLEX8, "complex8"),
+    type_name_entry(MPI_COMPLEX16, "complex16"),
+    type_name_entry(MPI_COMPLEX32, "complex32"),
+    type_name_entry(MPI_INTEGER1, "integer1"),
+    type_name_entry(MPI_INTEGER2, "integer2"),
+    type_name_entry(MPI_INTEGER4, "integer4"),
+    type_name_entry(MPI_INTEGER8, "integer8"),
+    type_name_entry(MPI_INTEGER16, "integer16"),
 
     /* C++ types */
-    type_name_entry(MPI_CXX_BOOL),
-    type_name_entry(MPI_CXX_FLOAT_COMPLEX),
-    type_name_entry(MPI_CXX_DOUBLE_COMPLEX),
-    type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX),
+    type_name_entry(MPI_CXX_BOOL, "cxxbool"),
+    type_name_entry(MPI_CXX_FLOAT_COMPLEX, "cxxfloatcomplex"),
+    type_name_entry(MPI_CXX_DOUBLE_COMPLEX, "cxxdoublecomplex"),
+    type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX, "cxxlongdoublecomplex"),
 };
 
 static mpi_names_t mpi_pairtypes[] = {
-    type_name_entry(MPI_FLOAT_INT),
-    type_name_entry(MPI_DOUBLE_INT),
-    type_name_entry(MPI_LONG_INT),
-    type_name_entry(MPI_SHORT_INT),
-    type_name_entry(MPI_LONG_DOUBLE_INT),
+    type_name_entry(MPI_FLOAT_INT, "floatint"),
+    type_name_entry(MPI_DOUBLE_INT, "doubleint"),
+    type_name_entry(MPI_LONG_INT, "longint"),
+    type_name_entry(MPI_SHORT_INT, "shortint"),
+    type_name_entry(MPI_LONG_DOUBLE_INT, "longdoubleint"),
 };
 
 static void predefined_index_init(void)
@@ -194,6 +195,7 @@ int MPIR_Datatype_init_predefined(void)
         dptr->true_ub = dptr->size;
         dptr->contents = NULL;  /* should never get referenced? */
         MPL_strncpy(dptr->name, mpi_dtypes[i].name, MPI_MAX_OBJECT_NAME);
+        MPL_strncpy(dptr->predefined_short_name, mpi_dtypes[i].short_name, MPI_MAX_OBJECT_NAME);
     }
 
     /* Setup pairtypes. The following assertions ensure that:
@@ -229,6 +231,7 @@ int MPIR_Datatype_init_predefined(void)
         mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i].dtype, (MPIR_Datatype *) dptr);
         MPIR_ERR_CHECK(mpi_errno);
         MPL_strncpy(dptr->name, mpi_pairtypes[i].name, MPI_MAX_OBJECT_NAME);
+        MPL_strncpy(dptr->predefined_short_name, mpi_pairtypes[i].short_name, MPI_MAX_OBJECT_NAME);
     }
 
     MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
@@ -682,4 +685,25 @@ void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flatt
 
     *flattened = dt_ptr->flattened;
     *flattened_sz = dt_ptr->flattened_sz;
+}
+
+MPI_Datatype MPIR_Datatype_predefined_search_by_shortname(const char *short_name)
+{
+    int i;
+    MPI_Datatype dtype = MPI_DATATYPE_NULL;
+    for (i = 0; i < sizeof(mpi_dtypes) / sizeof(mpi_dtypes[0]); i++) {
+        if (mpi_dtypes[i].dtype == MPI_DATATYPE_NULL)
+            continue;
+
+        if (!strcmp(mpi_dtypes[i].short_name, short_name))
+            dtype = mpi_dtypes[i].dtype;
+    }
+    return dtype;
+}
+
+const char *MPIR_Datatype_predefined_get_shortname(MPI_Datatype type)
+{
+    MPIR_Datatype *dt_ptr;
+    MPIR_Datatype_get_ptr(type, dt_ptr);
+    return dt_ptr->predefined_short_name;
 }

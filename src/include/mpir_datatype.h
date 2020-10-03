@@ -95,6 +95,7 @@ struct MPIR_Datatype {
     MPI_Aint extent, ub, lb, true_ub, true_lb;
     struct MPIR_Attribute *attributes;
     char name[MPI_MAX_OBJECT_NAME];
+    char predefined_short_name[MPI_MAX_OBJECT_NAME];    /* Short name for predefined types. Used in info.  */
 
 
     /* private fields */
@@ -495,6 +496,9 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Datatype_predefined_get_index(MPI_Datatype dat
     }
     return dtype_index;
 }
+
+MPI_Datatype MPIR_Datatype_predefined_search_by_shortname(const char *short_name);
+const char *MPIR_Datatype_predefined_get_shortname(MPI_Datatype type);
 
 /* contents accessor functions */
 void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
