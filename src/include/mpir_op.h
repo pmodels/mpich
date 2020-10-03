@@ -141,6 +141,9 @@ MPL_STATIC_INLINE_PREFIX MPI_Op MPIR_Op_builtin_get_op(int index)
     return (MPI_Op) (0x58000000 | (index + 1)); /* index 1 to 14 in handle */
 }
 
+MPI_Datatype MPIR_Op_builtin_search_by_shortname(const char *short_name);
+const char *MPIR_Op_builtin_get_shortname(MPI_Op op);
+
 void MPIR_MAXF(void *, void *, int *, MPI_Datatype *);
 void MPIR_MINF(void *, void *, int *, MPI_Datatype *);
 void MPIR_SUM(void *, void *, int *, MPI_Datatype *);
