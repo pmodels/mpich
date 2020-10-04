@@ -1831,5 +1831,7 @@ AC_OUTPUT(maint/testmerge \
           impls/mpich/mpi_t/Makefile \
           impls/mpich/comm/Makefile \
           impls/mpich/comm/testlist \
+          impls/mpich/rma/Makefile \
+          impls/mpich/rma/testlist \
           )
 

@@ -141,8 +141,6 @@ int main(int argc, char **argv)
     win_info_set(win, "same_disp_unit", "true");
     errors += check_win_info_get(win, "same_disp_unit", "true");
 
-    /* TODO: check alloc_shm as implementation-specific test */
-
     /* Test#8: setting "alloc_shared_noncontig" (no default value) in shared window. */
     MPI_Win_free(&win);
 
@@ -161,6 +159,53 @@ int main(int argc, char **argv)
     MPI_Comm_free(&shm_comm);
 
     MPI_Win_free(&win);
+
+    /* check MPICH implementation-specific info */
+#ifndef USE_STRICT_MPI
+    /* Test#9: setting "alloc_shm" with win_allocate (valid only at window creation */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "alloc_shm", "false");
+    MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
+    errors += check_win_info_get(win, "alloc_shm", "false");
+    MPI_Info_free(&info_in);
+    MPI_Win_free(&win);
+
+    /* Test#10: setting "which_accumulate_ops" with win_allocate (valid only at window creation) */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "which_accumulate_ops", "sum,no_op,cswap");
+    MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
+    errors += check_win_info_get(win, "which_accumulate_ops", "sum,no_op,cswap");
+    MPI_Info_free(&info_in);
+    MPI_Win_free(&win);
+
+    /* Test#11: setting "disable_shm_accumulate" with win_allocate (valid only at window creation) */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "disable_shm_accumulate", "true");
+    MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
+    errors += check_win_info_get(win, "disable_shm_accumulate", "true");
+    MPI_Info_free(&info_in);
+    MPI_Win_free(&win);
+
+    /* Test#12: setting "coll_attach" with dynamic window (valid only at window creation) */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "coll_attach", "true");
+    MPI_Win_create_dynamic(info_in, MPI_COMM_WORLD, &win);
+    errors += check_win_info_get(win, "coll_attach", "true");
+    MPI_Info_free(&info_in);
+    MPI_Win_free(&win);
+
+    /* Test#13: setting "accumulate_op_types" with win_allocate (valid only at window creation) */
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "accumulate_op_types:cswap", "int:1,long:1,int8:1,int16:1");
+    MPI_Info_set(info_in, "accumulate_op_types:sum", "float:1024,double:1024");
+    MPI_Info_set(info_in, "accumulate_op_types:no_op", "float:65536,double:8192");
+    MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
+    errors += check_win_info_get(win, "accumulate_op_types:cswap", "int:1,long:1,int8:1,int16:1");
+    errors += check_win_info_get(win, "accumulate_op_types:sum", "float:1024,double:1024");
+    errors += check_win_info_get(win, "accumulate_op_types:no_op", "float:65536,double:8192");
+    MPI_Info_free(&info_in);
+    MPI_Win_free(&win);
+#endif
 
     MTest_Finalize(errors);
 

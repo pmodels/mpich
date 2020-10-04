@@ -1,0 +1,8 @@
+# To add a ch4 comm hints support test:
+# start with @ch4_commhints_tests_enabled@
+# use @ch3_tests@, @ch4_tests@, @ch4_ucx_tests@, or @ch4_ofi_tests@ for specific tests
+@ch4_tests@win_info_hint 1 arg=-hint=alloc_shm arg=-value=false
+@ch4_tests@win_info_hint 1 arg=-hint=which_accumulate_ops arg=-value=sum,no_op,cswap
+@ch4_tests@win_info_hint 1 arg=-hint=disable_shm_accumulate arg=-value=true
+@ch4_tests@win_info_hint 1 arg=-hint=coll_attach arg=-value=true
+@ch4_tests@win_info_hint 1 arg=-hint=accumulate_op_types:cswap arg=-value=int:1,long:1,int8:1,int16:1 arg=-hint=accumulate_op_types:sum arg=-value=float:1024,double:1024 arg=-hint=accumulate_op_types:no_op arg=-value=float:65536,double:8192
