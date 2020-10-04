@@ -21,11 +21,28 @@ static int win_finalize(MPIR_Win ** win_ptr);
 static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option);
 
+static int accu_op_search_index_by_shortname(char *shortname)
+{
+    int op_index = -1;
+    /* Use OP_NULL for special cswap */
+    if (!strncmp(shortname, "cswap", strlen("cswap")) ||
+        !strncmp(shortname, "compare_and_swap", strlen("compare_and_swap"))) {
+        op_index = MPIDIU_win_acc_op_get_index(MPI_OP_NULL);
+    } else {
+        /* search other reduce op by short name */
+        MPI_Op op = MPIR_Op_builtin_search_by_shortname(shortname);
+        if (op != MPI_OP_NULL)
+            op_index = MPIDIU_win_acc_op_get_index(op);
+    }
+    return op_index;
+}
+
 static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
 {
     uint32_t ops = 0;
     char *value, *token, *savePtr = NULL;
     uint32_t *ops_ptr = &MPIDIG_WIN(win, info_args).which_accumulate_ops;
+    int op_index;
 
     value = (char *) val;
     /* str can never be NULL. */
@@ -37,7 +54,6 @@ static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
         return;
     } else if (!strncmp(value, "any_op", strlen("any_op"))) {
         /* add all ops */
-        int op_index;
         for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++)
             ops |= (1 << op_index);
         *ops_ptr = ops;
@@ -46,17 +62,9 @@ static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
 
     token = (char *) strtok_r(value, ",", &savePtr);
     while (token != NULL) {
-        /* Use OP_NULL for special cswap */
-        if (!strncmp(token, "cswap", strlen("cswap")) ||
-            !strncmp(token, "compare_and_swap", strlen("compare_and_swap"))) {
-            ops |= (1 << MPIDIU_win_acc_op_get_index(MPI_OP_NULL));
-        } else {
-            /* search other reduce op by short name */
-            MPI_Op op = MPIR_Op_builtin_search_by_shortname(token);
-            if (op != MPI_OP_NULL) {
-                ops |= (1 << MPIDIU_win_acc_op_get_index(op));
-            }
-        }
+        op_index = accu_op_search_index_by_shortname(token);
+        if (op_index >= 0)      /* -1 if not found */
+            ops |= (1 << op_index);
 
         token = (char *) strtok_r(NULL, ",", &savePtr);
     }
