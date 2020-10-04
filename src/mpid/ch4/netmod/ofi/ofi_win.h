@@ -31,6 +31,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_do_progress(MPIR_Win * win)
         while (tcount > donecount) {
             MPIR_Assert(donecount <= tcount);
             MPIDI_OFI_PROGRESS(0);
+            /* rma issued_cntr may be updated during MPIDI_OFI_PROGRESS if active messages
+             * arrive and trigger RDMA calls, so we need to update it after progress call */
+            tcount = *MPIDI_OFI_WIN(win).issued_cntr;
             donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
             itercount++;
 
