@@ -13,6 +13,10 @@
 /* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
 #define MPIR_DATATYPE_N_BUILTIN 71
 #define MPIR_DATATYPE_PAIRTYPE 5
+
+/* FIXME: we have to use magic number in CH4 mpidpre.h and unset here because
+ * we cannot include device-dependent mpir_datatype.h in mpidpre.h. */
+#undef MPIR_DATATYPE_N_PREDEFINED
 #define MPIR_DATATYPE_N_PREDEFINED (MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_PAIRTYPE)
 
 #ifndef MPIR_DATATYPE_PREALLOC

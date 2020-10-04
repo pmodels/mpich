@@ -48,6 +48,98 @@ static const char *accu_op_get_shortname(MPI_Op op)
     }
 }
 
+static void accu_op_types_info_set_all_types(MPIR_Win * win, int op_index, unsigned int used_count)
+{
+    int i;
+    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++)
+        MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count = used_count;
+}
+
+/* Set which_accumulate_ops based on accumulate_op_types hint.
+ * Invoked when accumulate_op_types is set by user (user-specified which_accumulate_ops is ignored). */
+static void accu_op_types_set_accu_ops(MPIR_Win * win)
+{
+    int op_index, type_index;
+    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
+        for (type_index = 0; type_index < MPIR_DATATYPE_N_PREDEFINED; type_index++) {
+            /* set to which_accumulate_ops if any type is set for this op */
+            if (MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][type_index].used_count) {
+                MPIDIG_WIN(win, info_args).which_accumulate_ops |= (1 << op_index);
+                break;  /* next op */
+            }
+        }
+    }
+}
+
+static void accu_op_types_info_parse_str(MPIR_Win * win, const char *key, const char *val)
+{
+    int op_index, type_index;
+    char *op_str, *savePtr = NULL, *subsavePtr = NULL;
+    char *typecount_str, *type_str = NULL, *count_str = NULL;
+
+    MPIR_Assert(val);   /* str can never be NULL. */
+
+    /* key=accumulate_op_types:op
+     * val=int:1,long:1,longlong:1,uint:8,ulong:1,ulonglong:1 */
+
+    /* get op from key */
+    op_str = (char *) key + strlen("accumulate_op_types:");
+    op_index = accu_op_search_index_by_shortname(op_str);
+
+    /* get type:count pairs from value */
+    typecount_str = (char *) strtok_r((char *) val, ",", &savePtr);
+    while (typecount_str != NULL) {
+        MPI_Datatype dtype;
+        type_str = (char *) strtok_r((char *) typecount_str, ":", &subsavePtr);
+        dtype = MPIR_Datatype_predefined_search_by_shortname(type_str);
+        MPIR_Assert(dtype != MPI_DATATYPE_NULL);        /* all types are predefined, thus user error if not found */
+        type_index = MPIR_Datatype_predefined_get_index(dtype);
+
+        count_str = (char *) strtok_r(NULL, ":", &subsavePtr);
+        MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][type_index].used_count =
+            atoi(count_str);
+
+        /* next */
+        typecount_str = (char *) strtok_r(NULL, ",", &savePtr);
+    }
+}
+
+static void accu_op_types_info_get_str(MPIR_Win * win, int op_index, char *key,
+                                       size_t keylen, char *val, size_t vallen)
+{
+    MPI_Op op = MPIDIU_win_acc_get_op(op_index);
+    const char *op_name = accu_op_get_shortname(op);
+
+    MPIR_Assert(strlen("accumulate_op_types") + strlen(op_name) + 2 < keylen);
+    snprintf(key, keylen, "accumulate_op_types:%s", accu_op_get_shortname(op));
+
+    int c = 0, i;
+    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++) {
+        MPI_Datatype dtype = MPIR_Datatype_predefined_get_type(i);
+        int used_count = MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count;
+        if (dtype == MPI_DATATYPE_NULL || used_count == 0)
+            continue;   /* skip invalid or disabled datatype */
+
+        const char *dtype_name = MPIR_Datatype_predefined_get_shortname(dtype);
+        MPIR_Assert(c + strlen(dtype_name) + 13 < vallen);      /*strlen(",") + strlen(":INT_MAX") + 1 = 13 */
+        c += snprintf(val + c, vallen, "%s%s:%d", (c > 0) ? "," : "", dtype_name, used_count);
+    }
+}
+
+/* Set accumulate_op_types based on which_accumulate_ops hint.
+ * Invoked when only which_accumulate_ops is set by user. */
+static void accu_ops_info_set_accu_op_types(MPIR_Win * win)
+{
+    int op_index;
+    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
+        if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << op_index)) {
+            accu_op_types_info_set_all_types(win, op_index, INT_MAX);
+        } else {
+            accu_op_types_info_set_all_types(win, op_index, 0);
+        }
+    }
+}
+
 static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
 {
     uint32_t ops = 0;
@@ -124,9 +216,27 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
     MPIR_Info *curr_ptr;
     char *value, *token, *savePtr = NULL;
     int save_ordering;
+    bool accumulate_op_types_set = false;
 
     curr_ptr = info->next;
 
+    /* Check if accumulate_op_types is set */
+    if (is_init) {
+        while (curr_ptr && !accumulate_op_types_set) {
+            if (!strncmp(curr_ptr->key, "accumulate_op_types", strlen("accumulate_op_types")))
+                accumulate_op_types_set = true;
+            curr_ptr = curr_ptr->next;
+        }
+
+        /* Reset accumulate_op_types table if user sets */
+        if (accumulate_op_types_set) {
+            int op_index;
+            for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++)
+                accu_op_types_info_set_all_types(win, op_index, 0);
+        }
+    }
+
+    curr_ptr = info->next;
     while (curr_ptr) {
         if (!strcmp(curr_ptr->key, "no_locks")) {
             if (!strcmp(curr_ptr->value, "true"))
@@ -198,8 +308,10 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
          * all future updates by win_set_info are ignored. This is because we do not
          * have a good way to ensure all outstanding atomic ops have been completed
          * on all processes especially in passive-target epochs. */
-        else if (is_init && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
+        else if (is_init && !accumulate_op_types_set    /* Ignore if accumulate_op_types is set. */
+                 && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
             accu_ops_info_parse_str(win, curr_ptr->value);
+            accu_ops_info_set_accu_op_types(win);       /* update also accumulate_op_types since it is not set */
         } else if (is_init && !strcmp(curr_ptr->key, "accumulate_noncontig_dtype")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
@@ -213,6 +325,10 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 if (max_bytes >= 0)
                     MPIDIG_WIN(win, info_args).accumulate_max_bytes = max_bytes;
             }
+        } else if (is_init && !strncmp(curr_ptr->key, "accumulate_op_types",
+                                       strlen("accumulate_op_types"))) {
+            accu_op_types_info_parse_str(win, curr_ptr->key, curr_ptr->value);
+            accu_op_types_set_accu_ops(win);    /* overwrite which_accumulate_ops */
         } else if (is_init && !strcmp(curr_ptr->key, "disable_shm_accumulate")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
@@ -290,11 +406,14 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
         MPIDIG_WIN(win, info_args).alloc_shm = 0;
     }
 
-    /* default any op */
+    /* default any op with unlimited count */
     int op_index;
     MPIDIG_WIN(win, info_args).which_accumulate_ops = 0;
-    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++)
+    for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
         MPIDIG_WIN(win, info_args).which_accumulate_ops |= (1 << op_index);
+        accu_op_types_info_set_all_types(win, op_index, INT_MAX);
+    }
+
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
@@ -742,6 +861,20 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         accu_ops_info_get_str(win, &buf[0], sizeof(buf));
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "which_accumulate_ops", buf);
         MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    {   /* Set key-value pair for all atomics ops */
+#define KEYSIZE 40
+#define VALSIZE (MPI_MAX_INFO_VAL)
+        int op_index;
+        for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
+            char key[KEYSIZE], val[VALSIZE];
+            accu_op_types_info_get_str(win, op_index, &key[0], sizeof(key), &val[0], sizeof(val));
+            mpi_errno = MPIR_Info_set_impl(*info_p_p, key, val);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+#undef KEYSIZE
+#undef VALSIZE
     }
 
     if (MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype)

@@ -298,7 +298,18 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
+typedef struct MPIDIG_win_accu_op_type {
+    unsigned int used_count;    /* non-negative number. INT_MAX means unlimited
+                                 * because the user can only set int count.*/
+} MPIDIG_win_accu_op_type_t;
+
 #define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN + 1)      /* builtin reduce op + cswap */
+
+/* FIXME: we have to use magic number for now because cannot include device-dependent mpir_datatype.h
+ * in this file. See definition of MPIR_DATATYPE_N_PREDEFINED in mpir_datatype.h. */
+#ifndef MPIR_DATATYPE_N_PREDEFINED
+#define MPIR_DATATYPE_N_PREDEFINED 76
+#endif
 
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;
@@ -313,6 +324,16 @@ typedef struct MPIDIG_win_info_args_t {
                                          * with bit shift defined by op index (0<=index<MPIDIG_ACCU_NUM_OP).
                                          * any_op and none are two special values.
                                          * any_op by default. */
+
+    /* Set specific predefined datatypes and counts for each op as format below:
+     * KEY="accumulate_op_types:<op>" VALUE="<dtype1>:<used_count>,<dtype2>:<used_count>,..."
+     * For each <op, dtype>, the default used_count is INT_MAX (unlimited).
+     * NOTE: When accumulate_op_types hint is set, which_accumulate_ops hint will be
+     * ignored and set following the former; when only which_accumulate_ops is set,
+     * accumulate_op_types will be initialized with the same value of which_accumulate_ops.
+     * Internally use only accumulate_op_types because it is the superset.*/
+    MPIDIG_win_accu_op_type_t accumulate_op_types[MPIDIG_ACCU_NUM_OP][MPIR_DATATYPE_N_PREDEFINED];
+
     bool accumulate_noncontig_dtype;    /* true by default. */
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
