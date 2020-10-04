@@ -671,20 +671,109 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                                      MPI_Datatype target_datatype,
                                                      MPI_Op op, MPIR_Win * win,
                                                      MPIDI_av_entry_t * addr,
+                                                     MPIDI_winattr_t winattr,
                                                      MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    size_t origin_bytes;
+    int target_contig, origin_contig;
+    size_t target_bytes, origin_bytes, target_extent;
+    MPI_Aint origin_true_lb, target_true_lb;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
+    MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count, origin_contig,
+                                        origin_bytes, origin_true_lb);
+    MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
+                                               target_bytes, target_extent, target_true_lb);
     if (origin_bytes == 0)
         goto null_op_exit;
 
+    /* prepare remote addr and mr key.
+     * Continue native path only when all segments are in the same registered memory region */
+    bool target_mr_found;
+    MPIDI_OFI_target_mr_t target_mr;
+    target_mr_found = MPIDI_OFI_prepare_target_mr(target_rank,
+                                                  target_disp, target_extent, target_true_lb,
+                                                  win, winattr, &target_mr);
+    if (unlikely(!target_mr_found))
+        goto am_fallback;
+
+    /* contiguous messages */
+    if (origin_contig && target_contig) {
+        MPI_Datatype basic_type;
+        enum fi_op fi_op;
+        enum fi_datatype fi_dt;
+        size_t max_count, max_size, dt_size, basic_count;
+
+        /* accept only same predefined basic datatype */
+        MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
+        MPIR_Assert(basic_type != MPI_DATATYPE_NULL);
+
+        /* query atomics max count support */
+        MPIDI_OFI_query_acc_atomic_support(basic_type, MPIDI_OFI_QUERY_ATOMIC_COUNT,
+                                           op, win, winattr, &fi_dt, &fi_op, &max_count, &dt_size);
+        if (max_count == 0)
+            goto am_fallback;
+
+        /* query ordering max size support */
+        max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_msg_size);
+        /* fall back to active message if cannot send all data in one message */
+        if (max_size < target_bytes)
+            goto am_fallback;
+        basic_count = target_bytes / dt_size;
+        MPIR_Assert(target_bytes % dt_size == 0);
+
+        /* Accumulate is WRITE. */
+        MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR));
+
+        uint64_t flags;
+        if (sigreq) {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+            if (*sigreq) {
+                MPIR_Request_add_ref(*sigreq);
+            } else
+#endif
+            {
+                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
+            }
+            flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+        } else {
+            flags = FI_DELIVERY_COMPLETE;
+        }
+
+        struct fi_ioc originv;
+        struct fi_rma_ioc targetv;
+        struct fi_msg_atomic msg;
+
+        originv.addr = (char *) origin_addr + origin_true_lb;
+        originv.count = basic_count;
+        targetv.addr = target_mr.addr + target_true_lb;
+        targetv.count = basic_count;
+        targetv.key = target_mr.mr_key;
+
+        msg.msg_iov = &originv;
+        msg.desc = NULL;
+        msg.iov_count = 1;
+        msg.addr = MPIDI_OFI_av_to_phys(addr, 0, 0);
+        msg.rma_iov = &targetv;
+        msg.rma_iov_count = 1;
+        msg.datatype = fi_dt;
+        msg.op = fi_op;
+        msg.context = NULL;
+        msg.data = 0;
+        MPIDI_OFI_INIT_CHUNK_CONTEXT(win, sigreq);
+        MPIDI_OFI_CALL_RETRY(fi_atomicmsg(MPIDI_OFI_WIN(win).ep, &msg, flags), 0 /*vci */ ,
+                             rdma_atomicto, FALSE);
+        /* Complete signal request to inform completion to user. */
+        MPIDI_OFI_sigreq_complete(sigreq);
+        goto fn_exit;
+    }
+
+  am_fallback:
     if (MPIDIG_WIN(win, info_args).accumulate_ordering &
         (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR)) {
         /* Wait for OFI acc to complete.
@@ -816,7 +905,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                         origin_datatype,
                                         target_rank,
                                         target_disp,
-                                        target_count, target_datatype, op, win, av, request);
+                                        target_count, target_datatype, op, win,
+                                        av, winattr, request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
@@ -1101,8 +1191,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                         origin_count,
                                         origin_datatype,
                                         target_rank,
-                                        target_disp, target_count, target_datatype, op, win, av,
-                                        NULL);
+                                        target_disp, target_count, target_datatype, op, win,
+                                        av, winattr, NULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
