@@ -70,9 +70,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
     dt_index = MPIR_Datatype_predefined_get_index(dt);
     MPIR_Assert(dt_index < MPIR_DATATYPE_N_PREDEFINED);
 
-    op_index = MPIDI_OFI_get_mpi_acc_op_index(op);
-    MPIR_Assert(op_index >= 0);
-    MPIR_Assert(op_index < MPIDI_OFI_OP_SIZES);
+    op_index = MPIDIU_win_acc_op_get_index(op);
+    MPIR_Assert(op_index < MPIDIG_ACCU_NUM_OP);
 
     *fi_dt = (enum fi_datatype) MPIDI_OFI_global.win_op_table[dt_index][op_index].dt;
     *fi_op = (enum fi_op) MPIDI_OFI_global.win_op_table[dt_index][op_index].op;

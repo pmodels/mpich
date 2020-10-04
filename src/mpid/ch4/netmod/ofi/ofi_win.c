@@ -7,7 +7,6 @@
 #include "ofi_impl.h"
 #include "ofi_noinline.h"
 
-static int accu_op_hint_get_index(MPIDIG_win_info_accu_op_shift_t hint_shift);
 static void load_acc_hint(MPIR_Win * win);
 static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo);
 static int win_allgather(MPIR_Win * win, void *base, int disp_unit);
@@ -17,66 +16,9 @@ static int win_init_stx(MPIR_Win * win);
 static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
 
-static int accu_op_hint_get_index(MPIDIG_win_info_accu_op_shift_t hint_shift)
-{
-    int op_index = 0;
-    switch (hint_shift) {
-        case MPIDIG_ACCU_MAX_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MAX);
-            break;
-        case MPIDIG_ACCU_MIN_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MIN);
-            break;
-        case MPIDIG_ACCU_SUM_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_SUM);
-            break;
-        case MPIDIG_ACCU_PROD_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_PROD);
-            break;
-        case MPIDIG_ACCU_MAXLOC_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MAXLOC);
-            break;
-        case MPIDIG_ACCU_MINLOC_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_MINLOC);
-            break;
-        case MPIDIG_ACCU_BAND_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BAND);
-            break;
-        case MPIDIG_ACCU_BOR_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BOR);
-            break;
-        case MPIDIG_ACCU_BXOR_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_BXOR);
-            break;
-        case MPIDIG_ACCU_LAND_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LAND);
-            break;
-        case MPIDIG_ACCU_LOR_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LOR);
-            break;
-        case MPIDIG_ACCU_LXOR_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_LXOR);
-            break;
-        case MPIDIG_ACCU_REPLACE_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_REPLACE);
-            break;
-        case MPIDIG_ACCU_NO_OP_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_NO_OP);
-            break;
-        case MPIDIG_ACCU_CSWAP_SHIFT:
-            op_index = MPIDI_OFI_get_mpi_acc_op_index(MPI_OP_NULL);
-            break;
-        default:
-            MPIR_Assert(hint_shift < MPIDIG_ACCU_OP_SHIFT_LAST);
-            break;
-    }
-    return op_index;
-}
-
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
-    MPIDIG_win_info_accu_op_shift_t hint_shift = MPIDIG_ACCU_OP_SHIFT_FIRST;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_LOAD_ACC_HINT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_LOAD_ACC_HINT);
@@ -99,22 +41,21 @@ static void load_acc_hint(MPIR_Win * win)
         if (dt == MPI_DATATYPE_NULL)
             continue;   /* skip disabled datatype */
 
-        for (hint_shift = MPIDIG_ACCU_OP_SHIFT_FIRST; hint_shift < MPIDIG_ACCU_OP_SHIFT_LAST;
-             hint_shift++) {
+        for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
             uint64_t max_count = 0;
             /* Calculate the max count of all possible atomics if this op is enabled.
              * If the op is disabled for the datatype, the max counts are set to 0 (see util.c).*/
-            if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << hint_shift)) {
-                op_index = accu_op_hint_get_index(hint_shift);
+            if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << op_index)) {
+                MPI_Op op = MPIDIU_win_acc_get_op(op_index);
 
                 /* Invalid <datatype, op> pairs should be excluded as it is never used in a
                  * correct program (e.g., <double, MAXLOC>).*/
                 if (!MPIDI_OFI_global.win_op_table[i][op_index].mpi_acc_valid)
                     continue;
 
-                if (hint_shift == MPIDIG_ACCU_NO_OP_SHIFT)      /* atomic get */
+                if (op == MPI_NO_OP)    /* atomic get */
                     max_count = MPIDI_OFI_global.win_op_table[i][op_index].max_fetch_atomic_count;
-                else if (hint_shift == MPIDIG_ACCU_CSWAP_SHIFT) /* compare and swap */
+                else if (op == MPI_OP_NULL)     /* compare and swap */
                     max_count = MPIDI_OFI_global.win_op_table[i][op_index].max_compare_atomic_count;
                 else    /* atomic write and fetch_and_write */
                     max_count = MPL_MIN(MPIDI_OFI_global.win_op_table[i][op_index].max_atomic_count,

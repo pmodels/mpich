@@ -25,18 +25,6 @@
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
-/* Get op index.
- * TODO: OP_NULL is the oddball. Change configure to table this correctly */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
-{
-    int op_index;
-    if (op == MPI_OP_NULL)
-        op_index = MPIDI_OFI_OP_SIZES - 1;
-    else
-        op_index = (0x000000FFU & op) - 1;
-    return op_index;
-}
-
 int MPIDI_OFI_progress(int vci, int blocking);
 
 /* vni mapping */
