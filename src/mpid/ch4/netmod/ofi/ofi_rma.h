@@ -614,9 +614,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
      *  TODO: we assume all processes should use the same max_size and dt_size, true ? */
     if (max_size < dt_size)
         goto am_fallback;
-    /* Compare_and_swap is READ and WRITE. */
-    MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR |
-                                          MPIDIG_ACCU_ORDER_WAW));
+    /* Ensure completion of outstanding AMs for atomicity. */
+    MPIDIG_wait_am_acc(win, target_rank);
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -648,12 +647,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-        (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR)) {
-        /* Wait for OFI cas to complete.
-         * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
-        MPIDI_OFI_win_do_progress(win);
-    }
+    /* Wait for OFI cas to complete for atomicity.
+     * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+    MPIDI_OFI_win_do_progress(win);
     return MPIDIG_mpi_compare_and_swap(origin_addr, compare_addr, result_addr, datatype,
                                        target_rank, target_disp, win);
 }
@@ -723,8 +719,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
 
-        /* Accumulate is WRITE. */
-        MPIDIG_wait_am_acc(win, target_rank, (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR));
+        /* Ensure completion of outstanding AMs for atomicity. */
+        MPIDIG_wait_am_acc(win, target_rank);
 
         uint64_t flags;
         if (sigreq) {
@@ -770,12 +766,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
     }
 
   am_fallback:
-    if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-        (MPIDIG_ACCU_ORDER_WAW | MPIDIG_ACCU_ORDER_WAR)) {
-        /* Wait for OFI acc to complete.
-         * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
-        MPIDI_OFI_win_do_progress(win);
-    }
+    /* Wait for OFI acc to complete for atomicity.
+     * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+    MPIDI_OFI_win_do_progress(win);
     if (sigreq)
         mpi_errno = MPIDIG_mpi_raccumulate(origin_addr, origin_count, origin_datatype, target_rank,
                                            target_disp, target_count, target_datatype, op, win,
@@ -867,14 +860,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
 
-        if (unlikely(op == MPI_NO_OP)) {
-            /* Get_accumulate is READ and WRITE, except NO_OP (it is READ only). */
-            MPIDIG_wait_am_acc(win, target_rank, MPIDIG_ACCU_ORDER_RAW);
-        } else {
-            MPIDIG_wait_am_acc(win, target_rank,
-                               (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR |
-                                MPIDIG_ACCU_ORDER_WAW));
-        }
+        /* Ensure completion of outstanding AMs for atomicity. */
+        MPIDIG_wait_am_acc(win, target_rank);
 
         uint64_t flags;
         if (sigreq) {
@@ -922,18 +909,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
     }
 
   am_fallback:
-    if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) {
-            /* Wait for OFI acc to complete.
-             * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
-            MPIDI_OFI_win_do_progress(win);
-        }
-    } else {
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-            (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW)) {
-            MPIDI_OFI_win_do_progress(win);
-        }
-    }
+    /* Wait for OFI getacc to complete for atomicity.
+     * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+    MPIDI_OFI_win_do_progress(win);
     if (sigreq)
         mpi_errno =
             MPIDIG_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype, result_addr,
@@ -1122,13 +1100,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
 
-    if (unlikely(op == MPI_NO_OP)) {
-        /* Fetch_and_op is READ and WRITE, except NO_OP (it is READ only). */
-        MPIDIG_wait_am_acc(win, target_rank, MPIDIG_ACCU_ORDER_RAW);
-    } else {
-        MPIDIG_wait_am_acc(win, target_rank,
-                           (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW));
-    }
+    /* Ensure completion of outstanding AMs for atomicity. */
+    MPIDIG_wait_am_acc(win, target_rank);
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -1158,18 +1131,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
-    if (unlikely(op == MPI_NO_OP)) {
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) {
-            /* Wait for OFI fetch_and_op to complete.
-             * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
-            MPIDI_OFI_win_do_progress(win);
-        }
-    } else {
-        if (MPIDIG_WIN(win, info_args).accumulate_ordering &
-            (MPIDIG_ACCU_ORDER_RAW | MPIDIG_ACCU_ORDER_WAR | MPIDIG_ACCU_ORDER_WAW)) {
-            MPIDI_OFI_win_do_progress(win);
-        }
-    }
+    /* Wait for OFI fetch_and_op to complete for atomicity.
+     * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+    MPIDI_OFI_win_do_progress(win);
     return MPIDIG_mpi_fetch_and_op(origin_addr, result_addr, datatype, target_rank, target_disp, op,
                                    win);
 }
