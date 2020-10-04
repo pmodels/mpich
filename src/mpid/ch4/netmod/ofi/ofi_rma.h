@@ -405,19 +405,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     /* contiguous messages */
     if (origin_contig && target_contig) {
         if (sigreq) {
-            if (sigreq) {
 #ifdef MPIDI_CH4_USE_WORK_QUEUES
-                if (*sigreq) {
-                    MPIR_Request_add_ref(*sigreq);
-                } else
+            if (*sigreq) {
+                MPIR_Request_add_ref(*sigreq);
+            } else
 #endif
-                {
-                    MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
-                }
-                flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-            } else {
-                flags = FI_DELIVERY_COMPLETE;
+            {
+                MPIDI_OFI_REQUEST_CREATE(*sigreq, MPIR_REQUEST_KIND__RMA, 0);
             }
+            flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         } else {
             flags = 0;
         }
