@@ -106,9 +106,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #endif
 #endif
 
-
-#define MPIDI_OFI_OP_SIZES 15
-
 #define MPIDI_OFI_THREAD_UTIL_MUTEX     MPIDI_OFI_global.mutexes[0].m
 #define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_OFI_global.mutexes[1].m
 #define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_OFI_global.mutexes[2].m
@@ -335,7 +332,7 @@ typedef struct {
     uint64_t rma_issued_cntr;
     /* OFI atomics limitation of each pair of <dtype, op> returned by the
      * OFI provider at MPI initialization.*/
-    MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDI_OFI_OP_SIZES];
+    MPIDI_OFI_atomic_valid_t win_op_table[MPIR_DATATYPE_N_PREDEFINED][MPIDIG_ACCU_NUM_OP];
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */

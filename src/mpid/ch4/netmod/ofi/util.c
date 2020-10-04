@@ -399,13 +399,6 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
     return -1;
 }
 
-static MPI_Op mpi_ops[] = {
-    MPI_MAX, MPI_MIN, MPI_SUM, MPI_PROD,
-    MPI_LAND, MPI_BAND, MPI_LOR, MPI_BOR,
-    MPI_LXOR, MPI_BXOR, MPI_MINLOC, MPI_MAXLOC,
-    MPI_REPLACE, MPI_NO_OP, MPI_OP_NULL,
-};
-
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
 #define CHECK_ATOMIC(fcn,field1,field2)            \
   atomic_count = 0;                                \
@@ -452,11 +445,12 @@ static void create_dt_map()
         if (dt == MPI_DATATYPE_NULL)
             continue;
 
-        for (j = 0; j < MPIDI_OFI_OP_SIZES; j++) {
+        for (j = 0; j < MPIDIG_ACCU_NUM_OP; j++) {
+            MPI_Op op = MPIDIU_win_acc_get_op(j);
             enum fi_datatype fi_dt = (enum fi_datatype) -1;
             enum fi_op fi_op = (enum fi_op) -1;
 
-            mpi_to_ofi(dt, &fi_dt, mpi_ops[j], &fi_op);
+            mpi_to_ofi(dt, &fi_dt, op, &fi_op);
             MPIR_Assert(fi_dt != (enum fi_datatype) -1);
             MPIR_Assert(fi_op != (enum fi_op) -1);
             _TBL.dt = fi_dt;
@@ -465,7 +459,7 @@ static void create_dt_map()
             _TBL.max_atomic_count = 0;
             _TBL.max_fetch_atomic_count = 0;
             _TBL.max_compare_atomic_count = 0;
-            _TBL.mpi_acc_valid = check_mpi_acc_valid(dt, mpi_ops[j]);
+            _TBL.mpi_acc_valid = check_mpi_acc_valid(dt, op);
             ssize_t ret;
             size_t atomic_count;
 
