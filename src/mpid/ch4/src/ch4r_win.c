@@ -37,6 +37,17 @@ static int accu_op_search_index_by_shortname(char *shortname)
     return op_index;
 }
 
+static const char *accu_op_cswap_shortname = "cswap";
+static const char *accu_op_get_shortname(MPI_Op op)
+{
+    /* use OP_NULL as special cswap */
+    if (op == MPI_OP_NULL) {
+        return accu_op_cswap_shortname;
+    } else {
+        return MPIR_Op_builtin_get_shortname(op);
+    }
+}
+
 static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
 {
     uint32_t ops = 0;
@@ -80,15 +91,10 @@ static void accu_ops_info_get_str(MPIR_Win * win, char *buf, size_t maxlen)
     for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
         if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << op_index)) {
             MPI_Op op = MPIDIU_win_acc_get_op(op_index);
+            const char *short_name = accu_op_get_shortname(op);
 
-            MPIR_Assert(c < maxlen);
-            /* use OP_NULL as special cswap */
-            if (op == MPI_OP_NULL) {
-                c += snprintf(buf + c, maxlen - c, "%scswap", (c > 0) ? "," : "");
-            } else {
-                const char *short_name = MPIR_Op_builtin_get_shortname(op);
-                c += snprintf(buf + c, maxlen - c, "%s%s", (c > 0) ? "," : "", short_name);
-            }
+            MPIR_Assert(c + strlen(short_name) + 1 < maxlen);
+            c += snprintf(buf + c, maxlen - c, "%s%s", (c > 0) ? "," : "", short_name);
         }
     }
 
