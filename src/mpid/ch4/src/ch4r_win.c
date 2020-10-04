@@ -12,8 +12,8 @@ enum {
     SHM_WIN_REQUIRED,
 };
 
-static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr);
-static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen);
+static void accu_ops_info_parse_str(MPIR_Win * win, const char *val);
+static void accu_ops_info_get_str(MPIR_Win * win, char *buf, size_t maxlen);
 static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init);
 static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, int create_flavor, int model);
@@ -21,12 +21,13 @@ static int win_finalize(MPIR_Win ** win_ptr);
 static int win_shm_alloc_impl(MPI_Aint size, int disp_unit, MPIR_Comm * comm_ptr, void **base_ptr,
                               MPIR_Win ** win_ptr, int shm_option);
 
-static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
+static void accu_ops_info_parse_str(MPIR_Win * win, const char *val)
 {
     uint32_t ops = 0;
     char *value, *token, *savePtr = NULL;
+    uint32_t *ops_ptr = &MPIDIG_WIN(win, info_args).which_accumulate_ops;
 
-    value = (char *) str;
+    value = (char *) val;
     /* str can never be NULL. */
     MPIR_Assert(value);
 
@@ -65,11 +66,11 @@ static void parse_info_accu_ops_str(const char *str, uint32_t * ops_ptr)
         *ops_ptr = ops;
 }
 
-static void get_info_accu_ops_str(uint32_t val, char *buf, size_t maxlen)
+static void accu_ops_info_get_str(MPIR_Win * win, char *buf, size_t maxlen)
 {
     int c = 0, op_index;
     for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
-        if (val & (1 << op_index)) {
+        if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << op_index)) {
             MPI_Op op = MPIDIU_win_acc_get_op(op_index);
 
             MPIR_Assert(c < maxlen);
@@ -184,8 +185,7 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
          * have a good way to ensure all outstanding atomic ops have been completed
          * on all processes especially in passive-target epochs. */
         else if (is_init && !strcmp(curr_ptr->key, "which_accumulate_ops")) {
-            parse_info_accu_ops_str(curr_ptr->value,
-                                    &MPIDIG_WIN(win, info_args).which_accumulate_ops);
+            accu_ops_info_parse_str(win, curr_ptr->value);
         } else if (is_init && !strcmp(curr_ptr->key, "accumulate_noncontig_dtype")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
@@ -725,8 +725,7 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 
     {   /* Keep buf as a local variable for which_accumulate_ops key. */
         char buf[128];
-        get_info_accu_ops_str(MPIDIG_WIN(win, info_args).which_accumulate_ops, &buf[0],
-                              sizeof(buf));
+        accu_ops_info_get_str(win, &buf[0], sizeof(buf));
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "which_accumulate_ops", buf);
         MPIR_ERR_CHECK(mpi_errno);
     }
