@@ -28,8 +28,10 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     adio_daos_poh_release(cont->p);
     cont->p = NULL;
 
-    ADIOI_Free(cont->obj_name);
-    ADIOI_Free(cont->cont_name);
+    if (rank == 0) {
+        ADIOI_Free(cont->obj_name);
+        ADIOI_Free(cont->cont_name);
+    }
     ADIOI_Free(fd->fs_ptr);
     fd->fs_ptr = NULL;
 
