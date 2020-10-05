@@ -15,6 +15,7 @@
 #include "ofi_pre.h"
 #include "ch4_types.h"
 #include "mpidch4r.h"
+#include "mpidu_genq.h"
 
 #define __SHORT_FILE__                          \
     (strrchr(__FILE__,'/')                      \
@@ -22,8 +23,8 @@
      : __FILE__                                 \
 )
 
-/* TODO: make it a configure option */
-#define MPIDI_OFI_MAX_CONTEXTS                  16
+/* TODO: This should come from provider capability */
+#define MPIDI_OFI_MAX_VNIS                  16
 
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
@@ -31,8 +32,9 @@
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_CACHELINE_SIZE           (MPL_CACHELINE_SIZE)
 #define MPIDI_OFI_IOV_MAX                  (32)
-#define MPIDI_OFI_BUF_POOL_SIZE            (1024)
-#define MPIDI_OFI_BUF_POOL_NUM             (1024)
+#define MPIDI_OFI_AM_HDR_POOL_CELL_SIZE            (1024)
+#define MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK   (1024)
+#define MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS         (257 * 1024)
 #define MPIDI_OFI_NUM_CQ_BUFFERED          (1024)
 
 /* The number of bits in the immediate data field allocated to the source rank. */
@@ -45,7 +47,8 @@
 #define MPIDI_OFI_ERR_PROC_FAILED (0x2ULL)
 
 /* Set the error bits */
-static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Errflag_t errflag)
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field,
+                                                             MPIR_Errflag_t errflag)
 {
     switch (errflag) {
         case MPIR_ERR_OTHER:
@@ -61,7 +64,7 @@ static inline void MPIDI_OFI_idata_set_error_bits(uint64_t * data_field, MPIR_Er
 }
 
 /* Get the error flag from the OFI data field. */
-static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 {
     if ((idata >> MPIDI_OFI_IDATA_SRC_BITS) & MPIDI_OFI_ERR_OTHER) {
         return MPIR_ERR_OTHER;
@@ -129,30 +132,6 @@ static inline int MPIDI_OFI_idata_get_error_bits(uint64_t idata)
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
-/* Convert the address vector entry to an endpoint index.
- * This conversion depends on the data structure which could change based on
- * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
-{
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    return (av)->ep_idx;
-#else
-    return 0;
-#endif
-}
-
-/* Convert a communicator and rank to an endpoint index.
- * This conversion depends on the data structure which could change based on
- * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
-{
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
-#else
-    return 0;
-#endif
-}
-
 #define MPIDI_OFI_NUM_CQ_ENTRIES 8
 
 /* Typedefs */
@@ -166,8 +145,8 @@ enum {
     MPIDI_OFI_EVENT_ABORT,
     MPIDI_OFI_EVENT_SEND,
     MPIDI_OFI_EVENT_RECV,
-    MPIDI_OFI_EVENT_RMA_DONE,
     MPIDI_OFI_EVENT_AM_SEND,
+    MPIDI_OFI_EVENT_AM_SEND_PIPELINE,
     MPIDI_OFI_EVENT_AM_RECV,
     MPIDI_OFI_EVENT_AM_READ,
     MPIDI_OFI_EVENT_PEEK,
@@ -205,6 +184,21 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     int index;
 } MPIDI_OFI_am_repost_request_t;
+
+/* chunked request for AM eager/pipeline send operation */
+typedef struct MPIDI_OFI_am_send_pipeline_request {
+    char pad[MPIDI_REQUEST_HDR_SIZE];
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
+    int event_id;               /* fixed field, do not move */
+    MPIR_Request *sreq;
+    void *pack_buffer;
+    void *am_hdr;
+    uint16_t am_hdr_sz;
+    MPIDI_OFI_am_header_t msg_hdr MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
+    /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
+    struct iovec iov[3];
+} MPIDI_OFI_am_send_pipeline_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
@@ -268,12 +262,14 @@ typedef struct {
     unsigned enable_shared_contexts:1;
     unsigned enable_mr_scalable:1;
     unsigned enable_mr_virt_address:1;
+    unsigned enable_mr_allocated:1;
     unsigned enable_mr_prov_key:1;
     unsigned enable_tagged:1;
     unsigned enable_am:1;
     unsigned enable_rma:1;
     unsigned enable_atomics:1;
     unsigned enable_pt2pt_nopack:1;
+    unsigned enable_hmem:1;
     unsigned enable_data_auto_progress:1;
     unsigned enable_control_auto_progress:1;
 
@@ -297,7 +293,6 @@ typedef struct {
 } MPIDI_OFI_conn_t;
 
 typedef struct MPIDI_OFI_conn_manager_t {
-    int mmapped_size;           /* Size of the connection list memory which is mmapped */
     int max_n_conn;             /* Maximum number of connections up to this point */
     int n_conn;                 /* Current number of open connections */
     int next_conn_id;           /* The next connection id to be used. */
@@ -340,8 +335,8 @@ typedef struct {
 
     /* Mutexes and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[MAX_OFI_MUTEXES];
-    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_CONTEXTS];
-    int num_ctx;
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_VNIS];
+    int num_vnis;
 
     /* Window/RMA Globals */
     void *win_map;
@@ -356,7 +351,7 @@ typedef struct {
     struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
-    MPIDIU_buf_pool_t *am_buf_pool;
+    MPIDU_genq_private_pool_t am_hdr_buf_pool;
     MPL_atomic_int_t am_inflight_inject_emus;
     MPL_atomic_int_t am_inflight_rma_send_mrs;
     /* Sequence number trackers for active messages */
@@ -364,6 +359,9 @@ typedef struct {
     void *am_recv_seq_tracker;
     /* Queue (utlist) to store early-arrival active messages */
     MPIDI_OFI_am_unordered_msg_t *am_unordered_msgs;
+
+    /* Pack buffers for various communication */
+    MPIDU_genq_private_pool_t pack_buf_pool;
 
     /* Completion queue buffering */
     MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
@@ -381,6 +379,9 @@ typedef struct {
 
     /* Communication info for dynamic processes */
     MPIDI_OFI_conn_manager_t conn_mgr;
+
+    void *req_map;
+    MPIDI_OFI_deferred_am_isend_req_t *deferred_am_isend_q;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
@@ -400,49 +401,11 @@ typedef struct {
     uintptr_t send_buf;
     size_t msgsize;
     int comm_id;
-    int endpoint_id;
     uint64_t rma_key;
     int tag;
+    int vni_src;
+    int vni_dst;
 } MPIDI_OFI_send_control_t;
-
-typedef struct MPIDI_OFI_seg_state {
-    MPI_Aint buf_limit;         /* Maximum data size in bytes which a single OFI call can handle.
-                                 * This value remains constant once seg_state is initialized. */
-    MPI_Aint buf_limit_left;    /* Buffer length left for a single OFI call */
-
-    size_t origin_cursor;       /* First byte to pack */
-    size_t origin_end;          /* Last byte to pack */
-    const void *origin_buf;
-    size_t origin_count;
-    MPI_Datatype origin_type;
-    MPI_Aint origin_iov_len;    /* Length of data actually packed */
-    struct iovec origin_iov;    /* IOVEC returned after pack */
-    uintptr_t origin_addr;      /* Address of data actually packed */
-
-    size_t target_cursor;
-    size_t target_end;
-    MPI_Aint target_buf;
-    size_t target_count;
-    MPI_Datatype target_type;
-    MPI_Aint target_iov_len;
-    struct iovec target_iov;
-    uintptr_t target_addr;
-
-    size_t result_cursor;
-    size_t result_end;
-    const void *result_buf;
-    size_t result_count;
-    MPI_Datatype result_type;
-    MPI_Aint result_iov_len;
-    struct iovec result_iov;
-    uintptr_t result_addr;
-} MPIDI_OFI_seg_state_t;
-
-typedef enum MPIDI_OFI_segment_side {
-    MPIDI_OFI_SEGMENT_ORIGIN = 0,
-    MPIDI_OFI_SEGMENT_TARGET,
-    MPIDI_OFI_SEGMENT_RESULT,
-} MPIDI_OFI_segment_side_t;
 
 typedef struct MPIDI_OFI_win_acc_hint {
     uint64_t dtypes_max_count[MPIDI_OFI_DT_SIZES];      /* translate CH4 which_accumulate_ops hints to
@@ -453,38 +416,69 @@ typedef struct MPIDI_OFI_win_acc_hint {
                                                          * This structure is prepared at window creation time. */
 } MPIDI_OFI_win_acc_hint_t;
 
+enum {
+    MPIDI_OFI_PUT,
+    MPIDI_OFI_GET,
+    MPIDI_OFI_ACC,
+    MPIDI_OFI_GET_ACC,
+};
+
+typedef struct MPIDI_OFI_pack_chunk {
+    struct MPIDI_OFI_pack_chunk *next;
+    void *pack_buffer;
+    MPI_Aint unpack_size;
+    MPI_Aint unpack_offset;
+} MPIDI_OFI_pack_chunk;
+
 typedef struct MPIDI_OFI_win_request {
-    MPIR_OBJECT_HEADER;
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
-    int target_rank;
-    struct {
-        char pad[MPIDI_REQUEST_HDR_SIZE];
-        struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];   /* fixed field, do not move */
-        int event_id;           /* fixed field, do not move */
-        union {
+    struct MPIDI_OFI_win_request *prev;
+    int rma_type;
+    MPIR_Request **sigreq;
+    MPIDI_OFI_pack_chunk *chunks;
+    union {
+        struct {
             struct {
-                struct iovec *originv;
-                struct fi_rma_iov *targetv;
-            } put_get;
+                const void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+            } origin;
             struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-                struct fi_ioc *resultv;
-                struct fi_ioc *comparev;
-            } cas;
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } put;
+        struct {
             struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-            } accumulate;
+                void *addr;
+                int count;
+                MPI_Datatype datatype;
+                MPI_Aint total_bytes;
+                MPI_Aint pack_offset;
+            } origin;
             struct {
-                struct fi_ioc *originv;
-                struct fi_rma_ioc *targetv;
-                struct fi_ioc *resultv;
-            } get_accumulate;
-        } iov;
-        char *iov_store;
+                void *base;
+                int count;
+                MPI_Datatype datatype;
+                struct iovec *iov;
+                MPI_Aint iov_len;
+                MPI_Aint total_iov_len;
+                MPI_Aint iov_offset;
+                MPI_Aint iov_cur;
+                MPIDI_av_entry_t *addr;
+                uint64_t key;
+            } target;
+        } get;
     } noncontig;
 } MPIDI_OFI_win_request_t;
 
@@ -494,6 +488,13 @@ typedef struct {
     int event_id;               /* fixed field, do not move */
     MPIR_Request *parent;       /* Parent request           */
 } MPIDI_OFI_chunk_request;
+
+typedef struct MPIDI_OFI_target_mr {
+    uint64_t addr;              /* Unlikely used. Needed for calculating relative offset
+                                 * only when FI_MR_VIRT_ADDRESS is off but registration with MPI_BOTTOM fails
+                                 * at win creation. However, we always store it for code simplicity. */
+    uint64_t mr_key;
+} MPIDI_OFI_target_mr_t;
 
 typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];

@@ -249,7 +249,6 @@ exist.
     mpich-%VERSION%/m.txt (generated in step 1(e) above)
     mpich-%VERSION%/mi.txt (generated in step 1(f) above)
     mpich-%VERSION%/config.log (generated in step 1(d) above)
-    mpich-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/mpl/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/pm/hydra/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/pm/hydra/tools/topo/hwloc/hwloc/config.log (generated in step 1(d) above)
@@ -373,7 +372,7 @@ will be included in the mpicc and other MPI wrapper script.
 =================================
 
 The communication mechanisms in MPICH are called "devices". MPICH
-supports ch3 (default) and ch4 (experimental), as well as many
+supports ch3 and ch4 (default), as well as many
 third-party devices that are released and maintained by other
 institutes.
 
@@ -811,10 +810,7 @@ For some configuration options (in particular, MPIR_CVAR_OFI_ENABLE_TAGGED and
 MPIR_CVAR_OFI_ENABLE_RMA), a default build of MPICH using the CH4 OFI netmod
 will fail if these options are not enabled. This is so that, for performance,
 MPICH can assume that some commonly available features are enabled by the OFI
-provider. If using a provider that does not support FI_TAGGED, FI_RMA, or
-FI_DELIVERY_COMPLETE, a special configure flag must be provided to build in
-support for workarounds for such features. Compile with --enable-legacy-ofi
-to enable such workarounds.
+provider.
 
 A full list of capability set configuration variables can be found in the
 environment variables README.envvar.

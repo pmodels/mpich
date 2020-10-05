@@ -11,7 +11,6 @@
 #include "mpidch4r.h"
 #include "mpidig_am.h"
 #include "ch4_impl.h"
-#include "ofi_iovec_util.h"
 
 #define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
 #define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
@@ -21,11 +20,8 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_AV_TO_PHYS(av) (MPIDI_OFI_AV(av).dest)
-#define MPIDI_OFI_COMM_TO_PHYS(comm,rank)                       \
-    MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).dest
 #define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest
+    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest[0][0]
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
@@ -42,18 +38,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_mpi_acc_op_index(int op)
 }
 
 int MPIDI_OFI_progress(int vci, int blocking);
+
+/* vni mapping */
+/* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
+ * we may get away with bit mask */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_vni(int flag, MPIR_Comm * comm_ptr,
+                                               int src_rank, int dst_rank, int tag)
+{
+    return MPIDI_get_vci(flag, comm_ptr, src_rank, dst_rank, tag) % MPIDI_OFI_global.num_vnis;
+}
+
 /*
  * Helper routines and macros for request completion
  */
-#define MPIDI_OFI_PROGRESS()                                      \
+#define MPIDI_OFI_PROGRESS(vni)                                   \
     do {                                                          \
-        mpi_errno = MPIDI_OFI_progress(0, 0);                     \
+        mpi_errno = MPIDI_OFI_progress(vni, 0);                   \
         MPIR_ERR_CHECK(mpi_errno);                                \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
-#define MPIDI_OFI_PROGRESS_WHILE(cond)                 \
-    while (cond) MPIDI_OFI_PROGRESS()
+#define MPIDI_OFI_PROGRESS_WHILE(cond, vni) \
+    while (cond) MPIDI_OFI_PROGRESS(vni)
 
 #define MPIDI_OFI_ERR  MPIR_ERR_CHKANDJUMP4
 #define MPIDI_OFI_CALL(FUNC,STR)                                     \
@@ -70,7 +76,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
                               fi_strerror(-_ret));          \
     } while (0)
 
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,EAGAIN)               \
+#define MPIDI_OFI_CALL_RETRY(FUNC,vci_,STR,EAGAIN)      \
     do {                                                    \
     ssize_t _ret;                                           \
     int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
@@ -94,9 +100,9 @@ int MPIDI_OFI_progress(int vci, int blocking);
          * for recursive locking in more than one lock (currently limited
          * to one due to scalar TLS counter), this lock yielding
          * operation can be avoided since we are inside a finite loop. */\
-        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(0).lock);         \
+        MPID_THREAD_CS_EXIT(VCI, MPIDI_VCI(vci_).lock);     \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
-        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(0).lock);        \
+        MPID_THREAD_CS_ENTER(VCI, MPIDI_VCI(vci_).lock);    \
         MPIR_ERR_CHECK(mpi_errno);                               \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
@@ -165,7 +171,7 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             mpi_errno,                      \
                             MPIX_ERR_EAGAIN,                \
                             "**eagain");                    \
-        mpi_errno = MPID_Progress_test();                   \
+        mpi_errno = MPID_Progress_test(NULL);                   \
         MPIR_ERR_CHECK(mpi_errno);                          \
         _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
@@ -191,39 +197,12 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             #STR);                              \
     } while (0)
 
-#define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
+#define MPIDI_OFI_REQUEST_CREATE(req, kind, vni) \
     do {                                                      \
-        (req) = MPIR_Request_create(kind, 0);  \
+        (req) = MPIR_Request_create_from_pool(kind, vni);  \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_need_request_creation(const MPIR_Request * req)
-{
-    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {
-        return 1;       /* Always allocated by netmod */
-    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
-        return (req == NULL);
-    } else {
-        /* Invalid MT model */
-        MPIR_Assert(0);
-        return -1;
-    }
-}
-
-#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
-      do {                                                              \
-          if (MPIDI_OFI_need_request_creation(req)) {                   \
-              MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
-                          (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind, 0);                        \
-              MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
-                                  "**nomemreq");                        \
-          }                                                             \
-          /* At this line we should always have a valid request */      \
-          MPIR_Assert((req) != NULL);                                   \
-          MPIR_Request_add_ref((req));                                  \
-      } while (0)
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
@@ -263,6 +242,79 @@ uint64_t MPIDI_OFI_mr_key_alloc(void);
 void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
 
+/* RMA */
+#define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \
+    do {                                                                \
+        if (sigreq) {                                                   \
+            int tmp;                                                    \
+            MPIDI_OFI_chunk_request *creq;                              \
+            MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                      \
+            creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER); \
+            MPIR_ERR_CHKANDSTMT(creq == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem"); \
+            creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                \
+            creq->parent = *(sigreq);                                   \
+            msg.context = &creq->context;                               \
+        }                                                               \
+        MPIDI_OFI_win_cntr_incr(win);                                   \
+    } while (0)
+
+MPL_STATIC_INLINE_PREFIX uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
+{
+    uint32_t ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+
+    if (MPIDI_OFI_ENABLE_MR_PROV_KEY || MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
+        /* Always use winfo[rank].disp_unit if any of PROV_KEY and VIRT_ADDRESS is on.
+         * Compiler can eliminate the branch in such a case. */
+        ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
+    } else if (MPIDI_OFI_WIN(win).winfo) {
+        ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
+    } else {
+        ret = win->disp_unit;
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_sigreq_complete(MPIR_Request ** sigreq)
+{
+    if (sigreq) {
+        /* If sigreq is not NULL, *sigreq should be a valid object now. */
+        MPIR_Assert(*sigreq != NULL);
+        MPID_Request_complete(*sigreq);
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_load_iov(const void *buffer, int count,
+                                                 MPI_Datatype datatype, MPI_Aint max_len,
+                                                 MPI_Aint * loaded_iov_offset, struct iovec *iov)
+{
+    MPI_Aint outlen;
+    MPIR_Typerep_to_iov_offset(buffer, count, datatype, *loaded_iov_offset, iov, max_len, &outlen);
+    *loaded_iov_offset += outlen;
+}
+
+int MPIDI_OFI_issue_deferred_rma(MPIR_Win * win);
+void MPIDI_OFI_complete_chunks(MPIDI_OFI_win_request_t * winreq);
+int MPIDI_OFI_nopack_putget(const void *origin_addr, int origin_count,
+                            MPI_Datatype origin_datatype, int target_rank,
+                            int target_count, MPI_Datatype target_datatype,
+                            MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
+                            MPIDI_av_entry_t * addr, int rma_type, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_put(const void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       int target_count, MPI_Datatype target_datatype,
+                       MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+int MPIDI_OFI_pack_get(void *origin_addr, int origin_count,
+                       MPI_Datatype origin_datatype, int target_rank,
+                       int target_count, MPI_Datatype target_datatype,
+                       MPIDI_OFI_target_mr_t target_mr, MPIR_Win * win,
+                       MPIDI_av_entry_t * addr, MPIR_Request ** sigreq);
+
 /* Common Utility functions used by the
  * C and C++ components
  */
@@ -298,7 +350,18 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_create(v
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * winreq)
 {
-    MPL_free(winreq->noncontig.iov_store);
+    MPIDI_OFI_complete_chunks(winreq);
+    if (winreq->rma_type == MPIDI_OFI_PUT &&
+        winreq->noncontig.put.origin.datatype != MPI_DATATYPE_NULL &&
+        winreq->noncontig.put.target.datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.put.origin.datatype);
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.put.target.datatype);
+    } else if (winreq->rma_type == MPIDI_OFI_GET &&
+               winreq->noncontig.get.origin.datatype != MPI_DATATYPE_NULL &&
+               winreq->noncontig.get.target.datatype != MPI_DATATYPE_NULL) {
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.get.origin.datatype);
+        MPIR_Datatype_release_if_not_builtin(winreq->noncontig.get.target.datatype);
+    }
     MPL_free(winreq);
 }
 
@@ -307,58 +370,41 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
  */
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni(int vci)
 {
-    /* MPIR_Assert(MPIDI_OFI_global.num_ctx == MPIDI_global.n_vcis); */
     return vci;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_av_insert(int vni, int rank, void *addrname)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_vci_to_vni_assert(int vci)
 {
-    int mpi_errno = MPI_SUCCESS;
-    fi_addr_t addr;
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni].av, addrname, 1, &addr, 0ULL, NULL),
-                   avmap);
-    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).dest = addr;
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-    MPIDI_OFI_AV(&MPIDIU_get_av(vni, rank)).ep_idx = 0;
+    int vni = MPIDI_OFI_vci_to_vni(vci);
+    MPIR_Assert(vni < MPIDI_OFI_global.num_vnis);
+    return vni;
+}
+
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av,
+                                                        int vni_local, int vni_remote)
+{
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[vni_local][vni_remote], 0,
+                          MPIDI_OFI_MAX_ENDPOINTS_BITS);
+    } else {
+        return MPIDI_OFI_AV(av).dest[vni_local][vni_remote];
+    }
+#else /* MPIDI_OFI_VNI_USE_SEPCTX */
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        return fi_rx_addr(MPIDI_OFI_AV(av).dest[0][0], vni_remote, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+    } else {
+        MPIR_Assert(vni_remote == 0);
+        return MPIDI_OFI_AV(av).dest[0][0];
+    }
 #endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank,
+                                                          int vni_local, int vni_remote)
 {
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
-        int ep_num = MPIDI_OFI_av_to_ep(av);
-        int rx_idx = ep_num;
-        return fi_rx_addr(av->dest, rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
-    } else {
-        return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
-    }
-}
-
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
-{
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
-        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
-    } else {
-        return MPIDI_OFI_AV_TO_PHYS(av);
-    }
-}
-
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank)
-{
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int ep_num = 0;
-        int rx_idx = ep_num;
-        return fi_rx_addr(MPIDI_OFI_TO_PHYS(0, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
-    } else {
-        return MPIDI_OFI_TO_PHYS(0, rank);
-    }
+    MPIDI_av_entry_t *av = MPIDIU_comm_rank_to_av(comm, rank);
+    return MPIDI_OFI_av_to_phys(av, vni_local, vni_remote);
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)

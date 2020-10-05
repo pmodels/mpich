@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int, int, MPIR_Comm *, int, MPIR_Reques
                                          MPI_Status *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int, int, MPIR_Comm *, int, int *, MPIR_Request **,
                                           MPI_Status *) MPL_STATIC_INLINE_SUFFIX;
-int MPID_Progress_test(void);
+int MPID_Progress_test(MPID_Progress_state *);
 int MPID_Progress_poke(void);
 void MPID_Progress_start(MPID_Progress_state *);
 void MPID_Progress_end(MPID_Progress_state *);
@@ -309,6 +309,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
    them in the NETMOD_INLINE mode */
 #include "ch4_request.h"
 
+/* vci is used by both generic and lower layer, need come early */
+#include "ch4_vci.h"
+
 /* Active message and generic implementatiions */
 #include "mpidig_am.h"
 #include "mpidch4r.h"
@@ -332,7 +335,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #include "ch4_rma.h"
 #include "ch4_proc.h"
 #include "ch4_coll.h"
-#include "ch4_vci.h"
+#include "ch4_wait.h"
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 extern int MPIDI_num_netmods;

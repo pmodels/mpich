@@ -73,11 +73,11 @@ int single_struct_test(void)
     ts1.d = 4;
     ts1.e = 5;
 
-    err = MPI_Type_struct(3, blks, disps, types, &mystruct);
+    err = MPI_Type_create_struct(3, blks, disps, types, &mystruct);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
-            fprintf(stderr, "MPI_Type_struct returned error\n");
+            fprintf(stderr, "MPI_Type_create_struct returned error\n");
         }
     }
 
@@ -166,11 +166,11 @@ int array_of_structs_test(void)
         ts2[i].e = -13;
     }
 
-    err = MPI_Type_struct(3, blks, disps, types, &mystruct);
+    err = MPI_Type_create_struct(3, blks, disps, types, &mystruct);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
-            fprintf(stderr, "MPI_Type_struct returned error\n");
+            fprintf(stderr, "MPI_Type_create_struct returned error\n");
         }
     }
 
@@ -243,9 +243,9 @@ int struct_of_structs_test(void)
 
     char buf[50], buf2[50], *packbuf;
 
-    MPI_Aint disps[3] = { 0, 3, 0 };
-    int blks[3] = { 2, 1, 0 };
-    MPI_Datatype types[3], chartype, tiletype1, tiletype2, finaltype;
+    MPI_Aint disps[2] = { 0, 3 };
+    int blks[2] = { 2, 1 };
+    MPI_Datatype types[2], chartype, tiletype1, tiletype2, tmptype, finaltype;
 
     /* build a contig of one char to try to keep optimizations
      * from being applied.
@@ -263,7 +263,7 @@ int struct_of_structs_test(void)
     types[0] = MPI_CHAR;
     types[1] = chartype;
 
-    err = MPI_Type_struct(2, blks, disps, types, &tiletype1);
+    err = MPI_Type_create_struct(2, blks, disps, types, &tiletype1);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
@@ -273,7 +273,7 @@ int struct_of_structs_test(void)
     }
 
     /* build the same type again, again to avoid optimizations */
-    err = MPI_Type_struct(2, blks, disps, types, &tiletype2);
+    err = MPI_Type_create_struct(2, blks, disps, types, &tiletype2);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
@@ -285,14 +285,20 @@ int struct_of_structs_test(void)
     /* build a combination of those two tiletypes */
     disps[0] = 0;
     disps[1] = 5;
-    disps[2] = 10;
     blks[0] = 1;
     blks[1] = 1;
-    blks[2] = 1;
     types[0] = tiletype1;
     types[1] = tiletype2;
-    types[2] = MPI_UB;
-    err = MPI_Type_struct(3, blks, disps, types, &finaltype);
+    err = MPI_Type_create_struct(2, blks, disps, types, &tmptype);
+    if (err != MPI_SUCCESS) {
+        errs++;
+        if (verbose) {
+            fprintf(stderr, "tmptype create failed\n");
+        }
+        return errs;
+    }
+
+    err = MPI_Type_create_resized(tmptype, 0, 10, &finaltype);
     if (err != MPI_SUCCESS) {
         errs++;
         if (verbose) {
@@ -305,6 +311,7 @@ int struct_of_structs_test(void)
     MPI_Type_free(&chartype);
     MPI_Type_free(&tiletype1);
     MPI_Type_free(&tiletype2);
+    MPI_Type_free(&tmptype);
 
     MPI_Pack_size(5, finaltype, MPI_COMM_WORLD, &bufsize);
 

@@ -12,7 +12,7 @@ static MPIR_Request *create_request(void *hdr, intptr_t hdr_sz, size_t nb)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
         return NULL;
@@ -110,7 +110,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
             else {
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, TYPICAL,
                               "ERROR - MPIDI_CH3I_Sock_write failed, rc=%d", rc);
-                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+                sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
                 if (!sreq) {
                     MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                 }
@@ -167,7 +167,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     else {
         /* Connection failed, so allocate a request and return an error. */
         MPL_DBG_VCUSE(vc, "ERROR - connection failed");
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
         if (!sreq) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         }

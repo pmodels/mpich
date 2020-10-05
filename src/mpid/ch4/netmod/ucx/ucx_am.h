@@ -17,7 +17,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_isend_callback(void *request, ucs_sta
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_ISEND_CALLBACK);
 
-    MPL_free(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
+    MPL_gpu_free_host(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
     MPIDIG_global.origin_cbs[handler_id] (req);
     ucp_request->req = NULL;
@@ -62,14 +62,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     MPIDI_Datatype_check_size(datatype, count, data_sz);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
     ucx_hdr.data_sz = data_sz;
 
-    send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+    MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
     MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
 
@@ -88,7 +88,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
-        MPL_free(send_buf);
+        MPL_gpu_free_host(send_buf);
         MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_check_size(datatype, count, data_sz);
@@ -138,7 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
     }
 
     /* copy headers to send buffer */
-    send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+    MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
     ucx_hdr.handler_id = handler_id;
     ucx_hdr.data_sz = data_sz;
     MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
@@ -212,10 +212,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
+    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+
+    MPL_pointer_attr_t attr;
+    MPIR_GPU_query_pointer_attr(data, &attr);
+    if (attr.type == MPL_GPU_POINTER_DEV) {
+        /* Force packing of GPU buffer in host memory */
+        dt_contig = 0;
+    }
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
@@ -235,7 +242,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
         dt = ucp_dt_make_iov();
         total_sz = 2;
     } else {
-        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);
+        /* FIXME: currently we always do packing, also for high density types. However,
+         * we should not do packing unless needed. Also, for large low-density types
+         * we should not allocate the entire buffer and do the packing at once. */
+        /* TODO: (1) Skip packing for high-density datatypes;
+         *       (2) Pipeline allocation for low-density datatypes; */
+        /* FIXME: allocating a GPU registered host buffer adds some additional overhead.
+         * However, once the new buffer pool infrastructure is setup, we would simply be
+         * allocating a buffer from the pool, so whether it's a regular malloc buffer or a GPU
+         * registered buffer should be equivalent with respect to performance. */
+        MPL_gpu_malloc_host((void **) &send_buf, data_sz + am_hdr_sz + sizeof(ucx_hdr));
 
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
@@ -259,7 +275,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
-        MPL_free(send_buf);
+        MPL_gpu_free_host(send_buf);
         MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
@@ -295,6 +311,11 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
     return (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
 }
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
+{
+    return MPIDI_UCX_MAX_AM_EAGER_SZ;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
                                                   MPIR_Comm * comm,
                                                   int handler_id, const void *am_hdr,
@@ -310,7 +331,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank, 0, 0);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
@@ -359,11 +380,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_SEND_HDR_REPLY);
 
     use_comm = MPIDIG_context_id_to_comm(context_id);
-    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank);
+    ep = MPIDI_UCX_COMM_TO_EP(use_comm, src_rank, 0, 0);
     ucx_tag = MPIDI_UCX_init_tag(0, MPIR_Process.comm_world->rank, MPIDI_UCX_AM_TAG);
 
     /* initialize our portion of the hdr */
     ucx_hdr.handler_id = handler_id;
+    ucx_hdr.data_sz = 0;
 
     /* just pack and send for now */
     send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr), MPL_MEM_BUFFER);

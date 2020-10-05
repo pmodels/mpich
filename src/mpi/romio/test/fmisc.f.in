@@ -20,7 +20,6 @@
       character*7 datarep
       character*1024 str    ! used to store the filename
       @FORTRAN_MPI_OFFSET@ disp, offset, filesize
-      @FTESTDEFINE@
 
       errs = 0
       verbose = .false.

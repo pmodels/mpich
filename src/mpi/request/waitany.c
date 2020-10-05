@@ -28,26 +28,20 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
 #undef MPI_Waitany
 #define MPI_Waitany PMPI_Waitany
 
-int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status)
+/* MPID_Waitany call MPIR_Waitany_state with initialized progress state */
+int MPIR_Waitany_state(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status,
+                       MPID_Progress_state * state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Progress_state progress_state;
-    int i;
-    int found_nonnull_req;
-    int n_inactive;
 
-    MPID_Progress_start(&progress_state);
     for (;;) {
-        n_inactive = 0;
-        found_nonnull_req = FALSE;
+        int n_inactive = 0;
+        int found_nonnull_req = FALSE;
 
-        for (i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
-                if (mpi_errno != MPI_SUCCESS) {
-                    MPID_Progress_end(&progress_state);
-                    goto fn_fail;
-                }
+                mpi_errno = MPID_Progress_test(state);
+                MPIR_ERR_CHECK(mpi_errno);
             }
 
             if (request_ptrs[i] == NULL) {
@@ -86,20 +80,34 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
             goto fn_exit;
         }
 
-        mpi_errno = MPID_Progress_test();
+        mpi_errno = MPID_Progress_test(state);
         MPIR_ERR_CHECK(mpi_errno);
         /* Avoid blocking other threads since I am inside an infinite loop */
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
   fn_exit:
-    MPID_Progress_end(&progress_state);
     return mpi_errno;
-
   fn_fail:
     goto fn_exit;
 }
 
+/* legacy interface (for ch3) */
+int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+
+    MPID_Progress_start(&progress_state);
+    mpi_errno = MPIR_Waitany_state(count, request_ptrs, indx, status, &progress_state);
+
+    MPID_Progress_end(&progress_state);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif
 
 /*@

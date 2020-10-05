@@ -29,20 +29,21 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #define MPI_Testall PMPI_Testall
 
 
-int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
-                      MPI_Status array_of_statuses[], int requests_property)
+int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
+                       MPI_Status array_of_statuses[], int requests_property,
+                       MPID_Progress_state * state)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
     int n_completed = 0;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(state);
     MPIR_ERR_CHECK(mpi_errno);
 
     if (requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) {
         for (i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(state);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -55,7 +56,7 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
     } else {
         for (i = 0; i < count; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(state);
                 MPIR_ERR_CHECK(mpi_errno);
             }
 
@@ -80,6 +81,12 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
     goto fn_exit;
 }
 
+int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
+                      MPI_Status array_of_statuses[], int requests_property)
+{
+    return MPIR_Testall_state(count, request_ptrs, flag, array_of_statuses,
+                              requests_property, NULL);
+}
 
 int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                  MPI_Status array_of_statuses[])

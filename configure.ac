@@ -373,12 +373,16 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
         debug    - Synonym for dbg
+        asan     - Add compiler flag, -fsanitize=address, to all internal
+                   compiler flags. It also includes other flags for nicer
+                   stacktrace such as -g -O1 -fno-omit-frame-pointer.
+        ubsan    - Add compiler flag, -fsanitize=undefined, to all internal
+                   compiler flags.
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
                    eliminate access warnings from programs like valgrind
         memarena - Check for overwrite errors in memory allocation arena
         mutex    - Enable error checking on pthread mutexes
-        mutexnesting - Check for non-nesting of mutexes
         most     - Most of the above options, excluding some with severe
                    performance impacts.  Recommended for typical development.
         yes      - synonym for "most" (*not* "all")
@@ -410,7 +414,9 @@ AC_ARG_ENABLE(fast,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS. (default is -O2)
         ndebug   - Appends -DNDEBUG to MPICHLIB_CFLAGS.
-        all|yes  - "O2" and "ndebug" are enabled
+        no-strict-alignment - relax strict alignment requirement
+        alwaysinline - Force compiler to always inline performance critical routines
+        all|yes  - "O2", "ndebug", and "alwaysinline" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=O2)
 
@@ -543,11 +549,6 @@ AC_ARG_ENABLE(thread-cs,
                          per-object, per-vci, lock-free. By default, CH3 uses global,
                          while CH4 uses per-vci.]),,enable_thread_cs=default)
 
-AC_ARG_ENABLE(vci-method,
-	AC_HELP_STRING([--enable-vci-method=type],
-			[Choose the method used for vci selection when enable-thread-cs=per-vci is selected.
-                          Values may be zero (default), communicator, tag, implicit, explicit]),,enable_vci_method=zero)
-
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
@@ -634,11 +635,8 @@ AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
 
-AC_ARG_ENABLE(dbg-nolocal, AC_HELP_STRING([--enable-dbg-nolocal], [enables debugging mode where shared-memory communication is disabled]),
-    AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication for debugging]))
-
-AC_ARG_ENABLE(dbg-localoddeven, AC_HELP_STRING([--enable-dbg-localoddeven], [enables debugging mode where shared-memory communication is enabled only between even processes or odd processes on a node]),
-    AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
+AC_ARG_ENABLE(nolocal, AC_HELP_STRING([--enable-nolocal], [enables nolocal mode where shared-memory communication is disabled]),
+    AC_DEFINE(ENABLE_NO_LOCAL, 1, [Define to disable shared-memory communication]))
 
 AC_CANONICAL_TARGET
 
@@ -708,9 +706,11 @@ dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 # with "--disable-LANG".  Libtool understands this as a request to disable
 # support for this language. This should save a bit of configure time and also
 # prevent user complaints like ticket #1570.
+#
+# NOTE: we are skipping overiding CXX as some modules (e.g. ucx) may depend on CXX
+#
 AS_IF([test "x$enable_f77" = "xno"],[F77=no])
 AS_IF([test "x$enable_fc"  = "xno"],[FC=no])
-AS_IF([test "x$enable_cxx" = "xno"],[CXX=no])
 
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
@@ -793,7 +793,7 @@ if test -z "$top_srcdir" ; then
 else
    use_top_srcdir=$top_srcdir
 fi
-if test -z "$master_top_srcdir" ; then
+if test -z "$main_top_srcdir" ; then
     # This needs to be an absolute pathname
     case "$use_top_srcdir" in
     /*) ;;
@@ -801,20 +801,20 @@ if test -z "$master_top_srcdir" ; then
         use_top_srcdir=`(cd $use_top_srcdir && pwd)`
 	;;
     esac
-    master_top_srcdir=$use_top_srcdir
+    main_top_srcdir=$use_top_srcdir
 fi
 # Get the directory that we're running in...
-if test -z "$master_top_builddir" ; then
-   master_top_builddir="`pwd`"
+if test -z "$main_top_builddir" ; then
+   main_top_builddir="`pwd`"
 fi
-AC_SUBST(master_top_builddir)
-AC_SUBST(master_top_srcdir)
-export master_top_builddir
-export master_top_srcdir
+AC_SUBST(main_top_builddir)
+AC_SUBST(main_top_srcdir)
+export main_top_builddir
+export main_top_srcdir
 
 if test -z "$with_cross"; then
-  if test -f "$master_top_srcdir/src/cross/$host_alias"; then
-    with_cross="$master_top_srcdir/src/cross/$host_alias"
+  if test -f "$main_top_srcdir/src/cross/$host_alias"; then
+    with_cross="$main_top_srcdir/src/cross/$host_alias"
   else
     with_cross=no
   fi
@@ -915,6 +915,11 @@ for option in $enable_fast ; do
         ndebug)
         enable_fast_ndebug=yes
         ;;
+        no-strict-alignment)
+        enable_fast_no_strict_alignment=yes
+        ;;
+        alwaysinline) # No op in MPICH. See mpl/configure.ac
+        ;;
         all|yes)
         enable_fast_ndebug=yes
         enable_fast_opts=O2
@@ -951,6 +956,11 @@ if test "$enable_fast_ndebug" = "yes" ; then
     # MPICH does NOT assume any preprocessing support from the Fortran compiler,
     # so no Fortran files contain any preprocessing statements.
     # Don't set FFLAGS or FCFLAGS with any -D.
+fi
+
+if test -z "$enable_fast_no_strict_alignment" ; then
+    # we need observe strict alignment to pass ubsan check
+    AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
 fi
 
 # error-checking
@@ -1033,7 +1043,7 @@ if test "$with_mpl_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding MPL
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
-    PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
     mplsrcdir="src/mpl"
@@ -1047,86 +1057,6 @@ else
     PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="-L${with_mpl_prefix}/lib"
-fi
-
-# OpenPA
-AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])
-OPALIBNAME=${OPALIBNAME:-"opa"}
-export OPALIBNAME
-AC_SUBST(OPALIBNAME)
-AC_ARG_WITH([openpa-prefix],
-            [AS_HELP_STRING([[--with-openpa-prefix[=DIR]]],
-                            [use the OpenPA atomics library installed in DIR,
-                             rather than the one included in src/openpa.  Pass
-                             "embedded" to force usage of the OpenPA source
-                             distributed with MPICH.])],
-            [],
-            [# see if OPA is already installed on the system
-             PAC_PUSH_FLAG([LIBS])
-             PAC_PREPEND_FLAG([-l${OPALIBNAME}],[LIBS])
-             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
-#include "opa_primitives.h"
-],[
-OPA_int_t i;
-OPA_store_int(i,10);
-OPA_fetch_and_incr_int(&i,5);
-])dnl
-                             ],
-                            [with_openpa_prefix=system],[with_openpa_prefix=embedded])
-             PAC_POP_FLAG([LIBS])
-             ])
-
-opasrcdir=""
-AC_SUBST([opasrcdir])
-opalibdir=""
-AC_SUBST([opalibdir])
-opalib=""
-AC_SUBST([opalib])
-
-if test "$with_openpa_prefix" = "embedded" ; then
-    if test -e "${use_top_srcdir}/src/openpa" ; then
-        opasrcdir="src/openpa"
-        opalib="src/openpa/src/lib${OPALIBNAME}.la"
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
-
-        # OPA defaults to "auto", but in MPICH we want "auto_allow_emulation" to
-        # easily permit using channels like ch3:sock that don't care about atomics
-        AC_ARG_WITH([atomic-primitives],
-                    [AS_HELP_STRING([--with-atomic-primitives],
-                                    [Force OPA to use a specific atomic primitives
-                                     implementation.  See the src/openpa directory
-                                     for more info.])],
-                    [],[with_atomic_primitives=not_specified])
-        # no need for libtool versioning when embedding OPA
-        opa_subdir_args="--disable-versioning --enable-embedded"
-        if test "$with_atomic_primitives" = "not_specified" ; then
-            PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
-        fi
-        PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
-    else
-        AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
-    fi
-elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-elif test "$with_openpa_prefix" = "no" ; then
-    # The user doesn't want to use OPA.  This may or may not cause MPICH to
-    # fail to configure/build, depending on many other factors.
-    :
-else
-    # The user specified an already-installed OPA; just sanity check, don't
-    # subconfigure it
-    AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
-          [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
-    PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-    if test -d ${with_openpa_prefix}/lib64 ; then
-        PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
-        opalibdir="-L${with_openpa_prefix}/lib64"
-    else
-        opalibdir="-L${with_openpa_prefix}/lib"
-    fi
-    PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
 
 # Izem
@@ -1159,15 +1089,15 @@ AC_SUBST([zmlib])
 
 if test "$enable_izem_queue" != "no" && test "$enable_izem_queue" != "none"; then
     if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
-        if test -e "${use_top_srcdir}/src/izem" ; then
+        if test -e "${use_top_srcdir}/modules/izem" ; then
             zm_subdir_args="--enable-embedded"
-            PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
-            zmsrcdir="${master_top_builddir}/src/izem"
-            zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
-            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
-            PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src/include],[CPPFLAGS])
+            PAC_CONFIG_SUBDIR_ARGS([modules/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
+            zmsrcdir="${main_top_builddir}/modules/izem"
+            zmlib="${main_top_builddir}/modules/izem/src/lib${ZMLIBNAME}.la"
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/izem/src/include],[CPPFLAGS])
+            PAC_APPEND_FLAG([-I${main_top_builddir}/modules/izem/src/include],[CPPFLAGS])
         else
-            AC_MSG_WARN([Attempted to use the embedded Izem source tree in "src/izem", but it is missing.  Configuration or compilation may fail later.])
+            AC_MSG_WARN([Attempted to use the embedded Izem source tree in "modules/izem", but it is missing.  Configuration or compilation may fail later.])
         fi
     elif test "$with_zm_prefix" = "system"; then
         # check if an Izem installation exists on this system
@@ -1236,7 +1166,7 @@ if test "$with_yaksa_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding YAKSA
     yaksa_subdir_args="--enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([modules/yaksa],[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
-    PAC_APPEND_FLAG([-I${master_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${main_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
 
     yaksasrcdir="modules/yaksa"
@@ -1251,27 +1181,6 @@ else
     PAC_APPEND_FLAG([-L${with_yaksa_prefix}/lib],[WRAPPER_LDFLAGS])
     yaksalibdir="-L${with_yaksa_prefix}/lib"
 fi
-
-
-##### allow selection of datatype engine
-AC_ARG_WITH([datatype-engine],
-            [AS_HELP_STRING([--with-datatype-engine={yaksa|dataloop|auto}],[controls datatype engine to use])],
-            [],[with_datatype_engine=dataloop])
-if test "${with_datatype_engine}" = "yaksa" ; then
-    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
-elif test "${with_datatype_engine}" = "dataloop" ; then
-    AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
-else
-    if test "$device_name" = "ch4" ; then
-        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_YAKSA,[Datatype engine])
-        with_datatype_engine=yaksa
-    else
-        AC_DEFINE_UNQUOTED(MPICH_DATATYPE_ENGINE,MPICH_DATATYPE_ENGINE_DATALOOP,[Datatype engine])
-        with_datatype_engine=dataloop
-    fi
-fi
-AM_CONDITIONAL([BUILD_YAKSA_ENGINE], [test "${with_datatype_engine}" = "yaksa"])
-AM_CONDITIONAL([BUILD_DATALOOP_ENGINE], [test "${with_datatype_engine}" = "dataloop"])
 
 
 # Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
@@ -1306,11 +1215,14 @@ AC_SUBST([jsonsrcdir])
 jsonlib=""
 AC_SUBST([jsonlib])
 
+PAC_PUSH_ALL_FLAGS()
+PAC_RESET_ALL_FLAGS()
 PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
-jsonsrcdir="${master_top_builddir}/modules/json-c"
-jsonlib="${master_top_builddir}/modules/json-c/libjson-c.la"
+PAC_POP_ALL_FLAGS()
+jsonsrcdir="${main_top_builddir}/modules/json-c"
+jsonlib="${main_top_builddir}/modules/json-c/libjson-c.la"
 PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/json-c],[CPPFLAGS])
-PAC_APPEND_FLAG([-I${master_top_builddir}/modules/json-c],[CPPFLAGS])
+PAC_APPEND_FLAG([-I${main_top_builddir}/modules/json-c],[CPPFLAGS])
 
 # ----------------------------------------------------------------------------
 # HWLOC
@@ -1331,9 +1243,9 @@ elif test "$with_hwloc_prefix" = "embedded" ; then
    # Disable visibility when setting up hwloc
    PAC_PUSH_FLAG([enable_visibility])
    enable_visibility=no;
-   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
+   HWLOC_SETUP_CORE([modules/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
    if test "$have_hwloc" = "yes" ; then
-      hwlocsrcdir="src/hwloc"
+      hwlocsrcdir="modules/hwloc"
       hwloclib="$HWLOC_EMBEDDED_LDADD"
       PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
       PAC_APPEND_FLAG([$HWLOC_EMBEDDED_LDFLAGS], [WRAPPER_LDFLAGS])
@@ -1525,11 +1437,7 @@ thread_refcount=MPICH_REFCOUNT__NONE
 if test "$enable_threads" = "multiple" ; then
     # default depends on ch3 or ch4
     if test "$enable_thread_cs" = "default" ; then
-        if test "$device_name" = "ch4" ; then
-            enable_thread_cs="per-vci"
-        else
-            enable_thread_cs="global"
-        fi
+        enable_thread_cs="global"
     fi
 
     case $enable_thread_cs in
@@ -1570,35 +1478,6 @@ if test "$enable_threads" = "multiple" ; then
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
 
-# Check for enable-vci-method choice
-vci_method=MPICH_VCI__ZERO
-case $enable_vci_method in
-    zero)
-    # Essentially single VCI
-    vci_method=MPICH_VCI__ZERO
-    ;;
-    communicator)
-    # Every communicator gets a new VCI in a round-robin fashion
-    vci_method=MPICH_VCI__COMM
-    ;;
-    tag)
-    # Explicit VCI info embedded with a tag scheme (5 bit src vci, 5 bit dst vci, plus 5 bit user)
-    vci_method=MPICH_VCI__TAG
-    ;;
-    implicit)
-    # An automatic scheme taking into account of user hints
-    vci_method=MPICH_VCI__IMPLICIT
-    ;;
-    explicit)
-    # Directly passing down vci in parameters (MPIX or Endpoint rank)
-    vci_method=MPICH_VCI__EXPLICIT
-    ;;
-    *)
-    AC_MSG_ERROR([Unrecognized value $enable_vci_method for --enable-vci-method])
-    ;;
-esac
-AC_DEFINE_UNQUOTED([MPIDI_CH4_VCI_METHOD], $vci_method, [Method used to select vci])
-
 if test "$thread_granularity" = "MPICH_THREAD_GRANULARITY__POBJ" -a "$device_name" == "ch4" ; then
     AC_MSG_ERROR([the ch4 device does not support the per-object critical section])
 fi
@@ -1622,6 +1501,12 @@ for option in $enable_g ; do
         debug|dbg)
         enable_append_g=yes
 	;;
+        asan)
+        enable_asan=yes
+        ;;
+        ubsan)
+        enable_ubsan=yes
+        ;;
         no|none)
 	;;
 	handlealloc)
@@ -1643,15 +1528,11 @@ for option in $enable_g ; do
 	mutex)
 	perform_dbgmutex=yes
 	;;
-	mutexnesting)
-	perform_mutexnesting=yes
-	;;
         most|yes)
         perform_memtracing=yes
         enable_append_g=yes
         perform_meminit=yes
         perform_dbgmutex=yes
-        perform_mutexnesting=yes
         perform_handlealloc=yes
         perform_handle=yes
         ;;
@@ -1661,7 +1542,6 @@ for option in $enable_g ; do
 	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
-	perform_mutexnesting=yes
 	perform_handlealloc=yes
         perform_handle=yes
 	;;
@@ -1683,6 +1563,29 @@ if test "$enable_append_g" = "yes" ; then
     PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
     PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
+fi
+
+if test "$enable_asan" = "yes" ; then
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[CXXFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[FCFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FFLAGS])
+    PAC_APPEND_FLAG([-O1 -g -fsanitize=address -fno-omit-frame-pointer],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=address],[LDFLAGS])
+fi
+if test "$enable_ubsan" = "yes" ; then
+    PAC_APPEND_FLAG([-fsanitize=undefined],[CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[FFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[WRAPPER_FCFLAGS])
+    PAC_APPEND_FLAG([-fsanitize=undefined],[LDFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
@@ -1740,7 +1643,7 @@ if test "$enable_romio" = "yes" ; then
        # This ought to be sufficient, but there is also a symlink setup in
        # src/include to accomodate current mpicc limitations.  See
        # src/mpi/Makefile.mk for more info.
-       PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
+       PAC_APPEND_FLAG([-I${main_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
 
        # Set environment variables that the romio configure expects
        export use_top_srcdir
@@ -2343,7 +2246,7 @@ if test "$has_fort_real8" = "yes" ; then
     cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
 fi
 fi],
-master_top_srcdir=$master_top_srcdir
+main_top_srcdir=$main_top_srcdir
 enable_f77=$enable_f77
 enable_fc=$enable_fc
 has_exclaim=$has_exclaim
@@ -3034,105 +2937,15 @@ if test "$MPID_NO_FLOAT16" != "yes" ; then
         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
     fi
 fi
+
 # ----------------------------------------------------------------------------
-# Get default structure alignment for integers
-dnl PAC_C_MAX_INTEGER_ALIGN places the default alignment into
-dnl pac_cv_c_max_integer_align, with possible values including
-dnl packed (byte), largest, two, four, eight (or other failure message).
-PAC_C_MAX_INTEGER_ALIGN
+AC_CHECK_ALIGNOF([max_align_t],[0],[#include <stddef.h>])
 
-if test "$pac_cv_c_max_integer_align" = "packed" ; then
-    pac_cv_c_struct_align_nr=1
-elif test "$pac_cv_c_max_integer_align" = "two" ; then
-    pac_cv_c_struct_align_nr=2
-elif test "$pac_cv_c_max_integer_align" = "four" ; then
-    pac_cv_c_struct_align_nr=4
-elif test "$pac_cv_c_max_integer_align" = "eight" ; then
-    pac_cv_c_struct_align_nr=8
-fi
-
-if test -n "$pac_cv_c_struct_align_nr" ; then
-    AC_DEFINE_UNQUOTED(HAVE_MAX_INTEGER_ALIGNMENT,$pac_cv_c_struct_align_nr,[Controls byte alignment of integer structures (for MPI structs)])
-    AC_DEFINE_UNQUOTED(HAVE_MAX_STRUCT_ALIGNMENT,$pac_cv_c_struct_align_nr,[Controls byte alignment of structures (for aligning allocated structures)])
-fi
-# Get default structure alignment for floating point types
-dnl PAC_C_MAX_FP_ALIGN places the default alignment into
-dnl pac_cv_c_max_fp_align, with possible values including
-dnl packed (byte), largest, two, four, eight (or other failure message).
-PAC_C_MAX_FP_ALIGN
-
-if test "$pac_cv_c_max_fp_align" = "packed" ; then
-    pac_cv_c_fp_align_nr=1
-elif test "$pac_cv_c_max_fp_align" = "two" ; then
-    pac_cv_c_fp_align_nr=2
-elif test "$pac_cv_c_max_fp_align" = "four" ; then
-    pac_cv_c_fp_align_nr=4
-elif test "$pac_cv_c_max_fp_align" = "eight" ; then
-    pac_cv_c_fp_align_nr=8
-elif test "$pac_cv_c_max_fp_align" = "sixteen" ; then
-    pac_cv_c_fp_align_nr=16
-elif test "$pac_cv_c_max_fp_align" = "largest" ; then
-    AC_MSG_ERROR([Configure detected unsupported structure alignment rules.])
-fi
-
-if test -n "$pac_cv_c_fp_align_nr" ; then
-    AC_DEFINE_UNQUOTED(HAVE_MAX_FP_ALIGNMENT,$pac_cv_c_fp_align_nr,[Controls byte alignment of structures with floats, doubles, and long doubles (for MPI structs)])
-fi
-
-# Test for the alignment of structs containing only long doubles.
-if test "$pac_cv_have_long_double" = yes ; then
-    # Check for alignment of just float and double (no long doubles)
-    PAC_C_MAX_DOUBLE_FP_ALIGN
-    PAC_C_MAX_LONGDOUBLE_FP_ALIGN
-    # FIXME: If this alignment is not the same as that for all float types,
-    # we need to do something else in the alignment rule code.
-    if test "$pac_cv_c_max_fp_align" != "$pac_cv_c_max_longdouble_fp_align" -o \
-            "$pac_cv_c_max_fp_align" != "$pac_cv_c_max_double_fp_align" ; then
-        AC_MSG_WARN([Structures containing long doubles may be aligned differently from structures with floats or longs.  MPICH does not handle this case automatically and you should avoid assumed extents for structures containing float types.])
-
-	double_align=-1
-	case $pac_cv_c_max_double_fp_align in
-	packed) double_align=1 ;;
-	two)    double_align=2 ;;
-	four)   double_align=4 ;;
-	eight)  double_align=8 ;;
-	esac
-	longdouble_align=-1
-	case $pac_cv_c_max_longdouble_fp_align in
-	packed) longdouble_align=1 ;;
-	two)    longdouble_align=2 ;;
-	four)   longdouble_align=4 ;;
-	eight)  longdouble_align=8 ;;
-	sixteen)longdouble_align=16 ;;
-	esac
-
-	AC_DEFINE_UNQUOTED(HAVE_MAX_DOUBLE_FP_ALIGNMENT,$double_align,[Controls byte alignment of structs with doubles])
-	AC_DEFINE_UNQUOTED(HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT,$longdouble_align,[Controls byte alignment of structs with long doubles])
-    fi
-fi
-
-# Test for weird struct alignment rules that vary padding based on
-# size of leading type only.
-PAC_C_DOUBLE_POS_ALIGN
-if test "$pac_cv_c_double_pos_align" = "yes" ; then
-    AC_DEFINE_UNQUOTED(HAVE_DOUBLE_POS_ALIGNMENT,1,[Controls how alignment is applied based on position of doubles in the structure])
-fi
-
-# Test for same weird issues with long long int.
-PAC_C_LLINT_POS_ALIGN
-if test "$pac_cv_c_llint_pos_align" = "yes" ; then
-   AC_DEFINE_UNQUOTED(HAVE_LLINT_POS_ALIGNMENT,1,[Controls how alignment is applied based on position of long long ints in the structure])
-fi
-
-# Test for double alignment not following all our other carefully constructed rules
-PAC_C_DOUBLE_ALIGNMENT_EXCEPTION
-if test "$pac_cv_c_double_alignment_exception" = "four" ; then
-   AC_DEFINE_UNQUOTED(HAVE_DOUBLE_ALIGNMENT_EXCEPTION,4,[Controls how alignment of doubles is performed, separate from other FP values])
-fi
-
-# Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)
-if test "$host_cpu" = "sparc" ; then
-    AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
+if test "$ac_cv_alignof_max_align_t" != "0" ; then
+    AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_max_align_t,[Controls byte alignment of structures (for aligning allocated structures)])
+else
+    AC_CHECK_ALIGNOF(long double)
+    AC_DEFINE_UNQUOTED(MAX_ALIGNMENT,$ac_cv_alignof_long_double,[Controls byte alignment of structures (for aligning allocated structures)])
 fi
 
 # There are further alignment checks after we test for int64_t etc. below.
@@ -3162,12 +2975,30 @@ AC_CHECK_SIZEOF(wchar_t, 0, [
 #endif
 ])
 
+AC_CHECK_SIZEOF(__float128, 0)
+
 AC_CHECK_SIZEOF(float_int, 0, [typedef struct { float a; int b; } float_int; ])
 AC_CHECK_SIZEOF(double_int, 0, [typedef struct { double a; int b; } double_int; ])
 AC_CHECK_SIZEOF(long_int, 0, [typedef struct { long a; int b; } long_int; ])
 AC_CHECK_SIZEOF(short_int, 0, [typedef struct { short a; int b; } short_int; ])
 AC_CHECK_SIZEOF(two_int, 0, [typedef struct { int a; int b; } two_int; ])
 AC_CHECK_SIZEOF(long_double_int, 0, [typedef struct { long double a; int b;} long_double_int; ])
+
+# alignments for basic types
+AC_CHECK_ALIGNOF(char)
+AC_CHECK_ALIGNOF(float)
+AC_CHECK_ALIGNOF(double)
+AC_CHECK_ALIGNOF(long)
+AC_CHECK_ALIGNOF(long long)
+AC_CHECK_ALIGNOF(long double)
+AC_CHECK_ALIGNOF(short)
+AC_CHECK_ALIGNOF(int)
+AC_CHECK_ALIGNOF(int8_t)
+AC_CHECK_ALIGNOF(int16_t)
+AC_CHECK_ALIGNOF(int32_t)
+AC_CHECK_ALIGNOF(int64_t)
+AC_CHECK_ALIGNOF(bool)
+AC_CHECK_ALIGNOF(wchar_t, 0, [#include <stddef.h>])
 
 # sys/bitypes.h defines the int16_t etc. on some systems (e.g., OSF1).
 # Include it when testing for these types
@@ -3467,7 +3298,11 @@ if test "$ac_cv_sizeof_double" = "8" ; then
     MPI_COMPLEX16="0x4c00102a"
     MPIR_REAL8_CTYPE=double
 fi
-if test "$ac_cv_sizeof_long_double" = "16" -a "$MPID_NO_LONG_DOUBLE" != yes ; then
+if test "$ac_cv_sizeof___float128" = "16" ; then
+    MPI_REAL16="0x4c00102b"
+    MPI_COMPLEX32="0x4c00202c"
+    MPIR_REAL16_CTYPE="__float128"
+elif test "$ac_cv_sizeof_long_double" = "16" -a "$MPID_NO_LONG_DOUBLE" != yes ; then
     MPI_REAL16="0x4c00102b"
     MPI_COMPLEX32="0x4c00202c"
     MPIR_REAL16_CTYPE="long double"
@@ -3631,7 +3466,7 @@ export MPIX_C_FLOAT16
 #
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = yes ; then
-    # Up to size checking code in master configure.ac (where it tries to
+    # Up to size checking code in main configure.ac (where it tries to
     # find the matching C sizes) as part of defining mpi_integer8 etc.
     # The results are available in pac_cv_sizeof_f77_<type>
     # Size is 0 if unknown or unavailable (or cross-compiling)
@@ -4160,7 +3995,7 @@ dnl Removed MPI_2COMPLEX and MPI_2DOUBLE_COMPLEX, leaving comments to explain th
 	# interface (was error)
 	# Check to see if the f77 binding has enabled the code to support
 	# the case of int != fint.
-	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
+	if grep HAVE_FINT_IS_INT $main_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
 	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
 	else
             AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
@@ -4934,7 +4769,7 @@ typedef struct MPIR_Comm MPIR_Comm;
 #include <stdint.h>
 #endif
 
-#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
+#include "${main_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPII_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])

@@ -9,6 +9,7 @@
 #include "posix_impl.h"
 #include "posix_am_impl.h"
 #include "posix_eager.h"
+#include "mpidu_genq.h"
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
@@ -20,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
                                                             size_t iov_num_left, size_t data_sz,
                                                             MPIR_Request * sreq)
 {
-    MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
+    MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ENQUEUE_REQUEST);
@@ -51,18 +52,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, 
     curr_sreq_hdr->iov_num = iov_num_left;
     curr_sreq_hdr->iov_ptr = curr_sreq_hdr->iov;
 
-    /* If we haven't made it through the header yet, make sure we include it in the iovec */
-    if (iov_num_left == 2) {
+    if (iov_num_left == 1 && data_sz > 0) {
+        /* this is the payload */
+        curr_sreq_hdr->iov[0] = iov_left_ptr[0];
+    } else {
+        /* the first iov is am_hdr, now points to curr_sreq_hdr */
         curr_sreq_hdr->iov[0].iov_base = curr_sreq_hdr->am_hdr;
         curr_sreq_hdr->iov[0].iov_len = curr_sreq_hdr->am_hdr_sz;
-
-        curr_sreq_hdr->iov[1] = iov_left_ptr[1];
-    } else if (iov_num_left == 1) {
-        if (data_sz == 0) {
-            curr_sreq_hdr->iov[0].iov_base = curr_sreq_hdr->am_hdr;
-            curr_sreq_hdr->iov[0].iov_len = curr_sreq_hdr->am_hdr_sz;
-        } else {
-            curr_sreq_hdr->iov[0] = iov_left_ptr[0];
+        /* copy the rest */
+        for (int i = 1; i < iov_num_left; i++) {
+            curr_sreq_hdr->iov[i] = iov_left_ptr[i];
         }
     }
 
@@ -98,19 +97,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     MPIDI_POSIX_am_header_t *msg_hdr_p = &msg_hdr;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     const int grank = MPIDIU_rank_to_lpid(rank, comm);
-    struct iovec iov_left[2];
+    struct iovec iov_left[MPIDI_POSIX_MAX_IOV_NUM];
     struct iovec *iov_left_ptr;
     size_t iov_num_left;
-#ifdef POSIX_AM_DEBUG
-    static int seq_num = 0;
-#endif /* POSIX_AM_DEBUG */
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
 
-#ifdef POSIX_AM_DEBUG
-    msg_hdr.seq_num = seq_num++;
-#endif /* POSIX_AM_DEBUG */
+    MPIDI_POSIX_AMREQUEST(sreq, req_hdr) = NULL;
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -148,19 +142,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
 
+    static char padding[MAX_ALIGNMENT]; /* in case we need pad to alignment */
     iov_left[0].iov_base = (void *) am_hdr;
     iov_left[0].iov_len = am_hdr_sz;
-    iov_left[1].iov_base = (void *) send_buf;
-    iov_left[1].iov_len = data_sz;
+    iov_num_left = 1;
+    if (data_sz > 0) {
+        if (am_hdr_sz & (MAX_ALIGNMENT - 1)) {
+            /* need padding to ensure maximum alignment (typically 16 on x86-64) */
+            iov_left[1].iov_base = (void *) padding;
+            iov_left[1].iov_len = MAX_ALIGNMENT - (am_hdr_sz & (MAX_ALIGNMENT - 1));
+            msg_hdr.am_hdr_sz += iov_left[1].iov_len;
+            iov_num_left++;
+        }
+        iov_left[iov_num_left].iov_base = (void *) send_buf;
+        iov_left[iov_num_left].iov_len = data_sz;
+        iov_num_left++;
+    }
 
     iov_left_ptr = iov_left;
-
-    iov_num_left = 2;
-
-    /* If there's no data to send, the second iov can be empty and doesn't need to be transfered. */
-    if (data_sz == 0) {
-        iov_num_left = 1;
-    }
 
     /* If we already have messages in the postponed queue, this one will probably also end up being
      * queued so save some cycles and do it now. */
@@ -172,19 +171,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
 
         goto fn_exit;
     }
-
-    /* pgi compiler can't handle preprocessing within macro argument */
-#ifdef POSIX_AM_DEBUG
-#define _SEQ_NUM msg_hdr_p->seq_num,
-#else
-#define _SEQ_NUM -1
-#endif
-
-    POSIX_TRACE("Direct OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
-                (uint64_t) msg_hdr_p->handler_id,
-                (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz, _SEQ_NUM,
-                ((MPIDIG_hdr_t *) am_hdr)->tag, ((MPIDIG_hdr_t *) am_hdr)->src_rank, grank);
 
     result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
 
@@ -238,11 +224,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
-    if (am_hdr_sz > MPIDI_POSIX_BUF_POOL_SIZE) {
+    if (am_hdr_sz > MPIDI_POSIX_AM_HDR_POOL_CELL_SIZE) {
         am_hdr_buf = (uint8_t *) MPL_malloc(am_hdr_sz, MPL_MEM_SHM);
         is_allocated = 1;
     } else {
-        am_hdr_buf = (uint8_t *) MPIDIU_get_buf(MPIDI_POSIX_global.am_buf_pool);
+        MPIDU_genq_private_pool_alloc_cell(MPIDI_POSIX_global.am_hdr_buf_pool,
+                                           (void **) &am_hdr_buf);
+        MPIR_Assert(am_hdr_buf);
         is_allocated = 0;
     }
 
@@ -250,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     am_hdr_sz = 0;
 
     for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
+        MPIR_Typerep_copy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
         am_hdr_sz += am_hdr[i].iov_len;
     }
 
@@ -260,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
     if (is_allocated)
         MPL_free(am_hdr_buf);
     else
-        MPIDIU_release_buf(am_hdr_buf);
+        MPIDU_genq_private_pool_free_cell(MPIDI_POSIX_global.am_hdr_buf_pool, am_hdr_buf);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
@@ -293,18 +281,20 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
 {
     /* Maximum size that fits in short send */
 
-    size_t max_shortsend = MPIDI_POSIX_DEFAULT_SHORT_SEND_SIZE - (sizeof(MPIDI_POSIX_am_header_t));
+    size_t max_shortsend = MPIDI_POSIX_eager_payload_limit();
 
     /* Maximum payload size representable by MPIDI_POSIX_am_header_t::am_hdr_sz field */
-
-    size_t max_representable = (1 << MPIDI_POSIX_AM_HDR_SZ_BITS) - 1;
-
-    return MPL_MIN(max_shortsend, max_representable);
+    return MPL_MIN(max_shortsend, MPIDI_POSIX_MAX_AM_HDR_SIZE);
 }
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
 {
-    return MPIDI_POSIX_DEFAULT_SHORT_SEND_SIZE - (sizeof(MPIDI_POSIX_am_header_t));
+    return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
+}
+
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_buf_limit(void)
+{
+    return MPIDI_POSIX_eager_buf_limit();
 }
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
@@ -378,13 +368,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                    iov_num_left);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
-
-        POSIX_TRACE("Direct OUT HDR [ POSIX AM HDR [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
-                    ", data_sz %" PRIu64 ", seq_num = %d]] to %d\n",
-                    (uint64_t) msg_hdr_p->handler_id,
-                    (uint64_t) msg_hdr_p->am_hdr_sz, (uint64_t) msg_hdr_p->data_sz,
-                    _SEQ_NUM, grank);
-
         result = MPIDI_POSIX_eager_send(grank, &msg_hdr_p, &iov_left_ptr, &iov_num_left);
         if (unlikely((MPIDI_POSIX_NOK == result) || iov_num_left)) {
             mpi_errno =

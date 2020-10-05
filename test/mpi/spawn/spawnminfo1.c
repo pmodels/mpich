@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(intercomm, &rank);
 
         if (parentcomm == MPI_COMM_NULL) {
-            /* Master */
+            /* Parent */
             if (rsize != sumnp) {
                 errs++;
                 printf("Did not create %d processes (got %d)\n", sumnp, rsize);
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
             /* Send our notion of the current directory to the parent */
             MPI_Send(curdir, strlen(curdir) + 1, MPI_CHAR, 0, 2, intercomm);
 
-            /* Send the errs back to the master process */
+            /* Send the errs back to the parent process */
             MPI_Ssend(&errs, 1, MPI_INT, 0, 1, intercomm);
         }
 

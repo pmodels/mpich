@@ -1,16 +1,19 @@
 contents 1
 gaddress 1
 lbub 1
+lbub_oldapi 1 strict=FALSE
 localpack 1
 simple_pack 1
 simple_pack_external 1
 simple_pack_external2 1
 transpose_pack 1
+transpose_pack_oldapi 1 strict=FALSE
 slice_pack 1
 struct_pack 1
 structpack2 1
 typecommit 1
 typename 1
+typename_oldapi 1 strict=FALSE
 typefree 1
 zeroparms 1
 concurrent_irecv 3
@@ -27,6 +30,7 @@ struct_zero_count 1
 blockindexed_zero_count 1
 blockindexed_misc 1
 indexed_misc 1
+indexed_misc_oldapi 1 strict=FALSE
 subarray_pack 1
 subarray 2
 darray_pack 1
@@ -36,7 +40,8 @@ darray_cyclic 12
 pairtype_size_extent 1
 simple_commit 1
 simple_size_extent 1
-struct_no_real_types 1
+simple_size_extent_oldapi 1 strict=FALSE
+struct_no_real_types 1 strict=FALSE
 struct_empty_el 1
 contig_zero_count 1
 simple_resized 1
@@ -50,16 +55,16 @@ zeroblks 1
 struct_derived_zeros 1
 struct_verydeep 1
 get_elements 1
-hindexed_block 1 mpiversion=3.0
-hindexed_block_contents 1 mpiversion=3.0
+hindexed_block 1
+hindexed_block_contents 1
 vecblklen 1
 hvecblklen 1
 longdouble 1
 dataalign 2
-@largetest@large_count 1 mpiversion=3.0
-cxx_types 1 mpiversion=3.0
-@largetest@large_type 1 mpiversion=3.0
-@largetest@large_type_sendrec 2 arg=31 mpiversion=3.0 mem=4.3
-@largetest@large_type_sendrec 2 arg=32 mpiversion=3.0 timeLimit=360 mem=8.6
-@largetest@large_type_sendrec 2 arg=33 mpiversion=3.0 timeLimit=360 mem=17.2
-@largetest@large_vec 3 mpiversion=3.0 mem=9.8
+@largetest@large_count 1
+cxx_types 1
+@largetest@large_type 1
+@largetest@large_type_sendrec 2 arg=31 mem=4.3
+@largetest@large_type_sendrec 2 arg=32 timeLimit=360 mem=8.6
+@largetest@large_type_sendrec 2 arg=33 timeLimit=360 mem=17.2
+@largetest@large_vec 3 mem=9.8

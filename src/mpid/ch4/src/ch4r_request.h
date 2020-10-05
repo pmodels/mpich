@@ -7,9 +7,10 @@
 #define CH4R_REQUEST_H_INCLUDED
 
 #include "ch4_types.h"
-#include "ch4r_buf.h"
+#include "mpidu_genq.h"
 
-static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int ref_count)
+MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind,
+                                                             int ref_count)
 {
     MPIR_Request *req;
     int i;
@@ -17,7 +18,7 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_REQUEST_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_REQUEST_CREATE);
 
-    req = MPIR_Request_create(kind, 0);
+    req = MPIR_Request_create_from_pool(kind, 0);
     if (req == NULL)
         goto fn_fail;
 
@@ -38,8 +39,9 @@ static inline MPIR_Request *MPIDIG_request_create(MPIR_Request_kind_t kind, int 
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_BUF_POOL_SZ);
-    MPIDIG_REQUEST(req, req) = (MPIDIG_req_ext_t *) MPIDIU_get_buf(MPIDI_global.buf_pool);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_REQUEST_POOL_CELL_SIZE);
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.request_pool,
+                                       (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 
@@ -65,8 +67,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
     MPIDI_SHM_am_request_init(req);
 #endif
 
-    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_BUF_POOL_SZ);
-    MPIDIG_REQUEST(req, req) = (MPIDIG_req_ext_t *) MPIDIU_get_buf(MPIDI_global.buf_pool);
+    MPL_COMPILE_TIME_ASSERT(sizeof(MPIDIG_req_ext_t) <= MPIDIU_REQUEST_POOL_CELL_SIZE);
+    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.request_pool,
+                                       (void **) &MPIDIG_REQUEST(req, req));
     MPIR_Assert(MPIDIG_REQUEST(req, req));
     MPIDIG_REQUEST(req, req->status) = 0;
 
@@ -82,7 +85,12 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDIG_request_init(MPIR_Request * req,
  * At matching time, we cancel one of them (but not freed).
  * At completion time, we complete and free both.
  */
-static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
+/* Thread-safety: MPIDI_anysrc_try_cancel_partner need be called inside the correct
+ * critical section, as both MPIDI_NM_mpi_cancel_recv and MPIDI_SHM_mpi_cancel_recv
+ * are unsafe. This assumes netmod, shmmod and am share the same vci. If that changes,
+ * here we need be called outside lock and shift the lock responsibility into netmod,
+ * shmmod, and am */
+MPL_STATIC_INLINE_PREFIX int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_cancelled)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -108,7 +116,7 @@ static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_c
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
                     MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
                     /* cancel freed it once, freed once more on behalf of mpi-layer */
-                    MPIR_Request_free(anysrc_partner);
+                    MPIR_Request_free_unsafe(anysrc_partner);
                 }
             } else {
                 /* NM, cancel SHM partner */
@@ -132,7 +140,7 @@ static inline int MPIDI_anysrc_try_cancel_partner(MPIR_Request * rreq, int *is_c
     goto fn_exit;
 }
 
-static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
 {
     MPIR_Request *anysrc_partner = MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq);
     if (unlikely(anysrc_partner)) {
@@ -140,14 +148,14 @@ static inline void MPIDI_anysrc_free_partner(MPIR_Request * rreq)
             /* NM, complete and free SHM partner */
             MPIDI_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
             MPIDI_REQUEST_ANYSOURCE_PARTNER(anysrc_partner) = NULL;
-            MPID_Request_complete(anysrc_partner);
             /* copy status to SHM partner */
             anysrc_partner->status = rreq->status;
+            MPID_Request_complete(anysrc_partner);
             /* free NM request on behalf of mpi-layer
              * final free for NM request happen at call-site MPID_Request_complete
              * final free for SHM partner happen at mpi-layer
              */
-            MPIR_Request_free(rreq);
+            MPIR_Request_free_unsafe(rreq);
         } else {
             /* SHM, NM partner should already been freed (this branch can't happen) */
             MPIR_Assert(0);

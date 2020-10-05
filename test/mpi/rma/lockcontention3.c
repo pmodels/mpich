@@ -54,7 +54,7 @@ int longcount = 512;
 int medcount = 127;
 int mednum = 4;
 
-void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *getbuf,
+void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
              int getbufsize);
 int RMACheck(int i, int *buf, MPI_Aint bufsize);
 int RMACheckGet(int i, MPI_Win win, int *getbuf, MPI_Aint getsize);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     MPI_Win win;
     int *rmabuffer = 0, *getbuf = 0;
     MPI_Aint bufsize = 0, getbufsize = 0;
-    int master, partner, next, wrank, wsize, i;
+    int primary, partner, next, wrank, wsize, i;
     int ntest = LAST_TEST;
     int *srcbuf;
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    master = 0;
+    primary = 0;
     partner = 1;
     next = wrank + 1;
     if (next == partner)
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
     /* Create the RMA window */
     bufsize = 0;
-    if (wrank == master) {
+    if (wrank == primary) {
         bufsize = RMA_SIZE;
         MPI_Alloc_mem(bufsize * sizeof(int), MPI_INFO_NULL, &rmabuffer);
     } else if (wrank == partner) {
@@ -128,25 +128,25 @@ int main(int argc, char *argv[])
 
     /* Run a sequence of tests */
     for (i = 0; i <= ntest; i++) {
-        if (wrank == master) {
+        if (wrank == primary) {
             MTestPrintfMsg(0, "Test %d\n", i);
             /* Because this lock is local, it must return only when the
              * lock is acquired */
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, master, win);
+            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, primary, win);
             RMATestInit(i, rmabuffer, bufsize);
             MPI_Send(MPI_BOTTOM, 0, MPI_INT, partner, i, MPI_COMM_WORLD);
             MPI_Send(MPI_BOTTOM, 0, MPI_INT, next, i, MPI_COMM_WORLD);
             MPI_Recv(MPI_BOTTOM, 0, MPI_INT, MPI_ANY_SOURCE, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Win_unlock(master, win);
+            MPI_Win_unlock(primary, win);
             MPI_Recv(MPI_BOTTOM, 0, MPI_INT, partner, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             errs += RMACheck(i, rmabuffer, bufsize);
         } else if (wrank == partner) {
-            MPI_Recv(MPI_BOTTOM, 0, MPI_INT, master, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, master, win);
-            RMATest(i, win, master, srcbuf, RMA_SIZE, getbuf, getbufsize);
-            MPI_Win_unlock(master, win);
+            MPI_Recv(MPI_BOTTOM, 0, MPI_INT, primary, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, primary, win);
+            RMATest(i, win, primary, srcbuf, RMA_SIZE, getbuf, getbufsize);
+            MPI_Win_unlock(primary, win);
             errs += RMACheckGet(i, win, getbuf, getbufsize);
-            MPI_Send(MPI_BOTTOM, 0, MPI_INT, master, i, MPI_COMM_WORLD);
+            MPI_Send(MPI_BOTTOM, 0, MPI_INT, primary, i, MPI_COMM_WORLD);
         } else {
             MPI_Recv(MPI_BOTTOM, 0, MPI_INT, MPI_ANY_SOURCE, i, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Send(MPI_BOTTOM, 0, MPI_INT, next, i, MPI_COMM_WORLD);
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
  *
  * The srcbuf must be passed in because the buffer must remain valid
  * until the subsequent unlock call. */
-void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *getbuf,
+void RMATest(int i, MPI_Win win, int primary, int *srcbuf, int srcbufsize, int *getbuf,
              int getbufsize)
 {
     int j, k;
@@ -184,40 +184,40 @@ void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *g
     switch (i) {
         case 0:        /* Single short put (1 word at OFFSET_1) */
             source[0] = PUT_VAL;
-            MPI_Put(source, 1, MPI_INT, master, OFFSET_1, 1, MPI_INT, win);
+            MPI_Put(source, 1, MPI_INT, primary, OFFSET_1, 1, MPI_INT, win);
             break;
         case 1:        /* Single short accumulate (1 word of value 17 at OFFSET_2) */
             source[0] = ACC_VAL;
-            MPI_Accumulate(source, 1, MPI_INT, master, OFFSET_2, 1, MPI_INT, MPI_SUM, win);
+            MPI_Accumulate(source, 1, MPI_INT, primary, OFFSET_2, 1, MPI_INT, MPI_SUM, win);
             break;
         case 2:        /* Single short get (1 word at OFFSET_3) */
             getbuf[0] = -1;
-            MPI_Get(getbuf, 1, MPI_INT, master, OFFSET_3, 1, MPI_INT, win);
+            MPI_Get(getbuf, 1, MPI_INT, primary, OFFSET_3, 1, MPI_INT, win);
             break;
         case 3:        /* Datatype single put (strided put) */
             for (j = 0; j < veccount; j++) {
                 source[j * stride] = PUT_VAL + j;
             }
-            MPI_Put(source, 1, vectype, master, OFFSET_1, 1, vectype, win);
+            MPI_Put(source, 1, vectype, primary, OFFSET_1, 1, vectype, win);
             break;
         case 4:        /* Datatype single accumulate (strided acc) */
             for (j = 0; j < veccount; j++) {
                 source[j * stride] = ACC_VAL + j;
             }
-            MPI_Accumulate(source, 1, vectype, master, OFFSET_2, 1, vectype, MPI_SUM, win);
+            MPI_Accumulate(source, 1, vectype, primary, OFFSET_2, 1, vectype, MPI_SUM, win);
             break;
         case 5:        /* Datatype single get (strided get) */
             for (j = 0; j < veccount; j++) {
                 getbuf[j] = -j;
             }
-            MPI_Get(getbuf, 1, vectype, master, OFFSET_3, 1, vectype, win);
+            MPI_Get(getbuf, 1, vectype, primary, OFFSET_3, 1, vectype, win);
             break;
         case 6:        /* a few small puts (like strided put, but 1 word at a time) */
             for (j = 0; j < veccount; j++) {
                 source[j * stride] = PUT_VAL + j;
             }
             for (j = 0; j < veccount; j++) {
-                MPI_Put(source + j * stride, 1, MPI_INT, master,
+                MPI_Put(source + j * stride, 1, MPI_INT, primary,
                         OFFSET_1 + j * stride, 1, MPI_INT, win);
             }
             break;
@@ -226,7 +226,7 @@ void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *g
                 source[j * stride] = ACC_VAL + j;
             }
             for (j = 0; j < veccount; j++) {
-                MPI_Accumulate(source + j * stride, 1, MPI_INT, master,
+                MPI_Accumulate(source + j * stride, 1, MPI_INT, primary,
                                OFFSET_2 + j * stride, 1, MPI_INT, MPI_SUM, win);
             }
             break;
@@ -235,32 +235,32 @@ void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *g
                 getbuf[j * stride] = -j;
             }
             for (j = 0; j < veccount; j++) {
-                MPI_Get(getbuf + j * stride, 1, MPI_INT, master,
+                MPI_Get(getbuf + j * stride, 1, MPI_INT, primary,
                         OFFSET_3 + j * stride, 1, MPI_INT, win);
             }
             break;
         case 9:        /* Single long put (OFFSET_1) */
             for (j = 0; j < longcount; j++)
                 source[j] = j;
-            MPI_Put(source, longcount, MPI_INT, master, OFFSET_1, longcount, MPI_INT, win);
+            MPI_Put(source, longcount, MPI_INT, primary, OFFSET_1, longcount, MPI_INT, win);
             break;
         case 10:       /* Single long accumulate (OFFSET_2) */
             for (j = 0; j < longcount; j++)
                 source[j] = j;
-            MPI_Accumulate(source, longcount, MPI_INT, master,
+            MPI_Accumulate(source, longcount, MPI_INT, primary,
                            OFFSET_2, longcount, MPI_INT, MPI_SUM, win);
             break;
         case 11:       /* Single long get (OFFSET_3) */
             for (j = 0; j < longcount; j++)
                 getbuf[j] = -j;
-            MPI_Get(getbuf, longcount, MPI_INT, master, OFFSET_3, longcount, MPI_INT, win);
+            MPI_Get(getbuf, longcount, MPI_INT, primary, OFFSET_3, longcount, MPI_INT, win);
             break;
         case 12:       /* a few long puts (start at OFFSET_1, medcount) */
             for (j = 0; j < mednum; j++) {
                 for (k = 0; k < medcount; k++) {
                     source[j * medcount + k] = j * 2 * medcount + k;
                 }
-                MPI_Put(source + j * medcount, medcount, MPI_INT, master,
+                MPI_Put(source + j * medcount, medcount, MPI_INT, primary,
                         OFFSET_1 + j * 2 * medcount, medcount, MPI_INT, win);
             }
             break;
@@ -269,7 +269,7 @@ void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *g
                 for (k = 0; k < medcount; k++) {
                     source[j * medcount + k] = ACC_VAL + j * 2 * medcount + k;
                 }
-                MPI_Accumulate(source + j * medcount, medcount, MPI_INT, master,
+                MPI_Accumulate(source + j * medcount, medcount, MPI_INT, primary,
                                OFFSET_2 + j * 2 * medcount, medcount, MPI_INT, MPI_SUM, win);
             }
             break;
@@ -278,7 +278,7 @@ void RMATest(int i, MPI_Win win, int master, int *srcbuf, int srcbufsize, int *g
                 for (k = 0; k < medcount; k++) {
                     getbuf[j * medcount + k] = -(j * medcount + k);
                 }
-                MPI_Get(getbuf + j * medcount, medcount, MPI_INT, master,
+                MPI_Get(getbuf + j * medcount, medcount, MPI_INT, primary,
                         OFFSET_3 + j * 2 * medcount, medcount, MPI_INT, win);
             }
             break;

@@ -6,8 +6,6 @@
 #ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
 #define MPIDU_THREAD_FALLBACK_H_INCLUDED
 
-#include "opa_primitives.h"
-
 /* some important critical section names:
  *   GLOBAL - entered/exited at beginning/end of (nearly) every MPI_ function
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
@@ -92,20 +90,51 @@ M*/
 
 M*/
 
+/*M MPIDU_THREAD_ASSERT_IN_CS - Assert whether the code is inside a critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+
+M*/
+
 #if defined(MPICH_IS_THREADED)
 #define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
 #define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
+#define MPIDU_THREAD_ASSERT_IN_CS(name, mutex) MPIDUI_THREAD_ASSERT_IN_CS_##name(mutex)
 
 #else
 #define MPIDU_THREAD_CS_ENTER(name, mutex)      /* NOOP */
 #define MPIDU_THREAD_CS_EXIT(name, mutex)       /* NOOP */
 #define MPIDU_THREAD_CS_YIELD(name, mutex)      /* NOOP */
+#define MPIDU_THREAD_ASSERT_IN_CS(name, mutex)  /* NOOP */
 
 #endif
 
 /* ***************************************** */
 #if defined(MPICH_IS_THREADED)
+
+#define MPIDUI_THREAD_CS_ENTER_REC(mutex)                               \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int equal_ = 0;                                             \
+            MPL_thread_id_t self_, owner_;                              \
+            MPL_thread_self(&self_);                                    \
+            owner_ = mutex.owner;                                       \
+            MPL_thread_same(&self_, &owner_, &equal_);                  \
+            if (!equal_) {                                              \
+                int err_ = 0;                                           \
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+                MPIDU_Thread_mutex_lock(&mutex, &err_, MPL_THREAD_PRIO_HIGH);\
+                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
+                MPIR_Assert(err_ == 0);                                 \
+                MPIR_Assert(mutex.count == 0);                          \
+                MPL_thread_self(&mutex.owner);                          \
+            }                                                           \
+            mutex.count++;                                              \
+        }                                                               \
+    } while (0)
 
 #define MPIDUI_THREAD_CS_ENTER(mutex)                                   \
     do {                                                                \
@@ -153,13 +182,26 @@ M*/
             MPL_thread_id_t self_;                                      \
             MPL_thread_self(&self_);                                    \
             MPL_thread_same(&self_, &mutex.owner, &equal_);             \
-            if (equal_ && mutex.count > 0) {                            \
-                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield %p", &mutex); \
-                MPIDU_Thread_yield(&mutex, &err_);                          \
-                MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield %p", &mutex); \
-                MPIR_Assert(err_ == 0);                                 \
-            }                                                           \
+            MPIR_Assert(equal_ && mutex.count > 0);                     \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield %p", &mutex); \
+            MPIDU_Thread_yield(&mutex, &err_);                          \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield %p", &mutex); \
+            MPIR_Assert(err_ == 0);                                     \
         }                                                               \
+    } while (0)
+
+/* debug macros */
+
+/* NOTE this macro is only available with VCI granularity */
+#define MPIDUI_THREAD_ASSERT_IN_CS(mutex) \
+    do { \
+        if (MPIR_ThreadInfo.isThreaded) {  \
+            int equal_ = 0;                                             \
+            MPL_thread_id_t self_;                                      \
+            MPL_thread_self(&self_);                                    \
+            MPL_thread_same(&self_, &mutex.owner, &equal_);             \
+            MPIR_Assert(equal_ && mutex.count >= 1); \
+        } \
     } while (0)
 
 /* MPICH_THREAD_GRANULARITY (set via `--enable-thread-cs=...`) activates one set of locks */
@@ -191,10 +233,12 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex) MPIDUI_THREAD_CS_ENTER(mutex)
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex) MPIDUI_THREAD_CS_EXIT(mutex)
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex) MPIDUI_THREAD_CS_YIELD(mutex)
+#define MPIDUI_THREAD_ASSERT_IN_CS_VCI(mutex) MPIDUI_THREAD_ASSERT_IN_CS(mutex)
 #else
 #define MPIDUI_THREAD_CS_ENTER_VCI(mutex)       /* NOOP */
 #define MPIDUI_THREAD_CS_EXIT_VCI(mutex)        /* NOOP */
 #define MPIDUI_THREAD_CS_YIELD_VCI(mutex)       /* NOOP */
+#define MPIDUI_THREAD_ASSERT_IN_CS_VCI(mutex)   /* NOOP */
 #endif
 
 #endif /* MPICH_IS_THREADED */

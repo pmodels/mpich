@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     ierr = MTest_Reduce(&a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (ierr == MPI_SUCCESS) {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

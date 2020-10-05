@@ -101,7 +101,7 @@ int indexed_zeroblock_first_test(void)
     MPI_Datatype type;
     int len[3] = { 0, 1, 1 };
     int disp[3] = { 0, 1, 4 };
-    MPI_Aint lb, ub;
+    MPI_Aint lb, ub, extent;
 
     err = MPI_Type_indexed(3, len, disp, MPI_INT, &type);
     if (err != MPI_SUCCESS) {
@@ -111,14 +111,14 @@ int indexed_zeroblock_first_test(void)
         errs += 1;
     }
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     if (lb != sizeof(int)) {
         if (verbose) {
             fprintf(stderr, "lb mismatch; is %d, should be %d\n", (int) lb, (int) sizeof(int));
         }
         errs++;
     }
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     if (ub != 5 * sizeof(int)) {
         if (verbose) {
             fprintf(stderr,
@@ -139,7 +139,7 @@ int indexed_zeroblock_middle_test(void)
     MPI_Datatype type;
     int len[3] = { 1, 0, 1 };
     int disp[3] = { 1, 2, 4 };
-    MPI_Aint lb, ub;
+    MPI_Aint lb, ub, extent;
 
     err = MPI_Type_indexed(3, len, disp, MPI_INT, &type);
     if (err != MPI_SUCCESS) {
@@ -149,14 +149,14 @@ int indexed_zeroblock_middle_test(void)
         errs += 1;
     }
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     if (lb != sizeof(int)) {
         if (verbose) {
             fprintf(stderr, "lb mismatch; is %d, should be %d\n", (int) lb, (int) sizeof(int));
         }
         errs++;
     }
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     if (ub != 5 * sizeof(int)) {
         if (verbose) {
             fprintf(stderr,
@@ -177,7 +177,7 @@ int indexed_zeroblock_last_test(void)
     MPI_Datatype type;
     int len[3] = { 1, 1, 0 };
     int disp[3] = { 1, 4, 8 };
-    MPI_Aint lb, ub;
+    MPI_Aint lb, ub, extent;
 
     err = MPI_Type_indexed(3, len, disp, MPI_INT, &type);
     if (err != MPI_SUCCESS) {
@@ -187,14 +187,14 @@ int indexed_zeroblock_last_test(void)
         errs += 1;
     }
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     if (lb != sizeof(int)) {
         if (verbose) {
             fprintf(stderr, "lb mismatch; is %d, should be %d\n", (int) lb, (int) sizeof(int));
         }
         errs++;
     }
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     if (ub != 5 * sizeof(int)) {
         if (verbose) {
             fprintf(stderr,
@@ -313,7 +313,7 @@ int indexed_contig_leading_zero_test(void)
     int len[3] = { 0, 4, 0 };
     int disp[3] = { INT_MAX, 2, INT_MAX };
     MPI_Aint adisp[3];
-    MPI_Aint lb, ub;
+    MPI_Aint lb, ub, extent;
     int *buf = NULL;
 
     err = MPI_Type_indexed(3, len, disp, MPI_INT, &type);
@@ -321,9 +321,9 @@ int indexed_contig_leading_zero_test(void)
     err = MPI_Type_commit(&type);
     check_err(err, "committing indexed type in indexed_contig_leading_zero_test()");
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     check(lb == 2 * sizeof(int));
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     check(ub == 6 * sizeof(int));
 
     /* make sure packing/unpacking works (hits a simple "is_contig" case in
@@ -404,15 +404,15 @@ int indexed_contig_leading_zero_test(void)
         adisp[2] = (MPI_Aint) INT_MAX;
     }
 
-    err = MPI_Type_hindexed(3, len, adisp, MPI_INT, &type);
+    err = MPI_Type_create_hindexed(3, len, adisp, MPI_INT, &type);
     check_err(err, "creating hindexed type in indexed_contig_leading_zero_test()");
 
     err = MPI_Type_commit(&type);
     check_err(err, "committing hindexed type in indexed_contig_leading_zero_test()");
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     check(lb == 2 * sizeof(int));
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     check(ub == 6 * sizeof(int));
 
     buf = malloc(10 * sizeof(int));
@@ -489,7 +489,7 @@ int indexed_same_lengths(void)
     int len[4];
     int disp[4];
     MPI_Aint adisp[4];
-    MPI_Aint lb, ub;
+    MPI_Aint lb, ub, extent;
     int *buf = NULL;
 
     len[0] = 0;
@@ -507,9 +507,9 @@ int indexed_same_lengths(void)
     err = MPI_Type_commit(&type);
     check_err(err, "committing indexed type in indexed_same_lengths()");
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     check(lb == 1 * sizeof(int));
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     check(ub == 9 * sizeof(int));
 
     buf = malloc(10 * sizeof(int));
@@ -543,14 +543,14 @@ int indexed_same_lengths(void)
     adisp[2] = 3 * sizeof(int);
     adisp[3] = 8 * sizeof(int);
 
-    err = MPI_Type_hindexed(4, len, adisp, MPI_INT, &type);
+    err = MPI_Type_create_hindexed(4, len, adisp, MPI_INT, &type);
     check_err(err, "creating hindexed type in indexed_same_lengths()");
     err = MPI_Type_commit(&type);
     check_err(err, "committing hindexed type in indexed_same_lengths()");
 
-    MPI_Type_lb(type, &lb);
+    MPI_Type_get_extent(type, &lb, &extent);
     check(lb == 1 * sizeof(int));
-    MPI_Type_ub(type, &ub);
+    ub = lb + extent;
     check(ub == 9 * sizeof(int));
 
     buf = malloc(10 * sizeof(int));

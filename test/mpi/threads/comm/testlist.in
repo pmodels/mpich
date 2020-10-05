@@ -1,11 +1,12 @@
 ctxdup 4
-dup_leak_test 2
+dup_leak_test 2 arg=-iter=12345
+dup_leak_test 2 arg=-iter=1234
 comm_dup_deadlock 4
 comm_create_threads 4
-comm_create_group_threads 4 mpiversion=3.0
-comm_create_group_threads2 4 mpiversion=3.0
-@comm_overlap@idup_deadlock 4 mpiversion=3.0
-@comm_overlap@comm_idup 4 mpiversion=3.0
-@comm_overlap@ctxidup 4 mpiversion=3.0
-@comm_overlap@idup_nb 4 mpiversion=3.0
-@comm_overlap@idup_comm_gen 4 mpiversion=3.0
+comm_create_group_threads 4
+comm_create_group_threads2 4
+@comm_overlap@idup_deadlock 4
+@comm_overlap@comm_idup 4
+@comm_overlap@ctxidup 4
+@comm_overlap@idup_nb 4
+@comm_overlap@idup_comm_gen 4

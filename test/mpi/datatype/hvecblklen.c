@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
      * tiling the target memory with copies of old type.  This is not
      * a contiguous copy since oldtype has a gap at the end.
      */
-    MPI_Type_hvector(veccount, stride, stride * 64, ot2, &newtype);
+    MPI_Type_create_hvector(veccount, stride, stride * 64, ot2, &newtype);
     MPI_Type_commit(&newtype);
 
     insize = veccount * stride * 64;

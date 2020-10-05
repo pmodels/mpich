@@ -32,14 +32,7 @@ typedef struct memory_list {
 static memory_list_t *memory_head = NULL;
 static memory_list_t *memory_tail = NULL;
 
-static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank);
-
-typedef struct asym_check_region {
-    void *base_ptr;
-    OPA_int_t is_asym;
-} asym_check_region;
-
-static asym_check_region *asym_check_region_p = NULL;
+static int check_alloc(MPIDU_shm_seg_t * memory);
 
 /* MPIDU_Init_shm_alloc(len, ptr_p)
 
@@ -62,9 +55,6 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_INIT_SHM_ALLOC);
 
     MPIR_Assert(segment_len > 0);
-
-    /* allocate an area to check if the segment was allocated symmetrically */
-    segment_len += sizeof(asym_check_region);
 
     MPIR_CHKPMEM_MALLOC(memory, MPIDU_shm_seg_t *, sizeof(*memory), mpi_errno, "memory_handle",
                         MPL_MEM_OTHER);
@@ -89,7 +79,7 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
         current_addr =
             (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 0;
+        memory->symmetrical = 1;
     } else {
         if (local_rank == 0) {
             /* root prepare shm segment */
@@ -126,15 +116,14 @@ int MPIDU_Init_shm_alloc(size_t len, void **ptr)
         }
         current_addr = memory->base_addr;
         memory->symmetrical = 0;
+
+        mpi_errno = check_alloc(memory);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
     /* assign sections of the shared memory segment to their pointers */
 
     *ptr = current_addr;
-    asym_check_region_p = (asym_check_region *) ((char *) current_addr + len);
-
-    mpi_errno = check_alloc(memory, local_rank);
-    MPIR_ERR_CHECK(mpi_errno);
 
     memory_node->ptr = *ptr;
     memory_node->memory = memory;
@@ -211,31 +200,42 @@ int MPIDU_Init_shm_is_symm(void *ptr)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-static int check_alloc(MPIDU_shm_seg_t * memory, int local_rank)
+static int check_alloc(MPIDU_shm_seg_t * memory)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_ALLOC);
+    int is_sym;
+    void *baseaddr;
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_ALLOC);
 
     if (MPIR_Process.local_rank == 0) {
-        asym_check_region_p->base_ptr = memory->base_addr;
-        OPA_store_int(&asym_check_region_p->is_asym, 0);
+        MPIDU_Init_shm_put(memory->base_addr, sizeof(void *));
     }
 
     MPIDU_Init_shm_barrier();
 
-    if (asym_check_region_p->base_ptr != memory->base_addr)
-        OPA_store_int(&asym_check_region_p->is_asym, 1);
+    MPIDU_Init_shm_get(0, sizeof(void *), &baseaddr);
 
-    OPA_read_write_barrier();
+    if (baseaddr == memory->base_addr) {
+        is_sym = 1;
+        MPIDU_Init_shm_put(&is_sym, sizeof(int));
+    } else {
+        is_sym = 0;
+        MPIDU_Init_shm_put(&is_sym, sizeof(int));
+    }
 
     MPIDU_Init_shm_barrier();
 
-    if (OPA_load_int(&asym_check_region_p->is_asym)) {
-        memory->symmetrical = 0;
-    } else {
+    for (int i = 0; i < MPIR_Process.local_size; i++) {
+        MPIDU_Init_shm_get(i, sizeof(int), &is_sym);
+        if (is_sym == 0)
+            break;
+    }
+
+    if (is_sym) {
         memory->symmetrical = 1;
+    } else {
+        memory->symmetrical = 0;
     }
 
   fn_exit:

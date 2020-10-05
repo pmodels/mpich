@@ -64,14 +64,14 @@ if test -z "$mpich_top_srcdir" ; then
 fi
 AC_SUBST(mpich_top_srcdir)
 
-# these (in particular master_top_srcdir) are needed to regenerate
+# these (in particular main_top_srcdir) are needed to regenerate
 # the f90 files from the f77 files
-AC_ARG_VAR([master_top_builddir],[path to the MPICH top-level build directory (if present)])
-AC_ARG_VAR([master_top_srcdir],[path to the MPICH top-level source directory (if present)])
+AC_ARG_VAR([main_top_builddir],[path to the MPICH top-level build directory (if present)])
+AC_ARG_VAR([main_top_srcdir],[path to the MPICH top-level source directory (if present)])
 
-# Ensure that master_top_srcdir is set if maintainer mode for is set, 
+# Ensure that main_top_srcdir is set if maintainer mode for is set,
 # since some of the Makefile targets require it.
-if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
+if test "X$main_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir   
     else
@@ -86,9 +86,9 @@ if test "X$master_top_srcdir" = "X" -a "$USE_MAINTAINER_MODE" = "yes" ; then
     esac
     # Now, see if we can find the f77tof90 routine
     if test -x $use_top_srcdir/maint/f77tof90 ; then
-        master_top_srcdir=$use_top_srcdir
+        main_top_srcdir=$use_top_srcdir
     else 
-        AC_MSG_ERROR([Unable to find master source file - reconfigure using --disable-maintainer_mode])
+        AC_MSG_ERROR([Unable to find main source file - reconfigure using --disable-maintainer_mode])
     fi
 fi
 
@@ -195,8 +195,8 @@ AC_ARG_ENABLE(large-tests,
 
 AC_ARG_ENABLE(ft-tests,
 	[AC_HELP_STRING([--enable-ft-tests],
-		[Include tests for fault tolerance (default)])],,
-	[enable_ft_tests=yes])
+		[Include tests for fault tolerance (default no)])],,
+	[enable_ft_tests=no])
 
 AC_ARG_ENABLE(comm-overlap-tests,
 	[AC_HELP_STRING([--enable-comm-overlap-tests],
@@ -250,6 +250,11 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
+AC_ARG_ENABLE(gpu-tests-only,
+        [AC_HELP_STRING([--enable-gpu-tests-only],
+                [Run only GPU tests])],,
+        [enable_gpu_tests_only=no])
+
 # DTPools test generation
 AC_ARG_WITH(dtpools-datatypes,
     [AC_HELP_STRING([--with-dtpools-datatypes=typelist],
@@ -262,6 +267,7 @@ AC_ARG_WITH(dtpools-datatypes,
 dtp_args="--with-dtpools-datatypes=${with_dtpools_datatypes}"
 
 AC_CONFIG_COMMANDS([gentests],[$srcdir/maint/gentests_dtp.sh $dtp_args],[dtp_args="$dtp_args"])
+AC_CONFIG_COMMANDS([gputests],[$srcdir/maint/generate_gpu_tests.sh])
 #Test collectives algorithms with CVARs
 AC_CONFIG_COMMANDS([collcvartests],[$srcdir/maint/test_coll_algos.sh])
 
@@ -635,7 +641,7 @@ AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
-# Note that some versions of autoconf will insist that the compiler 
+# Note that some versions of autoconf will insist that the compiler
 # produce executables at this point, which is why we must do something
 # special for building within MPICH
 
@@ -716,6 +722,75 @@ AC_TYPE_UINT64_T
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 AC_CHECK_SIZEOF(void *,8)
+
+# Start of GPU libs check
+have_gpu="no"
+PAC_PUSH_FLAG([CPPFLAGS])
+PAC_PUSH_FLAG([LDFLAGS])
+PAC_PUSH_FLAG([LIBS])
+
+# Check CUDA availability
+PAC_SET_HEADER_LIB_PATH([cuda])
+PAC_CHECK_HEADER_LIB([cuda_runtime_api.h],[cudart],[cudaStreamSynchronize],[have_cuda=yes],[have_cuda=no])
+cuda_CPPFLAGS=""
+cuda_LDFLAGS=""
+cuda_LIBS=""
+if test "X${have_cuda}" = "Xyes" ; then
+    AC_DEFINE([HAVE_CUDA],[1],[Define if CUDA is available])
+    have_gpu="yes"
+    if test -n "${with_cuda}" ; then
+        cuda_CPPFLAGS="-I${with_cuda}/include"
+        if test -d ${with_cuda}/lib64 ; then
+            cuda_LDFLAGS="-L${with_cuda}/lib64 -L${with_cuda}/lib"
+        else
+            cuda_LDFLAGS="-L${with_cuda}/lib"
+        fi
+        cuda_LIBS="-lcudart"
+    fi
+fi
+AM_CONDITIONAL([HAVE_CUDA],[test "X${have_cuda}" = "Xyes"])
+AC_SUBST([cuda_CPPFLAGS])
+AC_SUBST([cuda_LDFLAGS])
+AC_SUBST([cuda_LIBS])
+
+if test "$have_gpu" = "no" ; then
+    # Check Level Zero availability when no other GPU library is available
+    PAC_SET_HEADER_LIB_PATH([ze])
+    PAC_CHECK_HEADER_LIB([level_zero/ze_api.h],[ze_loader],[zeInit],[have_ze=yes],[have_ze=no])
+    ze_CPPFLAGS=""
+    ze_LDFLAGS=""
+    ze_LIBS=""
+    if test "X${have_ze}" = "Xyes" ; then
+        AC_DEFINE([HAVE_ZE],[1],[Define if ZE is available])
+        have_gpu="yes"
+        if test -n "${with_ze}" ; then
+            ze_CPPFLAGS="-I${with_ze}/include"
+            if test -d ${with_ze}/lib64 ; then
+                ze_LDFLAGS="-L${with_ze}/lib64 -L${with_ze}/lib"
+            else
+                ze_LDFLAGS="-L${with_ze}/lib"
+            fi
+            ze_LIBS="-lze_loader"
+        fi
+    fi
+    AC_SUBST([ze_CPPFLAGS])
+    AC_SUBST([ze_LDFLAGS])
+    AC_SUBST([ze_LIBS])
+fi
+AM_CONDITIONAL([HAVE_ZE],[test "X${have_ze}" = "Xyes"])
+
+PAC_POP_FLAG([CPPFLAGS])
+PAC_POP_FLAG([LDFLAGS])
+PAC_POP_FLAG([LIBS])
+
+AM_CONDITIONAL([HAVE_GPU], [test $have_gpu = "yes"])
+# GPU only tests
+if test $have_gpu = "no" -a $enable_gpu_tests_only = "yes" ; then
+    AC_MSG_ERROR([GPU only test configuration requires GPU library (CUDA or LevelZero)])
+fi
+AM_CONDITIONAL([GPU_ONLY], [test $enable_gpu_tests_only = "yes"])
+# End of GPU libs Check
+
 # for tests that require large mem
 largetest="#"
 if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
@@ -1701,6 +1776,7 @@ AC_OUTPUT(maint/testmerge \
           threads/rma/Makefile \
           threads/coll/Makefile \
           threads/coll/testlist \
+          threads/perf/Makefile \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \

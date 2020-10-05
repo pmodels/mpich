@@ -197,12 +197,14 @@ struct MPIR_Comm {
     /* A sequence number used for e.g. vci hashing. We can't directly use context_id
      * because context_id is non-sequential and can't be used to identify user-level
      * communicators (due to sub-comms). */
-
-    /* As an optimization for comm_world, if seq==0, every processes in the comm
-     * has seq=0. */
     int seq;
-    int *seq_table;             /* Table of sequence numbers for each rank.
-                                 * If seq==0, seq_table is NULL */
+    /* Certain comm and its offsprings should be restricted to sequence 0 due to
+     * various restrictions. E.g. multiple-vci doesn't support dynamic process,
+     * nor intercomms (even after its merge).
+     */
+    int tainted;
+
+
     int hints[MPIR_COMM_HINT_MAX];      /* Hints to the communicator
                                          * use int array for fast access */
 
@@ -360,6 +362,7 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
                                          MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_compare_impl(MPIR_Comm * comm_ptr1, MPIR_Comm * comm_ptr2, int *result);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided

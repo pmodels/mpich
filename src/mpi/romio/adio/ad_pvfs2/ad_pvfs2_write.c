@@ -20,6 +20,10 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
     static char myname[] = "ADIOI_PVFS2_WRITECONTIG";
 
     if (count == 0) {
+#ifdef HAVE_STATUS_SET_BYTES
+        if (status)
+            MPIR_Status_set_bytes(status, datatype, 0);
+#endif
         *error_code = MPI_SUCCESS;
         return;
     }
@@ -97,7 +101,8 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
         fd->fp_sys_posn = fd->fp_ind;
     }
 #ifdef HAVE_STATUS_SET_BYTES
-    MPIR_Status_set_bytes(status, datatype, resp_io.total_completed);
+    if (status)
+        MPIR_Status_set_bytes(status, datatype, resp_io.total_completed);
 #endif
     *error_code = MPI_SUCCESS;
   fn_exit:

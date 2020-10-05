@@ -8,7 +8,7 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_STUBSHM_rank_is_local(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_rank_is_local(int rank, MPIR_Comm * comm)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_RANK_IS_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_RANK_IS_LOCAL);
@@ -19,7 +19,7 @@ static inline int MPIDI_STUBSHM_rank_is_local(int rank, MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_av_is_local(MPIDI_av_entry_t * av)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_av_is_local(MPIDI_av_entry_t * av)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AV_IS_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AV_IS_LOCAL);
@@ -30,8 +30,8 @@ static inline int MPIDI_STUBSHM_av_is_local(MPIDI_av_entry_t * av)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                              int idx, int *lpid_ptr, bool is_remote)
+MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
+                                                         int idx, int *lpid_ptr, bool is_remote)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);

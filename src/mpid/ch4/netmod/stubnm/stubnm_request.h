@@ -8,12 +8,12 @@
 
 #include "stubnm_impl.h"
 
-static inline void MPIDI_NM_am_request_init(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
     MPIR_Assert(0);
 }
 
-static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 {
     MPIR_Assert(0);
 }

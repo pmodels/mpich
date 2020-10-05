@@ -178,6 +178,7 @@ void MTest_Init(int *argc, char ***argv)
 #endif
 }
 
+static void MTestCommRandomize_cleanup(void);
 /*
   Finalize MTest.  errs is the number of errors on the calling process;
   this routine will write the total number of errors over all of MPI_COMM_WORLD
@@ -206,6 +207,8 @@ void MTest_Finalize(int errs)
     if (usageOutput)
         MTestResourceSummary(stdout);
 
+    /* Clean up any comms from MTestCommRandomize() */
+    MTestCommRandomize_cleanup();
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
@@ -213,6 +216,7 @@ void MTest_Finalize(int errs)
     MPI_Finalize();
 
     MTest_finalize_thread_pkg();
+    MTest_finalize_gpu();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1019,6 +1023,33 @@ void MTestFreeComm(MPI_Comm * comm)
         merr = MPI_Comm_free(comm);
         if (merr)
             MTestPrintError(merr);
+    }
+}
+
+/* Directly calling MTestGetIntercomm maybe insufficient since all the processes
+ * may end up with the same context_id even between different groups of the intercomm.
+ * Radomize it by duplicate MPI_Comm_self different times */
+
+#define MAX_COMM_SELF_DUPS 4
+static MPI_Comm comm_self_dups[MAX_COMM_SELF_DUPS];
+static int num_self_dups = 0;
+
+void MTestCommRandomize(void)
+{
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    srand(rank);
+
+    num_self_dups = rand() % MAX_COMM_SELF_DUPS;
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_dup(MPI_COMM_SELF, &comm_self_dups[i]);
+    }
+}
+
+static void MTestCommRandomize_cleanup(void)
+{
+    for (int i = 0; i < num_self_dups; i++) {
+        MPI_Comm_free(&comm_self_dups[i]);
     }
 }
 

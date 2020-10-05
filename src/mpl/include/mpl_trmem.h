@@ -262,10 +262,38 @@ typedef struct {
 
 #else /* MPL_USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
-#define MPL_malloc(a,b)    malloc((size_t)(a))
-#define MPL_calloc(a,b,c)  calloc((size_t)(a),(size_t)(b))
+/* size_t allows for larger values than PTRDIFF_MAX.  GCC throws a
+ * warning if we pass a signed integer to MPL_malloc and friends,
+ * which when typecast to size_t becomes a very large number, saying
+ * that the max size exceeds that of PTRDIFF_MAX. */
+static inline void *MPL_malloc(size_t size, MPL_memory_class memclass)
+{
+    if (size <= PTRDIFF_MAX) {
+        return malloc(size);
+    } else {
+        return NULL;
+    }
+}
+
+static inline void *MPL_calloc(size_t nmemb, size_t size, MPL_memory_class memclass)
+{
+    if (size <= PTRDIFF_MAX) {
+        return calloc(nmemb, size);
+    } else {
+        return NULL;
+    }
+}
+
+static inline void *MPL_realloc(void *ptr, size_t size, MPL_memory_class memclass)
+{
+    if (size <= PTRDIFF_MAX) {
+        return realloc(ptr, size);
+    } else {
+        return NULL;
+    }
+}
+
 #define MPL_free(a)      free((void *)(a))
-#define MPL_realloc(a,b,c)  realloc((void *)(a),(size_t)(b))
 #define MPL_mmap(a,b,c,d,e,f,g) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
 #define MPL_munmap(a,b,c)  munmap((void *)(a),(size_t)(b))
 

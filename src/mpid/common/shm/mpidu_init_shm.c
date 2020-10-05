@@ -10,9 +10,47 @@
 #include "mpir_pmi.h"
 #include "mpidu_shm_seg.h"
 
+#ifdef ENABLE_NO_LOCAL
+/* shared memory disabled, just stubs */
+
+int MPIDU_Init_shm_init(void)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_finalize(void)
+{
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_barrier(void)
+{
+    return MPI_SUCCESS;
+}
+
+/* proper code should never call following under NO_LOCAL */
+int MPIDU_Init_shm_put(void *orig, size_t len)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_get(int local_rank, size_t len, void *target)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+int MPIDU_Init_shm_query(int local_rank, void **target_addr)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+#else /* ENABLE_NO_LOCAL */
 typedef struct Init_shm_barrier {
-    OPA_int_t val;
-    OPA_int_t wait;
+    MPL_atomic_int_t val;
+    MPL_atomic_int_t wait;
 } Init_shm_barrier_t;
 
 static int local_size;
@@ -24,17 +62,16 @@ static void *baseaddr;
 static int sense;
 static int barrier_init = 0;
 
-static int Init_shm_barrier_init(int init_values)
+static int Init_shm_barrier_init(int is_root)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_SHM_BARRIER_INIT);
 
     barrier = (Init_shm_barrier_t *) memory.base_addr;
-    if (init_values) {
-        OPA_store_int(&barrier->val, 0);
-        OPA_store_int(&barrier->wait, 0);
-        OPA_write_barrier();
+    if (is_root) {
+        MPL_atomic_store_int(&barrier->val, 0);
+        MPL_atomic_store_int(&barrier->wait, 0);
     }
     sense = 0;
     barrier_init = 1;
@@ -44,7 +81,6 @@ static int Init_shm_barrier_init(int init_values)
     return MPI_SUCCESS;
 }
 
-/* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
 static int Init_shm_barrier()
 {
     int mpi_errno = MPI_SUCCESS;
@@ -57,13 +93,12 @@ static int Init_shm_barrier()
 
     MPIR_ERR_CHKINTERNAL(!barrier_init, mpi_errno, "barrier not initialized");
 
-    if (OPA_fetch_and_incr_int(&barrier->val) == local_size - 1) {
-        OPA_store_int(&barrier->val, 0);
-        OPA_store_int(&barrier->wait, 1 - sense);
-        OPA_write_barrier();
+    if (MPL_atomic_fetch_add_int(&barrier->val, 1) == local_size - 1) {
+        MPL_atomic_store_int(&barrier->val, 0);
+        MPL_atomic_store_int(&barrier->wait, 1 - sense);
     } else {
         /* wait */
-        while (OPA_load_int(&barrier->wait) == sense)
+        while (MPL_atomic_load_int(&barrier->wait) == sense)
             MPL_sched_yield();  /* skip */
     }
     sense = 1 - sense;
@@ -79,11 +114,6 @@ int MPIDU_Init_shm_init(void)
     int mpi_errno = MPI_SUCCESS, mpl_err = 0;
     int local_leader;
     int rank;
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-    int ret;
-    int ipc_lock_offset;
-    OPA_emulation_ipl_t *ipc_lock;
-#endif
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(1);
 
@@ -103,20 +133,6 @@ int MPIDU_Init_shm_init(void)
     mpl_err = MPL_shm_hnd_init(&(memory.hnd));
     MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem");
 
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-    /* We have a similar bootstrapping problem when using OpenPA in
-     * lock-based emulation mode.  We use OPA_* functions during the
-     * check_alloc function but we were previously initializing OpenPA
-     * after return from this function.  So we put the emulation lock
-     * right after the barrier var space. */
-
-    /* offset from memory->base_addr to the start of ipc_lock */
-    ipc_lock_offset = MPIDU_SHM_CACHE_LINE_LEN;
-
-    MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
-    segment_len += MPIDU_SHM_CACHE_LINE_LEN;
-#endif
-
     memory.segment_len = segment_len;
 
     if (local_size == 1) {
@@ -131,12 +147,6 @@ int MPIDU_Init_shm_init(void)
                       (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
         memory.symmetrical = 0;
 
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
         mpi_errno = Init_shm_barrier_init(TRUE);
         MPIR_ERR_CHECK(mpi_errno);
     } else {
@@ -153,12 +163,6 @@ int MPIDU_Init_shm_init(void)
             serialized_hnd_size = strlen(serialized_hnd);
             MPIR_Assert(serialized_hnd_size < MPIR_pmi_max_val_size());
 
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASE_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /* isLeader */);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
             mpi_errno = Init_shm_barrier_init(TRUE);
             MPIR_ERR_CHECK(mpi_errno);
         } else {
@@ -182,20 +186,6 @@ int MPIDU_Init_shm_init(void)
             mpl_err = MPL_shm_seg_attach(memory.hnd, memory.segment_len,
                                          (void **) &memory.base_addr, 0);
             MPIR_ERR_CHKANDJUMP(mpl_err, mpi_errno, MPI_ERR_OTHER, "**attach_shar_mem");
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *) ((char *) memory.base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, my_local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
 
             mpi_errno = Init_shm_barrier_init(FALSE);
             MPIR_ERR_CHECK(mpi_errno);
@@ -309,3 +299,5 @@ int MPIDU_Init_shm_query(int local_rank, void **target_addr)
 
     return mpi_errno;
 }
+
+#endif /* ENABLE_NO_LOCAL */

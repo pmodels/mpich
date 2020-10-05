@@ -5,6 +5,7 @@
 
 #include "mpidimpl.h"
 #include "iqueue_noinline.h"
+#include "mpidu_genq.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -36,11 +37,8 @@ cvars:
 int MPIDI_POSIX_iqueue_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPIDI_POSIX_eager_iqueue_transport_t *transport;
     size_t size_of_terminals;
-    size_t size_of_cells;
-    size_t size_of_shared_memory;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
@@ -51,43 +49,28 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     transport->num_cells = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_NUM_CELLS;
     transport->size_of_cell = MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE;
 
-    /* Create one terminal for each process with which we will be able to communicate. */
-    size_of_terminals =
-        (size_t) MPIDI_POSIX_global.num_local * sizeof(MPIDI_POSIX_eager_iqueue_terminal_t);
+    /* ensure max alignment for payload */
+    MPIR_Assert((MPIR_CVAR_CH4_SHM_POSIX_IQUEUE_CELL_SIZE & (MAX_ALIGNMENT - 1)) == 0);
+    MPIR_Assert((sizeof(MPIDI_POSIX_eager_iqueue_cell_t) & (MAX_ALIGNMENT - 1)) == 0);
 
-    /* Behind each terminal is a series of cells. We have `num_cells` per queue/terminal per
-     * communicating process. */
-    size_of_cells = (size_t) MPIDI_POSIX_global.num_local * (size_t) transport->num_cells
-        * (size_t) transport->size_of_cell;
-
-    size_of_shared_memory = size_of_terminals + size_of_cells;
-
-    /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
-    mpi_errno = MPIDU_Init_shm_alloc(size_of_shared_memory, &transport->pointer_to_shared_memory);
+    mpi_errno = MPIDU_genq_shmem_pool_create_unsafe(transport->size_of_cell, transport->num_cells,
+                                                    MPIDI_POSIX_global.num_local,
+                                                    MPIDI_POSIX_global.my_local_rank,
+                                                    &transport->cell_pool);
     MPIR_ERR_CHECK(mpi_errno);
 
-    /* Set up the appropriate pointers for each of the parts of the queues. */
-    transport->terminals =
-        (MPIDI_POSIX_eager_iqueue_terminal_t *) ((char *) transport->pointer_to_shared_memory);
+    /* Create one terminal for each process with which we will be able to communicate. */
+    size_of_terminals = (size_t) MPIDI_POSIX_global.num_local * sizeof(MPIDU_genq_shmem_queue_u);
 
-    transport->cells = (char *) transport->pointer_to_shared_memory
-        + size_of_terminals +
-        (size_t) MPIDI_POSIX_global.my_local_rank * (size_t) transport->num_cells *
-        (size_t) transport->size_of_cell;
+    /* Create the shared memory regions that will be used for the iqueue cells and terminals. */
+    mpi_errno = MPIDU_Init_shm_alloc(size_of_terminals, (void *) &transport->terminals);
+    MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_atomic_relaxed_store_ptr(&transport->terminals[MPIDI_POSIX_global.my_local_rank].head,
-                                 NULL);
+    transport->my_terminal = &transport->terminals[MPIDI_POSIX_global.my_local_rank];
 
-    /* Do the pointer arithmetic and initialize each of the cell data structures. */
-    for (i = 0; i < transport->num_cells; i++) {
-        MPIDI_POSIX_eager_iqueue_cell_t *cell = (MPIDI_POSIX_eager_iqueue_cell_t *)
-            ((char *) transport->cells + (size_t) transport->size_of_cell * i);
-        cell->type = MPIDI_POSIX_EAGER_IQUEUE_CELL_TYPE_NULL;
-        cell->from = MPIDI_POSIX_global.my_local_rank;
-        cell->next = NULL;
-        cell->prev = 0;
-        cell->payload_size = 0;
-    }
+    mpi_errno = MPIDU_genq_shmem_queue_init(transport->my_terminal,
+                                            MPIDU_GENQ_SHMEM_QUEUE_TYPE__MPSC);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Run local procs barrier */
     mpi_errno = MPIDU_Init_shm_barrier();
@@ -97,6 +80,8 @@ int MPIDI_POSIX_iqueue_init(int rank, int size)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_INIT);
     return mpi_errno;
   fn_fail:
+    MPIDU_Init_shm_free(transport->terminals);
+    MPIDU_genq_shmem_pool_destroy_unsafe(transport->cell_pool);
     goto fn_exit;
 }
 
@@ -110,7 +95,8 @@ int MPIDI_POSIX_iqueue_finalize()
 
     transport = MPIDI_POSIX_eager_iqueue_get_transport();
 
-    mpi_errno = MPIDU_Init_shm_free(transport->pointer_to_shared_memory);
+    mpi_errno = MPIDU_Init_shm_free(transport->terminals);
+    mpi_errno = MPIDU_genq_shmem_pool_destroy_unsafe(transport->cell_pool);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_IQUEUE_FINALIZE);

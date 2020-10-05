@@ -1,0 +1,11 @@
+#This file is used by autogen.sh to generate multiple binary files for datatype testing.
+# Every line must have the format:
+#
+# <test pathname>:<procs#>:<count>
+coll/allred:4:10
+coll/allred:4:100
+coll/allred:7:10
+coll/allred2:4
+coll/reduce:5
+coll/reduce:10
+coll/op_coll:4

@@ -442,7 +442,6 @@ fi
 %{p_includedir}
 %{p_libdir}/*.so
 %{p_libdir}/pkgconfig/mpich.pc
-%{p_libdir}/pkgconfig/openpa.pc
 %{p_libdir}/pkgconfig/json-c.pc
 %{p_libdir}/pkgconfig/yaksa.pc
 

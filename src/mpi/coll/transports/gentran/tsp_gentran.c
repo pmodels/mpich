@@ -404,7 +404,7 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_START);
 
     /* Create a request */
-    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
+    reqp = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
     if (!reqp)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     *req = reqp;
@@ -412,13 +412,13 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPI
 
     if (unlikely(sched->total_vtcs == 0)) {
         MPII_Genutil_sched_free(sched);
-        MPID_Request_complete(reqp);
+        MPIR_Request_complete(reqp);
         goto fn_exit;
     }
     /* Kick start progress on this collective's schedule */
     mpi_errno = MPII_Genutil_sched_poke(sched, &is_complete, &made_progress);
     if (is_complete) {
-        MPID_Request_complete(reqp);
+        MPIR_Request_complete(reqp);
         goto fn_exit;
     }
 

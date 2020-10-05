@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     rank = intercomm.Get_rank();
 
     if (parentcomm == MPI::COMM_NULL) {
-        /* Master */
+        /* Parent */
         if (rsize != np) {
             errs++;
             cout << "Did not create " << np << " processes (got " << rsize << ")\n";
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
             errs++;
             cout << "Too few arguments to spawned command\n";
         }
-        /* Send the errs back to the master process */
+        /* Send the errs back to the parent process */
         intercomm.Ssend(&errs, 1, MPI::INT, 0, 1);
     }
 

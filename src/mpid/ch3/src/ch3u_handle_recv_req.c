@@ -288,7 +288,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIR_Datatype_is_contig(rreq->dev.datatype, &is_contig);
     MPIR_Datatype_get_true_lb(rreq->dev.datatype, &dt_true_lb);
 
-    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIR_Object_set_ref(resp_req, 1);
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
@@ -410,7 +410,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIR_Datatype_is_contig(rreq->dev.datatype, &is_contig);
 
     /* Create response request */
-    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_FOP_RESP);
     MPIR_Object_set_ref(resp_req, 1);
@@ -626,10 +626,11 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rreq->dev.msg_offset = 0;
     rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-    MPI_Aint actual_iov_bytes;
+    MPI_Aint actual_iov_bytes, actual_iov_len;
     MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                      0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
-                     &rreq->dev.iov_count, &actual_iov_bytes);
+                     &actual_iov_len, &actual_iov_bytes);
+    rreq->dev.iov_count = (int) actual_iov_len;
     rreq->dev.iov_offset = 0;
 
     rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
@@ -737,10 +738,11 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         rreq->dev.msg_offset = 0;
         rreq->dev.msgsize = rreq->dev.recv_data_sz;
 
-        MPI_Aint actual_iov_bytes;
+        MPI_Aint actual_iov_bytes, actual_iov_len;
         MPIR_Typerep_to_iov(rreq->dev.tmpbuf, rreq->dev.recv_data_sz / basic_type_size, basic_dtp,
                          0, rreq->dev.iov, MPL_IOV_LIMIT, rreq->dev.recv_data_sz,
-                         &rreq->dev.iov_count, &actual_iov_bytes);
+                         &actual_iov_len, &actual_iov_bytes);
+        rreq->dev.iov_count = actual_iov_len;
         rreq->dev.iov_offset = 0;
 
         rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
@@ -783,7 +785,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     MPIR_Typerep_unflatten(new_dtp, rreq->dev.flattened_type);
 
     /* create request for sending data */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(sreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     sreq->kind = MPIR_REQUEST_KIND__SEND;
@@ -1008,7 +1010,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIR_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
@@ -1181,7 +1183,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIR_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
@@ -1389,7 +1391,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         fop_resp_pkt->pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP) {
-        resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
+        resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
         if (resp_req == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         }

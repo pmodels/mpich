@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     int *recvBuf = 0, *srcBuf = 0;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
     MPI_Datatype originType;
     int counts[2];
     int displs[2];
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     }
     srcBuf[blksize] = -1;
 
-    MPI_Type_extent(MPI_INT, &extent);
+    MPI_Type_get_extent(MPI_INT, &tmp_lb, &extent);
     MPI_Win_create(recvBuf, totsize * extent, extent, MPI_INFO_NULL, comm, &win);
     MPI_Win_fence(0, win);
     if (rank == source) {

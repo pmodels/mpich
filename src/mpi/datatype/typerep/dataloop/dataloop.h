@@ -17,12 +17,12 @@ struct MPIR_Datatype;
         case HANDLE_KIND_DIRECT:                                        \
             MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);      \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);                 \
-            lptr_ = ((MPIR_Datatype *)ptr)->typerep;                    \
+            lptr_ = ((MPIR_Datatype *)ptr)->typerep.handle;             \
             break;                                                      \
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
                    MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem)); \
-            lptr_ = ((MPIR_Datatype *)ptr)->typerep;                    \
+            lptr_ = ((MPIR_Datatype *)ptr)->typerep.handle;             \
             break;                                                      \
         case HANDLE_KIND_INVALID:                                       \
         case HANDLE_KIND_BUILTIN:                                       \
@@ -38,12 +38,12 @@ struct MPIR_Datatype;
         case HANDLE_KIND_DIRECT:                                        \
             MPIR_Assert(HANDLE_INDEX(a) < MPIR_DATATYPE_PREALLOC);      \
             ptr = MPIR_Datatype_direct+HANDLE_INDEX(a);                 \
-            ((MPIR_Datatype *)ptr)->typerep = lptr_;                    \
+            ((MPIR_Datatype *)ptr)->typerep.handle = lptr_;             \
             break;                                                      \
         case HANDLE_KIND_INDIRECT:                                      \
             ptr = ((MPIR_Datatype *)                                    \
                    MPIR_Handle_get_ptr_indirect(a,&MPIR_Datatype_mem)); \
-            ((MPIR_Datatype *)ptr)->typerep = lptr_;                    \
+            ((MPIR_Datatype *)ptr)->typerep.handle = lptr_;             \
             break;                                                      \
         case HANDLE_KIND_INVALID:                                       \
         case HANDLE_KIND_BUILTIN:                                       \

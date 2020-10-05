@@ -14,6 +14,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .mpi_init = MPIDI_UCX_mpi_init_hook,
     .mpi_finalize = MPIDI_UCX_mpi_finalize_hook,
+    .post_init = MPIDI_UCX_post_init,
     .progress = MPIDI_UCX_progress,
     .mpi_comm_connect = MPIDI_UCX_mpi_comm_connect,
     .mpi_comm_disconnect = MPIDI_UCX_mpi_comm_disconnect,
@@ -52,7 +53,8 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
-    .am_eager_limit = MPIDI_NM_am_eager_limit
+    .am_eager_limit = MPIDI_NM_am_eager_limit,
+    .am_eager_buf_limit = MPIDI_NM_am_eager_buf_limit
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {

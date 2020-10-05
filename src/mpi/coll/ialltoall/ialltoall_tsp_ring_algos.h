@@ -173,7 +173,7 @@ int MPIR_TSP_Ialltoall_sched_intra_ring(const void *sendbuf, int sendcount, MPI_
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLTOALL_SCHED_INTRA_RING);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

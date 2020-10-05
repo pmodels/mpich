@@ -16,7 +16,7 @@ typedef struct {
     /* This is a special case for is_thread_main, which must be
      * implemented even if MPICH itself is single threaded.  */
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
-    MPID_Thread_id_t master_thread;     /* Thread that started MPI */
+    MPID_Thread_id_t main_thread;       /* Thread that started MPI */
 #endif
 
 #if defined MPICH_IS_THREADED
@@ -53,7 +53,7 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
  */
 
 #if defined(MPICH_IS_THREADED)
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 
 /* CS macros with runtime bypass */
 #define MPIR_THREAD_CS_ENTER(mutex) \
@@ -81,19 +81,20 @@ MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #if defined(MPICH_IS_THREADED)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 
 #define MPIR_THREAD_POBJ_COMM_MUTEX(_comm_ptr) _comm_ptr->mutex
 #define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_CTX_MUTEX;
-MPIR_EXTERN MPID_Thread_mutex_t MPIR_THREAD_VCI_BSEND_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_HANDLE_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_CTX_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_PMI_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_VCI_BSEND_MUTEX;
 
 #endif /* MPICH_THREAD_GRANULARITY */
 

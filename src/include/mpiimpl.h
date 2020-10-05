@@ -6,13 +6,6 @@
 #ifndef MPIIMPL_H_INCLUDED
 #define MPIIMPL_H_INCLUDED
 
-#ifdef MPIR_GLOBAL
-/* inside globals.c, instatiate globals */
-#define MPIR_EXTERN
-#else
-#define MPIR_EXTERN extern
-#endif
-
 #include "mpichconfconst.h"
 #include "mpichconf.h"
 
@@ -141,7 +134,6 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
 #include "mpl.h"
-#include "opa_primitives.h"
 #include "mpi.h"
 
 
@@ -195,6 +187,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
 #include "mpir_ext.h"
+#include "mpir_gpu.h"
 
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"
@@ -218,7 +211,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 /********************* PART 5: DEVICE DEPENDENT HEADERS **********************/
 /*****************************************************************************/
 
-#include "mpir_thread.h"
+#include "mpir_thread.h"        /* come first as mutexes are often depended on, e.g. request */
 #include "mpir_attr.h"
 #include "mpir_group.h"
 #include "mpir_comm.h"

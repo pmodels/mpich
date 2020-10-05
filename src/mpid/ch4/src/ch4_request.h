@@ -7,7 +7,7 @@
 #define CH4_REQUEST_H_INCLUDED
 
 #include "ch4_impl.h"
-#include "ch4r_buf.h"
+#include "mpidu_genq.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * req)
 {
@@ -90,14 +90,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIR_cc_decr(req->completion_notification, &notify_counter);
 
         if (MPIDIG_REQUEST(req, req)) {
-            MPIDIU_release_buf(MPIDIG_REQUEST(req, req));
+            MPIDU_genq_private_pool_free_cell(MPIDI_global.request_pool, MPIDIG_REQUEST(req, req));
             MPIDIG_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
 #ifndef MPIDI_CH4_DIRECT_NETMOD
             MPIDI_SHM_am_request_finalize(req);
 #endif
         }
-        MPIR_Request_free(req);
+        MPIR_Request_free_unsafe(req);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REQUEST_COMPLETE);

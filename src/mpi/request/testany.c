@@ -28,21 +28,21 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 #undef MPI_Testany
 #define MPI_Testany PMPI_Testany
 
-int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
-                      int *indx, int *flag, MPI_Status * status)
+int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
+                       int *indx, int *flag, MPI_Status * status, MPID_Progress_state * state)
 {
     int i;
     int n_inactive = 0;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Progress_test(state);
     /* --BEGIN ERROR HANDLING-- */
     MPIR_ERR_CHECK(mpi_errno);
     /* --END ERROR HANDLING-- */
 
     for (i = 0; i < count; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test();
+            mpi_errno = MPID_Progress_test(state);
             MPIR_ERR_CHECK(mpi_errno);
         }
 
@@ -69,6 +69,12 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
+                      int *indx, int *flag, MPI_Status * status)
+{
+    return MPIR_Testany_state(count, request_ptrs, indx, flag, status, NULL);
 }
 
 #endif

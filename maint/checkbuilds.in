@@ -56,7 +56,7 @@ $hasDemon   = 0;
 		  'error-messages;all;generic;class;none',
 		  'timer-type;linux86_cycle;gethrtime;clock_gettime;gettimeofday',
 		  'timing;none;all;runtime;log;log_detailed',
-		  'g;none;all;handle;dbg;log;meminit;handlealloc;instr;mem;mutex;mutexnesting;memarena',
+		  'g;none;all;handle;dbg;log;meminit;handlealloc;instr;mem;mutex;memarena',
 		  'fast;nochkmsg;notiming;ndebug;all',
 		  'f77',
 		  'fc',

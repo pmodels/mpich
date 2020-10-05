@@ -97,11 +97,11 @@ MPIR_TSP_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
-#endif
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "send_type_size: %lu, sendtype_extent: %lu, send_count: %d",
                      sendtype_size, sendtype_extent, sendcount));
+#endif
 
     while (max) {
         nphases++;

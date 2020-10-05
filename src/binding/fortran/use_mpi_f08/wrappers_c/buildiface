@@ -641,7 +641,7 @@ if ($make_exists) {
     print MAKEFD "\tsrc/binding/fortran/use_mpi_f08/wrappers_c/f_sync_reg_c.c \\\n";
     print MAKEFD "\tsrc/binding/fortran/use_mpi_f08/wrappers_c/utils.c\n\n";
     print MAKEFD <<EOT;
-AM_CPPFLAGS += -I\${master_top_srcdir}/src/binding/fortran/use_mpi_f08/wrappers_c
+AM_CPPFLAGS += -I\${main_top_srcdir}/src/binding/fortran/use_mpi_f08/wrappers_c
 
 noinst_HEADERS += src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.h
 

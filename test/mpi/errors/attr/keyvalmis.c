@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     MPI_Type_contiguous(4, MPI_DOUBLE, &dtype);
     MPI_Win_create(&buf, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     err = MPI_Comm_set_attr(MPI_COMM_WORLD, win_keyval, &comm_aval);
     if (err == MPI_SUCCESS) {

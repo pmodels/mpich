@@ -3,7 +3,7 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include
+AM_CPPFLAGS = -I$(srcdir)/../include -I../include -I$(srcdir)/../dtpools/include @cuda_CPPFLAGS@ @ze_CPPFLAGS@
 
 EXTRA_PROGRAMS = mtestcheck dtypes
 mtestcheck_SOURCES = mtestcheck.c mtest.c mtest_common.c

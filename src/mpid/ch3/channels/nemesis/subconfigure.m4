@@ -15,8 +15,8 @@ MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 # $device_name - name of the device
 # $device_args - contains name of channel select plus an channel args
 # $channel_name - name of the channel
-# $master_top_srcdir - top-level source directory
-# $master_top_builddir - top-level build directory
+# $main_top_srcdir - top-level source directory
+# $main_top_builddir - top-level build directory
 # $ac_configure_args - all arguments passed to configure
 if test -z "${channel_args}" ; then
     nemesis_networks="tcp"
@@ -148,12 +148,6 @@ for net in $nemesis_networks ; do
 
 done
 nemesis_nets_array_sz=$net_index
-
-AC_ARG_ENABLE(nemesis-dbg-nolocal, AC_HELP_STRING([--enable-nemesis-dbg-nolocal], [alias for --enable-dbg-nolocal]),
-    AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication for debugging]))
-
-AC_ARG_ENABLE(nemesis-dbg-localoddeven, AC_HELP_STRING([--enable-nemesis-dbg-localoddeven], [alias for --enable-dbg-localoddeven]),
-    AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
 
 AC_ARG_WITH(papi, [--with-papi[=path] - specify path where papi include and lib directories can be found],, with_papi=no)
 

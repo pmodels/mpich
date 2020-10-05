@@ -99,7 +99,7 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
     int last_idx;
     MPI_Aint size;
     MPI_Aint el_size;
-    char *last_end = NULL;
+    intptr_t last_end = 0;
     struct flatten_params *paramp = v_paramp;
 
     MPIR_Datatype_get_size_macro(el_type, el_size);
@@ -107,18 +107,18 @@ static int leaf_contig_mpi_flatten(MPI_Aint * blocks_p,
 
     last_idx = paramp->index - 1;
     if (last_idx >= 0) {
-        last_end = (char *)
+        last_end = (intptr_t)
             (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
     }
 
-    if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
+    if ((last_idx == paramp->length - 1) && (last_end != ((intptr_t) bufp + rel_off))) {
         /* we have used up all our entries, and this region doesn't fit on
          * the end of the last one.  setting blocks to 0 tells manipulation
          * function that we are done (and that we didn't process any blocks).
          */
         *blocks_p = 0;
         return 1;
-    } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+    } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
         /* add this size to the last vector rather than using up another one */
         paramp->blklens[last_idx] += size;
     } else {
@@ -161,7 +161,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
-        char *last_end = NULL;
+        intptr_t last_end = 0;
 
         if (blocks_left > blksz) {
             size = blksz * el_size;
@@ -174,11 +174,11 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            last_end = (char *)
+            last_end = (intptr_t)
                 (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
         }
 
-        if ((last_idx == paramp->length - 1) && (last_end != ((char *) bufp + rel_off))) {
+        if ((last_idx == paramp->length - 1) && (last_end != ((intptr_t) bufp + rel_off))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
@@ -191,7 +191,7 @@ static int leaf_vector_mpi_flatten(MPI_Aint * blocks_p, MPI_Aint count, MPI_Aint
                              paramp->u.pack_vector.index, *blocks_p));
 #endif
             return 1;
-        } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off))) {
+        } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off))) {
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
@@ -237,7 +237,7 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
-        char *last_end = NULL;
+        intptr_t last_end = 0;
 
         if (blocks_left > blksz) {
             size = blksz * el_size;
@@ -250,18 +250,18 @@ static int leaf_blkidx_mpi_flatten(MPI_Aint * blocks_p,
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            last_end = (char *)
+            last_end = (intptr_t)
                 (paramp->disps[last_idx] + ((MPI_Aint) paramp->blklens[last_idx]));
         }
 
         if ((last_idx == paramp->length - 1) &&
-            (last_end != ((char *) bufp + rel_off + offsetarray[i]))) {
+            (last_end != ((intptr_t) bufp + rel_off + offsetarray[i]))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
             *blocks_p -= ((MPI_Aint) blocks_left + (((MPI_Aint) size) / el_size));
             return 1;
-        } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i]))) {
+        } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off + offsetarray[i]))) {
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {
@@ -297,7 +297,7 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
-        char *last_end = NULL;
+        intptr_t last_end = 0;
 
         if (blocks_left > blockarray[i]) {
             size = blockarray[i] * el_size;
@@ -310,18 +310,18 @@ static int leaf_index_mpi_flatten(MPI_Aint * blocks_p,
 
         last_idx = paramp->index - 1;
         if (last_idx >= 0) {
-            last_end = (char *)
+            last_end = (intptr_t)
                 (paramp->disps[last_idx] + (MPI_Aint) (paramp->blklens[last_idx]));
         }
 
         if ((last_idx == paramp->length - 1) &&
-            (last_end != ((char *) bufp + rel_off + offsetarray[i]))) {
+            (last_end != ((intptr_t) bufp + rel_off + offsetarray[i]))) {
             /* we have used up all our entries, and this one doesn't fit on
              * the end of the last one.
              */
             *blocks_p -= (blocks_left + (size / el_size));
             return 1;
-        } else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i]))) {
+        } else if (last_idx >= 0 && (last_end == ((intptr_t) bufp + rel_off + offsetarray[i]))) {
             /* add this size to the last vector rather than using up new one */
             paramp->blklens[last_idx] += size;
         } else {

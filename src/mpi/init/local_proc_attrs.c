@@ -37,7 +37,7 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
     /* We need this inorder to implement IS_THREAD_MAIN */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
-    MPID_Thread_self(&MPIR_ThreadInfo.master_thread);
+    MPID_Thread_self(&MPIR_ThreadInfo.main_thread);
 #endif
 #endif /* MPICH_IS_THREADED */
 
@@ -126,13 +126,6 @@ int MPII_init_local_proc_attrs(int *p_thread_required)
 
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
-
-    /* Create complete request to return in the event of immediately complete
-     * operations. Use a SEND request to cover all possible use-cases. */
-    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
-    MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
-                        "**nomemreq");
-    MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);
 
     /* Init communicator hints */
     MPIR_Comm_hint_init();

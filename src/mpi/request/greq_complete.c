@@ -31,12 +31,7 @@ int MPI_Grequest_complete(MPI_Request request)
    into nothing otherwise. */
 void MPIR_Grequest_complete(MPIR_Request * request_ptr)
 {
-    /* Set the request as completed.  This does not change the
-     * reference count on the generalized request */
-    MPID_Request_complete(request_ptr);
-
-    /* The request release comes with the wait/test, not this complete
-     * routine, so we don't call the MPIR_Request_free routine */
+    MPIR_Request_complete(request_ptr);
 }
 
 #endif

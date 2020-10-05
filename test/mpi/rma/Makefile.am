@@ -81,6 +81,8 @@ noinst_PROGRAMS =          \
     window_creation        \
     window_allocation      \
     window_noncontig_allocation  \
+    window_attach                   \
+    window_attach_collattach        \
     win_flavors            \
     win_shared             \
     win_shared_noncontig   \
@@ -91,6 +93,9 @@ noinst_PROGRAMS =          \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
+    win_dynamic_acc_collattach \
+    win_dynamic_rma_flush_get             \
+    win_dynamic_rma_flush_get_collattach  \
     get_acc_local          \
     compare_and_swap       \
     linked_list            \
@@ -201,7 +206,8 @@ noinst_PROGRAMS =          \
     putpscw1
 
 if BUILD_MPIX_TESTS
-noinst_PROGRAMS += aint
+noinst_PROGRAMS += aint   \
+                   aint_collattach
 endif
 
 atomic_get_short_int_SOURCES      = atomic_get.c
@@ -417,3 +423,15 @@ lockall_dt_flushlocalall_SOURCES = lock_x_dt.c
 
 putpscw1_CPPFLAGS = $(AM_CPPFLAGS)
 putpscw1_SOURCES = putpscw1.c
+
+win_dynamic_acc_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+win_dynamic_acc_collattach_SOURCES = win_dynamic_acc.c
+
+win_dynamic_rma_flush_get_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+win_dynamic_rma_flush_get_collattach_SOURCES = win_dynamic_rma_flush_get.c
+
+aint_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+aint_collattach_SOURCES = aint.c
+
+window_attach_collattach_CPPFLAGS = -DUSE_INFO_COLL_ATTACH $(AM_CPPFLAGS)
+window_attach_collattach_SOURCES = window_attach.c

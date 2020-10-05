@@ -29,5 +29,6 @@
 #include "mpl_math.h"
 #include "mpl_proc_mutex.h"
 #include "mpl_gpu.h"
+#include "mpl_gavl.h"
 
 #endif /* MPL_H_INCLUDED */

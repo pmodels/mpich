@@ -319,11 +319,19 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         noStripeParms.stripedLastFileOffset = 0;
         noStripeParms.firstStripedWriteCall = 0;
         noStripeParms.lastStripedWriteCall = 0;
+        noStripeParms.iWasUsedStripingAgg = 0;
+        noStripeParms.numStripesUsed = 0;
+        noStripeParms.amountOfStripedDataExpected = 0;
+        noStripeParms.bufTypeExtent = 0;
+        noStripeParms.lastDataTypeExtent = 0;
+        noStripeParms.lastFlatBufIndice = 0;
+        noStripeParms.lastIndiceOffset = 0;
+
         int holeFound = 0;
         ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count,
                                        buf, datatype, error_code, firstFileOffset, lastFileOffset,
                                        currentValidDataIndex, fd_start, fd_end, &holeFound,
-                                       noStripeParms);
+                                       &noStripeParms);
         int anyHolesFound = 0;
         if (!romio_onesided_no_rmw)
             MPI_Allreduce(&holeFound, &anyHolesFound, 1, MPI_INT, MPI_MAX, fd->comm);

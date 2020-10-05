@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     MTest_Init(&argc, &argv);
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 0) {
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

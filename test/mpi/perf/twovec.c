@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
         for (j = 0; j < LOOPS; j++) {
             MPI_Type_vector(nrows, 1, ncols, MPI_INT, &column[j]);
-            MPI_Type_hvector(ncols, 1, sizeof(int), column[j], &xpose[j]);
+            MPI_Type_create_hvector(ncols, 1, sizeof(int), column[j], &xpose[j]);
             MPI_Type_commit(&xpose[j]);
         }
 

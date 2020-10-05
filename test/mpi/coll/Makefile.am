@@ -41,7 +41,6 @@ noinst_PROGRAMS =      \
     coll8              \
     coll9              \
     coll10             \
-    coll11             \
     coll12             \
     coll13             \
     exscan             \
@@ -68,6 +67,7 @@ noinst_PROGRAMS =      \
     nonblocking        \
     nonblocking2       \
     nonblocking3       \
+    op_coll            \
     op_commutative     \
     opband             \
     opbor              \

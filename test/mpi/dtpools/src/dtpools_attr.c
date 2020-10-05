@@ -14,7 +14,8 @@
 #define confirm_extent(type, extent)                                    \
     do {                                                                \
         MPI_Aint type_extent;                                           \
-        MPI_Type_extent(type, &type_extent);                            \
+        MPI_Aint tmp_lb_;                                               \
+        MPI_Type_get_extent(type, &tmp_lb_, &type_extent);              \
         if (type_extent != extent) {                                    \
             fprintf(stderr, "expected extent of %" PRIu64 ", but got %zd\n", extent, type_extent); \
             fflush(stderr);                                             \
@@ -385,8 +386,8 @@ static int construct_hvector(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s * 
             break;
     }
 
-    rc = MPI_Type_hvector(attr->u.hvector.numblks,
-                          attr->u.hvector.blklen, attr->u.hvector.stride, type, newtype);
+    rc = MPI_Type_create_hvector(attr->u.hvector.numblks,
+                                 attr->u.hvector.blklen, attr->u.hvector.stride, type, newtype);
     DTPI_ERR_CHK_MPI_RC(rc);
 
     confirm_extent(*newtype, extent);
@@ -1007,9 +1008,9 @@ static int construct_hindexed(DTP_pool_s dtp, int attr_tree_depth, DTPI_Attr_s *
             break;
     }
 
-    rc = MPI_Type_hindexed(attr->u.hindexed.numblks,
-                           attr->u.hindexed.array_of_blklens,
-                           attr->u.hindexed.array_of_displs, type, newtype);
+    rc = MPI_Type_create_hindexed(attr->u.hindexed.numblks,
+                                  attr->u.hindexed.array_of_blklens,
+                                  attr->u.hindexed.array_of_displs, type, newtype);
     DTPI_ERR_CHK_MPI_RC(rc);
 
     confirm_extent(*newtype, extent);

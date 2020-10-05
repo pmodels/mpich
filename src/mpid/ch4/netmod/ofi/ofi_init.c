@@ -26,6 +26,16 @@ cvars:
       description : >-
         Prints out the configuration of each capability selected via the capability sets interface.
 
+    - name        : MPIR_CVAR_OFI_SKIP_IPV6
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Skip IPv6 providers.
+
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
       type        : int
@@ -83,6 +93,19 @@ cvars:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enable virtual addressing for OFI memory regions. This variable is only meaningful
+        for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of
+        OFI older than 1.5.
+
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_ALLOCATED
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, require all OFI memory regions must be backed by physical memory pages
+        at the time the registration call is made. This variable is only meaningful
         for OFI versions 1.5+. It is equivelent to using FI_MR_BASIC in versions of
         OFI older than 1.5.
 
@@ -301,6 +324,54 @@ cvars:
         enabled. It the underlying OFI provider supports auto data progress, this value is ignored.
         If the value is -1, this optimization will be turned off.
 
+    - name        : MPIR_CVAR_CH4_OFI_RMA_IOVEC_MAX
+      category    : CH4_OFI
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the maximum number of iovecs to allocate for RMA operations
+        to/from noncontiguous buffers.
+
+    - name        : MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK
+      category    : CH4_OFI
+      type        : int
+      default     : 16
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for packing/unpacking messages in
+        each block of the pool.
+
+    - name        : MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS
+      category    : CH4_OFI
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the max number of buffers for packing/unpacking messages
+        in the pool.
+
+    - name        : MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        This cvar controls the message size at which OFI native path switches from eager to
+        rendezvous mode. It does not affect the AM path eager limit. Having this gives a way to
+        reliably test native non-path.
+        If the number is positive, OFI will init the MPIDI_OFI_global.max_msg_size to the value of
+        cvar. If the number is negative, OFI will init the MPIDI_OFI_globa.max_msg_size using
+        whatever provider gives (which might be unlimited for socket provider).
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -312,6 +383,38 @@ static int destroy_vni_context(int vni);
 static int conn_manager_init(void);
 static int conn_manager_destroy(void);
 static int dynproc_send_disconnect(int conn_id);
+
+static int addr_exchange_root_vni(MPIR_Comm * init_comm);
+static int addr_exchange_all_vnis(void);
+
+static void *host_alloc(uintptr_t size);
+static void *host_alloc_registered(uintptr_t size);
+static void host_free(void *ptr);
+static void host_free_registered(void *ptr);
+
+static void *host_alloc(uintptr_t size)
+{
+    return MPL_malloc(size, MPL_MEM_BUFFER);
+}
+
+static void *host_alloc_registered(uintptr_t size)
+{
+    void *ptr = MPL_malloc(size, MPL_MEM_BUFFER);
+    MPIR_Assert(ptr);
+    MPL_gpu_register_host(ptr, size);
+    return ptr;
+}
+
+static void host_free(void *ptr)
+{
+    MPL_free(ptr);
+}
+
+static void host_free_registered(void *ptr)
+{
+    MPL_gpu_unregister_host(ptr);
+    MPL_free(ptr);
+}
 
 static int get_ofi_version(void)
 {
@@ -328,17 +431,15 @@ static int conn_manager_init()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONN_MANAGER_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONN_MANAGER_INIT);
 
-    MPIDI_OFI_global.conn_mgr.mmapped_size = 8 * 4 * 1024;
     MPIDI_OFI_global.conn_mgr.max_n_conn = 1;
     MPIDI_OFI_global.conn_mgr.next_conn_id = 0;
     MPIDI_OFI_global.conn_mgr.n_conn = 0;
 
     MPIDI_OFI_global.conn_mgr.conn_list =
-        (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_OFI_global.conn_mgr.mmapped_size,
-                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0,
-                                      MPL_MEM_ADDRESS);
-    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
-                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+        (MPIDI_OFI_conn_t *) MPL_malloc(8 * 4 * 1024 /* FIXME: what is this size? */ ,
+                                        MPL_MEM_ADDRESS);
+    MPIR_ERR_CHKANDSTMT(MPIDI_OFI_global.conn_mgr.conn_list == NULL, mpi_errno, MPI_ERR_NO_MEM,
+                        goto fn_fail, "**nomem");
 
     MPIDI_OFI_global.conn_mgr.free_conn_id =
         (int *) MPL_malloc(MPIDI_OFI_global.conn_mgr.max_n_conn * sizeof(int), MPL_MEM_ADDRESS);
@@ -405,7 +506,7 @@ static int conn_manager_destroy()
                                                   NULL,
                                                   conn[j],
                                                   match_bits,
-                                                  mask_bits, &req[j].context), trecv, FALSE);
+                                                  mask_bits, &req[j].context), 0, trecv, FALSE);
                     j++;
                     break;
                 default:
@@ -414,7 +515,7 @@ static int conn_manager_destroy()
         }
 
         for (i = 0; i < j; ++i) {
-            MPIDI_OFI_PROGRESS_WHILE(!req[i].done);
+            MPIDI_OFI_PROGRESS_WHILE(!req[i].done, 0);
             MPIDI_OFI_global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "conn_id=%d closed", i));
@@ -423,8 +524,7 @@ static int conn_manager_destroy()
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPL_munmap((void *) MPIDI_OFI_global.conn_mgr.conn_list, MPIDI_OFI_global.conn_mgr.mmapped_size,
-               MPL_MEM_ADDRESS);
+    MPL_free(MPIDI_OFI_global.conn_mgr.conn_list);
     MPL_free(MPIDI_OFI_global.conn_mgr.free_conn_id);
 
   fn_exit:
@@ -470,8 +570,8 @@ static int dynproc_send_disconnect(int conn_id)
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | FI_REMOTE_CQ_DATA),
-                             tsendmsg, FALSE);
-        MPIDI_OFI_PROGRESS_WHILE(!req.done);
+                             0, tsendmsg, FALSE);
+        MPIDI_OFI_PROGRESS_WHILE(!req.done, 0);
     }
 
     switch (MPIDI_OFI_global.conn_mgr.conn_list[conn_id].state) {
@@ -501,8 +601,6 @@ static int dynproc_send_disconnect(int conn_id)
 int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_Comm * init_comm)
 {
     int mpi_errno = MPI_SUCCESS, i;
-    void *table = NULL;
-    fi_addr_t *mapped_table;
     size_t optlen;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_MPI_INIT_HOOK);
@@ -552,14 +650,24 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* TODO: update num_vnis according to provider capabilities, such as
      * prov_use->domain_attr->{tx,rx}_ctx_cnt
      */
-    if (num_vnis > MPIDI_OFI_MAX_CONTEXTS) {
-        num_vnis = MPIDI_OFI_MAX_CONTEXTS;
+    if (num_vnis > MPIDI_OFI_MAX_VNIS) {
+        num_vnis = MPIDI_OFI_MAX_VNIS;
     }
     /* for best performance, we ensure 1-to-1 vci/vni mapping. ref: MPIDI_OFI_vci_to_vni */
     /* TODO: allow less num_vnis. Option 1. runtime MOD; 2. overide MPIDI_global.n_vcis */
     MPIR_Assert(num_vnis == MPIDI_global.n_vcis);
 
-    MPIDI_OFI_global.num_ctx = num_vnis;
+    /* Multiple vni without using domain require MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS */
+#ifndef MPIDI_OFI_VNI_USE_DOMAIN
+    MPIR_Assert(num_vnis == 1 || MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+#endif
+
+    /* WorkQ only works with single vni for now */
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Assert(num_vnis == 1);
+#endif
+
+    MPIDI_OFI_global.num_vnis = num_vnis;
 
     /* Create MPIDI_OFI_global.ctx[0] first  */
     mpi_errno = create_vni_context(0);
@@ -567,7 +675,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* Creating the additional vni contexts.
      * This code maybe moved to a later stage */
-    for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
+    for (i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
         mpi_errno = create_vni_context(i);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -577,78 +685,15 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* ------------------------------------------------------------------------ */
 
     if (!MPIDI_OFI_global.got_named_av) {
-        /* No pre-published address table, need do address exchange. */
-        /* First, each get its own name */
-        MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname,
-                                  &MPIDI_OFI_global.addrnamelen), getname);
-        MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
-
-        /* Second, exchange names using PMI */
-        /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
-         * Otherwise, we collect a table of everyone. */
-        int ret_bc_len;
-        mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
-                                          &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                                          TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &ret_bc_len);
+        mpi_errno = addr_exchange_root_vni(init_comm);
         MPIR_ERR_CHECK(mpi_errno);
-        /* MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen); */
-
-        /* Third, each fi_av_insert those addresses */
-        if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
-            /* if "ROOTS_ONLY", we do a two stage bootstrapping ... */
-            int num_nodes = MPIR_Process.num_nodes;
-            int *node_roots = MPIR_Process.node_root_map;
-            int *rank_map, recv_bc_len;
-
-            /* First, insert address of node-roots, init_comm become useful */
-            mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-            MPIDI_OFI_CALL(fi_av_insert
-                           (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
-                           avmap);
-
-            for (i = 0; i < num_nodes; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
-#endif
-            }
-            MPL_free(mapped_table);
-            /* Then, allgather all address names using init_comm */
-            MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
-                               TRUE, &table, &rank_map, &recv_bc_len);
-
-            /* Insert the rest of the addresses */
-            for (i = 0; i < MPIR_Process.size; i++) {
-                if (rank_map[i] >= 0) {
-                    mpi_errno =
-                        MPIDI_OFI_av_insert(0, i, (char *) table + recv_bc_len * rank_map[i]);
-                    MPIR_ERR_CHECK(mpi_errno);
-                }
-            }
-            MPIDU_bc_table_destroy();
-        } else {
-            /* not "ROOTS_ONLY", we already have everyone's address name, insert all of them */
-            mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-            MPIDI_OFI_CALL(fi_av_insert
-                           (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL),
-                           avmap);
-
-            for (i = 0; i < size; i++) {
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
-            }
-            MPL_free(mapped_table);
-            MPIDU_bc_table_destroy();
-        }
     }
 
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
     MPIDIU_map_create(&MPIDI_OFI_global.win_map, MPL_MEM_RMA);
+    MPIDIU_map_create(&MPIDI_OFI_global.req_map, MPL_MEM_OTHER);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -657,8 +702,17 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         /* Maximum possible message size for short message send (=eager send)
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_OFI_global.max_msg_size);
-        MPIDI_OFI_global.am_buf_pool =
-            MPIDIU_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
+        MPL_COMPILE_TIME_ASSERT(sizeof(MPIDI_OFI_am_request_header_t)
+                                < MPIDI_OFI_AM_HDR_POOL_CELL_SIZE);
+        MPL_COMPILE_TIME_ASSERT(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE
+                                >= sizeof(MPIDI_OFI_am_send_pipeline_request_t));
+        mpi_errno =
+            MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_AM_HDR_POOL_CELL_SIZE,
+                                                  MPIDI_OFI_AM_HDR_POOL_NUM_CELLS_PER_CHUNK,
+                                                  MPIDI_OFI_AM_HDR_POOL_MAX_NUM_CELLS,
+                                                  host_alloc, host_free,
+                                                  &MPIDI_OFI_global.am_hdr_buf_pool);
+        MPIR_ERR_CHECK(mpi_errno);
 
         MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
             NULL;
@@ -674,7 +728,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         MPIDI_OFI_global.am_unordered_msgs = NULL;
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIDI_OFI_global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
+            MPL_gpu_malloc_host(&(MPIDI_OFI_global.am_bufs[i]), MPIDI_OFI_AM_BUFF_SZ);
             MPIDI_OFI_global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_OFI_global.am_reqs[i].index = i;
             MPIR_Assert(MPIDI_OFI_global.am_bufs[i]);
@@ -687,13 +741,23 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
             MPIDI_OFI_global.am_msg[i].iov_count = 1;
             MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_global.ctx[0].rx,
                                             &MPIDI_OFI_global.am_msg[i],
-                                            FI_MULTI_RECV | FI_COMPLETION), prepost, FALSE);
+                                            FI_MULTI_RECV | FI_COMPLETION), 0, prepost, FALSE);
         }
 
         MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
     }
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
+
+    /* Create pack buffer pool */
+    mpi_errno =
+        MPIDU_genq_private_pool_create_unsafe(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE,
+                                              MPIR_CVAR_CH4_OFI_NUM_PACK_BUFFERS_PER_CHUNK,
+                                              MPIR_CVAR_CH4_OFI_MAX_NUM_PACK_BUFFERS,
+                                              host_alloc_registered,
+                                              host_free_registered,
+                                              &MPIDI_OFI_global.pack_buf_pool);
+    MPIR_ERR_CHECK(mpi_errno);
 
     /* Initalize RMA keys allocator */
     MPIDI_OFI_mr_key_allocator_init();
@@ -707,6 +771,8 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
 
     /* index datatypes for RMA atomics */
     MPIDI_OFI_index_datatypes();
+
+    MPIDI_OFI_global.deferred_am_isend_q = NULL;
 
   fn_exit:
     *tag_bits = MPIDI_OFI_TAG_BITS;
@@ -732,8 +798,9 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight RMA send long buffers */
+    /* NOTE: am currently only use vni 0. Need update once that changes */
     while (MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs) > 0)
-        MPIDI_OFI_PROGRESS();
+        MPIDI_OFI_PROGRESS(0);
 
     /* Destroy RMA key allocator */
     MPIDI_OFI_mr_key_allocator_destroy();
@@ -745,12 +812,13 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Progress until we drain all inflight injection emulation requests */
+    /* NOTE: am currently only use vni 0. Need update once that changes */
     while (MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) > 0)
-        MPIDI_OFI_PROGRESS();
+        MPIDI_OFI_PROGRESS(0);
     MPIR_Assert(MPL_atomic_load_int(&MPIDI_OFI_global.am_inflight_inject_emus) == 0);
 
     /* Tearing down endpoints */
-    for (i = 1; i < MPIDI_OFI_global.num_ctx; i++) {
+    for (i = 1; i < MPIDI_OFI_global.num_vnis; i++) {
         mpi_errno = destroy_vni_context(i);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -763,6 +831,7 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     fi_freeinfo(MPIDI_OFI_global.prov_use);
 
     MPIDIU_map_destroy(MPIDI_OFI_global.win_map);
+    MPIDIU_map_destroy(MPIDI_OFI_global.req_map);
 
     if (MPIDI_OFI_ENABLE_AM) {
         while (MPIDI_OFI_global.am_unordered_msgs) {
@@ -773,14 +842,16 @@ int MPIDI_OFI_mpi_finalize_hook(void)
         MPIDIU_map_destroy(MPIDI_OFI_global.am_recv_seq_tracker);
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++)
-            MPL_free(MPIDI_OFI_global.am_bufs[i]);
+            MPL_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
 
-        MPIDIU_destroy_buf_pool(MPIDI_OFI_global.am_buf_pool);
+        MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
 
         MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
                     MPIDI_OFI_global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
     }
+
+    MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.pack_buf_pool);
 
     int err;
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &err);
@@ -802,6 +873,15 @@ int MPIDI_OFI_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
+int MPIDI_OFI_post_init(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIDI_OFI_global.num_vnis > 1) {
+        mpi_errno = addr_exchange_all_vnis();
+    }
+    return mpi_errno;
+}
+
 int MPIDI_OFI_get_vci_attr(int vci)
 {
     MPIR_Assert(0 <= vci && vci < 1);
@@ -816,132 +896,6 @@ void *MPIDI_OFI_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 int MPIDI_OFI_mpi_free_mem(void *ptr)
 {
     return MPIDIG_mpi_free_mem(ptr);
-}
-
-int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i, total_size = 0;
-    char *temp_buf = NULL, *curr_ptr = NULL;
-
-    MPIR_CHKPMEM_DECL(2);
-    MPIR_CHKLMEM_DECL(1);
-
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
-                        mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
-                        mpi_errno, "temp_buf", MPL_MEM_BUFFER);
-
-    for (i = 0; i < comm->local_size; i++) {
-        (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
-        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
-                                    &temp_buf[i * MPIDI_OFI_global.addrnamelen],
-                                    &(*local_upid_size)[i]), avlookup);
-        total_size += (*local_upid_size)[i];
-    }
-
-    MPIR_CHKPMEM_MALLOC((*local_upids), char *, total_size * sizeof(char),
-                        mpi_errno, "local_upids", MPL_MEM_BUFFER);
-    curr_ptr = (*local_upids);
-    for (i = 0; i < comm->local_size; i++) {
-        memcpy(curr_ptr, &temp_buf[i * MPIDI_OFI_global.addrnamelen], (*local_upid_size)[i]);
-        curr_ptr += (*local_upid_size)[i];
-    }
-
-    MPIR_CHKPMEM_COMMIT();
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    return mpi_errno;
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
-int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
-                              int **remote_lupids)
-{
-    int i, mpi_errno = MPI_SUCCESS;
-    int *new_avt_procs;
-    char **new_upids;
-    int n_new_procs = 0;
-    int max_n_avts;
-    char *curr_upid;
-
-    MPIR_CHKLMEM_DECL(2);
-
-    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
-                        MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
-                        MPL_MEM_ADDRESS);
-
-    max_n_avts = MPIDIU_get_max_n_avts();
-
-    curr_upid = remote_upids;
-    for (i = 0; i < size; i++) {
-        int j, k;
-        char tbladdr[FI_NAME_MAX];
-        int found = 0;
-        size_t sz = 0;
-
-        for (k = 0; k < max_n_avts; k++) {
-            if (MPIDIU_get_av_table(k) == NULL) {
-                continue;
-            }
-            for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
-                sz = MPIDI_OFI_global.addrnamelen;
-                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_TO_PHYS(k, j),
-                                            &tbladdr, &sz), avlookup);
-                if (sz == remote_upid_size[i]
-                    && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
-                    (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
-                    found = 1;
-                    break;
-                }
-            }
-        }
-
-        if (!found) {
-            new_avt_procs[n_new_procs] = i;
-            new_upids[n_new_procs] = curr_upid;
-            n_new_procs++;
-        }
-        curr_upid += remote_upid_size[i];
-    }
-
-    /* create new av_table, insert processes */
-    if (n_new_procs > 0) {
-        int avtid;
-        mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        for (i = 0; i < n_new_procs; i++) {
-            MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
-                                        1,
-                                        (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                        NULL), avmap);
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
-#endif
-            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
-            /* highest bit is marked as 1 to indicate this is a new process */
-            (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
-            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
-        }
-    }
-
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    return 0;
 }
 
 /* ---- static functions for vni contexts ---- */
@@ -1198,6 +1152,7 @@ static int create_vni_domain(struct fid_domain **p_domain, struct fid_av **p_av,
             av_attr.type = FI_AV_MAP;
         }
         av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
+        av_attr.count = MPIR_Process.size;
 
         av_attr.name = NULL;
         av_attr.flags = 0;
@@ -1312,6 +1267,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         av_attr.type = FI_AV_MAP;
     }
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
+    av_attr.count = MPIR_Process.size;
 
     char av_name[128];
     MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
@@ -1325,10 +1281,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av)
         /* directly references the mapped fi_addr_t array instead               */
         fi_addr_t *mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (int i = 0; i < MPIR_Process.size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-#if MPIDI_OFI_ENABLE_ENDPOINTS_BITS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void *) &MPIDIU_get_av(0, i), mapped_table[i]));
@@ -1371,7 +1324,7 @@ static int create_rma_stx_ctx(struct fid_domain *domain, struct fid_stx **p_rma_
 static int open_fabric(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct fi_info *prov = NULL;
+    struct fi_info *prov_list = NULL;
 
     /* First, find the provider and prepare the hints */
     struct fi_info *hints = fi_allocinfo();
@@ -1381,7 +1334,15 @@ static int open_fabric(void)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* Second, get the actual fi_info * prov */
-    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov), getinfo);
+    MPIDI_OFI_CALL(fi_getinfo(get_ofi_version(), NULL, NULL, 0ULL, hints, &prov_list), getinfo);
+
+    struct fi_info *prov = prov_list;
+    /* fi_getinfo may ignore the addr_format in hints, filter it again */
+    if (hints->addr_format != FI_FORMAT_UNSPEC) {
+        while (prov && prov->addr_format != hints->addr_format) {
+            prov = prov->next;
+        }
+    }
     MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_getinfo");
     if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         int set_number = MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name);
@@ -1399,7 +1360,13 @@ static int open_fabric(void)
 
     MPIDI_OFI_global.max_buffered_send = prov->tx_attr->inject_size;
     MPIDI_OFI_global.max_buffered_write = prov->tx_attr->inject_size;
-    MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
+    if (MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE > 0 &&
+        MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE <= prov->ep_attr->max_msg_size) {
+        /* Truncate max_msg_size to a user-selected value */
+        MPIDI_OFI_global.max_msg_size = MPIR_CVAR_CH4_OFI_EAGER_MAX_MSG_SIZE;
+    } else {
+        MPIDI_OFI_global.max_msg_size = MPL_MIN(prov->ep_attr->max_msg_size, MPIR_AINT_MAX);
+    }
     MPIDI_OFI_global.max_order_raw = prov->ep_attr->max_order_raw_size;
     MPIDI_OFI_global.max_order_war = prov->ep_attr->max_order_war_size;
     MPIDI_OFI_global.max_order_waw = prov->ep_attr->max_order_waw_size;
@@ -1423,8 +1390,9 @@ static int open_fabric(void)
     MPIDI_OFI_CALL(fi_fabric(prov->fabric_attr, &MPIDI_OFI_global.fabric, NULL), fabric);
 
   fn_exit:
-    if (prov)
-        fi_freeinfo(prov);
+    if (prov_list) {
+        fi_freeinfo(prov_list);
+    }
 
     /* prov_name is from MPL_strdup, can't let fi_freeinfo to free it */
     MPL_free(hints->fabric_attr->prov_name);
@@ -1587,11 +1555,11 @@ bool match_global_settings(struct fi_info * prov)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, "Provider name: %s",
                                                      prov->fabric_attr->prov_name));
 
-#ifdef MPIDI_CH4_OFI_SKIP_IPV6
-    if (prov->addr_format == FI_SOCKADDR_IN6) {
-        return false;
+    if (MPIR_CVAR_OFI_SKIP_IPV6) {
+        if (prov->addr_format == FI_SOCKADDR_IN6) {
+            return false;
+        }
     }
-#endif
     CHECK_CAP(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
               prov->domain_attr->max_ep_tx_ctx <= 1 ||
               (prov->caps & FI_NAMED_RX_CTX) != FI_NAMED_RX_CTX);
@@ -1616,7 +1584,9 @@ bool match_global_settings(struct fi_info * prov)
               (prov->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV));
 
     CHECK_CAP(MPIDI_OFI_ENABLE_RMA, !(prov->caps & FI_RMA));
-
+#ifdef FI_HMEM
+    CHECK_CAP(MPIDI_OFI_ENABLE_HMEM, !(prov->caps & FI_HMEM));
+#endif
     uint64_t msg_order = MPIDI_OFI_ATOMIC_ORDER_FLAGS;
     CHECK_CAP(MPIDI_OFI_ENABLE_ATOMICS,
               !(prov->caps & FI_ATOMICS) || (prov->tx_attr->msg_order & msg_order) != msg_order);
@@ -1655,13 +1625,15 @@ static void init_global_settings(const char *prov_name)
      * being used. */
     if (get_ofi_version() < FI_VERSION(1, 5)) {
         /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
+         * FI_MR_VIRT_ADDRESS, FI_MR_ALLOCATED, and FI_MR_PROV_KEY as the opposite values. */
         UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE);
         MPIDI_OFI_global.settings.enable_mr_virt_address =
             MPIDI_OFI_global.settings.enable_mr_prov_key =
+            MPIDI_OFI_global.settings.enable_mr_allocated =
             !MPIDI_OFI_global.settings.enable_mr_virt_address;
     } else {
         UPDATE_SETTING_BY_CAP(enable_mr_virt_address, MPIR_CVAR_CH4_OFI_ENABLE_MR_VIRT_ADDRESS);
+        UPDATE_SETTING_BY_CAP(enable_mr_allocated, MPIR_CVAR_CH4_OFI_ENABLE_MR_ALLOCATED);
         UPDATE_SETTING_BY_CAP(enable_mr_prov_key, MPIR_CVAR_CH4_OFI_ENABLE_MR_PROV_KEY);
     }
     UPDATE_SETTING_BY_CAP(enable_tagged, MPIR_CVAR_CH4_OFI_ENABLE_TAGGED);
@@ -1709,14 +1681,18 @@ static void update_global_settings(struct fi_info *prov_use, struct fi_info *hin
      * being used. */
     if (get_ofi_version() < FI_VERSION(1, 5)) {
         /* If the OFI library is 1.5 or less, query whether or not to use FI_MR_SCALABLE and set
-         * FI_MR_VIRT_ADDRESS and FI_MR_PROV_KEY as the opposite values. */
+         * FI_MR_VIRT_ADDRESS, FI_MR_ALLOCATED, and FI_MR_PROV_KEY as the opposite values. */
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
+                               prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
+        UPDATE_SETTING_BY_INFO(enable_mr_allocated,
                                prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
         UPDATE_SETTING_BY_INFO(enable_mr_prov_key,
                                prov_use->domain_attr->mr_mode != FI_MR_SCALABLE);
     } else {
         UPDATE_SETTING_BY_INFO(enable_mr_virt_address,
                                prov_use->domain_attr->mr_mode & FI_MR_VIRT_ADDR);
+        UPDATE_SETTING_BY_INFO(enable_mr_allocated,
+                               prov_use->domain_attr->mr_mode & FI_MR_ALLOCATED);
         UPDATE_SETTING_BY_INFO(enable_mr_prov_key, prov_use->domain_attr->mr_mode & FI_MR_PROV_KEY);
     }
     UPDATE_SETTING_BY_INFO(enable_tagged,
@@ -1728,7 +1704,9 @@ static void update_global_settings(struct fi_info *prov_use, struct fi_info *hin
                            (FI_MSG | FI_MULTI_RECV | FI_READ));
     UPDATE_SETTING_BY_INFO(enable_rma, prov_use->caps & FI_RMA);
     UPDATE_SETTING_BY_INFO(enable_atomics, prov_use->caps & FI_ATOMICS);
-
+#ifdef FI_HMEM
+    UPDATE_SETTING_BY_INFO(enable_hmem, prov_use->caps & FI_HMEM);
+#endif
     UPDATE_SETTING_BY_INFO(enable_data_auto_progress,
                            hints->domain_attr->data_progress & FI_PROGRESS_AUTO);
     UPDATE_SETTING_BY_INFO(enable_control_auto_progress,
@@ -1856,7 +1834,13 @@ static void init_hints(struct fi_info *hints)
          * mode bits to be added */
 #ifdef FI_MR_VIRT_ADDR
         if (MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS) {
-            hints->domain_attr->mr_mode |= FI_MR_VIRT_ADDR | FI_MR_ALLOCATED;
+            hints->domain_attr->mr_mode |= FI_MR_VIRT_ADDR;
+        }
+#endif
+
+#ifdef FI_MR_ALLOCATED
+        if (MPIDI_OFI_ENABLE_MR_ALLOCATED) {
+            hints->domain_attr->mr_mode |= FI_MR_ALLOCATED;
         }
 #endif
 
@@ -1905,6 +1889,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS: %d\n", MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_MR_ALLOCATED: %d\n", MPIDI_OFI_ENABLE_MR_ALLOCATED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_MR_PROV_KEY: %d\n", MPIDI_OFI_ENABLE_MR_PROV_KEY);
     fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
     fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
@@ -1916,6 +1901,7 @@ static void dump_global_settings(void)
     fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
             MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
     fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+    fprintf(stdout, "MPIDI_OFI_ENABLE_HMEM: %d\n", MPIDI_OFI_ENABLE_HMEM);
     fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
     fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
     fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
@@ -1930,4 +1916,144 @@ static void dump_global_settings(void)
     /* Discover the tag_ub */
     fprintf(stdout, "MAXIMUM TAG: %lu\n", 1UL << MPIDI_OFI_TAG_BITS);
     fprintf(stdout, "======================================\n");
+}
+
+/* static address exchange routines */
+static int addr_exchange_root_vni(MPIR_Comm * init_comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+
+    /* No pre-published address table, need do address exchange. */
+    /* First, each get its own name */
+    MPIDI_OFI_global.addrnamelen = FI_NAME_MAX;
+    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, MPIDI_OFI_global.addrname,
+                              &MPIDI_OFI_global.addrnamelen), getname);
+    MPIR_Assert(MPIDI_OFI_global.addrnamelen <= FI_NAME_MAX);
+
+    /* Second, exchange names using PMI */
+    /* If MPIR_CVAR_CH4_ROOTS_ONLY_PMI is true, we only collect a table of node-roots.
+     * Otherwise, we collect a table of everyone. */
+    void *table = NULL;
+    int ret_bc_len;
+    mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_global.node_map[0],
+                                      &MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                                      TRUE, MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, &ret_bc_len);
+    MPIR_ERR_CHECK(mpi_errno);
+    /* MPIR_Assert(ret_bc_len = MPIDI_OFI_global.addrnamelen); */
+
+    /* Third, each fi_av_insert those addresses */
+    if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+        /* if "ROOTS_ONLY", we do a two stage bootstrapping ... */
+        int num_nodes = MPIR_Process.num_nodes;
+        int *node_roots = MPIR_Process.node_root_map;
+        int *rank_map, recv_bc_len;
+
+        /* First, insert address of node-roots, init_comm become useful */
+        fi_addr_t *mapped_table;
+        mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+        MPIDI_OFI_CALL(fi_av_insert
+                       (MPIDI_OFI_global.ctx[0].av, table, num_nodes, mapped_table, 0ULL, NULL),
+                       avmap);
+
+        for (int i = 0; i < num_nodes; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest[0][0] = mapped_table[i];
+        }
+        MPL_free(mapped_table);
+        /* Then, allgather all address names using init_comm */
+        MPIDU_bc_allgather(init_comm, MPIDI_OFI_global.addrname, MPIDI_OFI_global.addrnamelen,
+                           TRUE, &table, &rank_map, &recv_bc_len);
+
+        /* Insert the rest of the addresses */
+        for (int i = 0; i < MPIR_Process.size; i++) {
+            if (rank_map[i] >= 0) {
+                fi_addr_t addr;
+                char *addrname = (char *) table + recv_bc_len * rank_map[i];
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av,
+                                            addrname, 1, &addr, 0ULL, NULL), avmap);
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, rank)).dest[0][0] = addr;
+            }
+        }
+        MPIDU_bc_table_destroy();
+    } else {
+        /* not "ROOTS_ONLY", we already have everyone's address name, insert all of them */
+        fi_addr_t *mapped_table;
+        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+        MPIDI_OFI_CALL(fi_av_insert
+                       (MPIDI_OFI_global.ctx[0].av, table, size, mapped_table, 0ULL, NULL), avmap);
+
+        for (int i = 0; i < size; i++) {
+            MPIR_Assert(mapped_table[i] != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest[0][0] = mapped_table[i];
+        }
+        MPL_free(mapped_table);
+        MPIDU_bc_table_destroy();
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int addr_exchange_all_vnis(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_OFI_VNI_USE_DOMAIN
+    int size = MPIR_Process.size;
+    int rank = MPIR_Process.rank;
+    int num_vnis = MPIDI_OFI_global.num_vnis;
+
+    /* get addr name length */
+    size_t name_len = 0;
+    int ret = fi_getname((fid_t) MPIDI_OFI_global.ctx[0].ep, NULL, &name_len);
+    MPIR_Assert(ret == -FI_ETOOSMALL);
+    MPIR_Assert(name_len > 0);
+
+    int my_len = num_vnis * name_len;
+    char *all_names = MPL_malloc(size * my_len, MPL_MEM_ADDRESS);
+    MPIR_Assert(all_names);
+
+    char *my_names = all_names + rank * my_len;
+
+    /* put in my addrnames */
+    for (int i = 0; i < num_vnis; i++) {
+        size_t actual_name_len = name_len;
+        char *vni_addrname = my_names + i * name_len;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_OFI_global.ctx[i].ep, vni_addrname,
+                                  &actual_name_len), getname);
+        MPIR_Assert(actual_name_len == name_len);
+    }
+    /* Allgather */
+    MPIR_Comm *comm = MPIR_Process.comm_world;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    mpi_errno = MPIR_Allgather_allcomm_auto(MPI_IN_PLACE, 0, MPI_BYTE,
+                                            all_names, my_len, MPI_BYTE, comm, &errflag);
+    /* insert the addresses */
+    fi_addr_t *mapped_table;
+    mapped_table = (fi_addr_t *) MPL_malloc(size * num_vnis * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+    for (int vni_local = 0; vni_local < num_vnis; vni_local++) {
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[vni_local].av, all_names, size * num_vnis,
+                                    mapped_table, 0ULL, NULL), avmap);
+        for (int r = 0; r < size; r++) {
+            MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(&MPIDIU_get_av(0, r));
+            for (int vni_remote = 0; vni_remote < num_vnis; vni_remote++) {
+                if (vni_local == 0 && vni_remote == 0) {
+                    /* don't overwrite existing addr, or bad things will happen */
+                    continue;
+                }
+                int idx = r * num_vnis + vni_remote;
+                MPIR_Assert(mapped_table[idx] != FI_ADDR_NOTAVAIL);
+                av->dest[vni_local][vni_remote] = mapped_table[idx];
+            }
+        }
+    }
+#endif
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

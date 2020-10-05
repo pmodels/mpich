@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int errs = 0;
     int rank, size, dest, source;
     int i, indices[40];
-    MPI_Aint extent;
+    MPI_Aint extent, tmp_lb;
     int *buf, *bufs[MAX_MSGS];
     MPI_Comm comm;
     MPI_Datatype dtype;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     MPI_Type_commit(&dtype);
 
     /* Create the corresponding message buffers */
-    MPI_Type_extent(dtype, &extent);
+    MPI_Type_get_extent(dtype, &tmp_lb, &extent);
     for (i = 0; i < MAX_MSGS; i++) {
         bufs[i] = (int *) malloc(extent);
         if (!bufs[i]) {

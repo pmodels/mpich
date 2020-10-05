@@ -36,19 +36,11 @@ void MPII_Datatype_printf(MPI_Datatype type,
 #ifdef MPL_USE_DBG_LOGGING
     char *string;
     MPI_Aint size;
-    MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
+    MPI_Aint extent, true_lb, true_ub, lb, ub;
 
     if (HANDLE_IS_BUILTIN(type)) {
         string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
-        if (type == MPI_LB)
-            sticky_lb = 1;
-        else
-            sticky_lb = 0;
-        if (type == MPI_UB)
-            sticky_ub = 1;
-        else
-            sticky_ub = 0;
     } else {
         MPIR_Datatype *type_ptr;
 
@@ -56,8 +48,6 @@ void MPII_Datatype_printf(MPI_Datatype type,
         MPIR_Assert(type_ptr != NULL);
         string = MPIR_Datatype_combiner_to_string(type_ptr->contents->combiner);
         MPIR_Assert(string != NULL);
-        sticky_lb = type_ptr->has_sticky_lb;
-        sticky_ub = type_ptr->has_sticky_ub;
     }
 
     MPIR_Datatype_get_size_macro(type, size);
@@ -71,19 +61,17 @@ void MPII_Datatype_printf(MPI_Datatype type,
         MPL_DBG_OUT(MPIR_DBG_DATATYPE,
                     "------------------------------------------------------------------------------------------------------------------------------------------\n");
         MPL_DBG_OUT(MPIR_DBG_DATATYPE,
-                    "depth                   type         size       extent      true_lb      true_ub           lb(s)           ub(s)         disp       blklen\n");
+                    "depth                   type         size       extent      true_lb      true_ub           lb           ub         disp       blklen\n");
         MPL_DBG_OUT(MPIR_DBG_DATATYPE,
                     "------------------------------------------------------------------------------------------------------------------------------------------\n");
     }
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
                     (MPL_DBG_FDEST,
                      "%5d  %21s  %11d  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  "
-                     MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC
-                     ")  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  "
+                     MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC " " MPI_AINT_FMT_DEC_SPEC " "
                      MPI_AINT_FMT_DEC_SPEC "  %11d", depth, string, (int) size, (MPI_Aint) extent,
-                     (MPI_Aint) true_lb, (MPI_Aint) true_ub, (MPI_Aint) lb, (MPI_Aint) sticky_lb,
-                     (MPI_Aint) ub, (MPI_Aint) sticky_ub, (MPI_Aint) displacement,
-                     (int) blocklength));
+                     (MPI_Aint) true_lb, (MPI_Aint) true_ub, (MPI_Aint) lb,
+                     (MPI_Aint) ub, (MPI_Aint) displacement, (int) blocklength));
 #endif
     return;
 }
@@ -290,13 +278,10 @@ char *MPIR_Datatype_combiner_to_string(int combiner)
  */
 void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
 {
-    int is_builtin;
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
     const char *string;
 #endif
     MPIR_Datatype *dtp ATTRIBUTE((unused));
-
-    is_builtin = (HANDLE_IS_BUILTIN(type));
 
     /* can get a NULL type a number of different ways, including not having
      * fortran support included.
@@ -307,7 +292,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
         return;
     }
 #if (defined HAVE_ERROR_CHECKING) || (defined MPL_USE_DBG_LOGGING)
-    if (is_builtin) {
+    if (HANDLE_IS_BUILTIN(type)) {
         string = MPIR_Datatype_builtin_to_string(type);
         MPIR_Assert(string != NULL);
     } else {
@@ -318,7 +303,7 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
                                         string));
 #endif
 
-    if (is_builtin)
+    if (HANDLE_IS_BUILTIN(type))
         return;
 
     MPIR_Datatype_get_ptr(type, dtp);
@@ -331,13 +316,11 @@ void MPIR_Datatype_debug(MPI_Datatype type, int array_ct)
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,
                                         "# Size = " MPI_AINT_FMT_DEC_SPEC ", Extent = "
                                         MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC
-                                        "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = "
+                                        ", UB = " MPI_AINT_FMT_DEC_SPEC ", Extent = "
                                         MPI_AINT_FMT_DEC_SPEC ", Element Size = "
                                         MPI_AINT_FMT_DEC_SPEC " (%s), %s", (MPI_Aint) dtp->size,
                                         (MPI_Aint) dtp->extent, (MPI_Aint) dtp->lb,
-                                        (dtp->has_sticky_lb) ? "(sticky)" : "", (MPI_Aint) dtp->ub,
-                                        (dtp->has_sticky_ub) ? "(sticky)" : "",
-                                        (MPI_Aint) dtp->extent,
+                                        (MPI_Aint) dtp->ub, (MPI_Aint) dtp->extent,
                                         (MPI_Aint) dtp->builtin_element_size,
                                         dtp->builtin_element_size ==
                                         -1 ? "multiple types" :

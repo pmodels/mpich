@@ -78,11 +78,10 @@ D*/
     error code on failure.
   . ctx - An anonymous pointer to data that may be used by the read
     and write members.
-  - isMaster - Indicates which process is the "master"; may have the
-    values 1 (is the master), 0 (is not the master), or -1 (neither is
-    designated as the master). The two processes must agree on which
-    process is the master, or both must select -1 (neither is the
-    master).
+  - isMain - Indicates which process is "main"; may have the values
+    1 (is main), 0 (is not main), or -1 (neither is designated as
+    main). The two processes must agree on which process is main, or
+    both must select -1 (neither is main).
 
   Notes:
   A typical implementation of these functions will use the read and
@@ -97,7 +96,7 @@ D*/
         int (*read) (void *buf, int maxlen, void *ctx);
         int (*write) (const void *buf, int len, void *ctx);
         void *ctx;
-        int isMaster;
+        int isMain;
     } PMI2_Connect_comm_t;
 
     struct MPIR_Info;

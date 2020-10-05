@@ -26,7 +26,10 @@ int MPIR_Igather_inter_sched_short(const void *sendbuf, int sendcount, MPI_Datat
     remote_size = comm_ptr->remote_size;
     local_size = comm_ptr->local_size;
 
-    if (root == MPI_ROOT) {
+    if (root == MPI_PROC_NULL) {
+        /* local processes other than root do nothing */
+        mpi_errno = MPI_SUCCESS;
+    } else if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
         mpi_errno = MPIR_Sched_recv(recvbuf, recvcount * remote_size, recvtype, 0, comm_ptr, s);
         MPIR_ERR_CHECK(mpi_errno);

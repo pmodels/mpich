@@ -29,7 +29,7 @@ int main(int argc, char **argv)
         displs[i] = (7 - i) * sizeof(long);
         oldtypes[i] = MPI_LONG;
     }
-    MPI_Type_struct(8, blocklens, displs, oldtypes, &ntype1);
+    MPI_Type_create_struct(8, blocklens, displs, oldtypes, &ntype1);
     MPI_Type_contiguous(65536, ntype1, &ntype2);
     MPI_Type_commit(&ntype2);
 

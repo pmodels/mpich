@@ -3,7 +3,10 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef POSIX_EAGER_INLINE
+#ifdef POSIX_EAGER_INLINE
+/* this file is empty */
+#else
+
 #define POSIX_EAGER_DISABLE_INLINES
 
 #include <mpidimpl.h>
@@ -20,7 +23,10 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_iqueue_funcs = {
     MPIDI_POSIX_eager_recv_commit,
 
     MPIDI_POSIX_eager_recv_posted_hook,
-    MPIDI_POSIX_eager_recv_completed_hook
+    MPIDI_POSIX_eager_recv_completed_hook,
+
+    MPIDI_POSIX_eager_payload_limit,
+    MPIDI_POSIX_eager_buf_limit
 };
 
 #endif /* POSIX_EAGER_INLINE */

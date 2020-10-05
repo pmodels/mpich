@@ -5,4 +5,4 @@ timeout 2 resultTest=TestErrFatal timeLimit=10
 version 1
 finalized 1
 attrself 1
-library_version 1 mpiversion=3.0
+library_version 1

@@ -15,40 +15,6 @@
 
 //  #define onesidedtrace 1
 
-/* Data that needs to persist throughout multiple calls to ADIOI_OneSidedWriteAggregation
- * to support file systems that stripe data -- the algorithm can now be called once
- * for each segment of data, a segment being defined as a contiguous region of the file which
- * is the size of one striping unit times the number of aggregators.  Each call effectively packs one
- * striping unit of data into the collective buffer on each agg, with additional parameters which govern when to flush
- * the collective buffer to the file.  Therefore in practice the collective write call for a file system such as
- * lustre on a dataset composed of multiple segments would call the algorithm several times without a
- * flush parameter to fill the collective buffers with multiple stripes of data, before calling it again to flush
- * the collective buffer to the file system.  In this fashion the synchronization can be minimized as that
- * only needs to occur during the actual read from or write to the file system.
- */
-int iWasUsedStripingAgg;        /* whether this rank was ever a used agg for this striping segement */
-int numStripesUsed;             /* the number of stripes packed into an aggregator */
-/* These 2 variables are the offset and lengths in the file corresponding to the actual stripes */
-ADIO_Offset *stripeWriteOffsets, *stripeWriteLens;
-int amountOfStripedDataExpected;        /* used to determine holes in this segment thereby requiring a rmw */
-/* Since ADIOI_OneSidedWriteAggregation can be called multiple times now only flatten the buffer once */
-/* for optimal performance so persist these two variables through multiple calls */
-MPI_Aint bufTypeExtent_global;
-ADIOI_Flatlist_node *flatBuf_global;
-/* These three variables track the state of the source buffer advancement through multiple calls */
-int lastDataTypeExtent;
-int lastFlatBufIndice;
-ADIO_Offset lastIndiceOffset;
-/* This data structure holds the number of extents, the index into the flattened buffer and the remnant length
- * beyond the flattened buffer index corresponding to the base buffer offset for non-contiguous source data
- * for the range to be written coresponding to the round and target agg.
- */
-typedef struct NonContigSourceBufOffset {
-    int dataTypeExtent;
-    int flatBufIndice;
-    ADIO_Offset indiceOffset;
-} NonContigSourceBufOffset;
-
 /* This data structure holds the access state of the source buffer for target
  * file domains within aggregators corresponding to the target data blocks.  It
  * is designed to be initialized with a starting point for a given file domain
@@ -64,7 +30,7 @@ typedef struct FDSourceBufferState {
 
     ADIO_Offset indiceOffset;
     MPI_Aint bufTypeExtent;
-    int dataTypeExtent;
+    ADIO_Offset dataTypeExtent;
     int flatBufIndice;
 
     ADIO_Offset sourceBufferOffset;
@@ -127,7 +93,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     // used in offset calculations
     ADIO_Offset currentIndiceOffset = currentFDSourceBufferState->indiceOffset;
     ADIO_Offset bufTypeExtent = (ADIO_Offset) currentFDSourceBufferState->bufTypeExtent;
-    ADIO_Offset currentDataTypeExtent = (ADIO_Offset) currentFDSourceBufferState->dataTypeExtent;
+    ADIO_Offset currentDataTypeExtent = currentFDSourceBufferState->dataTypeExtent;
     int currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
 
     int targetSendDataIndex = 0;
@@ -206,7 +172,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     /* update machinery with new flatbuf position
      */
     currentFDSourceBufferState->indiceOffset = currentIndiceOffset;
-    currentFDSourceBufferState->dataTypeExtent = (int) currentDataTypeExtent;
+    currentFDSourceBufferState->dataTypeExtent = currentDataTypeExtent;
     currentFDSourceBufferState->flatBufIndice = currentFlatBufIndice;
 #ifdef onesidedtrace
     printf
@@ -215,7 +181,22 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
 #endif
 }
 
-
+/* The ADIOI_OneSidedWriteAggregation algorithm is called once
+ * for each segment of data, a segment being defined as a contiguous region of the file which
+ * is the size of one striping unit times the number of aggregators.  For lustre the striping unit
+ * corresponds with the actual file stripe, in the case of gpfs these are file domains.
+ * Each call effectively packs one striping unit of data into the collective buffer on each agg,
+ * with additional parameters which govern when to flush the collective buffer to the file.
+ * Therefore in practice the collective write call for a file system such as
+ * lustre on a dataset composed of multiple segments would call the algorithm several times without a
+ * flush parameter to fill the collective buffers with multiple stripes of data, before calling it again to flush
+ * the collective buffer to the file system.  In this fashion the synchronization can be minimized as that
+ * only needs to occur during the actual read from or write to the file system.  In the case of gpfs
+ * this function is called just once.  The ADIOI_OneSidedStripeParms parameter is used to save the
+ * state and re-use variables thru repetative calls to help in the case of lustre to avoid costly
+ * recomputation, for consistency gpfs utilizes it as well but doesn't use some aspects of it.  This
+ * function was originally first written for gpfs only and then modified to support lustre.
+ */
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     ADIO_Offset * offset_list,
                                     ADIO_Offset * len_list,
@@ -228,12 +209,19 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     int numNonZeroDataOffsets,
                                     ADIO_Offset * fd_start,
                                     ADIO_Offset * fd_end,
-                                    int *hole_found, ADIOI_OneSidedStripeParms stripe_parms)
+                                    int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms)
 {
     int i, j;                   /* generic iterators */
 
-    if ((stripe_parms.stripeSize > 0) && stripe_parms.firstStripedWriteCall)
-        iWasUsedStripingAgg = 0;
+/* make local copy of certain ADIOI_OneSidedStripeParms elements for faster access -
+   pay for pointer dereference only once. */
+    int stripeSize = stripe_parms->stripeSize;
+    int segmentIter = stripe_parms->segmentIter;
+    MPI_Aint bufTypeExtent = stripe_parms->bufTypeExtent;
+    ADIOI_Flatlist_node *flatBuf = stripe_parms->flatBuf;
+
+    if ((stripeSize > 0) && stripe_parms->firstStripedWriteCall)
+        stripe_parms->iWasUsedStripingAgg = 0;
 #ifdef onesidedtrace
     if (buf == NULL) {
         printf("ADIOI_OneSidedWriteAggregation - buf is NULL contig_access_count is %d\n",
@@ -291,16 +279,17 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     if (!bufTypeIsContig) {
         /* Flatten the non-contiguous source datatype and set the extent. */
-        if ((stripe_parms.stripeSize == 0) || stripe_parms.firstStripedWriteCall) {
-            flatBuf_global = ADIOI_Flatten_and_find(datatype);
-            MPI_Type_extent(datatype, &bufTypeExtent_global);
+        if ((stripeSize == 0) || stripe_parms->firstStripedWriteCall) {
+            stripe_parms->flatBuf = ADIOI_Flatten_and_find(datatype);
+            flatBuf = stripe_parms->flatBuf;
+            MPI_Type_extent(datatype, &(stripe_parms->bufTypeExtent));
+            bufTypeExtent = stripe_parms->bufTypeExtent;
         }
 #ifdef onesidedtrace
-        printf("flatBuf_global->count is %d bufTypeExtent_global is %d\n", flatBuf_global->count,
-               bufTypeExtent_global);
-        for (i = 0; i < flatBuf_global->count; i++)
-            printf("flatBuf_global->blocklens[%d] is %d flatBuf_global->indices[%d] is %ld\n", i,
-                   flatBuf_global->blocklens[i], i, flatBuf_global->indices[i]);
+        printf("flatBuf->count is %d bufTypeExtent is %ld\n", flatBuf->count, bufTypeExtent);
+        for (i = 0; i < flatBuf->count; i++)
+            printf("flatBuf->blocklens[%d] is %d flatBuf->indices[%d] is %ld\n", i,
+                   flatBuf->blocklens[i], i, flatBuf->indices[i]);
 #endif
     }
 
@@ -348,10 +337,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     /* Make coll_bufsize an ADIO_Offset since it is used in calculations with offsets.
      */
     ADIO_Offset coll_bufsize = 0;
-    if (stripe_parms.stripeSize == 0)
+    if (stripeSize == 0)
         coll_bufsize = (ADIO_Offset) (fd->hints->cb_buffer_size);
     else
-        coll_bufsize = stripe_parms.stripeSize;
+        coll_bufsize = stripeSize;
 
 #ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio == 1) {
@@ -379,7 +368,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             myAggRank = j;
             if (fd_end[j] > fd_start[j]) {
                 iAmUsedAgg = 1;
-                iWasUsedStripingAgg = 1;
+                stripe_parms->iWasUsedStripingAgg = 1;
             }
         }
     }
@@ -448,18 +437,20 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentSourceBufferOffset = 0;
-    int currentDataTypeExtent = 0;
+    ADIO_Offset currentDataTypeExtent = 0;
     int currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
     /* Remember where we left off in the source buffer when packing stripes. */
-    if ((stripe_parms.stripeSize > 0) && !stripe_parms.firstStripedWriteCall) {
-        currentDataTypeExtent = lastDataTypeExtent;
-        currentFlatBufIndice = lastFlatBufIndice;
-        currentIndiceOffset = lastIndiceOffset;
+    if ((stripeSize > 0) && !(stripe_parms->firstStripedWriteCall)) {
+        currentDataTypeExtent = stripe_parms->lastDataTypeExtent;
+        currentFlatBufIndice = stripe_parms->lastFlatBufIndice;
+        currentIndiceOffset = stripe_parms->lastIndiceOffset;
 #ifdef onesidedtrace
-        printf("using lastDataTypeExtent %d lastFlatBufIndice %d lastIndiceOffset %ld\n",
-               lastDataTypeExtent, lastFlatBufIndice, lastIndiceOffset);
+        printf
+            ("using stripe_parms->lastDataTypeExtent %ld stripe_parms->lastFlatBufIndice %d stripe_parms->lastIndiceOffset %ld\n",
+             stripe_parms->lastDataTypeExtent, stripe_parms->lastFlatBufIndice,
+             stripe_parms->lastIndiceOffset);
 #endif
     }
 
@@ -500,10 +491,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     while (sourceBlockTotal < len_list[blockIter - 1]) {
                         numNonContigSourceChunks++;
                         sourceBlockTotal +=
-                            (flatBuf_global->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+                            (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
                         lastIndiceUsed = currentFlatBufIndice;
                         currentFlatBufIndice++;
-                        if (currentFlatBufIndice == flatBuf_global->count) {
+                        if (currentFlatBufIndice == flatBuf->count) {
                             currentFlatBufIndice = 0;
                             currentDataTypeExtent++;
                         }
@@ -513,12 +504,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                         currentFlatBufIndice--;
                         if (currentFlatBufIndice < 0) {
                             currentDataTypeExtent--;
-                            currentFlatBufIndice = flatBuf_global->count - 1;
+                            currentFlatBufIndice = flatBuf->count - 1;
                         }
                         currentIndiceOffset =
                             len_list[blockIter - 1] - (sourceBlockTotal -
-                                                       flatBuf_global->blocklens[lastIndiceUsed]);
-                        // ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf_global->blocklens[currentFlatBufIndice]));
+                                                       flatBuf->blocklens[lastIndiceUsed]);
+                        // ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf->blocklens[currentFlatBufIndice]));
                     } else
                         currentIndiceOffset = (ADIO_Offset) 0;
                     maxNumContigOperations += (numNonContigSourceChunks + 2);
@@ -527,7 +518,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
 #ifdef onesidedtrace
                     printf
-                        ("blockiter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
+                        ("blockiter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %ld currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
                          blockIter, currentFlatBufIndice, currentDataTypeExtent,
                          currentIndiceOffset, maxNumContigOperations);
 #endif
@@ -543,9 +534,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 int lastNumNonContigSourceChunks = 0;
                 while (sourceBlockTotal < len_list[blockIter]) {
                     lastNumNonContigSourceChunks++;
-                    sourceBlockTotal += flatBuf_global->blocklens[tmpCurrentFlatBufIndice];
+                    sourceBlockTotal += flatBuf->blocklens[tmpCurrentFlatBufIndice];
                     tmpCurrentFlatBufIndice++;
-                    if (tmpCurrentFlatBufIndice == flatBuf_global->count) {
+                    if (tmpCurrentFlatBufIndice == flatBuf->count) {
                         tmpCurrentFlatBufIndice = 0;
                     }
                 }
@@ -637,15 +628,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                     if (currentFDSourceBufferState[numTargetAggs].indiceOffset == -1) {
                         currentFDSourceBufferState[numTargetAggs].indiceOffset =
                             currentIndiceOffset;
-                        currentFDSourceBufferState[numTargetAggs].bufTypeExtent =
-                            bufTypeExtent_global;
+                        currentFDSourceBufferState[numTargetAggs].bufTypeExtent = bufTypeExtent;
                         currentFDSourceBufferState[numTargetAggs].dataTypeExtent =
                             currentDataTypeExtent;
                         currentFDSourceBufferState[numTargetAggs].flatBufIndice =
                             currentFlatBufIndice;
 #ifdef onesidedtrace
                         printf
-                            ("For agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld\n",
+                            ("For agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld\n",
                              numTargetAggs, currentDataTypeExtent, currentFlatBufIndice,
                              currentIndiceOffset);
 #endif
@@ -786,7 +776,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                 currentFDSourceBufferState[numTargetAggs].indiceOffset =
                                     currentIndiceOffset;
                                 currentFDSourceBufferState[numTargetAggs].bufTypeExtent =
-                                    bufTypeExtent_global;
+                                    bufTypeExtent;
                                 currentFDSourceBufferState[numTargetAggs].dataTypeExtent =
                                     currentDataTypeExtent;
                                 currentFDSourceBufferState[numTargetAggs].flatBufIndice =
@@ -802,13 +792,13 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                 currentFDSourceBufferState[numTargetAggs].flatBufIndice =
                                     currentFDSourceBufferState[numTargetAggs - 1].flatBufIndice;
                             }
-                            nonContigSourceDataBufferAdvance(((char *) buf), flatBuf_global,
+                            nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                              (int) amountToAdvanceSBOffsetForFD, 1,
                                                              &currentFDSourceBufferState
                                                              [numTargetAggs], NULL);
 #ifdef onesidedtrace
                             printf
-                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
+                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
                                  numTargetAggs,
                                  currentFDSourceBufferState[numTargetAggs].dataTypeExtent,
                                  currentFDSourceBufferState[numTargetAggs].flatBufIndice,
@@ -923,73 +913,74 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                currentRoundFDStart, currentRoundFDEnd);
 #endif
 
-        if ((stripe_parms.stripeSize > 0) && (stripe_parms.segmentIter == 0)) {
-            numStripesUsed = 0;
-            stripeWriteOffsets =
-                (ADIO_Offset *) ADIOI_Malloc(stripe_parms.stripesPerAgg * sizeof(ADIO_Offset));
-            stripeWriteLens =
-                (ADIO_Offset *) ADIOI_Malloc(stripe_parms.stripesPerAgg * sizeof(ADIO_Offset));
-            amountOfStripedDataExpected = 0;
+        if ((stripeSize > 0) && (segmentIter == 0)) {
+            stripe_parms->numStripesUsed = 0;
+            stripe_parms->stripeWriteOffsets =
+                (ADIO_Offset *) ADIOI_Malloc(stripe_parms->stripesPerAgg * sizeof(ADIO_Offset));
+            stripe_parms->stripeWriteLens =
+                (ADIO_Offset *) ADIOI_Malloc(stripe_parms->stripesPerAgg * sizeof(ADIO_Offset));
+            stripe_parms->amountOfStripedDataExpected = 0;
             int stripeIter = 0;
-            for (stripeIter = 0; stripeIter < stripe_parms.stripesPerAgg; stripeIter++) {
+            for (stripeIter = 0; stripeIter < stripe_parms->stripesPerAgg; stripeIter++) {
                 if (stripeIter == 0) {
-                    stripeWriteOffsets[stripeIter] = currentRoundFDStart;
-                    stripeWriteLens[stripeIter] =
+                    stripe_parms->stripeWriteOffsets[stripeIter] = currentRoundFDStart;
+                    stripe_parms->stripeWriteLens[stripeIter] =
                         (int) (currentRoundFDEnd - currentRoundFDStart) + 1;
-                    amountOfStripedDataExpected +=
+                    stripe_parms->amountOfStripedDataExpected +=
                         (int) (currentRoundFDEnd - currentRoundFDStart) + 1;
-                    numStripesUsed++;
+                    stripe_parms->numStripesUsed++;
                 } else {
                     if (((currentRoundFDEnd + (ADIO_Offset) 1 +
-                          ((ADIO_Offset) stripeIter * stripe_parms.segmentLen))) >
-                        stripe_parms.stripedLastFileOffset) {
+                          ((ADIO_Offset) stripeIter * stripe_parms->segmentLen))) >
+                        stripe_parms->stripedLastFileOffset) {
                         if (((currentRoundFDEnd + (ADIO_Offset) 1 -
-                              (ADIO_Offset) (stripe_parms.stripeSize) +
-                              ((ADIO_Offset) stripeIter * stripe_parms.segmentLen))) <=
-                            stripe_parms.stripedLastFileOffset) {
-                            stripeWriteOffsets[stripeIter] =
+                              (ADIO_Offset) (stripeSize) +
+                              ((ADIO_Offset) stripeIter * stripe_parms->segmentLen))) <=
+                            stripe_parms->stripedLastFileOffset) {
+                            stripe_parms->stripeWriteOffsets[stripeIter] =
                                 (currentRoundFDEnd + (ADIO_Offset) 1) -
-                                (ADIO_Offset) (stripe_parms.stripeSize) +
-                                ((ADIO_Offset) stripeIter * stripe_parms.segmentLen);
-                            stripeWriteLens[stripeIter] =
-                                (int) (stripe_parms.stripedLastFileOffset -
+                                (ADIO_Offset) (stripeSize) +
+                                ((ADIO_Offset) stripeIter * stripe_parms->segmentLen);
+                            stripe_parms->stripeWriteLens[stripeIter] =
+                                (int) (stripe_parms->stripedLastFileOffset -
                                        (currentRoundFDEnd + (ADIO_Offset) 1 -
-                                        (ADIO_Offset) (stripe_parms.stripeSize) +
-                                        ((ADIO_Offset) stripeIter * stripe_parms.segmentLen)) +
+                                        (ADIO_Offset) (stripeSize) +
+                                        ((ADIO_Offset) stripeIter * stripe_parms->segmentLen)) +
                                        (ADIO_Offset) 1);
-                            amountOfStripedDataExpected +=
-                                (int) (stripe_parms.stripedLastFileOffset -
+                            stripe_parms->amountOfStripedDataExpected +=
+                                (int) (stripe_parms->stripedLastFileOffset -
                                        (currentRoundFDEnd + (ADIO_Offset) 1 -
-                                        (ADIO_Offset) (stripe_parms.stripeSize) +
-                                        ((ADIO_Offset) stripeIter * stripe_parms.segmentLen)) +
+                                        (ADIO_Offset) (stripeSize) +
+                                        ((ADIO_Offset) stripeIter * stripe_parms->segmentLen)) +
                                        (ADIO_Offset) 1);
-                            numStripesUsed++;
+                            stripe_parms->numStripesUsed++;
                         }
                     } else {
-                        stripeWriteOffsets[stripeIter] =
+                        stripe_parms->stripeWriteOffsets[stripeIter] =
                             (currentRoundFDEnd + (ADIO_Offset) 1) -
-                            (ADIO_Offset) (stripe_parms.stripeSize) +
-                            ((ADIO_Offset) stripeIter * stripe_parms.segmentLen);
-                        stripeWriteLens[stripeIter] = stripe_parms.stripeSize;
-                        amountOfStripedDataExpected += stripe_parms.stripeSize;
-                        numStripesUsed++;
+                            (ADIO_Offset) (stripeSize) +
+                            ((ADIO_Offset) stripeIter * stripe_parms->segmentLen);
+                        stripe_parms->stripeWriteLens[stripeIter] = stripeSize;
+                        stripe_parms->amountOfStripedDataExpected += stripeSize;
+                        stripe_parms->numStripesUsed++;
                     }
                 }
             }   // for-loop
 
 #ifdef onesidedtrace
             printf
-                ("amountOfStripedDataExpected is %d numStripesUsed is %d offsets and lengths are ",
-                 amountOfStripedDataExpected, numStripesUsed);
-            for (i = 0; i < numStripesUsed; i++) {
-                printf("%ld %ld --", stripeWriteOffsets[i], stripeWriteLens[i]);
+                ("stripe_parms->amountOfStripedDataExpected is %d stripe_parms->numStripesUsed is %d offsets and lengths are ",
+                 stripe_parms->amountOfStripedDataExpected, stripe_parms->numStripesUsed);
+            for (i = 0; i < stripe_parms->numStripesUsed; i++) {
+                printf("%ld %ld --", stripe_parms->stripeWriteOffsets[i],
+                       stripe_parms->stripeWriteLens[i]);
             }
             printf("\n");
 #endif
-        }       // if ((stripe_parms.stripeSize>0) && (stripe_parms.segmentIter==0))
+        }       // if ((stripeSize>0) && (segmentIter==0))
 
 
-        if (romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0))) { // read in the first buffer
+        if (romio_onesided_always_rmw && ((stripeSize == 0) || (segmentIter == 0))) {   // read in the first buffer
             ADIO_Offset tmpCurrentRoundFDEnd = 0;
             if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
                 if (myAggRank == greatestFileDomainAggRank) {
@@ -1008,24 +999,26 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                  (int) (tmpCurrentRoundFDEnd - currentRoundFDStart) + 1);
 #endif
 
-            if (stripe_parms.stripeSize == 0) {
+            if (stripeSize == 0) {
                 ADIO_ReadContig(fd, write_buf,
                                 (int) (tmpCurrentRoundFDEnd - currentRoundFDStart) + 1, MPI_BYTE,
                                 ADIO_EXPLICIT_OFFSET, currentRoundFDStart, &status, error_code);
             } else {
                 // pre-read the entire batch of stripes we will do before writing
                 int stripeIter = 0;
-                for (stripeIter = 0; stripeIter < numStripesUsed; stripeIter++)
+                for (stripeIter = 0; stripeIter < stripe_parms->numStripesUsed; stripeIter++)
                     ADIO_ReadContig(fd,
                                     (char *) write_buf +
                                     ((ADIO_Offset) stripeIter *
-                                     (ADIO_Offset) stripe_parms.stripeSize),
-                                    stripeWriteLens[stripeIter], MPI_BYTE, ADIO_EXPLICIT_OFFSET,
-                                    stripeWriteOffsets[stripeIter], &status, error_code);
+                                     (ADIO_Offset) stripeSize),
+                                    stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
+                                    ADIO_EXPLICIT_OFFSET,
+                                    stripe_parms->stripeWriteOffsets[stripeIter], &status,
+                                    error_code);
             }
         }
     }   // if iAmUsedAgg
-    if (romio_onesided_always_rmw && ((stripe_parms.stripeSize == 0) || (stripe_parms.segmentIter == 0)))       // wait until the first buffer is read
+    if (romio_onesided_always_rmw && ((stripeSize == 0) || (segmentIter == 0))) // wait until the first buffer is read
         MPI_Barrier(fd->comm);
 
 #ifdef ROMIO_GPFS
@@ -1187,8 +1180,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                              */
                             MPI_Aint targetDisplacementToUseThisRound =
                                 (MPI_Aint) (offsetStart - currentRoundFDStartForMyTargetAgg) +
-                                ((MPI_Aint) (stripe_parms.segmentIter) *
-                                 (MPI_Aint) (stripe_parms.stripeSize));
+                                ((MPI_Aint) (segmentIter) * (MPI_Aint) (stripeSize));
 
                             /* If using the thread writer select the appropriate side of the split window.
                              */
@@ -1216,7 +1208,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                 } else {
                                     putSourceData =
                                         (char *) ADIOI_Malloc(bufferAmountToSend * sizeof(char));
-                                    nonContigSourceDataBufferAdvance(((char *) buf), flatBuf_global,
+                                    nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
                                                                      [aggIter], putSourceData);
@@ -1250,7 +1242,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                         (ADIO_Offset) bufferAmountToSend;
                                     targetAggContigAccessCount++;
                                 } else {
-                                    nonContigSourceDataBufferAdvance(((char *) buf), flatBuf_global,
+                                    nonContigSourceDataBufferAdvance(((char *) buf), flatBuf,
                                                                      bufferAmountToSend, 1,
                                                                      &currentFDSourceBufferState
                                                                      [aggIter],
@@ -1341,14 +1333,19 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 }       // baseoffset != -1
             }   // target aggs
 
-            if (stripe_parms.stripeSize > 0) {
-                lastDataTypeExtent = currentFDSourceBufferState[numTargetAggs - 1].dataTypeExtent;
-                lastFlatBufIndice = currentFDSourceBufferState[numTargetAggs - 1].flatBufIndice;
-                lastIndiceOffset = currentFDSourceBufferState[numTargetAggs - 1].indiceOffset;
+            if (stripeSize > 0) {
+                stripe_parms->lastDataTypeExtent =
+                    currentFDSourceBufferState[numTargetAggs - 1].dataTypeExtent;
+                stripe_parms->lastFlatBufIndice =
+                    currentFDSourceBufferState[numTargetAggs - 1].flatBufIndice;
+                stripe_parms->lastIndiceOffset =
+                    currentFDSourceBufferState[numTargetAggs - 1].indiceOffset;
 
 #ifdef onesidedtrace
-                printf("setting lastDataTypeExtent %d lastFlatBufIndice %d lastIndiceOffset %ld\n",
-                       lastDataTypeExtent, lastFlatBufIndice, lastIndiceOffset);
+                printf
+                    ("setting stripe_parms->lastDataTypeExtent %ld stripe_parms->lastFlatBufIndice %d stripe_parms->lastIndiceOffset %ld\n",
+                     stripe_parms->lastDataTypeExtent, stripe_parms->lastFlatBufIndice,
+                     stripe_parms->lastIndiceOffset);
 #endif
 
             }
@@ -1356,16 +1353,16 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         }       /// contig_access_count > 0
 
         /* Synchronize all procs before the file write */
-        if ((stripe_parms.stripeSize == 0) || (stripe_parms.flushCB)) {
+        if ((stripeSize == 0) || (stripe_parms->flushCB)) {
 #ifdef onesidedtrace
             printf("first barrier roundIter %d\n", roundIter);
 #endif
             MPI_Barrier(fd->comm);
         }
 
-        if ((iAmUsedAgg || iWasUsedStripingAgg) &&
-            ((stripe_parms.stripeSize == 0) || (stripe_parms.flushCB))) {
-            iWasUsedStripingAgg = 0;
+        if ((iAmUsedAgg || stripe_parms->iWasUsedStripingAgg) &&
+            ((stripeSize == 0) || (stripe_parms->flushCB))) {
+            stripe_parms->iWasUsedStripingAgg = 0;
             /* Determine what offsets define the portion of the file domain the agg is writing this round.
              */
             if (iAmUsedAgg) {
@@ -1394,7 +1391,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #endif
             int doWriteContig = 1;
             if (!romio_onesided_no_rmw) {
-                if (stripe_parms.stripeSize == 0) {
+                if (stripeSize == 0) {
                     if (fd->io_buf_put_amounts !=
                         ((int) (currentRoundFDEnd - currentRoundFDStart) + 1)) {
                         doWriteContig = 0;
@@ -1407,13 +1404,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #endif
                     }
                 } else {        // file striping
-                    if (fd->io_buf_put_amounts != amountOfStripedDataExpected) {
+                    if (fd->io_buf_put_amounts != stripe_parms->amountOfStripedDataExpected) {
                         doWriteContig = 0;
                         *hole_found = 1;
 #ifdef onesidedtrace
                         printf
-                            ("striping hole found --- fd->io_buf_put_amounts is %d amountOfStripedDataExpected is %d on roundIter %d\n",
-                             fd->io_buf_put_amounts, amountOfStripedDataExpected, roundIter);
+                            ("striping hole found --- fd->io_buf_put_amounts is %d stripe_parms->amountOfStripedDataExpected is %d on roundIter %d\n",
+                             fd->io_buf_put_amounts, stripe_parms->amountOfStripedDataExpected,
+                             roundIter);
 #endif
                     }
                 }
@@ -1422,28 +1420,31 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
             if (!useIOBuffer) {
                 if (doWriteContig) {
-                    if (stripe_parms.stripeSize > 0) {
+                    if (stripeSize > 0) {
 #ifdef onesidedtrace
-                        printf("about to write out %d stripes\n", numStripesUsed);
+                        printf("about to write out %d stripes\n", stripe_parms->numStripesUsed);
 #endif
                         int stripeIter = 0;
-                        for (stripeIter = 0; stripeIter < numStripesUsed; stripeIter++) {
+                        for (stripeIter = 0; stripeIter < stripe_parms->numStripesUsed;
+                             stripeIter++) {
 #ifdef onesidedtrace
                             printf("writing write_buf offset %ld len %ld file offset %ld\n",
                                    ((ADIO_Offset) stripeIter *
-                                    (ADIO_Offset) (stripe_parms.stripeSize)),
-                                   stripeWriteLens[stripeIter], stripeWriteOffsets[stripeIter]);
+                                    (ADIO_Offset) (stripeSize)),
+                                   stripe_parms->stripeWriteLens[stripeIter],
+                                   stripe_parms->stripeWriteOffsets[stripeIter]);
 #endif
                             ADIO_WriteContig(fd,
                                              (char *) write_buf +
                                              ((ADIO_Offset) stripeIter *
-                                              (ADIO_Offset) (stripe_parms.stripeSize)),
-                                             stripeWriteLens[stripeIter], MPI_BYTE,
-                                             ADIO_EXPLICIT_OFFSET, stripeWriteOffsets[stripeIter],
-                                             &status, error_code);
+                                              (ADIO_Offset) (stripeSize)),
+                                             stripe_parms->stripeWriteLens[stripeIter], MPI_BYTE,
+                                             ADIO_EXPLICIT_OFFSET,
+                                             stripe_parms->stripeWriteOffsets[stripeIter], &status,
+                                             error_code);
                         }
-                        ADIOI_Free(stripeWriteLens);
-                        ADIOI_Free(stripeWriteOffsets);
+                        ADIOI_Free(stripe_parms->stripeWriteLens);
+                        ADIOI_Free(stripe_parms->stripeWriteOffsets);
                     } else {
                         ADIO_WriteContig(fd, write_buf,
                                          (int) (currentRoundFDEnd - currentRoundFDStart) + 1,
@@ -1490,8 +1491,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
         }       // iAmUsedAgg
 
-        if (!iAmUsedAgg && useIOBuffer &&
-            ((stripe_parms.stripeSize == 0) || (stripe_parms.flushCB))) {
+        if (!iAmUsedAgg && useIOBuffer && ((stripeSize == 0) || (stripe_parms->flushCB))) {
             if (currentWriteBuf == 0) {
                 currentWriteBuf = 1;
                 write_buf = write_buf1;
@@ -1501,7 +1501,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             }
         }
 
-        if (iAmUsedAgg && stripe_parms.stripeSize == 0) {
+        if (iAmUsedAgg && stripeSize == 0) {
             currentRoundFDStart += coll_bufsize;
 
             if (romio_onesided_always_rmw && (roundIter < (numberOfRounds - 1))) {      // read in the buffer for the next round unless this is the last round
@@ -1812,7 +1812,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     int maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentRecvBufferOffset = 0;
-    int currentDataTypeExtent = 0;
+    ADIO_Offset currentDataTypeExtent = 0;
     int currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
@@ -1877,7 +1877,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
 #ifdef onesidedtrace
                     printf
-                        ("block iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
+                        ("block iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %ld currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
                          blockIter, currentFlatBufIndice, currentDataTypeExtent,
                          currentIndiceOffset, maxNumContigOperations);
 #endif
@@ -1985,7 +1985,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                             currentFlatBufIndice;
 #ifdef onesidedtrace
                         printf
-                            ("For agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld\n",
+                            ("For agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld\n",
                              numSourceAggs, currentDataTypeExtent, currentFlatBufIndice,
                              currentIndiceOffset);
 #endif
@@ -2152,7 +2152,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                                              [numSourceAggs], NULL);
 #ifdef onesidedtrace
                             printf
-                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
+                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
                                  numSourceAggs,
                                  currentFDSourceBufferState[numSourceAggs].dataTypeExtent,
                                  currentFDSourceBufferState[numSourceAggs].flatBufIndice,

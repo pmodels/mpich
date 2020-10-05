@@ -785,8 +785,7 @@ MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
         if (comm_ptr && comm_ptr->revoked && MPIR_TAG_MASK_ERROR_BITS(match->parts.tag) != MPIR_AGREE_TAG &&
                         comm_ptr->revoked && MPIR_TAG_MASK_ERROR_BITS(match->parts.tag) != MPIR_SHRINK_TAG) {
             *foundp = FALSE;
-            MPIDI_Request_create_null_rreq( rreq, mpi_errno, found=FALSE;goto lock_exit );
-            MPIR_Assert(mpi_errno == MPI_SUCCESS);
+            rreq = MPIR_Request_create_null_recv();
 
             MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,
                 (MPL_DBG_FDEST, "RECEIVED MESSAGE FOR REVOKED COMM (tag=%d,src=%d,cid=%d)\n", MPIR_TAG_MASK_ERROR_BITS(match->parts.tag), match->parts.rank, comm_ptr->context_id));

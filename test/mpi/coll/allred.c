@@ -18,6 +18,7 @@
 #endif
 
 int count, size, rank;
+mtest_mem_type_e memtype;
 int errs;
 
 struct int_test {
@@ -58,9 +59,10 @@ struct double_test {
 
 /* calloc to avoid spurious valgrind warnings when "type" has padding bytes */
 #define DECL_MALLOC_IN_OUT_SOL(type)            \
-    type *in, *out, *sol;                       \
-    in  = (type *) calloc(count, sizeof(type)); \
-    out = (type *) calloc(count, sizeof(type)); \
+    type *in, *out, *sol; /*allocated on host*/ \
+    void *in_d, *out_d; /*allocated on device*/ \
+    MTestAlloc(count * sizeof(type), memtype, ((void **)&in), &in_d, 1);  \
+    MTestAlloc(count * sizeof(type), memtype, ((void **)&out), &out_d, 1);\
     sol = (type *) calloc(count, sizeof(type));
 
 #define SET_INDEX_CONST(arr, val)               \
@@ -103,7 +105,9 @@ struct double_test {
             fprintf(stderr, "(%d) Error for type %s and op %s\n",       \
                     rank, name, mpi_op2str(mpi_op));                    \
         }                                                               \
-        free(in); free(out); free(sol);                                 \
+        MTestFree(memtype, in, in_d);                                   \
+        MTestFree(memtype, out, out_d);                                 \
+        free(sol);                                                      \
     } while (0)
 
 /* The logic on the error check on MPI_Allreduce assumes that all
@@ -112,10 +116,12 @@ struct double_test {
    (and motivated this addition, as some versions of the IBM MPI
    failed in just this way).
 */
-#define ALLREDUCE_AND_FREE(mpi_type, mpi_op, in, out, sol)              \
+#define ALLREDUCE_AND_FREE(type, mpi_type, mpi_op, in, out, sol)        \
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
-        rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
+        MTestCopyContent(in, in_d, count * sizeof(type),  memtype);     \
+        rc = MPI_Allreduce(in_d, out_d, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
+        MTestCopyContent(out_d, out, count * sizeof(type), memtype);    \
         if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }             \
         else {                                                          \
             for (i = 0; i < count; i++) {                               \
@@ -128,10 +134,12 @@ struct double_test {
         ERROR_CHECK_AND_FREE(lerrcnt, mpi_type, mpi_op);                \
     }
 
-#define STRUCT_ALLREDUCE_AND_FREE(mpi_type, mpi_op, in, out, sol)       \
+#define STRUCT_ALLREDUCE_AND_FREE(type, mpi_type, mpi_op, in, out, sol) \
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
-        rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
+        MTestCopyContent(in, in_d, count * sizeof(type),  memtype);     \
+        rc = MPI_Allreduce(in_d, out_d, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
+        MTestCopyContent(out_d, out, count * sizeof(type), memtype);    \
         if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }             \
         else {                                                          \
             for (i = 0; i < count; i++) {                               \
@@ -164,7 +172,7 @@ struct double_test {
         SET_INDEX_SUM(in, 0);                                   \
         SET_INDEX_FACTOR(sol, size);                            \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_SUM, in, out, sol);    \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_SUM, in, out, sol);    \
     }
 
 #define prod_test1(type, mpi_type)                              \
@@ -173,7 +181,7 @@ struct double_test {
         SET_INDEX_SUM(in, 0);                                   \
         SET_INDEX_POWER(sol, size);                             \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_PROD, in, out, sol);   \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_PROD, in, out, sol);   \
     }
 
 #define max_test1(type, mpi_type)                               \
@@ -182,7 +190,7 @@ struct double_test {
         SET_INDEX_SUM(in, rank);                                \
         SET_INDEX_SUM(sol, size - 1);                           \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_MAX, in, out, sol);    \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_MAX, in, out, sol);    \
     }
 
 #define min_test1(type, mpi_type)                               \
@@ -191,7 +199,7 @@ struct double_test {
         SET_INDEX_SUM(in, rank);                                \
         SET_INDEX_SUM(sol, 0);                                  \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_MIN, in, out, sol);    \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_MIN, in, out, sol);    \
     }
 
 #define const_test(type, mpi_type, mpi_op, val1, val2, val3)    \
@@ -200,7 +208,7 @@ struct double_test {
         SET_INDEX_CONST(in, (val1));                            \
         SET_INDEX_CONST(sol, (val2));                           \
         SET_INDEX_CONST(out, (val3));                           \
-        ALLREDUCE_AND_FREE(mpi_type, mpi_op, in, out, sol);     \
+        ALLREDUCE_AND_FREE(type, mpi_type, mpi_op, in, out, sol);     \
     }
 
 #define lor_test1(type, mpi_type)                                       \
@@ -237,7 +245,7 @@ struct double_test {
         }                                                       \
         SET_INDEX_SUM(sol, 0);                                  \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);   \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_BAND, in, out, sol);   \
     }
 
 #define band_test2(type, mpi_type)                              \
@@ -251,7 +259,7 @@ struct double_test {
         }                                                       \
         SET_INDEX_CONST(sol, 0);                                \
         SET_INDEX_CONST(out, 0);                                \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);   \
+        ALLREDUCE_AND_FREE(type, mpi_type, MPI_BAND, in, out, sol);   \
     }
 
 #define maxloc_test(type, mpi_type)                                     \
@@ -263,7 +271,7 @@ struct double_test {
         SET_INDEX_STRUCT_CONST(sol, size - 1, b);                       \
         SET_INDEX_STRUCT_CONST(out, 0, a);                              \
         SET_INDEX_STRUCT_CONST(out, -1, b);                             \
-        STRUCT_ALLREDUCE_AND_FREE(mpi_type, MPI_MAXLOC, in, out, sol);  \
+        STRUCT_ALLREDUCE_AND_FREE(type, mpi_type, MPI_MAXLOC, in, out, sol);  \
     }
 
 #define minloc_test(type, mpi_type)                                     \
@@ -275,7 +283,7 @@ struct double_test {
         SET_INDEX_STRUCT_CONST(sol, 0, b);                              \
         SET_INDEX_STRUCT_CONST(out, 0, a);                              \
         SET_INDEX_STRUCT_CONST(out, -1, b);                             \
-        STRUCT_ALLREDUCE_AND_FREE(mpi_type, MPI_MINLOC, in, out, sol);  \
+        STRUCT_ALLREDUCE_AND_FREE(type, mpi_type, MPI_MINLOC, in, out, sol);  \
     }
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
@@ -376,6 +384,7 @@ struct double_test {
 int main(int argc, char **argv)
 {
     MTest_Init(&argc, &argv);
+    MTestArgList *head = MTestArgListCreate(argc, argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -387,19 +396,25 @@ int main(int argc, char **argv)
 
     /* Set errors return so that we can provide better information
      * should a routine reject one of the operand/datatype pairs */
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     count = 10;
     /* Allow an argument to override the count.
      * Note that the product tests may fail if the count is very large.
      */
-    if (argc >= 2) {
-        count = atoi(argv[1]);
-        if (count <= 0) {
-            fprintf(stderr, "Invalid count argument %s\n", argv[1]);
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
+    count = MTestArgListGetInt(head, "count");
+
+    if (count <= 0) {
+        fprintf(stderr, "Invalid count argument %d\n", count);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
+
+    if (rank % 2 == 0)
+        memtype = MTestArgListGetMemType(head, "evenmemtype");
+    else
+        memtype = MTestArgListGetMemType(head, "oddmemtype");
+
+    MTestArgListDestroy(head);
 
     test_types_set2(sum, 1);
     test_types_set2(prod, 1);
@@ -455,7 +470,7 @@ int main(int argc, char **argv)
     minloc_test(struct float_test, MPI_FLOAT_INT);
     minloc_test(struct double_test, MPI_DOUBLE_INT);
 
-    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
 }

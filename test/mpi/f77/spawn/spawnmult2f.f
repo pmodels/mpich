@@ -58,7 +58,7 @@ C       We now have a valid intercomm
         call MPI_Comm_rank( intercomm, rank, ierr )
 
         if (parentcomm .eq. MPI_COMM_NULL) then
-C           Master 
+C           Parent
             if (rsize .ne. np(1) + np(2)) then
                 errs = errs + 1
                 print *, "Did not create ", np(1)+np(2),                    &
@@ -117,7 +117,7 @@ C        My appnum should be my rank in comm world
              print *, "appnum was not set"
          endif
 
-C       Send the errs back to the master process 
+C       Send the errs back to the parent process 
         call MPI_Ssend( errs, 1, MPI_INTEGER, 0, 1, intercomm, ierr )
         endif
 

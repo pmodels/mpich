@@ -50,8 +50,10 @@ typedef struct {
 
 typedef struct {
     int flag;
-    int progress_count;
-    int progress_start;
+    int progress_made;
+    int vci_count;              /* number of vcis that need progress */
+    int progress_counts[MPIDI_CH4_MAX_VCIS];
+    uint8_t vci[MPIDI_CH4_MAX_VCIS];    /* list of vcis that need progress */
 } MPID_Progress_state;
 
 typedef enum {
@@ -68,7 +70,7 @@ typedef enum {
 #define MPIDIG_REQ_UNEXP_CLAIMED  (0x1 << 4)
 #define MPIDIG_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDIG_REQ_MATCHED (0x1 << 6)
-#define MPIDIG_REQ_LONG_RTS (0x1 << 7)
+#define MPIDIG_REQ_RTS (0x1 << 7)
 #define MPIDIG_REQ_IN_PROGRESS (0x1 << 8)
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
@@ -76,18 +78,12 @@ typedef enum {
 
 typedef struct MPIDIG_sreq_t {
     /* persistent send fields */
-    char dummy;                 /* some compilers (suncc) does not like empty struct */
-} MPIDIG_sreq_t;
-
-typedef struct MPIDIG_lreq_t {
-    /* Long send fields */
     const void *src_buf;
     MPI_Count count;
     MPI_Datatype datatype;
     int rank;
-    int tag;
     MPIR_Context_id_t context_id;
-} MPIDIG_lreq_t;
+} MPIDIG_sreq_t;
 
 typedef struct MPIDIG_rreq_t {
     /* mrecv fields */
@@ -171,10 +167,17 @@ typedef struct MPIDIG_req_async {
     struct iovec iov_one;       /* used with MPIDIG_RECV_CONTIG */
 } MPIDIG_rreq_async_t;
 
+typedef struct MPIDIG_sreq_async {
+    MPI_Datatype datatype;
+    MPI_Aint data_sz_left;
+    MPI_Aint offset;
+    int seg_issued;
+    int seg_completed;
+} MPIDIG_sreq_async_t;
+
 typedef struct MPIDIG_req_ext_t {
     union {
         MPIDIG_sreq_t sreq;
-        MPIDIG_lreq_t lreq;
         MPIDIG_rreq_t rreq;
         MPIDIG_put_req_t preq;
         MPIDIG_get_req_t greq;
@@ -182,7 +185,8 @@ typedef struct MPIDIG_req_ext_t {
         MPIDIG_acc_req_t areq;
     };
 
-    MPIDIG_rreq_async_t async;
+    MPIDIG_rreq_async_t recv_async;
+    MPIDIG_sreq_async_t send_async;
     struct iovec *iov;
     MPIDIG_req_cmpl_cb target_cmpl_cb;
     uint64_t seq_no;
@@ -264,8 +268,14 @@ typedef struct {
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
+#define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_) \
+    do { \
+        (req)->dev.is_local = is_local_; \
+        (req)->dev.anysource_partner_request = partner_; \
+    } while (0)
 #else
 #define MPIDI_REQUEST_ANYSOURCE_PARTNER(req)  NULL
+#define MPIDI_REQUEST_SET_LOCAL(req, is_local_, partner_)  do { } while (0)
 #endif
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
@@ -325,6 +335,7 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+    bool coll_attach;           /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
@@ -423,16 +434,31 @@ typedef struct MPIDIG_win_t {
     MPIDIG_win_sync_t sync;
     MPIDIG_win_info_args_t info_args;
     MPIDIG_win_shared_info_t *shared_table;
-    unsigned shm_allocated;     /* shm optimized flag (0 or 1), set at shmmod win initialization time.
-                                 * Equal to 1 if the window has a shared memory region associated with it
-                                 * and the shmmod supports load/store based RMA operations over the window
-                                 * (e.g., may rely on support of interprocess mutex). */
 
     /* per-target structure for sync and OP completion. */
     MPIDIG_win_target_t *targets;
 } MPIDIG_win_t;
 
+typedef enum {
+    MPIDI_WINATTR_DIRECT_INTRA_COMM = 1,
+    MPIDI_WINATTR_SHM_ALLOCATED = 2,    /* shm optimized flag (0 or 1), set at shmmod win initialization time.
+                                         * Equal to 1 if the window has a shared memory region associated with it
+                                         * and the shmmod supports load/store based RMA operations over the window
+                                         * (e.g., may rely on support of interprocess mutex). */
+    MPIDI_WINATTR_ACCU_NO_SHM = 4,      /* shortcut of disable_shm_accumulate in MPIDIG_win_info_args_t. */
+    MPIDI_WINATTR_ACCU_SAME_OP_NO_OP = 8,
+    MPIDI_WINATTR_NM_REACHABLE = 16,    /* whether a netmod may reach the window. Set by netmod at win init.
+                                         * It only indicates whether the win type is supported. Per-target check
+                                         * may be required separately. */
+    MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
+                                         * dynamic window. Set by netmod. */
+    MPIDI_WINATTR_LAST_BIT
+} MPIDI_winattr_bit_t;
+
+typedef unsigned MPIDI_winattr_t;       /* bit-vector of zero or multiple integer attributes defined in MPIDI_winattr_bit_t. */
+
 typedef struct {
+    MPIDI_winattr_t winattr;    /* attributes for performance optimization at fast path. */
     MPIDIG_win_t am;
     union {
     MPIDI_NM_WIN_DECL} netmod;
@@ -444,6 +470,7 @@ typedef struct {
 } MPIDI_Devwin_t;
 
 #define MPIDIG_WIN(win,field)        (((win)->dev.am).field)
+#define MPIDI_WIN(win,field)         ((win)->dev).field
 
 typedef unsigned MPIDI_locality_t;
 

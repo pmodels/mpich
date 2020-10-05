@@ -140,17 +140,18 @@ static int basic_only = 0;
    (char, double), various packing and alignment tests can be made */
 #define SETUPSTRUCT2TYPE(_mpitype1,_ctype1,_mpitype2,_ctype2,_count,_tname) { \
   int i; char *myname;						\
-  MPI_Datatype b[3]; int cnts[3]; \
+  MPI_Datatype b[2], tmp_raw_type; int cnts[2]; \
   struct name { _ctype1 a1; _ctype2 a2; } *a, samp;	\
-  MPI_Aint disp[3];				\
+  MPI_Aint disp[2];				\
   if (cnt > *n) {*n = cnt; return; }					\
-  b[0] = _mpitype1; b[1] = _mpitype2; b[2] = MPI_UB;	\
-  cnts[0] = 1; cnts[1] = 1; cnts[2] = 1;	\
+  b[0] = _mpitype1; b[1] = _mpitype2;	\
+  cnts[0] = 1; cnts[1] = 1;	\
   MPI_Get_address(&(samp.a2), &disp[1]);		\
   MPI_Get_address(&(samp.a1), &disp[0]);		\
-  MPI_Get_address(&(samp) + 1, &disp[2]);	        \
-  disp[1] = disp[1] - disp[0]; disp[2] = disp[2] - disp[0]; disp[0] = 0; \
-  MPI_Type_create_struct(3, cnts, disp, b, types + cnt);		\
+  disp[1] = disp[1] - disp[0]; disp[0] = 0; \
+  MPI_Type_create_struct(2, cnts, disp, b, &tmp_raw_type);		\
+  MPI_Type_create_resized(tmp_raw_type, 0, sizeof(samp), types + cnt); \
+  MPI_Type_free(&tmp_raw_type); \
   MPI_Type_commit(types + cnt);					\
   inbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);	\
   outbufs[cnt] = (void *)calloc(sizeof(struct name) * (_count),1);	\
@@ -167,13 +168,9 @@ static int basic_only = 0;
 /* This accomplished the same effect as VECTOR, but allow a count of > 1 */
 #define SETUPSTRUCTTYPEUB(_mpitype,_ctype,_count,_stride) {	\
   int i; _ctype *a; char *myname;					\
-  int blens[2];  MPI_Aint disps[2]; MPI_Datatype mtypes[2];	\
   char _basename[MPI_MAX_OBJECT_NAME]; int _basenamelen;\
   if (cnt > *n) {*n = cnt; return; }					\
-  blens[0] = 1; blens[1] = 1; disps[0] = 0; \
-  disps[1] = (_stride) * sizeof(_ctype); \
-  mtypes[0] = _mpitype; mtypes[1] = MPI_UB;				\
-  MPI_Type_create_struct(2, blens, disps, mtypes, types + cnt);	\
+  MPI_Type_create_resized(_mpitype, 0, (_stride) * sizeof(_ctype), types + cnt); \
   MPI_Type_commit(types + cnt);					\
   inbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1);\
   outbufs[cnt] = (void *)calloc(sizeof(_ctype) * (_count) * (_stride),1);\

@@ -32,9 +32,9 @@ int main(int argc, char **argv)
     MPI_Intercomm_merge(parentcomm, 1, &allcomm);
 
     /* Without the Free of allcomm, the children *must not exit* until the
-     * master calls MPI_Finalize. */
+     * parent calls MPI_Finalize. */
     MPI_Barrier(allcomm);
-    /* According to 10.5.4, case 1b in MPI2.2, the children and master are
+    /* According to 10.5.4, case 1b in MPI2.2, the children and parent are
      * still connected unless MPI_Comm_disconnect is used with allcomm.
      * MPI_Comm_free is not sufficient */
     MPI_Comm_free(&allcomm);

@@ -514,6 +514,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wtype-limits
         -Werror-implicit-function-declaration
         -Wstack-usage=262144
+        -diag-disable=all
     "
 
     if test -z "$1"; then
@@ -1088,11 +1089,7 @@ int main( int argc, char *argv[] )
     if (extent1 < extent2) extent1 = extent2;
     if ((sizeof(double) == 8) && (extent1 % 8) != 0) {
        if (extent1 % 4 == 0) {
-#ifdef HAVE_MAX_FP_ALIGNMENT
-          if (HAVE_MAX_FP_ALIGNMENT >= 8) align_4 = 1;
-#else
           align_4 = 1;
-#endif
        }
     }
 

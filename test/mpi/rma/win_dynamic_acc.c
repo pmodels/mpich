@@ -34,7 +34,18 @@ int main(int argc, char **argv)
 
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, val_ptrs, 1, MPI_AINT, MPI_COMM_WORLD);
 
-    MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &dyn_win);
+    MPI_Info info = MPI_INFO_NULL;
+#ifdef USE_INFO_COLL_ATTACH
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "coll_attach", "true");
+#endif
+
+    MPI_Win_create_dynamic(info, MPI_COMM_WORLD, &dyn_win);
+
+#ifdef USE_INFO_COLL_ATTACH
+    MPI_Info_free(&info);
+#endif
+
     MPI_Win_attach(dyn_win, &val, sizeof(int));
 
     for (i = 0; i < iter; i++) {

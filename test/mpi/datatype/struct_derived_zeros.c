@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     for (i = 0; i < 3; i++) {
-        MPI_Type_hvector(i, 1, stride, MPI_INT, &vecs[i]);
+        MPI_Type_create_hvector(i, 1, stride, MPI_INT, &vecs[i]);
         MPI_Type_commit(&vecs[i]);
         blockcount[i] = 1;
     }
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     displs[1] = -100;
     displs[2] = -200;   /* irrelevant */
 
-    MPI_Type_struct(3, blockcount, displs, vecs, &mystruct);
+    MPI_Type_create_struct(3, blockcount, displs, vecs, &mystruct);
     MPI_Type_commit(&mystruct);
 
     MPI_Type_free(&mystruct);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     /* this time with the first argument always 0 */
     for (i = 0; i < 3; i++) {
-        MPI_Type_hvector(0, 1, stride, MPI_INT, &vecs[i]);
+        MPI_Type_create_hvector(0, 1, stride, MPI_INT, &vecs[i]);
         MPI_Type_commit(&vecs[i]);
         blockcount[i] = 1;
     }
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     displs[1] = -100;
     displs[2] = -200;   /* irrelevant */
 
-    MPI_Type_struct(3, blockcount, displs, vecs, &mystruct);
+    MPI_Type_create_struct(3, blockcount, displs, vecs, &mystruct);
     MPI_Type_commit(&mystruct);
 
     MPI_Type_free(&mystruct);

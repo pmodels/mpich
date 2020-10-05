@@ -9,3 +9,4 @@ include $(top_srcdir)/src/mpid/common/hcoll/Makefile.mk
 include $(top_srcdir)/src/mpid/common/timers/Makefile.mk
 include $(top_srcdir)/src/mpid/common/shm/Makefile.mk
 include $(top_srcdir)/src/mpid/common/bc/Makefile.mk
+include $(top_srcdir)/src/mpid/common/genq/Makefile.mk

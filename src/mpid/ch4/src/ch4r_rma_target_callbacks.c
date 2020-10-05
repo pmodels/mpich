@@ -571,7 +571,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->areq.origin_count) = MPIDIG_REQUEST(rreq, req->areq.target_count);
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
 
@@ -591,7 +591,7 @@ static int handle_acc_cmpl(MPIR_Request * rreq)
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -640,7 +640,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
         MPIDIG_REQUEST(rreq, req->areq.data_sz) = data_sz;
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
         shm_locked = 1;
@@ -660,14 +660,13 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                                       MPIDIG_REQUEST(rreq, req->areq.target_addr),
                                       MPIDIG_REQUEST(rreq, req->areq.target_count),
                                       MPIDIG_REQUEST(rreq, req->areq.target_datatype),
-                                      MPIDIG_REQUEST(rreq, req->areq.op),
-                                      MPIDIG_ACC_SRCBUF_DEFAULT);
+                                      MPIDIG_REQUEST(rreq, req->areq.op), MPIDIG_ACC_SRCBUF_PACKED);
     MPIR_ERR_CHECK(mpi_errno);
     MPIR_Datatype_release_if_not_builtin(MPIDIG_REQUEST(rreq, req->areq.target_datatype));
     MPL_free(MPIDIG_REQUEST(rreq, req->areq.flattened_dt));
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -962,7 +961,7 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
     /* MPIDI_CS_ENTER(); */
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     win = MPIDIG_REQUEST(rreq, req->creq.win_ptr);
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -970,14 +969,14 @@ static int cswap_target_cmpl_cb(MPIR_Request * rreq)
 
     if (MPIR_Compare_equal((void *) MPIDIG_REQUEST(rreq, req->creq.addr), compare_addr,
                            MPIDIG_REQUEST(rreq, req->creq.datatype))) {
-        MPIR_Memcpy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
-        MPIR_Memcpy((void *) MPIDIG_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
+        MPIR_Typerep_copy((void *) MPIDIG_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
     } else {
-        MPIR_Memcpy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
+        MPIR_Typerep_copy(compare_addr, (void *) MPIDIG_REQUEST(rreq, req->creq.addr), data_sz);
     }
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-    if (MPIDIG_WIN(win, shm_allocated)) {
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
         mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
         MPIR_ERR_CHECK(mpi_errno);
     }
@@ -1330,15 +1329,15 @@ int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
 
         MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
         MPIDIG_REQUEST(rreq, datatype) = dt->handle;
-        MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz / dt->size;
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
         MPIDIG_recv_type_init(in_data_sz, rreq);
     } else {
         MPIDIG_REQUEST(rreq, req->preq.flattened_dt) = NULL;
         MPIDIG_REQUEST(rreq, req->preq.dt) = NULL;
 
-        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset);
-        MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
-        MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
+        MPIDIG_REQUEST(rreq, buffer) = (void *) (base + offset + msg_hdr->target_true_lb);
+        MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
+        MPIDIG_REQUEST(rreq, datatype) = msg_hdr->target_datatype;
         MPIDIG_recv_type_init(in_data_sz, rreq);
     }
 
@@ -1385,7 +1384,7 @@ int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     offset = win->disp_unit * msg_hdr->target_disp;
     base = MPIDIG_win_base_at_target(win);
     MPIDIG_REQUEST(rreq, buffer) = (void *) (offset + base);
-    MPIDIG_REQUEST(rreq, count) = msg_hdr->data_sz;
+    MPIDIG_REQUEST(rreq, count) = msg_hdr->target_count;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = put_dt_target_cmpl_cb;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -1964,9 +1963,8 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     size_t offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDIG_REQUEST(rreq, req->greq.win_ptr) = win;
-    MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
-    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->data_sz;
-    MPIDIG_REQUEST(rreq, req->greq.datatype) = MPI_BYTE;
+    MPIDIG_REQUEST(rreq, req->greq.count) = msg_hdr->target_count;
+    MPIDIG_REQUEST(rreq, req->greq.datatype) = msg_hdr->target_datatype;
     MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.dt) = NULL;
     MPIDIG_REQUEST(rreq, req->greq.greq_ptr) = msg_hdr->greq_ptr;
@@ -1976,9 +1974,11 @@ int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
         void *flattened_dt = MPL_malloc(msg_hdr->flattened_sz, MPL_MEM_BUFFER);
         MPIDIG_recv_init(1, in_data_sz, flattened_dt, msg_hdr->flattened_sz, rreq);
         MPIDIG_REQUEST(rreq, req->greq.flattened_dt) = flattened_dt;
+        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset;
     } else {
         MPIR_Assert(!in_data_sz || in_data_sz == 0);
         MPIDIG_recv_init(1, 0, NULL, 0, rreq);
+        MPIDIG_REQUEST(rreq, req->greq.addr) = (char *) base + offset + msg_hdr->target_true_lb;
     }
 
     if (is_async) {

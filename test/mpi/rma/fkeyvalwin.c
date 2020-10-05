@@ -63,7 +63,8 @@ int main(int argc, char *argv[])
         /* We create some dummy keyvals here in case the same keyval
          * is reused */
         for (i = 0; i < 32; i++) {
-            MPI_Win_create_keyval(MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN, &key[i], (void *) 0);
+            MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, MPI_WIN_NULL_DELETE_FN, &key[i],
+                                  (void *) 0);
         }
 
         MTestFreeWin(&win);

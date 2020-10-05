@@ -43,7 +43,7 @@ static void free_port_name_tag(int tag)
     idx = tag / (sizeof(int) * 8);
     rem_tag = tag - (idx * sizeof(int) * 8);
 
-    MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
+    MPIDI_OFI_global.port_name_tag_mask[idx] &= ~(1u << ((8 * sizeof(int)) - 1 - rem_tag));
 
     MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_DYNPROC_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_FREE_PORT_NAME_TAG);
@@ -64,9 +64,9 @@ static int get_port_name_tag(int *port_name_tag)
 
     if (i < MPIR_MAX_CONTEXT_MASK)
         for (j = 0; j < (8 * sizeof(int)); j++) {
-            if ((MPIDI_OFI_global.port_name_tag_mask[i] | (1 << ((8 * sizeof(int)) - j - 1))) !=
+            if ((MPIDI_OFI_global.port_name_tag_mask[i] | (1u << ((8 * sizeof(int)) - j - 1))) !=
                 MPIDI_OFI_global.port_name_tag_mask[i]) {
-                MPIDI_OFI_global.port_name_tag_mask[i] |= (1 << ((8 * sizeof(int)) - j - 1));
+                MPIDI_OFI_global.port_name_tag_mask[i] |= (1u << ((8 * sizeof(int)) - j - 1));
                 *port_name_tag = ((i * 8 * sizeof(int)) + j);
                 goto fn_exit;
             }
@@ -262,7 +262,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
                                (MPIDI_OFI_global.ctx[0].rx, &msg,
                                 FI_PEEK | FI_COMPLETION | FI_REMOTE_CQ_DATA), 0, trecv);
             do {
-                mpi_errno = MPID_Progress_test();
+                mpi_errno = MPID_Progress_test(NULL);
                 MPIR_ERR_CHECK(mpi_errno);
 
                 MPL_wtime(&time_now);
@@ -291,7 +291,7 @@ static int dynproc_handshake(int root, int phase, int timeout, int port_id, fi_a
         time_gap = 0.0;
         MPL_wtime(&time_sta);
         do {
-            mpi_errno = MPID_Progress_test();
+            mpi_errno = MPID_Progress_test(NULL);
             MPIR_ERR_CHECK(mpi_errno);
 
             MPL_wtime(&time_now);
@@ -578,6 +578,7 @@ int MPIDI_OFI_mpi_comm_connect(const char *port_name, MPIR_Info * info, int root
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno =
             dynproc_exchange_map(root, DYNPROC_SENDER, port_id, &conn, conname, comm_ptr,
                                  &parent_root, &remote_size, &remote_upid_size, &remote_upids,
@@ -761,6 +762,7 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
         MPIR_ERR_CHECK(mpi_errno);
         MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, conname, 1, &conn, 0ULL, NULL),
                            0, avmap);
+        MPIR_Assert(conn != FI_ADDR_NOTAVAIL);
         mpi_errno = dynproc_handshake(root, DYNPROC_SENDER, 0, port_id, &conn, comm_ptr);
         MPIR_ERR_CHECK(mpi_errno);
         mpi_errno =
@@ -814,5 +816,129 @@ int MPIDI_OFI_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root,
     return mpi_errno;
 
   fn_fail:
+    goto fn_exit;
+}
+
+/* the following functions are "proc" functions, but because they are only used during dynamic
+ * process spawning, having them here provides better context */
+
+int MPIDI_OFI_upids_to_lupids(int size, size_t * remote_upid_size, char *remote_upids,
+                              int **remote_lupids)
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    int *new_avt_procs;
+    char **new_upids;
+    int n_new_procs = 0;
+    int max_n_avts;
+    char *curr_upid;
+
+    MPIR_CHKLMEM_DECL(2);
+
+    MPIR_CHKLMEM_MALLOC(new_avt_procs, int *, sizeof(int) * size, mpi_errno, "new_avt_procs",
+                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(new_upids, char **, sizeof(char *) * size, mpi_errno, "new_upids",
+                        MPL_MEM_ADDRESS);
+
+    max_n_avts = MPIDIU_get_max_n_avts();
+
+    curr_upid = remote_upids;
+    for (i = 0; i < size; i++) {
+        int j, k;
+        char tbladdr[FI_NAME_MAX];
+        int found = 0;
+        size_t sz = 0;
+
+        for (k = 0; k < max_n_avts; k++) {
+            if (MPIDIU_get_av_table(k) == NULL) {
+                continue;
+            }
+            for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
+                sz = MPIDI_OFI_global.addrnamelen;
+                MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, MPIDI_OFI_TO_PHYS(k, j),
+                                                &tbladdr, &sz), 0, avlookup);
+                if (sz == remote_upid_size[i]
+                    && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
+                    (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
+                    found = 1;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            new_avt_procs[n_new_procs] = i;
+            new_upids[n_new_procs] = curr_upid;
+            n_new_procs++;
+        }
+        curr_upid += remote_upid_size[i];
+    }
+
+    /* create new av_table, insert processes */
+    if (n_new_procs > 0) {
+        int avtid;
+        mpi_errno = MPIDIU_new_avt(n_new_procs, &avtid);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        for (i = 0; i < n_new_procs; i++) {
+            fi_addr_t addr;
+            MPIDI_OFI_VCI_CALL(fi_av_insert(MPIDI_OFI_global.ctx[0].av, new_upids[i],
+                                            1, &addr, 0ULL, NULL), 0, avmap);
+            MPIR_Assert(addr != FI_ADDR_NOTAVAIL);
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest[0][0] = addr;
+            /* highest bit is marked as 1 to indicate this is a new process */
+            (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
+            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
+        }
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIDI_OFI_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
+{
+    return 0;
+}
+
+int MPIDI_OFI_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, total_size = 0;
+    char *temp_buf = NULL, *curr_ptr = NULL;
+
+    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(1);
+
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
+                        mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_OFI_global.addrnamelen,
+                        mpi_errno, "temp_buf", MPL_MEM_BUFFER);
+
+    for (i = 0; i < comm->local_size; i++) {
+        (*local_upid_size)[i] = MPIDI_OFI_global.addrnamelen;
+        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, i));
+        MPIDI_OFI_VCI_CALL(fi_av_lookup(MPIDI_OFI_global.ctx[0].av, av->dest[0][0],
+                                        &temp_buf[i * MPIDI_OFI_global.addrnamelen],
+                                        &(*local_upid_size)[i]), 0, avlookup);
+        total_size += (*local_upid_size)[i];
+    }
+
+    MPIR_CHKPMEM_MALLOC((*local_upids), char *, total_size * sizeof(char),
+                        mpi_errno, "local_upids", MPL_MEM_BUFFER);
+    curr_ptr = (*local_upids);
+    for (i = 0; i < comm->local_size; i++) {
+        memcpy(curr_ptr, &temp_buf[i * MPIDI_OFI_global.addrnamelen], (*local_upid_size)[i]);
+        curr_ptr += (*local_upid_size)[i];
+    }
+
+    MPIR_CHKPMEM_COMMIT();
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }

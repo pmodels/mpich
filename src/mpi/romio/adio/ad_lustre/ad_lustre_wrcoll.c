@@ -1076,22 +1076,29 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* The maximum number of aggregators we can use is the number of
-     * stripes used in the file - each agg writes exactly 1 stripe.
+    /* Based on the co_ratio the number of aggregators we can use is the number of
+     * stripes used in the file times this co_ratio - each stripe is written by
+     * co_ratio aggregators this information is contained in the striping_info.
      */
     int numStripedAggs = striping_info[2];
 
     int orig_cb_nodes = fd->hints->cb_nodes;
-    if (fd->hints->cb_nodes > numStripedAggs)
-        fd->hints->cb_nodes = numStripedAggs;
-    else if (fd->hints->cb_nodes < numStripedAggs)
-        numStripedAggs = fd->hints->cb_nodes;
+    fd->hints->cb_nodes = numStripedAggs;
 
-    /* Declare ADIOI_OneSidedStripeParms here as some fields will not change.
+    /* Declare ADIOI_OneSidedStripeParms here - these parameters will be locally managed
+     * for this invokation of ADIOI_LUSTRE_IterateOneSided.  This will allow for concurrent
+     * one-sided collective writes via multi-threading as well as multiple communicators.
      */
     ADIOI_OneSidedStripeParms stripeParms;
     stripeParms.stripeSize = striping_info[0];
     stripeParms.stripedLastFileOffset = lastFileOffset;
+    stripeParms.iWasUsedStripingAgg = 0;
+    stripeParms.numStripesUsed = 0;
+    stripeParms.amountOfStripedDataExpected = 0;
+    stripeParms.bufTypeExtent = 0;
+    stripeParms.lastDataTypeExtent = 0;
+    stripeParms.lastFlatBufIndice = 0;
+    stripeParms.lastIndiceOffset = 0;
 
     /* The general algorithm here is to divide the file up into segements, a segment
      * being defined as a contiguous region of the file which has up to one occurrence
@@ -1177,7 +1184,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
 
             ADIO_Offset segment_stripe_offset = segmentFirstFileOffset;
             for (i = 0; i < numStripedAggs; i++) {
-                if (firstFileOffset > segmentFirstFileOffset)
+                if (firstFileOffset > segment_stripe_offset)
                     segment_stripe_start[i] = firstFileOffset;
                 else
                     segment_stripe_start[i] = segment_stripe_offset;
@@ -1319,7 +1326,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                error_code, segmentFirstFileOffset,
                                                segmentLastFileOffset, currentValidDataIndex,
                                                segment_stripe_start, segment_stripe_end,
-                                               &holeFoundThisRound, stripeParms);
+                                               &holeFoundThisRound, &stripeParms);
             } else {
                 ADIOI_OneSidedWriteAggregation(fd,
                                                (ADIO_Offset *) &
@@ -1330,7 +1337,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                segmentFirstFileOffset, segmentLastFileOffset,
                                                currentValidDataIndex, segment_stripe_start,
                                                segment_stripe_end, &holeFoundThisRound,
-                                               stripeParms);
+                                               &stripeParms);
             }
 
             if (stripeParms.flushCB) {

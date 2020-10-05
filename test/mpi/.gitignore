@@ -64,7 +64,6 @@
 /coll/bcasttest
 /coll/bcastzerotype
 /coll/coll10
-/coll/coll11
 /coll/coll12
 /coll/coll13
 /coll/coll2
@@ -123,6 +122,7 @@
 /coll/nonblocking
 /coll/nonblocking2
 /coll/nonblocking3
+/coll/op_coll
 /coll/op_commutative
 /coll/opband
 /coll/opbor
@@ -321,11 +321,13 @@
 /datatype/hindexed_block_contents
 /datatype/hvecblklen
 /datatype/indexed_misc
+/datatype/indexed_misc_oldapi
 /datatype/large_count
 /datatype/large_type
 /datatype/large_type_sendrec
 /datatype/large_vec
 /datatype/lbub
+/datatype/lbub_oldapi
 /datatype/localpack
 /datatype/longdouble
 /datatype/lots_of_types
@@ -340,6 +342,7 @@
 /datatype/simple_pack_external2
 /datatype/simple_resized
 /datatype/simple_size_extent
+/datatype/simple_size_extent_oldapi
 /datatype/sizedtypes
 /datatype/slice_pack
 /datatype/slice_pack_external
@@ -357,6 +360,7 @@
 /datatype/tfree
 /datatype/tmatchsize
 /datatype/transpose_pack
+/datatype/transpose_pack_oldapi
 /datatype/tresized
 /datatype/tresized2
 /datatype/triangular_pack
@@ -364,6 +368,7 @@
 /datatype/typefree
 /datatype/typelb
 /datatype/typename
+/datatype/typename_oldapi
 /datatype/unpack
 /datatype/unusual_noncontigs
 /datatype/vecblklen
@@ -483,6 +488,7 @@
 /errors/pt2pt/proberank
 /errors/pt2pt/truncmsg1
 /errors/pt2pt/truncmsg2
+/errors/pt2pt/truncmsg_mrecv
 /errors/rma/cas_type_check
 /errors/rma/win_sync_complete
 /errors/rma/win_sync_free_at
@@ -1085,7 +1091,7 @@
 /manual/segfault
 /manual/singjoin
 /manual/spawntest_child
-/manual/spawntest_master
+/manual/spawntest_parent
 /manual/test-port
 /manual/testconnect
 /manual/testconnectserial
@@ -1143,6 +1149,8 @@
 /pt2pt/mprobe
 /pt2pt/multi_psend_derived
 /pt2pt/pingping
+/pt2pt/precv_anysrc
+/pt2pt/precv_anysrc_exp
 /pt2pt/probe_unexp
 /pt2pt/probenull
 /pt2pt/pscancel
@@ -1363,7 +1371,7 @@
 /spawn/spawnmanyarg
 /spawn/spawnminfo1
 /spawn/spawnmult2
-/spawn/taskmaster
+/spawn/taskmanager
 /spawn/testlist
 /test.ncb
 /test.sln
@@ -1435,11 +1443,12 @@
 /threads/pt2pt/mt_bsendrecv_pers_huge
 /threads/pt2pt/mt_ssendrecv_pers_huge
 /threads/pt2pt/mt_mpicancel
+/threads/perf/mt_pt2pt_msgrate
 /threads/rma/multifence
 /threads/spawn/alltoall
 /threads/spawn/multispawn
 /threads/spawn/sendselfth
-/threads/spawn/th_taskmaster
+/threads/spawn/th_taskmanager
 /threads/spawn/threaded_sr
 /threads/testlist
 /topo/cartcreates
@@ -1481,4 +1490,6 @@
 /cxx/attr/testlist.dtp
 /cxx/datatype/testlist.dtp
 /pt2pt/testlist.dtp
+/pt2pt/testlist.gpu
 /rma/testlist.dtp
+/rma/testlist.gpu
