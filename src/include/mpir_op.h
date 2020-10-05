@@ -177,7 +177,6 @@ int MPIR_NO_OP_check_dtype(MPI_Datatype);
         }                                                \
     } while (0)                                          \
 
-#define MPIR_PREDEF_OP_COUNT 14
 extern MPI_User_function *MPIR_Op_table[];
 
 typedef int (MPIR_Op_check_dtype_fn) (MPI_Datatype);
