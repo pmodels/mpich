@@ -30,9 +30,11 @@ static void load_acc_hint(MPIR_Win * win)
      * the maximal value or the spec must define it as same value on all pes.
      * Now we assume the spec requries same value on all pes. */
 
-    /* We translate the atomic op hints to max count allowed for all possible atomics with each
-     * datatype. We do not need more specific info (e.g., <datatype, op>, because any process may use
-     * the op with accumulate or get_accumulate.*/
+    /* Combine the user-specified hint for atomics usage and the provider support.
+     * To check whether an atomic op can be sent by native atomics API, we need only
+     * the max count limit allowed for each datatype. This limit is the minimal value of all
+     * possible atomic operations with this datatype. It will be used to compare with the
+     * data size and the user-input datatype at each accumulate operation (see MPIDI_OFI_query_acc_atomic_support).*/
     for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++) {
         MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = 0;
         bool first_valid_op = true;
@@ -43,8 +45,8 @@ static void load_acc_hint(MPIR_Win * win)
 
         for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
             uint64_t max_count = 0;
-            /* Calculate the max count of all possible atomics if this op is enabled.
-             * If the op is disabled for the datatype, the max counts are set to 0 (see util.c).*/
+            /* Obtain the provider-defined max_count limit for each user-enabled datatype with this op,
+             * excluding any datatypes disabled by user hint (zero used_count in accumulate_op_types). */
             if (MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count) {
                 MPI_Op op = MPIDIU_win_acc_get_op(op_index);
 
@@ -62,7 +64,8 @@ static void load_acc_hint(MPIR_Win * win)
                                         MPIDI_OFI_global.
                                         win_op_table[i][op_index].max_fetch_atomic_count);
 
-                /* calculate the minimal max_count. */
+                /* Calculate the minimal max_count.
+                 * If the pair is not supported by provider, max_count in win_op_table is set to 0 (also see util.c).*/
                 if (first_valid_op) {
                     MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] = max_count;
                     first_valid_op = false;
