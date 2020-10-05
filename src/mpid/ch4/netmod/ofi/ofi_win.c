@@ -45,7 +45,7 @@ static void load_acc_hint(MPIR_Win * win)
             uint64_t max_count = 0;
             /* Calculate the max count of all possible atomics if this op is enabled.
              * If the op is disabled for the datatype, the max counts are set to 0 (see util.c).*/
-            if (MPIDIG_WIN(win, info_args).which_accumulate_ops & (1 << op_index)) {
+            if (MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count) {
                 MPI_Op op = MPIDIU_win_acc_get_op(op_index);
 
                 /* Invalid <datatype, op> pairs should be excluded as it is never used in a

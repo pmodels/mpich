@@ -100,8 +100,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
      * does not know what the same_op is on the other processes, which might be
      * unsupported (e.g., maxloc). Thus, the noop process has to always use AM, and
      * other processes have to also only use AM in order to ensure atomicity with
-     * atomic get. The user can use which_accumulate_ops hint to specify used reduce
-     * and cswap operations.
+     * atomic get. The user can use which_accumulate_ops or accumulate_op_types hint
+     * to specify used reduce and cswap operations.
      * We calculate the max count of all specified ops for each datatype at window
      * creation or info set. dtypes_max_count[dt_index] is the provider allowed
      * count for all possible ops. It is 0 if any of the op is not supported and
