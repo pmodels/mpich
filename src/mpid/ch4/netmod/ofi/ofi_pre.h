@@ -236,6 +236,9 @@ typedef struct {
      * supply automatic progress. This can make a big performance difference when doing
      * large, non-contiguous RMA operations. */
     int progress_counter;
+
+    bool force_native_flag;     /* Whether use only native path for all RMA operations of this window.
+                                 * FALSE by default. Can be changed by user hints only at window creation.*/
 } MPIDI_OFI_win_t;
 
 typedef struct {

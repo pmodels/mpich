@@ -399,6 +399,7 @@ typedef struct MPIDI_OFI_win_acc_hint {
                                                                  * provided by the OFI provider (recored in MPIDI_OFI_global.win_op_table).
                                                                  * Invalid <dtype, op> defined in MPI standard are excluded.
                                                                  * This structure is prepared at window creation time. */
+    bool acc_am_required;
 } MPIDI_OFI_win_acc_hint_t;
 
 enum {

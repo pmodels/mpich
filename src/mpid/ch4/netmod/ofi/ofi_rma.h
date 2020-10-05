@@ -292,6 +292,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
+    /* The user should not force NATIVE if the program will issue sparse noncontig data.
+     * Thus, we simply use the nopack routine. To gain performance, the user should not force NATIVE. */
+    if (MPIDI_OFI_WIN(win).force_native_flag) {
+        mpi_errno =
+            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_count, target_datatype, target_mr, win, addr,
+                                    MPIDI_OFI_PUT, sigreq);
+
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "Issued nopack PUT with low density data:"
+                         "origin_density 0x%lx, target_density 0x%lx, bytes 0x%lx",
+                         origin_density, target_density, origin_bytes));
+        goto fn_exit;
+    }
+
   am_fallback:
     if (sigreq)
         mpi_errno =
@@ -454,6 +469,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
         mpi_errno =
             MPIDI_OFI_pack_get(origin_addr, origin_count, origin_datatype, target_rank,
                                target_count, target_datatype, target_mr, win, addr, sigreq);
+        goto fn_exit;
+    }
+
+    /* The user should not force NATIVE if the program will issue sparse noncontig data.
+     * Thus, we simply use the nopack routine. To gain performance, the user should not force NATIVE. */
+    if (MPIDI_OFI_WIN(win).force_native_flag) {
+        mpi_errno =
+            MPIDI_OFI_nopack_putget(origin_addr, origin_count, origin_datatype, target_rank,
+                                    target_count, target_datatype, target_mr, win, addr,
+                                    MPIDI_OFI_GET, sigreq);
+
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "Issued nopack GET with low density data:"
+                         "origin_density 0x%lx, target_density 0x%lx, bytes 0x%lx",
+                         origin_density, target_density, origin_bytes));
         goto fn_exit;
     }
 
@@ -645,6 +675,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
   fn_fail:
     goto fn_exit;
   am_fallback:
+    /* If any atomics require AM, we should not allow to force NATIVE at all. Thus internal fault. */
+    MPIR_Assert(!MPIDI_OFI_WIN(win).force_native_flag);
     /* Wait for OFI cas to complete for atomicity.
      * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
     MPIDI_OFI_win_do_progress(win);
@@ -717,8 +749,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
 
-        /* Ensure completion of outstanding AMs for atomicity. */
-        MPIDIG_wait_am_acc(win, target_rank);
+        if (!MPIDI_OFI_WIN(win).force_native_flag) {
+            /* Ensure completion of outstanding AMs for atomicity. */
+            MPIDIG_wait_am_acc(win, target_rank);
+        }
 
         uint64_t flags;
         if (sigreq) {
@@ -764,6 +798,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
     }
 
   am_fallback:
+    /* If any atomics require AM, we should not allow to force NATIVE at all. Thus internal fault. */
+    MPIR_Assert(!MPIDI_OFI_WIN(win).force_native_flag);
     /* Wait for OFI acc to complete for atomicity.
      * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
     MPIDI_OFI_win_do_progress(win);
@@ -858,8 +894,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
 
-        /* Ensure completion of outstanding AMs for atomicity. */
-        MPIDIG_wait_am_acc(win, target_rank);
+        if (!MPIDI_OFI_WIN(win).force_native_flag) {
+            /* Ensure completion of outstanding AMs for atomicity. */
+            MPIDIG_wait_am_acc(win, target_rank);
+        }
 
         uint64_t flags;
         if (sigreq) {
@@ -907,6 +945,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
     }
 
   am_fallback:
+    /* If any atomics require AM, we should not allow to force NATIVE at all. Thus internal fault. */
+    MPIR_Assert(!MPIDI_OFI_WIN(win).force_native_flag);
     /* Wait for OFI getacc to complete for atomicity.
      * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
     MPIDI_OFI_win_do_progress(win);
@@ -1098,8 +1138,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     if (max_size < dt_size)
         goto am_fallback;
 
-    /* Ensure completion of outstanding AMs for atomicity. */
-    MPIDIG_wait_am_acc(win, target_rank);
+    if (!MPIDI_OFI_WIN(win).force_native_flag) {
+        /* Ensure completion of outstanding AMs for atomicity. */
+        MPIDIG_wait_am_acc(win, target_rank);
+    }
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -1129,6 +1171,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
+    /* If any atomics require AM, we should not allow to force NATIVE at all. Thus internal fault. */
+    MPIR_Assert(!MPIDI_OFI_WIN(win).force_native_flag);
     /* Wait for OFI fetch_and_op to complete for atomicity.
      * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
     MPIDI_OFI_win_do_progress(win);

@@ -16,9 +16,31 @@ static int win_init_stx(MPIR_Win * win);
 static int win_init_global(MPIR_Win * win);
 static int win_init(MPIR_Win * win);
 
+/* Check data size limit with atomics ordering guarantee.
+ * The limit is the minimal value of provider's limits of all required orders.
+ * A value of SIZE_MAX guarantees ordering for any data size;
+ * a value of 0 indicates that ordering is not guaranteed. */
+static MPI_Aint check_acc_max_order_size(MPIR_Win * win)
+{
+    MPI_Aint max_size = SIZE_MAX;       /* by default no limit */
+
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAR) {
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_war);
+    }
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_WAW) {
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_waw);
+    }
+    if (MPIDIG_WIN(win, info_args).accumulate_ordering & MPIDIG_ACCU_ORDER_RAW) {
+        max_size = MPL_MIN(max_size, MPIDI_OFI_global.max_order_raw);
+    }
+    return max_size;
+}
+
 static void load_acc_hint(MPIR_Win * win)
 {
     int op_index = 0, i;
+    bool acc_am_required = false;
+    MPI_Aint max_order_size = check_acc_max_order_size(win);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_LOAD_ACC_HINT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_LOAD_ACC_HINT);
@@ -44,10 +66,12 @@ static void load_acc_hint(MPIR_Win * win)
             continue;   /* skip disabled datatype */
 
         for (op_index = 0; op_index < MPIDIG_ACCU_NUM_OP; op_index++) {
-            uint64_t max_count = 0;
+            MPI_Aint max_count = 0, used_count, used_bytes;
+
             /* Obtain the provider-defined max_count limit for each user-enabled datatype with this op,
              * excluding any datatypes disabled by user hint (zero used_count in accumulate_op_types). */
-            if (MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count) {
+            used_count = MPIDIG_WIN(win, info_args).accumulate_op_types[op_index][i].used_count;
+            if (used_count) {
                 MPI_Op op = MPIDIU_win_acc_get_op(op_index);
 
                 /* Invalid <datatype, op> pairs should be excluded as it is never used in a
@@ -72,11 +96,42 @@ static void load_acc_hint(MPIR_Win * win)
                 } else
                     MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i] =
                         MPL_MIN(max_count, MPIDI_OFI_WIN(win).acc_hint->dtypes_max_count[i]);
+
+                /* User requires longer data than network support, thus force AM. */
+                used_bytes = used_count * MPIDI_OFI_global.win_op_table[i][op_index].dtsize;
+                acc_am_required |= (used_count > max_count || used_bytes > max_order_size);
             }
         }
     }
 
+    MPIDI_OFI_WIN(win).acc_hint->acc_am_required = acc_am_required;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_LOAD_ACC_HINT);
+}
+
+static void set_rma_issue_mode(MPIR_Win * win)
+{
+    /* Disable RMA AM path only when user explicitly requires the NATIVE mode and the following conditions are met:
+     * - no hardware limit:
+     *    1. native rma and atomics paths are enabled
+     *    2. memory registration is done (see MPIDI_WINATTR_NM_REACHABLE)
+     *    3. all atomics are supported (check all user-specified <op,type> pairs, see acc_am_required)
+     * - no implementation limit (see implementation in ofi_rma.h):
+     *    1. no implementation for noncontig acc, but user says no noncontig acc
+     *    2. no implemenation for cross-memory op over dynamic win, but it is
+     *       not dynamic win or user says no cross-mem op. */
+    if (MPIDIG_WIN(win, info_args).rma_issue_mode == MPIDIG_RMA_ISSUE_MODE_NATIVE &&
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_ACCU_NO_SHM) &&
+#endif
+        MPIDI_OFI_ENABLE_RMA && MPIDI_OFI_ENABLE_ATOMICS &&
+        (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_NM_REACHABLE) &&
+        !MPIDI_OFI_WIN(win).acc_hint->acc_am_required &&
+        !MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype &&
+        (win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC ||
+         MPIDIG_WIN(win, info_args).no_op_cross_attached_mem)) {
+        MPIDI_OFI_WIN(win).force_native_flag = true;
+    }
 }
 
 /* Set OFI attributes and capabilities for RMA. */
@@ -516,6 +571,7 @@ static int win_init(MPIR_Win * win)
 
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
     MPIDI_OFI_WIN(win).progress_counter = 1;
+    MPIDI_OFI_WIN(win).force_native_flag = false;
 
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
@@ -699,6 +755,8 @@ int MPIDI_OFI_mpi_win_create_hook(MPIR_Win * win)
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+
+        set_rma_issue_mode(win);
     }
 
   fn_exit:
@@ -722,6 +780,8 @@ int MPIDI_OFI_mpi_win_allocate_hook(MPIR_Win * win)
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         MPIR_ERR_CHECK(mpi_errno);
+
+        set_rma_issue_mode(win);
     }
 
   fn_exit:
@@ -745,6 +805,8 @@ int MPIDI_OFI_mpi_win_allocate_shared_hook(MPIR_Win * win)
 
         mpi_errno = win_allgather(win, win->base, win->disp_unit);
         MPIR_ERR_CHECK(mpi_errno);
+
+        set_rma_issue_mode(win);
     }
 
   fn_exit:
@@ -801,6 +863,8 @@ int MPIDI_OFI_mpi_win_create_dynamic_hook(MPIR_Win * win)
             MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
             MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_DYNAMIC_MR;
         }
+
+        set_rma_issue_mode(win);
     }
 
     MPIR_CHKPMEM_COMMIT();
