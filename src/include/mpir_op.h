@@ -126,6 +126,21 @@ extern MPIR_Object_alloc_t MPIR_Op_mem;
         }                                                \
     } while (0)
 
+
+/* Query index of builtin op */
+MPL_STATIC_INLINE_PREFIX int MPIR_Op_builtin_get_index(MPI_Op op)
+{
+    MPIR_Assert(HANDLE_IS_BUILTIN(op));
+    return (0x000000ff & op) - 1;       /* index 1 to 14 in handle. */
+}
+
+/* Query builtin op by using index (from 0 to MPIR_OP_N_BUILTIN-1) */
+MPL_STATIC_INLINE_PREFIX MPI_Op MPIR_Op_builtin_get_op(int index)
+{
+    MPIR_Assert(index >= 0 && index < MPIR_OP_N_BUILTIN);
+    return (MPI_Op) (0x58000000 | (index + 1)); /* index 1 to 14 in handle */
+}
+
 void MPIR_MAXF(void *, void *, int *, MPI_Datatype *);
 void MPIR_MINF(void *, void *, int *, MPI_Datatype *);
 void MPIR_SUM(void *, void *, int *, MPI_Datatype *);
