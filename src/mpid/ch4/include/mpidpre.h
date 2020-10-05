@@ -298,6 +298,12 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
+typedef enum {
+    MPIDIG_RMA_ISSUE_MODE_AM,   /* always active message */
+    MPIDIG_RMA_ISSUE_MODE_NATIVE,       /* always native when possible (nm or shm) */
+    MPIDIG_RMA_ISSUE_MODE_AUTO, /* controlled by each shmmod or netmod */
+} MPIDIG_win_info_rma_issue_mode_t;
+
 typedef struct MPIDIG_win_accu_op_type {
     unsigned int used_count;    /* non-negative number. INT_MAX means unlimited
                                  * because the user can only set int count.*/
@@ -338,6 +344,14 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+    MPIDIG_win_info_rma_issue_mode_t rma_issue_mode;    /* Control the issue routine of RMA operation per window.
+                                                         * Possible value is one of "am|native|auto".
+                                                         * If am is set, we always use CH4 AM based routine for the window;
+                                                         * if native is set, we use only native path (shm or nm) when possible;
+                                                         * if auto is set, shmmod or netmod decides the optimal path.
+                                                         * auto by default.
+                                                         * Note that if a native RMA cannot be supported by the hardware
+                                                         * (e.g., network atomics limit), we ignore the "native" hint and reset to auto.*/
     bool coll_attach;           /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).

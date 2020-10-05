@@ -339,6 +339,13 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).coll_attach = true;
             else
                 MPIDIG_WIN(win, info_args).coll_attach = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "rma_issue_mode")) {
+            if (!strcmp(curr_ptr->value, "am") || !strcmp(curr_ptr->value, "active_message"))
+                MPIDIG_WIN(win, info_args).rma_issue_mode = MPIDIG_RMA_ISSUE_MODE_AM;
+            else if (!strcmp(curr_ptr->value, "native"))
+                MPIDIG_WIN(win, info_args).rma_issue_mode = MPIDIG_RMA_ISSUE_MODE_NATIVE;
+            else
+                MPIDIG_WIN(win, info_args).rma_issue_mode = MPIDIG_RMA_ISSUE_MODE_AUTO;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -418,6 +425,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
     MPIDIG_WIN(win, info_args).coll_attach = false;
+    MPIDIG_WIN(win, info_args).rma_issue_mode = MPIDIG_RMA_ISSUE_MODE_AUTO;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = win_set_info(win, info, TRUE /* is_init */);
@@ -901,6 +909,14 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "coll_attach", "false");
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDIG_WIN(win, info_args).rma_issue_mode == MPIDIG_RMA_ISSUE_MODE_AM)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "rma_issue_mode", "am");
+    else if (MPIDIG_WIN(win, info_args).rma_issue_mode == MPIDIG_RMA_ISSUE_MODE_NATIVE)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "rma_issue_mode", "native");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "rma_issue_mode", "auto");
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
