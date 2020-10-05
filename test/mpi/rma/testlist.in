@@ -182,7 +182,6 @@ rget_testall 2
 get_flushlocal 4
 get_flushlocal_shm 4
 win_shared_query_null 4
-get_acc_flush 4
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
