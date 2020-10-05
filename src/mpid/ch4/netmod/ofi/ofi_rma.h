@@ -58,8 +58,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
                                                                  MPIR_Win * win,
                                                                  MPIDI_winattr_t winattr,
                                                                  enum fi_datatype *fi_dt,
-                                                                 enum fi_op *fi_op, size_t * count,
-                                                                 size_t * dtsize)
+                                                                 enum fi_op *fi_op,
+                                                                 MPI_Aint * count,
+                                                                 MPI_Aint * dtsize)
 {
     MPIR_Datatype *dt_ptr;
     int op_index, dt_index;
@@ -128,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_query_acc_atomic_support(MPI_Datatype dt
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_prepare_target_mr(int target_rank,
                                                           MPI_Aint target_disp,
-                                                          size_t target_extent,
+                                                          MPI_Aint target_extent,
                                                           MPI_Aint target_true_lb, MPIR_Win * win,
                                                           MPIDI_winattr_t winattr,
                                                           MPIDI_OFI_target_mr_t * target_mr)
@@ -185,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     uint64_t flags;
     struct fi_msg_rma msg;
     int target_contig, origin_contig;
-    size_t target_bytes, origin_bytes, target_extent;
+    MPI_Aint target_bytes, origin_bytes, target_extent;
     MPI_Aint origin_true_lb, target_true_lb;
     struct iovec iov;
     struct fi_rma_iov riov;
@@ -208,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
 
     /* self messages */
     if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
-        size_t offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        MPI_Aint offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
                                    origin_datatype,
@@ -363,7 +364,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     struct fi_msg_rma msg;
     int origin_contig, target_contig;
     MPI_Aint origin_true_lb, target_true_lb;
-    size_t origin_bytes, target_bytes, target_extent;
+    MPI_Aint origin_bytes, target_bytes, target_extent;
     struct fi_rma_iov riov;
     struct iovec iov;
 
@@ -385,7 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
 
     /* self messages */
     if (target_rank == MPIDIU_win_comm_rank(win, winattr)) {
-        size_t offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
+        MPI_Aint offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
@@ -557,7 +558,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
-    size_t max_count, max_size, dt_size, bytes;
+    MPI_Aint max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb;
     void *buffer, *rbuffer;
     struct fi_ioc originv;
@@ -668,7 +669,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int target_contig, origin_contig;
-    size_t target_bytes, origin_bytes, target_extent;
+    MPI_Aint target_bytes, origin_bytes, target_extent;
     MPI_Aint origin_true_lb, target_true_lb;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
@@ -698,7 +699,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
         MPI_Datatype basic_type;
         enum fi_op fi_op;
         enum fi_datatype fi_dt;
-        size_t max_count, max_size, dt_size, basic_count;
+        MPI_Aint max_count, max_size, dt_size, basic_count;
 
         /* accept only same predefined basic datatype */
         MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
@@ -806,7 +807,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
 {
     int mpi_errno = MPI_SUCCESS;
     int target_contig, origin_contig, result_contig;
-    size_t target_bytes, target_extent, origin_bytes ATTRIBUTE((unused)),
+    MPI_Aint target_bytes, target_extent, origin_bytes ATTRIBUTE((unused)),
         result_bytes ATTRIBUTE((unused));
     MPI_Aint origin_true_lb, target_true_lb, result_true_lb;
 
@@ -839,7 +840,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
         MPI_Datatype basic_type;
         enum fi_op fi_op;
         enum fi_datatype fi_dt;
-        size_t max_count, max_size, dt_size, basic_count;
+        MPI_Aint max_count, max_size, dt_size, basic_count;
 
         /* accept only same predefined basic datatype */
         MPIDI_OFI_GET_BASIC_TYPE(target_datatype, basic_type);
@@ -1045,7 +1046,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
-    size_t max_count, max_size, dt_size, bytes;
+    MPI_Aint max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb ATTRIBUTE((unused));
     void *buffer, *rbuffer;
     struct fi_ioc originv;
