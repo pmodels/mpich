@@ -771,6 +771,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR
     int rank = 0;
 
     *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return;
+
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
@@ -790,6 +793,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_local_completed(MPIR_
     int rank = 0;
 
     *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return;
+
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
@@ -809,6 +815,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * 
     int i = 0;
 
     *allcompleted = 1;
+    if (!MPIDIG_WIN(win, targets))
+        return;
+
     MPIDIG_win_target_t *target_ptr = NULL;
     for (i = 0; i < grp_siz; i++) {
         int rank = ranks_in_win_grp[i];
@@ -1116,4 +1125,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDIU_win_acc_op_get_index(MPI_Op op)
+{
+    if (op == MPI_OP_NULL) {
+        /* Builtin index is from 0 to MPIR_OP_N_BUILTIN-1.
+         * Thus use MPIR_OP_N_BUILTIN as index for special OP_NULL as RMA cswap */
+        return MPIR_OP_N_BUILTIN;
+    } else {
+        return MPIR_Op_builtin_get_index(op);
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Op MPIDIU_win_acc_get_op(int index)
+{
+    if (index == MPIR_OP_N_BUILTIN) {
+        /* Builtin index is from 0 to MPIR_OP_N_BUILTIN-1.
+         * Thus use MPIR_OP_N_BUILTIN as index for special OP_NULL as RMA cswap */
+        return MPI_OP_NULL;
+    } else {
+        return MPIR_Op_builtin_get_op(index);
+    }
+}
 #endif /* CH4_IMPL_H_INCLUDED */

@@ -20,6 +20,8 @@ MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     NULL
 };
 
+MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED];
+
 static int pairtypes_finalize_cb(void *dummy);
 static int datatype_attr_finalize_cb(void *dummy);
 
@@ -110,6 +112,32 @@ static mpi_names_t mpi_pairtypes[] = {
     type_name_entry(MPI_SHORT_INT),
     type_name_entry(MPI_LONG_DOUBLE_INT),
 };
+
+static void predefined_index_init(void)
+{
+    int i;
+
+    for (i = 0; i < MPIR_DATATYPE_N_PREDEFINED; i++)
+        MPIR_Datatype_index_to_predefined[i] = MPI_DATATYPE_NULL;
+
+    /* Set index to handle mapping for builtin datatypes */
+    for (i = 0; i < sizeof(mpi_dtypes) / sizeof(mpi_dtypes[0]); i++) {
+        MPI_Datatype d = mpi_dtypes[i].dtype;
+        if (d != MPI_DATATYPE_NULL) {
+            int index = MPIR_Datatype_predefined_get_index(d);
+            MPIR_Datatype_index_to_predefined[index] = d;
+        }
+    }
+
+    /* Set index to handle mapping for pairtype datatypes */
+    for (i = 0; i < sizeof(mpi_pairtypes) / sizeof(mpi_pairtypes[0]); i++) {
+        MPI_Datatype d = mpi_pairtypes[i].dtype;
+        if (d != MPI_DATATYPE_NULL) {
+            int index = MPIR_Datatype_predefined_get_index(d);
+            MPIR_Datatype_index_to_predefined[index] = d;
+        }
+    }
+}
 
 static int pairtypes_finalize_cb(void *dummy ATTRIBUTE((unused)))
 {
@@ -204,6 +232,7 @@ int MPIR_Datatype_init_predefined(void)
     }
 
     MPIR_Add_finalize(pairtypes_finalize_cb, 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    predefined_index_init();
 
   fn_fail:
     return mpi_errno;

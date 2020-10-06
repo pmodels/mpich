@@ -12,6 +12,7 @@ mpi_sources +=                     \
     src/mpi/coll/op/op_commutative.c
 
 mpi_core_sources += \
+    src/mpi/coll/op/oputil.c         \
     src/mpi/coll/op/opsum.c          \
     src/mpi/coll/op/opmax.c          \
     src/mpi/coll/op/opmin.c          \

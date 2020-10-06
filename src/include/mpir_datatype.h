@@ -12,8 +12,8 @@
  * here. */
 /* FIXME: I will fix this by refactor the current datatype code out-of configure.ac */
 #define MPIR_DATATYPE_N_BUILTIN 71
-#define MPIR_DTYPE_BEGINNING  0
-#define MPIR_DTYPE_END       -1
+#define MPIR_DATATYPE_PAIRTYPE 5
+#define MPIR_DATATYPE_N_PREDEFINED (MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_PAIRTYPE)
 
 #ifndef MPIR_DATATYPE_PREALLOC
 #define MPIR_DATATYPE_PREALLOC 8
@@ -146,6 +146,7 @@ struct MPIR_Datatype {
 extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
+extern MPI_Datatype MPIR_Datatype_index_to_predefined[MPIR_DATATYPE_N_PREDEFINED];
 
 void MPIR_Datatype_free(MPIR_Datatype * ptr);
 void MPIR_Datatype_get_flattened(MPI_Datatype type, void **flattened, int *flattened_sz);
@@ -464,6 +465,35 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     }
 
     return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX MPI_Datatype MPIR_Datatype_predefined_get_type(uint32_t index)
+{
+    MPIR_Assert(index < MPIR_DATATYPE_N_PREDEFINED);
+    return MPIR_Datatype_index_to_predefined[index];
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Datatype_predefined_get_index(MPI_Datatype datatype)
+{
+    int dtype_index = 0;
+    switch (HANDLE_GET_KIND(datatype)) {
+        case HANDLE_KIND_BUILTIN:
+            /* Predefined builtin index mask for dtype. See MPIR_Datatype_get_ptr. */
+            dtype_index = datatype & 0x000000ff;
+            MPIR_Assert(dtype_index < MPIR_DATATYPE_N_BUILTIN);
+            break;
+        case HANDLE_KIND_DIRECT:
+            /* pairtype */
+            dtype_index = HANDLE_INDEX(datatype) + MPIR_DATATYPE_N_BUILTIN;
+            MPIR_Assert(dtype_index < MPIR_DATATYPE_N_BUILTIN + MPIR_DATATYPE_N_BUILTIN);
+            break;
+        default:
+            /* should be called only by builtin or pairtype */
+            MPIR_Assert(HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
+                        HANDLE_GET_KIND(datatype) == HANDLE_KIND_DIRECT);
+            break;
+    }
+    return dtype_index;
 }
 
 /* contents accessor functions */

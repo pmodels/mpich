@@ -298,25 +298,7 @@ typedef enum {
     MPIDIG_ACCU_SAME_OP_NO_OP
 } MPIDIG_win_info_accumulate_ops;
 
-typedef enum {
-    MPIDIG_ACCU_OP_SHIFT_FIRST = 0,
-    MPIDIG_ACCU_MAX_SHIFT = 0,  /* 1<<0 */
-    MPIDIG_ACCU_MIN_SHIFT = 1,
-    MPIDIG_ACCU_SUM_SHIFT = 2,
-    MPIDIG_ACCU_PROD_SHIFT = 3,
-    MPIDIG_ACCU_MAXLOC_SHIFT = 4,
-    MPIDIG_ACCU_MINLOC_SHIFT = 5,
-    MPIDIG_ACCU_BAND_SHIFT = 6,
-    MPIDIG_ACCU_BOR_SHIFT = 7,
-    MPIDIG_ACCU_BXOR_SHIFT = 8,
-    MPIDIG_ACCU_LAND_SHIFT = 9,
-    MPIDIG_ACCU_LOR_SHIFT = 10,
-    MPIDIG_ACCU_LXOR_SHIFT = 11,
-    MPIDIG_ACCU_REPLACE_SHIFT = 12,
-    MPIDIG_ACCU_NO_OP_SHIFT = 13,       /* atomic get */
-    MPIDIG_ACCU_CSWAP_SHIFT = 14,
-    MPIDIG_ACCU_OP_SHIFT_LAST
-} MPIDIG_win_info_accu_op_shift_t;
+#define MPIDIG_ACCU_NUM_OP (MPIR_OP_N_BUILTIN + 1)      /* builtin reduce op + cswap */
 
 typedef struct MPIDIG_win_info_args_t {
     int no_locks;
@@ -328,7 +310,7 @@ typedef struct MPIDIG_win_info_args_t {
 
     /* hints to tradeoff atomicity support */
     uint32_t which_accumulate_ops;      /* Arbitrary combination of {1<<max|1<<min|1<<sum|...}
-                                         * with bit shift defined in MPIDIG_win_info_accu_op_shift_t.
+                                         * with bit shift defined by op index (0<=index<MPIDIG_ACCU_NUM_OP).
                                          * any_op and none are two special values.
                                          * any_op by default. */
     bool accumulate_noncontig_dtype;    /* true by default. */
