@@ -353,6 +353,7 @@ typedef struct MPIDIG_win_info_args_t {
                                                          * Note that if a native RMA cannot be supported by the hardware
                                                          * (e.g., network atomics limit), we ignore the "native" hint and reset to auto.*/
     bool coll_attach;           /* false by default. Valid only for dynamic window */
+    bool no_op_cross_attached_mem;      /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
      * If true, MPICH will try to use shared memory routines for the window.
