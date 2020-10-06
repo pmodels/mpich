@@ -7,7 +7,7 @@
 #include "ofi_impl.h"
 #include "ofi_events.h"
 
-int handle_deferred_ops(void)
+int MPIDI_OFI_handle_deferred_ops(void)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -46,4 +46,9 @@ int handle_deferred_ops(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+int MPIDI_OFI_progress_uninlined(int vni)
+{
+    return MPIDI_NM_progress(vni, 0);
 }

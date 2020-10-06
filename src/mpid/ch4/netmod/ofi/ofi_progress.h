@@ -8,7 +8,25 @@
 
 #include "ofi_impl.h"
 
-int handle_deferred_ops(void);
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    MPIR_Request *req;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
+
+    for (i = 0; i < num; i++) {
+        req = MPIDI_OFI_context_to_request(wc[i].op_context);
+        mpi_errno = MPIDI_OFI_dispatch_optimized(&wc[i], req);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_CQ_ENTRIES);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
 {
@@ -41,7 +59,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vci, int blocking)
             mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
     }
 
-    handle_deferred_ops();
+    if (mpi_errno == MPI_SUCCESS) {
+        mpi_errno = MPIDI_OFI_handle_deferred_ops();
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS);
 

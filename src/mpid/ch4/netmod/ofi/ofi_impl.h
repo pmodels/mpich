@@ -25,6 +25,8 @@
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 
+int MPIDI_OFI_progress_uninlined(int vni);
+
 /* vni mapping */
 /* NOTE: concerned by the modulo? If we restrict num_vnis to power of 2,
  * we may get away with bit mask */

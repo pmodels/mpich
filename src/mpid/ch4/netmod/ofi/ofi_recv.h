@@ -356,8 +356,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
             /* The cancel is local and must complete, so only poll this device (not global progress) */
-            if ((mpi_errno = MPIDI_NM_progress(vni, 0)) != MPI_SUCCESS)
-                goto fn_exit;
+            mpi_errno = MPIDI_OFI_progress_uninlined(vni);
+            MPIR_ERR_CHECK(mpi_errno);
         }
 
         if (MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) {
