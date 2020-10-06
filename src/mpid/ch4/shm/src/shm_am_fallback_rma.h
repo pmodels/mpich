@@ -111,6 +111,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_target_local_cmpl_hook(int rank, MPIR
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_rma_am_progress_cond_check(MPIR_Win * win)
+{
+    return true;        /* All RMAs are AM based, thus require AM progress. */
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_put(const void *origin_addr,
                                                int origin_count,
                                                MPI_Datatype origin_datatype,

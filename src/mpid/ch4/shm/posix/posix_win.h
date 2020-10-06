@@ -323,4 +323,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_exit_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_am_progress_cond_check(MPIR_Win * win)
+{
+    bool ret = true;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_AM_PROGRESS_COND_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_AM_PROGRESS_COND_HOOK);
+
+    /* All SHM-based RMAs are completed when issuing the op, thus no AM progress is required. */
+    if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
+        ret = false;
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_AM_PROGRESS_COND_HOOK);
+    return ret;
+}
+
 #endif /* POSIX_WIN_H_INCLUDED */

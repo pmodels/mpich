@@ -61,4 +61,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_target_local_cmpl_hook(int rank, MPIR
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_rma_am_progress_cond_check(MPIR_Win * win)
+{
+    bool ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_RMA_AM_PROGRESS_COND_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_RMA_AM_PROGRESS_COND_HOOK);
+
+    ret = MPIDI_POSIX_rma_am_progress_cond_check(win);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_RMA_AM_PROGRESS_COND_HOOK);
+    return ret;
+}
+
 #endif /* SHM_HOOKS_H_INCLUDED */

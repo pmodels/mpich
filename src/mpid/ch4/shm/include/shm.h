@@ -135,6 +135,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_target_local_cmpl_hook(int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_op_cs_enter_hook(MPIR_Win *
                                                             win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rma_op_cs_exit_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_rma_am_progress_cond_check(MPIR_Win *
+                                                                   win) MPL_STATIC_INLINE_SUFFIX;
 
 int MPIDI_SHM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info);
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int rank,
