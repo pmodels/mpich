@@ -114,6 +114,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_rma_am_progress_cond_check(MPIR_Win * win)
+{
+    return true;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_put(const void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
