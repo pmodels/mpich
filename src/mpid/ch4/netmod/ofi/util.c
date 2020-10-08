@@ -399,6 +399,90 @@ static int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum 
     return -1;
 }
 
+/* used for parsing info hint */
+int MPIDI_OFI_op_index_from_string(const char *s)
+{
+    if (!strcmp(s, "MPI_SUM")) {
+        return FI_SUM;
+    } else if (!strcmp(s, "MPI_PROD")) {
+        return FI_PROD;
+    } else if (!strcmp(s, "MPI_MAX")) {
+        return FI_MAX;
+    } else if (!strcmp(s, "MPI_MIN")) {
+        return FI_MIN;
+    } else if (!strcmp(s, "MPI_BAND")) {
+        return FI_BAND;
+    } else if (!strcmp(s, "MPI_BOR")) {
+        return FI_BOR;
+    } else if (!strcmp(s, "MPI_BXOR")) {
+        return FI_BXOR;
+    } else if (!strcmp(s, "MPI_LAND")) {
+        return FI_LAND;
+    } else if (!strcmp(s, "MPI_LOR")) {
+        return FI_LOR;
+    } else if (!strcmp(s, "MPI_LXOR")) {
+        return FI_LXOR;
+    } else if (!strcmp(s, "MPI_REPLACE")) {
+        return FI_ATOMIC_WRITE;
+    } else if (!strcmp(s, "MPI_NO_OP")) {
+        return FI_ATOMIC_READ;
+    } else if (!strcmp(s, "MPI_OP_NULL")) {
+        return FI_CSWAP;
+    } else {
+        return -1;
+    }
+}
+
+/* FIXME: I copied this from MPIDI_OFI_dt_index_from_string. This kind of
+ * assumed a type system in a non-portable way */
+int MPIDI_OFI_dt_index_from_string(const char *s)
+{
+    if (!strcmp(s, "MPI_INTEGER") || !strcmp(s, " MPI_INT32_T") || !strcmp(s, " MPI_INTEGER4") ||
+        !strcmp(s, " MPI_INT")) {
+        return FI_INT32;
+    } else if (!strcmp(s, " MPI_UINT32_T") || !strcmp(s, " MPI_UNSIGNED")) {
+        return FI_UINT32;
+    } else if (!strcmp(s, " MPI_SHORT") || !strcmp(s, " MPI_INT16_T") ||
+               !strcmp(s, " MPI_INTEGER2")) {
+        return FI_INT16;
+    } else if (!strcmp(s, " MPI_UNSIGNED_SHORT") || !strcmp(s, " MPI_UINT16_T")) {
+        return FI_UINT16;
+    } else if (!strcmp(s, " MPI_SIGNED_CHAR") || !strcmp(s, " MPI_INT8_T") ||
+               !strcmp(s, " MPI_INTEGER1") || !strcmp(s, " MPI_CHAR")) {
+        return FI_INT8;
+    } else if (!strcmp(s, " MPI_BYTE") || !strcmp(s, " MPI_UNSIGNED_CHAR") ||
+               !strcmp(s, " MPI_UINT8_T")) {
+        return FI_UINT8;
+    } else if (!strcmp(s, " MPI_LONG") || !strcmp(s, " MPI_AINT")) {
+        return FI_INT64;
+    } else if (!strcmp(s, " MPI_UNSIGNED_LONG")) {
+        return FI_UINT64;
+    } else if (!strcmp(s, " MPI_INT64_T") || !strcmp(s, " MPI_OFFSET") ||
+               !strcmp(s, " MPI_INTEGER8") || !strcmp(s, " MPI_LONG_LONG") ||
+               !strcmp(s, " MPI_LONG_LONG_INT") || !strcmp(s, " MPI_COUNT")) {
+        return FI_INT64;
+    } else if (!strcmp(s, " MPI_UINT64_T") || !strcmp(s, " MPI_UNSIGNED_LONG_LONG")) {
+        return FI_UINT64;
+    } else if (!strcmp(s, " MPI_FLOAT") || !strcmp(s, " MPI_REAL")) {
+        return FI_FLOAT;
+    } else if (!strcmp(s, " MPI_DOUBLE") || !strcmp(s, " MPI_DOUBLE_PRECISION")) {
+        return FI_DOUBLE;
+    } else if (!strcmp(s, " MPI_LONG_DOUBLE")) {
+        return FI_LONG_DOUBLE;
+    } else if (!strcmp(s, " MPI_C_BOOL")) {
+        return FI_UINT8;
+    } else if (!strcmp(s, " MPI_LOGICAL")) {
+        return FI_UINT32;
+    } else if (!strcmp(s, " MPI_COMPLEX") || !strcmp(s, " MPI_C_FLOAT_COMPLEX")) {
+        return FI_FLOAT_COMPLEX;
+    } else if (!strcmp(s, " MPI_DOUBLE_COMPLEX") || !strcmp(s, " MPI_COMPLEX8") ||
+               !strcmp(s, " MPI_C_DOUBLE_COMPLEX")) {
+        return FI_DOUBLE_COMPLEX;
+    } else {
+        return -1;
+    }
+}
+
 #define _TBL MPIDI_OFI_global.win_op_table[i][j]
 #define CHECK_ATOMIC(fcn,field1,field2)            \
   atomic_count = 0;                                \

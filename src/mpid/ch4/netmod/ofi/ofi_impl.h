@@ -229,6 +229,8 @@ int MPIDI_OFI_mr_key_allocator_init(void);
 uint64_t MPIDI_OFI_mr_key_alloc(void);
 void MPIDI_OFI_mr_key_free(uint64_t index);
 void MPIDI_OFI_mr_key_allocator_destroy(void);
+int MPIDI_OFI_op_index_from_string(const char *s);
+int MPIDI_OFI_dt_index_from_string(const char *s);
 
 /* RMA */
 #define MPIDI_OFI_INIT_CHUNK_CONTEXT(win,sigreq)                        \

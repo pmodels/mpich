@@ -76,6 +76,86 @@ static void load_acc_hint(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_LOAD_ACC_HINT);
 }
 
+static void check_hint_acc_op_dt_max_count(MPIR_Win * win)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_ACC_HINT_OP_DT_MAX_COUNT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_ACC_HINT_OP_DT_MAX_COUNT);
+
+    if (MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount) {
+        /* When op-datatype-count hints is given, we turn on native mode unless one of the
+         * op-datatype-count exceeds our capability. */
+        bool do_native = true;
+        /* get native max_size */
+        MPI_Aint max_size = MPIDI_OFI_check_acc_order_size(win, MPIDI_OFI_global.max_msg_size);
+        if (max_size <= 0) {
+            do_native = false;
+        }
+        /* parse the hint string */
+        char *s, *saveptr;
+        s = strtok_r(MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount, ",", &saveptr);
+        while (s) {
+            char *saveptr2, *s_op, *s_dt, *s_count;
+            int op_index, dt_index;
+            MPI_Aint count;
+
+            s_op = strtok_r(s, ":", &saveptr2);
+            if (!s_op) {
+                continue;
+            }
+            s_dt = strtok_r(NULL, ":", &saveptr2);
+            if (!s_dt) {
+                continue;
+            }
+            s_count = strtok_r(NULL, ":", &saveptr2);
+            if (!s_count) {
+                continue;
+            }
+
+            op_index = MPIDI_OFI_op_index_from_string(s_op);
+            dt_index = MPIDI_OFI_dt_index_from_string(s_dt);
+
+            if (dt_index == FI_LONG_DOUBLE &&
+                (op_index == FI_LAND || op_index == FI_LOR || op_index == FI_LXOR)) {
+                do_native = false;
+            }
+
+            if (op_index < 0 || dt_index < 0) {
+                do_native = false;
+            }
+
+            MPI_Aint max_count;
+            MPIDI_OFI_atomic_valid_t *win_op_entry;
+
+            win_op_entry = &MPIDI_OFI_global.win_op_table[dt_index][op_index];
+            if (!strcmp(s_op, "MPI_NO_OP")) {
+                /* atomic get */
+                max_count = win_op_entry->max_fetch_atomic_count;
+            } else if (!strcmp(s_op, "MPI_OP_NULL")) {
+                /* compare and swap */
+                max_count = win_op_entry->max_compare_atomic_count;
+            } else {
+                /* atomic write and fetch_and_write */
+                max_count = MPL_MIN(win_op_entry->max_atomic_count,
+                                    win_op_entry->max_fetch_atomic_count);
+            }
+            count = atol(s_count);
+            if (count > max_count) {
+                do_native = false;
+            }
+
+            /* next triplet */
+            s = strtok_r(NULL, ",", &saveptr);
+        }
+        if (do_native) {
+            MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_NATIVE_ATOMICS;
+        } else {
+            MPIDI_WIN(win, winattr) &= ~((unsigned) MPIDI_WINATTR_NM_NATIVE_ATOMICS);
+        }
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_ACC_HINT_OP_DT_MAX_COUNT);
+}
+
 /* Set OFI attributes and capabilities for RMA. */
 static void set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
 {
@@ -198,6 +278,10 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
             MPL_free(MPIDI_OFI_WIN(win).winfo);
             MPIDI_OFI_WIN(win).winfo = NULL;
         }
+    }
+
+    if (MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount) {
+        check_hint_acc_op_dt_max_count(win);
     }
 
     load_acc_hint(win);
