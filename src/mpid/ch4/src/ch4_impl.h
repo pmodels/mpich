@@ -765,15 +765,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, in
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
-                                                                            int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
@@ -781,43 +780,44 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR
             continue;
         if (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win,
-                                                                           int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_group_local_completed(MPIR_Win * win,
                                                                      int *ranks_in_win_grp,
-                                                                     int grp_siz, int *allcompleted)
+                                                                     int grp_siz)
 {
     int i = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (i = 0; i < grp_siz; i++) {
         int rank = ranks_in_win_grp[i];
@@ -825,10 +825,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * 
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
 /* Map function interfaces in CH4 level */
