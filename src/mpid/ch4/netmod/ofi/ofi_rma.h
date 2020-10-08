@@ -613,8 +613,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_compare_and_swap(const void *origin_ad
      *  TODO: we assume all processes should use the same max_size and dt_size, true ? */
     if (max_size < dt_size)
         goto am_fallback;
-    /* Ensure completion of outstanding AMs for atomicity. */
-    MPIDIG_wait_am_acc(win, target_rank);
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -719,9 +717,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_accumulate(const void *origin_addr,
             goto am_fallback;
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
-
-        /* Ensure completion of outstanding AMs for atomicity. */
-        MPIDIG_wait_am_acc(win, target_rank);
 
         uint64_t flags;
         if (sigreq) {
@@ -862,9 +857,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
             goto am_fallback;
         basic_count = target_bytes / dt_size;
         MPIR_Assert(target_bytes % dt_size == 0);
-
-        /* Ensure completion of outstanding AMs for atomicity. */
-        MPIDIG_wait_am_acc(win, target_rank);
 
         uint64_t flags;
         if (sigreq) {
@@ -1107,9 +1099,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
      *  TODO: we assume all processes should use the same max_size and dt_size, true ? */
     if (max_size < dt_size)
         goto am_fallback;
-
-    /* Ensure completion of outstanding AMs for atomicity. */
-    MPIDIG_wait_am_acc(win, target_rank);
 
     originv.addr = (void *) buffer;
     originv.count = 1;
