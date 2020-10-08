@@ -1630,7 +1630,7 @@ static int try_open_shared_av(struct fid_domain *domain, struct fid_av **p_av, i
         av_attr.type = FI_AV_MAP;
     }
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-    av_attr.count = MPIR_Process.size;
+    av_attr.count = MPIR_Process.size * MPIDI_OFI_global.num_nics;
 
     char av_name[128];
     MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", MPIR_Process.appnum);
@@ -1667,7 +1667,7 @@ static int open_local_av(struct fid_domain *p_domain, struct fid_av **p_av)
         av_attr.type = FI_AV_MAP;
     }
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
-    av_attr.count = MPIR_Process.size;
+    av_attr.count = MPIR_Process.size * MPIDI_OFI_global.num_nics;
 
     av_attr.name = NULL;
     av_attr.flags = 0;
