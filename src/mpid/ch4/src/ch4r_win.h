@@ -195,9 +195,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
-    do {
-        MPIDIU_PROGRESS();
-    } while (!MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp, group->size));
+    MPIDIU_PROGRESS_DO_WHILE(!MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp,
+                                                                     group->size));
 
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
@@ -639,9 +638,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
      * user flushes per target, but this should be optimized. */
     int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
 
-    while (!MPIDIG_win_check_all_targets_local_completed(win) || poll_once-- > 0) {
-        MPIDIU_PROGRESS();
-    }
+    MPIDIU_PROGRESS_WHILE(!MPIDIG_win_check_all_targets_local_completed(win) || poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -795,9 +792,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
      * user flushes per target, but this should be optimized. */
     int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
 
-    while (!MPIDIG_win_check_all_targets_remote_completed(win) || poll_once-- > 0) {
-        MPIDIU_PROGRESS();
-    }
+    MPIDIU_PROGRESS_WHILE(!MPIDIG_win_check_all_targets_remote_completed(win) || poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
