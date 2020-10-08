@@ -116,7 +116,7 @@ typedef int MPI_Fint;
 #if (!defined(HAVE_MPI_INFO) && !defined(MPIO_INCLUDE))
 typedef struct MPIR_Info *MPI_Info;
 #define MPI_INFO_NULL 0
-#define MPI_MAX_INFO_VAL      1024
+#define MPI_MAX_INFO_VAL     16384
 
 int MPI_Info_create(MPI_Info * info);
 int MPI_Info_set(MPI_Info info, char *key, char *value);

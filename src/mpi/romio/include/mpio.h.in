@@ -77,7 +77,7 @@ typedef int MPI_Fint;
   typedef struct MPIR_Info *MPI_Info;
 # define MPI_INFO_NULL         ((MPI_Info) 0)
 # define MPI_MAX_INFO_KEY       255
-# define MPI_MAX_INFO_VAL      1024
+# define MPI_MAX_INFO_VAL     16384
 #endif
 
 #define MPI_MODE_RDONLY              2  /* ADIO_RDONLY */

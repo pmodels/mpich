@@ -520,7 +520,7 @@ typedef int MPI_Info;
 #define MPI_INFO_NULL         ((MPI_Info)0x1c000000)
 #define MPI_INFO_ENV          ((MPI_Info)0x5c000001)
 #define MPI_MAX_INFO_KEY       255
-#define MPI_MAX_INFO_VAL      1024
+#define MPI_MAX_INFO_VAL     16384
 
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56
