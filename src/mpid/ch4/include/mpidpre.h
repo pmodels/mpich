@@ -317,6 +317,14 @@ typedef struct MPIDIG_win_info_args_t {
     MPI_Aint accumulate_max_bytes;      /* Non-negative integer, -1 (unlimited) by default.
                                          * TODO: can be set to win_size.*/
     bool disable_shm_accumulate;        /* false by default. */
+
+    /* List of op-datatype-count triplets, e.g. MPI_SUM:MPI_INT:100,MPI_REPLACE:MPI_INT:100,....
+     * When given, it will be used to check against native capability and turn on
+     * MPIDI_WINATTR_NM_NATIVE_ATOMICS winattr.
+     * Note: datatypes should include all basic element types. In addition, if non_contiguous types
+     *       are used, it should be included as `NONCONTIG`.
+     * Note: this hint obsoletes previous atomicity hints. */
+    char *accumulate_op_datatype_maxcount;
     bool coll_attach;           /* false by default. Valid only for dynamic window */
 
     /* alloc_shm: MPICH specific hint (same in CH3).
@@ -434,6 +442,8 @@ typedef enum {
                                          * may be required separately. */
     MPIDI_WINATTR_NM_DYNAMIC_MR = 32,   /* whether the memory region is registered dynamically. Valid only for
                                          * dynamic window. Set by netmod. */
+    MPIDI_WINATTR_NM_NATIVE_ATOMICS = 64,       /* when set, netmod will always do native accumulate,
+                                                 * will not fallback to AM or assert failure. */
     MPIDI_WINATTR_LAST_BIT
 } MPIDI_winattr_bit_t;
 

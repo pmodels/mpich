@@ -204,6 +204,9 @@ static int win_set_info(MPIR_Win * win, MPIR_Info * info, bool is_init)
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = true;
             else
                 MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+        } else if (is_init && !strcmp(curr_ptr->key, "accumulate_op_datatype_maxcount")) {
+            MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount =
+                MPL_strdup(curr_ptr->value);
         } else if (is_init && !strcmp(curr_ptr->key, "coll_attach")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDIG_WIN(win, info_args).coll_attach = true;
@@ -284,6 +287,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
     MPIDIG_WIN(win, info_args).accumulate_noncontig_dtype = true;
     MPIDIG_WIN(win, info_args).accumulate_max_bytes = -1;
     MPIDIG_WIN(win, info_args).disable_shm_accumulate = false;
+    MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount = NULL;
     MPIDIG_WIN(win, info_args).coll_attach = false;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
@@ -391,6 +395,10 @@ static int win_finalize(MPIR_Win ** win_ptr)
             MPL_free(MPIDIG_WIN(win, shared_table));
         } else
             MPL_free(win->base);
+    }
+
+    if (MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount) {
+        MPL_free(MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount);
     }
 
     MPIDIU_map_erase(MPIDI_global.win_map, MPIDIG_WIN(win, win_id));
@@ -747,6 +755,13 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 
     if (MPIDIG_WIN(win, info_args).disable_shm_accumulate)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
+    MPIR_ERR_CHECK(mpi_errno);
+
+    if (MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_op_datatype_maxcount",
+                                       MPIDIG_WIN(win, info_args).accumulate_op_datatype_maxcount);
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "disable_shm_accumulate", "false");
     MPIR_ERR_CHECK(mpi_errno);
