@@ -745,6 +745,7 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
         }
 
         MPIDIG_am_reg_cb(MPIDI_OFI_INTERNAL_HANDLER_CONTROL, NULL, &MPIDI_OFI_control_handler);
+        MPIDIG_am_reg_cb(MPIDI_OFI_AM_RDMA_READ_ACK, NULL, &MPIDI_OFI_am_rdma_read_ack_handler);
     }
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_inject_emus, 0);
     MPL_atomic_store_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 0);
