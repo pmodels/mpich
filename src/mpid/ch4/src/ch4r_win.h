@@ -43,6 +43,21 @@ cvars:
         Effective only for passive target synchronization MPI_Win_flush{_all}
         and MPI_Win_flush_local{_all}.
 
+    - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies a static interval of progress polling for incoming RMA active messages
+        received on the target process.
+        Effective only for passive-target synchronization MPI_Win_flush{_all} and
+        MPI_Win_flush_local{_all}. Interval indicates the number of performed
+        flush calls before polling. It is counted globally across all windows.
+        Invalid when MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS is true.
+
     - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
       category    : CH4
       type        : int
