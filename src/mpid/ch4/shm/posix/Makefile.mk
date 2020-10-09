@@ -24,10 +24,10 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_pre.h       \
                   src/mpid/ch4/shm/posix/posix_proc.h      \
                   src/mpid/ch4/shm/posix/posix_types.h     \
+                  src/mpid/ch4/shm/posix/posix_progress.h  \
                   src/mpid/ch4/shm/posix/posix_coll_release_gather.h
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
-                    src/mpid/ch4/shm/posix/posix_progress.c \
                     src/mpid/ch4/shm/posix/posix_comm.c \
                     src/mpid/ch4/shm/posix/posix_init.c \
                     src/mpid/ch4/shm/posix/posix_op.c \
