@@ -1167,9 +1167,18 @@ MPL_STATIC_INLINE_PREFIX bool MPIDIG_rma_need_poll_am(void)
             poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
                          == 0) ? true : false;
         }
-    } else {
-        /* Skip cntr update when we always poll (default)  */
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL > 1) {
+        int interval;
+        MPIR_cc_incr(&MPIDIG_global.rma_am_poll_cntr, &interval);
+
+        /* User explicitly controls the polling frequency */
+        poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 0) ? true : false;
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 1) {
+        /* Skip cntr update when interval == 1, as we always poll (default)  */
         poll_flag = true;
+    } else {
+        /* User explicitly disables polling */
+        poll_flag = false;
     }
 
     return poll_flag;
