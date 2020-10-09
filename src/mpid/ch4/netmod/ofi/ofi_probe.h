@@ -8,14 +8,14 @@
 
 #include "ofi_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_iprobe(int source,
-                                                 int tag,
-                                                 MPIR_Comm * comm,
-                                                 int context_offset,
-                                                 MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
-                                                 int *flag,
-                                                 MPI_Status * status,
-                                                 MPIR_Request ** message, uint64_t peek_flags)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_do_iprobe(int source,
+                                               int tag,
+                                               MPIR_Comm * comm,
+                                               int context_offset,
+                                               MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                               int *flag,
+                                               MPI_Status * status,
+                                               MPIR_Request ** message, uint64_t peek_flags)
 {
     int mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc;

@@ -8,14 +8,14 @@
 
 #include "ofi_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
-                                                        size_t data_sz,
-                                                        uint64_t cq_data,
-                                                        int dst_rank,
-                                                        int tag, MPIR_Comm * comm,
-                                                        int context_offset,
-                                                        MPIDI_av_entry_t * addr,
-                                                        int vni_src, int vni_dst)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_send_lightweight(const void *buf,
+                                                      size_t data_sz,
+                                                      uint64_t cq_data,
+                                                      int dst_rank,
+                                                      int tag, MPIR_Comm * comm,
+                                                      int context_offset,
+                                                      MPIDI_av_entry_t * addr,
+                                                      int vni_src, int vni_dst)
 {
     int mpi_errno = MPI_SUCCESS;
     int vni_local = vni_src;
@@ -51,11 +51,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
 
   Note: data_sz is passed in here for reusing.
 */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,
-                                                uint64_t cq_data,
-                                                int dst_rank, uint64_t match_bits, MPIR_Comm * comm,
-                                                MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
-                                                MPIR_Request * sreq, MPIR_Datatype * dt_ptr)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count, size_t data_sz,
+                                              uint64_t cq_data,
+                                              int dst_rank, uint64_t match_bits, MPIR_Comm * comm,
+                                              MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                              MPIR_Request * sreq, MPIR_Datatype * dt_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL;
@@ -116,15 +116,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint count,
-                                                   MPI_Datatype datatype,
-                                                   uint64_t cq_data, int dst_rank, int tag,
-                                                   MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * addr, int vni_src,
-                                                   int vni_dst, MPIR_Request ** request,
-                                                   int dt_contig, size_t data_sz,
-                                                   MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
-                                                   uint64_t type)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_send_normal(const void *buf, MPI_Aint count,
+                                                 MPI_Datatype datatype,
+                                                 uint64_t cq_data, int dst_rank, int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * addr, int vni_src,
+                                                 int vni_dst, MPIR_Request ** request,
+                                                 int dt_contig, size_t data_sz,
+                                                 MPIR_Datatype * dt_ptr, MPI_Aint dt_true_lb,
+                                                 uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
     char *send_buf;
@@ -311,12 +311,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                            int dst_rank, int tag, MPIR_Comm * comm,
-                                            int context_offset, MPIDI_av_entry_t * addr,
-                                            int vni_src, int vni_dst,
-                                            MPIR_Request ** request, int noreq,
-                                            uint64_t syncflag, MPIR_Errflag_t err_flag)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                          int dst_rank, int tag, MPIR_Comm * comm,
+                                          int context_offset, MPIDI_av_entry_t * addr,
+                                          int vni_src, int vni_dst,
+                                          MPIR_Request ** request, int noreq,
+                                          uint64_t syncflag, MPIR_Errflag_t err_flag)
 {
     int dt_contig, mpi_errno;
     size_t data_sz;

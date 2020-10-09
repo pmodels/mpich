@@ -181,9 +181,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm, int handler_id,
-                                                     const void *data, MPI_Aint data_sz,
-                                                     MPIR_Request * sreq)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm, int handler_id,
+                                                   const void *data, MPI_Aint data_sz,
+                                                   MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -258,9 +258,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
-                                                      const void *data, MPI_Aint data_sz,
-                                                      MPIR_Request * sreq)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm, int handler_id,
+                                                    const void *data, MPI_Aint data_sz,
+                                                    MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -305,11 +305,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_short(int rank, MPIR_Comm * comm
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * comm, int handler_id,
-                                                         const void *data, MPI_Aint seg_sz,
-                                                         MPI_Aint data_sz, MPIR_Request * sreq,
-                                                         MPIDI_OFI_am_send_pipeline_request_t *
-                                                         send_req)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_am_isend_pipeline(int rank, MPIR_Comm * comm, int handler_id,
+                                                       const void *data, MPI_Aint seg_sz,
+                                                       MPI_Aint data_sz, MPIR_Request * sreq,
+                                                       MPIDI_OFI_am_send_pipeline_request_t *
+                                                       send_req)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -469,9 +469,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_isend_eager(int rank, MPIR_Comm * c
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
-                                                          const MPIDI_OFI_am_header_t * msg_hdrp,
-                                                          const void *am_hdr, size_t am_hdr_sz)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
+                                                        const MPIDI_OFI_am_header_t * msg_hdrp,
+                                                        const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

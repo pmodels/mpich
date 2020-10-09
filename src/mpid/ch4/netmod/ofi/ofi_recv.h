@@ -21,12 +21,12 @@
       due to limitations with iovec. Needs to fall back to the unpack path.
   Other: An error occurred as indicated in the code.
 */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,      /* data_sz passed in here for reusing */
-                                                int rank, uint64_t match_bits, uint64_t mask_bits,
-                                                MPIR_Comm * comm, MPIR_Context_id_t context_id,
-                                                MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
-                                                MPIR_Request * rreq,
-                                                MPIR_Datatype * dt_ptr, uint64_t flags)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_t data_sz,        /* data_sz passed in here for reusing */
+                                              int rank, uint64_t match_bits, uint64_t mask_bits,
+                                              MPIR_Comm * comm, MPIR_Context_id_t context_id,
+                                              MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                              MPIR_Request * rreq,
+                                              MPIR_Datatype * dt_ptr, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     struct iovec *originv = NULL;
@@ -95,15 +95,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count, size_
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
-                                                MPI_Aint count,
-                                                MPI_Datatype datatype,
-                                                int rank,
-                                                int tag,
-                                                MPIR_Comm * comm,
-                                                int context_offset,
-                                                MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
-                                                MPIR_Request ** request, int mode, uint64_t flags)
+INTERNAL_STATIC_INLINE int MPIDI_OFI_do_irecv(void *buf,
+                                              MPI_Aint count,
+                                              MPI_Datatype datatype,
+                                              int rank,
+                                              int tag,
+                                              MPIR_Comm * comm,
+                                              int context_offset,
+                                              MPIDI_av_entry_t * addr, int vni_src, int vni_dst,
+                                              MPIR_Request ** request, int mode, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
