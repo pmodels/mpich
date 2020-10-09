@@ -351,14 +351,14 @@ static int win_finalize(MPIR_Win ** win_ptr)
 
     /* Make progress till all OPs have been completed */
     do {
-        int all_local_completed = 0, all_remote_completed = 0;
+        bool all_local_completed, all_remote_completed;
 
         /* NOTE: MPID_Win_free does not take on locks */
         mpi_errno = MPID_Progress_test(NULL);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
+        all_local_completed = MPIDIG_win_check_all_targets_local_completed(win);
+        all_remote_completed = MPIDIG_win_check_all_targets_remote_completed(win);
 
         /* Local completion counter might be updated later than remote completion
          * (at request completion), so we need to check it before release entire
