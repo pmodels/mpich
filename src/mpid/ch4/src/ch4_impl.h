@@ -1022,6 +1022,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
         /* --END ERROR HANDLING-- */
     }
 
+    void *in_targetbuf = target_buf;
+    void *host_targetbuf = NULL;
+    MPL_pointer_attr_t attr;
+    MPL_gpu_query_pointer_attr(target_buf, &attr);
+    /* FIXME: use typerep/yaksa GPU-aware accumulate when available */
+    if (attr.type == MPL_GPU_POINTER_DEV) {
+        MPI_Aint extent, true_extent;
+        MPI_Aint true_lb;
+
+        MPIR_Datatype_get_extent_macro(target_dtp, extent);
+        MPIR_Type_get_true_extent_impl(target_dtp, &true_lb, &true_extent);
+        extent = MPL_MAX(extent, true_extent);
+
+        host_targetbuf = MPL_malloc(extent * target_count, MPL_MEM_RMA);
+        MPIR_Assert(host_targetbuf);
+        MPIR_Localcopy(target_buf, target_count, target_dtp, host_targetbuf, target_count,
+                       target_dtp);
+        target_buf = host_targetbuf;
+    }
 
     if (is_empty_source == TRUE || HANDLE_IS_BUILTIN(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
@@ -1119,6 +1138,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_compute_acc_op(void *source_buf, int source_
 
         MPL_free(src_ptr);
         MPL_free(typerep_vec);
+    }
+
+    if (host_targetbuf) {
+        target_buf = in_targetbuf;
+        MPIR_Localcopy(host_targetbuf, target_count, target_dtp, target_buf, target_count,
+                       target_dtp);
+        MPL_free(host_targetbuf);
     }
 
   fn_exit:
