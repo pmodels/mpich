@@ -528,21 +528,15 @@ static int am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
     MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
 
-    switch (msg_hdr->am_type) {
-        case MPIDI_AMTYPE_LMT_ACK:
-            goto fn_exit;
-
-        default:
-            break;
+    /* continue origin side completion if not RDMA_READ. REMA_READ will perform
+     * origin side completion when ACK arrives */
+    if (msg_hdr->am_type != MPIDI_AMTYPE_RDMA_READ) {
+        MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
+                                          MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+        mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
+        MPIR_ERR_CHECK(mpi_errno);
     }
-
-    MPIDU_genq_private_pool_free_cell(MPIDI_OFI_global.pack_buf_pool,
-                                      MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
-
-    mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
-
-    MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND_EVENT);
@@ -601,7 +595,7 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 #if NEEDS_STRICT_ALIGNMENT
     /* FI_MULTI_RECV may pack the message at lesser alignment, copy the header
      * when that's the case */
-#define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_LMT_REQ */
+#define MAX_HDR_SIZE 256        /* need accommodate MPIDI_AMTYPE_RDMA_READ */
     char temp[MAX_HDR_SIZE] MPL_ATTR_ALIGNED(MAX_ALIGNMENT);
     if ((intptr_t) am_hdr & (MAX_ALIGNMENT - 1)) {
         int temp_size = MAX_HDR_SIZE;
@@ -657,10 +651,11 @@ static int am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
             MPIR_ERR_CHECK(mpi_errno);
             break;
 
-        case MPIDI_AMTYPE_LMT_REQ:
+        case MPIDI_AMTYPE_RDMA_READ:
             /* buffer always copied together (there is no payload, just LMT header) */
             p_data = (char *) am_hdr + sizeof(*am_hdr) + am_hdr->am_hdr_sz;
-            mpi_errno = MPIDI_OFI_handle_long_am(am_hdr, am_hdr + 1, p_data);
+            mpi_errno = MPIDI_OFI_handle_rdma_read(am_hdr, am_hdr + 1,
+                                                   (MPIDI_OFI_lmt_msg_payload_t *) p_data);
 
             MPIR_ERR_CHECK(mpi_errno);
 
