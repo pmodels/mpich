@@ -25,6 +25,54 @@ cvars:
         If false, performance-efficient mode is on, all allocated target
         objects are cached and freed at win_finalize.
 
+    - name        : MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, allows RMA synchronization calls to dynamically reduce the frequency
+        of internal progress polling for incoming RMA active messages received on
+        the target process. The RMA synchronization call initially polls progress
+        with a low frequency (defined by MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL)
+        to reduce synchronization overhead. Once any RMA active message has been
+        received, it will always poll progress once at every synchronization call
+        to ensure prompt target-side progress.
+        Effective only for passive target synchronization MPI_Win_flush{_all}
+        and MPI_Win_flush_local{_all}.
+
+    - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL
+      category    : CH4
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies a static interval of progress polling for incoming RMA active messages
+        received on the target process.
+        Effective only for passive-target synchronization MPI_Win_flush{_all} and
+        MPI_Win_flush_local{_all}. Interval indicates the number of performed
+        flush calls before polling. It is counted globally across all windows.
+        Invalid when MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS is true.
+
+    - name        : MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the interval of progress polling with low frequency for
+        incoming RMA active message received on the target process.
+        Effective only for passive-target synchronization MPI_Win_flush{_all} and
+        MPI_Win_flush_local{_all}. Interval indicates the number of performed
+        flush calls before polling. It is counted globally across all windows.
+        Used when MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS is true.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -118,7 +166,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
     int win_grp_idx, peer;
     MPIR_Group *group;
     int *ranks_in_win_grp = NULL;
-    int all_local_completed = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_COMPLETE);
@@ -148,11 +195,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_complete(MPIR_Win * win)
     MPIR_ERR_CHECK(mpi_errno);
 
     /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
-    do {
-        MPIDIU_PROGRESS();
-        MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
-                                               &all_local_completed);
-    } while (all_local_completed != 1);
+    MPIDIU_PROGRESS_DO_WHILE(!MPIDIG_win_check_group_local_completed(win, ranks_in_win_grp,
+                                                                     group->size));
 
     for (win_grp_idx = 0; win_grp_idx < group->size; ++win_grp_idx) {
         peer = ranks_in_win_grp[win_grp_idx];
@@ -559,8 +603,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    MPIDIU_PROGRESS_DO_WHILE(target_ptr && (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
-                                            MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0));
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+    MPIDIU_PROGRESS_WHILE((target_ptr && (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
+                                          MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0)) ||
+                          poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH);
@@ -572,7 +618,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush(int rank, MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int all_local_completed = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
 
@@ -591,10 +636,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local_all(MPIR_Win * win)
 
     /* FIXME: now we simply set per-target counters for lockall in case
      * user flushes per target, but this should be optimized. */
-    do {
-        MPIDIU_PROGRESS();
-        MPIDIG_win_check_all_targets_local_completed(win, &all_local_completed);
-    } while (all_local_completed != 1);
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+
+    MPIDIU_PROGRESS_WHILE(!MPIDIG_win_check_all_targets_local_completed(win) || poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -609,8 +653,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_UNLOCK_ALL);
     int i;
-
-    int all_remote_completed = 0;
 
     MPIDIG_ACCESS_EPOCH_CHECK(win, MPIDIG_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
     /* NOTE: lockall blocking waits till all locks granted */
@@ -631,8 +673,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_unlock_all(MPIR_Win * win)
      * user flushes per target, but this should be optimized. */
     do {
         MPIDIU_PROGRESS();
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
-    } while (all_remote_completed != 1);
+    } while (!MPIDIG_win_check_all_targets_remote_completed(win));
 
     if (MPIDIG_WIN(win, sync).assert_mode & MPI_MODE_NOCHECK) {
         MPIDIG_WIN(win, sync).lockall.allLocked = 0;
@@ -701,7 +742,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_local(int rank, MPIR_Win * win
             MPIDIG_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
     }
 
-    MPIDIU_PROGRESS_DO_WHILE(target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+    MPIDIU_PROGRESS_WHILE((target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) ||
+                          poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_LOCAL);
@@ -729,7 +772,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_sync(MPIR_Win * win)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int all_remote_completed = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);
 
@@ -745,13 +787,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_win_flush_all(MPIR_Win * win)
 #endif
 
     /* Ensure completion of AM operations */
-    do {
-        MPIDIU_PROGRESS();
 
-        /* FIXME: now we simply set per-target counters for lockall in case
-         * user flushes per target, but this should be optimized. */
-        MPIDIG_win_check_all_targets_remote_completed(win, &all_remote_completed);
-    } while (all_remote_completed != 1);
+    /* FIXME: now we simply set per-target counters for lockall in case
+     * user flushes per target, but this should be optimized. */
+    int poll_once = MPIDIG_rma_need_poll_am()? 1 : 0;
+
+    MPIDIU_PROGRESS_WHILE(!MPIDIG_win_check_all_targets_remote_completed(win) || poll_once-- > 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_WIN_FLUSH_ALL);

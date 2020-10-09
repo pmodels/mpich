@@ -765,15 +765,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_remote_cmpl_cnt_decr(MPIR_Win * win, in
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win,
-                                                                            int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_remote_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
@@ -781,43 +780,44 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_remote_completed(MPIR
             continue;
         if (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0 ||
             MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win,
-                                                                           int *allcompleted)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_all_targets_local_completed(MPIR_Win * win)
 {
     int rank = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
         target_ptr = MPIDIG_win_target_find(win, rank);
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * win,
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_win_check_group_local_completed(MPIR_Win * win,
                                                                      int *ranks_in_win_grp,
-                                                                     int grp_siz, int *allcompleted)
+                                                                     int grp_siz)
 {
     int i = 0;
 
-    *allcompleted = 1;
     if (!MPIDIG_WIN(win, targets))
-        return;
+        return true;
 
+    bool allcompleted = true;
     MPIDIG_win_target_t *target_ptr = NULL;
     for (i = 0; i < grp_siz; i++) {
         int rank = ranks_in_win_grp[i];
@@ -825,10 +825,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_check_group_local_completed(MPIR_Win * 
         if (!target_ptr)
             continue;
         if (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0) {
-            *allcompleted = 0;
+            allcompleted = false;
             break;
         }
     }
+    return allcompleted;
 }
 
 /* Map function interfaces in CH4 level */
@@ -1146,4 +1147,48 @@ MPL_STATIC_INLINE_PREFIX MPI_Op MPIDIU_win_acc_get_op(int index)
         return MPIR_Op_builtin_get_op(index);
     }
 }
+
+/* Determine whether need poll progress for RMA target-side active message.
+ * The polling interval is set globally as we don't distinguish target-side
+ * AM handling per-window.  */
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_rma_need_poll_am(void)
+{
+    bool poll_flag = false;
+
+    if (MPIR_CVAR_CH4_RMA_ENABLE_DYNAMIC_AM_PROGRESS) {
+        int interval;
+        MPIR_cc_incr(&MPIDIG_global.rma_am_poll_cntr, &interval);
+
+        /* Always poll if any RMA target-side AM has arrived because
+         * we expect more incoming AM now. */
+        if (MPL_atomic_load_int(&MPIDIG_global.rma_am_flag)) {
+            poll_flag = true;
+        } else {
+            /* Otherwise poll with low frequency to reduce latency */
+            poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_LOW_FREQ_INTERVAL
+                         == 0) ? true : false;
+        }
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL > 1) {
+        int interval;
+        MPIR_cc_incr(&MPIDIG_global.rma_am_poll_cntr, &interval);
+
+        /* User explicitly controls the polling frequency */
+        poll_flag = ((interval + 1) % MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 0) ? true : false;
+    } else if (MPIR_CVAR_CH4_RMA_AM_PROGRESS_INTERVAL == 1) {
+        /* Skip cntr update when interval == 1, as we always poll (default)  */
+        poll_flag = true;
+    } else {
+        /* User explicitly disables polling */
+        poll_flag = false;
+    }
+
+    return poll_flag;
+}
+
+/* Set flag to indicate a target-side AM has arrived. */
+MPL_STATIC_INLINE_PREFIX void MPIDIG_rma_set_am_flag(void)
+{
+    MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 1);
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */
