@@ -134,6 +134,9 @@ int MPIDIG_am_init(void)
     MPL_atomic_store_uint64(&MPIDI_global.exp_seq_no, 0);
     MPL_atomic_store_uint64(&MPIDI_global.nxt_seq_no, 0);
 
+    MPL_atomic_store_int(&MPIDIG_global.rma_am_flag, 0);
+    MPIR_cc_set(&MPIDIG_global.rma_am_poll_cntr, 0);
+
     mpi_errno =
         MPIDU_genq_private_pool_create_unsafe(MPIDIU_REQUEST_POOL_CELL_SIZE,
                                               MPIDIU_REQUEST_POOL_NUM_CELLS_PER_CHUNK,
