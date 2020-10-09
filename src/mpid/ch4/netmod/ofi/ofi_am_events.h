@@ -221,16 +221,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
 
 MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
                                               MPIDI_OFI_lmt_msg_payload_t * lmt_msg);
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
-                                                         MPIDI_OFI_lmt_msg_payload_t * lmt_msg,
-                                                         void *am_hdr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * msg_hdr,
+                                                        void *am_hdr,
+                                                        MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
 {
     int c, mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     size_t in_data_sz;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
 
     in_data_sz = msg_hdr->data_sz;
     /* note: setting is_local, is_async to 0, 1 */
@@ -261,26 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t *
     /* completion in lmt event functions */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr, void *am_hdr,
-                                                      void *p_data)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
-
-    mpi_errno = MPIDI_OFI_do_handle_long_am(msg_hdr, p_data, am_hdr);
-
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
     return mpi_errno;
 
   fn_fail:
