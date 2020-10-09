@@ -7,7 +7,7 @@
 #define SHM_PROGRESS_H_INCLUDED
 
 #include <shm.h>
-#include "../posix/shm_inline.h"
+#include "../posix/posix_progress.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vci, int blocking)
 {
