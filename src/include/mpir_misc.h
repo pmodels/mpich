@@ -14,6 +14,11 @@
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
+/* To differentiate internal static inline functions in inline header files.
+ * Note: we drop the MPIR_ prefix to make the INTERNAL nature more standout.
+ */
+#define INTERNAL_STATIC_INLINE MPL_STATIC_INLINE_PREFIX
+
 /* Define a typedef for the errflag value used by many internal
  * functions.  If an error needs to be returned, these values can be
  * used to signal such.  More details can be found further down in the
