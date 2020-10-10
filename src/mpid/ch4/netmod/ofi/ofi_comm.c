@@ -123,20 +123,25 @@ static int update_nic_preferences(MPIR_Comm * comm)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_init(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    int err;
     struct fi_av_set_attr av_set_attr;
     struct fid_av_set *av_set = NULL;
     fi_addr_t comm_addr;
     struct fid_mc *coll_mc;
-    int done;
+    MPIR_Request *req_ptr;
 
     MPIR_Assert(comm != NULL);
 
     MPIDI_OFI_COMM(comm).offload_coll.coll_mc = NULL;
     MPIDI_OFI_COMM(comm).offload_coll.av_set = NULL;
+    MPIDI_OFI_COMM(comm).offload_coll.req = NULL;
 
-    if (comm->local_size == 1 || comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE ||
-        comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+    if (comm->local_size == 1)
+        goto fn_exit;
+
+    /* does not apply to intercommunicator and its local comm */
+    if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE ||
+        comm->comm_kind == MPIR_COMM_KIND__INTERCOMM ||
+        MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->context_id))
         goto fn_exit;
 
     if (comm == MPIR_Process.comm_world) {
@@ -146,12 +151,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_init(MPIR_Comm * comm)
         av_set_attr.stride = MPIDI_OFI_global.num_nics;
         MPIDI_OFI_CALL(fi_av_set(MPIDI_OFI_global.ctx[0].av, &av_set_attr, &av_set, NULL),
                        fi_av_set);
+        av_set_attr.comm_key = NULL;
+        av_set_attr.comm_key_size = 0;
     } else {
         /* create an empty av_set first */
         av_set_attr.count = 0;
         av_set_attr.start_addr = FI_ADDR_NOTAVAIL;
         av_set_attr.end_addr = FI_ADDR_NOTAVAIL;
         av_set_attr.stride = 1;
+        av_set_attr.comm_key = (void *) &comm->context_id;
+        av_set_attr.comm_key_size = sizeof(comm->context_id);
         MPIDI_OFI_CALL(fi_av_set(MPIDI_OFI_global.ctx[0].av, &av_set_attr, &av_set, NULL),
                        fi_av_set);
         /* add group members */
@@ -165,22 +174,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_init(MPIR_Comm * comm)
     MPIDI_OFI_CALL(fi_av_set_addr(av_set, &comm_addr), fi_av_set_addr);
 
     /* setup multicast group, calling allreduce internally */
-    MPIDI_OFI_CALL(fi_join_collective(MPIDI_OFI_global.ctx[0].ep, comm_addr,
-                                      av_set, 0, &coll_mc, &done), fi_join_collective);
+    req_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    if (!req_ptr)
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_Request_add_ref(req_ptr);
 
-    /* wait for join to complete */
-    do {
-        uint32_t ev;
-        err = fi_eq_read(MPIDI_OFI_global.ctx[0].eq, &ev, NULL, 0, 0);
-        if (err >= 0) {
-            if (ev == FI_JOIN_COMPLETE) {
-                break;
-            }
-        } else if (err != -EAGAIN) {
-            MPIR_Assert(1);
+    MPIDI_OFI_CALL(fi_join_collective(MPIDI_OFI_global.ctx[0].ep, comm_addr,
+                                      av_set, 0, &coll_mc,
+                                      (void *) &(MPIDI_OFI_REQUEST(req_ptr, context))),
+                   fi_join_collective);
+
+    /* for comm_world, wait for this setup to finish now because we
+     * can't call OFI in comm free hook later */
+    if (comm == MPIR_Process.comm_world) {
+        while (MPIR_cc_get(*req_ptr->cc_ptr) != 0) {
+            MPID_Progress_test(NULL);
         }
-        MPID_Progress_test(NULL);
-    } while (err == -FI_EAGAIN);
+        MPIR_Request_free(req_ptr);
+    } else
+        MPIDI_OFI_COMM(comm).offload_coll.req = req_ptr;
 
     MPIDI_OFI_COMM(comm).offload_coll.coll_mc = coll_mc;
     MPIDI_OFI_COMM(comm).offload_coll.av_set = av_set;
@@ -199,6 +211,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_switch_coll_free(MPIR_Comm * comm)
     if (comm->local_size == 1)
         goto fn_exit;
 
+    if (MPIDI_OFI_COMM(comm).offload_coll.req) {
+        /* wait for ofi collective group setup to finish */
+        while (MPIR_cc_get(*MPIDI_OFI_COMM(comm).offload_coll.req->cc_ptr) != 0) {
+            MPID_Progress_test(NULL);
+        }
+        MPIR_Request_free(MPIDI_OFI_COMM(comm).offload_coll.req);
+        MPIDI_OFI_COMM(comm).offload_coll.req = NULL;
+    }
     if (MPIDI_OFI_COMM(comm).offload_coll.coll_mc) {
         MPIDI_OFI_CALL(fi_close(&(MPIDI_OFI_COMM(comm).offload_coll.coll_mc->fid)), fi_close);
         MPIDI_OFI_COMM(comm).offload_coll.coll_mc = NULL;
@@ -344,6 +364,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_trig_blocking_small_msg_destroy(MPIR_Comm
     return mpi_errno;
 }
 
+/* Do not call OFI functions in this free hook, this is because
+ * in case the comm is comm_world, the OFI library has been finalized
+ * before comm_world, etc built-in communicators are freed
+ */
 int MPIDI_OFI_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

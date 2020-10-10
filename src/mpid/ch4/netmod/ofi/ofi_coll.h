@@ -117,6 +117,30 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+static inline int MPIDI_OFI_Coll_ready(MPIR_Comm * comm)
+{
+    int do_offload = 1;
+
+    if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE) {
+        do_offload = 0;
+        return do_offload;
+    }
+    if (MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
+        do_offload = 0;
+        return do_offload;
+    }
+    /* collective group setup is not complete */
+    if (MPIDI_OFI_COMM(comm).offload_coll.req) {
+        while (MPIR_cc_get(*MPIDI_OFI_COMM(comm).offload_coll.req->cc_ptr) != 0) {
+            MPID_Progress_test(NULL);
+        }
+        MPIR_Request_free(MPIDI_OFI_COMM(comm).offload_coll.req);
+        MPIDI_OFI_COMM(comm).offload_coll.req = NULL;
+    }
+
+    return do_offload;
+}
+
 static inline int MPIDI_OFI_Barrier_json(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -192,17 +216,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
             break;
 
         case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_switch_offload:
-            if (comm->local_size == 1)
-                break;
-            MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, MPIDI_OFI_global.support_barrier,
-                                           mpi_errno,
-                                           "Barrier switch_offload cannot be applied.\n");
-            if (MPIDI_OFI_COMM(comm).offload_coll.av_set)
+            {
+                if (comm->local_size == 1)
+                    break;
+                int do_offload = MPIDI_OFI_Coll_ready(comm);
+                MPII_COLLECTIVE_FALLBACK_CHECK(comm->rank, do_offload &&
+                                               MPIDI_OFI_global.support_barrier,
+                                               mpi_errno,
+                                               "Barrier switch_offload cannot be applied.\n");
                 mpi_errno = MPIDI_OFI_Barrier_intra_switch_offloading(comm);
-            else
-                goto fallback;
-            break;
-
+                break;
+            }
         case MPIR_CVAR_BARRIER_OFI_INTRA_ALGORITHM_mpir:
             goto fallback;
 
@@ -362,12 +386,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, MPI_Aint count, MP
                 int do_offload = 1;
                 struct fi_collective_attr attr;
 
-                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
-                    do_offload = 0;
-                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
-                    mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
-                    break;
-                }
+                do_offload = MPIDI_OFI_Coll_ready(comm);
                 if (do_offload) {
                     ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL, NULL);
                     if (ret == -1)
@@ -569,13 +588,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
             {
                 int do_offload = 1;
 
-                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
-                    do_offload = 0;
-                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
-                    mpi_errno =
-                        MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-                    break;
-                }
+                do_offload = MPIDI_OFI_Coll_ready(comm);
                 if (do_offload) {
                     int ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op);
                     if (ret == -1)
@@ -1505,8 +1518,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint co
                                                        MPIR_Comm * comm, MPIR_TSP_sched_t sched)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum fi_datatype fi_dt;
+    MPI_Aint type_size = 0;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     switch (MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM) {
         case MPIR_CVAR_IBCAST_OFI_INTRA_ALGORITHM_switch_offload:
@@ -1515,13 +1532,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, MPI_Aint co
                 int do_offload = 1;
                 struct fi_collective_attr attr;
 
-                if (!MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
-                    do_offload = 0;
-                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
-                    mpi_errno =
-                        MPIDI_OFI_ibcast_sched_json(buffer, count, datatype, root, comm, sched);
-                    break;
-                }
+                do_offload = MPIDI_OFI_Coll_ready(comm);
                 if (do_offload) {
                     ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, MPI_OP_NULL, NULL);
                     if (ret == -1)
@@ -1644,21 +1655,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, 
     int mpi_errno = MPI_SUCCESS;
     enum fi_datatype fi_dt;
     enum fi_op fi_op;
+    MPI_Aint type_size = 0;
 
     MPIR_FUNC_ENTER;
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     switch (MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM) {
         case MPIR_CVAR_IALLREDUCE_OFI_INTRA_ALGORITHM_switch_offload:
             {
                 int do_offload = 1;
 
-                if (MPIDI_OFI_ENABLE_OFI_COLLECTIVE)
-                    do_offload = 0;
-                if (do_offload && MPIDI_OFI_COMM(comm).offload_coll.av_set == NULL) {
-                    mpi_errno = MPIDI_OFI_iallreduce_sched_json(sendbuf, recvbuf, count,
-                                                                datatype, op, comm, sched);
-                    break;
-                }
+                do_offload = MPIDI_OFI_Coll_ready(comm);
                 if (do_offload) {
                     int ret = MPIDI_mpi_to_ofi(datatype, &fi_dt, op, &fi_op);
                     if (ret == -1)

@@ -81,6 +81,7 @@ typedef struct {
     struct fid_av_set *av_set;
     struct fid_mc *coll_mc;
     fi_addr_t coll_addr;
+    MPIR_Request *req;
 } MPIDI_OFI_switch_coll;
 
 typedef struct {
