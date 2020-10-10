@@ -98,14 +98,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_recv(void *buf,
-                                            MPI_Aint count,
-                                            MPI_Datatype datatype,
-                                            int rank,
-                                            int tag, MPIR_Comm * comm,
-                                            int context_offset,
-                                            MPIDI_av_entry_t * addr,
-                                            int vni_dst, MPIR_Request ** request)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_recv(void *buf,
+                                          MPI_Aint count,
+                                          MPI_Datatype datatype,
+                                          int rank,
+                                          int tag, MPIR_Comm * comm,
+                                          int context_offset,
+                                          MPIDI_av_entry_t * addr,
+                                          int vni_dst, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;

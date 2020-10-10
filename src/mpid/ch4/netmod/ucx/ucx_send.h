@@ -26,16 +26,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_SEND_CMPL_CB);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_send(const void *buf,
-                                            MPI_Aint count,
-                                            MPI_Datatype datatype,
-                                            int rank,
-                                            int tag,
-                                            MPIR_Comm * comm,
-                                            int context_offset,
-                                            MPIDI_av_entry_t * addr,
-                                            MPIR_Request ** request,
-                                            int vni_src, int vni_dst, int have_request, int is_sync)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_send(const void *buf,
+                                          MPI_Aint count,
+                                          MPI_Datatype datatype,
+                                          int rank,
+                                          int tag,
+                                          MPIR_Comm * comm,
+                                          int context_offset,
+                                          MPIDI_av_entry_t * addr,
+                                          MPIR_Request ** request,
+                                          int vni_src, int vni_dst, int have_request, int is_sync)
 {
     int dt_contig;
     size_t data_sz;

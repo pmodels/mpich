@@ -25,12 +25,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_rma_cmpl_cb(void *request, ucs_status_t 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RMA_CMPL_CB);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
-                                                  size_t size,
-                                                  int target_rank,
-                                                  MPI_Aint target_disp, MPI_Aint true_lb,
-                                                  MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                  MPIR_Request ** reqptr)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_contig_put(const void *origin_addr,
+                                                size_t size,
+                                                int target_rank,
+                                                MPI_Aint target_disp, MPI_Aint true_lb,
+                                                MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                                MPIR_Request ** reqptr)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
@@ -89,12 +89,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_put(const void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
-                                                     int origin_count, MPI_Datatype origin_datatype,
-                                                     int target_rank, size_t size,
-                                                     MPI_Aint target_disp, MPI_Aint true_lb,
-                                                     MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                     MPIR_Request ** reqptr ATTRIBUTE((unused)))
+INTERNAL_STATIC_INLINE int MPIDI_UCX_noncontig_put(const void *origin_addr,
+                                                   int origin_count, MPI_Datatype origin_datatype,
+                                                   int target_rank, size_t size,
+                                                   MPI_Aint target_disp, MPI_Aint true_lb,
+                                                   MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                                   MPIR_Request ** reqptr ATTRIBUTE((unused)))
 {
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t base, offset;
@@ -129,12 +129,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_noncontig_put(const void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
-                                                  size_t size,
-                                                  int target_rank,
-                                                  MPI_Aint target_disp, MPI_Aint true_lb,
-                                                  MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                                  MPIR_Request ** reqptr)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_contig_get(void *origin_addr,
+                                                size_t size,
+                                                int target_rank,
+                                                MPI_Aint target_disp, MPI_Aint true_lb,
+                                                MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                                MPIR_Request ** reqptr)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
@@ -184,14 +184,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_contig_get(void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
-                                              int origin_count,
-                                              MPI_Datatype origin_datatype,
-                                              int target_rank,
-                                              MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
-                                              MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_do_put(const void *origin_addr,
+                                            int origin_count,
+                                            MPI_Datatype origin_datatype,
+                                            int target_rank,
+                                            MPI_Aint target_disp,
+                                            int target_count, MPI_Datatype target_datatype,
+                                            MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                            MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int target_contig, origin_contig;
@@ -242,14 +242,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_put(const void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_UCX_do_get(void *origin_addr,
-                                              int origin_count,
-                                              MPI_Datatype origin_datatype,
-                                              int target_rank,
-                                              MPI_Aint target_disp,
-                                              int target_count, MPI_Datatype target_datatype,
-                                              MPIR_Win * win, MPIDI_av_entry_t * addr,
-                                              MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
+INTERNAL_STATIC_INLINE int MPIDI_UCX_do_get(void *origin_addr,
+                                            int origin_count,
+                                            MPI_Datatype origin_datatype,
+                                            int target_rank,
+                                            MPI_Aint target_disp,
+                                            int target_count, MPI_Datatype target_datatype,
+                                            MPIR_Win * win, MPIDI_av_entry_t * addr,
+                                            MPIDI_winattr_t winattr, MPIR_Request ** reqptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int origin_contig, target_contig;

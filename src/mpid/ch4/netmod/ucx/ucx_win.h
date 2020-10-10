@@ -19,7 +19,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush(MPIR_Win * win)
     return need_flush;
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
+INTERNAL_STATIC_INLINE bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
 {
     int rank;
     bool need_flush_local = false;
@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_UCX_win_need_flush_local(MPIR_Win * win)
     return need_flush_local;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
+INTERNAL_STATIC_INLINE void MPIDI_UCX_win_unset_sync(MPIR_Win * win)
 {
     int rank;
     for (rank = 0; rank < win->comm_ptr->local_size; rank++)
@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_flush_cmpl_cb(void *request, ucs_status_
 {
 }
 
-MPL_STATIC_INLINE_PREFIX ucs_status_t MPIDI_UCX_flush(int vni)
+INTERNAL_STATIC_INLINE ucs_status_t MPIDI_UCX_flush(int vni)
 {
     void *request = ucp_worker_flush_nb(MPIDI_UCX_global.ctx[vni].worker,
                                         0, &MPIDI_UCX_flush_cmpl_cb);
