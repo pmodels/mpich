@@ -13,11 +13,11 @@
 #include "ipc_mem.h"
 #include "ipc_p2p.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIDI_av_entry_t * addr,
-                                                      MPIR_Request ** request, bool * done)
+INTERNAL_STATIC_INLINE int MPIDI_IPCI_try_lmt_isend(const void *buf, MPI_Aint count,
+                                                    MPI_Datatype datatype, int rank, int tag,
+                                                    MPIR_Comm * comm, int context_offset,
+                                                    MPIDI_av_entry_t * addr,
+                                                    MPIR_Request ** request, bool * done)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_TRY_LMT_ISEND);

@@ -13,13 +13,13 @@
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, size_t am_hdr_sz,
-                                                            int handler_id, const int grank,
-                                                            MPIDI_POSIX_am_header_t msg_hdr,
-                                                            MPIDI_POSIX_am_header_t * msg_hdr_p,
-                                                            struct iovec *iov_left_ptr,
-                                                            size_t iov_num_left, size_t data_sz,
-                                                            MPIR_Request * sreq)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, size_t am_hdr_sz,
+                                                          int handler_id, const int grank,
+                                                          MPIDI_POSIX_am_header_t msg_hdr,
+                                                          MPIDI_POSIX_am_header_t * msg_hdr_p,
+                                                          struct iovec *iov_left_ptr,
+                                                          size_t iov_num_left, size_t data_sz,
+                                                          MPIR_Request * sreq)
 {
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
     int mpi_errno = MPI_SUCCESS;
@@ -299,10 +299,10 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_buf_limit(void)
 
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
-                                                            int handler_id, const int grank,
-                                                            MPIDI_POSIX_am_header_t msg_hdr,
-                                                            size_t iov_num_left)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_am_enqueue_req_hdr(const void *am_hdr, size_t am_hdr_sz,
+                                                          int handler_id, const int grank,
+                                                          MPIDI_POSIX_am_header_t msg_hdr,
+                                                          size_t iov_num_left)
 {
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
     int mpi_errno = MPI_SUCCESS;

@@ -9,12 +9,12 @@
 #include "ch4_impl.h"
 #include "posix_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
-                                                            int origin_count,
-                                                            MPI_Datatype origin_datatype,
-                                                            void *target_addr,
-                                                            int target_count,
-                                                            MPI_Datatype target_datatype, MPI_Op op)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_compute_accumulate(void *origin_addr,
+                                                          int origin_count,
+                                                          MPI_Datatype origin_datatype,
+                                                          void *target_addr,
+                                                          int target_count,
+                                                          MPI_Datatype target_datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
@@ -80,13 +80,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_compute_accumulate(void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
-                                                int origin_count,
-                                                MPI_Datatype origin_datatype,
-                                                int target_rank,
-                                                MPI_Aint target_disp,
-                                                int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win, MPIDI_winattr_t winattr)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_do_put(const void *origin_addr,
+                                              int origin_count,
+                                              MPI_Datatype origin_datatype,
+                                              int target_rank,
+                                              MPI_Aint target_disp,
+                                              int target_count, MPI_Datatype target_datatype,
+                                              MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
@@ -124,13 +124,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_put(const void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
-                                                int origin_count,
-                                                MPI_Datatype origin_datatype,
-                                                int target_rank,
-                                                MPI_Aint target_disp,
-                                                int target_count, MPI_Datatype target_datatype,
-                                                MPIR_Win * win, MPIDI_winattr_t winattr)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_do_get(void *origin_addr,
+                                              int origin_count,
+                                              MPI_Datatype origin_datatype,
+                                              int target_rank,
+                                              MPI_Aint target_disp,
+                                              int target_count, MPI_Datatype target_datatype,
+                                              MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t origin_data_sz = 0, target_data_sz = 0;
@@ -167,17 +167,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get(void *origin_addr,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_addr,
-                                                           int origin_count,
-                                                           MPI_Datatype origin_datatype,
-                                                           void *result_addr,
-                                                           int result_count,
-                                                           MPI_Datatype result_datatype,
-                                                           int target_rank,
-                                                           MPI_Aint target_disp,
-                                                           int target_count,
-                                                           MPI_Datatype target_datatype, MPI_Op op,
-                                                           MPIR_Win * win, MPIDI_winattr_t winattr)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_do_get_accumulate(const void *origin_addr,
+                                                         int origin_count,
+                                                         MPI_Datatype origin_datatype,
+                                                         void *result_addr,
+                                                         int result_count,
+                                                         MPI_Datatype result_datatype,
+                                                         int target_rank,
+                                                         MPI_Aint target_disp,
+                                                         int target_count,
+                                                         MPI_Datatype target_datatype, MPI_Op op,
+                                                         MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
@@ -232,14 +232,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_get_accumulate(const void *origin_ad
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_accumulate(const void *origin_addr,
-                                                       int origin_count,
-                                                       MPI_Datatype origin_datatype,
-                                                       int target_rank,
-                                                       MPI_Aint target_disp,
-                                                       int target_count,
-                                                       MPI_Datatype target_datatype, MPI_Op op,
-                                                       MPIR_Win * win, MPIDI_winattr_t winattr)
+INTERNAL_STATIC_INLINE int MPIDI_POSIX_do_accumulate(const void *origin_addr,
+                                                     int origin_count,
+                                                     MPI_Datatype origin_datatype,
+                                                     int target_rank,
+                                                     MPI_Aint target_disp,
+                                                     int target_count,
+                                                     MPI_Datatype target_datatype, MPI_Op op,
+                                                     MPIR_Win * win, MPIDI_winattr_t winattr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;

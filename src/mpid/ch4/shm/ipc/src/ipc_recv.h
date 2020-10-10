@@ -17,10 +17,10 @@
  * corresponding handling routine. If the request is handled by an ipcmod,
  * recvd_flag is set to true. The caller should call fallback if no ipcmod
  * handles it. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_IPCI_try_matched_recv(void *buf,
-                                                         MPI_Aint count,
-                                                         MPI_Datatype datatype,
-                                                         MPIR_Request * message, bool * recvd_flag)
+INTERNAL_STATIC_INLINE int MPIDI_IPCI_try_matched_recv(void *buf,
+                                                       MPI_Aint count,
+                                                       MPI_Datatype datatype,
+                                                       MPIR_Request * message, bool * recvd_flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPCI_TRY_MATCHED_RECV);
