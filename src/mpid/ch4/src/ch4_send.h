@@ -231,13 +231,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_issend_unsafe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
-                                             MPI_Aint count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm, int context_offset,
-                                             MPIDI_av_entry_t * av, MPIR_Request ** req)
+INTERNAL_STATIC_INLINE int MPIDI_send_safe(const void *buf,
+                                           MPI_Aint count,
+                                           MPI_Datatype datatype,
+                                           int rank,
+                                           int tag,
+                                           MPIR_Comm * comm, int context_offset,
+                                           MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_SAFE);
@@ -271,14 +271,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
-                                                  MPI_Aint count,
-                                                  MPI_Datatype datatype,
-                                                  int rank,
-                                                  int tag,
-                                                  MPIR_Comm * comm, int context_offset,
-                                                  MPIDI_av_entry_t * av, MPIR_Request ** req,
-                                                  MPIR_Errflag_t * errflag)
+INTERNAL_STATIC_INLINE int MPIDI_send_coll_safe(const void *buf,
+                                                MPI_Aint count,
+                                                MPI_Datatype datatype,
+                                                int rank,
+                                                int tag,
+                                                MPIR_Comm * comm, int context_offset,
+                                                MPIDI_av_entry_t * av, MPIR_Request ** req,
+                                                MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -307,13 +307,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_send_coll_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
-                                              MPI_Aint count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIDI_av_entry_t * av, MPIR_Request ** req)
+INTERNAL_STATIC_INLINE int MPIDI_isend_safe(const void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISEND_SAFE);
@@ -342,14 +342,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
-                                                   MPI_Aint count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag,
-                                                   MPIR_Comm * comm, int context_offset,
-                                                   MPIDI_av_entry_t * av, MPIR_Request ** req,
-                                                   MPIR_Errflag_t * errflag)
+INTERNAL_STATIC_INLINE int MPIDI_isend_coll_safe(const void *buf,
+                                                 MPI_Aint count,
+                                                 MPI_Datatype datatype,
+                                                 int rank,
+                                                 int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * av, MPIR_Request ** req,
+                                                 MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -378,13 +378,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_isend_coll_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
-                                              MPI_Aint count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIDI_av_entry_t * av, MPIR_Request ** req)
+INTERNAL_STATIC_INLINE int MPIDI_ssend_safe(const void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SSEND_SAFE);
@@ -413,13 +413,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_ssend_safe(const void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_issend_safe(const void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * av, MPIR_Request ** req)
+INTERNAL_STATIC_INLINE int MPIDI_issend_safe(const void *buf,
+                                             MPI_Aint count,
+                                             MPI_Datatype datatype,
+                                             int rank,
+                                             int tag,
+                                             MPIR_Comm * comm, int context_offset,
+                                             MPIDI_av_entry_t * av, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ISSEND_SAFE);
@@ -662,14 +662,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
 }
 
 /* Common internal rountine for send_init family */
-MPL_STATIC_INLINE_PREFIX int MPIDI_psend_init(MPIDI_ptype ptype,
-                                              const void *buf,
-                                              MPI_Aint count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request)
+INTERNAL_STATIC_INLINE int MPIDI_psend_init(MPIDI_ptype ptype,
+                                            const void *buf,
+                                            MPI_Aint count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

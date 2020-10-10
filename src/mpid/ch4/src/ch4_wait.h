@@ -9,7 +9,7 @@
 #include "ch4_impl.h"
 
 /* a local wrapper that accounts for persistent request */
-MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
+INTERNAL_STATIC_INLINE int get_vci_wrapper(MPIR_Request * req)
 {
     int vci;
     if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV ||
@@ -26,8 +26,7 @@ MPL_STATIC_INLINE_PREFIX int get_vci_wrapper(MPIR_Request * req)
     return vci;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
-                                                     MPID_Progress_state * state)
+INTERNAL_STATIC_INLINE void MPIDI_set_progress_vci(MPIR_Request * req, MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
     state->progress_made = 0;
@@ -41,8 +40,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci(MPIR_Request * req,
     state->vci[0] = vci;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
-                                                       MPID_Progress_state * state)
+INTERNAL_STATIC_INLINE void MPIDI_set_progress_vci_n(int n, MPIR_Request ** reqs,
+                                                     MPID_Progress_state * state)
 {
     state->flag = MPIDI_PROGRESS_ALL;   /* TODO: check request is_local/anysource */
     state->progress_made = 0;

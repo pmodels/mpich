@@ -9,10 +9,10 @@
 #include "ch4r_proc.h"
 #include "ch4_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
-                                                 int tag, MPIR_Comm * comm, int context_offset,
-                                                 MPIDI_av_entry_t * av, int *flag,
-                                                 MPI_Status * status)
+INTERNAL_STATIC_INLINE int MPIDI_iprobe_unsafe(int source,
+                                               int tag, MPIR_Comm * comm, int context_offset,
+                                               MPIDI_av_entry_t * av, int *flag,
+                                               MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_UNSAFE);
@@ -41,12 +41,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
-                                                  int tag, MPIR_Comm * comm,
-                                                  int context_offset,
-                                                  MPIDI_av_entry_t * av,
-                                                  int *flag, MPIR_Request ** message,
-                                                  MPI_Status * status)
+INTERNAL_STATIC_INLINE int MPIDI_improbe_unsafe(int source,
+                                                int tag, MPIR_Comm * comm,
+                                                int context_offset,
+                                                MPIDI_av_entry_t * av,
+                                                int *flag, MPIR_Request ** message,
+                                                MPI_Status * status)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD
     return MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
@@ -90,10 +90,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
-                                               int tag, MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * av, int *flag,
-                                               MPI_Status * status)
+INTERNAL_STATIC_INLINE int MPIDI_iprobe_safe(int source,
+                                             int tag, MPIR_Comm * comm, int context_offset,
+                                             MPIDI_av_entry_t * av, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
@@ -115,12 +114,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
-                                                int tag, MPIR_Comm * comm,
-                                                int context_offset,
-                                                MPIDI_av_entry_t * av,
-                                                int *flag, MPIR_Request ** message,
-                                                MPI_Status * status)
+INTERNAL_STATIC_INLINE int MPIDI_improbe_safe(int source,
+                                              int tag, MPIR_Comm * comm,
+                                              int context_offset,
+                                              MPIDI_av_entry_t * av,
+                                              int *flag, MPIR_Request ** message,
+                                              MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);

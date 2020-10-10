@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX MPIDIG_rreq_t **MPIDIG_context_id_to_uelist(uint64_t co
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
+INTERNAL_STATIC_INLINE MPIR_Context_id_t MPIDIG_win_id_to_context(uint64_t win_id)
 {
     MPIR_Context_id_t ret;
 
@@ -397,7 +397,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_win_hash_clear(MPIR_Win * win)
     (HANDLE_IS_BUILTIN(_datatype))
 
 /* We assume this routine is never called with rank=MPI_PROC_NULL. */
-MPL_STATIC_INLINE_PREFIX int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
+INTERNAL_STATIC_INLINE int MPIDIU_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
     int size = grp->size;

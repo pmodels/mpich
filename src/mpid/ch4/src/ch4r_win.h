@@ -94,9 +94,9 @@ int MPIDIG_mpi_win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win_ptr);
 int MPIDIG_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win_ptr);
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
-                                                          MPIR_Group * group_ptr,
-                                                          int *ranks_in_win_grp)
+INTERNAL_STATIC_INLINE int MPIDIG_fill_ranks_in_win_grp(MPIR_Win * win_ptr,
+                                                        MPIR_Group * group_ptr,
+                                                        int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp = NULL;

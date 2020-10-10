@@ -13,7 +13,7 @@
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
+INTERNAL_STATIC_INLINE int MPIDIG_eager_limit(int is_local)
 {
     int thresh;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
@@ -31,11 +31,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
     return thresh;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
-                                               MPI_Datatype datatype, int rank, int tag,
-                                               MPIR_Comm * comm, int context_offset,
-                                               MPIDI_av_entry_t * addr, uint8_t flags,
-                                               MPIR_Request ** request, MPIR_Errflag_t errflag)
+INTERNAL_STATIC_INLINE int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
+                                             MPI_Datatype datatype, int rank, int tag,
+                                             MPIR_Comm * comm, int context_offset,
+                                             MPIDI_av_entry_t * addr, uint8_t flags,
+                                             MPIR_Request ** request, MPIR_Errflag_t errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq = *request;

@@ -49,7 +49,7 @@ MPL_STATIC_INLINE_PREFIX struct MPIDI_workq_elemt *MPIDI_workq_elemt_create(void
     return MPIR_Handle_obj_alloc(&MPIDI_workq_elemt_mem);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *elemt)
+INTERNAL_STATIC_INLINE void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *elemt)
 {
     MPIR_Handle_obj_free(&MPIDI_workq_elemt_mem, elemt);
 }
@@ -270,14 +270,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
     MPIDI_workq_enqueue(&MPIDI_global.workqueue, rma_elemt);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_t * workq_elemt)
+INTERNAL_STATIC_INLINE void MPIDI_workq_release_pt2pt_elemt(MPIDI_workq_elemt_t * workq_elemt)
 {
     MPIR_Request *req;
     req = MPL_container_of(workq_elemt, MPIR_Request, dev.ch4.command);
     MPIR_Request_free(req);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
+INTERNAL_STATIC_INLINE int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_elemt)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;

@@ -28,9 +28,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDIG_prepare_recv_req(int rank, int tag,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_PREPARE_RECV_REQ);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
-                                                      MPI_Datatype datatype, MPIR_Comm * comm,
-                                                      int context_offset, MPIR_Request * rreq)
+INTERNAL_STATIC_INLINE int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
+                                                    MPI_Datatype datatype, MPIR_Comm * comm,
+                                                    int context_offset, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -111,10 +111,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_handle_unexpected(void *buf, MPI_Aint count,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                             int rank, int tag, MPIR_Comm * comm,
-                                             int context_offset, MPIR_Request ** request,
-                                             int alloc_req, uint64_t flags)
+INTERNAL_STATIC_INLINE int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                           int rank, int tag, MPIR_Comm * comm,
+                                           int context_offset, MPIR_Request ** request,
+                                           int alloc_req, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;

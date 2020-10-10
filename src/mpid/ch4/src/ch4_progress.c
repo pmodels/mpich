@@ -22,7 +22,7 @@ static MPL_TLS int global_vci_poll_count = 0;
 static int global_vci_poll_count = 0;
 #endif
 
-MPL_STATIC_INLINE_PREFIX int do_global_progress(void)
+INTERNAL_STATIC_INLINE int do_global_progress(void)
 {
     if (MPIDI_global.n_vcis == 1) {
         return 1;
@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int do_global_progress(void)
 }
 
 /* inside per-vci progress */
-MPL_STATIC_INLINE_PREFIX void check_progress_made_idx(MPID_Progress_state * state, int idx)
+INTERNAL_STATIC_INLINE void check_progress_made_idx(MPID_Progress_state * state, int idx)
 {
     if (state->progress_counts[idx] != MPIDI_global.progress_counts[state->vci[idx]]) {
         state->progress_counts[idx] = MPIDI_global.progress_counts[state->vci[idx]];
@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX void check_progress_made_idx(MPID_Progress_state * stat
 }
 
 /* inside global progress */
-MPL_STATIC_INLINE_PREFIX void check_progress_made_vci(MPID_Progress_state * state, int vci)
+INTERNAL_STATIC_INLINE void check_progress_made_vci(MPID_Progress_state * state, int vci)
 {
     for (int i = 0; i < state->vci_count; i++) {
         if (vci == state->vci[i]) {
