@@ -31,8 +31,6 @@ static int progress_recv(int blocking)
     int mpi_errno = MPI_SUCCESS;
     int result = MPIDI_POSIX_OK;
     MPIR_Request *rreq = NULL;
-    void *p_data = NULL;
-    size_t in_total_data_sz = 0;
     void *am_hdr = NULL;
     MPIDI_POSIX_am_header_t *msg_hdr;
     uint8_t *payload;
@@ -60,9 +58,6 @@ static int progress_recv(int blocking)
     } else {
         /* First segment */
         am_hdr = payload;
-        p_data = payload + msg_hdr->am_hdr_sz;
-
-        in_total_data_sz = msg_hdr->data_sz;
 
         /* This is a SHM internal control header */
         /* TODO: internal control can use the generic am interface,
@@ -79,25 +74,28 @@ static int progress_recv(int blocking)
         payload += msg_hdr->am_hdr_sz;
         payload_left -= msg_hdr->am_hdr_sz;
 
-        /* note: setting is_local, is_async to 1, 1 */
-        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                           NULL, in_total_data_sz, 1, 1, &rreq);
+        switch (msg_hdr->am_type) {
+            case MPIDI_POSIX_AM_TYPE__HDR:
+            case MPIDI_POSIX_AM_TYPE__SHORT:
+                /* note: setting is_local, is_async to 1, 0 */
+                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+                                                                   payload, payload_left, 1, 0,
+                                                                   NULL);
+                MPIDI_POSIX_eager_recv_commit(&transaction);
+                goto fn_exit;
+                break;
+            case MPIDI_POSIX_AM_TYPE__PIPELINE:
+                /* note: setting is_local, is_async to 1, 1 */
+                MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+                                                                   NULL, payload_left, 1, 1, &rreq);
+                /* prepare for asynchronous transfer */
+                MPIDIG_recv_setup(rreq);
 
-        if (!rreq) {
-            MPIDI_POSIX_eager_recv_commit(&transaction);
-            goto fn_exit;
-        } else if (in_total_data_sz == payload_left) {
-            MPIDIG_recv_copy(p_data, rreq);
-            MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-            MPIDI_POSIX_eager_recv_commit(&transaction);
-            MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
-            goto fn_exit;
-        } else {
-            /* prepare for asynchronous transfer */
-            MPIDIG_recv_setup(rreq);
-
-            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] == NULL);
-            MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = rreq;
+                MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] == NULL);
+                MPIDI_POSIX_global.active_rreq[transaction.src_local_rank] = rreq;
+                break;
+            default:
+                MPIR_Assert(0);
         }
     }
 
