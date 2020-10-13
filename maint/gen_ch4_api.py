@@ -1,0 +1,382 @@
+import re
+import os
+
+class G:
+    apis = []
+    name_types = {}
+
+class RE:
+    m = None
+    def match(pat, str, flags=0):
+        RE.m = re.match(pat, str, flags)
+        return RE.m
+    def search(pat, str, flags=0):
+        RE.m = re.search(pat, str, flags)
+        return RE.m
+
+def main():
+
+    load_ch4_api("./src/mpid/ch4/ch4_api.txt")
+
+    os.system("mkdir -p src/mpid/ch4/shm/include")
+    dump_netmod_h("src/mpid/ch4/netmod/include/netmod.h")
+    dump_shm_h("src/mpid/ch4/shm/include/shm.h")
+    dump_netmod_impl_h("src/mpid/ch4/netmod/include/netmod_impl.h")
+
+    for m in "ofi", "ucx", "stubnm":
+        dump_func_table_c("src/mpid/ch4/netmod/%s/func_table.c" % (m), m)
+
+    for m in "ofi", "ucx", "stubnm":
+        dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m)
+
+# ---- subroutines --------------------------------------------
+def load_ch4_api(ch4_api_txt):
+    cur_api, flag = '', ''
+    with open(ch4_api_txt, "r") as In:
+        for line in In:
+            if RE.match(r'(.*API|PARAM):', line):
+                flag = RE.m.group(1)
+            elif re.search(r'API$', flag):
+                if RE.match(r'\s+(NM|SHM)(\*?)\s*:\s*(.+)', line):
+                    nm, inline, t = RE.m.group(1, 2, 3)
+                    tlist = re.split(r',\s*', t)
+                    if nm == "NM":
+                        cur_api['nm_params'] = tlist
+                        cur_api['nm_inline'] = inline
+                    else:
+                        cur_api['shm_params'] = tlist
+                        cur_api['shm_inline'] = inline
+                elif RE.match(r'\s+(\w+)\s*:\s*(.+)', line):
+                    name, ret = RE.m.group(1, 2)
+                    cur_api = {'name': name, 'ret': ret}
+                    G.apis.append(cur_api)
+                    func_name = name
+                    if RE.search(r'mpi_(init|finalize)_hook', func_name):
+                        init = RE.m.group(1)
+                        func_name = "mpi_%s" % (init)
+                    cur_api['func_name'] = func_name
+
+                    if re.match(r'Native API', flag):
+                        cur_api['native'] = 1
+                    else:
+                        cur_api['native'] = 0
+            elif flag == "PARAM":
+                if RE.match(r'\s+(\S+):\s*(.+)', line):
+                    k, v = RE.m.group(1, 2)
+                    G.name_types[k] = v
+
+def dump_netmod_h(h_file):
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include <mpidimpl.h>", file=Out)
+        print("", file=Out)
+        print("#define MPIDI_MAX_NETMOD_STRING_LEN 64", file=Out)
+        print("", file=Out)
+        print("typedef union {", file=Out)
+        print("#ifdef HAVE_CH4_NETMOD_OFI", file=Out)
+        print("    MPIDI_OFI_Global_t ofi;", file=Out)
+        print("#endif", file=Out)
+        print("#ifdef HAVE_CH4_NETMOD_UCX", file=Out)
+        print("    MPIDI_UCX_Global_t ucx;", file=Out)
+        print("#endif", file=Out)
+        print("} MPIDI_NM_Global_t;", file=Out)
+        print("", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            s = "typedef "
+            s += a['ret']
+            s += get_space_after_type(a['ret'])
+            s += "(*MPIDI_NM_%s_t) (" % (a['func_name'])
+            tail = ");"
+            dump_s_param_tail(Out, s, a['nm_params'], tail)
+        print("", file=Out)
+        print("typedef struct MPIDI_NM_funcs {", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if not a['native']:
+                s = "    "
+                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                print(s, file=Out)
+        print("} MPIDI_NM_funcs_t;", file=Out)
+        print("", file=Out)
+        print("typedef struct MPIDI_NM_native_funcs {", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if a['native']:
+                s = "    "
+                s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
+                print(s, file=Out)
+        print("} MPIDI_NM_native_funcs_t;", file=Out)
+        print("", file=Out)
+        print("extern MPIDI_NM_funcs_t *MPIDI_NM_funcs[];", file=Out)
+        print("extern MPIDI_NM_funcs_t *MPIDI_NM_func;", file=Out)
+        print("extern MPIDI_NM_native_funcs_t *MPIDI_NM_native_funcs[];", file=Out)
+        print("extern MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;", file=Out)
+        print("extern int MPIDI_num_netmods;", file=Out)
+        print("extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];", file=Out)
+        print("", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            s = ''
+            s += a['ret']
+            s += get_space_after_type(a['ret'])
+            s += "MPIDI_NM_%s(" % (a['name'])
+            tail = ");"
+            if a['nm_inline']:
+                s = "MPL_STATIC_INLINE_PREFIX %s" % (s)
+                tail = ") MPL_STATIC_INLINE_SUFFIX;"
+            dump_s_param_tail(Out, s, a['nm_params'], tail)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_shm_h(h_file):
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include <mpidimpl.h>", file=Out)
+        print("", file=Out)
+        for a in G.apis:
+            if 'shm_params' not in a:
+                continue
+            s = ''
+            s += a['ret']
+            s += get_space_after_type(a['ret'])
+            s += "MPIDI_SHM_%s(" % (a['name'])
+            tail = ");"
+            if a['shm_inline']:
+                s = "MPL_STATIC_INLINE_PREFIX %s" % (s)
+                tail = ") MPL_STATIC_INLINE_SUFFIX;"
+            dump_s_param_tail(Out, s, a['shm_params'], tail)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_netmod_impl_h(h_file):
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#ifndef NETMOD_INLINE", file=Out)
+        print("#ifndef NETMOD_DISABLE_INLINES", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if not a['nm_inline']:
+                continue
+            s = ''
+            if a['nm_inline']:
+                s += "MPL_STATIC_INLINE_PREFIX "
+            s += a['ret']
+            s += get_space_after_type(a['ret'])
+            s += "MPIDI_NM_%s(" % (a['name'])
+            tail = ")"
+            dump_s_param_tail(Out, s, a['nm_params'], tail)
+
+            print("{", file=Out)
+            use_ret = ''
+            if re.search(r'int|size_t', a['ret']):
+                use_ret = 1
+                print("    %s ret;" % a['ret'], file=Out)
+                print("", file=Out)
+            NAME = a['name'].upper()
+            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("", file=Out)
+            s = "    "
+            if use_ret:
+                s += "ret = "
+            if a['native']:
+                s += "MPIDI_NM_native_func->%s(" % (a['name'])
+            else:
+                s += "MPIDI_NM_func->%s(" % (a['name'])
+            tail = ");"
+            dump_s_param_tail(Out, s, a['nm_params'], tail, 1)
+            print("", file=Out)
+
+            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            if use_ret:
+                print("    return ret;", file=Out)
+            print("}", file=Out)
+            print("", file=Out)
+        print("#endif /* NETMOD_DISABLE_INLINES */", file=Out)
+        print("", file=Out)
+        print("#else", file=Out)
+        print("#define __netmod_inline_stubnm__   0", file=Out)
+        print("#define __netmod_inline_ofi__   1", file=Out)
+        print("#define __netmod_inline_ucx__   2", file=Out)
+        print("", file=Out)
+        print("#if NETMOD_INLINE==__netmod_inline_stubnm__", file=Out)
+        print("#include \"../stubnm/netmod_inline.h\"", file=Out)
+        print("#elif NETMOD_INLINE==__netmod_inline_ofi__", file=Out)
+        print("#include \"../ofi/netmod_inline.h\"", file=Out)
+        print("#elif NETMOD_INLINE==__netmod_inline_ucx__", file=Out)
+        print("#include \"../ucx/netmod_inline.h\"", file=Out)
+        print("#else", file=Out)
+        print("#error \"No direct netmod included\"", file=Out)
+        print("#endif", file=Out)
+        print("#endif /* NETMOD_INLINE */", file=Out)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_func_table_c(c_file, mod):
+    MOD = mod.upper()
+    print("  --> [%s]" % c_file)
+    with open(c_file, "w") as Out:
+        dump_copyright(Out)
+        print("#include \"mpl.h\"", file=Out)
+        print("", file=Out)
+        print("MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;", file=Out)
+        print("", file=Out)
+        print("#ifndef NETMOD_INLINE", file=Out)
+        print("#define NETMOD_DISABLE_INLINES", file=Out)
+        print("#include <mpidimpl.h>", file=Out)
+        print("#include \"netmod_inline.h\"", file=Out)
+        print("MPIDI_NM_funcs_t MPIDI_NM_%s_funcs = {" % mod, file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if not a['native']:
+                if a['nm_inline']:
+                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                else:
+                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+        print("};", file=Out)
+        print("", file=Out)
+        print("MPIDI_NM_native_funcs_t MPIDI_NM_native_%s_funcs = {" % mod, file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if a['native']:
+                if a['nm_inline']:
+                    print("    .%s = MPIDI_NM_%s," % (a['func_name'], a['name']), file=Out)
+                else:
+                    print("    .%s = MPIDI_%s_%s," % (a['func_name'], MOD, a['name']), file=Out)
+        print("};", file=Out)
+        print("#endif", file=Out)
+
+def dump_noinline_h(h_file, mod):
+    MOD = mod.upper()
+    print("  --> [%s]" % h_file)
+    with open(h_file, "w") as Out:
+        dump_copyright(Out)
+        INC = get_include_guard(h_file)
+        print("#ifndef %s" % INC, file=Out)
+        print("#define %s" % INC, file=Out)
+        print("", file=Out)
+        print("#include \"%s_impl.h\"" % mod, file=Out)
+        print("", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if not a['nm_inline']:
+                s = ''
+                s += a['ret']
+                s += get_space_after_type(a['ret'])
+                s += "MPIDI_%s_%s(" % (MOD, a['name'])
+                tail = ");"
+                dump_s_param_tail(Out, s, a['nm_params'], tail)
+        print("", file=Out)
+        print("#ifdef NETMOD_INLINE", file=Out)
+        for a in G.apis:
+            if 'nm_params' not in a:
+                continue
+            if not a['nm_inline']:
+                print("#define MPIDI_NM_%s MPIDI_%s_%s" % (a['name'], MOD, a['name']), file=Out)
+        print("#endif /* NETMOD_INLINE */", file=Out)
+        print("", file=Out)
+        print("#endif /* %s */" % INC, file=Out)
+
+def dump_copyright(out):
+    print("/*", file=out)
+    print(" * Copyright (C) by Argonne National Laboratory", file=out)
+    print(" *     See COPYRIGHT in top-level directory", file=out)
+    print(" */", file=out)
+    print("", file=out)
+
+def get_include_guard(h_file):
+    h_file = re.sub(r'.*\/', '', h_file)
+    h_file = re.sub(r'\.', '_', h_file)
+    return h_file.upper() + "_INCLUDED"
+
+def get_space_after_type(type):
+    if re.search(r'\b(void|char|int|short|long|float|double) \*+$', type) or re.match(r'struct .* \*+$', type):
+        return ''
+    else:
+        return ' '
+
+def dump_s_param_tail(out, s, params, tail, is_arg=0):
+    count = len(params)
+    n_lead = len(s)
+    n = n_lead
+    space = ""
+
+    if count == 1:
+        t = get_param_phrase(params[0], is_arg)
+        if n + len(t) + len(tail) <= 100:
+            print("%s%s%s" % (s, t, tail), file=out)
+        elif re.search(r'(.*) MPL_STATIC_INLINE_SUFFIX;', tail):
+            print("%s%s)" % (s, t), file=out)
+            print("    MPL_STATIC_INLINE_SUFFIX;", file=out)
+        else:
+            print("%s%s%s" % (s, t, tail), file=out)
+        return
+
+    for i, p in enumerate(params):
+        t = get_param_phrase(p, is_arg)
+        if i < count - 1:
+            t += ","
+        else:
+            t += "%s" % (tail)
+
+        if n + len(space) + len(t) <= 100:
+            s += "%s%s" % (space, t)
+        else:
+            print(s, file=out)
+            s = ' ' * n_lead + t
+        n = len(s)
+        space = ' '
+
+    if len(s) > 100 and RE.search(r'(.*) MPL_STATIC_INLINE_SUFFIX;', s):
+        t = RE.m.group(1)
+        print(t, file=out)
+        print("    MPL_STATIC_INLINE_SUFFIX;", file=out)
+    else:
+        print(s, file=out)
+
+def get_param_phrase(name, is_arg):
+    p = name
+    p = re.sub(r'-\d+$', '', p)
+    if is_arg:
+        if name == "void":
+            return ""
+        else:
+            return p
+
+    t = G.name_types[name]
+    if RE.search(r'(.*)\[\]', t):
+        t = RE.m.group(1)
+        p += '[]'
+
+    if name == "void":
+        return "void"
+    else:
+        return t + get_space_after_type(t) + p
+
+# ---------------------------------------------------------
+if __name__ == "__main__":
+    main()
