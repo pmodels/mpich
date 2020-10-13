@@ -28,7 +28,8 @@
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
 #define MPIDI_OFI_AM_TYPE_BITS         8
 #define MPIDI_OFI_AM_HDR_SZ_BITS       8
-#define MPIDI_OFI_AM_DATA_SZ_BITS     48
+#define MPIDI_OFI_AM_PAYLOAD_SZ_BITS  24
+#define MPIDI_OFI_AM_SEQ_NO_BITS      16
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
@@ -70,6 +71,7 @@ typedef struct {
     MPIR_Request *sreq_ptr;
     uint64_t am_hdr_src;
     uint64_t rma_key;
+    MPI_Aint reg_sz;
 } MPIDI_OFI_lmt_msg_payload_t;
 
 typedef struct {
@@ -80,10 +82,12 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t handler_id:MPIDI_OFI_AM_HANDLER_ID_BITS;
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
     uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
-    uint64_t data_sz:MPIDI_OFI_AM_DATA_SZ_BITS;
-    int32_t seg_sz;             /* size of current pipeline segment */
-    uint16_t seqno;             /* Sequence number of this message.
-                                 * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
+    uint64_t payload_sz:MPIDI_OFI_AM_PAYLOAD_SZ_BITS;   /* data size on this OFI message. This
+                                                         * could be the size of a pipeline segment
+                                                         * */
+    uint16_t seqno:MPIDI_OFI_AM_SEQ_NO_BITS;    /* Sequence number of this message.
+                                                 * Number is unique to (fi_src_addr,
+                                                 * fi_dest_addr) pair. */
     fi_addr_t fi_src_addr;      /* OFI address of the sender */
 } MPIDI_OFI_am_header_t;
 

@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
     size_t uo_msg_len, packet_len;
     /* Essentially, uo_msg_len == packet_len + sizeof(next,prev pointers) */
 
-    uo_msg_len = sizeof(*uo_msg) + am_hdr->am_hdr_sz + am_hdr->data_sz;
+    uo_msg_len = sizeof(*uo_msg) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
 
     /* Allocate a new memory region to store this unordered message.
      * We are doing this because the original am_hdr comes from FI_MULTI_RECV
@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_enqueue_unordered_msg(const MPIDI_OFI_
     if (uo_msg == NULL)
         return MPI_ERR_NO_MEM;
 
-    packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->data_sz;
+    packet_len = sizeof(*am_hdr) + am_hdr->am_hdr_sz + am_hdr->payload_sz;
     MPIR_Memcpy(&uo_msg->am_hdr, am_hdr, packet_len);
 
     DL_APPEND(MPIDI_OFI_global.am_unordered_msgs, uo_msg);
@@ -96,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * m
 
     /* note: setting is_local, is_async, req to 0, 0, NULL */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       p_data, msg_hdr->data_sz, 0, 0, NULL);
+                                                       p_data, msg_hdr->payload_sz, 0, 0, NULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_SHORT_AM);
@@ -126,12 +126,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_pipeline(MPIDI_OFI_am_header_t * m
         /* no cached request, this must be the first segment */
         /* note: setting is_local, is_async, req to 0, 1, rreq */
         MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr, p_data,
-                                                           msg_hdr->data_sz, 0, 1, &rreq);
+                                                           msg_hdr->payload_sz, 0, 1, &rreq);
         MPIDIG_recv_setup(rreq);
         MPIDIG_req_cache_add(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr, rreq);
     }
 
-    is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->seg_sz, rreq);
+    is_done = MPIDIG_recv_copy_seg(p_data, msg_hdr->payload_sz, rreq);
     if (is_done) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         MPIDIG_req_cache_remove(MPIDI_OFI_global.req_map, (uint64_t) msg_hdr->fi_src_addr);
@@ -227,15 +227,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 {
     int c, mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    size_t in_data_sz;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
 
-    in_data_sz = msg_hdr->data_sz;
     /* note: setting is_local, is_async to 0, 1 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                                       NULL, in_data_sz, 0, 1, &rreq);
+                                                       NULL, msg_hdr->payload_sz, 0, 1, &rreq);
 
     if (!rreq)
         goto fn_exit;
@@ -247,7 +245,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_cc_incr(rreq->cc_ptr, &c);
 
-    if (!in_data_sz) {
+    /* FIXME: explicit check of data_sz in CH4 region of the request, will fix when adding
+     * MPIDIG_am_recv */
+    if (!lmt_msg->reg_sz) {
         MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
         MPID_Request_complete(rreq);
         goto fn_exit;
@@ -257,7 +257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
-    do_long_am_recv(in_data_sz, rreq, lmt_msg);
+    do_long_am_recv(lmt_msg->reg_sz, rreq, lmt_msg);
     /* completion in lmt event functions */
 
   fn_exit:
