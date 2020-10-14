@@ -201,7 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_long(int rank, MPIR_Comm * comm,
     msg_hdr->handler_id = handler_id;
     msg_hdr->am_hdr_sz = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr_sz);
     msg_hdr->data_sz = data_sz;
-    msg_hdr->am_type = MPIDI_AMTYPE_LMT_REQ;
+    msg_hdr->am_type = MPIDI_AMTYPE_RDMA_READ;
     msg_hdr->seqno = MPIDI_OFI_am_fetch_incr_send_seqno(comm, rank);
     msg_hdr->fi_src_addr
         = MPIDI_OFI_comm_to_phys(MPIR_Process.comm_world, MPIR_Process.comm_world->rank, 0, 0);
