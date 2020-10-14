@@ -324,6 +324,9 @@ foreach my $p (@cvars) {
     my @env_names = ();
 
     # Process extra envs first so the primary always wins
+    if (exists $p->{'alias'}) {
+        push(@env_names, split(/[:,;\s]+/, $p->{'alias'}));
+    }
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
@@ -462,6 +465,9 @@ foreach my $p (@cvars) {
     # process extra envs first so the primary always wins
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${dep_ns}_" . $p->{name};
+    if (exists $p->{'alias'}) {
+        push(@env_names, split(/[:,;\s]+/, $p->{'alias'}));
+    }
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
