@@ -72,3 +72,5 @@
 **mpi_t_pvar_get_index %p %d %p: mpi_t_pvar_get_index(name=%p, var_class=%d, pvar_index=%p)
 **mpi_t_category_get_index: mpi_t_category_get_index failed
 **mpi_t_category_get_index %p %p: mpi_t_category_get_index(name=%p, cat_index=%p)
+**qmpi_invalid_name: tool name is invalid
+**qmpi_invalid_name %s: tool name is invalid (name=%s)

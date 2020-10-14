@@ -85,11 +85,11 @@ int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);
 /* make comm split based on access to a common file system easier */
 int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id);
 
-/* TODO WB - This should become a CVAR to allow the user to change it easily */
-#define MPIR_QMPI_DEFAULT_NUM_TOOLS 5
 extern void (**MPIR_QMPI_pointers) (void);
-extern void **MPIR_QMPI_contexts;
+extern void **MPIR_QMPI_storage;
+extern void (**MPIR_QMPI_tool_init_callbacks) (int);
 extern int MPIR_QMPI_num_tools;
+extern char **MPIR_QMPI_tool_names;
 extern int MPIR_QMPI_is_initialized;
 int MPII_qmpi_setup(void);
 

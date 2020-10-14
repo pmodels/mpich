@@ -247,19 +247,23 @@ qmpi_h_file.write(f"enum QMPI_Functions_enum {{" "\n    "
 qmpi_h_file.write(''.join(qmpi_h_file_text));
 
 # Add the types and registration functions to the header file
-qmpi_h_file.write("int QMPI_Register_tool(void * tool_context, int * tool_id) MPICH_API_PUBLIC;\n");
+qmpi_h_file.write("#define QMPI_MAX_TOOL_NAME_LENGTH 256\n\n");
+qmpi_h_file.write("int QMPI_Register_tool_name(const char *tool_name, void (* init_function_ptr)(int tool_id)) MPICH_API_PUBLIC;\n");
+qmpi_h_file.write("int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;\n");
 qmpi_h_file.write("int QMPI_Register_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,\n"
                   "                           void (* function_ptr)(void)) MPICH_API_PUBLIC;\n");
+qmpi_h_file.write("\n");
 qmpi_h_file.write("#include <stddef.h>\n"
         "extern MPICH_API_PUBLIC void (**MPIR_QMPI_pointers) (void);\n"
-        "extern MPICH_API_PUBLIC void **MPIR_QMPI_contexts;\n"
+        "extern MPICH_API_PUBLIC void **MPIR_QMPI_storage;\n"
+        "\n"
         "static inline void QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,\n"
         "                      void (**function_ptr) (void), void **next_tool_context)\n"
         "{\n"
         "    for (int i = calling_tool_id - 1; i >= 0; i--) {\n"
         "        if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum] != NULL) {\n"
         "            *function_ptr = MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum];\n"
-        "            *next_tool_context = MPIR_QMPI_contexts[i];\n"
+        "            *next_tool_context = MPIR_QMPI_storage[i];\n"
         "            return;\n"
         "        }\n"
         "    }\n"

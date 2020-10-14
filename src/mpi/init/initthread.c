@@ -85,8 +85,8 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
     MPID_Thread_init(&err);
     MPIR_Assert(err == 0);
 
-    mpi_errno = MPIR_T_env_init();
-    MPIR_ERR_CHECK(mpi_errno);
+    /* MPI_T was previously set up here, but that moved to MPII_qmpi_setup to support using
+     * environment variables before MPI_Init. */
 
     MPIR_Err_init();
     MPII_pre_init_dbg_logging(argc, argv);

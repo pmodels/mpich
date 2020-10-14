@@ -96,8 +96,22 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 
 static void qmpi_teardown()
 {
+    int counter = 0;
+
     MPL_free(MPIR_QMPI_pointers);
-    MPL_free(MPIR_QMPI_contexts);
+    MPL_free(MPIR_QMPI_storage);
+    MPL_free(MPIR_QMPI_tool_names[counter++]);
+    if (MPIR_CVAR_QMPI_TOOL_LIST != NULL) {
+        MPL_free(MPIR_QMPI_tool_names[counter++]);
+        size_t len = strlen(MPIR_CVAR_QMPI_TOOL_LIST);
+        for (int i = 0; i <= len; i++) {
+            if (MPIR_CVAR_QMPI_TOOL_LIST[i] == ':') {
+                MPL_free(MPIR_QMPI_tool_names[counter++]);
+            }
+        }
+    }
+    MPL_free(MPIR_QMPI_tool_names);
+    MPL_free(MPIR_QMPI_tool_init_callbacks);
 }
 
 /*@

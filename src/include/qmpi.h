@@ -2254,19 +2254,24 @@ typedef double (QMPI_Wtick_t) (void *context);
 double QMPI_Wtime(void *context) MPICH_API_PUBLIC;
 typedef double (QMPI_Wtime_t) (void *context);
 
-int QMPI_Register_tool(void *tool_context, int *tool_id) MPICH_API_PUBLIC;
+#define QMPI_MAX_TOOL_NAME_LENGTH 256
+
+int QMPI_Register_tool_name(const char *tool_name,
+                            void (*init_function_ptr) (int tool_id)) MPICH_API_PUBLIC;
+int QMPI_Register_tool_storage(int tool_id, void *tool_storage) MPICH_API_PUBLIC;
 int QMPI_Register_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
                            void (*function_ptr) (void)) MPICH_API_PUBLIC;
+
 #include <stddef.h>
 extern MPICH_API_PUBLIC void (**MPIR_QMPI_pointers) (void);
-extern MPICH_API_PUBLIC void **MPIR_QMPI_contexts;
+extern MPICH_API_PUBLIC void **MPIR_QMPI_storage;
 static inline void QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
                                      void (**function_ptr) (void), void **next_tool_context)
 {
     for (int i = calling_tool_id - 1; i >= 0; i--) {
         if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum] != NULL) {
             *function_ptr = MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum];
-            *next_tool_context = MPIR_QMPI_contexts[i];
+            *next_tool_context = MPIR_QMPI_storage[i];
             return;
         }
     }

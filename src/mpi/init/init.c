@@ -53,6 +53,22 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 
 #endif
 
+int MPI_Init(int *argc, char ***argv)
+{
+    QMPI_Init_t *fn_ptr;
+    void *context;
+
+    /* Initialize the tools that have been registered */
+    for (int i = 1; i < MPIR_QMPI_num_tools + 1; i++) {
+        MPIR_QMPI_tool_init_callbacks[i] (i);
+    }
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Init(context, argc, argv);
+    QMPI_Get_function(MPIR_QMPI_num_tools + 1, MPI_INIT_T, ((void (**)(void)) &fn_ptr), &context);
+    return (*fn_ptr) (context, argc, argv);
+}
+
 /*@
    MPI_Init - Initialize the MPI execution environment
 
@@ -88,7 +104,7 @@ The Fortran binding for 'MPI_Init' has only the error return
 
 .seealso: MPI_Init_thread, MPI_Finalize
 @*/
-int MPI_Init(int *argc, char ***argv)
+int QMPI_Init(QMPI_Context context, int tool_id, int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
