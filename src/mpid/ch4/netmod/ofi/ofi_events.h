@@ -12,7 +12,6 @@
 #include "ofi_control.h"
 #include "utlist.h"
 
-int MPIDI_OFI_handle_deferred_ops(void);
 int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
