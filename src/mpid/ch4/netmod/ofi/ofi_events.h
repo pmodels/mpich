@@ -16,7 +16,6 @@ int MPIDI_OFI_handle_deferred_ops(void);
 int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req);
 int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
-int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *wc, ssize_t num);
 int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret);
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc, bool has_err)
