@@ -9,7 +9,6 @@
 #include "ofi_impl.h"
 #include "mpidu_genq.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_poll(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
@@ -66,9 +65,8 @@ MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm *
                                    __LINE__,                            \
                                    __func__,                              \
                                    fi_strerror(-_ret));                 \
-            mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
-            if (mpi_errno != MPI_SUCCESS)                                \
-                MPIR_ERR_CHECK(mpi_errno);                               \
+            mpi_errno = MPIDI_OFI_progress_poll(0 /* vni_idx */);       \
+            MPIR_ERR_CHECK(mpi_errno);                                  \
         } while (_ret == -FI_EAGAIN);                                   \
     } while (0)
 
@@ -132,51 +130,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * r
                                        FI_MULTI_RECV | FI_COMPLETION), repost);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)
-{
-    int mpi_errno = MPI_SUCCESS, ret;
-    struct fi_cq_tagged_entry cq_entry;
-
-    /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
-
-    ret = fi_cq_read(MPIDI_OFI_global.ctx[vni_idx].cq, &cq_entry, 1);
-
-    if (unlikely(ret == -FI_EAGAIN))
-        goto fn_exit;
-
-    if (ret < 0) {
-        mpi_errno = MPIDI_OFI_handle_cq_error_util(vni_idx, ret);
-        goto fn_fail;
-    }
-
-    /* If the statically allocated buffered list is full or we've already
-     * started using the dynamic list, continue using it. */
-    if (((MPIDI_OFI_global.cq_buffered_static_head + 1) %
-         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_OFI_global.cq_buffered_static_tail) ||
-        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
-        MPIDI_OFI_cq_list_t *list_entry =
-            (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
-        MPIR_Assert(list_entry);
-        list_entry->cq_entry = cq_entry;
-        LL_APPEND(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                  MPIDI_OFI_global.cq_buffered_dynamic_tail, list_entry);
-    } else {
-        MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                 cq_buffered_static_head].cq_entry = cq_entry;
-        MPIDI_OFI_global.cq_buffered_static_head =
-            (MPIDI_OFI_global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

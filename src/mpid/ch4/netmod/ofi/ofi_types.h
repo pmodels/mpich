@@ -354,12 +354,6 @@ typedef struct {
     /* Pack buffers for various communication */
     MPIDU_genq_private_pool_t pack_buf_pool;
 
-    /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
-    int cq_buffered_static_head;
-    int cq_buffered_static_tail;
-    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
-
     /* Process management and PMI globals */
     int pname_set;
     int pname_len;

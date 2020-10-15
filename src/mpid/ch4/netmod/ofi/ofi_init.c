@@ -714,9 +714,6 @@ int MPIDI_OFI_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
                                                   &MPIDI_OFI_global.am_hdr_buf_pool);
         MPIR_ERR_CHECK(mpi_errno);
 
-        MPIDI_OFI_global.cq_buffered_dynamic_head = MPIDI_OFI_global.cq_buffered_dynamic_tail =
-            NULL;
-        MPIDI_OFI_global.cq_buffered_static_head = MPIDI_OFI_global.cq_buffered_static_tail = 0;
         optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
         MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_global.ctx[0].rx->fid),
@@ -846,10 +843,6 @@ int MPIDI_OFI_mpi_finalize_hook(void)
             MPL_gpu_free_host(MPIDI_OFI_global.am_bufs[i]);
 
         MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.am_hdr_buf_pool);
-
-        MPIR_Assert(MPIDI_OFI_global.cq_buffered_static_head ==
-                    MPIDI_OFI_global.cq_buffered_static_tail);
-        MPIR_Assert(NULL == MPIDI_OFI_global.cq_buffered_dynamic_head);
     }
 
     MPIDU_genq_private_pool_destroy_unsafe(MPIDI_OFI_global.pack_buf_pool);

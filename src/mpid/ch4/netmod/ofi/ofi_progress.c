@@ -68,9 +68,7 @@ int MPIDI_OFI_progress(int vci, int blocking)
         return MPI_SUCCESS;
     }
 
-    if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
-        mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1);
-    else if (likely(1)) {
+    {
         ret = fi_cq_read(MPIDI_OFI_global.ctx[vni].cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
 
         if (likely(ret > 0))

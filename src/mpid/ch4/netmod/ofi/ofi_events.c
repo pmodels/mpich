@@ -836,35 +836,6 @@ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc, MPIR_Request * re
     return mpi_errno;
 }
 
-int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *wc, ssize_t num)
-{
-    int rc = 0;
-
-    if ((MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) ||
-        (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head)) {
-        /* If the static list isn't empty, do so first */
-        if (MPIDI_OFI_global.cq_buffered_static_head != MPIDI_OFI_global.cq_buffered_static_tail) {
-            wc[0] =
-                MPIDI_OFI_global.cq_buffered_static_list[MPIDI_OFI_global.
-                                                         cq_buffered_static_tail].cq_entry;
-            MPIDI_OFI_global.cq_buffered_static_tail =
-                (MPIDI_OFI_global.cq_buffered_static_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
-        }
-        /* If there's anything in the dynamic list, it goes second. */
-        else if (NULL != MPIDI_OFI_global.cq_buffered_dynamic_head) {
-            MPIDI_OFI_cq_list_t *cq_list_entry = MPIDI_OFI_global.cq_buffered_dynamic_head;
-            LL_DELETE(MPIDI_OFI_global.cq_buffered_dynamic_head,
-                      MPIDI_OFI_global.cq_buffered_dynamic_tail, cq_list_entry);
-            wc[0] = cq_list_entry->cq_entry;
-            MPL_free(cq_list_entry);
-        }
-
-        rc = 1;
-    }
-
-    return rc;
-}
-
 int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc, ssize_t num)
 {
     int i, mpi_errno = MPI_SUCCESS;
