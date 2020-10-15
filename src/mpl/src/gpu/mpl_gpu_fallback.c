@@ -5,14 +5,6 @@
 
 #include "mpl.h"
 
-int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
-{
-    attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
-    attr->device = -1;
-
-    return MPL_SUCCESS;
-}
-
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     abort();

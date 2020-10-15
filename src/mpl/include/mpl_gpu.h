@@ -8,9 +8,12 @@
 
 #include "mplconfig.h"
 
+#undef MPL_HAVE_GPU
 #ifdef MPL_HAVE_CUDA
+#define MPL_HAVE_GPU MPL_GPU_TYPE_CUDA
 #include "mpl_gpu_cuda.h"
 #elif defined MPL_HAVE_ZE
+#define MPL_HAVE_GPU MPL_GPU_TYPE_ZE
 #include "mpl_gpu_ze.h"
 #else
 #include "mpl_gpu_fallback.h"
@@ -33,6 +36,18 @@ typedef enum {
     MPL_GPU_TYPE_CUDA,
     MPL_GPU_TYPE_ZE,
 } MPL_gpu_type_t;
+
+#ifndef MPL_HAVE_GPU
+/* inline the query function in the fallback path to provide compiler optimization opportunity */
+static inline int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
+{
+    attr->type = MPL_GPU_POINTER_UNREGISTERED_HOST;
+    attr->device = -1;
+
+    return MPL_SUCCESS;
+}
+
+#endif /* ! MPL_HAVE_GPU */
 
 int MPL_gpu_query_support(MPL_gpu_type_t * type);
 int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr);
