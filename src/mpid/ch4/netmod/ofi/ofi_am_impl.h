@@ -10,6 +10,7 @@
 #include "mpidu_genq.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_poll(int vni_idx);
 
 /* Acquire a sequence number to send, and record the next number */
 MPL_STATIC_INLINE_PREFIX uint16_t MPIDI_OFI_am_fetch_incr_send_seqno(MPIR_Comm * comm,
@@ -176,6 +177,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_poll(int vni)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ret;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_POLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_POLL);
+
+    void *cq_with_event;
+    ret = fi_poll(MPIDI_OFI_global.ctx[vni].pollset, &cq_with_event, 1);
+    if (unlikely(ret < 0 && ret != -FI_EAGAIN)) {
+        mpi_errno = MPIDI_OFI_handle_cq_error_util(vni, ret);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_POLL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

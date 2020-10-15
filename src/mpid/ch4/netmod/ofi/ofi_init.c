@@ -1025,6 +1025,14 @@ static int create_vni_context(int vni)
     MPIDI_OFI_global.ctx[vni].rx = rx;
 #endif
 
+    struct fid_poll *pollset;
+    struct fi_poll_attr poll_attr;
+    memset(&poll_attr, 0, sizeof(poll_attr));
+    MPIDI_OFI_CALL(fi_poll_open(domain, &poll_attr, &pollset), poll_open);
+    MPIDI_OFI_CALL(fi_poll_add(pollset, &cq->fid, 0), poll_add);
+
+    MPIDI_OFI_global.ctx[vni].pollset = pollset;
+
     /* ------------------------------------------------------------------------ */
     /* Construct:  Shared TX Context for RMA                                    */
     /* ------------------------------------------------------------------------ */
@@ -1061,6 +1069,10 @@ static struct fi_info *pick_provider_by_global_settings(struct fi_info *prov_lis
 static int destroy_vni_context(int vni)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_CALL(fi_poll_del(MPIDI_OFI_global.ctx[vni].pollset,
+                               &MPIDI_OFI_global.ctx[vni].cq->fid, 0), poll_del);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_global.ctx[vni].pollset->fid), pollclose);
 
 #ifdef MPIDI_OFI_VNI_USE_DOMAIN
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {

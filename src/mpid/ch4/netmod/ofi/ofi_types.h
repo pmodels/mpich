@@ -228,6 +228,8 @@ typedef struct {
     struct fid_ep *tx;
     struct fid_ep *rx;
     struct fid_cq *cq;
+
+    struct fid_poll *pollset;
 } MPIDI_OFI_context_t;
 
 typedef union {
