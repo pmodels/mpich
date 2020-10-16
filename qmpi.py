@@ -82,15 +82,19 @@ for filename in result.split():
             newlines.append("\n");
             newlines.append("}\n");
             if (function_name == "MPI_Pcontrol"):
-                newlines.append(f"    return (*fn_ptr)(context, level, args);" "\n");
+                newlines.append(f"    return (*fn_ptr)(next_context, next_tool_id, level, args);" "\n");
             else:
-                newlines.append(f"    return (*fn_ptr)(context{short_params});" "\n");
-            newlines.append(f"    QMPI_Get_function(MPIR_QMPI_num_tools + 1, {function_name.upper()}_T, ((void (**)(void)) &fn_ptr), &context);" "\n");
+                newlines.append(f"    return (*fn_ptr)(next_context, next_tool_id{short_params});" "\n");
+            newlines.append(f"    QMPI_Get_function(MPIR_QMPI_num_tools + 1, {function_name.upper()}_T, ((void (**)(void)) &fn_ptr), &next_context, &next_tool_id);" "\n");
             if (function_name == "MPI_Pcontrol"):
+                newlines.append(f"        return Q{function_name}(next_context, next_tool_id, level, args);" "\n");
+                newlines.append("    if (MPIR_QMPI_num_tools == 0)" "\n");
                 newlines.append("    va_list args;\n    va_start(args, level);\n");
-            newlines.append(f"        return Q{function_name}(context{short_params});" "\n");
-            newlines.append("    if (MPIR_QMPI_num_tools == 0)" "\n");
-            newlines.append("    void *context;\n");
+            else:
+                newlines.append(f"        return Q{function_name}(next_context, next_tool_id{short_params});" "\n");
+                newlines.append("    if (MPIR_QMPI_num_tools == 0)" "\n");
+            newlines.append("    int next_tool_id = 0;\n");
+            newlines.append("    QMPI_Context next_context;\n");
             newlines.append(f"    Q{function_name}_t *fn_ptr;" "\n");
             newlines.append("{\n");
             newlines.append(signature);
@@ -115,10 +119,10 @@ for filename in result.split():
                     end_char == '{' and match.group(1)[-1] != 'Q' and not match.group(2).isupper()):
                 function_name = match.group(2)[:-1];
                 if (match.group(5) == "void)"):
-                    replacement = f"{match.group(1)}Q{match.group(2)}void *context)" + "\n";
+                    replacement = f"{match.group(1)}Q{match.group(2)}QMPI_Context context, int tool_id)" + "\n";
                     signature   = f"{match.group(1)}{match.group(2)}void)" + "\n";
                 else:
-                    replacement = f"{match.group(1)}Q{match.group(2)}void *context, {match.group(5)}" + "\n";
+                    replacement = f"{match.group(1)}Q{match.group(2)}QMPI_Context context, int tool_id, {match.group(5)}" + "\n";
                     signature   = f"{match.group(1)}{match.group(2)}{match.group(5)}" + "\n";
                     for arg in match.group(5).split(','):
                         if (arg.strip() == ""):

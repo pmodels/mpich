@@ -96,6 +96,12 @@ ignore_functions = [
         "MPI_Neighbor_alltoallw_init",
         "MPI_NULL_COPY_FN",
         "MPI_NULL_DELETE_FN",
+        "MPI_Parrived",
+        "MPI_Pready",
+        "MPI_Pready_list",
+        "MPI_Pready_range",
+        "MPI_Precv_init",
+        "MPI_Psend_init",
         "MPI_Reduce_init",
         "MPI_Reduce_scatter_block_init",
         "MPI_Reduce_scatter_init",
@@ -108,9 +114,27 @@ ignore_functions = [
         "MPI_Sizeof",
         "MPI_Status_f082f",
         "MPI_Status_f2f08",
+        "MPI_T_category_get_events",
+        "MPI_T_category_get_num_events",
+        "MPI_T_event_callback_get_info",
+        "MPI_T_event_callback_set_info",
+        "MPI_T_event_copy",
+        "MPI_T_event_get_index",
+        "MPI_T_event_get_info",
+        "MPI_T_event_get_num",
+        "MPI_T_event_get_source",
+        "MPI_T_event_get_timestamp",
+        "MPI_T_event_handle_alloc",
+        "MPI_T_event_handle_free",
+        "MPI_T_event_handle_get_info",
+        "MPI_T_event_handle_set_info",
+        "MPI_T_event_read",
+        "MPI_T_event_register_callback",
+        "MPI_T_event_set_dropped_handler",
+        "MPI_T_source_get_info",
+        "MPI_T_source_get_num",
+        "MPI_T_source_get_timestamp",
         "MPI_TYPE_DUP_FN",
-        "MPI_Type_get_elements",
-        "MPI_Type_get_elements_x",
         "MPI_TYPE_NULL_COPY_FN",
         "MPI_TYPE_NULL_DELETE_FN",
         "MPI_WIN_DUP_FN",
@@ -145,8 +169,8 @@ def generate_code(parseset: Mapping[str, Any], postfix: str, kind_map: Mapping[s
     # Generate both the typed form and the shortened form of the parameter list
     varargs = "";
     orig_params = "";
-    typed_params = "void *context";
-    short_params = "context";
+    typed_params = "QMPI_Context context, int tool_id";
+    short_params = "context, tool_id";
     for param in parameters:
         # Handle a special case for MPI_Pcontrol
         if (param['kind'] == "VARARGS"):
@@ -208,7 +232,7 @@ if not (sys.version_info.major >= 4 or sys.version_info.major == 3 and sys.versi
 apis_file="apis.json"
 
 # Generate API json file
-subprocess.call(f"{MPI_STANDARD_PATH}/binding-tool/binding_prepass.py {MPI_STANDARD_PATH} {apis_file}", shell=True);
+subprocess.call(f"python3.7 {MPI_STANDARD_PATH}/binding-tool/binding_prepass.py {MPI_STANDARD_PATH} {apis_file}", shell=True);
 
 qmpi_h_file.write('/*\n * Copyright (C) by Argonne National Laboratory\n *     See COPYRIGHT in top-level directory\n */\n\n');
 qmpi_h_file.write('#ifndef QMPI_H\n#define QMPI_H\n\n');
@@ -244,6 +268,13 @@ qmpi_h_file.write(f"enum QMPI_Functions_enum {{" "\n    "
                    "MPI_LAST_FUNC_T\n"
                   f"}};" "\n\n");
 
+qmpi_h_file.write(""
+        "typedef struct {\n"
+        "    void *storage_stack;\n"
+        "} QMPI_Context;\n"
+        "\n"
+        );
+
 qmpi_h_file.write(''.join(qmpi_h_file_text));
 
 # Add the types and registration functions to the header file
@@ -258,12 +289,17 @@ qmpi_h_file.write("#include <stddef.h>\n"
         "extern MPICH_API_PUBLIC void **MPIR_QMPI_storage;\n"
         "\n"
         "static inline void QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,\n"
-        "                      void (**function_ptr) (void), void **next_tool_context)\n"
+        "                      void (**function_ptr) (void), QMPI_Context *next_tool_context,\n"
+        "                      int *next_tool_id)\n"
         "{\n"
+        "    QMPI_Context context;\n"
+        "    context.storage_stack = MPIR_QMPI_storage;"
+        "\n"
         "    for (int i = calling_tool_id - 1; i >= 0; i--) {\n"
         "        if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum] != NULL) {\n"
         "            *function_ptr = MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum];\n"
-        "            *next_tool_context = MPIR_QMPI_storage[i];\n"
+        "            *next_tool_context = context;\n"
+        "            *next_tool_id = i;\n"
         "            return;\n"
         "        }\n"
         "    }\n"
