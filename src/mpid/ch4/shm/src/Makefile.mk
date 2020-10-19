@@ -6,7 +6,6 @@
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/src
 
 noinst_HEADERS += src/mpid/ch4/shm/src/shm_impl.h    \
-        src/mpid/ch4/shm/src/shm_am_fallback.h       \
         src/mpid/ch4/shm/src/shm_am_fallback_coll.h  \
         src/mpid/ch4/shm/src/shm_am_fallback_probe.h \
         src/mpid/ch4/shm/src/shm_am_fallback_recv.h  \

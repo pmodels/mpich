@@ -12,11 +12,23 @@
 #ifndef SHM_IMPL_H_INCLUDED
 #define SHM_IMPL_H_INCLUDED
 
-#ifdef MPIDI_ENABLE_AM_ONLY
-#include "shm_am_fallback.h"
+#if defined(MPIDI_ENABLE_AM_ONLY)
+#include "shm_am_fallback_coll.h"
 #else
 #include "shm_coll.h"
+#endif
+
+#if defined(MPIDI_ENABLE_AM_ONLY_PT2PT) || defined(MPIDI_ENABLE_AM_ONLY)
+#include "shm_am_fallback_send.h"
+#include "shm_am_fallback_recv.h"
+#include "shm_am_fallback_probe.h"
+#else
 #include "shm_p2p.h"
+#endif
+
+#if defined(MPIDI_ENABLE_AM_ONLY_RMA) || defined(MPIDI_ENABLE_AM_ONLY)
+#include "shm_am_fallback_rma.h"
+#else
 #include "shm_rma.h"
 #include "shm_hooks.h"
 #endif

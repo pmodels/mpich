@@ -279,11 +279,15 @@ else
 fi
 
 AC_ARG_ENABLE([ch4-am-only],
-              AS_HELP_STRING([--enable-ch4-am-only],[forces AM-only communication]),
+              AS_HELP_STRING([--enable-ch4-am-only[=pt2pt|rma]],[forces AM-only communication]),
               [],[enable_ch4_am_only=no])
 
 if test "${enable_ch4_am_only}" = "yes"; then
     AC_DEFINE(MPIDI_ENABLE_AM_ONLY, 1, [Enables AM-only communication])
+elif test "${enable_ch4_am_only}" = "pt2pt"; then
+    AC_DEFINE(MPIDI_ENABLE_AM_ONLY_PT2PT, 1, [Enables AM-only pt2pt communication])
+elif test "${enable_ch4_am_only}" = "rma"; then
+    AC_DEFINE(MPIDI_ENABLE_AM_ONLY_RMA, 1, [Enables AM-only rma communication])
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)
