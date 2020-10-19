@@ -24,26 +24,6 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #undef MPI_Ibsend
 #define MPI_Ibsend PMPI_Ibsend
 
-
-int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                     MPIR_Comm * comm_ptr, MPI_Request * request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Ibsend is local-complete */
-    MPIR_Request *req = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
-    *request = req->handle;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 /*@
@@ -150,9 +130,13 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ibsend_impl(buf, count, datatype, dest, tag, comm_ptr, request);
+    mpi_errno = MPIR_Bsend_isend(buf, count, datatype, dest, tag, comm_ptr, NULL);
     if (mpi_errno)
         goto fn_fail;
+
+    /* Ibsend is local-complete */
+    MPIR_Request *request_ptr = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND);
+    *request = request_ptr->handle;
 
     /* ... end of body of routine ... */
 
