@@ -379,7 +379,7 @@ void MTestAlloc(size_t size, mtest_mem_type_e type, void **hostbuf, void **devic
             zerr = zeDriverAllocHostMem(driver, &host_desc, size, mem_alignment, hostbuf);
             assert(zerr == ZE_RESULT_SUCCESS);
             if (is_calloc)
-                memset(*devicebuf, 0, size);
+                memset(*hostbuf, 0, size);
         }
         /* FIXME: currently ZE only support device 0, so we cannot change device during test.
          * Shifting device_id similar to CUDA should be added in future. */
