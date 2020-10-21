@@ -31,4 +31,5 @@ mpi_sources +=                           \
     src/mpi/pt2pt/ssend_init.c
 
 mpi_core_sources += \
+    src/mpi/pt2pt/pt2pt_impl.c \
     src/mpi/pt2pt/bsendutil.c
