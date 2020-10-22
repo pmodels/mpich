@@ -198,8 +198,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
     MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
                                                target_bytes, target_extent, target_true_lb);
 
-    MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
-
     /* zero-byte messages */
     if (unlikely(origin_bytes == 0))
         goto null_op_exit;
@@ -361,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
     struct fi_msg_rma msg;
     int origin_contig, target_contig;
     MPI_Aint origin_true_lb, target_true_lb;
-    MPI_Aint origin_bytes, target_bytes, target_extent;
+    MPI_Aint target_bytes, target_extent;
     struct fi_rma_iov riov;
     struct iovec iov;
 
@@ -370,15 +368,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count, origin_contig,
-                                        origin_bytes, origin_true_lb);
+    MPIDI_Datatype_check_contig_lb(origin_datatype, origin_contig, origin_true_lb);
     MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
                                                target_bytes, target_extent, target_true_lb);
 
-    MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
-
     /* zero-byte messages */
-    if (unlikely(origin_bytes == 0))
+    if (unlikely(target_bytes == 0))
         goto null_op_exit;
 
     /* self messages */
@@ -804,8 +799,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
 {
     int mpi_errno = MPI_SUCCESS;
     int target_contig, origin_contig, result_contig;
-    MPI_Aint target_bytes, target_extent, origin_bytes ATTRIBUTE((unused)),
-        result_bytes ATTRIBUTE((unused));
+    MPI_Aint target_bytes, target_extent;
     MPI_Aint origin_true_lb, target_true_lb, result_true_lb;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
@@ -813,10 +807,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get_accumulate(const void *origin_addr
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count, origin_contig,
-                                        origin_bytes, origin_true_lb);
-    MPIDI_Datatype_check_contig_size_lb(result_datatype, result_count, result_contig,
-                                        result_bytes, result_true_lb);
+    MPIDI_Datatype_check_contig_lb(origin_datatype, origin_contig, origin_true_lb);
+    MPIDI_Datatype_check_contig_lb(result_datatype, result_contig, result_true_lb);
     MPIDI_Datatype_check_contig_size_extent_lb(target_datatype, target_count, target_contig,
                                                target_bytes, target_extent, target_true_lb);
     if (target_bytes == 0)
