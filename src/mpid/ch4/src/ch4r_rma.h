@@ -30,7 +30,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
     MPIR_Request *sreq = NULL;
     MPIDIG_put_msg_t am_hdr;
     uint64_t offset;
-    size_t data_sz;
+    MPI_Aint origin_data_sz, target_data_sz;
     struct iovec am_iov[2];
     size_t am_hdr_max_size;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
@@ -46,8 +46,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
-    if (data_sz == 0)
+    MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_data_sz);
+    MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
+    if (origin_data_sz == 0)
         goto immed_cmpl;
 
     if (target_rank == win->comm_ptr->rank) {
@@ -77,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
         am_hdr.target_count = target_count;
         am_hdr.target_datatype = target_datatype;
     } else {
-        am_hdr.target_count = data_sz;
+        am_hdr.target_count = target_data_sz;
         am_hdr.target_datatype = MPI_BYTE;
     }
     am_hdr.preq_ptr = sreq;
@@ -191,7 +192,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
     size_t offset;
     MPIR_Request *sreq = NULL;
     MPIDIG_get_msg_t am_hdr;
-    size_t data_sz;
+    MPI_Aint target_data_sz;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
@@ -205,8 +206,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
-    if (data_sz == 0)
+    MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
+    if (target_data_sz == 0)
         goto immed_cmpl;
 
     if (target_rank == win->comm_ptr->rank) {
@@ -240,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get(void *origin_addr, int origin_count,
         am_hdr.target_count = target_count;
         am_hdr.target_datatype = target_datatype;
     } else {
-        am_hdr.target_count = data_sz;
+        am_hdr.target_count = target_data_sz;
         am_hdr.target_datatype = MPI_BYTE;
     }
     am_hdr.greq_ptr = sreq;
@@ -326,7 +327,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_acc_req_msg_t am_hdr;
-    uint64_t data_sz, target_data_sz;
+    MPI_Aint origin_data_sz, target_data_sz;
     struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -343,9 +344,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
 
     MPIDIG_RMA_OP_CHECK_SYNC(target_rank, win);
 
-    MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+    MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, origin_data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
-    if (data_sz == 0 || target_data_sz == 0) {
+    if (origin_data_sz == 0 || target_data_sz == 0) {
         goto immed_cmpl;
     }
 
@@ -369,7 +370,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
         MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
-        am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
+        am_hdr.origin_count = (basic_type_size > 0) ? origin_data_sz / basic_type_size : 0;
     }
 
     am_hdr.target_count = target_count;
@@ -386,7 +387,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_accumulate(const void *origin_addr, int o
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
-    MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
@@ -498,7 +498,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDIG_get_acc_req_msg_t am_hdr;
-    uint64_t data_sz, result_data_sz, target_data_sz;
+    MPI_Aint origin_data_sz, result_data_sz, target_data_sz;
     struct iovec am_iov[2];
     MPIR_Datatype *dt_ptr;
     int am_hdr_max_sz;
@@ -520,15 +520,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     if (op == MPI_NO_OP) {
         origin_count = 0;
         origin_datatype = MPI_DATATYPE_NULL;
-        data_sz = 0;
+        origin_data_sz = 0;
         dt_ptr = NULL;
     } else {
-        MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
+        MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, origin_data_sz, dt_ptr);
     }
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     MPIDI_Datatype_check_size(result_datatype, result_count, result_data_sz);
 
-    if (target_data_sz == 0 || (data_sz == 0 && result_data_sz == 0)) {
+    if (target_data_sz == 0 || (origin_data_sz == 0 && result_data_sz == 0)) {
         goto immed_cmpl;
     }
 
@@ -557,7 +557,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
         MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
-        am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
+        am_hdr.origin_count = (basic_type_size > 0) ? origin_data_sz / basic_type_size : 0;
     }
 
     am_hdr.target_count = target_count;
@@ -576,7 +576,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_get_accumulate(const void *origin_addr,
     MPIDIG_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDIG_REQUEST(sreq, rank) = target_rank;
-    MPIDIG_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         am_hdr.flattened_sz = 0;
         MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
