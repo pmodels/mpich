@@ -362,16 +362,16 @@ void MPIR_Typerep_init(void)
 
     MPI_Aint size;
 
-    yaksa_init(YAKSA_INIT_ATTR__DEFAULT);
+    yaksa_init(NULL);
 
     MPIR_Datatype_get_size_macro(MPI_REAL16, size);
-    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, &TYPEREP_YAKSA_TYPE__REAL16);
+    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__REAL16);
 
     MPIR_Datatype_get_size_macro(MPI_COMPLEX32, size);
-    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, &TYPEREP_YAKSA_TYPE__COMPLEX32);
+    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__COMPLEX32);
 
     MPIR_Datatype_get_size_macro(MPI_INTEGER16, size);
-    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, &TYPEREP_YAKSA_TYPE__INTEGER16);
+    yaksa_type_create_contig(size, YAKSA_TYPE__BYTE, NULL, &TYPEREP_YAKSA_TYPE__INTEGER16);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TYPEREP_INIT);
 }
