@@ -144,15 +144,19 @@ static int win_allgather(MPIR_Win * win, void *base, int disp_unit)
     int rc = 0, allrc = 0;
     MPIDI_OFI_WIN(win).mr = NULL;
     if (base || (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC && !MPIDI_OFI_ENABLE_MR_ALLOCATED)) {
-        MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain, /* In:  Domain Object */
-                                        base,   /* In:  Lower memory address */
-                                        win->size,      /* In:  Length              */
-                                        FI_REMOTE_READ | FI_REMOTE_WRITE,       /* In:  Expose MR for read  */
-                                        0ULL,   /* In:  offset(not used)    */
-                                        MPIDI_OFI_WIN(win).mr_key,      /* In:  requested key       */
-                                        0ULL,   /* In:  flags               */
-                                        &MPIDI_OFI_WIN(win).mr, /* Out: memregion object    */
-                                        NULL), rc);     /* In:  context             */
+        /* device buffers are not currently supported */
+        if (MPIR_GPU_query_pointer_is_dev(base))
+            rc = -1;
+        else
+            MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,     /* In:  Domain Object */
+                                            base,       /* In:  Lower memory address */
+                                            win->size,  /* In:  Length              */
+                                            FI_REMOTE_READ | FI_REMOTE_WRITE,   /* In:  Expose MR for read  */
+                                            0ULL,       /* In:  offset(not used)    */
+                                            MPIDI_OFI_WIN(win).mr_key,  /* In:  requested key       */
+                                            0ULL,       /* In:  flags               */
+                                            &MPIDI_OFI_WIN(win).mr,     /* Out: memregion object    */
+                                            NULL), rc); /* In:  context             */
     } else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
         goto fn_exit;
     }
@@ -841,15 +845,19 @@ int MPIDI_OFI_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
 
     int rc = 0, allrc = 0;
     struct fid_mr *mr = NULL;
-    MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,     /* In:  Domain Object */
-                                    base,       /* In:  Lower memory address */
-                                    size,       /* In:  Length              */
-                                    FI_REMOTE_READ | FI_REMOTE_WRITE,   /* In:  Expose MR for read  */
-                                    0ULL,       /* In:  offset(not used)    */
-                                    requested_key,      /* In:  requested key */
-                                    0ULL,       /* In:  flags               */
-                                    &mr,        /* Out: memregion object    */
-                                    NULL), rc); /* In:  context             */
+    /* device buffers are not currently supported */
+    if (MPIR_GPU_query_pointer_is_dev(base))
+        rc = -1;
+    else
+        MPIDI_OFI_CALL_RETURN(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain, /* In:  Domain Object */
+                                        base,   /* In:  Lower memory address */
+                                        size,   /* In:  Length              */
+                                        FI_REMOTE_READ | FI_REMOTE_WRITE,       /* In:  Expose MR for read  */
+                                        0ULL,   /* In:  offset(not used)    */
+                                        requested_key,  /* In:  requested key */
+                                        0ULL,   /* In:  flags               */
+                                        &mr,    /* Out: memregion object    */
+                                        NULL), rc);     /* In:  context             */
 
     /* Check if any process fails to register. If so, release local MR and force AM path. */
     MPIR_Allreduce(&rc, &allrc, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
