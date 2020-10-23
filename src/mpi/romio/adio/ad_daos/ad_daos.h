@@ -11,6 +11,7 @@
 #include <gurt/list.h>
 #include <daos.h>
 #include <daos_fs.h>
+#include <daos_uns.h>
 
 /* #define D_PRINT_IO */
 /* #define D_PRINT_IO_MEM */
@@ -31,10 +32,8 @@ struct adio_daos_hdl {
 };
 
 struct ADIO_DAOS_cont {
-    /** container uuid */
-    uuid_t cuuid;
-    /** pool uuid */
-    uuid_t puuid;
+    /** pool, container uuids + other attributes */
+    struct duns_attr_t attr;
     /** Container name (Path to the file opened) */
     char *cont_name;
     /** Object name (File name) */
@@ -49,10 +48,6 @@ struct ADIO_DAOS_cont {
     dfs_obj_t *obj;
     /** Array Object ID for the MPI file */
     daos_obj_id_t oid;
-    /** Object class of the DAOS object associated with the file */
-    daos_oclass_id_t obj_class;
-    /** data size to store in a dkey */
-    daos_size_t chunk_size;
     /** file open mode */
     unsigned int amode;
     /** Event queue to store all async requests on file */
