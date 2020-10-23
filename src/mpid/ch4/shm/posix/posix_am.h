@@ -11,6 +11,11 @@
 #include "posix_eager.h"
 #include "mpidu_genq.h"
 
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
+{
+    return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
+}
+
 /* Enqueue a request header onto the postponed message queue. This is a helper function and most
  * likely shouldn't be used outside of this file. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_enqueue_request(const void *am_hdr, size_t am_hdr_sz,
@@ -113,7 +118,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
     msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
-    msg_hdr.data_sz = data_sz;
+    if (data_sz + am_hdr_sz <= MPIDI_POSIX_am_eager_limit()) {
+        msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__SHORT;
+    } else {
+        msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__PIPELINE;
+    }
 
     /* If the data being sent is not contiguous, pack it into a contiguous buffer using the datatype
      * engine. */
@@ -287,11 +296,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
     return MPL_MIN(max_shortsend, MPIDI_POSIX_MAX_AM_HDR_SIZE);
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_limit(void)
-{
-    return MPIDI_POSIX_eager_payload_limit() - MAX_ALIGNMENT;
-}
-
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_eager_buf_limit(void)
 {
     return MPIDI_POSIX_eager_buf_limit();
@@ -361,7 +365,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
     msg_hdr.kind = kind;
     msg_hdr.handler_id = handler_id;
     msg_hdr.am_hdr_sz = am_hdr_sz;
-    msg_hdr.data_sz = 0;
+    msg_hdr.am_type = MPIDI_POSIX_AM_TYPE__HDR;
 
     if (unlikely(MPIDI_POSIX_global.postponed_queue)) {
         mpi_errno = MPIDI_POSIX_am_enqueue_req_hdr(am_hdr, am_hdr_sz, handler_id, grank, msg_hdr,

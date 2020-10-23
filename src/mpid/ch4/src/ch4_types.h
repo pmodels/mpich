@@ -100,6 +100,7 @@ typedef struct MPIDIG_put_msg_t {
     MPI_Aint target_datatype;
     MPI_Aint target_true_lb;
     int flattened_sz;
+    MPI_Aint origin_data_sz;
 } MPIDIG_put_msg_t;
 
 typedef struct MPIDIG_put_dt_ack_msg_t {
@@ -133,6 +134,7 @@ typedef struct MPIDIG_get_msg_t {
 
 typedef struct MPIDIG_get_ack_msg_t {
     MPIR_Request *greq_ptr;
+    MPI_Aint target_data_sz;
 } MPIDIG_get_ack_msg_t;
 
 typedef struct MPIDIG_cswap_req_msg_t {
@@ -157,7 +159,7 @@ typedef struct MPIDIG_acc_req_msg_t {
     MPI_Datatype target_datatype;
     MPI_Op op;
     MPI_Aint target_disp;
-    uint64_t result_data_sz;
+    MPI_Aint result_data_sz;
     int n_iov;
     int flattened_sz;
 } MPIDIG_acc_req_msg_t;
