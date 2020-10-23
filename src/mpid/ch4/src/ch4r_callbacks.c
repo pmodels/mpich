@@ -354,6 +354,7 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
 
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_UNEXPECTED;
+        rreq->status.MPI_ERROR = hdr->error_bits;
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
             /* this is unexpected RNDV */
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
@@ -406,11 +407,13 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, tag) = hdr->tag;
         MPIDIG_REQUEST(rreq, context_id) = hdr->context_id;
 
+        rreq->status.MPI_ERROR = hdr->error_bits;
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
             /* this is expected RNDV, init a special recv into unexp buffer */
             MPIDIG_REQUEST(rreq, req->rreq.peer_req_ptr) = hdr->sreq_ptr;
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
+            MPIDIG_recv_type_init(hdr->data_sz, rreq);
             MPIDIG_do_cts(rreq);
         }
     }
@@ -420,7 +423,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
         MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_PEER_SSEND;
     }
 
-    rreq->status.MPI_ERROR = hdr->error_bits;
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
@@ -472,7 +474,6 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
                     (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
                      MPIDIG_REQUEST(rreq, req->seq_no),
                      MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
-    MPIDIG_recv_type_init(in_data_sz, rreq);
 
     if (is_async) {
         *req = rreq;
