@@ -349,7 +349,8 @@ static int ack_get_acc(MPIR_Request * rreq)
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
                                      &ack_msg, sizeof(ack_msg),
                                      MPIDIG_REQUEST(rreq, req->areq.data),
-                                     MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq);
+                                     MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE,
+                                     rreq);
     else
 #endif
     {
@@ -359,7 +360,7 @@ static int ack_get_acc(MPIR_Request * rreq)
                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
                                     &ack_msg, sizeof(ack_msg),
                                     MPIDIG_REQUEST(rreq, req->areq.data),
-                                    MPIDIG_REQUEST(rreq, req->areq.data_sz), MPI_BYTE, rreq);
+                                    MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, rreq);
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -621,23 +622,22 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     char *original = NULL;
-    size_t data_sz;
+    MPI_Aint result_data_sz;
     int shm_locked ATTRIBUTE((unused)) = 0;
     MPIR_Win *win ATTRIBUTE((unused)) = MPIDIG_REQUEST(rreq, req->areq.win_ptr);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_GET_ACC_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_GET_ACC_CMPL);
 
-    data_sz = MPIDIG_REQUEST(rreq, req->areq.data_sz);
+    result_data_sz = MPIDIG_REQUEST(rreq, req->areq.result_data_sz);
 
     /* MPIDI_CS_ENTER(); */
 
-    original = (char *) MPL_malloc(data_sz, MPL_MEM_RMA);
+    original = (char *) MPL_malloc(result_data_sz, MPL_MEM_RMA);
     MPIR_Assert(original);
 
     if (MPIDIG_REQUEST(rreq, req->areq.op) == MPI_NO_OP) {
         MPIDIG_REQUEST(rreq, req->areq.origin_count) = MPIDIG_REQUEST(rreq, req->areq.target_count);
-        MPIDIG_REQUEST(rreq, req->areq.data_sz) = data_sz;
     }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_WIN(win, winattr) & MPIDI_WINATTR_SHM_ALLOCATED) {
@@ -652,7 +652,7 @@ static int handle_get_acc_cmpl(MPIR_Request * rreq)
                       MPIDIG_REQUEST(rreq, req->areq.target_count), MPIDIG_REQUEST(rreq,
                                                                                    req->
                                                                                    areq.target_datatype),
-                      0, original, data_sz, &actual_pack_bytes);
+                      0, original, result_data_sz, &actual_pack_bytes);
 
     mpi_errno = MPIDIG_compute_acc_op(MPIDIG_REQUEST(rreq, req->areq.data),
                                       MPIDIG_REQUEST(rreq, req->areq.origin_count),
@@ -1805,7 +1805,7 @@ int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint 
     MPIDIG_REQUEST(rreq, req->areq.op) = msg_hdr->op;
     MPIDIG_REQUEST(rreq, req->areq.data) = p_data;
     MPIDIG_REQUEST(rreq, req->areq.flattened_dt) = NULL;
-    MPIDIG_REQUEST(rreq, req->areq.data_sz) = msg_hdr->result_data_sz;
+    MPIDIG_REQUEST(rreq, req->areq.result_data_sz) = msg_hdr->result_data_sz;
     MPIDIG_REQUEST(rreq, rank) = msg_hdr->src_rank;
 
     if (msg_hdr->flattened_sz) {
@@ -1897,7 +1897,7 @@ int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Ai
     MPIDIG_REQUEST(rreq, req->areq.target_count) = msg_hdr->target_count;
     MPIDIG_REQUEST(rreq, req->areq.target_addr) = (void *) (offset + base);
     MPIDIG_REQUEST(rreq, req->areq.op) = msg_hdr->op;
-    MPIDIG_REQUEST(rreq, req->areq.data_sz) = msg_hdr->result_data_sz;
+    MPIDIG_REQUEST(rreq, req->areq.result_data_sz) = msg_hdr->result_data_sz;
     MPIDIG_REQUEST(rreq, rank) = msg_hdr->src_rank;
 
     void *flattened_dt = MPL_malloc(msg_hdr->flattened_sz, MPL_MEM_RMA);

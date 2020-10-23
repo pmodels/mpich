@@ -140,8 +140,10 @@ typedef struct MPIDIG_acc_req_t {
     int target_count;
     void *target_addr;
     void *flattened_dt;
-    void *data;
-    size_t data_sz;
+    void *data;                 /* for origin_data received and result_data being sent (in GET_ACC).
+                                 * Not to be confused with result_addr below which saves the
+                                 * result_addr parameter. */
+    MPI_Aint result_data_sz;    /* only used in GET_ACC */
     MPI_Op op;
     void *result_addr;
     int result_count;
