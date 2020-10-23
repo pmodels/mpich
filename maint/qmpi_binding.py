@@ -270,7 +270,7 @@ qmpi_h_file.write(f"enum QMPI_Functions_enum {{" "\n    "
 
 qmpi_h_file.write(""
         "typedef struct {\n"
-        "    void *storage_stack;\n"
+        "    void **storage_stack;\n"
         "} QMPI_Context;\n"
         "\n"
         );
@@ -286,6 +286,7 @@ qmpi_h_file.write("int QMPI_Register_function(int calling_tool_id, enum QMPI_Fun
 qmpi_h_file.write("int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,\n"
                   "                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;\n");
 qmpi_h_file.write("int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;\n");
+qmpi_h_file.write("int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;\n");
 
 print('int MPII_qmpi_register_internal_functions(void)\n{\n');
 print(''.join(register_list));

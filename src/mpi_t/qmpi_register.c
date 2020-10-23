@@ -5,6 +5,9 @@
  */
 
 #include "mpiimpl.h"
+#include <execinfo.h>
+#define BACKTRACE_SIZE 5
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -673,6 +676,54 @@ int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage)
     int mpi_errno = MPI_SUCCESS;
 
     *storage = MPIR_QMPI_storage[tool_id];
+
+    return mpi_errno;
+}
+
+int QMPI_Get_calling_address(QMPI_Context context, void **address)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    void *array[BACKTRACE_SIZE];
+    char **traces;
+    int size, i;
+    int trace_entry = 1;        /* pick entry at 1 by default */
+    char *target = NULL;
+
+    /* Capture the calling function address */
+    size = backtrace(array, BACKTRACE_SIZE);
+    traces = backtrace_symbols(array, size);
+    if (traces != NULL) {
+        for (i = 0; i < size; i++) {
+            /* Skip PMPI_* calls */
+            char search[] = "PMPI_";
+            char *found = strstr(traces[i], search);
+            if (found != NULL) {
+                trace_entry += i;
+                break;
+            }
+        }
+        /* Extract the address from the backtrace */
+        if (size > trace_entry) {
+            const char *start_pattern = "[";
+            const char *end_pattern = "]";
+
+            char *start, *end;
+            if (start = strstr(traces[trace_entry], start_pattern)) {
+                start += strlen(start_pattern);
+                if (end = strstr(start, end_pattern)) {
+                    target = (char *) malloc(end - start + 1);
+                    memcpy(target, start, end - start);
+                    target[end - start] = '\0';
+                }
+            }
+        }
+    }
+    free(traces);
+    /* Store the calling address */
+    *address = calloc(0, strlen(target) + 1);
+    memcpy(*address, target, strlen(target) + 1);
+    free(target);
 
     return mpi_errno;
 }
