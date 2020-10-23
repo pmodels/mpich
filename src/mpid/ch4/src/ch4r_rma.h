@@ -83,6 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_put(const void *origin_addr, int origin_c
     }
     am_hdr.preq_ptr = sreq;
     am_hdr.win_id = MPIDIG_WIN(win, win_id);
+    am_hdr.origin_data_sz = origin_data_sz;
 
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
