@@ -109,6 +109,7 @@ typedef struct MPIDIG_put_req_t {
     MPI_Datatype origin_datatype;
     void *target_addr;
     MPI_Datatype target_datatype;
+    MPI_Aint origin_data_sz;
 } MPIDIG_put_req_t;
 
 typedef struct MPIDIG_get_req_t {
