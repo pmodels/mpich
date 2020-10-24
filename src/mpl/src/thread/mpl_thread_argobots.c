@@ -9,13 +9,63 @@
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
-/* begin argobots impl */
 
-void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp)
+typedef struct {
+    MPL_thread_func_t func;
+    void *data;
+} thread_info;
+
+static void thread_start(void *arg)
 {
-    /* not used */
-    return;
+    thread_info *info = (thread_info *) arg;
+    MPL_thread_func_t func = info->func;
+    void *data = info->data;
+
+    free(arg);
+
+    func(data);
 }
 
-/* end argobots impl */
+static int thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp)
+{
+    if (ABT_initialized() != ABT_SUCCESS) {
+        /* Not initialized yet. */
+        return MPL_ERR_THREAD;
+    }
+
+    ABT_xstream xstream;
+    if (ABT_xstream_self(&xstream) != ABT_SUCCESS) {
+        /* Not executed on an execution stream. */
+        return MPL_ERR_THREAD;
+    }
+
+    ABT_pool pool;
+    if (ABT_xstream_get_main_pools(xstream, 1, &pool) != ABT_SUCCESS) {
+        return MPL_ERR_THREAD;
+    }
+
+    thread_info *info = (thread_info *) MPL_malloc(sizeof(thread_info), MPL_MEM_THREAD);
+    if (info == NULL) {
+        return MPL_ERR_THREAD;
+    }
+
+    info->func = func;
+    info->data = data;
+    /* Push this thread to the current ES's first pool. */
+    int err = ABT_thread_create(pool, thread_start, info, ABT_THREAD_ATTR_NULL, idp);
+    return (err == ABT_SUCCESS) ? MPL_SUCCESS : MPL_ERR_THREAD;
+}
+
+/*
+ * MPL_thread_create()
+ */
+void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp)
+{
+    int err = thread_create(func, data, idp);
+
+    if (errp != NULL) {
+        *errp = err;
+    }
+}
+
 #endif
