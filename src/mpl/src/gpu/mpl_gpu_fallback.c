@@ -11,6 +11,11 @@ int MPL_gpu_get_dev_count(int *dev_cnt, int *dev_id)
     return MPL_SUCCESS;
 }
 
+int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
+{
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     abort();
