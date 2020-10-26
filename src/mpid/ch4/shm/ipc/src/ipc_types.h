@@ -10,6 +10,7 @@
 
 typedef struct {
     MPIR_Group *node_group_ptr; /* cache node group, used at win_create. */
+    MPL_gpu_ipc_handle_type_t ipc_handle_type;
 } MPIDI_IPCI_global_t;
 
 /* memory handle definition

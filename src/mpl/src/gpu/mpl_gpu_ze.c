@@ -356,6 +356,12 @@ int MPL_gpu_local_to_global_dev_id(int local_dev_id)
     return local_to_global_map[local_dev_id];
 }
 
+int MPL_gpu_ipc_get_handle_type(MPL_gpu_ipc_handle_type_t * type)
+{
+    *type = MPL_GPU_IPC_HANDLE_SHAREABLE_FD;
+    return MPL_SUCCESS;
+}
+
 int MPL_gpu_ipc_handle_create(const void *ptr, MPL_gpu_ipc_mem_handle_t * ipc_handle)
 {
     int mpl_err = MPL_SUCCESS;
