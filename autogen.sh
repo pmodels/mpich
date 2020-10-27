@@ -602,6 +602,27 @@ else
 fi
 
 ########################################################################
+## Check for Python 3
+########################################################################
+
+echo_n "Checking for Python 3... "
+PYTHON=
+if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python
+fi
+
+if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python3
+fi
+
+if test -z "$PYTHON" ; then
+    echo "not found"
+    exit 1
+else
+    echo "$PYTHON"
+fi
+
+########################################################################
 ## Setup external packages
 ########################################################################
 
