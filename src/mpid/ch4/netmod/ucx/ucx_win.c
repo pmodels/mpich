@@ -50,22 +50,25 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
             mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
         status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
-        MPIDI_UCX_CHK_STATUS(status);
+        /* some memory types cannot be mapped, skip rkey packing */
+        if (status != UCS_ERR_UNSUPPORTED) {
+            MPIDI_UCX_CHK_STATUS(status);
 
-        /* query allocated address. */
-        mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
-        status = ucp_mem_query(mem_h, &mem_attr);
-        MPIDI_UCX_CHK_STATUS(status);
+            /* query allocated address. */
+            mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
+            status = ucp_mem_query(mem_h, &mem_attr);
+            MPIDI_UCX_CHK_STATUS(status);
 
-        *base_ptr = mem_attr.address;
-        MPIR_Assert(mem_attr.length >= length);
+            *base_ptr = mem_attr.address;
+            MPIR_Assert(mem_attr.length >= length);
 
-        MPIDI_UCX_WIN(win).mem_h = mem_h;
+            MPIDI_UCX_WIN(win).mem_h = mem_h;
 
-        /* pack the key */
-        status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
+            /* pack the key */
+            status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
 
-        MPIDI_UCX_CHK_STATUS(status);
+            MPIDI_UCX_CHK_STATUS(status);
+        }
     }
 
     rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
