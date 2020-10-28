@@ -244,8 +244,8 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     void *host_sendbuf;
     void *host_recvbuf;
 
-    MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, recvcount, datatype, &host_sendbuf,
-                                &host_recvbuf);
+    MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, MPIR_Comm_size(comm_ptr) * recvcount, datatype,
+                                &host_sendbuf, &host_recvbuf);
     if (host_sendbuf)
         sendbuf = host_sendbuf;
     if (host_recvbuf)
