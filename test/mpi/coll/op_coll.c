@@ -268,9 +268,7 @@ void test_op_coll_with_root(int rank, int size, int root)
     MPI_Exscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0)
-            my_assert(recvbuf_h[i] == 0xdeadbeef);
-        else
+        if (rank != 0)
             my_assert(recvbuf_h[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 
@@ -285,9 +283,7 @@ void test_op_coll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0)
-            my_assert(recvbuf_h[i] == 0xdeadbeef);
-        else
+        if (rank != 0)
             my_assert(recvbuf_h[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 }
