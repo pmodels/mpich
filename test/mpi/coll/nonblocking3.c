@@ -616,9 +616,7 @@ static void check_after_completion(struct laundry *l)
 
         case 18:       /* MPI_Iexscan */
             for (i = 0; i < COUNT; ++i) {
-                if (rank == 0)
-                    my_assert(recvbuf[i] == 0xdeadbeef);
-                else
+                if (rank != 0)
                     my_assert(recvbuf[i] ==
                               ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
             }
