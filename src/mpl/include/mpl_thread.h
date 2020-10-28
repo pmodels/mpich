@@ -38,8 +38,8 @@ typedef int MPL_thread_tls_key_t;
 typedef void (*MPL_thread_func_t) (void *data);
 #define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = 0;}
 #define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = 0;}
-#define MPL_thread_init(err_ptr_)      do { } while (0)
-#define MPL_thread_finalize(err_ptr_)  do { } while (0)
+#define MPL_thread_init(err_ptr_)      do { *((int*)err_ptr_) = 0;} while (0)
+#define MPL_thread_finalize(err_ptr_)  do { *((int*)err_ptr_) = 0;} while (0)
 #define MPL_thread_yield()             do { } while (0)
 #else
 #error "thread package (MPL_THREAD_PACKAGE_NAME) not defined or unknown"
