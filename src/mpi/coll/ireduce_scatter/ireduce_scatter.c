@@ -367,7 +367,10 @@ int MPIR_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcount
     void *in_recvbuf = recvbuf;
     void *host_sendbuf;
     void *host_recvbuf;
-    int count = recvcounts[MPIR_Comm_rank(comm_ptr)];
+    int count = 0;
+
+    for (int i = 0; i < MPIR_Comm_size(comm_ptr); i++)
+        count += recvcounts[i];
 
     MPIR_Coll_host_buffer_alloc(sendbuf, recvbuf, count, datatype, &host_sendbuf, &host_recvbuf);
     if (host_sendbuf)
