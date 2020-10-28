@@ -142,6 +142,18 @@ int MPI_Request_free(MPI_Request * request)
                 break;
             }
 
+        case MPIR_REQUEST_KIND__PREQUEST_BCAST:
+            {
+                /* If this is an active persistent request, we must also
+                 * release the partner request. */
+                if (request_ptr->u.persist.real_request != NULL) {
+                    MPIR_Request_free(request_ptr->u.persist.real_request);
+                }
+                MPII_Genutil_sched_free(request_ptr->u.persist.sched);
+                break;
+
+            }
+
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno = MPIR_Grequest_free(request_ptr);

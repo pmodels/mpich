@@ -42,6 +42,7 @@ my %bufpos = (
     "MPI_Alltoallv" => [0, -1, -1, 4, -1, -1],
     "MPI_Alltoallw" => [0, -1, -1, 4, -1, -1],
     "MPI_Bcast" => [0, 1, 2],
+    "MPIX_Bcast_init" => [0, 1, 2],
     "MPI_Bsend" => [0, 1, 2],
     "MPI_Bsend_init" => [0, 1, 2],
     "MPI_Buffer_attach" => [0, -1, -1],

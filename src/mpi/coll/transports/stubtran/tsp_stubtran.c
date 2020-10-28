@@ -74,3 +74,8 @@ int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
 {
     return MPI_SUCCESS;
 }
+
+int MPII_Stubutil_sched_reset(MPII_Stubutil_sched_t * sched)
+{
+    return MPI_SUCCESS;
+}

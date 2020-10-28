@@ -299,6 +299,7 @@ void MPII_Genutil_vtx_copy(void *_dst, const void *_src)
     utarray_concat(dst->out_vtcs, src->out_vtcs, MPL_MEM_COLL);
 
     dst->pending_dependencies = src->pending_dependencies;
+    dst->num_dependencies = src->num_dependencies;
     dst->u = src->u;
     dst->next = src->next;
 }
@@ -345,8 +346,10 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 
         /* increment pending_dependencies only if the incoming
          * vertex is not complete yet */
-        if (in_vtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
+        if (in_vtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE) {
+            vtx->num_dependencies++;
             vtx->pending_dependencies++;
+        }
     }
 
     /* check if there was any fence operation and add appropriate dependencies.
@@ -364,8 +367,10 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 
         /* increment pending_dependencies only if the incoming
          * vertex is not complete yet */
-        if (sched_fence->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
+        if (sched_fence->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE) {
             vtx->pending_dependencies++;
+            vtx->num_dependencies++;
+        }
     }
 }
 
@@ -385,6 +390,7 @@ int MPII_Genutil_vtx_create(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t ** 
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
     vtxp->vtx_id = sched->total_vtcs++;
     vtxp->pending_dependencies = 0;
+    vtxp->num_dependencies = 0;
     vtxp->next = NULL;
 
     return vtxp->vtx_id;        /* return vertex vtx_id */
@@ -420,8 +426,9 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
             *made_progress = TRUE;
 
         /* Go over all the vertices and issue ready vertices */
-        for (i = 0; i < sched->total_vtcs; i++) {
-            vtx_issue(i, (vtx_t *) utarray_eltptr(sched->vtcs, i), sched);
+        vtx_t *vtx = ut_type_array(sched->vtcs, vtx_t *);
+        for (i = 0; i < sched->total_vtcs; i++, vtx++) {
+            vtx_issue(i, vtx, sched);
         }
 
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -556,6 +563,32 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPII_Genutil_sched_reset(MPII_Genutil_sched_t * sched)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
+
+    sched->completed_vtcs = 0;
+    sched->issued_head = sched->issued_tail = NULL;
+    for (i = 0; i < sched->total_vtcs; i++) {
+        MPIR_ERR_CHKANDJUMP(!(utarray_eltptr(sched->vtcs, i)), mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPII_Genutil_vtx_t *vtx = (MPII_Genutil_vtx_t *) utarray_eltptr(sched->vtcs, i);
+        vtx->pending_dependencies = vtx->num_dependencies;
+        vtx->vtx_state = MPII_GENUTIL_VTX_STATE__INIT;
+        if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
+            vtx->u.imcast.last_complete = -1;
+        }
+    }
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_GENUTIL_SCHED_RESET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

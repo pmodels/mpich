@@ -504,6 +504,20 @@ function MPIR_Ibcast_cdesc(buffer, count, datatype, root, comm, request) &
     integer(c_int) :: ierror
 end function MPIR_Ibcast_cdesc
 
+function MPIR_Bcast_init_cdesc(buffer, count, datatype, root, comm, info, request) &
+    bind(C, name="MPIR_Bcast_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Info, c_Request
+    implicit none
+    type(*), dimension(..) :: buffer
+    integer(c_int), value, intent(in) :: count, root
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Bcast_init_cdesc
+
 function MPIR_Exscan_cdesc(sendbuf, recvbuf, count, datatype, op, comm) &
     bind(C, name="MPIR_Exscan_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int

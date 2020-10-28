@@ -917,7 +917,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_barrier:MPI_Barrier failed
 **mpi_barrier %C:MPI_Barrier(comm=%C) failed
 **mpi_bcast:MPI_Bcast failed
-**mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, comm=%C) failed
+**mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, %C) failed
+**mpix_bcast_init:MPIX_Bcast_init failed
+**mpix_bcast_init %p %d %D %d %C %I %p:MPIX_Bcast_init(buf=%p, count=%d, %D, root=%d, %C, %I, request=%p) failed
 **mpi_gather:MPI_Gather failed
 **mpi_gather %p %d %D %p %d %D %d %C:MPI_Gather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
 **mpi_gatherv:MPI_Gatherv failed

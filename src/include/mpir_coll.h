@@ -283,6 +283,8 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
                MPIR_Errflag_t * errflag);
 int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                     MPIR_Errflag_t * errflag);
+int MPIR_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
+                    MPIR_Info * info_ptr, MPIR_Request ** request);
 
 /* intracomm-only functions */
 int MPIR_Bcast_allcomm_auto(void *buffer, int count, MPI_Datatype datatype, int root,

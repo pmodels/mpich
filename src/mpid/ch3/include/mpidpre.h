@@ -616,6 +616,9 @@ int MPID_Recv_init( void *buf, int count, MPI_Datatype datatype,
 
 int MPID_Startall(int count, MPIR_Request *requests[]);
 
+int MPID_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
+               MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request);
+
 int MPID_Probe(int, int, MPIR_Comm *, int, MPI_Status *);
 int MPID_Iprobe(int, int, MPIR_Comm *, int, int *, MPI_Status *);
 

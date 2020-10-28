@@ -1047,6 +1047,20 @@ interface MPI_Ibcast
     end subroutine MPI_Ibcast_f08ts
 end interface MPI_Ibcast
 
+interface MPIX_Bcast_init
+    subroutine MPIX_Bcast_init_f08ts(buffer, count, datatype, root, comm, info, request, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Comm, MPI_Info, MPI_Request
+        implicit none
+        type(*), dimension(..), asynchronous :: buffer
+        integer, intent(in) :: count, root
+        type(MPI_Datatype), intent(in) :: datatype
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Info), intent(in) :: info
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Bcast_init_f08ts
+end interface MPIX_Bcast_init
+
 interface MPI_Exscan
     subroutine MPI_Exscan_f08ts(sendbuf, recvbuf, count, datatype, op, comm, ierror)
         use :: mpi_f08_types, only : MPI_Datatype, MPI_Op, MPI_Comm

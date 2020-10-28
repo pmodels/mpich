@@ -60,7 +60,8 @@ typedef enum {
     MPIDI_PTYPE_RECV,
     MPIDI_PTYPE_SEND,
     MPIDI_PTYPE_BSEND,
-    MPIDI_PTYPE_SSEND
+    MPIDI_PTYPE_SSEND,
+    MPIDI_PTYPE_BCAST,
 } MPIDI_ptype;
 
 #define MPIDIG_REQ_BUSY           (0x1)

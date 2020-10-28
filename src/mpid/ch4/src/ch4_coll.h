@@ -1362,4 +1362,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *sendbuf, const int *send
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Bcast_init(void *buffer, int count, MPI_Datatype datatype,
+                                             int root, MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                             MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST_INIT);
+
+    mpi_errno = MPIR_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST_INIT);
+    return mpi_errno;
+}
+
 #endif /* CH4_COLL_H_INCLUDED */

@@ -18,6 +18,7 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK,
     MPII_GENUTIL_VTX_KIND__SINK,
     MPII_GENUTIL_VTX_KIND__FENCE,
+    MPII_GENUTIL_VTX_KIND__SCHED,
     MPII_GENUTIL_VTX_KIND__LAST,        /* marks the last built-in kind */
 } MPII_Genutil_vtx_kind_e;
 
@@ -26,6 +27,8 @@ typedef enum {
     MPII_GENUTIL_VTX_STATE__ISSUED,
     MPII_GENUTIL_VTX_STATE__COMPLETE,
 } MPII_Genutil_vtx_state_e;
+
+struct MPII_Genutil_sched_t;
 
 typedef struct MPII_Genutil_vtx_t {
     int vtx_kind;
@@ -36,6 +39,7 @@ typedef struct MPII_Genutil_vtx_t {
     UT_array *out_vtcs;
 
     int pending_dependencies;
+    int num_dependencies;
 
     union {
         struct {
@@ -94,12 +98,17 @@ typedef struct MPII_Genutil_vtx_t {
         struct {
             void *data;
         } generic;
+        struct {
+            struct MPII_Genutil_sched_t *sched;
+            MPIR_Request *req;
+            int is_persistent;
+        } sched;
     } u;
 
     struct MPII_Genutil_vtx_t *next;
 } MPII_Genutil_vtx_t;
 
-typedef struct {
+typedef struct MPII_Genutil_sched_t {
     UT_array *vtcs;
     int total_vtcs;
     int completed_vtcs;

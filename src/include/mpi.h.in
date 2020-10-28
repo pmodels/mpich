@@ -1565,6 +1565,10 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 int MPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
 int MPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
 
+/* Persistent Collectives Extensions */
+int MPIX_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
+               MPI_Comm comm, MPI_Info info, MPI_Request* request )
+               MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
@@ -2218,6 +2222,11 @@ int PMPIX_Comm_agree(MPI_Comm comm, int *flag) MPICH_API_PUBLIC;
 
 int PMPIX_GPU_query_support(int gpu_type, int *is_supported) MPICH_API_PUBLIC;
 int PMPIX_Query_cuda_support(void) MPICH_API_PUBLIC;
+
+/* Persistent Collectives Extensions */
+int PMPIX_Bcast_init( void *buffer, int count, MPI_Datatype datatype, int root,
+               MPI_Comm comm, MPI_Info info, MPI_Request* request )
+               MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_API_PUBLIC;
 
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */

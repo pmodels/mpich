@@ -24,7 +24,6 @@
 #undef MPIR_TSP_sched_malloc
 #undef MPIR_TSP_sched_start
 #undef MPIR_TSP_sched_free
-#undef MPIR_TSP_sched_optimize
 #undef MPIR_TSP_sched_reset
 
 #define MPIR_TSP_TRANSPORT_NAME             Stubtran_
@@ -48,6 +47,7 @@
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 #define MPIR_TSP_sched_free                 MPII_Stubutil_sched_free
+#define MPIR_TSP_sched_reset                MPII_Stubutil_sched_reset
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, bool is_persistent);
 void MPII_Stubutil_sched_free(MPII_Stubutil_sched_t * sched);
@@ -83,5 +83,6 @@ void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
 void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);
+int MPII_Stubutil_sched_reset(MPII_Stubutil_sched_t * sched);
 
 #endif /* TSP_STUBTRAN_H_INCLUDED */

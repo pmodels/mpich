@@ -7,6 +7,8 @@
 #define CH4_STARTALL_H_INCLUDED
 
 #include "ch4_impl.h"
+#include "tsp_gentran.h"
+#include "gentran_utils.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 {
@@ -20,6 +22,31 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
         /* continue if the source/dest is MPI_PROC_NULL */
         if (MPIDIG_REQUEST(preq, rank) == MPI_PROC_NULL)
             continue;
+
+        /* Persistent collectives support */
+        if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_BCAST) {
+            MPIR_TSP_sched_reset(preq->u.persist.sched);
+            mpi_errno = MPIR_TSP_sched_start(preq->u.persist.sched,
+                                             preq->comm, &preq->u.persist.real_request);
+            if (mpi_errno == MPI_SUCCESS) {
+                preq->status.MPI_ERROR = MPI_SUCCESS;
+                preq->cc_ptr = &preq->u.persist.real_request->cc;
+            }
+            /* --BEGIN ERROR HANDLING-- */
+            else {
+                /* If a failure occurs attempting to start the request, then we
+                 * assume that partner request was not created, and stuff
+                 * the error code in the persistent request.  The wait and test
+                 * routines will look at the error code in the persistent
+                 * request if a partner request is not present. */
+                preq->u.persist.real_request = NULL;
+                preq->status.MPI_ERROR = mpi_errno;
+                preq->cc_ptr = &preq->cc;
+                MPIR_cc_set(&preq->cc, 0);
+            }
+            /* --END ERROR HANDLING-- */
+            continue;
+        }
 
         switch (MPIDI_PREQUEST(preq, p_type)) {
 

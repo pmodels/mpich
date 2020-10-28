@@ -109,6 +109,12 @@ EXPORTS
 	mpi_bcast__=pmpi_bcast__
 	_mpi_bcast_=pmpi_bcast__
 	mpi_bcast_=pmpi_bcast__
+	pmpix_bcast_init__
+	pmpix_bcast_init_=pmpix_bcast_init__
+	_pmpix_bcast_init_=pmpix_bcast_init__
+	mpix_bcast_init__=pmpix_bcast_init__
+	_mpix_bcast_init_=pmpix_bcast_init__
+	mpix_bcast_init_=pmpix_bcast_init__
 	pmpi_bsend__
 	pmpi_bsend_=pmpi_bsend__
 	_pmpi_bsend_=pmpi_bsend__

@@ -60,6 +60,12 @@ void MPII_Genutil_sched_free(MPII_Genutil_sched_t * sched)
         if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
             MPL_free(vtx->u.imcast.req);
             utarray_free(vtx->u.imcast.dests);
+        } else if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__SCHED) {
+            /* In normal case, sub schedule is free'ed when it is done
+             * only when the sub-scheduler is persistent */
+            if (vtx->u.sched.is_persistent) {
+                MPII_Genutil_sched_free(vtx->u.sched.sched);
+            }
         } else if (vtx->vtx_kind > MPII_GENUTIL_VTX_KIND__LAST) {
             MPII_Genutil_vtx_type_t *type = vtype + vtx->vtx_kind - MPII_GENUTIL_VTX_KIND__LAST - 1;
             MPIR_Assert(type != NULL);

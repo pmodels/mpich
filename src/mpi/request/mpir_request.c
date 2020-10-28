@@ -152,6 +152,34 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 break;
             }
 
+        case MPIR_REQUEST_KIND__PREQUEST_BCAST:
+            {
+                if (request_ptr->u.persist.real_request != NULL) {
+                    MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
+
+                    /* reset persistent request to inactive state */
+                    MPIR_cc_set(&request_ptr->cc, 0);
+                    request_ptr->cc_ptr = &request_ptr->cc;
+                    request_ptr->u.persist.real_request = NULL;
+
+                    MPIR_Request_extract_status(prequest_ptr, status);
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+
+                    MPIR_Request_free(prequest_ptr);
+                } else {
+                    MPIR_Status_set_empty(status);
+                    /* --BEGIN ERROR HANDLING-- */
+                    if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
+                        /* if the persistent request failed to start then make the
+                         * error code available */
+                        mpi_errno = request_ptr->status.MPI_ERROR;
+                    }
+                    /* --END ERROR HANDLING-- */
+                }
+
+                break;
+            }
+
         case MPIR_REQUEST_KIND__GREQUEST:
             {
                 mpi_errno = MPIR_Grequest_query(request_ptr);
