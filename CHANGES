@@ -22,8 +22,6 @@
 
 # Add support for Arm compiler toolchain
 
-# Add support for NVIDIA HPC compilers
-
 # Add support for flang/f18 Fortran compiler
 
 # Add support for AddressSanitizer and UndefinedBehaviorSanitizer to
