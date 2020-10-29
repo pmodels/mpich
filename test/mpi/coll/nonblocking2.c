@@ -430,9 +430,7 @@ void test_icoll_with_root(int rank, int size, int root)
     MPI_Iexscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0)
-            my_assert(recvbuf[i] == 0xdeadbeef);
-        else
+        if (rank != 0)
             my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 
