@@ -25,6 +25,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->auto_cleanup = -1;
     user_global->pmi_port = -1;
     user_global->skip_launch_node = -1;
+    user_global->gpus_per_proc = HYD_GPUS_PER_PROC_UNSET;
 
     HYDU_init_global_env(&user_global->global_env);
 }

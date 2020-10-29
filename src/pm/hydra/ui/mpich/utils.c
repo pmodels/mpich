@@ -132,6 +132,7 @@ static void help_help_fn(void)
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
     printf("    -pmi-port                        use the PMI_PORT model\n");
     printf("    -skip-launch-node                do not run MPI processes on the launch node\n");
+    printf("    -gpus-per-proc                   number of GPUs per process (default: auto)\n");
 
     printf("\n");
     printf("Please see the intructions provided at\n");
@@ -1434,6 +1435,46 @@ static HYD_status skip_launch_node_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void gpus_per_proc_help_fn(void)
+{
+    printf("\n");
+    printf("-gpus-per-proc: Number of GPUs assigned to each process\n");
+    printf("   Sets the appropriate environment variables for CUDA\n");
+    printf("   Users have to ensure that there are enough GPUs on each node\n\n");
+    printf
+        ("   AUTO: All GPUs if CUDA is shared compute mode and none in exclusive mode (default)\n");
+    printf("   <value>: Numeric value >= 0\n\n");
+}
+
+static HYD_status gpus_per_proc_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    if (reading_config_file && HYD_server_info.user_global.gpus_per_proc != HYD_GPUS_PER_PROC_UNSET) {
+        /* global variable already set; ignore */
+        goto fn_exit;
+    }
+
+    HYDU_ERR_CHKANDJUMP(status,
+                        HYD_server_info.user_global.gpus_per_proc != HYD_GPUS_PER_PROC_UNSET,
+                        HYD_INTERNAL_ERROR, "GPUs per proc already set\n");
+
+    if (!strcmp(**argv, "AUTO")) {
+        HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
+    } else {
+        HYD_server_info.user_global.gpus_per_proc = atoi(**argv);
+        HYDU_ERR_CHKANDJUMP(status, HYD_server_info.user_global.gpus_per_proc < 0,
+                            HYD_INTERNAL_ERROR, "invalid number of GPUs per proc\n");
+    }
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status set_default_values(void)
 {
     char *tmp;
@@ -1519,6 +1560,9 @@ static HYD_status set_default_values(void)
 
     if (HYD_server_info.user_global.skip_launch_node == -1)
         HYD_server_info.user_global.skip_launch_node = 0;
+
+    if (HYD_server_info.user_global.gpus_per_proc == HYD_GPUS_PER_PROC_UNSET)
+        HYD_server_info.user_global.gpus_per_proc = HYD_GPUS_PER_PROC_AUTO;
 
   fn_exit:
     return status;
@@ -1797,6 +1841,8 @@ static struct HYD_arg_match_table match_table[] = {
     {"usize", usize_fn, usize_help_fn},
     {"pmi-port", pmi_port_fn, pmi_port_help_fn},
     {"skip-launch-node", skip_launch_node_fn, skip_launch_node_help_fn},
+    {"gpus-per-proc", gpus_per_proc_fn, gpus_per_proc_help_fn},
+    {"g", gpus_per_proc_fn, gpus_per_proc_help_fn},
 
     {"\0", NULL}
 };
