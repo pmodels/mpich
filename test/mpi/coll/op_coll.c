@@ -150,7 +150,7 @@ void test_op_coll_with_root(int rank, int size, int root)
             recvbuf_h[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MTestCopyContent(buf_h, buf, COUNT * sizeof(int), memtype);
+    MTestCopyContent(buf_h, buf, size * COUNT * sizeof(int), memtype);
     MTestCopyContent(recvbuf_h, recvbuf, COUNT * sizeof(int), memtype);
     MPI_Reduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
@@ -172,7 +172,7 @@ void test_op_coll_with_root(int rank, int size, int root)
             recvbuf_h[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MTestCopyContent(buf_h, buf, COUNT * sizeof(int), memtype);
+    MTestCopyContent(buf_h, buf, size * COUNT * sizeof(int), memtype);
     MTestCopyContent(recvbuf_h, recvbuf, COUNT * sizeof(int), memtype);
     MPI_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
@@ -194,10 +194,9 @@ void test_op_coll_with_root(int rank, int size, int root)
             recvbuf_h[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MTestCopyContent(buf_h, buf, COUNT * sizeof(int), memtype);
+    MTestCopyContent(buf_h, buf, size * COUNT * sizeof(int), memtype);
     MTestCopyContent(recvbuf_h, recvbuf, COUNT * sizeof(int), memtype);
     MPI_Reduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Wait(&req, MPI_STATUS_IGNORE);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf_h[j] == (size * rank + ((size - 1) * size) / 2));
@@ -216,7 +215,7 @@ void test_op_coll_with_root(int rank, int size, int root)
             recvbuf_h[i * COUNT + j] = 0xdeadbeef;
         }
     }
-    MTestCopyContent(buf_h, buf, COUNT * sizeof(int), memtype);
+    MTestCopyContent(buf_h, buf, size * COUNT * sizeof(int), memtype);
     MTestCopyContent(recvbuf_h, recvbuf, COUNT * sizeof(int), memtype);
     MPI_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
@@ -268,9 +267,7 @@ void test_op_coll_with_root(int rank, int size, int root)
     MPI_Exscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0)
-            my_assert(recvbuf_h[i] == 0xdeadbeef);
-        else
+        if (rank != 0)
             my_assert(recvbuf_h[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 
@@ -285,9 +282,7 @@ void test_op_coll_with_root(int rank, int size, int root)
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     MTestCopyContent(recvbuf, recvbuf_h, COUNT * sizeof(int), memtype);
     for (i = 0; i < COUNT; ++i) {
-        if (rank == 0)
-            my_assert(recvbuf_h[i] == 0xdeadbeef);
-        else
+        if (rank != 0)
             my_assert(recvbuf_h[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 }
