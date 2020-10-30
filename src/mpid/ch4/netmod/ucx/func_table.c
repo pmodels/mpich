@@ -58,14 +58,10 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
 };
 
 MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {
-    .mpi_send = MPIDI_NM_mpi_send,
-    .send_coll = MPIDI_NM_send_coll,
-    .mpi_ssend = MPIDI_NM_mpi_ssend,
     .mpi_isend = MPIDI_NM_mpi_isend,
     .isend_coll = MPIDI_NM_isend_coll,
     .mpi_issend = MPIDI_NM_mpi_issend,
     .mpi_cancel_send = MPIDI_NM_mpi_cancel_send,
-    .mpi_recv = MPIDI_NM_mpi_recv,
     .mpi_irecv = MPIDI_NM_mpi_irecv,
     .mpi_imrecv = MPIDI_NM_mpi_imrecv,
     .mpi_cancel_recv = MPIDI_NM_mpi_cancel_recv,

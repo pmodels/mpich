@@ -8,26 +8,6 @@
 
 #include "stubshm_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_send(const void *buf,
-                                                    MPI_Aint count,
-                                                    MPI_Datatype datatype,
-                                                    int rank,
-                                                    int tag,
-                                                    MPIR_Comm * comm, int context_offset,
-                                                    MPIR_Request ** request)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
-    return MPI_SUCCESS;
-}
-
-
-
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_irsend(const void *buf,
                                                   MPI_Aint count,
                                                   MPI_Datatype datatype,
@@ -42,23 +22,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_irsend(const void *buf,
     MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_IRSEND);
-    return MPI_SUCCESS;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_ssend(const void *buf,
-                                                     MPI_Aint count,
-                                                     MPI_Datatype datatype,
-                                                     int rank,
-                                                     int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIR_Request ** request)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
     return MPI_SUCCESS;
 }
 

@@ -8,24 +8,6 @@
 
 #include "stubshm_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_recv(void *buf,
-                                                    MPI_Aint count,
-                                                    MPI_Datatype datatype,
-                                                    int rank,
-                                                    int tag,
-                                                    MPIR_Comm * comm,
-                                                    int context_offset, MPI_Status * status,
-                                                    MPIR_Request ** request)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
-    return MPI_SUCCESS;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_STUBSHM_mpi_imrecv(void *buf,
                                                       MPI_Aint count,
                                                       MPI_Datatype datatype,
