@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 /*
  * Keyvals.  These are handled just like the other opaque objects in MPICH
  * The predefined keyvals (and their associated attributes) are handled

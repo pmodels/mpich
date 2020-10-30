@@ -188,4 +188,18 @@ typedef struct MPIR_Attribute {
 #endif
 } MPIR_Attribute;
 
+/*
+  Keyval and attribute storage
+ */
+extern MPIR_Object_alloc_t MPII_Keyval_mem;
+extern MPIR_Object_alloc_t MPID_Attr_mem;
+extern MPII_Keyval MPII_Keyval_direct[];
+
+int MPIR_Attr_dup_list(int, MPIR_Attribute *, MPIR_Attribute **);
+int MPIR_Attr_delete_list(int, MPIR_Attribute **);
+MPIR_Attribute *MPID_Attr_alloc(void);
+void MPID_Attr_free(MPIR_Attribute * attr_ptr);
+int MPIR_Call_attr_delete(int, MPIR_Attribute *);
+int MPIR_Call_attr_copy(int, MPIR_Attribute *, void **, int *);
+
 #endif /* MPIR_ATTR_H_INCLUDED */
