@@ -264,22 +264,6 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
     /* --END ERROR HANDLING-- */
 }
 
-/* This function is called by the fortran bindings. */
-/* FIXME: There is no reason to have this routine since it unnecessarily
-   duplicates the MPII_Comm_get_attr interface. */
-int MPII_Comm_get_attr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
-                            int *flag, MPIR_Attr_type outAttrType)
-{
-    int mpi_errno;
-
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    mpi_errno = MPII_Comm_get_attr(comm, comm_keyval, attribute_val, flag, outAttrType);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
-    return mpi_errno;
-}
-
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
