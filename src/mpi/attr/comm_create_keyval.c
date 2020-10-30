@@ -26,43 +26,6 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
 #undef MPI_Comm_create_keyval
 #define MPI_Comm_create_keyval PMPI_Comm_create_keyval
 
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                                 int *comm_keyval, void *extra_state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
-
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
-
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_COMM << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_COMM;
-    keyval_ptr->extra_state = extra_state;
-    keyval_ptr->copyfn.user_function = comm_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = comm_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
-    MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
-}
-
 #endif
 
 /*@
@@ -126,9 +89,8 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
 
     /* ... body of routine ...  */
 
-    mpi_errno =
-        MPIR_Comm_create_keyval_impl(comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval,
-                                     extra_state);
+    mpi_errno = MPIR_Comm_create_keyval_impl(comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval,
+                                             extra_state);
     if (mpi_errno)
         goto fn_fail;
 

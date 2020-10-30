@@ -24,83 +24,12 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 #undef MPI_Comm_set_attr
 #define MPI_Comm_set_attr PMPI_Comm_set_attr
 
-int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
-                            MPIR_Attr_type attrType)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr = NULL;
-    MPIR_Attribute *p;
-
-    MPIR_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL,
-                        "**keyvalinvalid");
-
-    /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
-     * were added, with the most recent first. This uses
-     * a simple linear list algorithm because few applications use more than a
-     * handful of attributes */
-
-    MPII_Keyval_get_ptr(comm_keyval, keyval_ptr);
-    MPIR_Assert(keyval_ptr != NULL);
-
-    /* printf("Setting attr val to %x\n", attribute_val); */
-    p = comm_ptr->attributes;
-    while (p) {
-        if (p->keyval->handle == keyval_ptr->handle) {
-            /* If found, call the delete function before replacing the
-             * attribute */
-            mpi_errno = MPIR_Call_attr_delete(comm_ptr->handle, p);
-            if (mpi_errno) {
-                goto fn_fail;
-            }
-            p->attrType = attrType;
-            /* FIXME: This code is incorrect in some cases, particularly
-             * in the case where intptr_t is different from MPI_Aint,
-             * since in that case, the Fortran 9x interface will provide
-             * more bytes in the attribute_val than this allows. The
-             * dual casts are a sign that this is faulty. This will
-             * need to be fixed in the type/win set_attr routines as
-             * well. */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
-            /* printf("Updating attr at %x\n", &p->value); */
-            /* Does not change the reference count on the keyval */
-            break;
-        }
-        p = p->next;
-    }
-    /* CHANGE FOR MPI 2.2: If not found, add at the beginning */
-    if (!p) {
-        MPIR_Attribute *new_p = MPID_Attr_alloc();
-        MPIR_ERR_CHKANDJUMP(!new_p, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        /* Did not find in list.  Add at end */
-        new_p->keyval = keyval_ptr;
-        new_p->attrType = attrType;
-        new_p->pre_sentinal = 0;
-        /* FIXME: See the comment above on this dual cast. */
-        new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
-        new_p->post_sentinal = 0;
-        new_p->next = comm_ptr->attributes;
-        MPII_Keyval_add_ref(keyval_ptr);
-        comm_ptr->attributes = new_p;
-        /* printf("Creating attr at %x\n", &new_p->value); */
-    }
-
-    /* Here is where we could add a hook for the device to detect attribute
-     * value changes, using something like
-     * MPID_Comm_attr_hook(comm_ptr, keyval, attribute_val);
-     */
-
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR_Attr_type attrType)
+int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
+                       MPIR_Attr_type attr_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPII_Keyval *keyval_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_COMM_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -129,12 +58,13 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPII_Keyval *keyval_ptr = NULL;
-
             /* Validate comm_ptr */
             MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
             /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
+            MPIR_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL,
+                                "**keyvalinvalid");
+
             MPII_Keyval_get_ptr(comm_keyval, keyval_ptr);
             MPII_Keyval_valid_ptr(keyval_ptr, mpi_errno);
             if (mpi_errno)
@@ -145,10 +75,9 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, MPIR
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, comm_keyval, attribute_val, attrType);
+    mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, keyval_ptr, attribute_val, attr_type);
     if (mpi_errno)
         goto fn_fail;
-
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -26,5 +26,6 @@ mpi_sources +=                                      \
     src/mpi/attr/win_set_attr.c
 
 mpi_core_sources +=         \
+    src/mpi/attr/attr_impl.c \
     src/mpi/attr/attrutil.c \
     src/mpi/attr/dup_fn.c
