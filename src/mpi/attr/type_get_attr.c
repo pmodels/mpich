@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_get_attr */
 #if defined(HAVE_PRAGMA_WEAK)
