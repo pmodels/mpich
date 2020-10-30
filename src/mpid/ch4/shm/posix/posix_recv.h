@@ -22,21 +22,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_recv_posted_hook(MPIR_Request * reques
     MPIDI_POSIX_EAGER_RECV_POSTED_HOOK(request, rank, comm);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_recv(void *buf,
-                                                  MPI_Aint count,
-                                                  MPI_Datatype datatype,
-                                                  int rank,
-                                                  int tag,
-                                                  MPIR_Comm * comm,
-                                                  int context_offset, MPI_Status * status,
-                                                  MPIR_Request ** request)
-{
-    int mpi_errno =
-        MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request, 1);
-    MPIDI_POSIX_recv_posted_hook(*request, rank, comm);
-    return mpi_errno;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_imrecv(void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPIR_Request * message)
 {
