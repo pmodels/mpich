@@ -125,9 +125,6 @@ MPICH_API_PUBLIC int MPII_Comm_get_attr(MPI_Comm, int, void *, int *, MPIR_Attr_
 MPICH_API_PUBLIC int MPII_Type_get_attr(MPI_Datatype, int, void *, int *, MPIR_Attr_type);
 MPICH_API_PUBLIC int MPII_Win_get_attr(MPI_Win, int, void *, int *, MPIR_Attr_type);
 
-MPICH_API_PUBLIC int MPII_Comm_get_attr_fort(MPI_Comm, int, void *, int *, MPIR_Attr_type);
-
-
 #if defined(__cplusplus)
 extern "C" {
 #endif

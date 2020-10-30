@@ -386,10 +386,10 @@ foreach $_ (@ARGV) {
 # at the end.  This is used with the attribute routines which must 
 # pass an additional argument to a special attribute routine that handles
 # the differences between C and Fortran attributes.
-%ChangeCall = ( 'Comm_get_attr' => 'MPII_Comm_get_attr_fort:!MPIR_ATTR_AINT' ,
+%ChangeCall = ( 'Comm_get_attr' => 'MPII_Comm_get_attr:!MPIR_ATTR_AINT' ,
 		'Type_get_attr' => 'MPII_Type_get_attr:!MPIR_ATTR_AINT',
 		'Win_get_attr'  => 'MPII_Win_get_attr:!MPIR_ATTR_AINT',
-		'Attr_get'      => 'MPII_Comm_get_attr_fort:!MPIR_ATTR_INT',
+		'Attr_get'      => 'MPII_Comm_get_attr:!MPIR_ATTR_INT',
 		'Comm_set_attr' => 'MPII_Comm_set_attr:!MPIR_ATTR_AINT',
 		'Type_set_attr' => 'MPII_Type_set_attr:!MPIR_ATTR_AINT',
 		'Win_set_attr'  => 'MPII_Win_set_attr:!MPIR_ATTR_AINT',
