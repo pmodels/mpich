@@ -23,23 +23,6 @@ int MPI_Comm_free_keyval(int *comm_keyval) __attribute__ ((weak, alias("PMPI_Com
 #undef MPI_Comm_free_keyval
 #define MPI_Comm_free_keyval PMPI_Comm_free_keyval
 
-void MPIR_Comm_free_keyval_impl(int keyval)
-{
-    int in_use;
-    MPII_Keyval *keyval_ptr;
-
-    MPII_Keyval_get_ptr(keyval, keyval_ptr);
-    if (!keyval_ptr->was_freed) {
-        keyval_ptr->was_freed = 1;
-        MPII_Keyval_release_ref(keyval_ptr, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
-        }
-    }
-    return;
-}
-
-
 #endif
 
 /*@
@@ -63,6 +46,7 @@ Key values are global (they can be used with any and all communicators)
 int MPI_Comm_free_keyval(int *comm_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPII_Keyval *keyval_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_FREE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -88,8 +72,6 @@ int MPI_Comm_free_keyval(int *comm_keyval)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPII_Keyval *keyval_ptr = NULL;
-
             /* Convert MPI object handles to object pointers */
             MPII_Keyval_get_ptr(*comm_keyval, keyval_ptr);
 
@@ -103,7 +85,7 @@ int MPI_Comm_free_keyval(int *comm_keyval)
 
     /* ... body of routine ...  */
 
-    MPIR_Comm_free_keyval_impl(*comm_keyval);
+    MPIR_free_keyval(keyval_ptr);
     *comm_keyval = MPI_KEYVAL_INVALID;
 
     /* ... end of body of routine ... */

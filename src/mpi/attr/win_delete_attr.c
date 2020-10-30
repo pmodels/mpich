@@ -48,7 +48,6 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_Attribute *p, **old_p;
     MPII_Keyval *keyval_ptr = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_DELETE_ATTR);
 
@@ -94,44 +93,10 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 
     /* ... body of routine ...  */
 
-    /* Look for attribute.  They are ordered by keyval handle */
-
-    old_p = &win_ptr->attributes;
-    p = win_ptr->attributes;
-    while (p) {
-        if (p->keyval->handle == keyval_ptr->handle) {
-            break;
-        }
-        old_p = &p->next;
-        p = p->next;
-    }
-
-    /* We can't unlock yet, because we must not free the attribute until
-     * we know whether the delete function has returned with a 0 status
-     * code */
-
-    if (p) {
-        /* Run the delete function, if any, and then free the attribute
-         * storage */
-        mpi_errno = MPIR_Call_attr_delete(win, p);
-
-        /* --BEGIN ERROR HANDLING-- */
-        if (!mpi_errno) {
-            int in_use;
-            /* We found the attribute.  Remove it from the list */
-            *old_p = p->next;
-            /* Decrement the use of the keyval */
-            MPII_Keyval_release_ref(p->keyval, &in_use);
-            if (!in_use) {
-                MPIR_Handle_obj_free(&MPII_Keyval_mem, p->keyval);
-            }
-            MPID_Attr_free(p);
-        }
-        /* --END ERROR HANDLING-- */
-    }
-
-    if (mpi_errno != MPI_SUCCESS)
+    mpi_errno = MPIR_Win_delete_attr_impl(win_ptr, keyval_ptr);
+    if (mpi_errno != MPI_SUCCESS) {
         goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

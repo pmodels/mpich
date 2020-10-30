@@ -314,10 +314,6 @@ typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, va
 int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
                             int type, int attr);
 
-int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                                 int *comm_keyval, void *extra_state);
 int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
@@ -330,7 +326,6 @@ int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
-void MPIR_Comm_free_keyval_impl(int keyval);
 void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr);
 void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr);
 void MPIR_Comm_get_name_impl(MPIR_Comm * comm, char *comm_name, int *resultlen);
@@ -353,8 +348,6 @@ int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Inf
                          MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                               MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
-                            MPIR_Attr_type attrType);
 
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
