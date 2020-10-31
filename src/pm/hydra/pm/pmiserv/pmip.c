@@ -162,6 +162,7 @@ int main(int argc, char **argv)
                                   HYD_POLLIN, NULL, HYD_pmcd_pmip_control_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
+    done = 0;
     while (1) {
         /* Wait for some event to occur */
         status = HYDT_dmx_wait_for_event(-1);
@@ -181,10 +182,24 @@ int main(int argc, char **argv)
         }
         if (!count)
             break;
+
+        pid = waitpid(-1, &ret_status, WNOHANG);
+        if (pid > 0) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                if (HYD_pmcd_pmip.downstream.pid[i] == pid) {
+                    HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
+                    if (WIFSIGNALED(ret_status)) {
+                        /* kill all processes */
+                        HYD_pmcd_pmip_send_signal(SIGKILL);
+                    }
+                    done++;
+                    break;
+                }
+            }
+        }
     }
 
     /* Now wait for the processes to finish */
-    done = 0;
     while (1) {
         pid = waitpid(-1, &ret_status, 0);
 
