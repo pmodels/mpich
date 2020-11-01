@@ -23,18 +23,6 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint * displacement)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_lb
 #define MPI_Type_lb PMPI_Type_lb
-
-void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement)
-{
-    if (HANDLE_IS_BUILTIN(datatype)) {
-        *displacement = 0;
-    } else {
-        MPIR_Datatype *datatype_ptr = NULL;
-        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-        *displacement = datatype_ptr->lb;
-    }
-}
-
 #endif
 
 /*@
