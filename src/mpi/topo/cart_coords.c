@@ -54,8 +54,6 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *cart_ptr;
-    int i, nnodes;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_COORDS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -93,12 +91,13 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    cart_ptr = MPIR_Topology_get(comm_ptr);
-
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPIR_Topology *cart_ptr;
+            cart_ptr = MPIR_Topology_get(comm_ptr);
+
             MPIR_ERR_CHKANDJUMP((!cart_ptr ||
                                  cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY,
                                 "**notcarttopo");
@@ -114,13 +113,9 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    /* Calculate coords */
-    nnodes = cart_ptr->topo.cart.nnodes;
-    for (i = 0; i < cart_ptr->topo.cart.ndims; i++) {
-        nnodes = nnodes / cart_ptr->topo.cart.dims[i];
-        coords[i] = rank / nnodes;
-        rank = rank % nnodes;
+    mpi_errno = MPIR_Cart_coords(comm_ptr, rank, maxdims, coords);
+    if (mpi_errno) {
+        goto fn_fail;
     }
 
     /* ... end of body of routine ... */

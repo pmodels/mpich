@@ -25,8 +25,6 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[], const i
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Dist_graph_create
 #define MPI_Dist_graph_create PMPI_Dist_graph_create
-/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
- * correctly handle weak symbols and the profiling interface */
 #endif
 
 /*@

@@ -26,4 +26,5 @@ mpi_sources +=                          \
     src/mpi/topo/dist_gr_neighb.c
 
 mpi_core_sources +=       \
+    src/mpi/topo/topo_impl.c \
     src/mpi/topo/topoutil.c

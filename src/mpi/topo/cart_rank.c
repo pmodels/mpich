@@ -23,32 +23,6 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Cart_rank
 #define MPI_Cart_rank PMPI_Cart_rank
-
-void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank)
-{
-    int i, ndims, coord, multiplier;
-
-    ndims = cart_ptr->topo.cart.ndims;
-    *rank = 0;
-    multiplier = 1;
-    for (i = ndims - 1; i >= 0; i--) {
-        coord = coords[i];
-        if (cart_ptr->topo.cart.periodic[i]) {
-            if (coord >= cart_ptr->topo.cart.dims[i])
-                coord = coord % cart_ptr->topo.cart.dims[i];
-            else if (coord < 0) {
-                coord = coord % cart_ptr->topo.cart.dims[i];
-                if (coord)
-                    coord = cart_ptr->topo.cart.dims[i] + coord;
-            }
-        }
-        *rank += multiplier * coord;
-        multiplier *= cart_ptr->topo.cart.dims[i];
-    }
-    return;
-}
-
-
 #endif
 
 /*@

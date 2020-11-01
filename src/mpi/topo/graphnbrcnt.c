@@ -23,32 +23,6 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Graph_neighbors_count
 #define MPI_Graph_neighbors_count PMPI_Graph_neighbors_count
-
-int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighbors)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Topology *graph_ptr;
-
-    graph_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP((!graph_ptr ||
-                         graph_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY,
-                        "**notgraphtopo");
-    MPIR_ERR_CHKANDJUMP2((rank < 0 ||
-                          rank >= graph_ptr->topo.graph.nnodes), mpi_errno, MPI_ERR_RANK, "**rank",
-                         "**rank %d %d", rank, graph_ptr->topo.graph.nnodes);
-
-    if (rank == 0)
-        *nneighbors = graph_ptr->topo.graph.index[rank];
-    else
-        *nneighbors = graph_ptr->topo.graph.index[rank] - graph_ptr->topo.graph.index[rank - 1];
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 
