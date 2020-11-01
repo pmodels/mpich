@@ -24,26 +24,6 @@ int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *fl
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_valuelen
 #define MPI_Info_get_valuelen PMPI_Info_get_valuelen
-
-void MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valuelen, int *flag)
-{
-    MPIR_Info *curr_ptr;
-
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            *valuelen = (int) strlen(curr_ptr->value);
-            *flag = 1;
-            break;
-        }
-        curr_ptr = curr_ptr->next;
-    }
-
-    return;
-}
-
 #endif
 
 /*@

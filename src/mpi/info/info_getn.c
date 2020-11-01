@@ -24,23 +24,6 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_nkeys
 #define MPI_Info_get_nkeys PMPI_Info_get_nkeys
-
-void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
-{
-    int n;
-
-    info_ptr = info_ptr->next;
-    n = 0;
-
-    while (info_ptr) {
-        info_ptr = info_ptr->next;
-        n++;
-    }
-    *nkeys = n;
-
-    return;
-}
-
 #endif
 
 
