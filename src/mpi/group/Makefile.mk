@@ -18,6 +18,7 @@ mpi_sources +=                            \
     src/mpi/group/group_union.c
 
 mpi_core_sources += \
+    src/mpi/group/group_impl.c \
     src/mpi/group/grouputil.c
 
 noinst_HEADERS += src/mpi/group/group.h
