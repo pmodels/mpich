@@ -23,11 +23,6 @@ int MPI_Comm_free(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_free")
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_free
 #define MPI_Comm_free PMPI_Comm_free
-
-int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr)
-{
-    return MPIR_Comm_release(comm_ptr);
-}
 #endif
 
 /*@

@@ -24,55 +24,6 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group * group)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_group
 #define MPI_Comm_group PMPI_Comm_group
-
-int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i, lpid, n;
-    int comm_world_size = MPIR_Process.comm_world->local_size;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GROUP_IMPL);
-    /* Create a group if necessary and populate it with the
-     * local process ids */
-    if (!comm_ptr->local_group) {
-        n = comm_ptr->local_size;
-        mpi_errno = MPIR_Group_create(n, group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        (*group_ptr)->is_local_dense_monotonic = TRUE;
-        for (i = 0; i < n; i++) {
-            (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, FALSE);
-            (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
-            if (lpid > comm_world_size ||
-                (i > 0 && (*group_ptr)->lrank_to_lpid[i - 1].lpid != (lpid - 1))) {
-                (*group_ptr)->is_local_dense_monotonic = FALSE;
-            }
-        }
-
-        (*group_ptr)->size = n;
-        (*group_ptr)->rank = comm_ptr->rank;
-        (*group_ptr)->idx_of_first_lpid = -1;
-
-        comm_ptr->local_group = *group_ptr;
-    } else {
-        *group_ptr = comm_ptr->local_group;
-    }
-
-    /* FIXME : Add a sanity check that the size of the group is the same as
-     * the size of the communicator.  This helps catch corrupted
-     * communicators */
-
-    MPIR_Group_add_ref(comm_ptr->local_group);
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GROUP_IMPL);
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
-}
-
 #endif
 
 /*@

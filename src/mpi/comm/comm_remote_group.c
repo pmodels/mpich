@@ -24,43 +24,6 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_remote_group
 #define MPI_Comm_remote_group PMPI_Comm_remote_group
-
-int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i, lpid, n;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
-    /* Create a group and populate it with the local process ids */
-    if (!comm_ptr->remote_group) {
-        n = comm_ptr->remote_size;
-        mpi_errno = MPIR_Group_create(n, group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        for (i = 0; i < n; i++) {
-            (void) MPID_Comm_get_lpid(comm_ptr, i, &lpid, TRUE);
-            (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
-            /* TODO calculate is_local_dense_monotonic */
-        }
-        (*group_ptr)->size = n;
-        (*group_ptr)->rank = MPI_UNDEFINED;
-        (*group_ptr)->idx_of_first_lpid = -1;
-
-        comm_ptr->remote_group = *group_ptr;
-    } else {
-        *group_ptr = comm_ptr->remote_group;
-    }
-    MPIR_Group_add_ref(comm_ptr->remote_group);
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
-}
-
 #endif
 
 /*@
