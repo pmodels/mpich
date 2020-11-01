@@ -4,6 +4,7 @@
 ##
 
 mpi_sources +=                       \
+    src/mpi/comm/comm_impl.c         \
     src/mpi/comm/comm_compare.c      \
     src/mpi/comm/comm_create.c       \
     src/mpi/comm/comm_create_group.c \

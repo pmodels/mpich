@@ -275,8 +275,8 @@ int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm);
 
-/* implements the logic for MPI_Comm_create for intracommunicators only */
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);

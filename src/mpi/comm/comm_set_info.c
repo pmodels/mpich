@@ -25,25 +25,6 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_set_info
 #define MPI_Comm_set_info PMPI_Comm_set_info
-
-int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-
-    mpi_errno = MPII_Comm_set_hints(comm_ptr, info_ptr);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

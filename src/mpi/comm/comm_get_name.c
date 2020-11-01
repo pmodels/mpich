@@ -23,15 +23,6 @@ int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_get_name
 #define MPI_Comm_get_name PMPI_Comm_get_name
-
-void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultlen)
-{
-    /* The user must allocate a large enough section of memory */
-    MPL_strncpy(comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME);
-    *resultlen = (int) strlen(comm_name);
-    return;
-}
-
 #endif
 
 

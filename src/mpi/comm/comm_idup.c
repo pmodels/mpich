@@ -24,46 +24,6 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
 #undef MPI_Comm_idup
 #define MPI_Comm_idup PMPI_Comm_idup
 
-/* any non-MPI functions go here, especially non-static ones */
-
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcommp,
-                        MPIR_Request ** reqp)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *new_attributes = 0;
-
-    /* Copy attributes, executing the attribute copy functions */
-    /* This accesses the attribute dup function through the perprocess
-     * structure to prevent comm_dup from forcing the linking of the
-     * attribute functions.  The actual function is (by default)
-     * MPIR_Attr_dup_list
-     */
-    if (MPIR_Process.attr_dup) {
-        mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    mpi_errno = MPII_Comm_copy_data(comm_ptr, info, newcommp);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*newcommp)->attributes = new_attributes;
-
-    /* We now have a mostly-valid new communicator, so begin the process of
-     * allocating a context ID to use for actual communication */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIR_Get_intercomm_contextid_nonblock(comm_ptr, *newcommp, reqp);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        mpi_errno = MPIR_Get_contextid_nonblock(comm_ptr, *newcommp, reqp);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@
