@@ -23,9 +23,6 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Get_elements
 #define MPI_Get_elements PMPI_Get_elements
-
-/* any non-MPI functions go here, especially non-static ones */
-
 #endif
 
 /*@

@@ -23,17 +23,6 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint * true_lb, MPI_Aint
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_get_true_extent
 #define MPI_Type_get_true_extent PMPI_Type_get_true_extent
-
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
-                                    MPI_Aint * true_extent)
-{
-    MPI_Count true_lb_x, true_extent_x;
-
-    MPIR_Type_get_true_extent_x_impl(datatype, &true_lb_x, &true_extent_x);
-    *true_lb = (true_lb_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_lb_x;
-    *true_extent = (true_extent_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint) true_extent_x;
-}
-
 #endif
 
 /*@

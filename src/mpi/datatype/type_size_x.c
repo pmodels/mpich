@@ -23,18 +23,6 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count * size)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_size_x
 #define MPI_Type_size_x PMPI_Type_size_x
-
-/* any non-MPI functions go here, especially non-static ones */
-
-int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Datatype_get_size_macro(datatype, *size);
-
-    return mpi_errno;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@
