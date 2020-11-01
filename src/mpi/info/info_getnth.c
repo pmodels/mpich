@@ -24,36 +24,6 @@ int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get_nthkey
 #define MPI_Info_get_nthkey PMPI_Info_get_nthkey
-
-int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_ptr;
-    int nkeys;
-
-    curr_ptr = info_ptr->next;
-    nkeys = 0;
-    while (curr_ptr && nkeys != n) {
-        curr_ptr = curr_ptr->next;
-        nkeys++;
-    }
-
-    /* verify that n is valid */
-    MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n,
-                         nkeys);
-
-    /* if key is MPI_MAX_INFO_KEY long, MPL_strncpy will null-terminate it for
-     * us */
-    MPL_strncpy(key, curr_ptr->key, MPI_MAX_INFO_KEY);
-    /* Eventually, we could remember the location of this key in
-     * the head using the key/value locations (and a union datatype?) */
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

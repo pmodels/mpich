@@ -24,39 +24,6 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_get
 #define MPI_Info_get PMPI_Info_get
-
-int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char *value, int *flag)
-{
-    MPIR_Info *curr_ptr;
-    int err = 0, mpi_errno = 0;
-
-    curr_ptr = info_ptr->next;
-    *flag = 0;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            err = MPL_strncpy(value, curr_ptr->value, valuelen + 1);
-            /* +1 because the MPI Standard says "In C, valuelen
-             * (passed to MPI_Info_get) should be one less than the
-             * amount of allocated space to allow for the null
-             * terminator*/
-            *flag = 1;
-            break;
-        }
-        curr_ptr = curr_ptr->next;
-    }
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (err != 0) {
-        mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPI_ERR_INFO_VALUE, "**infovallong", NULL);
-    }
-    /* --END ERROR HANDLING-- */
-
-    return mpi_errno;
-}
-
 #endif
 
 /*@
