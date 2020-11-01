@@ -26,8 +26,6 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int so
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Dist_graph_create_adjacent
 #define MPI_Dist_graph_create_adjacent PMPI_Dist_graph_create_adjacent
-/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
- * correctly handle weak symbols and the profiling interface */
 #endif
 
 /*@

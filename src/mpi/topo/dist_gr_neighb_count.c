@@ -23,29 +23,6 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Dist_graph_neighbors_count
 #define MPI_Dist_graph_neighbors_count PMPI_Dist_graph_neighbors_count
-/* any utility functions should go here, usually prefixed with PMPI_LOCAL to
- * correctly handle weak symbols and the profiling interface */
-
-int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, int *outdegree,
-                                         int *weighted)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Topology *topo_ptr = NULL;
-
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIR_ERR_CHKANDJUMP(!topo_ptr ||
-                        topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY,
-                        "**notdistgraphtopo");
-    *indegree = topo_ptr->topo.dist_graph.indegree;
-    *outdegree = topo_ptr->topo.dist_graph.outdegree;
-    *weighted = topo_ptr->topo.dist_graph.is_weighted;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@
