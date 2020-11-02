@@ -87,31 +87,10 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-#ifdef HAVE_NAMEPUB_SERVICE
-    {
-        /* The standard leaves explicitly undefined what happens if the code
-         * attempts to unpublish a name that is not published.  In this case,
-         * MPI_Unpublish_name could be called before a name service structure
-         * is allocated. */
-        if (!MPIR_Namepub) {
-            mpi_errno = MPID_NS_Create(info_ptr, &MPIR_Namepub);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-            MPIR_Add_finalize((int (*)(void *)) MPID_NS_Free, &MPIR_Namepub, 9);
-        }
-
-        mpi_errno = MPID_NS_Unpublish(MPIR_Namepub, info_ptr, (const char *) service_name);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-
+    mpi_errno = MPIR_Unpublish_name(service_name, info_ptr, port_name);
+    if (mpi_errno) {
+        goto fn_fail;
     }
-#else
-    {
-        /* No name publishing service available */
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
-    }
-#endif
 
     /* ... end of body of routine ... */
 

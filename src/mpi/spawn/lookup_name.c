@@ -24,13 +24,6 @@ int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Lookup_name
 #define MPI_Lookup_name PMPI_Lookup_name
-
-/* One of these routines needs to define the global handle.  Since
-   Most routines will use lookup (if they use any of the name publishing
-   interface at all), we place this in MPI_Lookup_name.
-*/
-MPID_NS_Handle MPIR_Namepub = 0;
-
 #endif
 
 /*@
