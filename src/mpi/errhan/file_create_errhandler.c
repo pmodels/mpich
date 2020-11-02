@@ -46,8 +46,11 @@ Output Parameters:
 int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn,
                                MPI_Errhandler * errhandler)
 {
+#ifndef MPI_MODE_RDONLY
+    return MPI_ERR_INTERN;
+#else
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errhandler *errhan_ptr;
+
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -69,14 +72,10 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 
     /* ... body of routine ...  */
 
-    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
-    MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    errhan_ptr->language = MPIR_LANG__C;
-    errhan_ptr->kind = MPIR_FILE;
-    MPIR_Object_set_ref(errhan_ptr, 1);
-    errhan_ptr->errfn.C_File_Handler_function = file_errhandler_fn;
+    mpi_errno = MPIR_File_create_errhandler_impl(file_errhandler_fn, errhandler);
+    if (mpi_errno)
+        goto fn_fail;
 
-    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -98,4 +97,5 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
     mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif /* MPI_MODE_RDONLY */
 }

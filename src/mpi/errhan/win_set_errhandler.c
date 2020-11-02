@@ -45,7 +45,6 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    int in_use;
     MPIR_Errhandler *errhan_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_ERRHANDLER);
 
@@ -98,19 +97,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 
     /* ... body of routine ...  */
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
-
-    if (win_ptr->errhandler != NULL) {
-        MPIR_Errhandler_release_ref(win_ptr->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Errhandler_free(win_ptr->errhandler);
-        }
-    }
-
-    MPIR_Errhandler_add_ref(errhan_ptr);
-    win_ptr->errhandler = errhan_ptr;
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPIR_Win_set_errhandler_impl(win_ptr, errhan_ptr);
 
     /* ... end of body of routine ... */
 

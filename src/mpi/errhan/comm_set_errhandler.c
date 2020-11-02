@@ -23,30 +23,6 @@ int MPI_Comm_set_errhandler(MPI_Comm comm, MPI_Errhandler errhandler)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_set_errhandler
 #define MPI_Comm_set_errhandler PMPI_Comm_set_errhandler
-
-void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr)
-{
-    int in_use;
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
-
-    /* We don't bother with the case where the errhandler is NULL;
-     * in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
-     * which is builtin and can never be freed. */
-    if (comm_ptr->errhandler != NULL) {
-        MPIR_Errhandler_release_ref(comm_ptr->errhandler, &in_use);
-        if (!in_use) {
-            MPIR_Errhandler_free(comm_ptr->errhandler);
-        }
-    }
-
-    MPIR_Errhandler_add_ref(errhandler_ptr);
-    comm_ptr->errhandler = errhandler_ptr;
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
-    return;
-}
-
 #endif
 
 

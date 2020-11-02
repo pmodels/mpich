@@ -46,10 +46,6 @@ Output Parameters:
 int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef MPI_MODE_RDONLY
-    MPI_Errhandler eh;
-    MPIR_Errhandler *e;
-#endif
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,14 +70,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 
     /* ... body of routine ...  */
 
-    MPIR_ROMIO_Get_file_errhand(file, &eh);
-    if (!eh) {
-        MPIR_Errhandler_get_ptr(MPI_ERRORS_RETURN, e);
-    } else {
-        MPIR_Errhandler_get_ptr(eh, e);
-    }
-    MPIR_Errhandler_add_ref(e);
-    *errhandler = e->handle;
+    MPIR_File_get_errhandler_impl(file, errhandler);
 
 #else
     /* Dummy in case ROMIO is not defined */
