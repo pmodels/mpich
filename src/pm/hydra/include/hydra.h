@@ -257,6 +257,9 @@ typedef enum {
 #define HYD_USIZE_SYSTEM    (-1)
 #define HYD_USIZE_INFINITE  (-2)
 
+#define HYD_GPUS_PER_PROC_UNSET   (-1)
+#define HYD_GPUS_PER_PROC_AUTO    (-2)
+
 #if defined(NEEDS_GETHOSTNAME_DECL)
 int gethostname(char *name, size_t len);
 #endif
@@ -403,6 +406,8 @@ struct HYD_user_global {
 
     int auto_cleanup;
     int pmi_port;
+    int skip_launch_node;
+    int gpus_per_proc;
 
     struct HYD_env_global global_env;
 };
