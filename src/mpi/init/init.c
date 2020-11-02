@@ -8,27 +8,6 @@
 
 #include <strings.h>
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-categories:
-    - name        : THREADS
-      description : multi-threading cvars
-
-cvars:
-    - name        : MPIR_CVAR_DEFAULT_THREAD_LEVEL
-      category    : THREADS
-      type        : string
-      default     : "MPI_THREAD_SINGLE"
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Sets the default thread level to use when using MPI_INIT. This variable
-        is case-insensitive.
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
 
 /* -- Begin Profiling Symbol Block for routine MPI_Init */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -47,9 +26,6 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Init
 #define MPI_Init PMPI_Init
-
-/* Any internal routines can go here.  Make them static if possible */
-
 #endif
 
 /*@
@@ -110,25 +86,7 @@ int MPI_Init(int *argc, char ***argv)
 
     /* ... body of routine ... */
 
-    int threadLevel = MPI_THREAD_SINGLE;
-    const char *tmp_str;
-    if (MPL_env2str("MPIR_CVAR_DEFAULT_THREAD_LEVEL", &tmp_str)) {
-        if (!strcasecmp(tmp_str, "MPI_THREAD_MULTIPLE"))
-            threadLevel = MPI_THREAD_MULTIPLE;
-        else if (!strcasecmp(tmp_str, "MPI_THREAD_SERIALIZED"))
-            threadLevel = MPI_THREAD_SERIALIZED;
-        else if (!strcasecmp(tmp_str, "MPI_THREAD_FUNNELED"))
-            threadLevel = MPI_THREAD_FUNNELED;
-        else if (!strcasecmp(tmp_str, "MPI_THREAD_SINGLE"))
-            threadLevel = MPI_THREAD_SINGLE;
-        else {
-            MPL_error_printf("Unrecognized thread level %s\n", tmp_str);
-            exit(1);
-        }
-    }
-
-    int provided;
-    mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
+    mpi_errno = MPIR_Init(argc, argv);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
