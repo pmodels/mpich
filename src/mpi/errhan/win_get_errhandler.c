@@ -87,17 +87,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
 
     /* ... body of routine ...  */
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
-
-    if (win_ptr->errhandler) {
-        *errhandler = win_ptr->errhandler->handle;
-        MPIR_Errhandler_add_ref(win_ptr->errhandler);
-    } else {
-        /* Use the default */
-        *errhandler = MPI_ERRORS_ARE_FATAL;
-    }
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
+    MPIR_Win_get_errhandler_impl(win_ptr, errhandler);
 
     /* ... end of body of routine ... */
 

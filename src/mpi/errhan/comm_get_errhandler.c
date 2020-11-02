@@ -23,20 +23,6 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_get_errhandler
 #define MPI_Comm_get_errhandler PMPI_Comm_get_errhandler
-
-/* MPIR_Comm_get_errhandler_impl
-   returning NULL for errhandler_ptr means the default handler, MPI_ERRORS_ARE_FATAL is used */
-void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr)
-{
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
-    *errhandler_ptr = comm_ptr->errhandler;
-    if (comm_ptr->errhandler)
-        MPIR_Errhandler_add_ref(comm_ptr->errhandler);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
-
-    return;
-}
-
 #endif
 
 /*@
@@ -60,7 +46,6 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Errhandler *errhandler_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -99,11 +84,7 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
 
     /* ... body of routine ...  */
 
-    MPIR_Comm_get_errhandler_impl(comm_ptr, &errhandler_ptr);
-    if (errhandler_ptr)
-        *errhandler = errhandler_ptr->handle;
-    else
-        *errhandler = MPI_ERRORS_ARE_FATAL;
+    MPIR_Comm_get_errhandler_impl(comm_ptr, errhandler);
 
     /* ... end of body of routine ... */
 
