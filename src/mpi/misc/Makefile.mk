@@ -10,5 +10,7 @@ mpi_sources +=              \
     src/mpi/misc/library_version.c \
     src/mpi/misc/aint_add.c \
     src/mpi/misc/aint_diff.c \
-    src/mpi/misc/utils.c \
     src/mpi/misc/gpu.c
+
+mpi_core_sources += \
+    src/mpi/misc/utils.c
