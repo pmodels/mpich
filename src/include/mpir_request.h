@@ -574,6 +574,14 @@ int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPI_Grequest_cancel_function *,
                              MPIX_Grequest_poll_function *,
                              MPIX_Grequest_wait_function *, void *, MPIR_Request **);
+int MPIX_Grequest_class_create_impl(MPI_Grequest_query_function * query_fn,
+                                    MPI_Grequest_free_function * free_fn,
+                                    MPI_Grequest_cancel_function * cancel_fn,
+                                    MPIX_Grequest_poll_function * poll_fn,
+                                    MPIX_Grequest_wait_function * wait_fn,
+                                    MPIX_Grequest_class * greq_class);
+int MPIX_Grequest_class_allocate_impl(MPIX_Grequest_class greq_class,
+                                      void *extra_state, MPI_Request * request);
 
 /* These routines below are helpers for the Extended generalized requests. */
 
