@@ -56,6 +56,11 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
+int MPIR_Init(int *argc, char ***argv);
+int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided);
+int MPIR_Finalize(void);
+int MPIR_Abort_impl(MPIR_Comm * comm_ptr, int errorcode);
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 

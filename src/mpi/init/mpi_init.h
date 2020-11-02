@@ -40,8 +40,6 @@ cvars:
 */
 
 /* Definitions local to src/mpi/init only */
-int MPIR_Init_thread(int *, char ***, int, int *);
-
 void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
