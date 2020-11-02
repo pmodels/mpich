@@ -24,16 +24,6 @@ int MPI_Grequest_complete(MPI_Request request)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Grequest_complete
 #define MPI_Grequest_complete PMPI_Grequest_complete
-
-/* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
-   static; this macro expands into "static" if weak symbols are supported and
-   into nothing otherwise. */
-void MPIR_Grequest_complete(MPIR_Request * request_ptr)
-{
-    MPIR_Request_complete(request_ptr);
-}
-
 #endif
 
 /*@
