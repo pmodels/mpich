@@ -23,13 +23,6 @@ int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm co
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_connect
 #define MPI_Comm_connect PMPI_Comm_connect
-
-int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
-                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
-{
-    return MPID_Comm_connect(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
-}
-
 #endif
 
 /*@

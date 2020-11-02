@@ -22,12 +22,6 @@ int MPI_Open_port(MPI_Info info, char *port_name) __attribute__ ((weak, alias("P
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Open_port
 #define MPI_Open_port PMPI_Open_port
-
-int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
-{
-    return MPID_Open_port(info_ptr, port_name);
-}
-
 #endif
 
 /*@

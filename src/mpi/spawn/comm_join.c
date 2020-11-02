@@ -17,87 +17,11 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm) __attribute__ ((weak, alias("PMP
 #endif
 /* -- End Profiling Symbol Block */
 
-/* Prototypes for local functions */
-PMPI_LOCAL int MPIR_fd_send(int, void *, int);
-PMPI_LOCAL int MPIR_fd_recv(int, void *, int);
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_join
 #define MPI_Comm_join PMPI_Comm_join
-
-#ifdef HAVE_ERRNO_H
-#include <errno.h>      /* needed for read/write error codes */
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#define SOCKET_EINTR        WSAEINTR
-#else
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#define SOCKET_EINTR        EINTR
-#endif
-
-PMPI_LOCAL int MPIR_fd_send(int fd, void *buffer, int length)
-{
-    int result, num_bytes;
-
-    while (length) {
-        /* The expectation is that the length of a join message will fit
-         * in an int.  For Unixes that define send as returning ssize_t,
-         * we can safely cast this to an int. */
-        num_bytes = (int) send(fd, buffer, length, 0);
-        /* --BEGIN ERROR HANDLING-- */
-        if (num_bytes == -1) {
-#ifdef HAVE_WINDOWS_H
-            result = WSAGetLastError();
-#else
-            result = errno;
-#endif
-            if (result == SOCKET_EINTR)
-                continue;
-            else
-                return result;
-        }
-        /* --END ERROR HANDLING-- */
-        else {
-            length -= num_bytes;
-            buffer = (char *) buffer + num_bytes;
-        }
-    }
-    return 0;
-}
-
-PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
-{
-    int result, num_bytes;
-
-    while (length) {
-        /* See discussion on send above for the cast to int. */
-        num_bytes = (int) recv(fd, buffer, length, 0);
-        /* --BEGIN ERROR HANDLING-- */
-        if (num_bytes == -1) {
-#ifdef HAVE_WINDOWS_H
-            result = WSAGetLastError();
-#else
-            result = errno;
-#endif
-            if (result == SOCKET_EINTR)
-                continue;
-            else
-                return result;
-        }
-        /* --END ERROR HANDLING-- */
-        else {
-            length -= num_bytes;
-            buffer = (char *) buffer + num_bytes;
-        }
-    }
-    return 0;
-}
-
 #endif
 
 /*@
@@ -126,10 +50,7 @@ Output Parameters:
 @*/
 int MPI_Comm_join(int fd, MPI_Comm * intercomm)
 {
-    int mpi_errno = MPI_SUCCESS, err;
-    MPIR_Comm *intercomm_ptr;
-    char *local_port, *remote_port;
-    MPIR_CHKLMEM_DECL(2);
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_JOIN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -139,48 +60,14 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
 
     /* ... body of routine ...  */
 
-    MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name",
-                        MPL_MEM_DYNAMIC);
-    MPIR_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name",
-                        MPL_MEM_DYNAMIC);
-
-    MPL_VG_MEM_INIT(local_port, MPI_MAX_PORT_NAME * sizeof(char));
-
-    mpi_errno = MPIR_Open_port_impl(NULL, local_port);
-    MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**openportfailed");
-
-    err = MPIR_fd_send(fd, local_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHKANDJUMP1((err != 0), mpi_errno, MPI_ERR_INTERN, "**join_send", "**join_send %d",
-                         err);
-
-    err = MPIR_fd_recv(fd, remote_port, MPI_MAX_PORT_NAME);
-    MPIR_ERR_CHKANDJUMP1((err != 0), mpi_errno, MPI_ERR_INTERN, "**join_recv", "**join_recv %d",
-                         err);
-
-    MPIR_ERR_CHKANDJUMP2((strcmp(local_port, remote_port) == 0), mpi_errno, MPI_ERR_INTERN,
-                         "**join_portname", "**join_portname %s %s", local_port, remote_port);
-
-    if (strcmp(local_port, remote_port) < 0) {
-        MPIR_Comm *comm_self_ptr;
-        MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-        mpi_errno = MPIR_Comm_accept_impl(local_port, NULL, 0, comm_self_ptr, &intercomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        MPIR_Comm *comm_self_ptr;
-        MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-        mpi_errno = MPIR_Comm_connect_impl(remote_port, NULL, 0, comm_self_ptr, &intercomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
+    mpi_errno = MPIR_Comm_join(fd, intercomm);
+    if (mpi_errno) {
+        goto fn_fail;
     }
-
-    mpi_errno = MPIR_Close_port_impl(local_port);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_JOIN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;

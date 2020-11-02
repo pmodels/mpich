@@ -22,13 +22,6 @@ int MPI_Close_port(const char *port_name) __attribute__ ((weak, alias("PMPI_Clos
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Close_port
 #define MPI_Close_port PMPI_Close_port
-
-int MPIR_Close_port_impl(const char *port_name)
-{
-    return MPID_Close_port(port_name);
-}
-
-
 #endif
 
 /*@
