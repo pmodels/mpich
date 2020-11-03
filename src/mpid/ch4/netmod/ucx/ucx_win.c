@@ -260,12 +260,12 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 
 int MPIDI_UCX_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    return win_init(win);
 }
 
 int MPIDI_UCX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    return win_init(win);
 }
 
 int MPIDI_UCX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
