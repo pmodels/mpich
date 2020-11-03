@@ -36,20 +36,20 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     MPIDI_UCX_WIN(win).info_table =
         MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size, MPL_MEM_OTHER);
 
-    /* Only non-zero region maps to device. */
     rkey_size = 0;
-    if (length > 0) {
-        mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
-            UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
+    mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
+        UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
 
-        mem_map_params.address = *base_ptr;
-        mem_map_params.length = length;
-        mem_map_params.flags = 0;
+    mem_map_params.address = *base_ptr;
+    mem_map_params.length = length;
+    mem_map_params.flags = 0;
 
-        if (*base_ptr == NULL)
-            mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
+    if (*base_ptr == NULL)
+        mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
-        status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+    /* some memory types cannot be mapped, skip rkey packing */
+    if (status != UCS_ERR_UNSUPPORTED) {
         MPIDI_UCX_CHK_STATUS(status);
 
         /* query allocated address. */
@@ -94,9 +94,11 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
      * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
      * then we need our fallback-solution */
 
+    bool all_reachable = true;
     for (i = 0; i < comm_ptr->local_size; i++) {
-        /* Skip zero-size remote region. */
+        /* Skip unmapped remote region. */
         if (rkey_sizes[i] == 0) {
+            all_reachable = false;
             MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
             continue;
         }
@@ -105,6 +107,7 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
         if (status == UCS_ERR_UNREACHABLE) {
+            all_reachable = false;
             MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
         } else
             MPIDI_UCX_CHK_STATUS(status);
@@ -129,6 +132,9 @@ static int win_allgather(MPIR_Win * win, size_t length, uint32_t disp_unit, void
     MPIR_Assert(MPIDI_UCX_WIN(win).target_sync);
     for (rank = 0; rank < win->comm_ptr->local_size; rank++)
         MPIDI_UCX_WIN(win).target_sync[rank].need_sync = MPIDI_UCX_WIN_SYNC_UNSET;
+
+    if (all_reachable)
+        MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
 
   fn_exit:
     /* buffer release */
@@ -222,8 +228,6 @@ int MPIDI_UCX_mpi_win_create_hook(MPIR_Win * win)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_CREATE_HOOK);
     return mpi_errno;
@@ -246,8 +250,6 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    MPIDI_WIN(win, winattr) |= MPIDI_WINATTR_NM_REACHABLE;
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MPI_WIN_ALLOCATE_HOOK);
     return mpi_errno;
@@ -257,12 +259,12 @@ int MPIDI_UCX_mpi_win_allocate_hook(MPIR_Win * win)
 
 int MPIDI_UCX_mpi_win_allocate_shared_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    return win_init(win);
 }
 
 int MPIDI_UCX_mpi_win_create_dynamic_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    return win_init(win);
 }
 
 int MPIDI_UCX_mpi_win_attach_hook(MPIR_Win * win, void *base, MPI_Aint size)
