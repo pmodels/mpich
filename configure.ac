@@ -1150,7 +1150,7 @@ AC_SUBST([jsonlib])
 
 PAC_PUSH_ALL_FLAGS()
 PAC_RESET_ALL_FLAGS()
-PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[--disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
+PAC_CONFIG_SUBDIR_ARGS([modules/json-c],[CFLAGS=-fvisibility=hidden --disable-werror],[],[AC_MSG_ERROR(json-c configure failed)])
 PAC_POP_ALL_FLAGS()
 jsonsrcdir="${main_top_builddir}/modules/json-c"
 jsonlib="${main_top_builddir}/modules/json-c/libjson-c.la"
