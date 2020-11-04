@@ -51,6 +51,7 @@ AC_SUBST([yaksalibdir])
 yaksalib=""
 AC_SUBST([yaksalib])
 
+AM_COND_IF([BUILD_YAKSA_ENGINE], [
 if test "$with_yaksa_prefix" = "embedded" ; then
     # no need for libtool versioning when embedding YAKSA
     yaksa_subdir_args="--enable-embedded"
@@ -70,6 +71,7 @@ else
     PAC_APPEND_FLAG([-L${with_yaksa_prefix}/lib],[WRAPPER_LDFLAGS])
     yaksalibdir="-L${with_yaksa_prefix}/lib"
 fi
+])
 
 ])dnl end _BODY
 
