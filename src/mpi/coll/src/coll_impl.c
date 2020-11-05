@@ -27,7 +27,7 @@ cvars:
     - name        : MPIR_CVAR_COLLECTIVE_FALLBACK
       category    : COLLECTIVE
       type        : enum
-      default     : error
+      default     : silent
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
