@@ -53,9 +53,12 @@ AC_SUBST([yaksalib])
 
 AM_COND_IF([BUILD_YAKSA_ENGINE], [
 if test "$with_yaksa_prefix" = "embedded" ; then
+    PAC_PUSH_ALL_FLAGS()
+    PAC_RESET_ALL_FLAGS()
     # no need for libtool versioning when embedding YAKSA
     yaksa_subdir_args="--enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([modules/yaksa],[$yaksa_subdir_args],[],[AC_MSG_ERROR(YAKSA configure failed)])
+    PAC_POP_ALL_FLAGS()
     PAC_APPEND_FLAG([-I${main_top_builddir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/modules/yaksa/src/frontend/include], [CPPFLAGS])
 
