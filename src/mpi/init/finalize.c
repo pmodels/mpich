@@ -100,8 +100,9 @@ static void qmpi_teardown()
 
     MPL_free(MPIR_QMPI_pointers);
     MPL_free(MPIR_QMPI_storage);
-    MPL_free(MPIR_QMPI_tool_names[counter++]);
     if (MPIR_CVAR_QMPI_TOOL_LIST != NULL) {
+        /* We allocate one extra tool name so we don't have to shift to avoid the MPICH functions */
+        MPL_free(MPIR_QMPI_tool_names[counter++]);
         MPL_free(MPIR_QMPI_tool_names[counter++]);
         size_t len = strlen(MPIR_CVAR_QMPI_TOOL_LIST);
         for (int i = 0; i <= len; i++) {
