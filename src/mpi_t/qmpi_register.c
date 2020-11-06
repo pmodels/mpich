@@ -610,3 +610,20 @@ int QMPI_Register_function(int tool_id, enum QMPI_Functions_enum function_enum,
   fn_exit:
     return mpi_errno;
 }
+
+int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
+                      void (**function_ptr) (void), QMPI_Context * next_tool_context,
+                      int *next_tool_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    for (int i = calling_tool_id - 1; i >= 0; i--) {
+        if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum] != NULL) {
+            *function_ptr = MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum];
+            *next_tool_id = i;
+            return mpi_errno;
+        }
+    }
+
+    return mpi_errno;
+}
