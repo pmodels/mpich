@@ -455,6 +455,25 @@ static int ofi_pvar_init(void)
                                               (MPIR_T_PVAR_FLAG_READONLY |
                                                MPIR_T_PVAR_FLAG_SUM), "CH4",
                                               "number of bytes received through a particular NIC");
+
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              striped_nic_sent_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of striped bytes sent through a particular NIC");
+
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              striped_nic_recvd_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of striped bytes received through a particular NIC");
+
     return mpi_errno;
 }
 

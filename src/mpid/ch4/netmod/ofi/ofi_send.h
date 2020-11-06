@@ -348,6 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                           (void *) &(MPIDI_OFI_REQUEST(sreq, context))),
                              vni_local, tsenddata, FALSE /* eagain */);
         MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_sent_bytes_count[sender_nic], msg_size);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_sent_bytes_count[sender_nic], msg_size);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = 0;
         ctrl.tag = tag;

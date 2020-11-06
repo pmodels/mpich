@@ -14,6 +14,10 @@ MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail = NULL;
 
 unsigned long long PVAR_COUNTER_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
 unsigned long long PVAR_COUNTER_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS] ATTRIBUTE((unused));
+unsigned long long PVAR_COUNTER_striped_nic_sent_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
+unsigned long long PVAR_COUNTER_striped_nic_recvd_bytes_count[MPIDI_OFI_MAX_NICS]
+ATTRIBUTE((unused));
 
 MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
 /* Initialize a runtime version of all of the capability sets defined in

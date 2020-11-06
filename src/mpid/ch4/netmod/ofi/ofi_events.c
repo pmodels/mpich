@@ -404,7 +404,8 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                              remote_key,        /* Key */
                                              (void *) &recv_elem->context), nic,        /* Context */
                                      rdma_readfrom, FALSE);
-                MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[receiver_nic], bytesToGet);
+                MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
+                MPIR_T_PVAR_COUNTER_INC(MULTINIC, striped_nic_recvd_bytes_count[nic], bytesToGet);
                 recv_elem->cur_offset += bytesToGet;
                 recv_elem->chunks_outstanding++;
             }
@@ -422,7 +423,7 @@ int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
                                      remote_key,        /* Key          */
                                      (void *) &recv_elem->context), vni_src, rdma_readfrom,     /* Context */
                              FALSE);
-        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[receiver_nic], bytesToGet);
+        MPIR_T_PVAR_COUNTER_INC(MULTINIC, nic_recvd_bytes_count[nic], bytesToGet);
         recv_elem->cur_offset += bytesToGet;
     }
 
