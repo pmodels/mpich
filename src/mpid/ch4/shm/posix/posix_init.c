@@ -257,6 +257,7 @@ int MPIDI_POSIX_coll_init(int rank, int size)
 int MPIDI_POSIX_coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    static MPL_atomic_uint64_t MPIDI_POSIX_dummy_shm_limit_counter;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_COLL_FINALIZE);
@@ -264,6 +265,11 @@ int MPIDI_POSIX_coll_finalize(void)
     /* Destroy the shared counter which was used to track the amount of shared memory created
      * per node for intra-node collectives */
     mpi_errno = MPIDU_Init_shm_free(MPIDI_POSIX_global.shm_ptr);
+
+    /* MPIDI_POSIX_global.shm_ptr is freed but will be referenced during builtin
+     * comm free; here we set MPIDI_POSIX_shm_limit_counter as dummy counter to
+     * avoid segmentation fault */
+    MPIDI_POSIX_shm_limit_counter = &MPIDI_POSIX_dummy_shm_limit_counter;
 
     if (MPIDI_global.shm.posix.csel_root) {
         mpi_errno = MPIR_Csel_free(MPIDI_global.shm.posix.csel_root);
