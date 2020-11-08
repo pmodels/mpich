@@ -265,8 +265,6 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
                 MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
                 MPIR_ERR_SETANDJUMP(mpi_errno_ret, MPI_ERR_NO_MEM, "**nomem");
             } else {
-                /* More shm can be created, update the shared counter */
-                MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, memory_to_be_allocated);
                 fallback = 0;
                 mpi_errno = MPIR_Bcast_impl(&fallback, 1, MPI_INT, 0, comm_ptr, &errflag);
                 if (mpi_errno) {
@@ -376,6 +374,10 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         release_gather_info_ptr->reduce_buf_addr = NULL;
         release_gather_info_ptr->child_reduce_buf_addr = NULL;
 
+        RELEASE_GATHER_FIELD(comm_ptr, flags_shm_size) = flags_shm_size;
+        /* update the shared counter */
+        if (rank == 0)
+            MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter, flags_shm_size);
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, flags_shm_size,
                             (void **) &(release_gather_info_ptr->flags_addr), &mapfail_flag);
@@ -411,6 +413,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
     }
 
     if (initialize_bcast_buf) {
+        RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size) =
+            MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
+        if (rank == 0)
+            MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter,
+                                        RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size));
+
         /* Allocate the shared memory for bcast buffer */
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE,
@@ -431,6 +439,12 @@ int MPIDI_POSIX_mpi_release_gather_comm_init(MPIR_Comm * comm_ptr,
         int i;
         RELEASE_GATHER_FIELD(comm_ptr, child_reduce_buf_addr) =
             MPL_malloc(num_ranks * sizeof(void *), MPL_MEM_COLL);
+
+        RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size) =
+            MPIR_CVAR_BCAST_INTRANODE_BUFFER_TOTAL_SIZE;
+        if (rank == 0)
+            MPL_atomic_fetch_add_uint64(MPIDI_POSIX_shm_limit_counter,
+                                        RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
 
         mpi_errno =
             MPIDU_shm_alloc(comm_ptr, num_ranks * MPIR_CVAR_REDUCE_INTRANODE_BUFFER_TOTAL_SIZE,
@@ -480,6 +494,11 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
         goto fn_exit;
     }
 
+    /* decrease shm memory limit counter */
+    if (comm_ptr->rank == 0)
+        MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
+                                    RELEASE_GATHER_FIELD(comm_ptr, flags_shm_size));
+
     /* destroy and detach shared memory used for flags */
     mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, flags_addr));
     if (mpi_errno) {
@@ -492,6 +511,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr) != NULL) {
+        if (comm_ptr->rank == 0)
+            MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
+                                        RELEASE_GATHER_FIELD(comm_ptr, bcast_shm_size));
         /* destroy and detach shared memory used for bcast buffer */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, bcast_buf_addr));
         if (mpi_errno) {
@@ -505,6 +527,9 @@ int MPIDI_POSIX_mpi_release_gather_comm_free(MPIR_Comm * comm_ptr)
     }
 
     if (RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr) != NULL) {
+        if (comm_ptr->rank == 0)
+            MPL_atomic_fetch_sub_uint64(MPIDI_POSIX_shm_limit_counter,
+                                        RELEASE_GATHER_FIELD(comm_ptr, reduce_shm_size));
         /* destroy and detach shared memory used for reduce buffers */
         mpi_errno = MPIDU_shm_free(RELEASE_GATHER_FIELD(comm_ptr, reduce_buf_addr));
         if (mpi_errno) {
