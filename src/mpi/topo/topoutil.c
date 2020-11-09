@@ -60,7 +60,9 @@ int MPIR_Topology_put(MPIR_Comm * comm_ptr, MPIR_Topology * topo_ptr)
         MPIR_ERR_CHECK(mpi_errno);
         MPIR_Add_finalize(MPIR_Topology_finalize, (void *) 0, MPIR_FINALIZE_CALLBACK_PRIO - 1);
     }
-    mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, MPIR_Topology_keyval, topo_ptr, MPIR_ATTR_PTR);
+    MPII_Keyval *keyval_ptr;
+    MPII_Keyval_get_ptr(MPIR_Topology_keyval, keyval_ptr);
+    mpi_errno = MPIR_Comm_set_attr_impl(comm_ptr, keyval_ptr, topo_ptr, MPIR_ATTR_PTR);
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
@@ -77,7 +79,9 @@ static int MPIR_Topology_finalize(void *p ATTRIBUTE((unused)))
 
     if (MPIR_Topology_keyval != MPI_KEYVAL_INVALID) {
         /* Just in case */
-        MPIR_Comm_free_keyval_impl(MPIR_Topology_keyval);
+        MPII_Keyval *keyval_ptr;
+        MPII_Keyval_get_ptr(MPIR_Topology_keyval, keyval_ptr);
+        MPIR_free_keyval(keyval_ptr);
         MPIR_Topology_keyval = MPI_KEYVAL_INVALID;
     }
     return 0;

@@ -24,17 +24,17 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
 #undef MPI_Win_get_attr
 #define MPI_Win_get_attr PMPI_Win_get_attr
 
-int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
-                      int *flag, MPIR_Attr_type outAttrType)
+int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag,
+                      MPIR_Attr_type attr_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_WIN_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPII_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -67,133 +67,29 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    /* Check for builtin attribute */
-    /* This code is ok for correct programs, but it would be better
-     * to copy the values from the per-process block and pass the user
-     * a pointer to a copy */
-    /* Note that if we are called from Fortran, we must return the values,
-     * not the addresses, of these attributes */
-    if (HANDLE_IS_BUILTIN(win_keyval)) {
-        void **attr_val_p = (void **) attribute_val;
-#ifdef HAVE_FORTRAN_BINDING
-        /* Note that this routine only has a Fortran 90 binding,
-         * so the attribute value is an address-sized int */
-        intptr_t *attr_int = (intptr_t *) attribute_val;
-#endif
-        *flag = 1;
-
-        /*
-         * The C versions of the attributes return the address of a
-         * *COPY* of the value (to prevent the user from changing it)
-         * and the Fortran versions provide the actual value (as a Fint)
-         */
-        switch (win_keyval) {
-            case MPI_WIN_BASE:
-                *attr_val_p = win_ptr->base;
-                break;
-            case MPI_WIN_SIZE:
-                win_ptr->copySize = win_ptr->size;
-                *attr_val_p = &win_ptr->copySize;
-                break;
-            case MPI_WIN_DISP_UNIT:
-                win_ptr->copyDispUnit = win_ptr->disp_unit;
-                *attr_val_p = &win_ptr->copyDispUnit;
-                break;
-            case MPI_WIN_CREATE_FLAVOR:
-                win_ptr->copyCreateFlavor = win_ptr->create_flavor;
-                *attr_val_p = &win_ptr->copyCreateFlavor;
-                break;
-            case MPI_WIN_MODEL:
-                win_ptr->copyModel = win_ptr->model;
-                *attr_val_p = &win_ptr->copyModel;
-                break;
-#ifdef HAVE_FORTRAN_BINDING
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_BASE):
-                /* The Fortran routine that matches this routine should
-                 * provide an address-sized integer, not an MPI_Fint */
-                *attr_int = (MPI_Aint) win_ptr->base;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_SIZE):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->size;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_DISP_UNIT):
-                /* We do not need to copy because we return the value,
-                 * not a pointer to the value */
-                *attr_int = win_ptr->disp_unit;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_CREATE_FLAVOR):
-                *attr_int = win_ptr->create_flavor;
-                break;
-            case MPII_ATTR_C_TO_FORTRAN(MPI_WIN_MODEL):
-                *attr_int = win_ptr->model;
-                break;
-#endif
-            default:
-                MPIR_Assert(FALSE);
-                break;
-        }
-    } else {
-        MPIR_Attribute *p = win_ptr->attributes;
-
-        *flag = 0;
-        while (p) {
-            if (p->keyval->handle == win_keyval) {
-                *flag = 1;
-                if (outAttrType == MPIR_ATTR_PTR) {
-                    if (p->attrType == MPIR_ATTR_INT) {
-                        /* This is the tricky case: if the system is
-                         * bigendian, and we have to return a pointer to
-                         * an int, then we may need to point to the
-                         * correct location in the word. */
-#if defined(WORDS_LITTLEENDIAN) || (SIZEOF_VOID_P == SIZEOF_INT)
-                        *(void **) attribute_val = &(p->value);
-#else
-                        int *p_loc = (int *) &(p->value);
-#if SIZEOF_VOID_P == 2 * SIZEOF_INT
-                        p_loc++;
-#else
-#error Expected sizeof(void*) to be either sizeof(int) or 2*sizeof(int)
-#endif
-                        *(void **) attribute_val = p_loc;
-#endif
-                    } else if (p->attrType == MPIR_ATTR_AINT) {
-                        *(void **) attribute_val = &(p->value);
-                    } else {
-                        *(void **) attribute_val = (void *) (intptr_t) (p->value);
-                    }
-                } else
-                    *(void **) attribute_val = (void *) (intptr_t) (p->value);
-
-                break;
-            }
-            p = p->next;
-        }
-    }
-
+    mpi_errno = MPIR_Win_get_attr_impl(win_ptr, win_keyval, attribute_val, flag, attr_type);
+    if (mpi_errno)
+        goto fn_fail;
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPII_WIN_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
+#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpir_wingetattr", "**mpir_wingetattr %W %d %p %p", win,
+                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
                                  win_keyval, attribute_val, flag);
     }
+    MPIR_Win_get_ptr(win, win_ptr);
     mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
-    goto fn_exit;
 #endif
+    goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
 #endif
@@ -229,37 +125,11 @@ Output Parameters:
 int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ERROR_CHECKING
-    MPIR_Win *win_ptr = NULL;
-#endif
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_GET_ATTR);
 
-    /* ... body of routine ...  */
     mpi_errno = MPII_Win_get_attr(win, win_keyval, attribute_val, flag, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        goto fn_fail;
-    /* ... end of body of routine ... */
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_GET_ATTR);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
-                                 win_keyval, attribute_val, flag);
-    }
-    MPIR_Win_get_ptr(win, win_ptr);
-    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
-#endif
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

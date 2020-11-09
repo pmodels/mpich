@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_free_keyval */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -44,7 +43,6 @@ Input Parameters:
 int MPI_Type_free_keyval(int *type_keyval)
 {
     MPII_Keyval *keyval_ptr = NULL;
-    int in_use;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
 
@@ -84,13 +82,7 @@ int MPI_Type_free_keyval(int *type_keyval)
 
     /* ... body of routine ...  */
 
-    if (!keyval_ptr->was_freed) {
-        keyval_ptr->was_freed = 1;
-        MPII_Keyval_release_ref(keyval_ptr, &in_use);
-        if (!in_use) {
-            MPIR_Handle_obj_free(&MPII_Keyval_mem, keyval_ptr);
-        }
-    }
+    MPIR_free_keyval(keyval_ptr);
     *type_keyval = MPI_KEYVAL_INVALID;
 
     /* ... end of body of routine ... */

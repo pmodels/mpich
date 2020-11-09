@@ -25,8 +25,7 @@ mpi_sources +=                                      \
     src/mpi/attr/win_get_attr.c       \
     src/mpi/attr/win_set_attr.c
 
-noinst_HEADERS += src/mpi/attr/attr.h
-
 mpi_core_sources +=         \
+    src/mpi/attr/attr_impl.c \
     src/mpi/attr/attrutil.c \
     src/mpi/attr/dup_fn.c

@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_set_attr */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -26,20 +25,19 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #define MPI_Type_set_attr PMPI_Type_set_attr
 
 int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
-                       MPIR_Attr_type attrType)
+                       MPIR_Attr_type attr_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPII_Keyval *keyval_ptr = NULL;
-    MPIR_Attribute *p, **old_p;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* The thread lock prevents a valid attr delete on the same datatype
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPII_TYPE_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -76,66 +74,13 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    /* Look for attribute.  They are ordered by keyval handle.  This uses
-     * a simple linear list algorithm because few applications use more than a
-     * handful of attributes */
-
-    old_p = &type_ptr->attributes;
-    p = type_ptr->attributes;
-    while (p) {
-        if (p->keyval->handle == keyval_ptr->handle) {
-            /* If found, call the delete function before replacing the
-             * attribute */
-            mpi_errno = MPIR_Call_attr_delete(datatype, p);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno) {
-                goto fn_fail;
-            }
-            /* --END ERROR HANDLING-- */
-            p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
-            p->attrType = attrType;
-            break;
-        } else if (p->keyval->handle > keyval_ptr->handle) {
-            MPIR_Attribute *new_p = MPID_Attr_alloc();
-            MPIR_ERR_CHKANDJUMP1(!new_p, mpi_errno, MPI_ERR_OTHER,
-                                 "**nomem", "**nomem %s", "MPIR_Attribute");
-            new_p->keyval = keyval_ptr;
-            new_p->attrType = attrType;
-            new_p->pre_sentinal = 0;
-            new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
-            new_p->post_sentinal = 0;
-            new_p->next = p->next;
-            MPII_Keyval_add_ref(keyval_ptr);
-            p->next = new_p;
-            break;
-        }
-        old_p = &p->next;
-        p = p->next;
-    }
-    if (!p) {
-        MPIR_Attribute *new_p = MPID_Attr_alloc();
-        MPIR_ERR_CHKANDJUMP1(!new_p, mpi_errno, MPI_ERR_OTHER,
-                             "**nomem", "**nomem %s", "MPIR_Attribute");
-        /* Did not find in list.  Add at end */
-        new_p->keyval = keyval_ptr;
-        new_p->attrType = attrType;
-        new_p->pre_sentinal = 0;
-        new_p->value = (MPII_Attr_val_t) (intptr_t) attribute_val;
-        new_p->post_sentinal = 0;
-        new_p->next = 0;
-        MPII_Keyval_add_ref(keyval_ptr);
-        *old_p = new_p;
-    }
-
-    /* Here is where we could add a hook for the device to detect attribute
-     * value changes, using something like
-     * MPID_Type_attr_hook(type_ptr, keyval, attribute_val);
-     */
-
+    mpi_errno = MPIR_Type_set_attr_impl(type_ptr, keyval_ptr, attribute_val, attr_type);
+    if (mpi_errno)
+        goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPII_TYPE_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -153,7 +98,6 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 #endif
 
 /*@
@@ -183,30 +127,10 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SET_ATTR);
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_SET_ATTR);
 
     mpi_errno = MPII_Type_set_attr(datatype, type_keyval, attribute_val, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        goto fn_fail;
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_SET_ATTR);
     return mpi_errno;
-
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_type_set_attr", "**mpi_type_set_attr %D %d %p", datatype,
-                                 type_keyval, attribute_val);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

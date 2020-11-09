@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "attr.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Type_create_keyval */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -62,7 +61,6 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
                            int *type_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPII_Keyval *keyval_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -83,32 +81,10 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 
     /* ... body of routine ...  */
 
-    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    /* Initialize the attribute dup function */
-    if (!MPIR_Process.attr_dup) {
-        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
-        MPIR_Process.attr_free = MPIR_Attr_delete_list;
-    }
-
-    /* The handle encodes the keyval kind.  Modify it to have the correct
-     * field */
-    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_DATATYPE << 22);
-    MPIR_Object_set_ref(keyval_ptr, 1);
-    keyval_ptr->was_freed = 0;
-    keyval_ptr->kind = MPIR_DATATYPE;
-    keyval_ptr->extra_state = extra_state;
-    keyval_ptr->copyfn.user_function = type_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
-    keyval_ptr->delfn.user_function = type_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
-
-    /* Tell finalize to check for attributes on permenant types */
-    MPII_Datatype_attr_finalize();
-
-    MPIR_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
-
+    mpi_errno = MPIR_Type_create_keyval_impl(type_copy_attr_fn, type_delete_attr_fn, type_keyval,
+                                             extra_state);
+    if (mpi_errno)
+        goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:
