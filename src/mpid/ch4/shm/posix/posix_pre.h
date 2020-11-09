@@ -85,17 +85,14 @@ typedef struct MPIDI_POSIX_am_request_header {
 
     uint8_t am_hdr_buf[MPIDI_POSIX_MAX_AM_HDR_SIZE];
 
-    int handler_id;
     int dst_grank;
 
-    struct iovec *iov_ptr;
-    struct iovec iov[MPIDI_POSIX_MAX_IOV_NUM];
-    size_t iov_num;
-    size_t iov_num_total;
-
-    int is_contig;
-
     size_t in_total_data_sz;
+
+    /* For postponed operation */
+    MPI_Datatype datatype;
+    const void *buf;
+    MPI_Count count;
 
     /* Structure used with POSIX postponed_queue */
     MPIR_Request *request;      /* Store address of MPIR_Request* sreq */
