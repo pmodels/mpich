@@ -71,7 +71,7 @@ static inline bool fastpath_memcpy(const void *inbuf, void *outbuf, MPI_Datatype
             (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
              outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
             MPI_Aint size = MPIR_Datatype_get_basic_size(type);
-            *actual_bytes = MPL_MIN(count * size, max_bytes);
+            *actual_bytes = MPL_MIN(count * size - offset, max_bytes);
             if (dir == MEMCPY_DIR__PACK)
                 MPIR_Memcpy(outbuf, (const char *) inbuf + offset, *actual_bytes);
             else
@@ -97,7 +97,7 @@ static inline bool fastpath_memcpy(const void *inbuf, void *outbuf, MPI_Datatype
                  inattr.type == MPL_GPU_POINTER_REGISTERED_HOST) &&
                 (outattr.type == MPL_GPU_POINTER_UNREGISTERED_HOST ||
                  outattr.type == MPL_GPU_POINTER_REGISTERED_HOST)) {
-                *actual_bytes = MPL_MIN(count * dtp->size, max_bytes);
+                *actual_bytes = MPL_MIN(count * dtp->size - offset, max_bytes);
                 if (dir == MEMCPY_DIR__PACK)
                     MPIR_Memcpy(outbuf, (const char *) inbuf + dtp->true_lb + offset,
                                 *actual_bytes);
