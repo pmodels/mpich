@@ -29,12 +29,12 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_WIN_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPII_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -178,7 +178,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPII_WIN_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -188,7 +188,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpir_wingetattr", "**mpir_wingetattr %W %d %p %p", win,
+                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
                                  win_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
@@ -229,37 +229,11 @@ Output Parameters:
 int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ERROR_CHECKING
-    MPIR_Win *win_ptr = NULL;
-#endif
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_GET_ATTR);
 
-    /* ... body of routine ...  */
     mpi_errno = MPII_Win_get_attr(win, win_keyval, attribute_val, flag, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        goto fn_fail;
-    /* ... end of body of routine ... */
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_GET_ATTR);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
-                                 win_keyval, attribute_val, flag);
-    }
-    MPIR_Win_get_ptr(win, win_ptr);
-    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
-#endif
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
