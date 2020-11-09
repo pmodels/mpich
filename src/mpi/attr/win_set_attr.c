@@ -30,14 +30,14 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     MPIR_Win *win_ptr = NULL;
     MPII_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* The thread lock prevents a valid attr delete on the same window
      * but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPII_WIN_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -136,7 +136,7 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPII_WIN_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -189,28 +189,8 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_SET_ATTR);
 
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
-    /* ... body of routine ...  */
     mpi_errno = MPII_Win_set_attr(win, win_keyval, attribute_val, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        goto fn_fail;
-    /* ... end of body of routine ... */
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
     return mpi_errno;
-
-  fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_set_attr", "**mpi_win_set_attr %W %d %p", win,
-                                 win_keyval, attribute_val);
-    }
-#endif
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }

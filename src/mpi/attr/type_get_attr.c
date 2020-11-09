@@ -30,12 +30,12 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPII_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPII_TYPE_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -109,7 +109,7 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPII_TYPE_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -119,7 +119,7 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpir_type_get_attr", "**mpir_type_get_attr %D %d %p %p",
+                                 "**mpi_type_get_attr", "**mpi_type_get_attr %D %d %p %p",
                                  datatype, type_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
@@ -164,33 +164,10 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
-
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
-
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
 
-    /* ... body of routine ...  */
     mpi_errno = MPII_Type_get_attr(datatype, type_keyval, attribute_val, flag, MPIR_ATTR_PTR);
-    if (mpi_errno)
-        goto fn_fail;
 
-    /* ... end of body of routine ... */
-
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-#ifdef HAVE_ERROR_CHECKING
-    {
-        mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_type_get_attr", "**mpi_type_get_attr %D %d %p %p", datatype,
-                                 type_keyval, attribute_val, flag);
-    }
-#endif
-    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
