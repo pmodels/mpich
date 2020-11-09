@@ -13,9 +13,10 @@
 typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
 typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 
-typedef int (*MPIDI_POSIX_eager_send_t) (int grank,
-                                         MPIDI_POSIX_am_header_t ** msg_hdr,
-                                         struct iovec ** iov, size_t * iov_num);
+typedef int (*MPIDI_POSIX_eager_send_t) (int grank, MPIDI_POSIX_am_header_t * msg_hdr,
+                                         const void *am_hdr, MPI_Aint am_hdr_sz, const void *buf,
+                                         MPI_Count count, MPI_Datatype datatype, MPI_Aint offset,
+                                         MPI_Aint * bytes_sent);
 
 typedef int (*MPIDI_POSIX_eager_recv_begin_t) (MPIDI_POSIX_eager_recv_transaction_t * transaction);
 
@@ -56,10 +57,11 @@ extern char MPIDI_POSIX_eager_strings[][MPIDI_MAX_POSIX_EAGER_STRING_LEN];
 int MPIDI_POSIX_eager_init(int rank, int size);
 int MPIDI_POSIX_eager_finalize(void);
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank,
-                                                    MPIDI_POSIX_am_header_t ** msg_hdr,
-                                                    struct iovec **iov,
-                                                    size_t * iov_num) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr,
+                                                    const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                    const void *buf, MPI_Count count,
+                                                    MPI_Datatype datatype, MPI_Aint offset,
+                                                    MPI_Aint * bytes_sent) MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t *
                                                           transaction) MPL_STATIC_INLINE_SUFFIX;

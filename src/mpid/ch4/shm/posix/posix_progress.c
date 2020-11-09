@@ -55,6 +55,8 @@ static int progress_recv(int blocking)
     if (!msg_hdr) {
         /* Fragment handling. Set currently active recv request */
         rreq = MPIDI_POSIX_global.active_rreq[transaction.src_local_rank];
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "posix cached req handle=0x%x", rreq->handle));
     } else {
         /* First segment */
         am_hdr = payload;
@@ -116,8 +118,6 @@ static int progress_send(int blocking)
 {
 
     int mpi_errno = MPI_SUCCESS;
-    int result = MPIDI_POSIX_OK;
-    MPIR_Request *sreq = NULL;
     MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PROGRESS_SEND);
@@ -127,31 +127,29 @@ static int progress_send(int blocking)
         /* Drain postponed queue */
         curr_sreq_hdr = MPIDI_POSIX_global.postponed_queue;
 
-        result = MPIDI_POSIX_eager_send(curr_sreq_hdr->dst_grank,
-                                        &curr_sreq_hdr->msg_hdr,
-                                        &curr_sreq_hdr->iov_ptr, &curr_sreq_hdr->iov_num);
+        switch (curr_sreq_hdr->msg_hdr->am_type) {
+            case MPIDI_POSIX_AM_TYPE__HDR:
+                mpi_errno = MPIDI_POSIX_do_am_send_hdr(curr_sreq_hdr->dst_grank,
+                                                       curr_sreq_hdr->msg_hdr,
+                                                       curr_sreq_hdr->am_hdr, true);
 
-        if ((MPIDI_POSIX_NOK == result) || curr_sreq_hdr->iov_num) {
-            goto fn_exit;
+                break;
+            case MPIDI_POSIX_AM_TYPE__SHORT:
+            case MPIDI_POSIX_AM_TYPE__PIPELINE:
+                mpi_errno = MPIDI_POSIX_do_am_isend(curr_sreq_hdr->dst_grank,
+                                                    curr_sreq_hdr->msg_hdr,
+                                                    curr_sreq_hdr->am_hdr,
+                                                    curr_sreq_hdr->am_hdr_sz,
+                                                    curr_sreq_hdr->buf,
+                                                    curr_sreq_hdr->count,
+                                                    curr_sreq_hdr->datatype, curr_sreq_hdr->request,
+                                                    true);
+
+                break;
+            default:
+                MPIR_Assert(0);
         }
 
-        /* Remove element from postponed queue */
-
-        DL_DELETE(MPIDI_POSIX_global.postponed_queue, curr_sreq_hdr);
-
-        /* Request has been completed.
-         * If associated with a device-layer sreq, call origin callback and cleanup.
-         * Otherwise this is a POSIX internal queued sreq_hdr, simply release. */
-        if (curr_sreq_hdr->request) {
-            sreq = curr_sreq_hdr->request;
-
-            MPL_free(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer));
-            MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
-
-            MPIDIG_global.origin_cbs[curr_sreq_hdr->handler_id] (sreq);
-        } else {
-            MPIDI_POSIX_am_release_req_hdr(&curr_sreq_hdr);
-        }
     }
 
   fn_exit:
