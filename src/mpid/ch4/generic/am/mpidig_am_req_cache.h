@@ -16,7 +16,7 @@ static inline MPIR_Request *MPIDIG_req_cache_lookup(void *req_map, uint64_t key)
     void *ret = MPIDIU_map_lookup(req_map, key);
     if (ret != MPIDIU_MAP_NOT_FOUND) {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "req_map found: key=0x%lx, value=0x%p", key, ret));
+                        (MPL_DBG_FDEST, "req_map found: key=0x" PRIx64 ", value=0x%p", key, ret));
         return (MPIR_Request *) ret;
     }
     return NULL;
@@ -29,7 +29,7 @@ static inline void MPIDIG_req_cache_add(void *req_map, uint64_t key, MPIR_Reques
     if (likely(ret == MPIDIU_MAP_NOT_FOUND)) {
         MPIDIU_map_set_unsafe(req_map, key, (void *) rreq, MPL_MEM_OTHER);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "req_map new: key=0x%lx value=%p", key, rreq));
+                        (MPL_DBG_FDEST, "req_map new: key=0x" PRIx64 " value=%p", key, rreq));
     } else {
         MPIR_Assert(0);
     }
@@ -41,7 +41,7 @@ static inline void MPIDIG_req_cache_remove(void *req_map, uint64_t key)
     if (ret != MPIDIU_MAP_NOT_FOUND) {
         MPIDIU_map_erase(req_map, key);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "req_map remove: key=0x%lx, value=0x%p", key, ret));
+                        (MPL_DBG_FDEST, "req_map remove: key=0x" PRIx64 ", value=0x%p", key, ret));
     }
 }
 
