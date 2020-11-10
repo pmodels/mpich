@@ -8,6 +8,17 @@
 
 #include "stubnm_impl.h"
 
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_prepare_send(int handler_id, const void *buf,
+                                                      MPI_Count count, MPI_Datatype datatype,
+                                                      const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                      void **ext_hdr, MPI_Aint * ext_hdr_sz,
+                                                      MPIR_Request * sreq)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,

@@ -34,6 +34,10 @@ typedef int (*MPIDI_NM_mpi_open_port_t) (MPIR_Info * info_ptr, char *port_name);
 typedef int (*MPIDI_NM_mpi_close_port_t) (const char *port_name);
 typedef int (*MPIDI_NM_mpi_comm_accept_t) (const char *port_name, MPIR_Info * info, int root,
                                            MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
+typedef int (*MPIDI_NM_am_prepare_send_t) (int handler_id, const void *buf, MPI_Count count,
+                                           MPI_Datatype datatype, const void *am_hdr,
+                                           MPI_Aint am_hdr_sz, void **ext_hdr,
+                                           MPI_Aint * ext_hdr_sz, MPIR_Request * sreq);
 typedef int (*MPIDI_NM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
                                        const void *am_hdr, size_t am_hdr_sz);
 typedef int (*MPIDI_NM_am_isend_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
@@ -391,6 +395,7 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
     /* Active Message Routines */
+    MPIDI_NM_am_prepare_send_t am_prepare_send;
     MPIDI_NM_am_send_hdr_t am_send_hdr;
     MPIDI_NM_am_isend_t am_isend;
     MPIDI_NM_am_isendv_t am_isendv;
@@ -522,6 +527,11 @@ int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name);
 int MPIDI_NM_mpi_close_port(const char *port_name);
 int MPIDI_NM_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                              MPIR_Comm ** newcomm_ptr);
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_prepare_send(int handler_id, const void *buf,
+                                                      MPI_Count count, MPI_Datatype datatype,
+                                                      const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                      void **ext_hdr, MPI_Aint * ext_hdr_sz,
+                                                      MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr,
                                                   size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;

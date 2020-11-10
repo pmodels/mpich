@@ -39,6 +39,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_UCX_am_send_callback(void *request, ucs_stat
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_prepare_send(int handler_id, const void *buf,
+                                                      MPI_Count count, MPI_Datatype datatype,
+                                                      const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                      void **ext_hdr, MPI_Aint * ext_hdr_sz,
+                                                      MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
+    return mpi_errno;
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                MPIR_Comm * comm,

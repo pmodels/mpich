@@ -46,6 +46,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     .am_request_init = MPIDI_NM_am_request_init,
     .am_request_finalize = MPIDI_NM_am_request_finalize,
     /* Active Message Routines */
+    .am_prepare_send = MPIDI_NM_am_prepare_send,
     .am_send_hdr = MPIDI_NM_am_send_hdr,
     .am_isend = MPIDI_NM_am_isend,
     .am_isendv = MPIDI_NM_am_isendv,
