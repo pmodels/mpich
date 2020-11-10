@@ -96,6 +96,9 @@ typedef struct MPIDIG_rreq_t {
     MPIR_Request *match_req;
     MPIR_Request *request;
 
+    MPI_Aint zcopy_hdr_sz;
+    void *zcopy_hdr;
+
     struct MPIDIG_rreq_t *prev, *next;
 } MPIDIG_rreq_t;
 

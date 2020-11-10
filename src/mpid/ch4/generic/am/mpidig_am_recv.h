@@ -154,7 +154,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_do_irecv(void *buf, MPI_Aint count, MPI_Data
             }
             MPIDIG_REQUEST(unexp_req, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
             MPIDIG_recv_type_init(data_sz, unexp_req);
-            mpi_errno = MPIDIG_do_cts(unexp_req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIDIG_do_am_recv(MPIDIG_REQUEST(unexp_req, rank),
+                              MPIDIG_REQUEST(unexp_req, context_id),
+                              MPIDIG_REQUEST(unexp_req, req->rreq.zcopy_hdr),
+                              MPIDIG_REQUEST(unexp_req, req->rreq.zcopy_hdr_sz),
+                              MPIDI_REQUEST(unexp_req, is_local), unexp_req);
+#else
+            MPIDIG_do_am_recv(MPIDIG_REQUEST(unexp_req, rank),
+                              MPIDIG_REQUEST(unexp_req, context_id),
+                              MPIDIG_REQUEST(unexp_req, req->rreq.zcopy_hdr),
+                              MPIDIG_REQUEST(unexp_req, req->rreq.zcopy_hdr_sz),
+                              0 /* is_local == 0 */ , unexp_req);
+#endif
             MPIR_ERR_CHECK(mpi_errno);
             goto fn_exit;
         } else {
@@ -242,7 +254,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDIG_REQUEST(message, count) = count;
         MPIDIG_REQUEST(message, req->status) &= ~MPIDIG_REQ_UNEXPECTED;
         MPIDIG_recv_type_init(data_sz, message);
-        MPIDIG_do_cts(message);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        MPIDIG_do_am_recv(MPIDIG_REQUEST(message, rank), MPIDIG_REQUEST(message, context_id),
+                          MPIDIG_REQUEST(message, req->rreq.zcopy_hdr),
+                          MPIDIG_REQUEST(message, req->rreq.zcopy_hdr_sz),
+                          MPIDI_REQUEST(message, is_local), message);
+#else
+        MPIDIG_do_am_recv(MPIDIG_REQUEST(message, rank), MPIDIG_REQUEST(message, context_id),
+                          MPIDIG_REQUEST(message, req->rreq.zcopy_hdr),
+                          MPIDIG_REQUEST(message, req->rreq.zcopy_hdr_sz), 0 /* is_local == 0 */ ,
+                          message);
+#endif
     } else {
         mpi_errno = MPIDIG_handle_unexp_mrecv(message);
         MPIR_ERR_CHECK(mpi_errno);

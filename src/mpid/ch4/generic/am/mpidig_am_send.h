@@ -12,6 +12,7 @@
 #define MPIDIG_AM_SEND_FLAGS_NONE (0)
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
+#define MPIDIG_AM_SEND_FLAGS_ZCOPY (1 << 2)
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
 {
@@ -29,6 +30,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
     MPIR_Assert(thresh > 0);
 
     return thresh;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDIG_am_prepare_send(int handler_id, const void *buf,
+                                                    MPI_Count count, MPI_Datatype datatype,
+                                                    int is_local, const void *am_hdr,
+                                                    MPI_Aint am_hdr_sz, void **ext_hdr,
+                                                    MPI_Aint * ext_hdr_sz, MPIR_Request * sreq)
+{
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    return MPIDI_NM_am_prepare_send(handler_id, buf, count, datatype, am_hdr, am_hdr_sz, ext_hdr,
+                                    ext_hdr_sz, sreq);
+#else
+    if (is_local) {
+        return MPIDI_SHM_am_prepare_send(handler_id, buf, count, datatype, am_hdr, am_hdr_sz,
+                                         ext_hdr, ext_hdr_sz, sreq);
+    } else {
+        return MPIDI_NM_am_prepare_send(handler_id, buf, count, datatype, am_hdr, am_hdr_sz,
+                                        ext_hdr, ext_hdr_sz, sreq);
+    }
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
@@ -73,6 +94,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 #endif
 
     int is_local = MPIDI_av_is_local(addr);
+    MPI_Aint ext_hdr_sz = 0;
+    void *ext_hdr = NULL;
+    mpi_errno = MPIDIG_am_prepare_send(MPIDIG_SEND, buf, count, datatype, is_local, &am_hdr,
+                                       sizeof(am_hdr), &ext_hdr, &ext_hdr_sz, sreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    /* extend hdr is created, NM/SHM will be trying ZCOPY send, we only send the header in this
+     * case. The receiver will call the am_do_recv to perform the ZCOPY transmission. */
+    if (ext_hdr) {
+        ((MPIDIG_hdr_t *) ext_hdr)->zcopy_hdr_sz = ext_hdr_sz - sizeof(am_hdr);
+        ((MPIDIG_hdr_t *) ext_hdr)->flags |= MPIDIG_AM_SEND_FLAGS_RTS;
+        ((MPIDIG_hdr_t *) ext_hdr)->flags |= MPIDIG_AM_SEND_FLAGS_ZCOPY;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (is_local) {
+            mpi_errno = MPIDI_SHM_am_send_hdr(rank, comm, MPIDIG_SEND, ext_hdr, ext_hdr_sz);
+        } else
+#endif
+        {
+            mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND, ext_hdr, ext_hdr_sz);
+        }
+        goto fn_exit;
+    }
+
+    /* There is no extended header, send EAGER or RNDV */
+    am_hdr.zcopy_hdr_sz = 0;
     if (data_sz > MPIDIG_eager_limit(is_local)) {
         /* RNDV send */
         MPIDIG_REQUEST(sreq, req->sreq).src_buf = buf;

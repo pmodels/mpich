@@ -45,6 +45,39 @@ int MPIDIG_do_cts(MPIR_Request * rreq)
     goto fn_exit;
 }
 
+int MPIDIG_do_am_recv(int src_rank, MPIR_Context_id_t context_id, const void *zcopy_hdr,
+                      MPI_Aint zcopy_hdr_sz, int is_local, MPIR_Request * rreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_DO_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_DO_AM_RECV);
+
+    if (!zcopy_hdr_sz) {
+        MPIDIG_do_cts(rreq);
+    } else {
+        /* starting zcopy recv */
+        MPIDIG_REQUEST(rreq, req->seq_no) =
+            MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                         MPIDIG_REQUEST(rreq, req->seq_no),
+                         MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (is_local) {
+            mpi_errno = MPIDI_SHM_am_recv(src_rank, context_id, zcopy_hdr, zcopy_hdr_sz, rreq);
+        } else
+#endif
+        {
+            mpi_errno = MPIDI_NM_am_recv(src_rank, context_id, zcopy_hdr, zcopy_hdr_sz, rreq);
+        }
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_DO_AM_RECV);
+    return mpi_errno;
+}
+
 /* Checks to make sure that the specified request is the next one expected to finish. If it isn't
  * supposed to finish next, it is appended to a list of requests to be retrieved later. */
 int MPIDIG_check_cmpl_order(MPIR_Request * req)
@@ -364,6 +397,19 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             /* this is unexpected EAGER */
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
         }
+        /* unexpected request need to save the zcopy hdr */
+        if (hdr->flags & MPIDIG_AM_SEND_FLAGS_ZCOPY) {
+            MPIDIG_REQUEST(rreq, req->rreq).zcopy_hdr = MPL_malloc(hdr->zcopy_hdr_sz,
+                                                                   MPL_MEM_OTHER);
+            MPIR_ERR_CHKANDSTMT(MPIDIG_REQUEST(rreq, req->rreq.zcopy_hdr) == NULL, mpi_errno,
+                                MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+            MPIR_Memcpy(MPIDIG_REQUEST(rreq, req->rreq.zcopy_hdr), (char *) hdr + sizeof(*hdr),
+                        hdr->zcopy_hdr_sz);
+            MPIDIG_REQUEST(rreq, req->rreq.zcopy_hdr_sz) = hdr->zcopy_hdr_sz;
+        } else {
+            MPIDIG_REQUEST(rreq, req->rreq).zcopy_hdr = NULL;
+            MPIDIG_REQUEST(rreq, req->rreq).zcopy_hdr_sz = 0;
+        }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         MPIDI_REQUEST(rreq, is_local) = is_local;
 #endif
@@ -414,7 +460,8 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
             MPIDIG_recv_type_init(hdr->data_sz, rreq);
-            MPIDIG_do_cts(rreq);
+            MPIDIG_do_am_recv(hdr->src_rank, hdr->context_id, (char *) hdr + sizeof(*hdr),
+                              hdr->zcopy_hdr_sz, is_local, rreq);
         }
     }
 
