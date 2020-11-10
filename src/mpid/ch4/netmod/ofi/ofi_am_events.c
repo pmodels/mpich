@@ -35,6 +35,7 @@ int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
     src_handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
     mpi_errno = MPIDIG_global.origin_cbs[src_handler_id] (sreq);
     MPIR_ERR_CHECK(mpi_errno);
+    MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, ext_hdr));
     MPID_Request_complete(sreq);
 
   fn_exit:

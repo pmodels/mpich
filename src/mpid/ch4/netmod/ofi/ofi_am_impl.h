@@ -115,6 +115,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_init_request(const void *am_hdr,
         MPIR_Memcpy(req_hdr->am_hdr, am_hdr, am_hdr_sz);
     }
 
+    MPIDI_OFI_AMREQUEST_HDR(sreq, ext_hdr) = NULL;
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
     return mpi_errno;
 }

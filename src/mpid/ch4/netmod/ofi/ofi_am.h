@@ -47,15 +47,84 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_prepare_send(int handler_id, const void
                                                       MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
+    int c;
+    int dt_contig = 0;
+    MPI_Aint data_sz = 0;
+    MPL_pointer_attr_t attr;
+    void *data = NULL;
+    MPI_Aint dt_true_lb = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
 
-    *ext_hdr = NULL;
-    *ext_hdr_sz = 0;
+    MPIDI_Datatype_check_contig_size(datatype, count, dt_contig, data_sz);
+    MPIR_GPU_query_pointer_attr(buf, &attr);
 
+    if (!dt_contig || (am_hdr_sz + data_sz <= MPIDI_NM_am_eager_limit())
+        || (attr.type == MPL_GPU_POINTER_DEV && !MPIDI_OFI_ENABLE_HMEM)) {
+        /* smaller than eager, noncontig or GPU buffer needs packing, do not do zcopy */
+        *ext_hdr = NULL;
+        *ext_hdr_sz = 0;
+        goto fn_exit;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "sreq handle=0x%x send ZCOPY", sreq->handle));
+    /* 1. Create memory for am_hdr + lmt_info and copy the am_hdr */
+    void *header = MPL_malloc(am_hdr_sz + sizeof(MPIDI_OFI_lmt_msg_payload_t), MPL_MEM_OTHER);
+    MPIR_ERR_CHKANDSTMT((header) == NULL, mpi_errno, MPI_ERR_OTHER, goto fn_fail, "**nomem");
+    MPIR_Memcpy(header, am_hdr, am_hdr_sz);
+
+    MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
+    MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    MPIDI_OFI_AMREQUEST_HDR(sreq, ext_hdr) = header;
+    /* also save handler id in request */
+    MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id = handler_id;
+
+    /* 2. register buffer */
+    MPIDI_OFI_lmt_msg_payload_t *lmt_info =
+        (MPIDI_OFI_lmt_msg_payload_t *) ((char *) header + am_hdr_sz);
+
+    MPIDI_Datatype_check_lb(datatype, dt_true_lb);
+    data = (char *) buf + dt_true_lb;
+
+    lmt_info->src_offset =
+        !MPIDI_OFI_ENABLE_MR_VIRT_ADDRESS ? (uint64_t) 0 : (uint64_t) (uintptr_t) data;
+
+    lmt_info->sreq_ptr = sreq;
+    if (!MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+        lmt_info->rma_key = MPIDI_OFI_mr_key_alloc();
+    } else {
+        lmt_info->rma_key = 0;
+    }
+    lmt_info->reg_sz = data_sz;
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "lmt_info.data_sz %ld", lmt_info->reg_sz));
+
+    MPIDI_OFI_CALL(fi_mr_reg(MPIDI_OFI_global.ctx[0].domain,
+                             data,
+                             data_sz,
+                             FI_REMOTE_READ,
+                             0ULL,
+                             lmt_info->rma_key,
+                             0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
+    MPL_atomic_fetch_add_int(&MPIDI_OFI_global.am_inflight_rma_send_mrs, 1);
+
+    if (MPIDI_OFI_ENABLE_MR_PROV_KEY) {
+        /* MR_BASIC */
+        lmt_info->rma_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+    }
+
+    MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
+
+    *ext_hdr = header;
+    *ext_hdr_sz = am_hdr_sz + sizeof(MPIDI_OFI_lmt_msg_payload_t);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_PREPARE_SEND);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,

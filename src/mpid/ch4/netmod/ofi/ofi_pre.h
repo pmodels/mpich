@@ -120,6 +120,7 @@ typedef enum {
 
 typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;
+    void *ext_hdr;
     struct fid_mr *lmt_mr;
     MPIDI_OFI_lmt_type_t lmt_type;
     union {
