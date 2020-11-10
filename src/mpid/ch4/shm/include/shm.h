@@ -20,6 +20,12 @@ int MPIDI_SHM_mpi_open_port(MPIR_Info * info_ptr, char *port_name);
 int MPIDI_SHM_mpi_close_port(const char *port_name);
 int MPIDI_SHM_mpi_comm_accept(const char *port_name, MPIR_Info * info, int root, MPIR_Comm * comm,
                               MPIR_Comm ** newcomm_ptr);
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_prepare_send(int handler_id, const void *buf,
+                                                       MPI_Count count, MPI_Datatype datatype,
+                                                       const void *am_hdr, MPI_Aint am_hdr_sz,
+                                                       void **ext_hdr, MPI_Aint * ext_hdr_sz,
+                                                       MPIR_Request * sreq)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    const void *am_hdr,
                                                    size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
