@@ -299,13 +299,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(int src_rank, MPIR_Context_id_t co
                                               const void *ext_hdr, MPI_Aint ext_hdr_sz,
                                               MPIR_Request * rreq)
 {
-    int ret = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    int c;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
 
+    MPIR_Assert(rreq);
+    MPIR_Assert(ext_hdr_sz == sizeof(MPIDI_OFI_lmt_msg_payload_t));
+
+    MPIDI_OFI_am_clear_request(rreq);
+    mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
+    MPIR_ERR_CHECK(mpi_errno);
+
+    MPIR_cc_incr(rreq->cc_ptr, &c);
+
+    MPIDI_OFI_lmt_msg_payload_t *lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) ext_hdr;
+    MPIR_Assert(lmt_msg->reg_sz);
+
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank = src_rank;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id = context_id;
+    MPIR_Assert(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr);
+
+    do_long_am_recv(lmt_msg->reg_sz, rreq, &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info));
+    /* completion in lmt event functions */
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
-    return ret;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* OFI_AM_H_INCLUDED */
