@@ -69,7 +69,6 @@ typedef struct {
 
     uint64_t src_offset;
     MPIR_Request *sreq_ptr;
-    uint64_t am_hdr_src;
     uint64_t rma_key;
     MPI_Aint reg_sz;
 } MPIDI_OFI_lmt_msg_payload_t;
