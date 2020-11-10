@@ -425,4 +425,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(int src_rank, MPIR_Context_id_t context_id,
+                                              const void *ext_hdr, MPI_Aint ext_hdr_sz,
+                                              MPIR_Request * rreq)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
+    return ret;
+}
+
 #endif /* UCX_AM_H_INCLUDED */
