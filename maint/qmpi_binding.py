@@ -285,19 +285,7 @@ qmpi_h_file.write("int QMPI_Register_function(int calling_tool_id, enum QMPI_Fun
                   "                           void (* function_ptr)(void)) MPICH_API_PUBLIC;\n");
 qmpi_h_file.write("int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,\n"
                   "                      void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;\n");
-qmpi_h_file.write("\n");
-qmpi_h_file.write("#include <stddef.h>\n"
-        "extern MPICH_API_PUBLIC void **MPIR_QMPI_storage;\n"
-        "\n"
-        "static inline int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage)\n"
-        "{\n"
-        "    int mpi_errno = MPI_SUCCESS;\n"
-        "\n"
-        "    *storage = MPIR_QMPI_storage[tool_id];\n"
-        "\n"
-        "    return mpi_errno;\n"
-        "}\n"
-        );
+qmpi_h_file.write("int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;\n");
 
 print('int MPII_qmpi_register_internal_functions(void)\n{\n');
 print(''.join(register_list));

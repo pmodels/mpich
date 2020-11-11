@@ -627,3 +627,12 @@ int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enu
 
     return mpi_errno;
 }
+
+int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    *storage = MPIR_QMPI_storage[tool_id];
+
+    return mpi_errno;
+}
