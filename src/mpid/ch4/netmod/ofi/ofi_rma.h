@@ -144,7 +144,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_prepare_target_mr(int target_rank,
                              (const void *) target_addr, target_extent, &target_mr_found);
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "target_mr found %d addr 0x%lx, extent 0x%lx",
+                        (MPL_DBG_FDEST, "target_mr found %d addr 0x" PRIx64 ", extent 0x%lx",
                          target_mr_found ? 1 : 0, target_addr, target_extent));
 
         if (target_mr_found) {
