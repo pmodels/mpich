@@ -411,4 +411,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager_limit(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                            const void *data, MPI_Count count,
+                                                            MPI_Datatype datatype,
+                                                            MPIR_Request * sreq)
+{
+    return (am_hdr_sz + data_sz) <= (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
+}
+
 #endif /* UCX_AM_H_INCLUDED */
