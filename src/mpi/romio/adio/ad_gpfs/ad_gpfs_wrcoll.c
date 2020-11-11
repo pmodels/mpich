@@ -360,7 +360,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
             ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf,
                                            datatype, error_code, firstFileOffset, lastFileOffset,
                                            currentValidDataIndex, fd_start, fd_end, &holeFound,
-                                           noStripeParms);
+                                           &noStripeParms);
             fd->romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
             GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
             ADIOI_Free(offset_list);
@@ -433,7 +433,15 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ);
 
     ADIOI_Free(count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
+    if (gpfsmpio_tuneblocking) {
+        for ( i = 0; i < nprocs; ++i ) {
+            if ( my_req[i].count ) {
+                ADIOI_Free(my_req[i].offsets);
+            }
+        }
+    } else {
+        ADIOI_Free(my_req[0].offsets);
+    }
     ADIOI_Free(my_req);
 
     /* exchange data and write in sizes of no more than coll_bufsize. */
@@ -447,8 +455,17 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     GPFSMPIO_T_CIO_REPORT(1, fd, myrank, nprocs);
 
     /* free all memory allocated for collective I/O */
-    ADIOI_Free(others_req[0].offsets);
-    ADIOI_Free(others_req[0].mem_ptrs);
+    if (gpfsmpio_tuneblocking) {
+        for ( i = 0; i < nprocs; ++i ) {
+            if ( others_req[i].count ) {
+                ADIOI_Free(others_req[i].offsets);
+                ADIOI_Free(others_req[i].mem_ptrs);
+            }
+        }
+    } else {
+        ADIOI_Free(others_req[0].offsets);
+        ADIOI_Free(others_req[0].mem_ptrs);
+    }
     ADIOI_Free(others_req);
 
     ADIOI_Free(buf_idx);
