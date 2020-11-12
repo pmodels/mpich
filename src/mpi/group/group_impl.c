@@ -6,6 +6,10 @@
 #include "mpiimpl.h"
 #include "group.h"
 
+/* temporary declaration until auto-generated */
+int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *pset_name,
+                                      MPIR_Group ** newgroup_ptr);
+
 int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -618,6 +622,50 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_UNION_IMPL);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Group_from_session_pset_impl(MPIR_Session * session_ptr, const char *pset_name,
+                                      MPIR_Group ** new_group_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Group *group_ptr;
+
+    if (strcmp(pset_name, "mpi://WORLD") == 0) {
+        mpi_errno = MPIR_Group_create(MPIR_Process.size, &group_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        group_ptr->size = MPIR_Process.size;
+        group_ptr->rank = MPIR_Process.rank;
+        group_ptr->is_local_dense_monotonic = TRUE;
+        for (int i = 0; i < group_ptr->size; i++) {
+            group_ptr->lrank_to_lpid[i].lpid = i;
+            group_ptr->lrank_to_lpid[i].next_lpid = i + 1;
+        }
+        group_ptr->lrank_to_lpid[group_ptr->size - 1].next_lpid = -1;
+        group_ptr->idx_of_first_lpid = 0;
+        group_ptr->pset_name = "mpi://WORLD";
+    } else if (strcmp(pset_name, "mpi://SELF") == 0) {
+        mpi_errno = MPIR_Group_create(1, &group_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        group_ptr->size = 1;
+        group_ptr->rank = 0;
+        group_ptr->is_local_dense_monotonic = TRUE;
+        group_ptr->lrank_to_lpid[0].lpid = MPIR_Process.rank;
+        group_ptr->lrank_to_lpid[0].next_lpid = -1;
+        group_ptr->idx_of_first_lpid = 0;
+        group_ptr->pset_name = "mpi://SELF";
+    } else {
+        /* TODO: Implement pset struct, locate pset struct ptr */
+        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**psetinvalidname");
+    }
+
+    *new_group_ptr = group_ptr;
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
