@@ -33,6 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_progress_do_queue(int vni_idx);
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
     MPIDI_OFI_AMREQUEST(req, req_hdr) = NULL;
+    MPIDI_OFI_AMREQUEST(req, am_type_choice) = MPIDI_AMTYPE_NONE;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request * req)
@@ -54,25 +55,52 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
-    MPIDI_Datatype_check_size(datatype, count, data_sz);
-    /* TODO: check for RDMA read too */
-    if (data_sz + am_hdr_sz <= MPIDI_NM_am_eager_limit()) {
-        /* EAGER */
-        mpi_errno = MPIDI_OFI_do_am_isend_eager(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
-                                                count, datatype, sreq,
-                                                false /* not for issue deferred */);
-    } else {
-        if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
-            /* RDMA READ */
-            mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(rank, comm, handler_id, am_hdr, am_hdr_sz,
-                                                        data, count, datatype, sreq,
-                                                        false /* not for issue deferred */);
-        } else {
-            /* PIPELINE */
+    switch (MPIDI_OFI_AMREQUEST(sreq, am_type_choice)) {
+        case MPIDI_AMTYPE_NONE:
+            /* if no preselected amtype, do check here */
+            MPIDI_Datatype_check_size(datatype, count, data_sz);
+            if (data_sz + am_hdr_sz <= MPIDI_NM_am_eager_limit()) {
+                /* EAGER */
+                mpi_errno = MPIDI_OFI_do_am_isend_eager(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                                        data, count, datatype, sreq, false);
+            } else {
+                if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
+                    /* RDMA READ */
+                    mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(rank, comm, handler_id, am_hdr,
+                                                                am_hdr_sz, data, count, datatype,
+                                                                sreq, false);
+                } else {
+                    /* PIPELINE */
+                    mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr,
+                                                               am_hdr_sz, data, count, datatype,
+                                                               sreq, data_sz, false);
+                }
+            }
+            break;
+        case MPIDI_AMTYPE_SHORT_HDR:
+            MPIR_Assert(0);     /* header only should go to the send hdr interface */
+            break;
+        case MPIDI_AMTYPE_SHORT:
+            mpi_errno = MPIDI_OFI_do_am_isend_eager(rank, comm, handler_id, am_hdr, am_hdr_sz, data,
+                                                    count, datatype, sreq, false);
+            /* cleanup preselected amtype to avoid problem with reused request */
+            MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_NONE;
+            break;
+        case MPIDI_AMTYPE_PIPELINE:
             mpi_errno = MPIDI_OFI_do_am_isend_pipeline(rank, comm, handler_id, am_hdr, am_hdr_sz,
-                                                       data, count, datatype, sreq, data_sz,
-                                                       false /* not for issue deferred */);
-        }
+                                                       data, count, datatype, sreq,
+                                                       MPIDI_OFI_AMREQUEST(sreq, data_sz), false);
+            /* cleanup preselected amtype to avoid problem with reused request */
+            MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_NONE;
+            break;
+        case MPIDI_AMTYPE_RDMA_READ:
+            mpi_errno = MPIDI_OFI_do_am_isend_rdma_read(rank, comm, handler_id, am_hdr, am_hdr_sz,
+                                                        data, count, datatype, sreq, false);
+            /* cleanup preselected amtype to avoid problem with reused request */
+            MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_NONE;
+            break;
+        default:
+            MPIR_Assert(0);     /* header only should go to the send hdr interface */
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND);
@@ -213,10 +241,25 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager_limit(MPI_Aint am_hdr_sz, 
                                                             MPI_Datatype datatype,
                                                             MPIR_Request * sreq)
 {
-    /* TODO: extending this to include pretending RDMA_READ as eager. In this case, we just tells
-     * the sender to not worry about the protocol and let netmod send the data. */
-    return (am_hdr_sz + data_sz)
-        <= (MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t));
+    MPIDI_OFI_AMREQUEST(sreq, data_sz) = data_sz;
+    if ((am_hdr_sz + data_sz)
+        <= (MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t))) {
+        MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_SHORT;
+        return true;
+    } else {
+        /* TODO: extending this to include pretending RDMA_READ as eager. In this case, we just
+         * tells the sender to not worry about the protocol and let netmod send the data. */
+        if (MPIDI_OFI_ENABLE_RMA && !MPIR_CVAR_CH4_OFI_AM_LONG_FORCE_PIPELINE) {
+            MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_RDMA_READ;
+            /* FIXME: report this is none eager and let CH4 goto RNDV path. This is just for testing
+             * and will be switched reporting true in the future to save the unnecessary RTS */
+            return false;
+        } else {
+            /* Forced PIPELINE */
+            MPIDI_OFI_AMREQUEST(sreq, am_type_choice) = MPIDI_AMTYPE_PIPELINE;
+            return false;
+        }
+    }
 }
 
 #endif /* OFI_AM_H_INCLUDED */
