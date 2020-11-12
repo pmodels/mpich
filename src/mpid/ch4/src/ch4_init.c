@@ -817,6 +817,7 @@ typedef enum {
 typedef struct {
     void *user_buf;
 
+    void *real_buf;
     alloc_mem_buf_type_e buf_type;
     size_t size;
 
@@ -834,6 +835,8 @@ void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
     MPIR_hwtopo_gid_t mem_gid = MPIR_HWTOPO_GID_ROOT;
     alloc_mem_buf_type_e buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
     void *user_buf = NULL;
+    void *real_buf;
+    int alignment = MAX_ALIGNMENT;
 
     MPIR_Info *curr_info;
     LL_FOREACH(info_ptr, curr_info) {
@@ -876,6 +879,11 @@ void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
                 assert(0);
             }
         }
+
+        MPIR_Info_get_impl(info_ptr, "mpi_minimum_memory_alignment", MPI_MAX_INFO_VAL, val, &flag);
+        if (flag) {
+            alignment = atoi(val);
+        }
     }
 
     switch (buf_type) {
@@ -885,34 +893,39 @@ void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
              * process is bound to the corresponding device; allocate
              * memory and bind it to device. */
             assert(mem_gid != MPIR_HWTOPO_GID_ROOT);
-            user_buf = MPL_mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0,
-                                MPL_MEM_USER);
-            MPIR_hwtopo_mem_bind(user_buf, size, mem_gid);
+            real_buf =
+                MPL_mmap(NULL, size + alignment, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1,
+                         0, MPL_MEM_USER);
+            MPIR_hwtopo_mem_bind(real_buf, size + alignment, mem_gid);
             break;
 
         case ALLOC_MEM_BUF_TYPE__NETMOD:
-            user_buf = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
+            real_buf = MPIDI_NM_mpi_alloc_mem(size + alignment, info_ptr);
             break;
 
         case ALLOC_MEM_BUF_TYPE__SHMMOD:
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-            user_buf = MPIDI_SHM_mpi_alloc_mem(size, info_ptr);
+            real_buf = MPIDI_SHM_mpi_alloc_mem(size + alignment, info_ptr);
 #else
             goto fn_exit;
 #endif
             break;
 
         default:
-            user_buf = MPIDIG_mpi_alloc_mem(size, info_ptr);
+            real_buf = MPIDIG_mpi_alloc_mem(size + alignment, info_ptr);
             break;
     }
 
     alloc_mem_container_s *container;
     container = (alloc_mem_container_s *) MPL_malloc(sizeof(alloc_mem_container_s), MPL_MEM_USER);
 
+    int diff = alignment - (int) ((uintptr_t) real_buf % alignment);
+    user_buf = (void *) ((uintptr_t) real_buf + diff);
+
+    container->real_buf = real_buf;
     container->user_buf = user_buf;
     container->buf_type = buf_type;
-    container->size = size;
+    container->size = size + alignment;
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
     HASH_ADD_PTR(alloc_mem_container_list, user_buf, container, MPL_MEM_USER);
@@ -940,23 +953,23 @@ int MPID_Free_mem(void *user_buf)
     switch (container->buf_type) {
         case ALLOC_MEM_BUF_TYPE__HBM:
         case ALLOC_MEM_BUF_TYPE__DDR:
-            MPL_munmap(container->user_buf, container->size, MPL_MEM_USER);
+            MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
             break;
 
         case ALLOC_MEM_BUF_TYPE__NETMOD:
-            mpi_errno = MPIDI_NM_mpi_free_mem(container->user_buf);
+            mpi_errno = MPIDI_NM_mpi_free_mem(container->real_buf);
             break;
 
         case ALLOC_MEM_BUF_TYPE__SHMMOD:
 #ifndef MPIDI_CH4_DIRECT_NETMOD
-            mpi_errno = MPIDI_SHM_mpi_free_mem(container->user_buf);
+            mpi_errno = MPIDI_SHM_mpi_free_mem(container->real_buf);
 #else
             assert(0);
 #endif
             break;
 
         default:
-            MPIDIG_mpi_free_mem(container->user_buf);
+            MPIDIG_mpi_free_mem(container->real_buf);
             break;
     }
 
