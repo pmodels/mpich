@@ -39,6 +39,22 @@ void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errh
 
 #endif
 
+int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
+{
+    QMPI_Context context;
+    QMPI_Comm_get_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_get_errhandler(context, 0, comm, errhandler);
+
+    fn_ptr = (QMPI_Comm_get_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GET_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GET_ERRHANDLER_T], comm,
+                      errhandler);
+}
+
 /*@
    MPI_Comm_get_errhandler - Get the error handler attached to a communicator
 
@@ -56,7 +72,8 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler * errhandler)
+int QMPI_Comm_get_errhandler(QMPI_Context context, int tool_id, MPI_Comm comm,
+                             MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -64,6 +64,25 @@ int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr,
 
 #endif
 
+int MPI_Dist_graph_neighbors(MPI_Comm comm,
+                             int maxindegree, int sources[], int sourceweights[],
+                             int maxoutdegree, int destinations[], int destweights[])
+{
+    QMPI_Context context;
+    QMPI_Dist_graph_neighbors_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Dist_graph_neighbors(context, 0, comm, maxindegree, sources, sourceweights,
+                                         maxoutdegree, destinations, destweights);
+
+    fn_ptr = (QMPI_Dist_graph_neighbors_t *) MPIR_QMPI_first_fn_ptrs[MPI_DIST_GRAPH_NEIGHBORS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_DIST_GRAPH_NEIGHBORS_T], comm,
+                      maxindegree, sources, sourceweights, maxoutdegree, destinations, destweights);
+}
+
 /*@
 MPI_Dist_graph_neighbors - Provides adjacency information for a distributed graph topology.
 
@@ -85,9 +104,9 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Dist_graph_neighbors(MPI_Comm comm,
-                             int maxindegree, int sources[], int sourceweights[],
-                             int maxoutdegree, int destinations[], int destweights[])
+int QMPI_Dist_graph_neighbors(QMPI_Context context, int tool_id, MPI_Comm comm,
+                              int maxindegree, int sources[], int sourceweights[],
+                              int maxoutdegree, int destinations[], int destweights[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

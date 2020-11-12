@@ -34,6 +34,21 @@ int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_write_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_write(context, 0, session, handle, buf);
+
+    fn_ptr = (QMPI_T_pvar_write_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_WRITE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_WRITE_T], session, handle, buf);
+}
+
 /*@
 MPI_T_pvar_write - Write a performance variable
 
@@ -62,7 +77,8 @@ MPI_T_pvar_write().
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_PVAR_NO_WRITE
 @*/
-int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
+int QMPI_T_pvar_write(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                      MPI_T_pvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

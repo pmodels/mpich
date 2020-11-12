@@ -251,6 +251,26 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 
 #endif
 
+int MPI_Type_indexed(int count,
+                     const int *array_of_blocklengths,
+                     const int *array_of_displacements,
+                     MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_indexed_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_indexed(context, 0, count, array_of_blocklengths, array_of_displacements,
+                                 oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_indexed_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_INDEXED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_INDEXED_T], count,
+                      array_of_blocklengths, array_of_displacements, oldtype, newtype);
+}
+
 /*@
     MPI_Type_indexed - Creates an indexed datatype
 
@@ -296,10 +316,10 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_ARG
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Type_indexed(int count,
-                     const int *array_of_blocklengths,
-                     const int *array_of_displacements,
-                     MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_indexed(QMPI_Context context, int tool_id, int count,
+                      const int *array_of_blocklengths,
+                      const int *array_of_displacements,
+                      MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_INDEXED);

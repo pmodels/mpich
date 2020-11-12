@@ -48,6 +48,23 @@ int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, in
 
 #endif
 
+int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted)
+{
+    QMPI_Context context;
+    QMPI_Dist_graph_neighbors_count_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Dist_graph_neighbors_count(context, 0, comm, indegree, outdegree, weighted);
+
+    fn_ptr = (QMPI_Dist_graph_neighbors_count_t *)
+        MPIR_QMPI_first_fn_ptrs[MPI_DIST_GRAPH_NEIGHBORS_COUNT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_DIST_GRAPH_NEIGHBORS_COUNT_T], comm,
+                      indegree, outdegree, weighted);
+}
+
 /*@
 MPI_Dist_graph_neighbors_count - Provides adjacency information for a distributed graph topology.
 
@@ -66,7 +83,8 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted)
+int QMPI_Dist_graph_neighbors_count(QMPI_Context context, int tool_id, MPI_Comm comm, int *indegree,
+                                    int *outdegree, int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

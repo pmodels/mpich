@@ -103,6 +103,21 @@ int MPIR_Comm_compare_impl(MPIR_Comm * comm_ptr1, MPIR_Comm * comm_ptr2, int *re
 #endif
 
 
+int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
+{
+    QMPI_Context context;
+    QMPI_Comm_compare_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_compare(context, 0, comm1, comm2, result);
+
+    fn_ptr = (QMPI_Comm_compare_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_COMPARE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_COMPARE_T], comm1, comm2, result);
+}
+
 /*@
 
 MPI_Comm_compare - Compares two communicators
@@ -139,7 +154,8 @@ this routine is only thread-safe.)
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
+int QMPI_Comm_compare(QMPI_Context context, int tool_id, MPI_Comm comm1, MPI_Comm comm2,
+                      int *result)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr1 = NULL;

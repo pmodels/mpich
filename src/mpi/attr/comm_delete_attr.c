@@ -26,6 +26,21 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 
 #endif
 
+int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
+{
+    QMPI_Context context;
+    QMPI_Comm_delete_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_delete_attr(context, 0, comm, comm_keyval);
+
+    fn_ptr = (QMPI_Comm_delete_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_DELETE_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_DELETE_ATTR_T], comm, comm_keyval);
+}
+
 /*@
    MPI_Comm_delete_attr - Deletes an attribute value associated with a key on
    a  communicator
@@ -45,7 +60,7 @@ Input Parameters:
 
 .seealso MPI_Comm_set_attr, MPI_Comm_create_keyval
 @*/
-int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
+int QMPI_Comm_delete_attr(QMPI_Context context, int tool_id, MPI_Comm comm, int comm_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

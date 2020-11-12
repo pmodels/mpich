@@ -27,6 +27,21 @@ int MPI_Add_error_string(int errorcode, const char *string)
 
 #endif
 
+int MPI_Add_error_string(int errorcode, const char *string)
+{
+    QMPI_Context context;
+    QMPI_Add_error_string_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Add_error_string(context, 0, errorcode, string);
+
+    fn_ptr = (QMPI_Add_error_string_t *) MPIR_QMPI_first_fn_ptrs[MPI_ADD_ERROR_STRING_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ADD_ERROR_STRING_T], errorcode, string);
+}
+
 /*@
    MPI_Add_error_string - Associates an error string with an MPI error code or
    class
@@ -54,7 +69,7 @@ with this routine.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Add_error_string(int errorcode, const char *string)
+int QMPI_Add_error_string(QMPI_Context context, int tool_id, int errorcode, const char *string)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_STRING);

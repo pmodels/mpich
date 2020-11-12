@@ -28,6 +28,23 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message,
+              MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Mrecv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Mrecv(context, 0, buf, count, datatype, message, status);
+
+    fn_ptr = (QMPI_Mrecv_t *) MPIR_QMPI_first_fn_ptrs[MPI_MRECV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_MRECV_T], buf, count, datatype, message,
+                      status);
+}
+
 /*@
 MPI_Mrecv - Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
 
@@ -48,8 +65,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message,
-              MPI_Status * status)
+int QMPI_Mrecv(QMPI_Context context, int tool_id, void *buf, int count, MPI_Datatype datatype,
+               MPI_Message * message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL, *rreq = NULL;

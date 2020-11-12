@@ -24,6 +24,21 @@ double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
 #endif
 
 
+double MPI_Wtime(void)
+{
+    QMPI_Context context;
+    QMPI_Wtime_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Wtime(context, 0);
+
+    fn_ptr = (QMPI_Wtime_t *) MPIR_QMPI_first_fn_ptrs[MPI_WTIME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WTIME_T]);
+}
+
 /*@
   MPI_Wtime - Returns an elapsed time on the calling processor
 
@@ -41,7 +56,7 @@ double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
 
 .see also: MPI_Wtick, MPI_Comm_get_attr, MPI_Attr_get
 @*/
-double MPI_Wtime(void)
+double QMPI_Wtime(QMPI_Context context, int tool_id)
 {
     double d;
     MPL_time_t t;

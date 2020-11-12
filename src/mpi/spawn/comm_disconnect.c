@@ -25,6 +25,21 @@ int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_
 
 #endif
 
+int MPI_Comm_disconnect(MPI_Comm * comm)
+{
+    QMPI_Context context;
+    QMPI_Comm_disconnect_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_disconnect(context, 0, comm);
+
+    fn_ptr = (QMPI_Comm_disconnect_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_DISCONNECT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_DISCONNECT_T], comm);
+}
+
 /*@
    MPI_Comm_disconnect - Disconnect from a communicator
 
@@ -45,7 +60,7 @@ with 'MPI_COMM_WORLD' or 'MPI_COMM_SELF'.
 
 .seealso MPI_Comm_connect, MPI_Comm_join
 @*/
-int MPI_Comm_disconnect(MPI_Comm * comm)
+int QMPI_Comm_disconnect(QMPI_Context context, int tool_id, MPI_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

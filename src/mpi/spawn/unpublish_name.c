@@ -27,6 +27,22 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 
 #endif
 
+int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port_name)
+{
+    QMPI_Context context;
+    QMPI_Unpublish_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Unpublish_name(context, 0, service_name, info, port_name);
+
+    fn_ptr = (QMPI_Unpublish_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_UNPUBLISH_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_UNPUBLISH_NAME_T], service_name, info,
+                      port_name);
+}
+
 /*@
    MPI_Unpublish_name - Unpublish a service name published with
    MPI_Publish_name
@@ -46,7 +62,8 @@ Input Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port_name)
+int QMPI_Unpublish_name(QMPI_Context context, int tool_id, const char *service_name, MPI_Info info,
+                        const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;

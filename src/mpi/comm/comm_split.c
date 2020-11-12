@@ -386,6 +386,22 @@ int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** 
 
 
 
+int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_split_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_split(context, 0, comm, color, key, newcomm);
+
+    fn_ptr = (QMPI_Comm_split_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SPLIT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SPLIT_T], comm, color, key,
+                      newcomm);
+}
+
 /*@
 
 MPI_Comm_split - Creates new communicators based on colors and keys
@@ -422,7 +438,8 @@ Algorithm:
 
 .seealso: MPI_Comm_free
 @*/
-int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm * newcomm)
+int QMPI_Comm_split(QMPI_Context context, int tool_id, MPI_Comm comm, int color, int key,
+                    MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;

@@ -26,6 +26,21 @@ int MPI_File_get_amode(MPI_File fh, int *amode)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_get_amode(MPI_File fh, int *amode)
+{
+    QMPI_Context context;
+    QMPI_File_get_amode_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_get_amode(context, 0, fh, amode);
+
+    fn_ptr = (QMPI_File_get_amode_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_GET_AMODE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_GET_AMODE_T], fh, amode);
+}
+
 /*@
     MPI_File_get_amode - Returns the file access mode
 
@@ -37,7 +52,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_get_amode(MPI_File fh, int *amode)
+int QMPI_File_get_amode(QMPI_Context context, int tool_id, MPI_File fh, int *amode)
 {
     int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_GET_AMODE";

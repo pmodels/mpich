@@ -26,6 +26,21 @@ MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) __attribute__ ((weak, alias(
 #endif
 
 
+MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp)
+{
+    QMPI_Context context;
+    QMPI_Aint_add_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Aint_add(context, 0, base, disp);
+
+    fn_ptr = (QMPI_Aint_add_t *) MPIR_QMPI_first_fn_ptrs[MPI_AINT_ADD_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_AINT_ADD_T], base, disp);
+}
+
 /*@
 MPI_Aint_add - Returns the sum of base and disp
 
@@ -51,7 +66,7 @@ as if the process that originally produced base had called\:
 .seealso: MPI_Aint_diff
 @*/
 
-MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp)
+MPI_Aint QMPI_Aint_add(QMPI_Context context, int tool_id, MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);

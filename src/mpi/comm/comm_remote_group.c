@@ -63,6 +63,21 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 
 #endif
 
+int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
+{
+    QMPI_Context context;
+    QMPI_Comm_remote_group_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_remote_group(context, 0, comm, group);
+
+    fn_ptr = (QMPI_Comm_remote_group_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_REMOTE_GROUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_REMOTE_GROUP_T], comm, group);
+}
+
 /*@
 
 MPI_Comm_remote_group - Accesses the remote group associated with
@@ -87,7 +102,7 @@ The user is responsible for freeing the group when it is no longer needed.
 
 .seealso MPI_Group_free
 @*/
-int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group * group)
+int QMPI_Comm_remote_group(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Group * group)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

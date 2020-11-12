@@ -25,6 +25,21 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__ ((weak, alias("PMPI
 
 #endif
 
+int MPI_Attr_delete(MPI_Comm comm, int keyval)
+{
+    QMPI_Context context;
+    QMPI_Attr_delete_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Attr_delete(context, 0, comm, keyval);
+
+    fn_ptr = (QMPI_Attr_delete_t *) MPIR_QMPI_first_fn_ptrs[MPI_ATTR_DELETE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ATTR_DELETE_T], comm, keyval);
+}
+
 /*@
 
 MPI_Attr_delete - Deletes an attribute value associated with a key on a
@@ -46,7 +61,7 @@ Input Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_PERM_KEY
 @*/
-int MPI_Attr_delete(MPI_Comm comm, int keyval)
+int QMPI_Attr_delete(QMPI_Context context, int tool_id, MPI_Comm comm, int keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);

@@ -28,6 +28,26 @@ int MPI_Type_create_hindexed(int count, const int array_of_blocklengths[],
 
 #endif
 
+int MPI_Type_create_hindexed(int count,
+                             const int array_of_blocklengths[],
+                             const MPI_Aint array_of_displacements[],
+                             MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_create_hindexed_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_hindexed(context, 0, count, array_of_blocklengths,
+                                         array_of_displacements, oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_create_hindexed_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_HINDEXED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_HINDEXED_T], count,
+                      array_of_blocklengths, array_of_displacements, oldtype, newtype);
+}
+
 /*@
    MPI_Type_create_hindexed - Create a datatype for an indexed datatype with
    displacements in bytes
@@ -51,10 +71,10 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_create_hindexed(int count,
-                             const int array_of_blocklengths[],
-                             const MPI_Aint array_of_displacements[],
-                             MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_create_hindexed(QMPI_Context context, int tool_id, int count,
+                              const int array_of_blocklengths[],
+                              const MPI_Aint array_of_displacements[],
+                              MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;

@@ -413,6 +413,25 @@ int MPIR_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ialltoall_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ialltoall(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                              recvtype, comm, request);
+
+    fn_ptr = (QMPI_Ialltoall_t *) MPIR_QMPI_first_fn_ptrs[MPI_IALLTOALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IALLTOALL_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcount, recvtype, comm, request);
+}
+
 /*@
 MPI_Ialltoall - Sends data from all to all processes in a nonblocking way
 
@@ -434,9 +453,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  MPI_Comm comm, MPI_Request * request)
+int QMPI_Ialltoall(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

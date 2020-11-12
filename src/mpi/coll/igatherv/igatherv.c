@@ -284,6 +284,25 @@ int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                 const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                 MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Igatherv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Igatherv(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                             recvtype, root, comm, request);
+
+    fn_ptr = (QMPI_Igatherv_t *) MPIR_QMPI_first_fn_ptrs[MPI_IGATHERV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IGATHERV_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, request);
+}
+
 /*@
 MPI_Igatherv - Gathers into specified locations from all processes in a group
                in a nonblocking way
@@ -308,9 +327,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                 const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
-                 MPI_Comm comm, MPI_Request * request)
+int QMPI_Igatherv(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                  MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[],
+                  MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

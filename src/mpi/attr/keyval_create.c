@@ -27,6 +27,23 @@ int MPI_Keyval_create(MPI_Copy_function * copy_fn, MPI_Delete_function * delete_
 
 #endif
 
+int MPI_Keyval_create(MPI_Copy_function * copy_fn,
+                      MPI_Delete_function * delete_fn, int *keyval, void *extra_state)
+{
+    QMPI_Context context;
+    QMPI_Keyval_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Keyval_create(context, 0, copy_fn, delete_fn, keyval, extra_state);
+
+    fn_ptr = (QMPI_Keyval_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_KEYVAL_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_KEYVAL_CREATE_T], copy_fn, delete_fn,
+                      keyval, extra_state);
+}
+
 /*@
 
 MPI_Keyval_create - Greates a new attribute key
@@ -62,8 +79,8 @@ The replacement for this routine is 'MPI_Comm_create_keyval'.
 
 .seealso  MPI_Keyval_free, MPI_Comm_create_keyval
 @*/
-int MPI_Keyval_create(MPI_Copy_function * copy_fn,
-                      MPI_Delete_function * delete_fn, int *keyval, void *extra_state)
+int QMPI_Keyval_create(QMPI_Context context, int tool_id, MPI_Copy_function * copy_fn,
+                       MPI_Delete_function * delete_fn, int *keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_CREATE);

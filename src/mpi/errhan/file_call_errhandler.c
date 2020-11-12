@@ -27,6 +27,21 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 
 #endif
 
+int MPI_File_call_errhandler(MPI_File fh, int errorcode)
+{
+    QMPI_Context context;
+    QMPI_File_call_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_call_errhandler(context, 0, fh, errorcode);
+
+    fn_ptr = (QMPI_File_call_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_CALL_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_CALL_ERRHANDLER_T], fh, errorcode);
+}
+
 /*@
    MPI_File_call_errhandler - Call the error handler installed on a
    file
@@ -43,7 +58,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_FILE
 @*/
-int MPI_File_call_errhandler(MPI_File fh, int errorcode)
+int QMPI_File_call_errhandler(QMPI_Context context, int tool_id, MPI_File fh, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY

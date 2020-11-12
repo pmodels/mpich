@@ -26,6 +26,21 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 
 #endif
 
+int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
+{
+    QMPI_Context context;
+    QMPI_Win_get_group_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_get_group(context, 0, win, group);
+
+    fn_ptr = (QMPI_Win_get_group_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_GET_GROUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_GET_GROUP_T], win, group);
+}
+
 /*@
    MPI_Win_get_group - Get the MPI Group of the window object
 
@@ -51,7 +66,7 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
+int QMPI_Win_get_group(QMPI_Context context, int tool_id, MPI_Win win, MPI_Group * group)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

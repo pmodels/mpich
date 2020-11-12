@@ -25,6 +25,21 @@ int MPI_Free_mem(void *base) __attribute__ ((weak, alias("PMPI_Free_mem")));
 
 #endif
 
+int MPI_Free_mem(void *base)
+{
+    QMPI_Context context;
+    QMPI_Free_mem_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Free_mem(context, 0, base);
+
+    fn_ptr = (QMPI_Free_mem_t *) MPIR_QMPI_first_fn_ptrs[MPI_FREE_MEM_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FREE_MEM_T], base);
+}
+
 /*@
    MPI_Free_mem - Free memory allocated with MPI_Alloc_mem
 
@@ -39,7 +54,7 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Free_mem(void *base)
+int QMPI_Free_mem(QMPI_Context context, int tool_id, void *base)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FREE_MEM);

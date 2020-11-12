@@ -30,6 +30,21 @@ int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name)
 
 #endif
 
+int MPI_Open_port(MPI_Info info, char *port_name)
+{
+    QMPI_Context context;
+    QMPI_Open_port_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Open_port(context, 0, info, port_name);
+
+    fn_ptr = (QMPI_Open_port_t *) MPIR_QMPI_first_fn_ptrs[MPI_OPEN_PORT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_OPEN_PORT_T], info, port_name);
+}
+
 /*@
    MPI_Open_port - Establish an address that can be used to establish
    connections between groups of MPI processes
@@ -60,7 +75,7 @@ The maximum size string that may be supplied by the system is
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Open_port(MPI_Info info, char *port_name)
+int QMPI_Open_port(QMPI_Context context, int tool_id, MPI_Info info, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;

@@ -37,6 +37,21 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count * size)
+{
+    QMPI_Context context;
+    QMPI_Type_size_x_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_size_x(context, 0, datatype, size);
+
+    fn_ptr = (QMPI_Type_size_x_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_SIZE_X_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_SIZE_X_T], datatype, size);
+}
+
 /*@
 MPI_Type_size_x - Return the number of bytes occupied by entries
                   in the datatype
@@ -53,7 +68,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count * size)
+int QMPI_Type_size_x(QMPI_Context context, int tool_id, MPI_Datatype datatype, MPI_Count * size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SIZE_X);

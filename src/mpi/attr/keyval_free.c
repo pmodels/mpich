@@ -25,6 +25,21 @@ int MPI_Keyval_free(int *keyval) __attribute__ ((weak, alias("PMPI_Keyval_free")
 
 #endif
 
+int MPI_Keyval_free(int *keyval)
+{
+    QMPI_Context context;
+    QMPI_Keyval_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Keyval_free(context, 0, keyval);
+
+    fn_ptr = (QMPI_Keyval_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_KEYVAL_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_KEYVAL_FREE_T], keyval);
+}
+
 /*@
 
 MPI_Keyval_free - Frees an attribute key for communicators
@@ -49,7 +64,7 @@ The replacement for this routine is 'MPI_Comm_free_keyval'.
 
 .seealso: MPI_Keyval_create, MPI_Comm_free_keyval
 @*/
-int MPI_Keyval_free(int *keyval)
+int QMPI_Keyval_free(QMPI_Context context, int tool_id, int *keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);

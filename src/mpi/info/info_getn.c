@@ -44,6 +44,21 @@ void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 #endif
 
 
+int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
+{
+    QMPI_Context context;
+    QMPI_Info_get_nkeys_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_get_nkeys(context, 0, info, nkeys);
+
+    fn_ptr = (QMPI_Info_get_nkeys_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_GET_NKEYS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_GET_NKEYS_T], info, nkeys);
+}
+
 /*@
     MPI_Info_get_nkeys - Returns the number of currently defined keys in info
 
@@ -61,7 +76,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
+int QMPI_Info_get_nkeys(QMPI_Context context, int tool_id, MPI_Info info, int *nkeys)
 {
     MPIR_Info *info_ptr = 0;
     int mpi_errno = MPI_SUCCESS;

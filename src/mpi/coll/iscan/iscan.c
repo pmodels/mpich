@@ -217,6 +217,23 @@ int MPIR_Iscan(const void *sendbuf, void *recvbuf, int count,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+              MPI_Op op, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Iscan_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Iscan(context, 0, sendbuf, recvbuf, count, datatype, op, comm, request);
+
+    fn_ptr = (QMPI_Iscan_t *) MPIR_QMPI_first_fn_ptrs[MPI_ISCAN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ISCAN_T], sendbuf, recvbuf, count,
+                      datatype, op, comm, request);
+}
+
 /*@
 MPI_Iscan - Computes the scan (partial reductions) of data on a collection of
             processes in a nonblocking way
@@ -238,8 +255,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-              MPI_Op op, MPI_Comm comm, MPI_Request * request)
+int QMPI_Iscan(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf, int count,
+               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

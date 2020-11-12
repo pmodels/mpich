@@ -94,6 +94,22 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *fla
 }
 #endif
 
+int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Win_get_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_get_attr(context, 0, win, win_keyval, attribute_val, flag);
+
+    fn_ptr = (QMPI_Win_get_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_GET_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_GET_ATTR_T], win, win_keyval,
+                      attribute_val, flag);
+}
+
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 
@@ -122,7 +138,8 @@ Output Parameters:
 .N MPI_ERR_KEYVAL
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag)
+int QMPI_Win_get_attr(QMPI_Context context, int tool_id, MPI_Win win, int win_keyval,
+                      void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);

@@ -26,6 +26,21 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
 #endif
 
+int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
+{
+    QMPI_Context context;
+    QMPI_Alloc_mem_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Alloc_mem(context, 0, size, info, baseptr);
+
+    fn_ptr = (QMPI_Alloc_mem_t *) MPIR_QMPI_first_fn_ptrs[MPI_ALLOC_MEM_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ALLOC_MEM_T], size, info, baseptr);
+}
+
 /*@
    MPI_Alloc_mem - Allocate memory for message passing and RMA
 
@@ -56,7 +71,7 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_NO_MEM
 @*/
-int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
+int QMPI_Alloc_mem(QMPI_Context context, int tool_id, MPI_Aint size, MPI_Info info, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
     void *ap;

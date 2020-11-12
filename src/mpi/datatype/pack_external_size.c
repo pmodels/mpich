@@ -28,6 +28,23 @@ int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datat
 #endif
 
 
+int MPI_Pack_external_size(const char datarep[],
+                           int incount, MPI_Datatype datatype, MPI_Aint * size)
+{
+    QMPI_Context context;
+    QMPI_Pack_external_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Pack_external_size(context, 0, datarep, incount, datatype, size);
+
+    fn_ptr = (QMPI_Pack_external_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_PACK_EXTERNAL_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PACK_EXTERNAL_SIZE_T], datarep, incount,
+                      datatype, size);
+}
+
 /*@
   MPI_Pack_external_size - Returns the upper bound on the amount of
   space needed to pack a message using MPI_Pack_external.
@@ -49,8 +66,8 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Pack_external_size(const char datarep[],
-                           int incount, MPI_Datatype datatype, MPI_Aint * size)
+int QMPI_Pack_external_size(QMPI_Context context, int tool_id, const char datarep[],
+                            int incount, MPI_Datatype datatype, MPI_Aint * size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL_SIZE);

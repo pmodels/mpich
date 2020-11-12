@@ -94,6 +94,22 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int 
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Comm_get_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_get_attr(context, 0, comm, comm_keyval, attribute_val, flag);
+
+    fn_ptr = (QMPI_Comm_get_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GET_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GET_ATTR_T], comm, comm_keyval,
+                      attribute_val, flag);
+}
+
 /*@
    MPI_Comm_get_attr - Retrieves attribute value by key
 
@@ -125,7 +141,8 @@ Notes for C:
 .N MPI_ERR_COMM
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *flag)
+int QMPI_Comm_get_attr(QMPI_Context context, int tool_id, MPI_Comm comm, int comm_keyval,
+                       void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);

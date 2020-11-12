@@ -281,6 +281,23 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
 
 #endif
 
+int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Reduce_scatter_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Reduce_scatter(context, 0, sendbuf, recvbuf, recvcounts, datatype, op, comm);
+
+    fn_ptr = (QMPI_Reduce_scatter_t *) MPIR_QMPI_first_fn_ptrs[MPI_REDUCE_SCATTER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REDUCE_SCATTER_T], sendbuf, recvbuf,
+                      recvcounts, datatype, op, comm);
+}
+
 /*@
 
 MPI_Reduce_scatter - Combines values and scatters the results
@@ -312,8 +329,8 @@ Output Parameters:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int QMPI_Reduce_scatter(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf,
+                        const int recvcounts[], MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

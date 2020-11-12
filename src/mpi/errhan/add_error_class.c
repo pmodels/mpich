@@ -26,6 +26,21 @@ int MPI_Add_error_class(int *errorclass) __attribute__ ((weak, alias("PMPI_Add_e
 
 #endif
 
+int MPI_Add_error_class(int *errorclass)
+{
+    QMPI_Context context;
+    QMPI_Add_error_class_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Add_error_class(context, 0, errorclass);
+
+    fn_ptr = (QMPI_Add_error_class_t *) MPIR_QMPI_first_fn_ptrs[MPI_ADD_ERROR_CLASS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ADD_ERROR_CLASS_T], errorclass);
+}
+
 /*@
    MPI_Add_error_class - Add an MPI error class to the known classes
 
@@ -40,7 +55,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Add_error_class(int *errorclass)
+int QMPI_Add_error_class(QMPI_Context context, int tool_id, int *errorclass)
 {
     int mpi_errno = MPI_SUCCESS;
     int new_class;

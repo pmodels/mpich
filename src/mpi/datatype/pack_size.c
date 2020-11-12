@@ -34,6 +34,22 @@ void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size)
 
 #endif
 
+int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
+{
+    QMPI_Context context;
+    QMPI_Pack_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Pack_size(context, 0, incount, datatype, comm, size);
+
+    fn_ptr = (QMPI_Pack_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_PACK_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PACK_SIZE_T], incount, datatype, comm,
+                      size);
+}
+
 /*@
    MPI_Pack_size - Returns the upper bound on the amount of space needed to
                     pack a message
@@ -62,7 +78,8 @@ the maximum that is needed by either 'MPI_Pack' or 'MPI_Unpack'.
 .N MPI_ERR_ARG
 
 @*/
-int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
+int QMPI_Pack_size(QMPI_Context context, int tool_id, int incount, MPI_Datatype datatype,
+                   MPI_Comm comm, int *size)
 {
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Comm *comm_ptr = NULL;

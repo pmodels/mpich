@@ -211,6 +211,22 @@ int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
 }
 #endif
 
+int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
+{
+    QMPI_Context context;
+    QMPI_Init_thread_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Init_thread(context, 0, argc, argv, required, provided);
+
+    fn_ptr = (QMPI_Init_thread_t *) MPIR_QMPI_first_fn_ptrs[MPI_INIT_THREAD_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INIT_THREAD_T], argc, argv, required,
+                      provided);
+}
+
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 
@@ -249,7 +265,8 @@ Notes for Fortran:
 
 .seealso: MPI_Init, MPI_Finalize
 @*/
-int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
+int QMPI_Init_thread(QMPI_Context context, int tool_id, int *argc, char ***argv, int required,
+                     int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);

@@ -415,6 +415,21 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_p
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
+int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_create(context, 0, comm, group, newcomm);
+
+    fn_ptr = (QMPI_Comm_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_CREATE_T], comm, group, newcomm);
+}
+
 /*@
 
 MPI_Comm_create - Creates a new communicator
@@ -437,7 +452,8 @@ Output Parameters:
 
 .seealso: MPI_Comm_free
 @*/
-int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm * newcomm)
+int QMPI_Comm_create(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Group group,
+                     MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;

@@ -25,6 +25,21 @@ int MPI_Buffer_attach(void *buffer, int size) __attribute__ ((weak, alias("PMPI_
 
 #endif
 
+int MPI_Buffer_attach(void *buffer, int size)
+{
+    QMPI_Context context;
+    QMPI_Buffer_attach_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Buffer_attach(context, 0, buffer, size);
+
+    fn_ptr = (QMPI_Buffer_attach_t *) MPIR_QMPI_first_fn_ptrs[MPI_BUFFER_ATTACH_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_BUFFER_ATTACH_T], buffer, size);
+}
+
 /*@
   MPI_Buffer_attach - Attaches a user-provided buffer for sending
 
@@ -68,7 +83,7 @@ one thread at a time calls this routine or 'MPI_Buffer_detach'.
 
 .seealso: MPI_Buffer_detach, MPI_Bsend
 @*/
-int MPI_Buffer_attach(void *buffer, int size)
+int QMPI_Buffer_attach(QMPI_Context context, int tool_id, void *buffer, int size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_ATTACH);

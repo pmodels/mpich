@@ -28,6 +28,21 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #define MPI_Info_set PMPI_Info_set
 #endif
 
+int MPI_Info_set(MPI_Info info, const char *key, const char *value)
+{
+    QMPI_Context context;
+    QMPI_Info_set_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_set(context, 0, info, key, value);
+
+    fn_ptr = (QMPI_Info_set_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_SET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_SET_T], info, key, value);
+}
+
 /*@
     MPI_Info_set - Adds a (key,value) pair to info
 
@@ -46,7 +61,8 @@ Input Parameters:
 .N MPI_ERR_INFO_VALUE
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Info_set(MPI_Info info, const char *key, const char *value)
+int QMPI_Info_set(QMPI_Context context, int tool_id, MPI_Info info, const char *key,
+                  const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;

@@ -24,6 +24,21 @@ int MPI_Is_thread_main(int *flag) __attribute__ ((weak, alias("PMPI_Is_thread_ma
 #define MPI_Is_thread_main PMPI_Is_thread_main
 #endif
 
+int MPI_Is_thread_main(int *flag)
+{
+    QMPI_Context context;
+    QMPI_Is_thread_main_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Is_thread_main(context, 0, flag);
+
+    fn_ptr = (QMPI_Is_thread_main_t *) MPIR_QMPI_first_fn_ptrs[MPI_IS_THREAD_MAIN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IS_THREAD_MAIN_T], flag);
+}
+
 /*@
    MPI_Is_thread_main - Returns a flag indicating whether this thread called
                         'MPI_Init' or 'MPI_Init_thread'
@@ -39,7 +54,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Is_thread_main(int *flag)
+int QMPI_Is_thread_main(QMPI_Context context, int tool_id, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IS_THREAD_MAIN);

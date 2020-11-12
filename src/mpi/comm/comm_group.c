@@ -75,6 +75,21 @@ int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
 
 #endif
 
+int MPI_Comm_group(MPI_Comm comm, MPI_Group * group)
+{
+    QMPI_Context context;
+    QMPI_Comm_group_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_group(context, 0, comm, group);
+
+    fn_ptr = (QMPI_Comm_group_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GROUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GROUP_T], comm, group);
+}
+
 /*@
 
 MPI_Comm_group - Accesses the group associated with given communicator
@@ -96,7 +111,7 @@ Notes:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_group(MPI_Comm comm, MPI_Group * group)
+int QMPI_Comm_group(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Group * group)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -26,6 +26,22 @@ int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
 
 #endif
 
+int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
+{
+    QMPI_Context context;
+    QMPI_Attr_put_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Attr_put(context, 0, comm, keyval, attribute_val);
+
+    fn_ptr = (QMPI_Attr_put_t *) MPIR_QMPI_first_fn_ptrs[MPI_ATTR_PUT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ATTR_PUT_T], comm, keyval,
+                      attribute_val);
+}
+
 /*@
 
 MPI_Attr_put - Stores attribute value associated with a key
@@ -66,7 +82,7 @@ corresponding keyval was created) will be called.
 
 .seealso MPI_Attr_get, MPI_Keyval_create, MPI_Attr_delete, MPI_Comm_set_attr
 @*/
-int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
+int QMPI_Attr_put(QMPI_Context context, int tool_id, MPI_Comm comm, int keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_PUT);

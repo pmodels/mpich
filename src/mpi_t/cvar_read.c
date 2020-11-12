@@ -76,6 +76,21 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
+{
+    QMPI_Context context;
+    QMPI_T_cvar_read_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_cvar_read(context, 0, handle, buf);
+
+    fn_ptr = (QMPI_T_cvar_read_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CVAR_READ_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CVAR_READ_T], handle, buf);
+}
+
 /*@
 MPI_T_cvar_read - Read the value of a control variable
 
@@ -92,7 +107,7 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_HANDLE
 @*/
-int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
+int QMPI_T_cvar_read(QMPI_Context context, int tool_id, MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -123,6 +123,23 @@ int MPIR_Graph_create(MPIR_Comm * comm_ptr, int nnodes,
 }
 #endif
 
+int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
+                     const int edges[], int reorder, MPI_Comm * comm_graph)
+{
+    QMPI_Context context;
+    QMPI_Graph_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Graph_create(context, 0, comm_old, nnodes, indx, edges, reorder, comm_graph);
+
+    fn_ptr = (QMPI_Graph_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_GRAPH_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GRAPH_CREATE_T], comm_old, nnodes, indx,
+                      edges, reorder, comm_graph);
+}
+
 /*@
 MPI_Graph_create - Makes a new communicator to which topology information
                  has been attached
@@ -155,8 +172,8 @@ We ignore the 'reorder' info currently.
 .N MPI_ERR_ARG
 
 @*/
-int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
-                     const int edges[], int reorder, MPI_Comm * comm_graph)
+int QMPI_Graph_create(QMPI_Context context, int tool_id, MPI_Comm comm_old, int nnodes,
+                      const int indx[], const int edges[], int reorder, MPI_Comm * comm_graph)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

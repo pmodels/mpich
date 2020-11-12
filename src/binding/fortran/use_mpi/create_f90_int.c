@@ -38,6 +38,23 @@ typedef struct intModel {
     int range, kind, bytes;
 } intModel;
 
+int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_create_f90_integer_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_f90_integer(context, 0, range, newtype);
+
+    fn_ptr =
+        (QMPI_Type_create_f90_integer_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_F90_INTEGER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_F90_INTEGER_T], range,
+                      newtype);
+}
+
 /*@
    MPI_Type_create_f90_integer - Return a predefined type that matches
    the specified range
@@ -59,7 +76,8 @@ returns an error of class 'MPI_ERR_ARG'.
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
+int QMPI_Type_create_f90_integer(QMPI_Context context, int tool_id, int range,
+                                 MPI_Datatype * newtype)
 {
     int i, bytes;
     int mpi_errno = MPI_SUCCESS;

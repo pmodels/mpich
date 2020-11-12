@@ -258,6 +258,23 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
 #endif
 
+int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
+                MPI_Status array_of_statuses[])
+{
+    QMPI_Context context;
+    QMPI_Testall_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Testall(context, 0, count, array_of_requests, flag, array_of_statuses);
+
+    fn_ptr = (QMPI_Testall_t *) MPIR_QMPI_first_fn_ptrs[MPI_TESTALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TESTALL_T], count, array_of_requests,
+                      flag, array_of_statuses);
+}
+
 /*@
     MPI_Testall - Tests for the completion of all previously initiated
     requests
@@ -299,8 +316,8 @@ program to unexecpectedly terminate or produce incorrect results.
 .N MPI_ERR_REQUEST
 .N MPI_ERR_ARG
 @*/
-int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
-                MPI_Status array_of_statuses[])
+int QMPI_Testall(QMPI_Context context, int tool_id, int count, MPI_Request array_of_requests[],
+                 int *flag, MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTALL);

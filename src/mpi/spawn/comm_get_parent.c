@@ -25,6 +25,21 @@ int MPI_Comm_get_parent(MPI_Comm * parent) __attribute__ ((weak, alias("PMPI_Com
 
 #endif
 
+int MPI_Comm_get_parent(MPI_Comm * parent)
+{
+    QMPI_Context context;
+    QMPI_Comm_get_parent_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_get_parent(context, 0, parent);
+
+    fn_ptr = (QMPI_Comm_get_parent_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GET_PARENT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GET_PARENT_T], parent);
+}
+
 /*@
    MPI_Comm_get_parent - Return the parent communicator for this process
 
@@ -53,7 +68,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Comm_get_parent(MPI_Comm * parent)
+int QMPI_Comm_get_parent(QMPI_Context context, int tool_id, MPI_Comm * parent)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_PARENT);

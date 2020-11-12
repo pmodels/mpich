@@ -192,6 +192,21 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_read_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_read(context, 0, session, handle, buf);
+
+    fn_ptr = (QMPI_T_pvar_read_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_READ_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_READ_T], session, handle, buf);
+}
+
 /*@
 MPI_T_pvar_read - Read the value of a performance variable
 
@@ -221,7 +236,8 @@ MPI_T_pvar_read().
 .N MPI_T_ERR_INVALID_SESSION
 .N MPI_T_ERR_INVALID_HANDLE
 @*/
-int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+int QMPI_T_pvar_read(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                     MPI_T_pvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

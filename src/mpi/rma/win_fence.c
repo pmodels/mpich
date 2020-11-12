@@ -25,6 +25,21 @@ int MPI_Win_fence(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win
 
 #endif
 
+int MPI_Win_fence(int assert, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_fence_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_fence(context, 0, assert, win);
+
+    fn_ptr = (QMPI_Win_fence_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_FENCE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_FENCE_T], assert, win);
+}
+
 /*@
    MPI_Win_fence - Perform an MPI fence synchronization on a MPI window
 
@@ -58,7 +73,7 @@ Input Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_WIN
 @*/
-int MPI_Win_fence(int assert, MPI_Win win)
+int QMPI_Win_fence(QMPI_Context context, int tool_id, int assert, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

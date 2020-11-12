@@ -24,6 +24,21 @@ int MPI_T_category_changed(int *stamp) __attribute__ ((weak, alias("PMPI_T_categ
 #define MPI_T_category_changed PMPI_T_category_changed
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_category_changed(int *stamp)
+{
+    QMPI_Context context;
+    QMPI_T_category_changed_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_category_changed(context, 0, stamp);
+
+    fn_ptr = (QMPI_T_category_changed_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CATEGORY_CHANGED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CATEGORY_CHANGED_T], stamp);
+}
+
 /*@
 MPI_T_category_changed - Get the timestamp indicating the last change to the categories
 
@@ -41,7 +56,7 @@ from the second call is higher, then some categories have been added or expanded
 .N MPI_SUCCESS
 .N MPI_T_ERR_NOT_INITIALIZED
 @*/
-int MPI_T_category_changed(int *stamp)
+int QMPI_T_category_changed(QMPI_Context context, int tool_id, int *stamp)
 {
     int mpi_errno = MPI_SUCCESS;
 

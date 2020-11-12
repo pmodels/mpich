@@ -27,6 +27,26 @@ int MPI_Pack_external(const char datarep[], const void *inbuf, int incount,
 
 #endif
 
+int MPI_Pack_external(const char datarep[],
+                      const void *inbuf,
+                      int incount,
+                      MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
+{
+    QMPI_Context context;
+    QMPI_Pack_external_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Pack_external(context, 0, datarep, inbuf, incount, datatype, outbuf, outsize,
+                                  position);
+
+    fn_ptr = (QMPI_Pack_external_t *) MPIR_QMPI_first_fn_ptrs[MPI_PACK_EXTERNAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PACK_EXTERNAL_T], datarep, inbuf,
+                      incount, datatype, outbuf, outsize, position);
+}
+
 /*@
    MPI_Pack_external - Packs a datatype into contiguous memory, using the
      external32 format
@@ -54,10 +74,10 @@ Input/Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_COUNT
 @*/
-int MPI_Pack_external(const char datarep[],
-                      const void *inbuf,
-                      int incount,
-                      MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
+int QMPI_Pack_external(QMPI_Context context, int tool_id, const char datarep[],
+                       const void *inbuf,
+                       int incount,
+                       MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
 {
     int mpi_errno = MPI_SUCCESS;
 

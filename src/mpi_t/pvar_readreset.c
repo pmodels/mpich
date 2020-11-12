@@ -46,6 +46,22 @@ int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle han
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_readreset_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_readreset(context, 0, session, handle, buf);
+
+    fn_ptr = (QMPI_T_pvar_readreset_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_READRESET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_READRESET_T], session, handle,
+                      buf);
+}
+
 /*@
 MPI_T_pvar_readreset - Read the value of a performance variable and then reset it
 
@@ -66,7 +82,8 @@ Output Parameters:
 .N MPI_T_ERR_PVAR_NO_WRITE
 .N MPI_T_ERR_PVAR_NO_ATOMIC
 @*/
-int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+int QMPI_T_pvar_readreset(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                          MPI_T_pvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

@@ -27,6 +27,22 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 
 #endif
 
+int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
+{
+    QMPI_Context context;
+    QMPI_Type_get_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_name(context, 0, datatype, type_name, resultlen);
+
+    fn_ptr = (QMPI_Type_get_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_NAME_T], datatype, type_name,
+                      resultlen);
+}
+
 /*@
    MPI_Type_get_name - Get the print name for a datatype
 
@@ -49,7 +65,8 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
+int QMPI_Type_get_name(QMPI_Context context, int tool_id, MPI_Datatype datatype, char *type_name,
+                       int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;

@@ -26,6 +26,21 @@ int MPI_Info_delete(MPI_Info info, const char *key)
 #define MPI_Info_delete PMPI_Info_delete
 #endif
 
+int MPI_Info_delete(MPI_Info info, const char *key)
+{
+    QMPI_Context context;
+    QMPI_Info_delete_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_delete(context, 0, info, key);
+
+    fn_ptr = (QMPI_Info_delete_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_DELETE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_DELETE_T], info, key);
+}
+
 /*@
   MPI_Info_delete - Deletes a (key,value) pair from info
 
@@ -40,7 +55,7 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Info_delete(MPI_Info info, const char *key)
+int QMPI_Info_delete(QMPI_Context context, int tool_id, MPI_Info info, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0, *prev_ptr, *curr_ptr;

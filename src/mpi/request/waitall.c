@@ -247,6 +247,22 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
 
 #endif
 
+int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
+{
+    QMPI_Context context;
+    QMPI_Waitall_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Waitall(context, 0, count, array_of_requests, array_of_statuses);
+
+    fn_ptr = (QMPI_Waitall_t *) MPIR_QMPI_first_fn_ptrs[MPI_WAITALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WAITALL_T], count, array_of_requests,
+                      array_of_statuses);
+}
+
 /*@
     MPI_Waitall - Waits for all given MPI Requests to complete
 
@@ -283,7 +299,8 @@ program to unexecpectedly terminate or produce incorrect results.
 .N MPI_ERR_ARG
 .N MPI_ERR_IN_STATUS
 @*/
-int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
+int QMPI_Waitall(QMPI_Context context, int tool_id, int count, MPI_Request array_of_requests[],
+                 MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITALL);

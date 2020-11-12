@@ -288,6 +288,22 @@ static int compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *in
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_split_type_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_split_type(context, 0, comm, split_type, key, info, newcomm);
+
+    fn_ptr = (QMPI_Comm_split_type_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SPLIT_TYPE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SPLIT_TYPE_T], comm, split_type,
+                      key, info, newcomm);
+}
+
 /*@
 
 MPI_Comm_split_type - Creates new communicators based on split types and keys
@@ -315,7 +331,8 @@ Notes:
 
 .seealso: MPI_Comm_free
 @*/
-int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm * newcomm)
+int QMPI_Comm_split_type(QMPI_Context context, int tool_id, MPI_Comm comm, int split_type, int key,
+                         MPI_Info info, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;

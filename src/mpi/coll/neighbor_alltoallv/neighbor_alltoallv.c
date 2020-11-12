@@ -187,6 +187,25 @@ int MPIR_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[],
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                           const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Neighbor_alltoallv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Neighbor_alltoallv(context, 0, sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                       recvcounts, rdispls, recvtype, comm);
+
+    fn_ptr = (QMPI_Neighbor_alltoallv_t *) MPIR_QMPI_first_fn_ptrs[MPI_NEIGHBOR_ALLTOALLV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_NEIGHBOR_ALLTOALLV_T], sendbuf,
+                      sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm);
+}
+
 /*@
 MPI_Neighbor_alltoallv - The vector variant of MPI_Neighbor_alltoall allows
 sending/receiving different numbers of elements to and from each neighbor.
@@ -210,9 +229,10 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
-                           const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm)
+int QMPI_Neighbor_alltoallv(QMPI_Context context, int tool_id, const void *sendbuf,
+                            const int sendcounts[], const int sdispls[], MPI_Datatype sendtype,
+                            void *recvbuf, const int recvcounts[], const int rdispls[],
+                            MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

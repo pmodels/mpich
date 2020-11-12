@@ -334,6 +334,22 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
 /* N.B. "count" is the name mandated by the MPI-3 standard, but it should
  * probably be called "elements" instead and is handled that way in the _impl
  * routine [goodell@ 2012-11-05 */
+int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Count * count)
+{
+    QMPI_Context context;
+    QMPI_Get_elements_x_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_elements_x(context, 0, status, datatype, count);
+
+    fn_ptr = (QMPI_Get_elements_x_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_ELEMENTS_X_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_ELEMENTS_X_T], status, datatype,
+                      count);
+}
+
 /*@
 MPI_Get_elements_x - Returns the number of basic elements
                      in a datatype
@@ -351,7 +367,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Count * count)
+int QMPI_Get_elements_x(QMPI_Context context, int tool_id, const MPI_Status * status,
+                        MPI_Datatype datatype, MPI_Count * count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Count byte_count;

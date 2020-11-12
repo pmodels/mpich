@@ -30,6 +30,31 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int so
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
+                                   int indegree, const int sources[],
+                                   const int sourceweights[],
+                                   int outdegree, const int destinations[],
+                                   const int destweights[],
+                                   MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
+{
+    QMPI_Context context;
+    QMPI_Dist_graph_create_adjacent_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Dist_graph_create_adjacent(context, 0, comm_old, indegree, sources,
+                                               sourceweights, outdegree, destinations, destweights,
+                                               info, reorder, comm_dist_graph);
+
+    fn_ptr = (QMPI_Dist_graph_create_adjacent_t *)
+        MPIR_QMPI_first_fn_ptrs[MPI_DIST_GRAPH_CREATE_ADJACENT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_DIST_GRAPH_CREATE_ADJACENT_T], comm_old,
+                      indegree, sources, sourceweights, outdegree, destinations, destweights, info,
+                      reorder, comm_dist_graph);
+}
+
 /*@
 MPI_Dist_graph_create_adjacent - returns a handle to a new communicator to
 which the distributed graph topology information is attached.
@@ -61,12 +86,12 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
-                                   int indegree, const int sources[],
-                                   const int sourceweights[],
-                                   int outdegree, const int destinations[],
-                                   const int destweights[],
-                                   MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
+int QMPI_Dist_graph_create_adjacent(QMPI_Context context, int tool_id, MPI_Comm comm_old,
+                                    int indegree, const int sources[],
+                                    const int sourceweights[],
+                                    int outdegree, const int destinations[],
+                                    const int destweights[],
+                                    MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -27,6 +27,24 @@ int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Dat
 
 #endif
 
+int MPI_Type_create_hvector(int count,
+                            int blocklength,
+                            MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_create_hvector_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_hvector(context, 0, count, blocklength, stride, oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_create_hvector_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_HVECTOR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_HVECTOR_T], count,
+                      blocklength, stride, oldtype, newtype);
+}
+
 /*@
    MPI_Type_create_hvector - Create a datatype with a constant stride given
      in bytes
@@ -49,9 +67,9 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_create_hvector(int count,
-                            int blocklength,
-                            MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_create_hvector(QMPI_Context context, int tool_id, int count,
+                             int blocklength,
+                             MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;

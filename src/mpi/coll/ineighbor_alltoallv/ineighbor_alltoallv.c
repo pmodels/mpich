@@ -317,6 +317,27 @@ int MPIR_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[],
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                            MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                            const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
+                            MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ineighbor_alltoallv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ineighbor_alltoallv(context, 0, sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                        recvcounts, rdispls, recvtype, comm, request);
+
+    fn_ptr = (QMPI_Ineighbor_alltoallv_t *) MPIR_QMPI_first_fn_ptrs[MPI_INEIGHBOR_ALLTOALLV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INEIGHBOR_ALLTOALLV_T], sendbuf,
+                      sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm,
+                      request);
+}
+
 /*@
 MPI_Ineighbor_alltoallv - Nonblocking version of MPI_Neighbor_alltoallv.
 
@@ -340,10 +361,10 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                            MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
-                            const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
-                            MPI_Request * request)
+int QMPI_Ineighbor_alltoallv(QMPI_Context context, int tool_id, const void *sendbuf,
+                             const int sendcounts[], const int sdispls[], MPI_Datatype sendtype,
+                             void *recvbuf, const int recvcounts[], const int rdispls[],
+                             MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

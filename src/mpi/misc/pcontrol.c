@@ -26,6 +26,23 @@ int MPI_Pcontrol(const int level, ...) __attribute__ ((weak, alias("PMPI_Pcontro
 #endif
 
 
+int MPI_Pcontrol(const int level, ...)
+{
+    QMPI_Context context;
+    QMPI_Pcontrol_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    va_list args;
+    va_start(args, level);
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Pcontrol(context, 0, level, args);
+
+    fn_ptr = (QMPI_Pcontrol_t *) MPIR_QMPI_first_fn_ptrs[MPI_PCONTROL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PCONTROL_T], level, args);
+}
+
 /*@
   MPI_Pcontrol - Controls profiling
 
@@ -45,7 +62,7 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Pcontrol(const int level, ...)
+int QMPI_Pcontrol(QMPI_Context context, int tool_id, const int level, ...)
 {
     int mpi_errno = MPI_SUCCESS;
     va_list list;

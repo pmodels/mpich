@@ -188,6 +188,22 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_i
 #endif
 
 
+int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
+{
+    QMPI_Context context;
+    QMPI_Intercomm_merge_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Intercomm_merge(context, 0, intercomm, high, newintracomm);
+
+    fn_ptr = (QMPI_Intercomm_merge_t *) MPIR_QMPI_first_fn_ptrs[MPI_INTERCOMM_MERGE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INTERCOMM_MERGE_T], intercomm, high,
+                      newintracomm);
+}
+
 /*@
 MPI_Intercomm_merge - Creates an intracommuncator from an intercommunicator
 
@@ -226,7 +242,8 @@ Algorithm:
 
 .seealso: MPI_Intercomm_create, MPI_Comm_free
 @*/
-int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm * newintracomm)
+int QMPI_Intercomm_merge(QMPI_Context context, int tool_id, MPI_Comm intercomm, int high,
+                         MPI_Comm * newintracomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

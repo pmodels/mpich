@@ -24,6 +24,21 @@ MPI_Fint MPI_File_c2f(MPI_File fh) __attribute__ ((weak, alias("PMPI_File_c2f"))
 #endif
 #include "adio_extern.h"
 
+MPI_Fint MPI_File_c2f(MPI_File fh)
+{
+    QMPI_Context context;
+    QMPI_File_c2f_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_c2f(context, 0, fh);
+
+    fn_ptr = (QMPI_File_c2f_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_C2F_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_C2F_T], fh);
+}
+
 /*@
     MPI_File_c2f - Translates a C file handle to a Fortran file handle
 
@@ -33,7 +48,7 @@ Input Parameters:
 Return Value:
   Fortran file handle (integer)
 @*/
-MPI_Fint MPI_File_c2f(MPI_File fh)
+MPI_Fint QMPI_File_c2f(QMPI_Context context, int tool_id, MPI_File fh)
 {
     return MPIO_File_c2f(fh);
 }

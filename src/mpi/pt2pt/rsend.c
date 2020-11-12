@@ -26,6 +26,22 @@ int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
+int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Rsend_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Rsend(context, 0, buf, count, datatype, dest, tag, comm);
+
+    fn_ptr = (QMPI_Rsend_t *) MPIR_QMPI_first_fn_ptrs[MPI_RSEND_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RSEND_T], buf, count, datatype, dest,
+                      tag, comm);
+}
+
 /*@
     MPI_Rsend - Blocking ready send
 
@@ -50,7 +66,8 @@ Input Parameters:
 .N MPI_ERR_RANK
 
 @*/
-int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+int QMPI_Rsend(QMPI_Context context, int tool_id, const void *buf, int count, MPI_Datatype datatype,
+               int dest, int tag, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -117,6 +117,21 @@ static void qmpi_teardown()
     MPL_free(MPIR_QMPI_tool_init_callbacks);
 }
 
+int MPI_Finalize(void)
+{
+    QMPI_Context context;
+    QMPI_Finalize_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Finalize(context, 0);
+
+    fn_ptr = (QMPI_Finalize_t *) MPIR_QMPI_first_fn_ptrs[MPI_FINALIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FINALIZE_T]);
+}
+
 /*@
    MPI_Finalize - Terminates MPI execution environment
 
@@ -135,7 +150,7 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Finalize(void)
+int QMPI_Finalize(QMPI_Context context, int tool_id)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;

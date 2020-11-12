@@ -33,6 +33,22 @@ MPID_NS_Handle MPIR_Namepub = 0;
 
 #endif
 
+int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
+{
+    QMPI_Context context;
+    QMPI_Lookup_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Lookup_name(context, 0, service_name, info, port_name);
+
+    fn_ptr = (QMPI_Lookup_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_LOOKUP_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_LOOKUP_NAME_T], service_name, info,
+                      port_name);
+}
+
 /*@
    MPI_Lookup_name - Lookup a port given a service name
 
@@ -59,7 +75,8 @@ If the 'service_name' is found, MPI copies the associated value into
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
+int QMPI_Lookup_name(QMPI_Context context, int tool_id, const char *service_name, MPI_Info info,
+                     char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;

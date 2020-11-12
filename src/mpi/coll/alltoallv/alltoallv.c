@@ -227,6 +227,25 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
 #endif
 
 
+int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
+                  const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                  const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Alltoallv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Alltoallv(context, 0, sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                              recvcounts, rdispls, recvtype, comm);
+
+    fn_ptr = (QMPI_Alltoallv_t *) MPIR_QMPI_first_fn_ptrs[MPI_ALLTOALLV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ALLTOALLV_T], sendbuf, sendcounts,
+                      sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm);
+}
+
 /*@
 MPI_Alltoallv - Sends data from all to all processes; each process may
    send a different amount of data and provide displacements for the input
@@ -262,9 +281,9 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
-                  const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
-                  const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
+int QMPI_Alltoallv(QMPI_Context context, int tool_id, const void *sendbuf, const int *sendcounts,
+                   const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                   const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

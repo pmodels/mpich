@@ -25,6 +25,21 @@ int MPI_Comm_free_keyval(int *comm_keyval) __attribute__ ((weak, alias("PMPI_Com
 
 #endif
 
+int MPI_Comm_free_keyval(int *comm_keyval)
+{
+    QMPI_Context context;
+    QMPI_Comm_free_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_free_keyval(context, 0, comm_keyval);
+
+    fn_ptr = (QMPI_Comm_free_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_FREE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_FREE_KEYVAL_T], comm_keyval);
+}
+
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 
@@ -43,7 +58,7 @@ Key values are global (they can be used with any and all communicators)
 .N MPI_ERR_ARG
 .N MPI_ERR_PERM_KEY
 @*/
-int MPI_Comm_free_keyval(int *comm_keyval)
+int QMPI_Comm_free_keyval(QMPI_Context context, int tool_id, int *comm_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr = NULL;

@@ -26,6 +26,22 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 
 #endif
 
+int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coords[])
+{
+    QMPI_Context context;
+    QMPI_Cart_get_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_get(context, 0, comm, maxdims, dims, periods, coords);
+
+    fn_ptr = (QMPI_Cart_get_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_GET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_GET_T], comm, maxdims, dims,
+                      periods, coords);
+}
+
 /*@
 
 MPI_Cart_get - Retrieves Cartesian topology information associated with a
@@ -53,7 +69,8 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coords[])
+int QMPI_Cart_get(QMPI_Context context, int tool_id, MPI_Comm comm, int maxdims, int dims[],
+                  int periods[], int coords[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

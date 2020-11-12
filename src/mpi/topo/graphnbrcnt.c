@@ -52,6 +52,22 @@ int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighb
 #endif
 
 
+int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
+{
+    QMPI_Context context;
+    QMPI_Graph_neighbors_count_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Graph_neighbors_count(context, 0, comm, rank, nneighbors);
+
+    fn_ptr = (QMPI_Graph_neighbors_count_t *) MPIR_QMPI_first_fn_ptrs[MPI_GRAPH_NEIGHBORS_COUNT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GRAPH_NEIGHBORS_COUNT_T], comm, rank,
+                      nneighbors);
+}
+
 /*@
 MPI_Graph_neighbors_count - Returns the number of neighbors of a node
                             associated with a graph topology
@@ -74,7 +90,8 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_RANK
 @*/
-int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
+int QMPI_Graph_neighbors_count(QMPI_Context context, int tool_id, MPI_Comm comm, int rank,
+                               int *nneighbors)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

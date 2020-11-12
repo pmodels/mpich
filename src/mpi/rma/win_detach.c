@@ -25,6 +25,21 @@ int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("P
 
 #endif
 
+int MPI_Win_detach(MPI_Win win, const void *base)
+{
+    QMPI_Context context;
+    QMPI_Win_detach_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_detach(context, 0, win, base);
+
+    fn_ptr = (QMPI_Win_detach_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_DETACH_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_DETACH_T], win, base);
+}
+
 /*@
 MPI_Win_detach - Detach memory from a dynamic window
 
@@ -54,7 +69,7 @@ Memory also becomes detached when the associated dynamic memory window is freed.
 
 .seealso: MPI_Win_create_dynamic MPI_Win_attach
 @*/
-int MPI_Win_detach(MPI_Win win, const void *base)
+int QMPI_Win_detach(QMPI_Context context, int tool_id, MPI_Win win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

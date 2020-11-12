@@ -42,6 +42,21 @@ void MPIR_Op_free_impl(MPI_Op * op)
 
 #endif
 
+int MPI_Op_free(MPI_Op * op)
+{
+    QMPI_Context context;
+    QMPI_Op_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Op_free(context, 0, op);
+
+    fn_ptr = (QMPI_Op_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_OP_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_OP_FREE_T], op);
+}
+
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
 
@@ -64,7 +79,7 @@ Input Parameters:
 
 .seealso: MPI_Op_create
 @*/
-int MPI_Op_free(MPI_Op * op)
+int QMPI_Op_free(QMPI_Context context, int tool_id, MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);

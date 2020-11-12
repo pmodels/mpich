@@ -26,6 +26,22 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 
 #endif
 
+int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_lock_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_lock(context, 0, lock_type, rank, assert, win);
+
+    fn_ptr = (QMPI_Win_lock_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_LOCK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_LOCK_T], lock_type, rank, assert,
+                      win);
+}
+
 /*@
    MPI_Win_lock - Begin an RMA access epoch at the target process.
 
@@ -69,7 +85,8 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
+int QMPI_Win_lock(QMPI_Context context, int tool_id, int lock_type, int rank, int assert,
+                  MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

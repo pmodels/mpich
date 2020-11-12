@@ -50,6 +50,21 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session * session)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_session_free(MPI_T_pvar_session * session)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_session_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_session_free(context, 0, session);
+
+    fn_ptr = (QMPI_T_pvar_session_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_SESSION_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_SESSION_FREE_T], session);
+}
+
 /*@
 MPI_T_pvar_session_free - Free an existing performance variable session
 
@@ -68,7 +83,7 @@ return, MPI sets the session identifier to MPI_T_PVAR_SESSION_NULL.
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_SESSION
 @*/
-int MPI_T_pvar_session_free(MPI_T_pvar_session * session)
+int QMPI_T_pvar_session_free(QMPI_Context context, int tool_id, MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
 

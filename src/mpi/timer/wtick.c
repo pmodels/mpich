@@ -26,6 +26,21 @@ double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 #endif
 
 
+double MPI_Wtick(void)
+{
+    QMPI_Context context;
+    QMPI_Wtick_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Wtick(context, 0);
+
+    fn_ptr = (QMPI_Wtick_t *) MPIR_QMPI_first_fn_ptrs[MPI_WTICK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WTICK_T]);
+}
+
 /*@
   MPI_Wtick - Returns the resolution of MPI_Wtime
 
@@ -37,7 +52,7 @@ double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 
 .see also: MPI_Wtime, MPI_Comm_get_attr, MPI_Attr_get
 @*/
-double MPI_Wtick(void)
+double QMPI_Wtick(QMPI_Context context, int tool_id)
 {
     double tick;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTICK);

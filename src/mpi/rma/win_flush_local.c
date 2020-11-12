@@ -26,6 +26,21 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
 
 #endif
 
+int MPI_Win_flush_local(int rank, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_flush_local_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_flush_local(context, 0, rank, win);
+
+    fn_ptr = (QMPI_Win_flush_local_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_FLUSH_LOCAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_FLUSH_LOCAL_T], rank, win);
+}
+
 /*@
 MPI_Win_flush_local - Complete locally all outstanding RMA operations at the
 given target
@@ -52,7 +67,7 @@ Input Parameters:
 
 .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local_all MPI_Win_lock MPI_Win_lock_all
 @*/
-int MPI_Win_flush_local(int rank, MPI_Win win)
+int QMPI_Win_flush_local(QMPI_Context context, int tool_id, int rank, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

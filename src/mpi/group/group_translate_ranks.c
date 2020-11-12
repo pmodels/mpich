@@ -101,6 +101,23 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
 
 #endif
 
+int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
+                              MPI_Group group2, int ranks2[])
+{
+    QMPI_Context context;
+    QMPI_Group_translate_ranks_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_translate_ranks(context, 0, group1, n, ranks1, group2, ranks2);
+
+    fn_ptr = (QMPI_Group_translate_ranks_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_TRANSLATE_RANKS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_TRANSLATE_RANKS_T], group1, n,
+                      ranks1, group2, ranks2);
+}
+
 /*@
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to
                              those in another group
@@ -125,8 +142,8 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
-                              MPI_Group group2, int ranks2[])
+int QMPI_Group_translate_ranks(QMPI_Context context, int tool_id, MPI_Group group1, int n,
+                               const int ranks1[], MPI_Group group2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;

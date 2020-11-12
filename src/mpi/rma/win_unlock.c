@@ -25,6 +25,21 @@ int MPI_Win_unlock(int rank, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_
 
 #endif
 
+int MPI_Win_unlock(int rank, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_unlock_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_unlock(context, 0, rank, win);
+
+    fn_ptr = (QMPI_Win_unlock_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_UNLOCK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_UNLOCK_T], rank, win);
+}
+
 /*@
    MPI_Win_unlock - Completes an RMA access epoch at the target process
 
@@ -44,7 +59,7 @@ Input Parameters:
 
 .seealso: MPI_Win_lock
 @*/
-int MPI_Win_unlock(int rank, MPI_Win win)
+int QMPI_Win_unlock(QMPI_Context context, int tool_id, int rank, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

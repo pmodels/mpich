@@ -67,6 +67,21 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_reset_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_reset(context, 0, session, handle);
+
+    fn_ptr = (QMPI_T_pvar_reset_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_RESET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_RESET_T], session, handle);
+}
+
 /*@
 MPI_T_pvar_reset - Reset a performance variable
 
@@ -93,7 +108,8 @@ variables are ignored when MPI_T_PVAR_ALL_HANDLES is specified.
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_PVAR_NO_WRITE
 @*/
-int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+int QMPI_T_pvar_reset(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                      MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_handle_t *hnd;

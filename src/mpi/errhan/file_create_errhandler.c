@@ -27,6 +27,24 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 
 #endif
 
+int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn,
+                               MPI_Errhandler * errhandler)
+{
+    QMPI_Context context;
+    QMPI_File_create_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_create_errhandler(context, 0, file_errhandler_fn, errhandler);
+
+    fn_ptr =
+        (QMPI_File_create_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_CREATE_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_CREATE_ERRHANDLER_T],
+                      file_errhandler_fn, errhandler);
+}
+
 /*@
    MPI_File_create_errhandler - Create a file error handler
 
@@ -43,8 +61,9 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn,
-                               MPI_Errhandler * errhandler)
+int QMPI_File_create_errhandler(QMPI_Context context, int tool_id,
+                                MPI_File_errhandler_function * file_errhandler_fn,
+                                MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;

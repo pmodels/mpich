@@ -175,6 +175,23 @@ int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
 
 #endif
 
+int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+             MPI_Op op, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Scan_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Scan(context, 0, sendbuf, recvbuf, count, datatype, op, comm);
+
+    fn_ptr = (QMPI_Scan_t *) MPIR_QMPI_first_fn_ptrs[MPI_SCAN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_SCAN_T], sendbuf, recvbuf, count,
+                      datatype, op, comm);
+}
+
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of
@@ -204,8 +221,8 @@ Output Parameters:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-             MPI_Op op, MPI_Comm comm)
+int QMPI_Scan(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf, int count,
+              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

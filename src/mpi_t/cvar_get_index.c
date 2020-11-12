@@ -25,6 +25,21 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index)
 #define MPI_T_cvar_get_index PMPI_T_cvar_get_index
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_cvar_get_index(const char *name, int *cvar_index)
+{
+    QMPI_Context context;
+    QMPI_T_cvar_get_index_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_cvar_get_index(context, 0, name, cvar_index);
+
+    fn_ptr = (QMPI_T_cvar_get_index_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CVAR_GET_INDEX_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CVAR_GET_INDEX_T], name, cvar_index);
+}
+
 /*@
 MPI_T_cvar_get_index - Get the index of a control variable
 
@@ -41,7 +56,7 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_NAME
 .N MPI_T_ERR_NOT_INITIALIZED
 @*/
-int MPI_T_cvar_get_index(const char *name, int *cvar_index)
+int QMPI_T_cvar_get_index(QMPI_Context context, int tool_id, const char *name, int *cvar_index)
 {
     int mpi_errno = MPI_SUCCESS;
 

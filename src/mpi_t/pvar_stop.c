@@ -94,6 +94,21 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_stop_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_stop(context, 0, session, handle);
+
+    fn_ptr = (QMPI_T_pvar_stop_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_STOP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_STOP_T], session, handle);
+}
+
 /*@
 MPI_T_pvar_stop - Stop a performance variable
 
@@ -121,7 +136,8 @@ MPI_T_PVAR_ALL_HANDLES is specified.
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_PVAR_NO_STARTSTOP
 @*/
-int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+int QMPI_T_pvar_stop(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                     MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
 

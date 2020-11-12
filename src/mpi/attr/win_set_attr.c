@@ -101,6 +101,22 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
 #endif
 
 
+int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
+{
+    QMPI_Context context;
+    QMPI_Win_set_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_set_attr(context, 0, win, win_keyval, attribute_val);
+
+    fn_ptr = (QMPI_Win_set_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_SET_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_SET_ATTR_T], win, win_keyval,
+                      attribute_val);
+}
+
 /*@
    MPI_Win_set_attr - Stores attribute value associated with a key
 
@@ -127,7 +143,8 @@ corresponding keyval was created) will be called.
 .N MPI_ERR_WIN
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
+int QMPI_Win_set_attr(QMPI_Context context, int tool_id, MPI_Win win, int win_keyval,
+                      void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);

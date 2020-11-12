@@ -200,6 +200,25 @@ int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif
 
+int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                void *recvbuf, const int *recvcounts, const int *displs,
+                MPI_Datatype recvtype, int root, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Gatherv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Gatherv(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                            recvtype, root, comm);
+
+    fn_ptr = (QMPI_Gatherv_t *) MPIR_QMPI_first_fn_ptrs[MPI_GATHERV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GATHERV_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcounts, displs, recvtype, root, comm);
+}
+
 /*@
 
 MPI_Gatherv - Gathers into specified locations from all processes in a group
@@ -233,9 +252,9 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_BUFFER
 @*/
-int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                void *recvbuf, const int *recvcounts, const int *displs,
-                MPI_Datatype recvtype, int root, MPI_Comm comm)
+int QMPI_Gatherv(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                 MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs,
+                 MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

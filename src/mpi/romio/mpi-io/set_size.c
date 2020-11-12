@@ -26,6 +26,21 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_set_size(MPI_File fh, MPI_Offset size)
+{
+    QMPI_Context context;
+    QMPI_File_set_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_set_size(context, 0, fh, size);
+
+    fn_ptr = (QMPI_File_set_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SET_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SET_SIZE_T], fh, size);
+}
+
 /*@
     MPI_File_set_size - Sets the file size
 
@@ -35,7 +50,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_set_size(MPI_File fh, MPI_Offset size)
+int QMPI_File_set_size(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset size)
 {
     int error_code;
     ADIO_File adio_fh;

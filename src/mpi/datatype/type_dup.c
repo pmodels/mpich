@@ -87,6 +87,21 @@ int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
     return mpi_errno;
 }
 
+int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_dup_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_dup(context, 0, oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_dup_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_DUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_DUP_T], oldtype, newtype);
+}
+
 /*@
    MPI_Type_dup - Duplicate a datatype
 
@@ -104,7 +119,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_dup(QMPI_Context context, int tool_id, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;

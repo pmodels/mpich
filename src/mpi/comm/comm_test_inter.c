@@ -27,6 +27,21 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 #endif
 
 
+int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Comm_test_inter_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_test_inter(context, 0, comm, flag);
+
+    fn_ptr = (QMPI_Comm_test_inter_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_TEST_INTER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_TEST_INTER_T], comm, flag);
+}
+
 /*@
 
 MPI_Comm_test_inter - Tests to see if a comm is an inter-communicator
@@ -46,7 +61,7 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
+int QMPI_Comm_test_inter(QMPI_Context context, int tool_id, MPI_Comm comm, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -28,6 +28,25 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 #endif
 
+int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
+                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Op op, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Fetch_and_op_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Fetch_and_op(context, 0, origin_addr, result_addr, datatype, target_rank,
+                                 target_disp, op, win);
+
+    fn_ptr = (QMPI_Fetch_and_op_t *) MPIR_QMPI_first_fn_ptrs[MPI_FETCH_AND_OP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FETCH_AND_OP_T], origin_addr,
+                      result_addr, datatype, target_rank, target_disp, op, win);
+}
+
 /*@
 MPI_Fetch_and_op - Perform one-sided read-modify-write.
 
@@ -72,9 +91,9 @@ datatype argument must be a predefined datatype.
 
 .seealso: MPI_Get_accumulate
 @*/
-int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                     MPI_Op op, MPI_Win win)
+int QMPI_Fetch_and_op(QMPI_Context context, int tool_id, const void *origin_addr, void *result_addr,
+                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                      MPI_Op op, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

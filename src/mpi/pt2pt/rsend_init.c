@@ -27,6 +27,23 @@ int MPI_Rsend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #endif
 
+int MPI_Rsend_init(const void *buf, int count, MPI_Datatype datatype, int dest,
+                   int tag, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Rsend_init_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Rsend_init(context, 0, buf, count, datatype, dest, tag, comm, request);
+
+    fn_ptr = (QMPI_Rsend_init_t *) MPIR_QMPI_first_fn_ptrs[MPI_RSEND_INIT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RSEND_INIT_T], buf, count, datatype,
+                      dest, tag, comm, request);
+}
+
 /*@
     MPI_Rsend_init - Creates a persistent request for a ready send
 
@@ -56,8 +73,8 @@ Output Parameters:
 
 .seealso: MPI_Start, MPI_Request_free, MPI_Send_init
 @*/
-int MPI_Rsend_init(const void *buf, int count, MPI_Datatype datatype, int dest,
-                   int tag, MPI_Comm comm, MPI_Request * request)
+int QMPI_Rsend_init(QMPI_Context context, int tool_id, const void *buf, int count,
+                    MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

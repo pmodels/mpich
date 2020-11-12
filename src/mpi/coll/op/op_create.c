@@ -98,6 +98,21 @@ int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
+{
+    QMPI_Context context;
+    QMPI_Op_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Op_create(context, 0, user_fn, commute, op);
+
+    fn_ptr = (QMPI_Op_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_OP_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_OP_CREATE_T], user_fn, commute, op);
+}
+
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 
@@ -130,7 +145,8 @@ Output Parameters:
 
 .seealso: MPI_Op_free
 @*/
-int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
+int QMPI_Op_create(QMPI_Context context, int tool_id, MPI_User_function * user_fn, int commute,
+                   MPI_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);

@@ -99,6 +99,22 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
 
 #endif
 
+int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+{
+    QMPI_Context context;
+    QMPI_Reduce_local_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Reduce_local(context, 0, inbuf, inoutbuf, count, datatype, op);
+
+    fn_ptr = (QMPI_Reduce_local_t *) MPIR_QMPI_first_fn_ptrs[MPI_REDUCE_LOCAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REDUCE_LOCAL_T], inbuf, inoutbuf, count,
+                      datatype, op);
+}
+
 /*@
 MPI_Reduce_local - Applies a reduction operator to local arguments.
 
@@ -124,7 +140,8 @@ Output Parameters:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int QMPI_Reduce_local(QMPI_Context context, int tool_id, const void *inbuf, void *inoutbuf,
+                      int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);

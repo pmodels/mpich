@@ -277,6 +277,23 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 
 #endif
 
+int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
+                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Allreduce_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Allreduce(context, 0, sendbuf, recvbuf, count, datatype, op, comm);
+
+    fn_ptr = (QMPI_Allreduce_t *) MPIR_QMPI_first_fn_ptrs[MPI_ALLREDUCE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ALLREDUCE_T], sendbuf, recvbuf, count,
+                      datatype, op, comm);
+}
+
 /*@
 MPI_Allreduce - Combines values from all processes and distributes the result
                 back to all processes
@@ -304,8 +321,8 @@ Output Parameters:
 .N MPI_ERR_OP
 .N MPI_ERR_COMM
 @*/
-int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
-                  MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int QMPI_Allreduce(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf, int count,
+                   MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

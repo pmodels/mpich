@@ -25,6 +25,22 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
 #define MPI_T_enum_get_item PMPI_T_enum_get_item
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
+{
+    QMPI_Context context;
+    QMPI_T_enum_get_item_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_enum_get_item(context, 0, enumtype, indx, value, name, name_len);
+
+    fn_ptr = (QMPI_T_enum_get_item_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_ENUM_GET_ITEM_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_ENUM_GET_ITEM_T], enumtype, indx,
+                      value, name, name_len);
+}
+
 /*@
 MPI_T_enum_get_item - Get the information about an item in an enumeration
 
@@ -47,7 +63,8 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_INVALID_ITEM
 @*/
-int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
+int QMPI_T_enum_get_item(QMPI_Context context, int tool_id, MPI_T_enum enumtype, int indx,
+                         int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
     enum_item_t *item;

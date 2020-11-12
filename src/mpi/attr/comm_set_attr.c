@@ -101,6 +101,22 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 }
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
+{
+    QMPI_Context context;
+    QMPI_Comm_set_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_set_attr(context, 0, comm, comm_keyval, attribute_val);
+
+    fn_ptr = (QMPI_Comm_set_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SET_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SET_ATTR_T], comm, comm_keyval,
+                      attribute_val);
+}
+
 /*@
    MPI_Comm_set_attr - Stores attribute value associated with a key
 
@@ -134,7 +150,8 @@ corresponding keyval was created) will be called.
 
 .seealso MPI_Comm_create_keyval, MPI_Comm_delete_attr
 @*/
-int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
+int QMPI_Comm_set_attr(QMPI_Context context, int tool_id, MPI_Comm comm, int comm_keyval,
+                       void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);

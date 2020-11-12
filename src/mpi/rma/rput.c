@@ -28,6 +28,26 @@ int MPI_Rput(const void *origin_addr, int origin_count,
 
 #endif
 
+int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
+             MPI_Win win, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Rput_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Rput(context, 0, origin_addr, origin_count, origin_datatype, target_rank,
+                         target_disp, target_count, target_datatype, win, request);
+
+    fn_ptr = (QMPI_Rput_t *) MPIR_QMPI_first_fn_ptrs[MPI_RPUT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RPUT_T], origin_addr, origin_count,
+                      origin_datatype, target_rank, target_disp, target_count, target_datatype, win,
+                      request);
+}
+
 /*@
 MPI_Rput - Put data into a memory window on a remote process and return a
 request handle for the operation.
@@ -69,9 +89,9 @@ Output Parameters:
 
 .seealso: MPI_Put
 @*/
-int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
-             MPI_Win win, MPI_Request * request)
+int QMPI_Rput(QMPI_Context context, int tool_id, const void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count,
+              MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

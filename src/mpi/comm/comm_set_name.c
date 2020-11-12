@@ -27,6 +27,21 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 #endif
 
 
+int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
+{
+    QMPI_Context context;
+    QMPI_Comm_set_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_set_name(context, 0, comm, comm_name);
+
+    fn_ptr = (QMPI_Comm_set_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SET_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SET_NAME_T], comm, comm_name);
+}
+
 /*@
    MPI_Comm_set_name - Sets the print name for a communicator
 
@@ -42,7 +57,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
+int QMPI_Comm_set_name(QMPI_Context context, int tool_id, MPI_Comm comm, const char *comm_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

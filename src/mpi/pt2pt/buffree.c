@@ -26,6 +26,21 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
 
 #endif
 
+int MPI_Buffer_detach(void *buffer_addr, int *size)
+{
+    QMPI_Context context;
+    QMPI_Buffer_detach_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Buffer_detach(context, 0, buffer_addr, size);
+
+    fn_ptr = (QMPI_Buffer_detach_t *) MPIR_QMPI_first_fn_ptrs[MPI_BUFFER_DETACH_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_BUFFER_DETACH_T], buffer_addr, size);
+}
+
 /*@
   MPI_Buffer_detach - Removes an existing buffer (for use in MPI_Bsend etc)
 
@@ -86,7 +101,7 @@ Notes for C:
 
 .seealso: MPI_Buffer_attach
 @*/
-int MPI_Buffer_detach(void *buffer_addr, int *size)
+int QMPI_Buffer_detach(QMPI_Context context, int tool_id, void *buffer_addr, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_DETACH);

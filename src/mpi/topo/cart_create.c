@@ -185,6 +185,23 @@ int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
 #endif
 
+int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
+                    const int periods[], int reorder, MPI_Comm * comm_cart)
+{
+    QMPI_Context context;
+    QMPI_Cart_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_create(context, 0, comm_old, ndims, dims, periods, reorder, comm_cart);
+
+    fn_ptr = (QMPI_Cart_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_CREATE_T], comm_old, ndims, dims,
+                      periods, reorder, comm_cart);
+}
+
 /*@
 
 MPI_Cart_create - Makes a new communicator to which topology information
@@ -215,8 +232,8 @@ We ignore 'reorder' info currently.
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
-                    const int periods[], int reorder, MPI_Comm * comm_cart)
+int QMPI_Cart_create(QMPI_Context context, int tool_id, MPI_Comm comm_old, int ndims,
+                     const int dims[], const int periods[], int reorder, MPI_Comm * comm_cart)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

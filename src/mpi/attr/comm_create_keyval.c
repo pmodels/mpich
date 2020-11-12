@@ -28,6 +28,25 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
 
 #endif
 
+int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                           MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                           int *comm_keyval, void *extra_state)
+{
+    QMPI_Context context;
+    QMPI_Comm_create_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_create_keyval(context, 0, comm_copy_attr_fn, comm_delete_attr_fn,
+                                       comm_keyval, extra_state);
+
+    fn_ptr = (QMPI_Comm_create_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_CREATE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_CREATE_KEYVAL_T],
+                      comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval, extra_state);
+}
+
 /*@
    MPI_Comm_create_keyval - Create a new attribute key
 
@@ -64,9 +83,10 @@ Fortran and C in the same program need to be sure that they follow this rule.
 
 .seealso MPI_Comm_free_keyval
 @*/
-int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
-                           MPI_Comm_delete_attr_function * comm_delete_attr_fn,
-                           int *comm_keyval, void *extra_state)
+int QMPI_Comm_create_keyval(QMPI_Context context, int tool_id,
+                            MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                            MPI_Comm_delete_attr_function * comm_delete_attr_fn, int *comm_keyval,
+                            void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_KEYVAL);

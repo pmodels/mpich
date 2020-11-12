@@ -26,6 +26,21 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 
 #endif
 
+int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
+{
+    QMPI_Context context;
+    QMPI_Graphdims_get_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Graphdims_get(context, 0, comm, nnodes, nedges);
+
+    fn_ptr = (QMPI_Graphdims_get_t *) MPIR_QMPI_first_fn_ptrs[MPI_GRAPHDIMS_GET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GRAPHDIMS_GET_T], comm, nnodes, nedges);
+}
+
 /*@
 
 MPI_Graphdims_get - Retrieves graph topology information associated with a
@@ -48,7 +63,7 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
+int QMPI_Graphdims_get(QMPI_Context context, int tool_id, MPI_Comm comm, int *nnodes, int *nedges)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

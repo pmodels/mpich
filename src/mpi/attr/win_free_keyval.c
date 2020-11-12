@@ -25,6 +25,21 @@ int MPI_Win_free_keyval(int *win_keyval) __attribute__ ((weak, alias("PMPI_Win_f
 
 #endif
 
+int MPI_Win_free_keyval(int *win_keyval)
+{
+    QMPI_Context context;
+    QMPI_Win_free_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_free_keyval(context, 0, win_keyval);
+
+    fn_ptr = (QMPI_Win_free_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_FREE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_FREE_KEYVAL_T], win_keyval);
+}
+
 /*@
    MPI_Win_free_keyval - Frees an attribute key for MPI RMA windows
 
@@ -41,7 +56,7 @@ Input Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Win_free_keyval(int *win_keyval)
+int QMPI_Win_free_keyval(QMPI_Context context, int tool_id, int *win_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr = NULL;

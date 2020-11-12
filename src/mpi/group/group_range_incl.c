@@ -94,6 +94,22 @@ int MPIR_Group_range_incl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 #endif
 
 
+int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], MPI_Group * newgroup)
+{
+    QMPI_Context context;
+    QMPI_Group_range_incl_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_range_incl(context, 0, group, n, ranges, newgroup);
+
+    fn_ptr = (QMPI_Group_range_incl_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_RANGE_INCL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_RANGE_INCL_T], group, n, ranges,
+                      newgroup);
+}
+
 /*@
 
 MPI_Group_range_incl - Creates a new group from ranges of ranks in an
@@ -123,7 +139,8 @@ order defined by  'ranges' (handle)
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], MPI_Group * newgroup)
+int QMPI_Group_range_incl(QMPI_Context context, int tool_id, MPI_Group group, int n,
+                          int ranges[][3], MPI_Group * newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL, *new_group_ptr;

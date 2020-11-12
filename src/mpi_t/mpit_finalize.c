@@ -168,6 +168,21 @@ void MPIR_T_env_finalize(void)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_finalize(void)
+{
+    QMPI_Context context;
+    QMPI_T_finalize_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_finalize(context, 0);
+
+    fn_ptr = (QMPI_T_finalize_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_FINALIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_FINALIZE_T]);
+}
+
 /*@
 MPI_T_finalize - Finalize the MPI tool information interface
 
@@ -194,7 +209,7 @@ have called MPI_T_init_thread() and MPI_T_finalize() an equal number of times.
 
 .seealso MPI_T_init_thread
 @*/
-int MPI_T_finalize(void)
+int QMPI_T_finalize(QMPI_Context context, int tool_id)
 {
     int mpi_errno = MPI_SUCCESS;
 

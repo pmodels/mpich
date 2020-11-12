@@ -26,6 +26,21 @@ int MPI_File_get_info(MPI_File fh, MPI_Info * info_used)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_get_info(MPI_File fh, MPI_Info * info_used)
+{
+    QMPI_Context context;
+    QMPI_File_get_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_get_info(context, 0, fh, info_used);
+
+    fn_ptr = (QMPI_File_get_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_GET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_GET_INFO_T], fh, info_used);
+}
+
 /*@
     MPI_File_get_info - Returns the hints for a file that are actually being used by MPI
 
@@ -37,7 +52,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_get_info(MPI_File fh, MPI_Info * info_used)
+int QMPI_File_get_info(QMPI_Context context, int tool_id, MPI_File fh, MPI_Info * info_used)
 {
     int error_code;
     ADIO_File adio_fh;

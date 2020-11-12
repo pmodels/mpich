@@ -43,6 +43,22 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Coun
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
+{
+    QMPI_Context context;
+    QMPI_Type_get_extent_x_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_extent_x(context, 0, datatype, lb, extent);
+
+    fn_ptr = (QMPI_Type_get_extent_x_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_EXTENT_X_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_EXTENT_X_T], datatype, lb,
+                      extent);
+}
+
 /*@
 MPI_Type_get_extent_x - Get the lower bound and extent as MPI_Count values
  for a Datatype
@@ -60,7 +76,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
+int QMPI_Type_get_extent_x(QMPI_Context context, int tool_id, MPI_Datatype datatype, MPI_Count * lb,
+                           MPI_Count * extent)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_EXTENT_X);

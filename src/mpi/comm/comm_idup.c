@@ -65,6 +65,21 @@ int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcommp, MPIR_Reques
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Comm_idup_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_idup(context, 0, comm, newcomm, request);
+
+    fn_ptr = (QMPI_Comm_idup_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_IDUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_IDUP_T], comm, newcomm, request);
+}
+
 /*@
 MPI_Comm_idup - nonblocking communicator duplication
 
@@ -81,7 +96,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+int QMPI_Comm_idup(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Comm * newcomm,
+                   MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

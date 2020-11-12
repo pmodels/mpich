@@ -108,6 +108,24 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
 
 #endif
 
+int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
+                 int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+{
+    QMPI_Context context;
+    QMPI_Waitsome_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Waitsome(context, 0, incount, array_of_requests, outcount, array_of_indices,
+                             array_of_statuses);
+
+    fn_ptr = (QMPI_Waitsome_t *) MPIR_QMPI_first_fn_ptrs[MPI_WAITSOME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WAITSOME_T], incount, array_of_requests,
+                      outcount, array_of_indices, array_of_statuses);
+}
+
 /*@
     MPI_Waitsome - Waits for some given MPI Requests to complete
 
@@ -155,8 +173,8 @@ completion of the message.
 .N MPI_ERR_ARG
 .N MPI_ERR_IN_STATUS
 @*/
-int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
-                 int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+int QMPI_Waitsome(QMPI_Context context, int tool_id, int incount, MPI_Request array_of_requests[],
+                  int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
 {
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;

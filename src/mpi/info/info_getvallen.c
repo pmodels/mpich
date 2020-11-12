@@ -46,6 +46,22 @@ void MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *val
 
 #endif
 
+int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Info_get_valuelen_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_get_valuelen(context, 0, info, key, valuelen, flag);
+
+    fn_ptr = (QMPI_Info_get_valuelen_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_GET_VALUELEN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_GET_VALUELEN_T], info, key,
+                      valuelen, flag);
+}
+
 /*@
     MPI_Info_get_valuelen - Retrieves the length of the value associated with
     a key
@@ -67,7 +83,8 @@ Output Parameters:
 .N MPI_ERR_INFO_KEY
 .N MPI_ERR_OTHER
 @*/
-int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *flag)
+int QMPI_Info_get_valuelen(QMPI_Context context, int tool_id, MPI_Info info, const char *key,
+                           int *valuelen, int *flag)
 {
     MPIR_Info *info_ptr = 0;
     int mpi_errno = MPI_SUCCESS;

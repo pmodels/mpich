@@ -342,6 +342,26 @@ int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdisp
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                   const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                   const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
+                   MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ialltoallw_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ialltoallw(context, 0, sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
+                               recvcounts, rdispls, recvtypes, comm, request);
+
+    fn_ptr = (QMPI_Ialltoallw_t *) MPIR_QMPI_first_fn_ptrs[MPI_IALLTOALLW_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IALLTOALLW_T], sendbuf, sendcounts,
+                      sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, request);
+}
+
 /*@
 MPI_Ialltoallw - Nonblocking generalized all-to-all communication allowing
    different datatypes, counts, and displacements for each partner
@@ -366,10 +386,10 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                   const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                   const int rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
-                   MPI_Request * request)
+int QMPI_Ialltoallw(QMPI_Context context, int tool_id, const void *sendbuf, const int sendcounts[],
+                    const int sdispls[], const MPI_Datatype sendtypes[], void *recvbuf,
+                    const int recvcounts[], const int rdispls[], const MPI_Datatype recvtypes[],
+                    MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

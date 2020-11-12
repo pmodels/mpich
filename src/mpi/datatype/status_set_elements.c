@@ -27,6 +27,22 @@ int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int coun
 #endif
 
 
+int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int count)
+{
+    QMPI_Context context;
+    QMPI_Status_set_elements_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Status_set_elements(context, 0, status, datatype, count);
+
+    fn_ptr = (QMPI_Status_set_elements_t *) MPIR_QMPI_first_fn_ptrs[MPI_STATUS_SET_ELEMENTS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_STATUS_SET_ELEMENTS_T], status,
+                      datatype, count);
+}
+
 /*@
    MPI_Status_set_elements - Set the number of elements in a status
 
@@ -44,7 +60,8 @@ Input Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_TYPE
 @*/
-int MPI_Status_set_elements(MPI_Status * status, MPI_Datatype datatype, int count)
+int QMPI_Status_set_elements(QMPI_Context context, int tool_id, MPI_Status * status,
+                             MPI_Datatype datatype, int count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_ELEMENTS);

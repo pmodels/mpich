@@ -117,6 +117,21 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
 #endif
 
 
+int MPI_Cancel(MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Cancel_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cancel(context, 0, request);
+
+    fn_ptr = (QMPI_Cancel_t *) MPIR_QMPI_first_fn_ptrs[MPI_CANCEL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CANCEL_T], request);
+}
+
 /*@
     MPI_Cancel - Cancels a communication request
 
@@ -148,7 +163,7 @@ messages).
 .N MPI_ERR_REQUEST
 .N MPI_ERR_ARG
 @*/
-int MPI_Cancel(MPI_Request * request)
+int QMPI_Cancel(QMPI_Context context, int tool_id, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;

@@ -27,6 +27,21 @@ int MPI_Error_class(int errorcode, int *errorclass)
 
 #endif
 
+int MPI_Error_class(int errorcode, int *errorclass)
+{
+    QMPI_Context context;
+    QMPI_Error_class_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Error_class(context, 0, errorcode, errorclass);
+
+    fn_ptr = (QMPI_Error_class_t *) MPIR_QMPI_first_fn_ptrs[MPI_ERROR_CLASS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ERROR_CLASS_T], errorcode, errorclass);
+}
+
 /*@
    MPI_Error_class - Converts an error code into an error class
 
@@ -43,7 +58,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Error_class(int errorcode, int *errorclass)
+int QMPI_Error_class(QMPI_Context context, int tool_id, int errorcode, int *errorclass)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_CLASS);

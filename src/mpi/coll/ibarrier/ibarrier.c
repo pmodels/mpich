@@ -247,6 +247,21 @@ int MPIR_Ibarrier(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ibarrier_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ibarrier(context, 0, comm, request);
+
+    fn_ptr = (QMPI_Ibarrier_t *) MPIR_QMPI_first_fn_ptrs[MPI_IBARRIER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IBARRIER_T], comm, request);
+}
+
 /*@
 MPI_Ibarrier - Notifies the process that it has reached the barrier and returns
                immediately
@@ -273,7 +288,7 @@ group have called MPI_Ibarrier.
 
 .N Errors
 @*/
-int MPI_Ibarrier(MPI_Comm comm, MPI_Request * request)
+int QMPI_Ibarrier(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

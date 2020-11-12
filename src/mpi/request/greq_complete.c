@@ -36,6 +36,21 @@ void MPIR_Grequest_complete(MPIR_Request * request_ptr)
 
 #endif
 
+int MPI_Grequest_complete(MPI_Request request)
+{
+    QMPI_Context context;
+    QMPI_Grequest_complete_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Grequest_complete(context, 0, request);
+
+    fn_ptr = (QMPI_Grequest_complete_t *) MPIR_QMPI_first_fn_ptrs[MPI_GREQUEST_COMPLETE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GREQUEST_COMPLETE_T], request);
+}
+
 /*@
    MPI_Grequest_complete - Notify MPI that a user-defined request is complete
 
@@ -51,7 +66,7 @@ Input Parameters:
 
 .seealso: MPI_Grequest_start
 @*/
-int MPI_Grequest_complete(MPI_Request request)
+int QMPI_Grequest_complete(QMPI_Context context, int tool_id, MPI_Request request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;

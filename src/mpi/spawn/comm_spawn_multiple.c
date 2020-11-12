@@ -29,6 +29,28 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[], char **array_o
 /* Any internal routines can go here.  Make them static if possible */
 #endif
 
+int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
+                            char **array_of_argv[], const int array_of_maxprocs[],
+                            const MPI_Info array_of_info[], int root, MPI_Comm comm,
+                            MPI_Comm * intercomm, int array_of_errcodes[])
+{
+    QMPI_Context context;
+    QMPI_Comm_spawn_multiple_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_spawn_multiple(context, 0, count, array_of_commands, array_of_argv,
+                                        array_of_maxprocs, array_of_info, root, comm, intercomm,
+                                        array_of_errcodes);
+
+    fn_ptr = (QMPI_Comm_spawn_multiple_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SPAWN_MULTIPLE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SPAWN_MULTIPLE_T], count,
+                      array_of_commands, array_of_argv, array_of_maxprocs, array_of_info, root,
+                      comm, intercomm, array_of_errcodes);
+}
+
 /*@
    MPI_Comm_spawn_multiple - short description
 
@@ -60,10 +82,10 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_SPAWN
 @*/
-int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
-                            char **array_of_argv[], const int array_of_maxprocs[],
-                            const MPI_Info array_of_info[], int root, MPI_Comm comm,
-                            MPI_Comm * intercomm, int array_of_errcodes[])
+int QMPI_Comm_spawn_multiple(QMPI_Context context, int tool_id, int count,
+                             char *array_of_commands[], char **array_of_argv[],
+                             const int array_of_maxprocs[], const MPI_Info array_of_info[],
+                             int root, MPI_Comm comm, MPI_Comm * intercomm, int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_Comm *comm_ptr = NULL;

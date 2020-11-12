@@ -148,6 +148,24 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
+int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
+                         MPI_Comm peer_comm, int remote_leader, int tag, MPI_Comm * newintercomm)
+{
+    QMPI_Context context;
+    QMPI_Intercomm_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Intercomm_create(context, 0, local_comm, local_leader, peer_comm, remote_leader,
+                                     tag, newintercomm);
+
+    fn_ptr = (QMPI_Intercomm_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_INTERCOMM_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INTERCOMM_CREATE_T], local_comm,
+                      local_leader, peer_comm, remote_leader, tag, newintercomm);
+}
+
 /*@
 
 MPI_Intercomm_create - Creates an intercommuncator from two intracommunicators
@@ -196,8 +214,8 @@ Notes:
           MPI_Comm_remote_size
 
 @*/
-int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
-                         MPI_Comm peer_comm, int remote_leader, int tag, MPI_Comm * newintercomm)
+int QMPI_Intercomm_create(QMPI_Context context, int tool_id, MPI_Comm local_comm, int local_leader,
+                          MPI_Comm peer_comm, int remote_leader, int tag, MPI_Comm * newintercomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *local_comm_ptr = NULL;

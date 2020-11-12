@@ -313,6 +313,23 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
 
 
+int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+               MPI_Op op, int root, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Reduce_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Reduce(context, 0, sendbuf, recvbuf, count, datatype, op, root, comm);
+
+    fn_ptr = (QMPI_Reduce_t *) MPIR_QMPI_first_fn_ptrs[MPI_REDUCE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REDUCE_T], sendbuf, recvbuf, count,
+                      datatype, op, root, comm);
+}
+
 /*@
 
 MPI_Reduce - Reduces values on all processes to a single value
@@ -344,8 +361,8 @@ Output Parameters:
 .N MPI_ERR_BUFFER_ALIAS
 
 @*/
-int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-               MPI_Op op, int root, MPI_Comm comm)
+int QMPI_Reduce(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf, int count,
+                MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

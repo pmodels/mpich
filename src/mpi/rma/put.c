@@ -27,6 +27,26 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
 
 #endif
 
+int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+            int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
+            MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Put_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Put(context, 0, origin_addr, origin_count, origin_datatype, target_rank,
+                        target_disp, target_count, target_datatype, win);
+
+    fn_ptr = (QMPI_Put_t *) MPIR_QMPI_first_fn_ptrs[MPI_PUT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PUT_T], origin_addr, origin_count,
+                      origin_datatype, target_rank, target_disp, target_count, target_datatype,
+                      win);
+}
+
 /*@
    MPI_Put - Put data into a memory window on a remote process
 
@@ -55,9 +75,9 @@ Input Parameters:
 
 .seealso: MPI_Rput
 @*/
-int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
-            MPI_Win win)
+int QMPI_Put(QMPI_Context context, int tool_id, const void *origin_addr, int origin_count,
+             MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count,
+             MPI_Datatype target_datatype, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

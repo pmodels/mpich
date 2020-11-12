@@ -27,6 +27,22 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler * errhandler)
+{
+    QMPI_Context context;
+    QMPI_File_get_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_get_errhandler(context, 0, mpi_fh, errhandler);
+
+    fn_ptr = (QMPI_File_get_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_GET_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_GET_ERRHANDLER_T], mpi_fh,
+                      errhandler);
+}
+
 /*@
     MPI_File_get_errhandler - Returns the error handler for a file
 
@@ -38,7 +54,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler * errhandler)
+int QMPI_File_get_errhandler(QMPI_Context context, int tool_id, MPI_File mpi_fh,
+                             MPI_Errhandler * errhandler)
 {
     int error_code = MPI_SUCCESS;
     ADIO_File fh;

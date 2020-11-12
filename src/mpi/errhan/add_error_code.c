@@ -27,6 +27,22 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 
 #endif
 
+int MPI_Add_error_code(int errorclass, int *errorcode)
+{
+    QMPI_Context context;
+    QMPI_Add_error_code_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Add_error_code(context, 0, errorclass, errorcode);
+
+    fn_ptr = (QMPI_Add_error_code_t *) MPIR_QMPI_first_fn_ptrs[MPI_ADD_ERROR_CODE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ADD_ERROR_CODE_T], errorclass,
+                      errorcode);
+}
+
 /*@
    MPI_Add_error_code - Add an MPI error code to an MPI error class
 
@@ -44,7 +60,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Add_error_code(int errorclass, int *errorcode)
+int QMPI_Add_error_code(QMPI_Context context, int tool_id, int errorclass, int *errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     int new_code;

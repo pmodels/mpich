@@ -26,6 +26,22 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * statu
 
 #endif
 
+int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Iprobe_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Iprobe(context, 0, source, tag, comm, flag, status);
+
+    fn_ptr = (QMPI_Iprobe_t *) MPIR_QMPI_first_fn_ptrs[MPI_IPROBE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IPROBE_T], source, tag, comm, flag,
+                      status);
+}
+
 /*@
     MPI_Iprobe - Nonblocking test for a message
 
@@ -50,7 +66,8 @@ Output Parameters:
 .N MPI_ERR_RANK
 
 @*/
-int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * status)
+int QMPI_Iprobe(QMPI_Context context, int tool_id, int source, int tag, MPI_Comm comm, int *flag,
+                MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

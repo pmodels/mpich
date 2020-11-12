@@ -26,6 +26,22 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
+int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Bsend_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Bsend(context, 0, buf, count, datatype, dest, tag, comm);
+
+    fn_ptr = (QMPI_Bsend_t *) MPIR_QMPI_first_fn_ptrs[MPI_BSEND_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_BSEND_T], buf, count, datatype, dest,
+                      tag, comm);
+}
+
 /*@
     MPI_Bsend - Basic send with user-provided buffering
 
@@ -80,7 +96,8 @@ delivered.)
 
 .seealso: MPI_Buffer_attach, MPI_Ibsend, MPI_Bsend_init
 @*/
-int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+int QMPI_Bsend(QMPI_Context context, int tool_id, const void *buf, int count, MPI_Datatype datatype,
+               int dest, int tag, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

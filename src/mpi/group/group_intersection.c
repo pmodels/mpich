@@ -100,6 +100,22 @@ int MPIR_Group_intersection_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr
 #endif
 
 
+int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+{
+    QMPI_Context context;
+    QMPI_Group_intersection_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_intersection(context, 0, group1, group2, newgroup);
+
+    fn_ptr = (QMPI_Group_intersection_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_INTERSECTION_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_INTERSECTION_T], group1, group2,
+                      newgroup);
+}
+
 /*@
 
 MPI_Group_intersection - Produces a group as the intersection of two existing
@@ -127,7 +143,8 @@ The output group contains those processes that are in both 'group1' and
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+int QMPI_Group_intersection(QMPI_Context context, int tool_id, MPI_Group group1, MPI_Group group2,
+                            MPI_Group * newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;

@@ -26,6 +26,21 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__ ((weak, alias("PMPI_Co
 #endif
 
 
+int MPI_Comm_rank(MPI_Comm comm, int *rank)
+{
+    QMPI_Context context;
+    QMPI_Comm_rank_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_rank(context, 0, comm, rank);
+
+    fn_ptr = (QMPI_Comm_rank_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_RANK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_RANK_T], comm, rank);
+}
+
 /*@
 
 MPI_Comm_rank - Determines the rank of the calling process in the communicator
@@ -44,7 +59,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_rank(MPI_Comm comm, int *rank)
+int QMPI_Comm_rank(QMPI_Context context, int tool_id, MPI_Comm comm, int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = 0;

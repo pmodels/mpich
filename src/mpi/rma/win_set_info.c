@@ -25,6 +25,21 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info) __attribute__ ((weak, alias("PM
 
 #endif
 
+int MPI_Win_set_info(MPI_Win win, MPI_Info info)
+{
+    QMPI_Context context;
+    QMPI_Win_set_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_set_info(context, 0, win, info);
+
+    fn_ptr = (QMPI_Win_set_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_SET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_SET_INFO_T], win, info);
+}
+
 /*@
 MPI_Win_set_info - Set new values for the hints of the window associated with
 win.
@@ -58,7 +73,7 @@ call.
 
 .seealso: MPI_Win_get_info
 @*/
-int MPI_Win_set_info(MPI_Win win, MPI_Info info)
+int QMPI_Win_set_info(QMPI_Context context, int tool_id, MPI_Win win, MPI_Info info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

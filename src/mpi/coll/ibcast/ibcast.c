@@ -433,6 +433,23 @@ int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_C
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm,
+               MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ibcast_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ibcast(context, 0, buffer, count, datatype, root, comm, request);
+
+    fn_ptr = (QMPI_Ibcast_t *) MPIR_QMPI_first_fn_ptrs[MPI_IBCAST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IBCAST_T], buffer, count, datatype,
+                      root, comm, request);
+}
+
 /*@
 MPI_Ibcast - Broadcasts a message from the process with rank "root" to
              all other processes of the communicator in a nonblocking way
@@ -455,8 +472,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm,
-               MPI_Request * request)
+int QMPI_Ibcast(QMPI_Context context, int tool_id, void *buffer, int count, MPI_Datatype datatype,
+                int root, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

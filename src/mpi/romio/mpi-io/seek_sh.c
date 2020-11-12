@@ -26,6 +26,22 @@ int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
+{
+    QMPI_Context context;
+    QMPI_File_seek_shared_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_seek_shared(context, 0, fh, offset, whence);
+
+    fn_ptr = (QMPI_File_seek_shared_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SEEK_SHARED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SEEK_SHARED_T], fh, offset,
+                      whence);
+}
+
 /*@
     MPI_File_seek_shared - Updates the shared file pointer
 
@@ -36,7 +52,8 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
+int QMPI_File_seek_shared(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset offset,
+                          int whence)
 {
     int error_code = MPI_SUCCESS, tmp_whence, myrank;
     static char myname[] = "MPI_FILE_SEEK_SHARED";

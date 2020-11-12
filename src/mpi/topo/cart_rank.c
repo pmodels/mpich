@@ -51,6 +51,21 @@ void MPIR_Cart_rank_impl(MPIR_Topology * cart_ptr, const int coords[], int *rank
 
 #endif
 
+int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
+{
+    QMPI_Context context;
+    QMPI_Cart_rank_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_rank(context, 0, comm, coords, rank);
+
+    fn_ptr = (QMPI_Cart_rank_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_RANK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_RANK_T], comm, coords, rank);
+}
+
 /*@
 MPI_Cart_rank - Determines process rank in communicator given Cartesian
                 location
@@ -79,7 +94,7 @@ Notes:
 .N MPI_ERR_RANK
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
+int QMPI_Cart_rank(QMPI_Context context, int tool_id, MPI_Comm comm, const int coords[], int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

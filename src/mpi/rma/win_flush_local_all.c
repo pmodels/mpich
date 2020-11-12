@@ -25,6 +25,21 @@ int MPI_Win_flush_local_all(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_f
 
 #endif
 
+int MPI_Win_flush_local_all(MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_flush_local_all_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_flush_local_all(context, 0, win);
+
+    fn_ptr = (QMPI_Win_flush_local_all_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_FLUSH_LOCAL_ALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_FLUSH_LOCAL_ALL_T], win);
+}
+
 /*@
 MPI_Win_flush_local_all - Complete locally all outstanding RMA operations at all targets
 
@@ -47,7 +62,7 @@ Input Parameters:
 
 .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local MPI_Win_lock MPI_Win_lock_all
 @*/
-int MPI_Win_flush_local_all(MPI_Win win)
+int QMPI_Win_flush_local_all(QMPI_Context context, int tool_id, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

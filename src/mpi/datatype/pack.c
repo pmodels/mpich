@@ -25,6 +25,24 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #define MPI_Pack PMPI_Pack
 #endif
 
+int MPI_Pack(const void *inbuf,
+             int incount,
+             MPI_Datatype datatype, void *outbuf, int outsize, int *position, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Pack_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Pack(context, 0, inbuf, incount, datatype, outbuf, outsize, position, comm);
+
+    fn_ptr = (QMPI_Pack_t *) MPIR_QMPI_first_fn_ptrs[MPI_PACK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PACK_T], inbuf, incount, datatype,
+                      outbuf, outsize, position, comm);
+}
+
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 
@@ -58,9 +76,9 @@ Input/Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Pack(const void *inbuf,
-             int incount,
-             MPI_Datatype datatype, void *outbuf, int outsize, int *position, MPI_Comm comm)
+int QMPI_Pack(QMPI_Context context, int tool_id, const void *inbuf,
+              int incount,
+              MPI_Datatype datatype, void *outbuf, int outsize, int *position, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint position_x;

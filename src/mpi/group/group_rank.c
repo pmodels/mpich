@@ -26,6 +26,21 @@ int MPI_Group_rank(MPI_Group group, int *rank) __attribute__ ((weak, alias("PMPI
 #endif
 
 
+int MPI_Group_rank(MPI_Group group, int *rank)
+{
+    QMPI_Context context;
+    QMPI_Group_rank_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_rank(context, 0, group, rank);
+
+    fn_ptr = (QMPI_Group_rank_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_RANK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_RANK_T], group, rank);
+}
+
 /*@
 
 MPI_Group_rank - Returns the rank of this process in the given group
@@ -46,7 +61,7 @@ process is not a member (integer)
 .N MPI_ERR_GROUP
 .N MPI_ERR_ARG
 @*/
-int MPI_Group_rank(MPI_Group group, int *rank)
+int QMPI_Group_rank(QMPI_Context context, int tool_id, MPI_Group group, int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL;

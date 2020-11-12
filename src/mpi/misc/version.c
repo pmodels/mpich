@@ -26,6 +26,21 @@ int MPI_Get_version(int *version, int *subversion)
 
 #endif
 
+int MPI_Get_version(int *version, int *subversion)
+{
+    QMPI_Context context;
+    QMPI_Get_version_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_version(context, 0, version, subversion);
+
+    fn_ptr = (QMPI_Get_version_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_VERSION_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_VERSION_T], version, subversion);
+}
+
 /*@
    MPI_Get_version - Return the version number of MPI
 
@@ -40,7 +55,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_version(int *version, int *subversion)
+int QMPI_Get_version(QMPI_Context context, int tool_id, int *version, int *subversion)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_VERSION);

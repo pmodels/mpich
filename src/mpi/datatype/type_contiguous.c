@@ -186,6 +186,22 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
 #endif
 
 
+int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_contiguous_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_contiguous(context, 0, count, oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_contiguous_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CONTIGUOUS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CONTIGUOUS_T], count, oldtype,
+                      newtype);
+}
+
 /*@
     MPI_Type_contiguous - Creates a contiguous datatype
 
@@ -206,7 +222,8 @@ Output Parameters:
 .N MPI_ERR_COUNT
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_contiguous(QMPI_Context context, int tool_id, int count, MPI_Datatype oldtype,
+                         MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CONTIGUOUS);

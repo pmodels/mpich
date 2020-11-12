@@ -28,6 +28,22 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Mprobe_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Mprobe(context, 0, source, tag, comm, message, status);
+
+    fn_ptr = (QMPI_Mprobe_t *) MPIR_QMPI_first_fn_ptrs[MPI_MPROBE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_MPROBE_T], source, tag, comm, message,
+                      status);
+}
+
 /*@
 MPI_Mprobe - Blocking matched probe.
 
@@ -46,7 +62,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_Status * status)
+int QMPI_Mprobe(QMPI_Context context, int tool_id, int source, int tag, MPI_Comm comm,
+                MPI_Message * message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL;

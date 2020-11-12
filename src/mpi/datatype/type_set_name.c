@@ -28,6 +28,21 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 #endif
 
 
+int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
+{
+    QMPI_Context context;
+    QMPI_Type_set_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_set_name(context, 0, datatype, type_name);
+
+    fn_ptr = (QMPI_Type_set_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_SET_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_SET_NAME_T], datatype, type_name);
+}
+
 /*@
    MPI_Type_set_name - set datatype name
 
@@ -43,7 +58,8 @@ Input Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_OTHER
 @*/
-int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
+int QMPI_Type_set_name(QMPI_Context context, int tool_id, MPI_Datatype datatype,
+                       const char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;

@@ -26,6 +26,22 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 
 #endif
 
+int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Cart_sub_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_sub(context, 0, comm, remain_dims, newcomm);
+
+    fn_ptr = (QMPI_Cart_sub_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_SUB_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_SUB_T], comm, remain_dims,
+                      newcomm);
+}
+
 /*@
 
 MPI_Cart_sub - Partitions a communicator into subgroups which
@@ -51,7 +67,8 @@ process (handle)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
+int QMPI_Cart_sub(QMPI_Context context, int tool_id, MPI_Comm comm, const int remain_dims[],
+                  MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS, all_false;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;

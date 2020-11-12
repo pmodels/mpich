@@ -27,6 +27,22 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 
 #endif
 
+int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Request_get_status_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Request_get_status(context, 0, request, flag, status);
+
+    fn_ptr = (QMPI_Request_get_status_t *) MPIR_QMPI_first_fn_ptrs[MPI_REQUEST_GET_STATUS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REQUEST_GET_STATUS_T], request, flag,
+                      status);
+}
+
 /*@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 
@@ -49,7 +65,8 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
+int QMPI_Request_get_status(QMPI_Context context, int tool_id, MPI_Request request, int *flag,
+                            MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;

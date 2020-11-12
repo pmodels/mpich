@@ -26,6 +26,21 @@ int MPI_Group_size(MPI_Group group, int *size) __attribute__ ((weak, alias("PMPI
 #endif
 
 
+int MPI_Group_size(MPI_Group group, int *size)
+{
+    QMPI_Context context;
+    QMPI_Group_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_size(context, 0, group, size);
+
+    fn_ptr = (QMPI_Group_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_SIZE_T], group, size);
+}
+
 /*@
 
 MPI_Group_size - Returns the size of a group
@@ -45,7 +60,7 @@ Output Parameters:
 .N MPI_ERR_GROUP
 .N MPI_ERR_ARG
 @*/
-int MPI_Group_size(MPI_Group group, int *size)
+int QMPI_Group_size(QMPI_Context context, int tool_id, MPI_Group group, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL;

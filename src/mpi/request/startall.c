@@ -30,6 +30,21 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
 
 #endif
 
+int MPI_Startall(int count, MPI_Request array_of_requests[])
+{
+    QMPI_Context context;
+    QMPI_Startall_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Startall(context, 0, count, array_of_requests);
+
+    fn_ptr = (QMPI_Startall_t *) MPIR_QMPI_first_fn_ptrs[MPI_STARTALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_STARTALL_T], count, array_of_requests);
+}
+
 /*@
   MPI_Startall - Starts a collection of persistent requests
 
@@ -54,7 +69,7 @@ Input Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_REQUEST
 @*/
-int MPI_Startall(int count, MPI_Request array_of_requests[])
+int QMPI_Startall(QMPI_Context context, int tool_id, int count, MPI_Request array_of_requests[])
 {
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;

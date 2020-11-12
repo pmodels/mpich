@@ -28,6 +28,27 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int 
 
 #endif
 
+int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 int dest, int sendtag,
+                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                 int source, int recvtag, MPI_Comm comm, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Sendrecv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Sendrecv(context, 0, sendbuf, sendcount, sendtype, dest, sendtag, recvbuf,
+                             recvcount, recvtype, source, recvtag, comm, status);
+
+    fn_ptr = (QMPI_Sendrecv_t *) MPIR_QMPI_first_fn_ptrs[MPI_SENDRECV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_SENDRECV_T], sendbuf, sendcount,
+                      sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm,
+                      status);
+}
+
 /*@
     MPI_Sendrecv - Sends and receives a message
 
@@ -62,10 +83,10 @@ Output Parameters:
 .N MPI_ERR_RANK
 
 @*/
-int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                 int dest, int sendtag,
-                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                 int source, int recvtag, MPI_Comm comm, MPI_Status * status)
+int QMPI_Sendrecv(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                  MPI_Datatype sendtype, int dest, int sendtag, void *recvbuf, int recvcount,
+                  MPI_Datatype recvtype, int source, int recvtag, MPI_Comm comm,
+                  MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

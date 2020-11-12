@@ -26,6 +26,21 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 
 #endif
 
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
+{
+    QMPI_Context context;
+    QMPI_Win_create_dynamic_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_create_dynamic(context, 0, info, comm, win);
+
+    fn_ptr = (QMPI_Win_create_dynamic_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_CREATE_DYNAMIC_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_CREATE_DYNAMIC_T], info, comm, win);
+}
+
 /*@
 MPI_Win_create_dynamic - Create an MPI Window object for one-sided
 communication.  This window allows memory to be dynamically exposed and
@@ -81,7 +96,8 @@ operation. Only memory that is currently accessible may be attached.
 
 .seealso: MPI_Win_attach MPI_Win_detach MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create MPI_Win_free
 @*/
-int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
+int QMPI_Win_create_dynamic(QMPI_Context context, int tool_id, MPI_Info info, MPI_Comm comm,
+                            MPI_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

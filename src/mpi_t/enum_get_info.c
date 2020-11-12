@@ -25,6 +25,22 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
 #define MPI_T_enum_get_info PMPI_T_enum_get_info
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len)
+{
+    QMPI_Context context;
+    QMPI_T_enum_get_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_enum_get_info(context, 0, enumtype, num, name, name_len);
+
+    fn_ptr = (QMPI_T_enum_get_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_ENUM_GET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_ENUM_GET_INFO_T], enumtype, num, name,
+                      name_len);
+}
+
 /*@
 MPI_T_enum_get_info - Get the information about an enumeration
 
@@ -45,7 +61,8 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_HANDLE
 @*/
-int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len)
+int QMPI_T_enum_get_info(QMPI_Context context, int tool_id, MPI_T_enum enumtype, int *num,
+                         char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
 

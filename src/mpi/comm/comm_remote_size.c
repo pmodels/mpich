@@ -27,6 +27,21 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
 #endif
 
 
+int MPI_Comm_remote_size(MPI_Comm comm, int *size)
+{
+    QMPI_Context context;
+    QMPI_Comm_remote_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_remote_size(context, 0, comm, size);
+
+    fn_ptr = (QMPI_Comm_remote_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_REMOTE_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_REMOTE_SIZE_T], comm, size);
+}
+
 /*@
 
 MPI_Comm_remote_size - Determines the size of the remote group
@@ -47,7 +62,7 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Comm_remote_size(MPI_Comm comm, int *size)
+int QMPI_Comm_remote_size(QMPI_Context context, int tool_id, MPI_Comm comm, int *size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -44,6 +44,21 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
+{
+    QMPI_Context context;
+    QMPI_Comm_get_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_get_info(context, 0, comm, info_used);
+
+    fn_ptr = (QMPI_Comm_get_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GET_INFO_T], comm, info_used);
+}
+
 /*@
    MPI_Comm_get_info - Returns a new info object containing the hints
    of the communicator associated with comm. The current setting of
@@ -68,7 +83,7 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 @*/
-int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
+int QMPI_Comm_get_info(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Info * info_used)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -25,6 +25,21 @@ int MPI_Request_free(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Re
 
 #endif
 
+int MPI_Request_free(MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Request_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Request_free(context, 0, request);
+
+    fn_ptr = (QMPI_Request_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_REQUEST_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REQUEST_FREE_T], request);
+}
+
 /*@
     MPI_Request_free - Frees a communication request object
 
@@ -58,7 +73,7 @@ MPI_Recv_init, MPI_Send_init, MPI_Ssend_init, MPI_Rsend_init, MPI_Wait,
 MPI_Test, MPI_Waitall, MPI_Waitany, MPI_Waitsome, MPI_Testall, MPI_Testany,
 MPI_Testsome
 @*/
-int MPI_Request_free(MPI_Request * request)
+int QMPI_Request_free(QMPI_Context context, int tool_id, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;

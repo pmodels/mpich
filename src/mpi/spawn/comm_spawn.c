@@ -28,6 +28,24 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 /* Any internal routines can go here.  Make them static if possible */
 #endif
 
+int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info,
+                   int root, MPI_Comm comm, MPI_Comm * intercomm, int array_of_errcodes[])
+{
+    QMPI_Context context;
+    QMPI_Comm_spawn_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_spawn(context, 0, command, argv, maxprocs, info, root, comm, intercomm,
+                               array_of_errcodes);
+
+    fn_ptr = (QMPI_Comm_spawn_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SPAWN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SPAWN_T], command, argv, maxprocs,
+                      info, root, comm, intercomm, array_of_errcodes);
+}
+
 /*@
    MPI_Comm_spawn - Spawn up to maxprocs instances of a single MPI application
 
@@ -57,8 +75,9 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_SPAWN
 @*/
-int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info,
-                   int root, MPI_Comm comm, MPI_Comm * intercomm, int array_of_errcodes[])
+int QMPI_Comm_spawn(QMPI_Context context, int tool_id, const char *command, char *argv[],
+                    int maxprocs, MPI_Info info, int root, MPI_Comm comm, MPI_Comm * intercomm,
+                    int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *intercomm_ptr;

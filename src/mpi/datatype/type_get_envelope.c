@@ -52,6 +52,24 @@ void MPIR_Type_get_envelope(MPI_Datatype datatype,
 
 #endif
 
+int MPI_Type_get_envelope(MPI_Datatype datatype,
+                          int *num_integers, int *num_addresses, int *num_datatypes, int *combiner)
+{
+    QMPI_Context context;
+    QMPI_Type_get_envelope_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_envelope(context, 0, datatype, num_integers, num_addresses,
+                                      num_datatypes, combiner);
+
+    fn_ptr = (QMPI_Type_get_envelope_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_ENVELOPE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_ENVELOPE_T], datatype,
+                      num_integers, num_addresses, num_datatypes, combiner);
+}
+
 /*@
    MPI_Type_get_envelope - get type envelope
 
@@ -71,8 +89,8 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Type_get_envelope(MPI_Datatype datatype,
-                          int *num_integers, int *num_addresses, int *num_datatypes, int *combiner)
+int QMPI_Type_get_envelope(QMPI_Context context, int tool_id, MPI_Datatype datatype,
+                           int *num_integers, int *num_addresses, int *num_datatypes, int *combiner)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ENVELOPE);

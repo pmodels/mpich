@@ -26,6 +26,22 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
 
 #endif
 
+int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
+{
+    QMPI_Context context;
+    QMPI_Type_match_size_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_match_size(context, 0, typeclass, size, datatype);
+
+    fn_ptr = (QMPI_Type_match_size_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_MATCH_SIZE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_MATCH_SIZE_T], typeclass, size,
+                      datatype);
+}
+
 /*@
    MPI_Type_match_size - Find an MPI datatype matching a specified size
 
@@ -50,7 +66,8 @@ The function returns an MPI datatype matching a local variable of type
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
+int QMPI_Type_match_size(QMPI_Context context, int tool_id, int typeclass, int size,
+                         MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef HAVE_ERROR_CHECKING

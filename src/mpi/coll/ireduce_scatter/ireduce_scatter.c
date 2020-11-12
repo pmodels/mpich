@@ -401,6 +401,24 @@ int MPIR_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcount
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                        MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ireduce_scatter_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ireduce_scatter(context, 0, sendbuf, recvbuf, recvcounts, datatype, op, comm,
+                                    request);
+
+    fn_ptr = (QMPI_Ireduce_scatter_t *) MPIR_QMPI_first_fn_ptrs[MPI_IREDUCE_SCATTER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IREDUCE_SCATTER_T], sendbuf, recvbuf,
+                      recvcounts, datatype, op, comm, request);
+}
+
 /*@
 MPI_Ireduce_scatter - Combines values and scatters the results in
                       a nonblocking way
@@ -422,8 +440,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                        MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request * request)
+int QMPI_Ireduce_scatter(QMPI_Context context, int tool_id, const void *sendbuf, void *recvbuf,
+                         const int recvcounts[], MPI_Datatype datatype, MPI_Op op, MPI_Comm comm,
+                         MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

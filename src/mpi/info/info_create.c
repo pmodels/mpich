@@ -25,6 +25,21 @@ int MPI_Info_create(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_crea
 #define MPI_Info_create PMPI_Info_create
 #endif
 
+int MPI_Info_create(MPI_Info * info)
+{
+    QMPI_Context context;
+    QMPI_Info_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_create(context, 0, info);
+
+    fn_ptr = (QMPI_Info_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_CREATE_T], info);
+}
+
 /*@
     MPI_Info_create - Creates a new info object
 
@@ -39,7 +54,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Info_create(MPI_Info * info)
+int QMPI_Info_create(QMPI_Context context, int tool_id, MPI_Info * info)
 {
     MPIR_Info *info_ptr;
     int mpi_errno = MPI_SUCCESS;

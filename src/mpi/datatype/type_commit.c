@@ -70,6 +70,21 @@ int MPIR_Type_commit_impl(MPI_Datatype * datatype)
 
 #endif
 
+int MPI_Type_commit(MPI_Datatype * datatype)
+{
+    QMPI_Context context;
+    QMPI_Type_commit_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_commit(context, 0, datatype);
+
+    fn_ptr = (QMPI_Type_commit_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_COMMIT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_COMMIT_T], datatype);
+}
+
 /*@
     MPI_Type_commit - Commits the datatype
 
@@ -84,7 +99,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-int MPI_Type_commit(MPI_Datatype * datatype)
+int QMPI_Type_commit(QMPI_Context context, int tool_id, MPI_Datatype * datatype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_COMMIT);

@@ -135,6 +135,22 @@ int MPIR_Group_union_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 #endif
 
 
+int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+{
+    QMPI_Context context;
+    QMPI_Group_union_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_union(context, 0, group1, group2, newgroup);
+
+    fn_ptr = (QMPI_Group_union_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_UNION_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_UNION_T], group1, group2,
+                      newgroup);
+}
+
 /*@
 
 MPI_Group_union - Produces a group by combining two groups
@@ -157,7 +173,8 @@ Output Parameters:
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+int QMPI_Group_union(QMPI_Context context, int tool_id, MPI_Group group1, MPI_Group group2,
+                     MPI_Group * newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;

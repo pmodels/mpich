@@ -26,6 +26,21 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 
 #endif
 
+int MPI_Status_set_cancelled(MPI_Status * status, int flag)
+{
+    QMPI_Context context;
+    QMPI_Status_set_cancelled_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Status_set_cancelled(context, 0, status, flag);
+
+    fn_ptr = (QMPI_Status_set_cancelled_t *) MPIR_QMPI_first_fn_ptrs[MPI_STATUS_SET_CANCELLED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_STATUS_SET_CANCELLED_T], status, flag);
+}
+
 /*@
    MPI_Status_set_cancelled - Sets the cancelled state associated with a
    Status object
@@ -42,7 +57,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Status_set_cancelled(MPI_Status * status, int flag)
+int QMPI_Status_set_cancelled(QMPI_Context context, int tool_id, MPI_Status * status, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);

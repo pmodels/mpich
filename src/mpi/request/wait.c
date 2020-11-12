@@ -111,6 +111,21 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 
 #endif
 
+int MPI_Wait(MPI_Request * request, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Wait_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Wait(context, 0, request, status);
+
+    fn_ptr = (QMPI_Wait_t *) MPIR_QMPI_first_fn_ptrs[MPI_WAIT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WAIT_T], request, status);
+}
+
 /*@
     MPI_Wait - Waits for an MPI request to complete
 
@@ -133,7 +148,7 @@ Output Parameters:
 .N MPI_ERR_REQUEST
 .N MPI_ERR_ARG
 @*/
-int MPI_Wait(MPI_Request * request, MPI_Status * status)
+int QMPI_Wait(QMPI_Context context, int tool_id, MPI_Request * request, MPI_Status * status)
 {
     MPIR_Request *request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;

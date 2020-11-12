@@ -24,6 +24,21 @@ int MPI_Initialized(int *flag) __attribute__ ((weak, alias("PMPI_Initialized")))
 #define MPI_Initialized PMPI_Initialized
 #endif
 
+int MPI_Initialized(int *flag)
+{
+    QMPI_Context context;
+    QMPI_Initialized_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Initialized(context, 0, flag);
+
+    fn_ptr = (QMPI_Initialized_t *) MPIR_QMPI_first_fn_ptrs[MPI_INITIALIZED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INITIALIZED_T], flag);
+}
+
 /*@
    MPI_Initialized - Indicates whether 'MPI_Init' has been called.
 
@@ -38,7 +53,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Initialized(int *flag)
+int QMPI_Initialized(QMPI_Context context, int tool_id, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INITIALIZED);

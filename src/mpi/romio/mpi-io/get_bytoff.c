@@ -27,6 +27,22 @@ int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
+{
+    QMPI_Context context;
+    QMPI_File_get_byte_offset_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_get_byte_offset(context, 0, fh, offset, disp);
+
+    fn_ptr = (QMPI_File_get_byte_offset_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_GET_BYTE_OFFSET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_GET_BYTE_OFFSET_T], fh, offset,
+                      disp);
+}
+
 /*@
     MPI_File_get_byte_offset - Returns the absolute byte position in
                 the file corresponding to "offset" etypes relative to
@@ -41,7 +57,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset * disp)
+int QMPI_File_get_byte_offset(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset offset,
+                              MPI_Offset * disp)
 {
     int error_code;
     ADIO_File adio_fh;

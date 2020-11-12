@@ -76,6 +76,22 @@ int MPIR_Group_compare_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2, in
 
 #endif
 
+int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
+{
+    QMPI_Context context;
+    QMPI_Group_compare_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_compare(context, 0, group1, group2, result);
+
+    fn_ptr = (QMPI_Group_compare_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_COMPARE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_COMPARE_T], group1, group2,
+                      result);
+}
+
 /*@
 
 MPI_Group_compare - Compares two groups
@@ -98,7 +114,8 @@ and 'MPI_UNEQUAL' otherwise
 .N MPI_ERR_GROUP
 .N MPI_ERR_ARG
 @*/
-int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
+int QMPI_Group_compare(QMPI_Context context, int tool_id, MPI_Group group1, MPI_Group group2,
+                       int *result)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;

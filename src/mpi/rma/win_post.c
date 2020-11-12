@@ -26,6 +26,21 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
 
 #endif
 
+int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_post_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_post(context, 0, group, assert, win);
+
+    fn_ptr = (QMPI_Win_post_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_POST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_POST_T], group, assert, win);
+}
+
 /*@
    MPI_Win_post - Start an RMA exposure epoch
 
@@ -57,7 +72,7 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
+int QMPI_Win_post(QMPI_Context context, int tool_id, MPI_Group group, int assert, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

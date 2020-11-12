@@ -100,6 +100,22 @@ int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
 #endif
 
 
+int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+{
+    QMPI_Context context;
+    QMPI_Group_difference_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_difference(context, 0, group1, group2, newgroup);
+
+    fn_ptr = (QMPI_Group_difference_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_DIFFERENCE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_DIFFERENCE_T], group1, group2,
+                      newgroup);
+}
+
 /*@
 
 MPI_Group_difference - Makes a group from the difference of two groups
@@ -125,7 +141,8 @@ The generated group containc the members of 'group1' that are not in 'group2'.
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+int QMPI_Group_difference(QMPI_Context context, int tool_id, MPI_Group group1, MPI_Group group2,
+                          MPI_Group * newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;

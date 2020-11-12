@@ -115,6 +115,22 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
+int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_create_group_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_create_group(context, 0, comm, group, tag, newcomm);
+
+    fn_ptr = (QMPI_Comm_create_group_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_CREATE_GROUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_CREATE_GROUP_T], comm, group, tag,
+                      newcomm);
+}
+
 /*@
 
 MPI_Comm_create_group - Creates a new communicator
@@ -138,7 +154,8 @@ Output Parameters:
 
 .seealso: MPI_Comm_free
 @*/
-int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
+int QMPI_Comm_create_group(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Group group,
+                           int tag, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;

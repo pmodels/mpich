@@ -28,6 +28,22 @@ int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *coun
 
 #endif
 
+int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *count)
+{
+    QMPI_Context context;
+    QMPI_Get_elements_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_elements(context, 0, status, datatype, count);
+
+    fn_ptr = (QMPI_Get_elements_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_ELEMENTS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_ELEMENTS_T], status, datatype,
+                      count);
+}
+
 /*@
    MPI_Get_elements - Returns the number of basic elements
                       in a datatype
@@ -50,7 +66,8 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *count)
+int QMPI_Get_elements(QMPI_Context context, int tool_id, const MPI_Status * status,
+                      MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Count count_x, byte_count;

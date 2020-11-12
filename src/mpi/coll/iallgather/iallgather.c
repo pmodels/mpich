@@ -439,6 +439,25 @@ int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Iallgather_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Iallgather(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                               recvtype, comm, request);
+
+    fn_ptr = (QMPI_Iallgather_t *) MPIR_QMPI_first_fn_ptrs[MPI_IALLGATHER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IALLGATHER_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcount, recvtype, comm, request);
+}
+
 /*@
 MPI_Iallgather - Gathers data from all tasks and distribute the combined data
                  to all tasks in a nonblocking way
@@ -461,9 +480,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   MPI_Comm comm, MPI_Request * request)
+int QMPI_Iallgather(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                    MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                    MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

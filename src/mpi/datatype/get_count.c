@@ -59,6 +59,21 @@ void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_A
 
 #endif
 
+int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
+{
+    QMPI_Context context;
+    QMPI_Get_count_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_count(context, 0, status, datatype, count);
+
+    fn_ptr = (QMPI_Get_count_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_COUNT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_COUNT_T], status, datatype, count);
+}
+
 /*@
   MPI_Get_count - Gets the number of "top level" elements
 
@@ -80,7 +95,8 @@ size of 'datatype' (so that 'count' would not be integral), a 'count' of
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
+int QMPI_Get_count(QMPI_Context context, int tool_id, const MPI_Status * status,
+                   MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint count_x;

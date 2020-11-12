@@ -26,6 +26,24 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
 #define MPI_T_category_get_info PMPI_T_category_get_info
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc,
+                            int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)
+{
+    QMPI_Context context;
+    QMPI_T_category_get_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_category_get_info(context, 0, cat_index, name, name_len, desc, desc_len,
+                                        num_cvars, num_pvars, num_categories);
+
+    fn_ptr = (QMPI_T_category_get_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CATEGORY_GET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CATEGORY_GET_INFO_T], cat_index, name,
+                      name_len, desc, desc_len, num_cvars, num_pvars, num_categories);
+}
+
 /*@
 MPI_T_category_get_info - Get the information about a category
 
@@ -50,8 +68,9 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_INDEX
 @*/
-int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc,
-                            int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)
+int QMPI_T_category_get_info(QMPI_Context context, int tool_id, int cat_index, char *name,
+                             int *name_len, char *desc, int *desc_len, int *num_cvars,
+                             int *num_pvars, int *num_categories)
 {
     int mpi_errno = MPI_SUCCESS;
     cat_table_entry_t *cat;

@@ -26,6 +26,23 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #endif
 
+int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm,
+             MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Recv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Recv(context, 0, buf, count, datatype, source, tag, comm, status);
+
+    fn_ptr = (QMPI_Recv_t *) MPIR_QMPI_first_fn_ptrs[MPI_RECV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RECV_T], buf, count, datatype, source,
+                      tag, comm, status);
+}
+
 /*@
     MPI_Recv - Blocking receive for a message
 
@@ -59,8 +76,8 @@ length of the message can be determined with 'MPI_Get_count'.
 .N MPI_ERR_RANK
 
 @*/
-int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm,
-             MPI_Status * status)
+int QMPI_Recv(QMPI_Context context, int tool_id, void *buf, int count, MPI_Datatype datatype,
+              int source, int tag, MPI_Comm comm, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

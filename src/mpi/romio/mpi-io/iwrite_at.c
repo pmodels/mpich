@@ -27,6 +27,23 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 #include "mpioprof.h"
 #endif
 
+int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
+                       int count, MPI_Datatype datatype, MPIO_Request * request)
+{
+    QMPI_Context context;
+    QMPI_File_iwrite_at_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_iwrite_at(context, 0, fh, offset, buf, count, datatype, request);
+
+    fn_ptr = (QMPI_File_iwrite_at_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_IWRITE_AT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_IWRITE_AT_T], fh, offset, buf,
+                      count, datatype, request);
+}
+
 /*@
     MPI_File_iwrite_at - Nonblocking write using explicit offset
 
@@ -46,8 +63,9 @@ Output Parameters:
 #include "mpiu_greq.h"
 #endif
 
-int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
-                       int count, MPI_Datatype datatype, MPIO_Request * request)
+int QMPI_File_iwrite_at(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset offset,
+                        ROMIO_CONST void *buf, int count, MPI_Datatype datatype,
+                        MPIO_Request * request)
 {
     int error_code;
     ADIO_File adio_fh;

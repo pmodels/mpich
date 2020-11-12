@@ -28,6 +28,25 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
 #endif
 
+int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
+                         void *result_addr, MPI_Datatype datatype, int target_rank,
+                         MPI_Aint target_disp, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Compare_and_swap_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Compare_and_swap(context, 0, origin_addr, compare_addr, result_addr, datatype,
+                                     target_rank, target_disp, win);
+
+    fn_ptr = (QMPI_Compare_and_swap_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMPARE_AND_SWAP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMPARE_AND_SWAP_T], origin_addr,
+                      compare_addr, result_addr, datatype, target_rank, target_disp, win);
+}
+
 /*@
 MPI_Compare_and_swap - Perform one-sided atomic compare-and-swap.
 
@@ -67,9 +86,9 @@ buffers (origin_addr and result_addr) must be disjoint.
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-                         void *result_addr, MPI_Datatype datatype, int target_rank,
-                         MPI_Aint target_disp, MPI_Win win)
+int QMPI_Compare_and_swap(QMPI_Context context, int tool_id, const void *origin_addr,
+                          const void *compare_addr, void *result_addr, MPI_Datatype datatype,
+                          int target_rank, MPI_Aint target_disp, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

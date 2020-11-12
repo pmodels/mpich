@@ -46,6 +46,21 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
+{
+    QMPI_Context context;
+    QMPI_Comm_set_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_set_info(context, 0, comm, info);
+
+    fn_ptr = (QMPI_Comm_set_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_SET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_SET_INFO_T], comm, info);
+}
+
 /*@
    MPI_Comm_set_info - Set new values for the hints of the
    communicator associated with comm.  The call is collective on the
@@ -67,7 +82,7 @@ Input Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 @*/
-int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
+int QMPI_Comm_set_info(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Info info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

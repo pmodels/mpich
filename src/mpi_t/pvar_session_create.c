@@ -53,6 +53,21 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_session_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_session_create(context, 0, session);
+
+    fn_ptr = (QMPI_T_pvar_session_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_SESSION_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_SESSION_CREATE_T], session);
+}
+
 /*@
 MPI_T_pvar_session_create - Create a new session for accessing performance variables
 
@@ -66,7 +81,7 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_OUT_OF_SESSIONS
 @*/
-int MPI_T_pvar_session_create(MPI_T_pvar_session * session)
+int QMPI_T_pvar_session_create(QMPI_Context context, int tool_id, MPI_T_pvar_session * session)
 {
     int mpi_errno = MPI_SUCCESS;
 

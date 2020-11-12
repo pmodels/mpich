@@ -29,6 +29,26 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[], const i
  * correctly handle weak symbols and the profiling interface */
 #endif
 
+int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
+                          const int degrees[], const int destinations[],
+                          const int weights[],
+                          MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
+{
+    QMPI_Context context;
+    QMPI_Dist_graph_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Dist_graph_create(context, 0, comm_old, n, sources, degrees, destinations,
+                                      weights, info, reorder, comm_dist_graph);
+
+    fn_ptr = (QMPI_Dist_graph_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_DIST_GRAPH_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_DIST_GRAPH_CREATE_T], comm_old, n,
+                      sources, degrees, destinations, weights, info, reorder, comm_dist_graph);
+}
+
 /*@
 MPI_Dist_graph_create - MPI_DIST_GRAPH_CREATE returns a handle to a new
 communicator to which the distributed graph topology information is
@@ -61,10 +81,10 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
-                          const int degrees[], const int destinations[],
-                          const int weights[],
-                          MPI_Info info, int reorder, MPI_Comm * comm_dist_graph)
+int QMPI_Dist_graph_create(QMPI_Context context, int tool_id, MPI_Comm comm_old, int n,
+                           const int sources[], const int degrees[], const int destinations[],
+                           const int weights[], MPI_Info info, int reorder,
+                           MPI_Comm * comm_dist_graph)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -44,6 +44,21 @@ int MPI_Abort(MPI_Comm comm, int errorcode) __attribute__ ((weak, alias("PMPI_Ab
 
 #endif
 
+int MPI_Abort(MPI_Comm comm, int errorcode)
+{
+    QMPI_Context context;
+    QMPI_Abort_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Abort(context, 0, comm, errorcode);
+
+    fn_ptr = (QMPI_Abort_t *) MPIR_QMPI_first_fn_ptrs[MPI_ABORT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ABORT_T], comm, errorcode);
+}
+
 /*@
    MPI_Abort - Terminates MPI execution environment
 
@@ -65,7 +80,7 @@ release a lock or other mechanism for atomic access.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Abort(MPI_Comm comm, int errorcode)
+int QMPI_Abort(QMPI_Context context, int tool_id, MPI_Comm comm, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

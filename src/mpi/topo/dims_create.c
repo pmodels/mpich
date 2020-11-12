@@ -834,6 +834,21 @@ extern volatile int MPIR_DIMS_initPCVars;
 #endif /* PMPI Local */
 
 
+int MPI_Dims_create(int nnodes, int ndims, int dims[])
+{
+    QMPI_Context context;
+    QMPI_Dims_create_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Dims_create(context, 0, nnodes, ndims, dims);
+
+    fn_ptr = (QMPI_Dims_create_t *) MPIR_QMPI_first_fn_ptrs[MPI_DIMS_CREATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_DIMS_CREATE_T], nnodes, ndims, dims);
+}
+
 /*@
     MPI_Dims_create - Creates a division of processors in a cartesian grid
 
@@ -853,7 +868,7 @@ Input/Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Dims_create(int nnodes, int ndims, int dims[])
+int QMPI_Dims_create(QMPI_Context context, int tool_id, int nnodes, int ndims, int dims[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIMS_CREATE);

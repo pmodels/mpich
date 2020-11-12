@@ -28,6 +28,25 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
 
 #endif
 
+int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
+                          MPI_Win_delete_attr_function * win_delete_attr_fn,
+                          int *win_keyval, void *extra_state)
+{
+    QMPI_Context context;
+    QMPI_Win_create_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_create_keyval(context, 0, win_copy_attr_fn, win_delete_attr_fn, win_keyval,
+                                      extra_state);
+
+    fn_ptr = (QMPI_Win_create_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_CREATE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_CREATE_KEYVAL_T], win_copy_attr_fn,
+                      win_delete_attr_fn, win_keyval, extra_state);
+}
+
 /*@
    MPI_Win_create_keyval - Create an attribute keyval for MPI window objects
 
@@ -56,9 +75,10 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
-                          MPI_Win_delete_attr_function * win_delete_attr_fn,
-                          int *win_keyval, void *extra_state)
+int QMPI_Win_create_keyval(QMPI_Context context, int tool_id,
+                           MPI_Win_copy_attr_function * win_copy_attr_fn,
+                           MPI_Win_delete_attr_function * win_delete_attr_fn, int *win_keyval,
+                           void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_KEYVAL);

@@ -95,6 +95,22 @@ int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 #endif
 
 
+int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Type_get_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_attr(context, 0, datatype, type_keyval, attribute_val, flag);
+
+    fn_ptr = (QMPI_Type_get_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_ATTR_T], datatype, type_keyval,
+                      attribute_val, flag);
+}
+
 /*@
    MPI_Type_get_attr - Retrieves attribute value by key
 
@@ -125,7 +141,8 @@ Notes for C:
 .N MPI_ERR_KEYVAL
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val, int *flag)
+int QMPI_Type_get_attr(QMPI_Context context, int tool_id, MPI_Datatype datatype, int type_keyval,
+                       void *attribute_val, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);

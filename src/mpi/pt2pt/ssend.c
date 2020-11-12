@@ -26,6 +26,22 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #endif
 
+int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Ssend_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ssend(context, 0, buf, count, datatype, dest, tag, comm);
+
+    fn_ptr = (QMPI_Ssend_t *) MPIR_QMPI_first_fn_ptrs[MPI_SSEND_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_SSEND_T], buf, count, datatype, dest,
+                      tag, comm);
+}
+
 /*@
     MPI_Ssend - Blocking synchronous send
 
@@ -49,7 +65,8 @@ Input Parameters:
 .N MPI_ERR_TAG
 .N MPI_ERR_RANK
 @*/
-int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+int QMPI_Ssend(QMPI_Context context, int tool_id, const void *buf, int count, MPI_Datatype datatype,
+               int dest, int tag, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

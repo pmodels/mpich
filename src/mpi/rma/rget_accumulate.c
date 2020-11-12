@@ -30,6 +30,29 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 
 #endif
 
+int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
+                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                        MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Rget_accumulate_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Rget_accumulate(context, 0, origin_addr, origin_count, origin_datatype,
+                                    result_addr, result_count, result_datatype, target_rank,
+                                    target_disp, target_count, target_datatype, op, win, request);
+
+    fn_ptr = (QMPI_Rget_accumulate_t *) MPIR_QMPI_first_fn_ptrs[MPI_RGET_ACCUMULATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RGET_ACCUMULATE_T], origin_addr,
+                      origin_count, origin_datatype, result_addr, result_count, result_datatype,
+                      target_rank, target_disp, target_count, target_datatype, op, win, request);
+}
+
 /*@
 MPI_Rget_accumulate - Perform an atomic, one-sided read-and-accumulate
 operation and return a request handle for the operation.
@@ -82,11 +105,11 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 
 .seealso: MPI_Get_accumulate MPI_Fetch_and_op
 @*/
-int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
-                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
-                        MPI_Request * request)
+int QMPI_Rget_accumulate(QMPI_Context context, int tool_id, const void *origin_addr,
+                         int origin_count, MPI_Datatype origin_datatype, void *result_addr,
+                         int result_count, MPI_Datatype result_datatype, int target_rank,
+                         MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
+                         MPI_Op op, MPI_Win win, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

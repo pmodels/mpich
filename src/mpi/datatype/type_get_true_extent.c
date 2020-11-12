@@ -36,6 +36,22 @@ void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
 
 #endif
 
+int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint * true_lb, MPI_Aint * true_extent)
+{
+    QMPI_Context context;
+    QMPI_Type_get_true_extent_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_true_extent(context, 0, datatype, true_lb, true_extent);
+
+    fn_ptr = (QMPI_Type_get_true_extent_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_TRUE_EXTENT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_TRUE_EXTENT_T], datatype,
+                      true_lb, true_extent);
+}
+
 /*@
    MPI_Type_get_true_extent - Get the true lower bound and extent for a
      datatype
@@ -56,7 +72,8 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint * true_lb, MPI_Aint * true_extent)
+int QMPI_Type_get_true_extent(QMPI_Context context, int tool_id, MPI_Datatype datatype,
+                              MPI_Aint * true_lb, MPI_Aint * true_extent)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT);

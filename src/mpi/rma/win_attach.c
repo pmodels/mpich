@@ -26,6 +26,21 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 
 #endif
 
+int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
+{
+    QMPI_Context context;
+    QMPI_Win_attach_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_attach(context, 0, win, base, size);
+
+    fn_ptr = (QMPI_Win_attach_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_ATTACH_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_ATTACH_T], win, base, size);
+}
+
 /*@
 MPI_Win_attach - Attach memory to a dynamic window.
 
@@ -56,7 +71,7 @@ Input Parameters:
 
 .seealso: MPI_Win_create_dynamic MPI_Win_detach
 @*/
-int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
+int QMPI_Win_attach(QMPI_Context context, int tool_id, MPI_Win win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

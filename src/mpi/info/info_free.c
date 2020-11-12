@@ -25,6 +25,21 @@ int MPI_Info_free(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_free")
 #define MPI_Info_free PMPI_Info_free
 #endif
 
+int MPI_Info_free(MPI_Info * info)
+{
+    QMPI_Context context;
+    QMPI_Info_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_free(context, 0, info);
+
+    fn_ptr = (QMPI_Info_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_FREE_T], info);
+}
+
 /*@
     MPI_Info_free - Frees an info object
 
@@ -40,7 +55,7 @@ Input Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 @*/
-int MPI_Info_free(MPI_Info * info)
+int QMPI_Info_free(QMPI_Context context, int tool_id, MPI_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0;

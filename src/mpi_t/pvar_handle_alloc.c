@@ -166,6 +166,23 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
+                            void *obj_handle, MPI_T_pvar_handle * handle, int *count)
+{
+    QMPI_Context context;
+    QMPI_T_pvar_handle_alloc_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_pvar_handle_alloc(context, 0, session, pvar_index, obj_handle, handle, count);
+
+    fn_ptr = (QMPI_T_pvar_handle_alloc_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_PVAR_HANDLE_ALLOC_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_PVAR_HANDLE_ALLOC_T], session,
+                      pvar_index, obj_handle, handle, count);
+}
+
 /*@
 MPI_T_pvar_handle_alloc - Allocate a handle for a performance variable
 
@@ -187,8 +204,9 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_INDEX
 .N MPI_T_ERR_OUT_OF_HANDLES
 @*/
-int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
-                            void *obj_handle, MPI_T_pvar_handle * handle, int *count)
+int QMPI_T_pvar_handle_alloc(QMPI_Context context, int tool_id, MPI_T_pvar_session session,
+                             int pvar_index, void *obj_handle, MPI_T_pvar_handle * handle,
+                             int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     pvar_table_entry_t *entry;

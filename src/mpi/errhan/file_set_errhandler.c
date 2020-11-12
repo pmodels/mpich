@@ -27,6 +27,22 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 
 #endif
 
+int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
+{
+    QMPI_Context context;
+    QMPI_File_set_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_set_errhandler(context, 0, file, errhandler);
+
+    fn_ptr = (QMPI_File_set_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SET_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SET_ERRHANDLER_T], file,
+                      errhandler);
+}
+
 /*@
    MPI_File_set_errhandler - Set the error handler for an MPI file
 
@@ -41,7 +57,8 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
+int QMPI_File_set_errhandler(QMPI_Context context, int tool_id, MPI_File file,
+                             MPI_Errhandler errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY

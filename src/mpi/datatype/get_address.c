@@ -27,6 +27,21 @@ int MPI_Get_address(const void *location, MPI_Aint * address)
 #endif
 
 
+int MPI_Get_address(const void *location, MPI_Aint * address)
+{
+    QMPI_Context context;
+    QMPI_Get_address_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_address(context, 0, location, address);
+
+    fn_ptr = (QMPI_Get_address_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_ADDRESS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_ADDRESS_T], location, address);
+}
+
 /*@
    MPI_Get_address - Get the address of a location in memory
 
@@ -64,7 +79,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Get_address(const void *location, MPI_Aint * address)
+int QMPI_Get_address(QMPI_Context context, int tool_id, const void *location, MPI_Aint * address)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ADDRESS);

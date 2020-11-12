@@ -24,6 +24,21 @@ int MPI_Finalized(int *flag) __attribute__ ((weak, alias("PMPI_Finalized")));
 #define MPI_Finalized PMPI_Finalized
 #endif
 
+int MPI_Finalized(int *flag)
+{
+    QMPI_Context context;
+    QMPI_Finalized_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Finalized(context, 0, flag);
+
+    fn_ptr = (QMPI_Finalized_t *) MPIR_QMPI_first_fn_ptrs[MPI_FINALIZED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FINALIZED_T], flag);
+}
+
 /*@
    MPI_Finalized - Indicates whether 'MPI_Finalize' has been called.
 
@@ -38,7 +53,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Finalized(int *flag)
+int QMPI_Finalized(QMPI_Context context, int tool_id, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FINALIZED);

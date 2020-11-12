@@ -27,6 +27,22 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 #endif
 
 
+int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
+{
+    QMPI_Context context;
+    QMPI_Comm_call_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_call_errhandler(context, 0, comm, errorcode);
+
+    fn_ptr = (QMPI_Comm_call_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_CALL_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_CALL_ERRHANDLER_T], comm,
+                      errorcode);
+}
+
 /*@
    MPI_Comm_call_errhandler - Call the error handler installed on a
    communicator
@@ -47,7 +63,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
+int QMPI_Comm_call_errhandler(QMPI_Context context, int tool_id, MPI_Comm comm, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_cs = FALSE;

@@ -29,6 +29,26 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count,
 
 #endif
 
+int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                    int target_rank, MPI_Aint target_disp, int target_count,
+                    MPI_Datatype target_datatype, MPI_Op op, MPI_Win win, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Raccumulate_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Raccumulate(context, 0, origin_addr, origin_count, origin_datatype, target_rank,
+                                target_disp, target_count, target_datatype, op, win, request);
+
+    fn_ptr = (QMPI_Raccumulate_t *) MPIR_QMPI_first_fn_ptrs[MPI_RACCUMULATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_RACCUMULATE_T], origin_addr,
+                      origin_count, origin_datatype, target_rank, target_disp, target_count,
+                      target_datatype, op, win, request);
+}
+
 /*@
 MPI_Raccumulate - Accumulate data into the target process using remote memory
 access and return a request handle for the operation.
@@ -72,9 +92,10 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 
 .seealso: MPI_Accumulate
 @*/
-int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-                    int target_rank, MPI_Aint target_disp, int target_count,
-                    MPI_Datatype target_datatype, MPI_Op op, MPI_Win win, MPI_Request * request)
+int QMPI_Raccumulate(QMPI_Context context, int tool_id, const void *origin_addr, int origin_count,
+                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                     MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

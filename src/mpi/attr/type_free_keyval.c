@@ -25,6 +25,21 @@ int MPI_Type_free_keyval(int *type_keyval) __attribute__ ((weak, alias("PMPI_Typ
 
 #endif
 
+int MPI_Type_free_keyval(int *type_keyval)
+{
+    QMPI_Context context;
+    QMPI_Type_free_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_free_keyval(context, 0, type_keyval);
+
+    fn_ptr = (QMPI_Type_free_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_FREE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_FREE_KEYVAL_T], type_keyval);
+}
+
 /*@
    MPI_Type_free_keyval - Frees an attribute key for datatypes
 
@@ -40,7 +55,7 @@ Input Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Type_free_keyval(int *type_keyval)
+int QMPI_Type_free_keyval(QMPI_Context context, int tool_id, int *type_keyval)
 {
     MPII_Keyval *keyval_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;

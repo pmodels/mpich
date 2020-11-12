@@ -26,6 +26,23 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #endif
 
+int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
+              int tag, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Irecv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Irecv(context, 0, buf, count, datatype, source, tag, comm, request);
+
+    fn_ptr = (QMPI_Irecv_t *) MPIR_QMPI_first_fn_ptrs[MPI_IRECV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IRECV_T], buf, count, datatype, source,
+                      tag, comm, request);
+}
+
 /*@
     MPI_Irecv - Begins a nonblocking receive
 
@@ -53,8 +70,8 @@ Output Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
-              int tag, MPI_Comm comm, MPI_Request * request)
+int QMPI_Irecv(QMPI_Context context, int tool_id, void *buf, int count, MPI_Datatype datatype,
+               int source, int tag, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

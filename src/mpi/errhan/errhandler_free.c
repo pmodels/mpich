@@ -26,6 +26,21 @@ int MPI_Errhandler_free(MPI_Errhandler * errhandler)
 
 #endif
 
+int MPI_Errhandler_free(MPI_Errhandler * errhandler)
+{
+    QMPI_Context context;
+    QMPI_Errhandler_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Errhandler_free(context, 0, errhandler);
+
+    fn_ptr = (QMPI_Errhandler_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_ERRHANDLER_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ERRHANDLER_FREE_T], errhandler);
+}
+
 /*@
   MPI_Errhandler_free - Frees an MPI-style errorhandler
 
@@ -41,7 +56,7 @@ exit.
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Errhandler_free(MPI_Errhandler * errhandler)
+int QMPI_Errhandler_free(QMPI_Context context, int tool_id, MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr = NULL;

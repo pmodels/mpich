@@ -25,6 +25,21 @@ int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__ ((weak, alias("PMPI_
 
 #endif
 
+int MPI_Topo_test(MPI_Comm comm, int *status)
+{
+    QMPI_Context context;
+    QMPI_Topo_test_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Topo_test(context, 0, comm, status);
+
+    fn_ptr = (QMPI_Topo_test_t *) MPIR_QMPI_first_fn_ptrs[MPI_TOPO_TEST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TOPO_TEST_T], comm, status);
+}
+
 /*@
 
 MPI_Topo_test - Determines the type of topology (if any) associated with a
@@ -48,7 +63,7 @@ Output Parameters:
 
 .seealso: MPI_Graph_create, MPI_Cart_create
 @*/
-int MPI_Topo_test(MPI_Comm comm, int *status)
+int QMPI_Topo_test(QMPI_Context context, int tool_id, MPI_Comm comm, int *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

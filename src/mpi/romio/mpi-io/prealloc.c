@@ -26,6 +26,21 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
+{
+    QMPI_Context context;
+    QMPI_File_preallocate_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_preallocate(context, 0, fh, size);
+
+    fn_ptr = (QMPI_File_preallocate_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_PREALLOCATE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_PREALLOCATE_T], fh, size);
+}
+
 /*@
     MPI_File_preallocate - Preallocates storage space for a file
 
@@ -35,7 +50,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
+int QMPI_File_preallocate(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset size)
 {
     ADIO_Fcntl_t *fcntl_struct;
     int error_code = 0, mynod = 0;

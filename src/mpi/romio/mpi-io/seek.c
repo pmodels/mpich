@@ -27,6 +27,21 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
+{
+    QMPI_Context context;
+    QMPI_File_seek_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_seek(context, 0, fh, offset, whence);
+
+    fn_ptr = (QMPI_File_seek_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SEEK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SEEK_T], fh, offset, whence);
+}
+
 /*@
     MPI_File_seek - Updates the individual file pointer
 
@@ -37,7 +52,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
+int QMPI_File_seek(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset offset, int whence)
 {
     int error_code;
     ADIO_File adio_fh;

@@ -26,6 +26,22 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 
 #endif
 
+int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
+{
+    QMPI_Context context;
+    QMPI_Win_shared_query_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_shared_query(context, 0, win, rank, size, disp_unit, baseptr);
+
+    fn_ptr = (QMPI_Win_shared_query_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_SHARED_QUERY_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_SHARED_QUERY_T], win, rank, size,
+                      disp_unit, baseptr);
+}
+
 /*@
 MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
 memory window.
@@ -67,7 +83,8 @@ Output Parameters:
 
 .seealso: MPI_Win_allocate_shared
 @*/
-int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
+int QMPI_Win_shared_query(QMPI_Context context, int tool_id, MPI_Win win, int rank, MPI_Aint * size,
+                          int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

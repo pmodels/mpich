@@ -31,6 +31,21 @@ int MPIR_Close_port_impl(const char *port_name)
 
 #endif
 
+int MPI_Close_port(const char *port_name)
+{
+    QMPI_Context context;
+    QMPI_Close_port_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Close_port(context, 0, port_name);
+
+    fn_ptr = (QMPI_Close_port_t *) MPIR_QMPI_first_fn_ptrs[MPI_CLOSE_PORT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CLOSE_PORT_T], port_name);
+}
+
 /*@
    MPI_Close_port - close port
 
@@ -44,7 +59,7 @@ Input Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Close_port(const char *port_name)
+int QMPI_Close_port(QMPI_Context context, int tool_id, const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CLOSE_PORT);

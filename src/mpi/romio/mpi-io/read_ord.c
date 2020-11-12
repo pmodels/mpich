@@ -29,6 +29,23 @@ int MPI_File_read_ordered(MPI_File fh, void *buf, int count, MPI_Datatype dataty
 
 /* status object not filled currently */
 
+int MPI_File_read_ordered(MPI_File fh, void *buf, int count,
+                          MPI_Datatype datatype, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_File_read_ordered_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_read_ordered(context, 0, fh, buf, count, datatype, status);
+
+    fn_ptr = (QMPI_File_read_ordered_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_READ_ORDERED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_READ_ORDERED_T], fh, buf, count,
+                      datatype, status);
+}
+
 /*@
     MPI_File_read_ordered - Collective read using shared file pointer
 
@@ -43,8 +60,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_read_ordered(MPI_File fh, void *buf, int count,
-                          MPI_Datatype datatype, MPI_Status * status)
+int QMPI_File_read_ordered(QMPI_Context context, int tool_id, MPI_File fh, void *buf, int count,
+                           MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code, nprocs, myrank;
     ADIO_Offset incr;

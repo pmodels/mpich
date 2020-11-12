@@ -64,6 +64,22 @@ int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
 
 #endif
 
+int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[], int *newrank)
+{
+    QMPI_Context context;
+    QMPI_Graph_map_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Graph_map(context, 0, comm, nnodes, indx, edges, newrank);
+
+    fn_ptr = (QMPI_Graph_map_t *) MPIR_QMPI_first_fn_ptrs[MPI_GRAPH_MAP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GRAPH_MAP_T], comm, nnodes, indx, edges,
+                      newrank);
+}
+
 /*@
 MPI_Graph_map - Maps process to graph topology information
 
@@ -87,7 +103,8 @@ calling process does not belong to graph (integer)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[], int *newrank)
+int QMPI_Graph_map(QMPI_Context context, int tool_id, MPI_Comm comm, int nnodes, const int indx[],
+                   const int edges[], int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

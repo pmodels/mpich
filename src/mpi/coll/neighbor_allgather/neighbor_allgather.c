@@ -176,6 +176,24 @@ int MPIR_Neighbor_allgather(const void *sendbuf, int sendcount,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                           int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Neighbor_allgather_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Neighbor_allgather(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                       recvtype, comm);
+
+    fn_ptr = (QMPI_Neighbor_allgather_t *) MPIR_QMPI_first_fn_ptrs[MPI_NEIGHBOR_ALLGATHER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_NEIGHBOR_ALLGATHER_T], sendbuf,
+                      sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
+}
+
 /*@
 MPI_Neighbor_allgather - In this function, each process i gathers data items
 from each process j if an edge (j,i) exists in the topology graph, and each
@@ -200,8 +218,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                           int recvcount, MPI_Datatype recvtype, MPI_Comm comm)
+int QMPI_Neighbor_allgather(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                            MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

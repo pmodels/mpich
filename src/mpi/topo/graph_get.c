@@ -26,6 +26,22 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 
 #endif
 
+int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edges[])
+{
+    QMPI_Context context;
+    QMPI_Graph_get_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Graph_get(context, 0, comm, maxindex, maxedges, indx, edges);
+
+    fn_ptr = (QMPI_Graph_get_t *) MPIR_QMPI_first_fn_ptrs[MPI_GRAPH_GET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GRAPH_GET_T], comm, maxindex, maxedges,
+                      indx, edges);
+}
+
 /*@
 
 MPI_Graph_get - Retrieves graph topology information associated with a
@@ -50,7 +66,8 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edges[])
+int QMPI_Graph_get(QMPI_Context context, int tool_id, MPI_Comm comm, int maxindex, int maxedges,
+                   int indx[], int edges[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

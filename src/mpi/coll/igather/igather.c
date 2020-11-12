@@ -325,6 +325,25 @@ int MPIR_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                int root, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Igather_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Igather(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                            root, comm, request);
+
+    fn_ptr = (QMPI_Igather_t *) MPIR_QMPI_first_fn_ptrs[MPI_IGATHER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_IGATHER_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+}
+
 /*@
 MPI_Igather - Gathers together values from a group of processes in
               a nonblocking way
@@ -348,9 +367,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                int root, MPI_Comm comm, MPI_Request * request)
+int QMPI_Igather(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                 MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                 int root, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

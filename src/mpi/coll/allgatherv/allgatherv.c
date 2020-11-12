@@ -248,6 +248,25 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #endif
 
 
+int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, const int *recvcounts, const int *displs,
+                   MPI_Datatype recvtype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Allgatherv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Allgatherv(context, 0, sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                               displs, recvtype, comm);
+
+    fn_ptr = (QMPI_Allgatherv_t *) MPIR_QMPI_first_fn_ptrs[MPI_ALLGATHERV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ALLGATHERV_T], sendbuf, sendcount,
+                      sendtype, recvbuf, recvcounts, displs, recvtype, comm);
+}
+
 /*@
 
 MPI_Allgatherv - Gathers data from all tasks and deliver the combined data
@@ -296,9 +315,9 @@ Notes:
 .N MPI_ERR_COUNT
 .N MPI_ERR_TYPE
 @*/
-int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, const int *recvcounts, const int *displs,
-                   MPI_Datatype recvtype, MPI_Comm comm)
+int QMPI_Allgatherv(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                    MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs,
+                    MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

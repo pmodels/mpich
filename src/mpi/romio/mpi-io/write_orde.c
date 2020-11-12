@@ -26,6 +26,23 @@ int MPI_File_write_ordered_end(MPI_File fh, const void *buf, MPI_Status * status
 #include "mpioprof.h"
 #endif
 
+int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_File_write_ordered_end_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_write_ordered_end(context, 0, fh, buf, status);
+
+    fn_ptr =
+        (QMPI_File_write_ordered_end_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_WRITE_ORDERED_END_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_WRITE_ORDERED_END_T], fh, buf,
+                      status);
+}
+
 /*@
     MPI_File_write_ordered_end - Complete a split collective write using shared file pointer
 
@@ -38,7 +55,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status * status)
+int QMPI_File_write_ordered_end(QMPI_Context context, int tool_id, MPI_File fh,
+                                ROMIO_CONST void *buf, MPI_Status * status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_ORDERED_END";

@@ -59,6 +59,21 @@ int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newc
 
 #endif
 
+int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_dup_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_dup(context, 0, comm, newcomm);
+
+    fn_ptr = (QMPI_Comm_dup_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_DUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_DUP_T], comm, newcomm);
+}
+
 /*@
 
 MPI_Comm_dup - Duplicates an existing communicator with all its cached
@@ -104,7 +119,7 @@ Notes:
 .seealso: MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete,
  MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
 @*/
-int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm)
+int QMPI_Comm_dup(QMPI_Context context, int tool_id, MPI_Comm comm, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;

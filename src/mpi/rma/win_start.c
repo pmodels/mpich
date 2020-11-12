@@ -26,6 +26,21 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 
 #endif
 
+int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_start_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_start(context, 0, group, assert, win);
+
+    fn_ptr = (QMPI_Win_start_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_START_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_START_T], group, assert, win);
+}
+
 /*@
    MPI_Win_start - Start an RMA access epoch for MPI
 
@@ -58,7 +73,7 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
+int QMPI_Win_start(QMPI_Context context, int tool_id, MPI_Group group, int assert, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

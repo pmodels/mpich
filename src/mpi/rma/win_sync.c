@@ -25,6 +25,21 @@ int MPI_Win_sync(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_sync")));
 
 #endif
 
+int MPI_Win_sync(MPI_Win win)
+{
+    QMPI_Context context;
+    QMPI_Win_sync_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_sync(context, 0, win);
+
+    fn_ptr = (QMPI_Win_sync_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_SYNC_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_SYNC_T], win);
+}
+
 /*@
 MPI_Win_sync - Synchronize public and private copies of the given window.
 
@@ -50,7 +65,7 @@ Input Parameters:
 
 .seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local MPI_Win_flush_local_all
 @*/
-int MPI_Win_sync(MPI_Win win)
+int QMPI_Win_sync(QMPI_Context context, int tool_id, MPI_Win win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

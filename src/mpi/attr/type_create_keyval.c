@@ -28,6 +28,25 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 
 #endif
 
+int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
+                           MPI_Type_delete_attr_function * type_delete_attr_fn,
+                           int *type_keyval, void *extra_state)
+{
+    QMPI_Context context;
+    QMPI_Type_create_keyval_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_keyval(context, 0, type_copy_attr_fn, type_delete_attr_fn,
+                                       type_keyval, extra_state);
+
+    fn_ptr = (QMPI_Type_create_keyval_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_KEYVAL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_KEYVAL_T],
+                      type_copy_attr_fn, type_delete_attr_fn, type_keyval, extra_state);
+}
+
 /*@
    MPI_Type_create_keyval - Create an attribute keyval for MPI datatypes
 
@@ -56,9 +75,10 @@ Notes:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
-                           MPI_Type_delete_attr_function * type_delete_attr_fn,
-                           int *type_keyval, void *extra_state)
+int QMPI_Type_create_keyval(QMPI_Context context, int tool_id,
+                            MPI_Type_copy_attr_function * type_copy_attr_fn,
+                            MPI_Type_delete_attr_function * type_delete_attr_fn, int *type_keyval,
+                            void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_KEYVAL);

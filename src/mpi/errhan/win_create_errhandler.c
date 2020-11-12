@@ -27,6 +27,23 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 
 #endif
 
+int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
+                              MPI_Errhandler * errhandler)
+{
+    QMPI_Context context;
+    QMPI_Win_create_errhandler_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_create_errhandler(context, 0, win_errhandler_fn, errhandler);
+
+    fn_ptr = (QMPI_Win_create_errhandler_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_CREATE_ERRHANDLER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_CREATE_ERRHANDLER_T],
+                      win_errhandler_fn, errhandler);
+}
+
 /*@
    MPI_Win_create_errhandler - Create an error handler for use with MPI window
    objects
@@ -45,8 +62,9 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
-                              MPI_Errhandler * errhandler)
+int QMPI_Win_create_errhandler(QMPI_Context context, int tool_id,
+                               MPI_Win_errhandler_function * win_errhandler_fn,
+                               MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;

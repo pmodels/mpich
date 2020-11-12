@@ -173,6 +173,23 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 
 #endif
 
+int MPI_Type_vector(int count,
+                    int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_vector_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_vector(context, 0, count, blocklength, stride, oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_vector_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_VECTOR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_VECTOR_T], count, blocklength,
+                      stride, oldtype, newtype);
+}
+
 /*@
     MPI_Type_vector - Creates a vector (strided) datatype
 
@@ -195,8 +212,8 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Type_vector(int count,
-                    int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_vector(QMPI_Context context, int tool_id, int count,
+                     int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_VECTOR);

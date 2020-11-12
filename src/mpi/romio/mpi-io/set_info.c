@@ -26,6 +26,21 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_set_info(MPI_File fh, MPI_Info info)
+{
+    QMPI_Context context;
+    QMPI_File_set_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_set_info(context, 0, fh, info);
+
+    fn_ptr = (QMPI_File_set_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SET_INFO_T], fh, info);
+}
+
 /*@
     MPI_File_set_info - Sets new values for the hints associated with a file
 
@@ -35,7 +50,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_set_info(MPI_File fh, MPI_Info info)
+int QMPI_File_set_info(QMPI_Context context, int tool_id, MPI_File fh, MPI_Info info)
 {
     int error_code;
     static char myname[] = "MPI_FILE_SET_INFO";

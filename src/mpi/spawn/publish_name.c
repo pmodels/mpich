@@ -27,6 +27,22 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
 #endif
 
+int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_name)
+{
+    QMPI_Context context;
+    QMPI_Publish_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Publish_name(context, 0, service_name, info, port_name);
+
+    fn_ptr = (QMPI_Publish_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_PUBLISH_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PUBLISH_NAME_T], service_name, info,
+                      port_name);
+}
+
 /*@
    MPI_Publish_name - Publish a service name for use with MPI_Comm_connect
 
@@ -49,7 +65,8 @@ The maximum size string that may be supplied for 'port_name' is
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 @*/
-int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_name)
+int QMPI_Publish_name(QMPI_Context context, int tool_id, const char *service_name, MPI_Info info,
+                      const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;

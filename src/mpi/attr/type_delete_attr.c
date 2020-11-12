@@ -26,6 +26,22 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 
 #endif
 
+int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
+{
+    QMPI_Context context;
+    QMPI_Type_delete_attr_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_delete_attr(context, 0, datatype, type_keyval);
+
+    fn_ptr = (QMPI_Type_delete_attr_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_DELETE_ATTR_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_DELETE_ATTR_T], datatype,
+                      type_keyval);
+}
+
 /*@
    MPI_Type_delete_attr - Deletes an attribute value associated with a key on
    a datatype
@@ -43,7 +59,7 @@ Input Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
+int QMPI_Type_delete_attr(QMPI_Context context, int tool_id, MPI_Datatype datatype, int type_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;

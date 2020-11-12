@@ -79,6 +79,23 @@ int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
 
 #endif
 
+int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
+                int *flag, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Testany_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Testany(context, 0, count, array_of_requests, indx, flag, status);
+
+    fn_ptr = (QMPI_Testany_t *) MPIR_QMPI_first_fn_ptrs[MPI_TESTANY_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TESTANY_T], count, array_of_requests,
+                      indx, flag, status);
+}
+
 /*@
     MPI_Testany - Tests for completion of any previdously initiated
                   requests
@@ -108,8 +125,8 @@ program to unexecpectedly terminate or produce incorrect results.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
-                int *flag, MPI_Status * status)
+int QMPI_Testany(QMPI_Context context, int tool_id, int count, MPI_Request array_of_requests[],
+                 int *indx, int *flag, MPI_Status * status)
 {
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;

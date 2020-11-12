@@ -29,6 +29,23 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,
 
 /* status object not filled currently */
 
+int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf,
+                         int count, MPI_Datatype datatype, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_File_read_at_all_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_read_at_all(context, 0, fh, offset, buf, count, datatype, status);
+
+    fn_ptr = (QMPI_File_read_at_all_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_READ_AT_ALL_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_READ_AT_ALL_T], fh, offset, buf,
+                      count, datatype, status);
+}
+
 /*@
     MPI_File_read_at_all - Collective read using explicit offset
 
@@ -44,8 +61,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf,
-                         int count, MPI_Datatype datatype, MPI_Status * status)
+int QMPI_File_read_at_all(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset offset,
+                          void *buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_IREAD_AT";

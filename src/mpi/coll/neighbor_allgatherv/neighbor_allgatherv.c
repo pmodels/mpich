@@ -180,6 +180,25 @@ int MPIR_Neighbor_allgatherv(const void *sendbuf, int sendcount,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                            void *recvbuf, const int recvcounts[], const int displs[],
+                            MPI_Datatype recvtype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Neighbor_allgatherv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Neighbor_allgatherv(context, 0, sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcounts, displs, recvtype, comm);
+
+    fn_ptr = (QMPI_Neighbor_allgatherv_t *) MPIR_QMPI_first_fn_ptrs[MPI_NEIGHBOR_ALLGATHERV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_NEIGHBOR_ALLGATHERV_T], sendbuf,
+                      sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
+}
+
 /*@
 MPI_Neighbor_allgatherv - The vector variant of MPI_Neighbor_allgather.
 
@@ -201,9 +220,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                            void *recvbuf, const int recvcounts[], const int displs[],
-                            MPI_Datatype recvtype, MPI_Comm comm)
+int QMPI_Neighbor_allgatherv(QMPI_Context context, int tool_id, const void *sendbuf, int sendcount,
+                             MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                             const int displs[], MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

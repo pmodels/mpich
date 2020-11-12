@@ -88,6 +88,30 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
 #endif
 
+int MPI_Type_get_contents(MPI_Datatype datatype,
+                          int max_integers,
+                          int max_addresses,
+                          int max_datatypes,
+                          int array_of_integers[],
+                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+{
+    QMPI_Context context;
+    QMPI_Type_get_contents_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_get_contents(context, 0, datatype, max_integers, max_addresses,
+                                      max_datatypes, array_of_integers, array_of_addresses,
+                                      array_of_datatypes);
+
+    fn_ptr = (QMPI_Type_get_contents_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_GET_CONTENTS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_GET_CONTENTS_T], datatype,
+                      max_integers, max_addresses, max_datatypes, array_of_integers,
+                      array_of_addresses, array_of_datatypes);
+}
+
 /*@
    MPI_Type_get_contents - get type contents
 
@@ -109,12 +133,12 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Type_get_contents(MPI_Datatype datatype,
-                          int max_integers,
-                          int max_addresses,
-                          int max_datatypes,
-                          int array_of_integers[],
-                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+int QMPI_Type_get_contents(QMPI_Context context, int tool_id, MPI_Datatype datatype,
+                           int max_integers,
+                           int max_addresses,
+                           int max_datatypes,
+                           int array_of_integers[],
+                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_CONTENTS);

@@ -56,6 +56,21 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
 
 #endif
 
+int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
+{
+    QMPI_Context context;
+    QMPI_Info_get_nthkey_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_get_nthkey(context, 0, info, n, key);
+
+    fn_ptr = (QMPI_Info_get_nthkey_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_GET_NTHKEY_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_GET_NTHKEY_T], info, n, key);
+}
+
 /*@
     MPI_Info_get_nthkey - Returns the nth defined key in info
 
@@ -75,7 +90,7 @@ Output Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
+int QMPI_Info_get_nthkey(QMPI_Context context, int tool_id, MPI_Info info, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0;

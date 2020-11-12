@@ -35,6 +35,22 @@ void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultl
 #endif
 
 
+int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
+{
+    QMPI_Context context;
+    QMPI_Comm_get_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_get_name(context, 0, comm, comm_name, resultlen);
+
+    fn_ptr = (QMPI_Comm_get_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_GET_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_GET_NAME_T], comm, comm_name,
+                      resultlen);
+}
+
 /*@
   MPI_Comm_get_name - Return the print name from the communicator
 
@@ -58,7 +74,8 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen)
+int QMPI_Comm_get_name(QMPI_Context context, int tool_id, MPI_Comm comm, char *comm_name,
+                       int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

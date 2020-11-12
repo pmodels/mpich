@@ -85,6 +85,21 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
+{
+    QMPI_Context context;
+    QMPI_T_cvar_write_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_cvar_write(context, 0, handle, buf);
+
+    fn_ptr = (QMPI_T_cvar_write_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CVAR_WRITE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CVAR_WRITE_T], handle, buf);
+}
+
 /*@
 MPI_T_cvar_write - Write a control variable
 
@@ -101,7 +116,7 @@ Input Parameters:
 .N MPI_T_ERR_CVAR_SET_NOT_NOW
 .N MPI_T_ERR_CVAR_SET_NEVER
 @*/
-int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
+int QMPI_T_cvar_write(QMPI_Context context, int tool_id, MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

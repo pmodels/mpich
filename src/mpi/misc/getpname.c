@@ -31,6 +31,21 @@ int MPI_Get_processor_name(char *name, int *resultlen)
    into nothing otherwise. */
 #endif
 
+int MPI_Get_processor_name(char *name, int *resultlen)
+{
+    QMPI_Context context;
+    QMPI_Get_processor_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_processor_name(context, 0, name, resultlen);
+
+    fn_ptr = (QMPI_Get_processor_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_PROCESSOR_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_PROCESSOR_NAME_T], name, resultlen);
+}
+
 /*@
   MPI_Get_processor_name - Gets the name of the processor
 
@@ -65,7 +80,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_processor_name(char *name, int *resultlen)
+int QMPI_Get_processor_name(QMPI_Context context, int tool_id, char *name, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_PROCESSOR_NAME);

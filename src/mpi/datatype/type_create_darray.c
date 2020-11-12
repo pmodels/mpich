@@ -301,6 +301,32 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 }
 #endif
 
+int MPI_Type_create_darray(int size,
+                           int rank,
+                           int ndims,
+                           const int array_of_gsizes[],
+                           const int array_of_distribs[],
+                           const int array_of_dargs[],
+                           const int array_of_psizes[],
+                           int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_create_darray_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_darray(context, 0, size, rank, ndims, array_of_gsizes,
+                                       array_of_distribs, array_of_dargs, array_of_psizes, order,
+                                       oldtype, newtype);
+
+    fn_ptr = (QMPI_Type_create_darray_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_DARRAY_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_DARRAY_T], size, rank,
+                      ndims, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes,
+                      order, oldtype, newtype);
+}
+
 /*@
    MPI_Type_create_darray - Create a datatype representing a distributed array
 
@@ -327,14 +353,14 @@ Output Parameters:
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_create_darray(int size,
-                           int rank,
-                           int ndims,
-                           const int array_of_gsizes[],
-                           const int array_of_distribs[],
-                           const int array_of_dargs[],
-                           const int array_of_psizes[],
-                           int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int QMPI_Type_create_darray(QMPI_Context context, int tool_id, int size,
+                            int rank,
+                            int ndims,
+                            const int array_of_gsizes[],
+                            const int array_of_distribs[],
+                            const int array_of_dargs[],
+                            const int array_of_psizes[],
+                            int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPI_Datatype new_handle;

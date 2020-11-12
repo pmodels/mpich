@@ -24,6 +24,21 @@ int MPI_T_cvar_get_num(int *num_cvar) __attribute__ ((weak, alias("PMPI_T_cvar_g
 #define MPI_T_cvar_get_num PMPI_T_cvar_get_num
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_cvar_get_num(int *num_cvar)
+{
+    QMPI_Context context;
+    QMPI_T_cvar_get_num_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_cvar_get_num(context, 0, num_cvar);
+
+    fn_ptr = (QMPI_T_cvar_get_num_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CVAR_GET_NUM_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CVAR_GET_NUM_T], num_cvar);
+}
+
 /*@
 MPI_T_cvar_get_num - Get the number of control variables
 
@@ -36,7 +51,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_T_ERR_NOT_INITIALIZED
 @*/
-int MPI_T_cvar_get_num(int *num_cvar)
+int QMPI_T_cvar_get_num(QMPI_Context context, int tool_id, int *num_cvar)
 {
     int mpi_errno = MPI_SUCCESS;
 

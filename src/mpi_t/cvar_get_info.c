@@ -27,6 +27,25 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosit
 #define MPI_T_cvar_get_info PMPI_T_cvar_get_info
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
+                        int *verbosity, MPI_Datatype * datatype, MPI_T_enum * enumtype,
+                        char *desc, int *desc_len, int *binding, int *scope)
+{
+    QMPI_Context context;
+    QMPI_T_cvar_get_info_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_cvar_get_info(context, 0, cvar_index, name, name_len, verbosity, datatype,
+                                    enumtype, desc, desc_len, binding, scope);
+
+    fn_ptr = (QMPI_T_cvar_get_info_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CVAR_GET_INFO_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CVAR_GET_INFO_T], cvar_index, name,
+                      name_len, verbosity, datatype, enumtype, desc, desc_len, binding, scope);
+}
+
 /*@
 MPI_T_cvar_get_info - Get the information about a control variable
 
@@ -53,9 +72,9 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_INDEX
 @*/
-int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
-                        int *verbosity, MPI_Datatype * datatype, MPI_T_enum * enumtype,
-                        char *desc, int *desc_len, int *binding, int *scope)
+int QMPI_T_cvar_get_info(QMPI_Context context, int tool_id, int cvar_index, char *name,
+                         int *name_len, int *verbosity, MPI_Datatype * datatype,
+                         MPI_T_enum * enumtype, char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
     const cvar_table_entry_t *cvar;

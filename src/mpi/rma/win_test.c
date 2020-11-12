@@ -25,6 +25,21 @@ int MPI_Win_test(MPI_Win win, int *flag) __attribute__ ((weak, alias("PMPI_Win_t
 
 #endif
 
+int MPI_Win_test(MPI_Win win, int *flag)
+{
+    QMPI_Context context;
+    QMPI_Win_test_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_test(context, 0, win, flag);
+
+    fn_ptr = (QMPI_Win_test_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_TEST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_TEST_T], win, flag);
+}
+
 /*@
    MPI_Win_test - Test whether an RMA exposure epoch has completed
 
@@ -49,7 +64,7 @@ Output Parameters:
 
 .seealso: MPI_Win_wait, MPI_Win_post
 @*/
-int MPI_Win_test(MPI_Win win, int *flag)
+int QMPI_Win_test(QMPI_Context context, int tool_id, MPI_Win win, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

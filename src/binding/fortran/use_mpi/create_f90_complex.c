@@ -40,6 +40,23 @@ typedef struct realModel {
     MPI_Datatype dtype;
 } realModel;
 
+int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype)
+{
+    QMPI_Context context;
+    QMPI_Type_create_f90_complex_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Type_create_f90_complex(context, 0, precision, range, newtype);
+
+    fn_ptr =
+        (QMPI_Type_create_f90_complex_t *) MPIR_QMPI_first_fn_ptrs[MPI_TYPE_CREATE_F90_COMPLEX_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TYPE_CREATE_F90_COMPLEX_T], precision,
+                      range, newtype);
+}
+
 /*@
    MPI_Type_create_f90_complex - Return a predefined type that matches
    the specified range
@@ -62,7 +79,8 @@ returns an error of class 'MPI_ERR_ARG'.
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype)
+int QMPI_Type_create_f90_complex(QMPI_Context context, int tool_id, int precision, int range,
+                                 MPI_Datatype * newtype)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;

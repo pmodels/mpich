@@ -26,6 +26,22 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 #endif
 
+int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Send_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Send(context, 0, buf, count, datatype, dest, tag, comm);
+
+    fn_ptr = (QMPI_Send_t *) MPIR_QMPI_first_fn_ptrs[MPI_SEND_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_SEND_T], buf, count, datatype, dest,
+                      tag, comm);
+}
+
 /*@
     MPI_Send - Performs a blocking send
 
@@ -55,7 +71,8 @@ process.
 
 .seealso: MPI_Isend, MPI_Bsend
 @*/
-int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+int QMPI_Send(QMPI_Context context, int tool_id, const void *buf, int count, MPI_Datatype datatype,
+              int dest, int tag, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

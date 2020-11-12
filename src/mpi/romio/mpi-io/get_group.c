@@ -26,6 +26,21 @@ int MPI_File_get_group(MPI_File fh, MPI_Group * group)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_get_group(MPI_File fh, MPI_Group * group)
+{
+    QMPI_Context context;
+    QMPI_File_get_group_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_get_group(context, 0, fh, group);
+
+    fn_ptr = (QMPI_File_get_group_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_GET_GROUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_GET_GROUP_T], fh, group);
+}
+
 /*@
     MPI_File_get_group - Returns the group of processes that
                          opened the file
@@ -38,7 +53,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_get_group(MPI_File fh, MPI_Group * group)
+int QMPI_File_get_group(QMPI_Context context, int tool_id, MPI_File fh, MPI_Group * group)
 {
     int error_code;
     ADIO_File adio_fh;

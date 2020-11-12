@@ -25,6 +25,21 @@ int MPI_Start(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Start")))
 
 #endif
 
+int MPI_Start(MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Start_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Start(context, 0, request);
+
+    fn_ptr = (QMPI_Start_t *) MPIR_QMPI_first_fn_ptrs[MPI_START_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_START_T], request);
+}
+
 /*@
     MPI_Start - Initiates a communication with a persistent request handle
 
@@ -40,7 +55,7 @@ Input Parameters:
 .N MPI_ERR_REQUEST
 
 @*/
-int MPI_Start(MPI_Request * request)
+int QMPI_Start(QMPI_Context context, int tool_id, MPI_Request * request)
 {
     MPIR_Request *request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;

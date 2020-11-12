@@ -41,6 +41,21 @@ int MPIR_Group_free_impl(MPIR_Group * group_ptr)
 
 #endif
 
+int MPI_Group_free(MPI_Group * group)
+{
+    QMPI_Context context;
+    QMPI_Group_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Group_free(context, 0, group);
+
+    fn_ptr = (QMPI_Group_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_GROUP_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GROUP_FREE_T], group);
+}
+
 /*@
 
 MPI_Group_free - Frees a group
@@ -60,7 +75,7 @@ On output, group is set to 'MPI_GROUP_NULL'.
 .N MPI_ERR_ARG
 .N MPI_ERR_PERM_GROUP
 @*/
-int MPI_Group_free(MPI_Group * group)
+int QMPI_Group_free(QMPI_Context context, int tool_id, MPI_Group * group)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL;

@@ -26,6 +26,21 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 #include "mpioprof.h"
 #endif
 
+int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
+{
+    QMPI_Context context;
+    QMPI_File_delete_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_delete(context, 0, filename, info);
+
+    fn_ptr = (QMPI_File_delete_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_DELETE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_DELETE_T], filename, info);
+}
+
 /*@
     MPI_File_delete - Deletes a file
 
@@ -35,7 +50,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
+int QMPI_File_delete(QMPI_Context context, int tool_id, ROMIO_CONST char *filename, MPI_Info info)
 {
     int error_code, file_system;
     char *tmp;

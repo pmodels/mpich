@@ -85,6 +85,22 @@ int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
 #endif
 
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank)
+{
+    QMPI_Context context;
+    QMPI_Cart_map_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_map(context, 0, comm, ndims, dims, periods, newrank);
+
+    fn_ptr = (QMPI_Cart_map_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_MAP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_MAP_T], comm, ndims, dims, periods,
+                      newrank);
+}
+
 /*@
 MPI_Cart_map - Maps process to Cartesian topology information
 
@@ -110,7 +126,8 @@ Output Parameters:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank)
+int QMPI_Cart_map(QMPI_Context context, int tool_id, MPI_Comm comm, int ndims, const int dims[],
+                  const int periods[], int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

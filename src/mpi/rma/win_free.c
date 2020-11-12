@@ -25,6 +25,21 @@ int MPI_Win_free(MPI_Win * win) __attribute__ ((weak, alias("PMPI_Win_free")));
 
 #endif
 
+int MPI_Win_free(MPI_Win * win)
+{
+    QMPI_Context context;
+    QMPI_Win_free_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_free(context, 0, win);
+
+    fn_ptr = (QMPI_Win_free_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_FREE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_FREE_T], win);
+}
+
 /*@
    MPI_Win_free - Free an MPI RMA window
 
@@ -43,7 +58,7 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_free(MPI_Win * win)
+int QMPI_Win_free(QMPI_Context context, int tool_id, MPI_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

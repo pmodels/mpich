@@ -27,6 +27,23 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 #include "mpioprof.h"
 #endif
 
+int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
+                      MPI_Datatype filetype, ROMIO_CONST char *datarep, MPI_Info info)
+{
+    QMPI_Context context;
+    QMPI_File_set_view_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_set_view(context, 0, fh, disp, etype, filetype, datarep, info);
+
+    fn_ptr = (QMPI_File_set_view_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_SET_VIEW_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_SET_VIEW_T], fh, disp, etype,
+                      filetype, datarep, info);
+}
+
 /*@
     MPI_File_set_view - Sets the file view
 
@@ -40,8 +57,9 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
-                      MPI_Datatype filetype, ROMIO_CONST char *datarep, MPI_Info info)
+int QMPI_File_set_view(QMPI_Context context, int tool_id, MPI_File fh, MPI_Offset disp,
+                       MPI_Datatype etype, MPI_Datatype filetype, ROMIO_CONST char *datarep,
+                       MPI_Info info)
 {
     int error_code = MPI_SUCCESS;
     MPI_Count filetype_size, etype_size;

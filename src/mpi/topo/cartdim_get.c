@@ -25,6 +25,21 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims) __attribute__ ((weak, alias("PMPI
 
 #endif
 
+int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
+{
+    QMPI_Context context;
+    QMPI_Cartdim_get_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cartdim_get(context, 0, comm, ndims);
+
+    fn_ptr = (QMPI_Cartdim_get_t *) MPIR_QMPI_first_fn_ptrs[MPI_CARTDIM_GET_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CARTDIM_GET_T], comm, ndims);
+}
+
 /*@
 
 MPI_Cartdim_get - Retrieves Cartesian topology information associated with a
@@ -45,7 +60,7 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
+int QMPI_Cartdim_get(QMPI_Context context, int tool_id, MPI_Comm comm, int *ndims)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

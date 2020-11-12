@@ -80,6 +80,22 @@ int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int disp, int *ran
 
 #endif
 
+int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int *rank_dest)
+{
+    QMPI_Context context;
+    QMPI_Cart_shift_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_shift(context, 0, comm, direction, disp, rank_source, rank_dest);
+
+    fn_ptr = (QMPI_Cart_shift_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_SHIFT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_SHIFT_T], comm, direction, disp,
+                      rank_source, rank_dest);
+}
+
 /*@
 MPI_Cart_shift - Returns the shifted source and destination ranks, given a
                  shift direction and amount
@@ -107,7 +123,8 @@ Cartesian mesh.
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int *rank_dest)
+int QMPI_Cart_shift(QMPI_Context context, int tool_id, MPI_Comm comm, int direction, int disp,
+                    int *rank_source, int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

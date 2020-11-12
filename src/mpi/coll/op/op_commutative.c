@@ -63,6 +63,21 @@ int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute)
     return mpi_errno;
 }
 
+int MPI_Op_commutative(MPI_Op op, int *commute)
+{
+    QMPI_Context context;
+    QMPI_Op_commutative_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Op_commutative(context, 0, op, commute);
+
+    fn_ptr = (QMPI_Op_commutative_t *) MPIR_QMPI_first_fn_ptrs[MPI_OP_COMMUTATIVE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_OP_COMMUTATIVE_T], op, commute);
+}
+
 /*@
   MPI_Op_commute - Queries an MPI reduction operation for its commutativity.
 
@@ -84,7 +99,7 @@ Output Parameters:
 
 .seealso: MPI_Op_create
 @*/
-int MPI_Op_commutative(MPI_Op op, int *commute)
+int QMPI_Op_commutative(QMPI_Context context, int tool_id, MPI_Op op, int *commute)
 {
     MPIR_Op *op_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;

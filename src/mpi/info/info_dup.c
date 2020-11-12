@@ -65,6 +65,21 @@ int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
 
 #endif
 
+int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo)
+{
+    QMPI_Context context;
+    QMPI_Info_dup_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Info_dup(context, 0, info, newinfo);
+
+    fn_ptr = (QMPI_Info_dup_t *) MPIR_QMPI_first_fn_ptrs[MPI_INFO_DUP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INFO_DUP_T], info, newinfo);
+}
+
 /*@
     MPI_Info_dup - Returns a duplicate of the info object
 
@@ -82,7 +97,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo)
+int QMPI_Info_dup(QMPI_Context context, int tool_id, MPI_Info info, MPI_Info * newinfo)
 {
     MPIR_Info *info_ptr = 0, *new_info_ptr;
     int mpi_errno = MPI_SUCCESS;

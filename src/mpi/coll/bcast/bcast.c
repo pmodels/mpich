@@ -286,6 +286,22 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
+int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Bcast_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Bcast(context, 0, buffer, count, datatype, root, comm);
+
+    fn_ptr = (QMPI_Bcast_t *) MPIR_QMPI_first_fn_ptrs[MPI_BCAST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_BCAST_T], buffer, count, datatype, root,
+                      comm);
+}
+
 /*@
 MPI_Bcast - Broadcasts a message from the process with rank "root" to
             all other processes of the communicator
@@ -311,7 +327,8 @@ Input Parameters:
 .N MPI_ERR_BUFFER
 .N MPI_ERR_ROOT
 @*/
-int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm)
+int QMPI_Bcast(QMPI_Context context, int tool_id, void *buffer, int count, MPI_Datatype datatype,
+               int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -24,6 +24,21 @@ int MPI_Query_thread(int *provided) __attribute__ ((weak, alias("PMPI_Query_thre
 #define MPI_Query_thread PMPI_Query_thread
 #endif
 
+int MPI_Query_thread(int *provided)
+{
+    QMPI_Context context;
+    QMPI_Query_thread_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Query_thread(context, 0, provided);
+
+    fn_ptr = (QMPI_Query_thread_t *) MPIR_QMPI_first_fn_ptrs[MPI_QUERY_THREAD_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_QUERY_THREAD_T], provided);
+}
+
 /*@
    MPI_Query_thread - Return the level of thread support provided by the MPI
     library
@@ -56,7 +71,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Query_thread(int *provided)
+int QMPI_Query_thread(QMPI_Context context, int tool_id, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_QUERY_THREAD);

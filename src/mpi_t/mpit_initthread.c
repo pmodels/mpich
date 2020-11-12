@@ -78,6 +78,21 @@ int MPIR_T_env_init(void)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_init_thread(int required, int *provided)
+{
+    QMPI_Context context;
+    QMPI_T_init_thread_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_init_thread(context, 0, required, provided);
+
+    fn_ptr = (QMPI_T_init_thread_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_INIT_THREAD_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_INIT_THREAD_T], required, provided);
+}
+
 /*@
 MPI_T_init_thread - Initialize the MPI_T execution environment
 
@@ -105,7 +120,7 @@ Notes:
 
 .seealso MPI_T_finalize
 @*/
-int MPI_T_init_thread(int required, int *provided)
+int QMPI_T_init_thread(QMPI_Context context, int tool_id, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 

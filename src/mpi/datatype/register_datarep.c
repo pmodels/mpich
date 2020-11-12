@@ -23,6 +23,26 @@
 
 #endif
 
+int MPI_Register_datarep(char *datarep,
+                         MPI_Datarep_conversion_function * read_conversion_fn,
+                         MPI_Datarep_conversion_function * write_conversion_fn,
+                         MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+{
+    QMPI_Context context;
+    QMPI_Register_datarep_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Register_datarep(context, 0, datarep, read_conversion_fn, write_conversion_fn,
+                                     dtype_file_extent_fn, extra_state);
+
+    fn_ptr = (QMPI_Register_datarep_t *) MPIR_QMPI_first_fn_ptrs[MPI_REGISTER_DATAREP_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_REGISTER_DATAREP_T], datarep,
+                      read_conversion_fn, write_conversion_fn, dtype_file_extent_fn, extra_state);
+}
+
 /*@
    MPI_Register_datarep - Register a set of user-provided data conversion
    functions
@@ -42,10 +62,10 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Register_datarep(char *datarep,
-                         MPI_Datarep_conversion_function * read_conversion_fn,
-                         MPI_Datarep_conversion_function * write_conversion_fn,
-                         MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
+int QMPI_Register_datarep(QMPI_Context context, int tool_id, char *datarep,
+                          MPI_Datarep_conversion_function * read_conversion_fn,
+                          MPI_Datarep_conversion_function * write_conversion_fn,
+                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REGISTER_DATAREP);

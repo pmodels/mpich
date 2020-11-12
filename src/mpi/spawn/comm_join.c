@@ -100,6 +100,21 @@ PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
 
 #endif
 
+int MPI_Comm_join(int fd, MPI_Comm * intercomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_join_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_join(context, 0, fd, intercomm);
+
+    fn_ptr = (QMPI_Comm_join_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_JOIN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_JOIN_T], fd, intercomm);
+}
+
 /*@
    MPI_Comm_join - Create a communicator by joining two processes connected by
      a socket.
@@ -124,7 +139,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Comm_join(int fd, MPI_Comm * intercomm)
+int QMPI_Comm_join(QMPI_Context context, int tool_id, int fd, MPI_Comm * intercomm)
 {
     int mpi_errno = MPI_SUCCESS, err;
     MPIR_Comm *intercomm_ptr;

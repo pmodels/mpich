@@ -26,6 +26,21 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 
 #endif
 
+int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Probe_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Probe(context, 0, source, tag, comm, status);
+
+    fn_ptr = (QMPI_Probe_t *) MPIR_QMPI_first_fn_ptrs[MPI_PROBE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_PROBE_T], source, tag, comm, status);
+}
+
 /*@
     MPI_Probe - Blocking test for a message
 
@@ -47,7 +62,8 @@ Output Parameters:
 .N MPI_ERR_TAG
 .N MPI_ERR_RANK
 @*/
-int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
+int QMPI_Probe(QMPI_Context context, int tool_id, int source, int tag, MPI_Comm comm,
+               MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

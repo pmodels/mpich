@@ -28,6 +28,23 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 #endif
 
 
+int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
+                            void *baseptr, MPI_Win * win)
+{
+    QMPI_Context context;
+    QMPI_Win_allocate_shared_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_allocate_shared(context, 0, size, disp_unit, info, comm, baseptr, win);
+
+    fn_ptr = (QMPI_Win_allocate_shared_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_ALLOCATE_SHARED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_ALLOCATE_SHARED_T], size, disp_unit,
+                      info, comm, baseptr, win);
+}
+
 /*@
 MPI_Win_allocate_shared - Create an MPI Window object for one-sided
 communication and shared memory access, and allocate memory at each process.
@@ -74,8 +91,8 @@ Output Parameters:
 
 .seealso: MPI_Win_allocate MPI_Win_create MPI_Win_create_dynamic MPI_Win_free MPI_Win_shared_query
 @*/
-int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
-                            void *baseptr, MPI_Win * win)
+int QMPI_Win_allocate_shared(QMPI_Context context, int tool_id, MPI_Aint size, int disp_unit,
+                             MPI_Info info, MPI_Comm comm, void *baseptr, MPI_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

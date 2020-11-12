@@ -294,6 +294,25 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
+                  MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  int root, MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Iscatterv_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Iscatterv(context, 0, sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                              recvtype, root, comm, request);
+
+    fn_ptr = (QMPI_Iscatterv_t *) MPIR_QMPI_first_fn_ptrs[MPI_ISCATTERV_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ISCATTERV_T], sendbuf, sendcounts,
+                      displs, sendtype, recvbuf, recvcount, recvtype, root, comm, request);
+}
+
 /*@
 MPI_Iscatterv - Scatters a buffer in parts to all processes in a communicator
                 in a nonblocking way
@@ -318,9 +337,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
-                  MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPI_Comm comm, MPI_Request * request)
+int QMPI_Iscatterv(QMPI_Context context, int tool_id, const void *sendbuf, const int sendcounts[],
+                   const int displs[], MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                   MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

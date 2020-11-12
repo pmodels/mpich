@@ -27,6 +27,21 @@ MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 #endif
 
 
+MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+{
+    QMPI_Context context;
+    QMPI_Aint_diff_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Aint_diff(context, 0, addr1, addr2);
+
+    fn_ptr = (QMPI_Aint_diff_t *) MPIR_QMPI_first_fn_ptrs[MPI_AINT_DIFF_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_AINT_DIFF_T], addr1, addr2);
+}
+
 /*@
 MPI_Aint_diff - Returns the difference between addr1 and addr2
 
@@ -53,7 +68,7 @@ on the addresses initially passed to MPI_GET_ADDRESS.
 .seealso: MPI_Aint_add
 @*/
 
-MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+MPI_Aint QMPI_Aint_diff(QMPI_Context context, int tool_id, MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_DIFF);

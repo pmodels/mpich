@@ -26,6 +26,22 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 
 #endif
 
+int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
+{
+    QMPI_Context context;
+    QMPI_Cart_coords_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Cart_coords(context, 0, comm, rank, maxdims, coords);
+
+    fn_ptr = (QMPI_Cart_coords_t *) MPIR_QMPI_first_fn_ptrs[MPI_CART_COORDS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_CART_COORDS_T], comm, rank, maxdims,
+                      coords);
+}
+
 /*@
 MPI_Cart_coords - Determines process coords in cartesian topology given
                   rank in group
@@ -50,7 +66,8 @@ Output Parameters:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
+int QMPI_Cart_coords(QMPI_Context context, int tool_id, MPI_Comm comm, int rank, int maxdims,
+                     int coords[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

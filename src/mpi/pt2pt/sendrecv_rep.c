@@ -27,6 +27,25 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #endif
 
+int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
+                         int dest, int sendtag, int source, int recvtag,
+                         MPI_Comm comm, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Sendrecv_replace_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Sendrecv_replace(context, 0, buf, count, datatype, dest, sendtag, source,
+                                     recvtag, comm, status);
+
+    fn_ptr = (QMPI_Sendrecv_replace_t *) MPIR_QMPI_first_fn_ptrs[MPI_SENDRECV_REPLACE_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_SENDRECV_REPLACE_T], buf, count,
+                      datatype, dest, sendtag, source, recvtag, comm, status);
+}
+
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 
@@ -60,9 +79,9 @@ Output Parameters:
 .N MPI_ERR_EXHAUSTED
 
 @*/
-int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
-                         int dest, int sendtag, int source, int recvtag,
-                         MPI_Comm comm, MPI_Status * status)
+int QMPI_Sendrecv_replace(QMPI_Context context, int tool_id, void *buf, int count,
+                          MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag,
+                          MPI_Comm comm, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

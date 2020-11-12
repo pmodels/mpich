@@ -94,6 +94,21 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
 #endif
 
+int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_Test_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Test(context, 0, request, flag, status);
+
+    fn_ptr = (QMPI_Test_t *) MPIR_QMPI_first_fn_ptrs[MPI_TEST_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_TEST_T], request, flag, status);
+}
+
 /*@
     MPI_Test  - Tests for the completion of a request
 
@@ -117,7 +132,8 @@ Output Parameters:
 .N MPI_ERR_REQUEST
 .N MPI_ERR_ARG
 @*/
-int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
+int QMPI_Test(QMPI_Context context, int tool_id, MPI_Request * request, int *flag,
+              MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;

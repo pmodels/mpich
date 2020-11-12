@@ -26,6 +26,21 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 
 #endif
 
+int MPI_Win_set_name(MPI_Win win, const char *win_name)
+{
+    QMPI_Context context;
+    QMPI_Win_set_name_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Win_set_name(context, 0, win, win_name);
+
+    fn_ptr = (QMPI_Win_set_name_t *) MPIR_QMPI_first_fn_ptrs[MPI_WIN_SET_NAME_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_WIN_SET_NAME_T], win, win_name);
+}
+
 /*@
    MPI_Win_set_name - Set the print name for an MPI RMA window
 
@@ -43,7 +58,7 @@ Input Parameters:
 .N MPI_ERR_OTHER
 .N MPI_ERR_ARG
 @*/
-int MPI_Win_set_name(MPI_Win win, const char *win_name)
+int QMPI_Win_set_name(QMPI_Context context, int tool_id, MPI_Win win, const char *win_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;

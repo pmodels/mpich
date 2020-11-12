@@ -30,6 +30,23 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype dataty
 #ifdef HAVE_MPI_GREQUEST
 #include "mpiu_greq.h"
 
+int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
+                          MPI_Datatype datatype, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_File_iread_shared_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_iread_shared(context, 0, fh, buf, count, datatype, request);
+
+    fn_ptr = (QMPI_File_iread_shared_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_IREAD_SHARED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_IREAD_SHARED_T], fh, buf, count,
+                      datatype, request);
+}
+
 /*@
     MPI_File_iread_shared - Nonblocking read using shared file pointer
 
@@ -44,8 +61,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
-                          MPI_Datatype datatype, MPI_Request * request)
+int QMPI_File_iread_shared(QMPI_Context context, int tool_id, MPI_File fh, void *buf, int count,
+                           MPI_Datatype datatype, MPI_Request * request)
 {
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_Offset bufsize;

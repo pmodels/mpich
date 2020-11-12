@@ -45,6 +45,22 @@ int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[])
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
+{
+    QMPI_Context context;
+    QMPI_T_category_get_pvars_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_T_category_get_pvars(context, 0, cat_index, len, indices);
+
+    fn_ptr = (QMPI_T_category_get_pvars_t *) MPIR_QMPI_first_fn_ptrs[MPI_T_CATEGORY_GET_PVARS_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_T_CATEGORY_GET_PVARS_T], cat_index, len,
+                      indices);
+}
+
 /*@
 MPI_T_category_get_pvars - Get performance variables in a category
 
@@ -62,7 +78,8 @@ Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_INDEX
 @*/
-int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
+int QMPI_T_category_get_pvars(QMPI_Context context, int tool_id, int cat_index, int len,
+                              int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
 

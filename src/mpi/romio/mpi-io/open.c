@@ -32,6 +32,23 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 extern int ADIO_Init_keyval;
 
+int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
+                  MPI_Info info, MPI_File * fh)
+{
+    QMPI_Context context;
+    QMPI_File_open_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_open(context, 0, comm, filename, amode, info, fh);
+
+    fn_ptr = (QMPI_File_open_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_OPEN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_OPEN_T], comm, filename, amode,
+                      info, fh);
+}
+
 /*@
     MPI_File_open - Opens a file
 
@@ -46,8 +63,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
-                  MPI_Info info, MPI_File * fh)
+int QMPI_File_open(QMPI_Context context, int tool_id, MPI_Comm comm, ROMIO_CONST char *filename,
+                   int amode, MPI_Info info, MPI_File * fh)
 {
     int error_code = MPI_SUCCESS, file_system, flag, tmp_amode = 0, rank;
     char *tmp;

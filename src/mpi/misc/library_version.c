@@ -26,6 +26,22 @@ int MPI_Get_library_version(char *version, int *resultlen)
 
 #endif
 
+int MPI_Get_library_version(char *version, int *resultlen)
+{
+    QMPI_Context context;
+    QMPI_Get_library_version_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Get_library_version(context, 0, version, resultlen);
+
+    fn_ptr = (QMPI_Get_library_version_t *) MPIR_QMPI_first_fn_ptrs[MPI_GET_LIBRARY_VERSION_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_GET_LIBRARY_VERSION_T], version,
+                      resultlen);
+}
+
 /*@
    MPI_Get_library_version - Return the version number of MPI library
 
@@ -40,7 +56,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_library_version(char *version, int *resultlen)
+int QMPI_Get_library_version(QMPI_Context context, int tool_id, char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
     int printed_len;

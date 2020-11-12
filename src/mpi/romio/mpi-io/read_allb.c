@@ -26,6 +26,22 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 #include "mpioprof.h"
 #endif
 
+int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
+{
+    QMPI_Context context;
+    QMPI_File_read_all_begin_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_read_all_begin(context, 0, fh, buf, count, datatype);
+
+    fn_ptr = (QMPI_File_read_all_begin_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_READ_ALL_BEGIN_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_READ_ALL_BEGIN_T], fh, buf, count,
+                      datatype);
+}
+
 /*@
     MPI_File_read_all_begin - Begin a split collective read using individual file pointer
 
@@ -39,7 +55,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
+int QMPI_File_read_all_begin(QMPI_Context context, int tool_id, MPI_File fh, void *buf, int count,
+                             MPI_Datatype datatype)
 {
     int error_code;
     static char myname[] = "MPI_FILE_READ_ALL_BEGIN";

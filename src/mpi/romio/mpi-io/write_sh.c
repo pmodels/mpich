@@ -29,6 +29,23 @@ int MPI_File_write_shared(MPI_File fh, const void *buf, int count, MPI_Datatype 
 
 /* status object not filled currently */
 
+int MPI_File_write_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
+                          MPI_Datatype datatype, MPI_Status * status)
+{
+    QMPI_Context context;
+    QMPI_File_write_shared_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_File_write_shared(context, 0, fh, buf, count, datatype, status);
+
+    fn_ptr = (QMPI_File_write_shared_t *) MPIR_QMPI_first_fn_ptrs[MPI_FILE_WRITE_SHARED_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_FILE_WRITE_SHARED_T], fh, buf, count,
+                      datatype, status);
+}
+
 /*@
     MPI_File_write_shared - Write using shared file pointer
 
@@ -43,8 +60,8 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
-                          MPI_Datatype datatype, MPI_Status * status)
+int QMPI_File_write_shared(QMPI_Context context, int tool_id, MPI_File fh, ROMIO_CONST void *buf,
+                           int count, MPI_Datatype datatype, MPI_Status * status)
 {
     int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_Offset bufsize;

@@ -32,6 +32,23 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
 
 #endif
 
+int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm,
+                     MPI_Comm * newcomm)
+{
+    QMPI_Context context;
+    QMPI_Comm_connect_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Comm_connect(context, 0, port_name, info, root, comm, newcomm);
+
+    fn_ptr = (QMPI_Comm_connect_t *) MPIR_QMPI_first_fn_ptrs[MPI_COMM_CONNECT_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_COMM_CONNECT_T], port_name, info, root,
+                      comm, newcomm);
+}
+
 /*@
    MPI_Comm_connect - Make a request to form a new intercommunicator
 
@@ -54,8 +71,8 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_PORT
 @*/
-int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm comm,
-                     MPI_Comm * newcomm)
+int QMPI_Comm_connect(QMPI_Context context, int tool_id, const char *port_name, MPI_Info info,
+                      int root, MPI_Comm comm, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

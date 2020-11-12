@@ -25,6 +25,23 @@ int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int o
 #define MPI_Unpack PMPI_Unpack
 #endif
 
+int MPI_Unpack(const void *inbuf, int insize, int *position,
+               void *outbuf, int outcount, MPI_Datatype datatype, MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Unpack_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Unpack(context, 0, inbuf, insize, position, outbuf, outcount, datatype, comm);
+
+    fn_ptr = (QMPI_Unpack_t *) MPIR_QMPI_first_fn_ptrs[MPI_UNPACK_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_UNPACK_T], inbuf, insize, position,
+                      outbuf, outcount, datatype, comm);
+}
+
 /*@
     MPI_Unpack - Unpack a buffer according to a datatype into contiguous memory
 
@@ -55,8 +72,8 @@ Inout/Output Parameters:
 
 .seealso: MPI_Pack, MPI_Pack_size
 @*/
-int MPI_Unpack(const void *inbuf, int insize, int *position,
-               void *outbuf, int outcount, MPI_Datatype datatype, MPI_Comm comm)
+int QMPI_Unpack(QMPI_Context context, int tool_id, const void *inbuf, int insize, int *position,
+                void *outbuf, int outcount, MPI_Datatype datatype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint position_x;

@@ -27,6 +27,22 @@ int MPI_Error_string(int errorcode, char *string, int *resultlen)
 
 #endif
 
+int MPI_Error_string(int errorcode, char *string, int *resultlen)
+{
+    QMPI_Context context;
+    QMPI_Error_string_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Error_string(context, 0, errorcode, string, resultlen);
+
+    fn_ptr = (QMPI_Error_string_t *) MPIR_QMPI_first_fn_ptrs[MPI_ERROR_STRING_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ERROR_STRING_T], errorcode, string,
+                      resultlen);
+}
+
 /*@
    MPI_Error_string - Return a string for a given error code
 
@@ -49,7 +65,8 @@ with the routine 'MPI_Error_class'.
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Error_string(int errorcode, char *string, int *resultlen)
+int QMPI_Error_string(QMPI_Context context, int tool_id, int errorcode, char *string,
+                      int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_STRING);

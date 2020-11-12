@@ -172,6 +172,21 @@ int MPIR_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 
 
 
+int MPI_Barrier(MPI_Comm comm)
+{
+    QMPI_Context context;
+    QMPI_Barrier_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Barrier(context, 0, comm);
+
+    fn_ptr = (QMPI_Barrier_t *) MPIR_QMPI_first_fn_ptrs[MPI_BARRIER_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_BARRIER_T], comm);
+}
+
 /*@
 
 MPI_Barrier - Blocks until all processes in the communicator have
@@ -193,7 +208,7 @@ communicator have entered the call.
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPI_Barrier(MPI_Comm comm)
+int QMPI_Barrier(QMPI_Context context, int tool_id, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -323,6 +323,27 @@ int MPIR_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
+int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
+                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
+                            MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Ineighbor_alltoallw_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Ineighbor_alltoallw(context, 0, sendbuf, sendcounts, sdispls, sendtypes,
+                                        recvbuf, recvcounts, rdispls, recvtypes, comm, request);
+
+    fn_ptr = (QMPI_Ineighbor_alltoallw_t *) MPIR_QMPI_first_fn_ptrs[MPI_INEIGHBOR_ALLTOALLW_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INEIGHBOR_ALLTOALLW_T], sendbuf,
+                      sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm,
+                      request);
+}
+
 /*@
 MPI_Ineighbor_alltoallw - Nonblocking version of MPI_Neighbor_alltoallw.
 
@@ -346,10 +367,11 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[],
-                            const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm,
-                            MPI_Request * request)
+int QMPI_Ineighbor_alltoallw(QMPI_Context context, int tool_id, const void *sendbuf,
+                             const int sendcounts[], const MPI_Aint sdispls[],
+                             const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                             const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                             MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;

@@ -26,6 +26,23 @@ int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
 #endif
 
+int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+               MPI_Comm comm, MPI_Request * request)
+{
+    QMPI_Context context;
+    QMPI_Issend_t *fn_ptr;
+
+    context.storage_stack = NULL;
+
+    if (MPIR_QMPI_num_tools == 0)
+        return QMPI_Issend(context, 0, buf, count, datatype, dest, tag, comm, request);
+
+    fn_ptr = (QMPI_Issend_t *) MPIR_QMPI_first_fn_ptrs[MPI_ISSEND_T];
+
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_ISSEND_T], buf, count, datatype, dest,
+                      tag, comm, request);
+}
+
 /*@
     MPI_Issend - Starts a nonblocking synchronous send
 
@@ -53,8 +70,8 @@ Output Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_EXHAUSTED
 @*/
-int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-               MPI_Comm comm, MPI_Request * request)
+int QMPI_Issend(QMPI_Context context, int tool_id, const void *buf, int count,
+                MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
