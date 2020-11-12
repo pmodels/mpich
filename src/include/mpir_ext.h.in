@@ -91,6 +91,9 @@ extern void (**MPIR_QMPI_tool_init_callbacks) (int);
 extern int MPIR_QMPI_num_tools;
 extern char **MPIR_QMPI_tool_names;
 extern int MPIR_QMPI_is_initialized;
+extern void (**MPIR_QMPI_first_fn_ptrs) (void);
+extern int *MPIR_QMPI_first_tool_ids;
+int MPII_qmpi_stash_first_tools(void);
 int MPII_qmpi_setup(void);
 
 #endif

@@ -55,18 +55,29 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 
 int MPI_Init(int *argc, char ***argv)
 {
+    QMPI_Context context;
     QMPI_Init_t *fn_ptr;
-    void *context;
+    int mpi_errno;
 
     /* Initialize the tools that have been registered */
     for (int i = 1; i < MPIR_QMPI_num_tools + 1; i++) {
         MPIR_QMPI_tool_init_callbacks[i] (i);
     }
 
+    if (!MPIR_QMPI_is_initialized) {
+        mpi_errno = MPII_qmpi_setup();
+        if (mpi_errno != MPI_SUCCESS) {
+            return mpi_errno;
+        }
+    }
+
+    MPII_qmpi_stash_first_tools();
+
     if (MPIR_QMPI_num_tools == 0)
-        return QMPI_Init(context, argc, argv);
-    QMPI_Get_function(MPIR_QMPI_num_tools + 1, MPI_INIT_T, ((void (**)(void)) &fn_ptr), &context);
-    return (*fn_ptr) (context, argc, argv);
+        return QMPI_Init(context, 0, argc, argv);
+
+    fn_ptr = (QMPI_Init_t *) MPIR_QMPI_first_fn_ptrs[MPI_INIT_T];
+    return (*fn_ptr) (context, MPIR_QMPI_first_tool_ids[MPI_INIT_T], argc, argv);
 }
 
 /*@
@@ -126,10 +137,6 @@ int QMPI_Init(QMPI_Context context, int tool_id, int *argc, char ***argv)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-
-    if (!MPIR_QMPI_is_initialized) {
-        MPII_qmpi_setup();
-    }
 
     int threadLevel = MPI_THREAD_SINGLE;
     const char *tmp_str;

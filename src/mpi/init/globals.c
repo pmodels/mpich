@@ -22,3 +22,5 @@ void (**MPIR_QMPI_tool_init_callbacks) (int);
 int MPIR_QMPI_num_tools = 0;
 char **MPIR_QMPI_tool_names;
 int MPIR_QMPI_is_initialized = 0;
+void (**MPIR_QMPI_first_fn_ptrs) (void);
+int *MPIR_QMPI_first_tool_ids;

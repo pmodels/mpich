@@ -32,7 +32,6 @@ typedef void (*generic_mpi_func) (void);
 
 int MPII_qmpi_register_internal_functions(void)
 {
-
     MPIR_QMPI_pointers[MPI_ABORT_T] = (void (*)(void)) &QMPI_Abort;
     MPIR_QMPI_pointers[MPI_ACCUMULATE_T] = (void (*)(void)) &QMPI_Accumulate;
     MPIR_QMPI_pointers[MPI_ADD_ERROR_CLASS_T] = (void (*)(void)) &QMPI_Add_error_class;
@@ -436,13 +435,41 @@ int MPII_qmpi_register_internal_functions(void)
     MPIR_QMPI_pointers[MPI_WTICK_T] = (void (*)(void)) &QMPI_Wtick;
     MPIR_QMPI_pointers[MPI_WTIME_T] = (void (*)(void)) &QMPI_Wtime;
 
-    return 0;
+    return MPI_SUCCESS;
+}
+
+/* Cache the first function and tool ID in the chain of QMPI tools to optimize the lookup in all of
+ * the internal MPI_* functions. */
+int MPII_qmpi_stash_first_tools(void)
+{
+    if (MPIR_QMPI_num_tools == 0) {
+        return MPI_SUCCESS;
+    }
+
+    for (int i = 0; i < MPI_LAST_FUNC_T; i++) {
+        MPIR_QMPI_first_fn_ptrs[i] = NULL;
+
+        for (int j = 1; j <= MPIR_QMPI_num_tools; j++) {
+            if (MPIR_QMPI_pointers[j * MPI_LAST_FUNC_T + i] != NULL) {
+                MPIR_QMPI_first_fn_ptrs[i] = MPIR_QMPI_pointers[j * MPI_LAST_FUNC_T + i];
+                MPIR_QMPI_first_tool_ids[i] = j;
+            }
+        }
+
+        if (MPIR_QMPI_first_fn_ptrs[i] == NULL) {
+            MPIR_QMPI_first_fn_ptrs[i] = MPIR_QMPI_pointers[i];
+            MPIR_QMPI_first_tool_ids[i] = 0;
+        }
+    }
+    return MPI_SUCCESS;
 }
 
 int MPII_qmpi_setup(void)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t len = 0;
+
+    MPIR_QMPI_is_initialized = 1;
 
     mpi_errno = MPIR_T_env_init();
     MPIR_ERR_CHECK(mpi_errno);
@@ -500,6 +527,23 @@ int MPII_qmpi_setup(void)
         goto fn_exit;
     }
 
+    /* Allocate space to stash the first callback function in the chain */
+    MPIR_QMPI_first_fn_ptrs = MPL_calloc(1, sizeof(generic_mpi_func *) * MPI_LAST_FUNC_T,
+                                         MPL_MEM_OTHER);
+    if (!MPIR_QMPI_first_fn_ptrs) {
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_QMPI_pointers");
+        goto fn_exit;
+    }
+
+    /* Allocate space to stash the first tool ID in the chain */
+    MPIR_QMPI_first_tool_ids = MPL_calloc(1, sizeof(int) * MPI_LAST_FUNC_T, MPL_MEM_OTHER);
+    if (!MPIR_QMPI_first_tool_ids) {
+        MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_QMPI_pointers");
+        goto fn_exit;
+    }
+
     MPIR_QMPI_storage = MPL_calloc(1, sizeof(void *) * (MPIR_QMPI_num_tools + 1), MPL_MEM_OTHER);
     if (!MPIR_QMPI_storage) {
         MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
@@ -519,8 +563,6 @@ int MPII_qmpi_setup(void)
     MPII_qmpi_register_internal_functions();
 
     MPIR_QMPI_storage[0] = NULL;
-
-    MPIR_QMPI_is_initialized = 1;
 
   fn_exit:
     return mpi_errno;
@@ -549,8 +591,6 @@ int QMPI_Register_tool_name(const char *tool_name, void (*init_function_ptr) (in
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_QMPIX_REGISTER);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_QMPIX_REGISTER);
 
-    /* ... body of routine ...  */
-
     /* If the QMPI globals have not yet been set up, do so now. This does not need to be protected
      * by a mutex because it will be called before the application has even reached its main
      * function. */
@@ -573,8 +613,6 @@ int QMPI_Register_tool_name(const char *tool_name, void (*init_function_ptr) (in
             goto fn_exit;
         }
     }
-
-    /* ... end of body of routine ... */
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_QMPIX_REGISTER);
 
@@ -612,18 +650,20 @@ int QMPI_Register_function(int tool_id, enum QMPI_Functions_enum function_enum,
 }
 
 int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
-                      void (**function_ptr) (void), QMPI_Context * next_tool_context,
-                      int *next_tool_id)
+                      void (**function_ptr) (void), int *next_tool_id)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    for (int i = calling_tool_id - 1; i >= 0; i--) {
+    for (int i = calling_tool_id + 1; i < MPIR_QMPI_num_tools; i++) {
         if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum] != NULL) {
             *function_ptr = MPIR_QMPI_pointers[i * MPI_LAST_FUNC_T + function_enum];
             *next_tool_id = i;
             return mpi_errno;
         }
     }
+
+    *function_ptr = MPIR_QMPI_pointers[function_enum];
+    *next_tool_id = 0;
 
     return mpi_errno;
 }

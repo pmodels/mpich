@@ -111,6 +111,8 @@ static void qmpi_teardown()
             }
         }
     }
+    MPL_free(MPIR_QMPI_first_fn_ptrs);
+    MPL_free(MPIR_QMPI_first_tool_ids);
     MPL_free(MPIR_QMPI_tool_names);
     MPL_free(MPIR_QMPI_tool_init_callbacks);
 }

@@ -57,6 +57,8 @@ for filename in result.split():
         continue;
     elif "src/mpi_t/mpit.c" in filename:
         continue;
+    elif "src/mpi/init/init.c" in filename:
+        continue;
 
     #print("Trying file: " + filename);
 
@@ -82,20 +84,21 @@ for filename in result.split():
             newlines.append("\n");
             newlines.append("}\n");
             if (function_name == "MPI_Pcontrol"):
-                newlines.append(f"    return (*fn_ptr)(next_context, next_tool_id, level, args);" "\n");
+                newlines.append(f"    return (*fn_ptr)(context, MPIR_QMPI_first_tool_ids[MPI_PCONTROL_T], level, args);" "\n");
             else:
-                newlines.append(f"    return (*fn_ptr)(next_context, next_tool_id{short_params});" "\n");
-            newlines.append(f"    QMPI_Get_function(MPIR_QMPI_num_tools + 1, {function_name.upper()}_T, ((void (**)(void)) &fn_ptr), &next_context, &next_tool_id);" "\n");
+                newlines.append(f"    return (*fn_ptr)(context, MPIR_QMPI_first_tool_ids[{function_name.upper()}_T]{short_params});" "\n");
+            newlines.append(f"\n");
+            newlines.append(f"\n    fn_ptr = (Q{function_name}_t *) MPIR_QMPI_first_fn_ptrs[{function_name.upper()}_T];\n");
             if (function_name == "MPI_Pcontrol"):
-                newlines.append(f"        return Q{function_name}(next_context, next_tool_id, level, args);" "\n");
+                newlines.append(f"        return QMPI_Pcontrol(context, 0, level, args);" "\n");
                 newlines.append("    if (MPIR_QMPI_num_tools == 0)" "\n");
                 newlines.append("    va_list args;\n    va_start(args, level);\n");
             else:
-                newlines.append(f"        return Q{function_name}(next_context, next_tool_id{short_params});" "\n");
+                newlines.append(f"        return Q{function_name}(context, 0{short_params});" "\n");
                 newlines.append("    if (MPIR_QMPI_num_tools == 0)" "\n");
-            newlines.append("    int next_tool_id = 0;\n");
-            newlines.append("    QMPI_Context next_context;\n");
-            newlines.append(f"    Q{function_name}_t *fn_ptr;" "\n");
+            newlines.append("    context.storage_stack = NULL;\n\n");
+            newlines.append(f"    Q{function_name}_t *fn_ptr;" "\n\n");
+            newlines.append("    QMPI_Context context;\n");
             newlines.append("{\n");
             newlines.append(signature);
             continue;
