@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 
     MPI_Info hints;
     MPI_Info_create(&hints);
+    MPI_Info_set(hints, "mpi_minimum_memory_alignment", "4096");
 
     const char *hintstrs[] = { "ddr", "hbm", "network", "shmem", NULL };
 
