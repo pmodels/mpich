@@ -14,43 +14,39 @@
 
           errs = 0
           call mpi_init(ierr)
-          call mpi_sizeof( errs, size1, ierr )
+          size1 = storage_size(errs) / 8
           call mpi_type_size( MPI_INTEGER, size2, ierr )
           if (size1 .ne. size2) then
              errs = errs + 1
-             print *, "integer size is ", size2, " sizeof claims ", size1
+             print *, "integer size is ", size2, " storage_size claims ", size1
           endif
 
-          call mpi_sizeof( a, size1, ierr )
+          size1 = storage_size(a) / 8
           call mpi_type_size( MPI_REAL, size2, ierr )
           if (size1 .ne. size2) then
              errs = errs + 1
-             print *, "real size is ", size2, " sizeof claims ", size1
+             print *, "real size is ", size2, " storage_size claims ", size1
           endif
 
-          call mpi_sizeof( b, size1, ierr )
+          size1 = storage_size(b) / 8
           call mpi_type_size( MPI_DOUBLE_PRECISION, size2, ierr )
           if (size1 .ne. size2) then
              errs = errs + 1
-             print *, "double precision size is ", size2, " sizeof claims ", size1
+             print *, "double precision size is ", size2, " storage_size claims ", size1
           endif
 
-          call mpi_sizeof( c, size1, ierr )
+          size1 = storage_size(c) / 8
           call mpi_type_size( MPI_COMPLEX, size2, ierr )
           if (size1 .ne. size2) then
              errs = errs + 1
-             print *, "complex size is ", size2, " sizeof claims ", size1
+             print *, "complex size is ", size2, " storage_size claims ", size1
           endif
-!
-! A previous version of this test called mpi_sizeof with a character variable.
-! However, the MPI 2.2 standard, p 494, line 41, defines MPI_SIZEOF only
-! for "numeric intrinsic type", so that test was removed.
-!
-          call mpi_sizeof( d, size1, ierr )
+
+          size1 = storage_size(d) / 8
           call mpi_type_size( MPI_REAL, size2, ierr )
           if (size1 .ne. size2) then
              errs = errs + 1
-             print *, "real array size is ", size2, " sizeof claims ", size1
+             print *, "real array size is ", size2, " storage_size claims ", size1
           endif
 
           if (errs .gt. 0) then
