@@ -57,21 +57,6 @@ process.
 @*/
 int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
-    /* Call the first layer in the QMPI stack that contains the correct function. */
-    for (int i = MPIR_QMPI_num_tools; i >= 0; i--) {
-        if (MPIR_QMPI_pointers[i * MPI_LAST_FUNC + MPI_SEND_T] != NULL) {
-            QMPI_Send_t *send_fn =
-                (QMPI_Send_t *) MPIR_QMPI_pointers[i * MPI_LAST_FUNC + MPI_SEND_T];
-            return send_fn(buf, count, datatype, dest, tag, comm, MPIR_QMPI_contexts[i]);
-        }
-    }
-
-    return MPI_SUCCESS;
-}
-
-int QMPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm,
-              void *context)
-{
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
