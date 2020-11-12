@@ -20,7 +20,7 @@ static void am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t *
 
     /* note: setting is_local, is_async to 0, 0 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                       p_data, data_sz, 0, 0, NULL);
+                                                       p_data, data_sz, 0, 0, NULL, NULL);
 
 }
 

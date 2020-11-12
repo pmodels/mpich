@@ -297,7 +297,7 @@ int MPIDIG_send_data_origin_cb(MPIR_Request * sreq)
 }
 
 int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                              int is_local, int is_async, MPIR_Request ** req)
+                              int is_local, int is_async, bool * recv_ready, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -415,6 +415,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
             MPIDIG_recv_type_init(hdr->data_sz, rreq);
             MPIDIG_do_cts(rreq);
+            if (recv_ready) {
+                *recv_ready = true;
+            }
         }
     }
 
@@ -438,8 +441,12 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 
     if (is_async) {
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {
-            *req = NULL;
+            if (recv_ready)
+                *recv_ready = false;
+            *req = rreq;
         } else {
+            if (recv_ready)
+                *recv_ready = true;
             *req = rreq;
         }
     } else {
@@ -457,7 +464,8 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
 }
 
 int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req)
+                                   int is_local, int is_async, bool * recv_ready,
+                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -476,6 +484,8 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
                      MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
 
     if (is_async) {
+        if (recv_ready)
+            *recv_ready = true;
         *req = rreq;
     } else {
         MPIDIG_recv_copy(data, rreq);
@@ -487,7 +497,8 @@ int MPIDIG_send_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
 }
 
 int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req)
+                                   int is_local, int is_async, bool * recv_ready,
+                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -506,7 +517,8 @@ int MPIDIG_ssend_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI
 }
 
 int MPIDIG_send_cts_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req)
+                                  int is_local, int is_async, bool * recv_ready,
+                                  MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

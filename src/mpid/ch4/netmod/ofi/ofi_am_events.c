@@ -8,7 +8,7 @@
 
 int MPIDI_OFI_am_rdma_read_ack_handler(int handler_id, void *am_hdr, void *data,
                                        MPI_Aint in_data_sz, int is_local, int is_async,
-                                       MPIR_Request ** req)
+                                       bool * recv_ready, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

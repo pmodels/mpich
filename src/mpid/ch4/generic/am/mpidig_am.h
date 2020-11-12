@@ -71,9 +71,9 @@ typedef int (*MPIDIG_am_origin_cb) (MPIR_Request * req);
  *
  * If is_async is false/0, a request object will never be returned.
  */
-typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr,
-                                        void *data, MPI_Aint data_sz,
-                                        int is_local, int is_async, MPIR_Request ** req);
+typedef int (*MPIDIG_am_target_msg_cb) (int handler_id, void *am_hdr, void *data, MPI_Aint data_sz,
+                                        int is_local, int is_async, bool * recv_ready,
+                                        MPIR_Request ** req);
 
 typedef struct MPIDIG_global_t {
     MPIDIG_am_target_msg_cb target_msg_cbs[MPIDI_AM_HANDLERS_MAX];

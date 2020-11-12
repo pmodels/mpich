@@ -35,46 +35,58 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unuse
 
 int MPIDIG_RMA_Init_targetcb_pvars(void);
 int MPIDIG_put_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
-                                 MPI_Aint in_data_sz, int is_local, int is_async,
+                                 int is_local, int is_async, bool * recv_ready,
+                                 MPIR_Request ** req);
+int MPIDIG_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
+                                 int is_local, int is_async, bool * recv_ready,
                                  MPIR_Request ** req);
 int MPIDIG_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                     int is_local, int is_async, MPIR_Request ** req);
+                                     int is_local, int is_async, bool * recv_ready,
+                                     MPIR_Request ** req);
 int MPIDIG_cswap_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                   int is_local, int is_async, MPIR_Request ** req);
+                                   int is_local, int is_async, bool * recv_ready,
+                                   MPIR_Request ** req);
 int MPIDIG_win_ctrl_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
+                                  int is_local, int is_async, bool * recv_ready,
+                                  MPIR_Request ** req);
 int MPIDIG_put_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
+                             int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_put_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                int is_local, int is_async, MPIR_Request ** req);
+                                int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
+                                    int is_local, int is_async, bool * recv_ready,
+                                    MPIR_Request ** req);
 int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
+                                    int is_local, int is_async, bool * recv_ready,
+                                    MPIR_Request ** req);
 int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data,
                                         MPI_Aint in_data_sz, int is_local, int is_async,
-                                        MPIR_Request ** req);
+                                        bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_put_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
+                                  int is_local, int is_async, bool * recv_ready,
+                                  MPIR_Request ** req);
 int MPIDIG_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                  int is_local, int is_async, MPIR_Request ** req);
-int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                      int is_local, int is_async, MPIR_Request ** req);
+                                  int is_local, int is_async, bool * recv_ready,
+                                  MPIR_Request ** req);
+int MPIDIG_get_acc_data_target_msg_cb(int handler_id, void *am_hdr, void *data,
+                                      MPI_Aint in_data_sz, int is_local, int is_async,
+                                      bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_cswap_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                               int is_local, int is_async, MPIR_Request ** req);
+                               int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
+                             int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_get_acc_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
+                                 int is_local, int is_async, bool * recv_ready,
+                                 MPIR_Request ** req);
 int MPIDIG_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                int is_local, int is_async, MPIR_Request ** req);
+                                int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_get_acc_dt_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                    int is_local, int is_async, MPIR_Request ** req);
+                                    int is_local, int is_async, bool * recv_ready,
+                                    MPIR_Request ** req);
 int MPIDIG_get_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                             int is_local, int is_async, MPIR_Request ** req);
+                             int is_local, int is_async, bool * recv_ready, MPIR_Request ** req);
 int MPIDIG_get_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint in_data_sz,
-                                 int is_local, int is_async, MPIR_Request ** req);
+                                 int is_local, int is_async, bool * recv_ready,
+                                 MPIR_Request ** req);
 
 #endif /* CH4R_RMA_TARGET_CALLBACKS_H_INCLUDED */
