@@ -203,6 +203,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
 
 
     /**********************************************************************/

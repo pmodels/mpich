@@ -5,7 +5,10 @@
 
 #include <mpiimpl.h>
 
+/* *INDENT-OFF* */
 MPL_atomic_int_t MPIR_init_lock = MPL_ATOMIC_INT_T_INITIALIZER(0);
+MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(MPICH_WORLD_MODEL_UNINITIALIZED);
+/* *INDENT-ON* */
 
 MPIR_Process_t MPIR_Process = { MPL_ATOMIC_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
 

@@ -66,4 +66,9 @@
 /* Internal init states. */
 #define MPICH_MPI_STATE__IN_INIT 3      /* can call MPIR_Err_return_comm(...) on error */
 
+/* Possible values for process world_model_state */
+#define MPICH_WORLD_MODEL_UNINITIALIZED 0
+#define MPICH_WORLD_MODEL_INITIALIZED   1
+#define MPICH_WORLD_MODEL_FINALIZED     2
+
 #endif /* MPICHCONFCONST_H_INCLUDED */
