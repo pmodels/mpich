@@ -215,7 +215,10 @@ typedef struct {
 /* Protects dynamic process tag, connection_id, avtable etc. */
 #define MPIDIU_THREAD_DYNPROC_MUTEX       MPIDI_global.m[6]
 
-#define MAX_CH4_MUTEXES 7
+/* Protects alloc_mem hash */
+#define MPIDIU_THREAD_ALLOC_MEM_MUTEX     MPIDI_global.m[7]
+
+#define MAX_CH4_MUTEXES 8
 
 /* per-VCI structure -- using union to force minimum size */
 typedef union MPIDI_vci {

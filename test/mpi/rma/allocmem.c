@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     MPI_Info hints;
     MPI_Info_create(&hints);
 
-    const char *hintstrs[] = { "ddr", "hbm", NULL };
+    const char *hintstrs[] = { "ddr", "hbm", "network", "shmem", NULL };
 
     for (int i = 0; hintstrs[i]; i++) {
         MPI_Info_set(hints, "mpich_buf_type", hintstrs[i]);
