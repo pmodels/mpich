@@ -85,6 +85,12 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     int required = user_required;
     int err;
 
+    MPIR_INIT_LOCK;
+    MPIR_Process.init_counter++;
+    if (MPIR_Process.init_counter > 1) {
+        *provided = MPIR_ThreadInfo.thread_provided;
+        goto fn_exit;
+    }
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
      * These need to be intialized first.  They have strong
@@ -215,10 +221,10 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
 
+  fn_exit:
+    MPIR_INIT_UNLOCK;
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    return mpi_errno;
-    /* --END ERROR HANDLING-- */
+    goto fn_exit;
 }

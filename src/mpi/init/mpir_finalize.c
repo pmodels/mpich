@@ -71,6 +71,12 @@ int MPIR_Finalize_impl(void)
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
 
+    MPIR_INIT_LOCK;
+    MPIR_Process.init_counter--;
+    if (MPIR_Process.init_counter > 0) {
+        goto fn_exit;
+    }
+
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -124,6 +130,7 @@ int MPIR_Finalize_impl(void)
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
   fn_exit:
+    MPIR_INIT_UNLOCK;
     return mpi_errno;
   fn_fail:
     goto fn_exit;

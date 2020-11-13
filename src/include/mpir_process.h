@@ -29,7 +29,7 @@ extern MPIR_Object_alloc_t MPIR_Session_mem;
 typedef struct MPIR_Process_t {
     MPL_atomic_int_t mpich_state;       /* Need use atomics due to MPI_Initialized() etc.
                                          * thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
-
+    int init_counter;
     /* Fields to be initialized by MPIR_pmi_init() */
     int has_parent;
     int appnum;
@@ -79,5 +79,10 @@ typedef struct MPIR_Process_t {
 #endif                          /* HAVE_CXX_BINDING */
 } MPIR_Process_t;
 extern MPIR_Process_t MPIR_Process;
+
+/* use spin lock to control access to init/finalize */
+extern MPL_atomic_int_t MPIR_init_lock;
+#define MPIR_INIT_LOCK   while (MPL_atomic_cas_int(&MPIR_init_lock, 0, 1) != 0) {}
+#define MPIR_INIT_UNLOCK MPL_atomic_store_int(&MPIR_init_lock, 0)
 
 #endif /* MPIR_PROCESS_H_INCLUDED */

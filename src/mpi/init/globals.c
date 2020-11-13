@@ -5,6 +5,8 @@
 
 #include <mpiimpl.h>
 
+MPL_atomic_int_t MPIR_init_lock = MPL_ATOMIC_INT_T_INITIALIZER(0);
+
 MPIR_Process_t MPIR_Process = { MPL_ATOMIC_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
 
 MPIR_Thread_info_t MPIR_ThreadInfo;
