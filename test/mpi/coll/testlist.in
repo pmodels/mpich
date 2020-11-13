@@ -168,3 +168,5 @@ neighb_allgatherv 4
 neighb_alltoall 4
 neighb_alltoallv 4
 neighb_alltoallw 4
+ring_neighbor_alltoall 2
+ring_neighbor_alltoall 1

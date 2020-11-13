@@ -157,6 +157,7 @@
 /coll/summary.xml
 /coll/testlist
 /coll/uoplong
+/coll/ring_neighbor_alltoall
 /comm/cfree
 /comm/cmfree
 /comm/cmsplit
