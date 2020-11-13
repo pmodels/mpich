@@ -898,7 +898,7 @@ def dump_mpi_fn_fail(func, mapping):
 
     if RE.match(r'mpi_(finalized|initialized)', func['name'], re.IGNORECASE):
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
-        cond = "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT" + " && " + "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__POST_FINALIZED"
+        cond = "MPIR_Errutil_is_initialized()"
         dump_if_open(cond)
         s = get_fn_fail_create_code(func, mapping)
         G.out.append(s)
