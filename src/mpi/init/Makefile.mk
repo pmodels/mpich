@@ -3,6 +3,9 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
+# for mpi_init.h, which is included generated binding functions
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/init
+
 mpi_core_sources += \
     src/mpi/init/init_impl.c      \
     src/mpi/init/init_util.c      \
