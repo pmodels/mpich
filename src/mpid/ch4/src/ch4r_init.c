@@ -112,7 +112,7 @@ void *MPIDIG_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 
     /* retrieve requested memory type for allocation */
     if (info_ptr) {
-        MPIR_Info_get_impl(info_ptr, "bind_memory", MPI_MAX_INFO_VAL, hint_str, &flag);
+        MPIR_Info_get_impl(info_ptr, "mpich_buf_type", MPI_MAX_INFO_VAL, hint_str, &flag);
     }
 
     if (flag) {

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     hints = mem_hints;
 
     /* try allocating ddr memory first (default) */
-    MPI_Info_set(mem_hints, "bind_memory", "ddr");
+    MPI_Info_set(mem_hints, "mpich_buf_type", "ddr");
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     for (count = 1; count < 128000; count *= 2) {
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     hints = mem_hints;
 
     /* try allocating hbm memory second (non-default) */
-    MPI_Info_set(mem_hints, "bind_memory", "hbm");
+    MPI_Info_set(mem_hints, "mpich_buf_type", "hbm");
 
     for (count = 1; count < 128000; count *= 2) {
 
