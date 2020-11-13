@@ -54,7 +54,7 @@ int MPI_Error_string(int errorcode, char *string, int *resultlen)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_STRING);
 
-    MPIR_ERRTEST_INITIALIZED_ORDIE();
+    /* Note that this routine may be called before MPI_Init */
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ERROR_STRING);
 
