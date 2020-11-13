@@ -212,6 +212,13 @@ void MPIR_Err_preOrPostInit(void)
 
 /* --END ERROR HANDLING-- */
 
+/* Return true if the error util is initialized */
+int MPIR_Errutil_is_initialized(void)
+{
+    int state = MPL_atomic_load_int(&MPIR_process.mpich_state);
+    return (state != MPICH_MPI_STATE__PRE_INIT && state != MPICH_MPI_STATE__POST_FINALIZED);
+}
+
 /* Return true if the error code indicates a fatal error */
 int MPIR_Err_is_fatal(int errcode)
 {
@@ -231,8 +238,7 @@ int MPIR_Err_return_comm(MPIR_Comm * comm_ptr, const char fcname[], int errcode)
     checkValidErrcode(error_class, fcname, &errcode);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT ||
-        MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) {
+    if (!MPIR_Errutil_is_initialized()) {
         /* for whatever reason, we aren't initialized (perhaps error
          * during MPI_Init) */
         MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);
