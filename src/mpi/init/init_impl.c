@@ -4,6 +4,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpi_init.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

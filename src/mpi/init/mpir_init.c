@@ -74,23 +74,36 @@ int MPIR_Init_impl(int *argc, char ***argv)
     }
 
     int provided;
-    mpi_errno = MPIR_Init_thread_impl(argc, argv, threadLevel, &provided);
+    mpi_errno = MPII_Init_thread(argc, argv, threadLevel, &provided, NULL);
 
     return mpi_errno;
 }
 
 int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
 {
+    return MPII_Init_thread(argc, argv, user_required, provided, NULL);
+}
+
+int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
+                     MPIR_Session ** p_session_ptr)
+{
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
     int err;
 
     MPIR_INIT_LOCK;
+
+    if (p_session_ptr) {
+        *p_session_ptr = (MPIR_Session *) MPIR_Handle_obj_alloc(&MPIR_Session_mem);
+        MPIR_ERR_CHKHANDLEMEM(*p_session_ptr);
+    }
+
     MPIR_Process.init_counter++;
     if (MPIR_Process.init_counter > 1) {
         *provided = MPIR_ThreadInfo.thread_provided;
         goto fn_exit;
     }
+
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
      * These need to be intialized first.  They have strong
@@ -201,7 +214,6 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     MPIR_ERR_CHECK(mpi_errno);
 
     MPL_atomic_store_int(&MPIR_mpich_state, MPICH_MPI_STATE__INITIALIZED);
-    MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
 
 
     /**********************************************************************/
@@ -221,6 +233,9 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
         *provided = MPIR_ThreadInfo.thread_provided;
 
   fn_exit:
+    if (!p_session_ptr) {
+        MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_INITIALIZED);
+    }
     MPIR_INIT_UNLOCK;
     return mpi_errno;
 
