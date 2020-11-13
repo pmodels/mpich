@@ -52,6 +52,9 @@ cvars:
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
+/* MPIR_world_model_state tracks so we only init and finalize once in world model */
+MPL_atomic_int_t MPIR_world_model_state = MPL_ATOMIC_INT_T_INITIALIZER(0);
+
 /* Use init_lock to protect concurrent init/finalize (include session init/finalize) */
 static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
 
@@ -238,6 +241,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
         *provided = MPIR_ThreadInfo.thread_provided;
 
   fn_exit:
+    MPII_world_set_initilized();
     MPL_initlock_unlock(&init_lock);
     return mpi_errno;
 
@@ -316,6 +320,7 @@ int MPIR_Finalize_impl(void)
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
   fn_exit:
+    MPII_world_set_finalized();
     MPL_initlock_unlock(&init_lock);
     return mpi_errno;
   fn_fail:
