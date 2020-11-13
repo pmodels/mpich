@@ -52,6 +52,14 @@ cvars:
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
+/* Use init_lock to protect concurrent init/finalize (include session init/finalize) */
+static MPL_initlock_t init_lock = MPL_INITLOCK_INITIALIZER;
+
+/* Use init_counter to track when we are initilizing for the first time or
+ * when we are finalize for the last time and need cleanup states */
+/* Note: we are not using atomic variable since it is always accessed under init_lock */
+static int init_counter;
+
 /* ------------ Init ------------------- */
 
 int MPIR_Init_impl(int *argc, char ***argv)
@@ -93,6 +101,12 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     int required = user_required;
     int err;
 
+    MPL_initlock_lock(&init_lock);
+    init_counter++;
+    if (init_counter > 1) {
+        *provided = MPIR_ThreadInfo.thread_provided;
+        goto fn_exit;
+    }
     /**********************************************************************/
     /* Section 1: base components that other components rely on.
      * These need to be intialized first.  They have strong
@@ -223,12 +237,12 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     if (provided)
         *provided = MPIR_ThreadInfo.thread_provided;
 
+  fn_exit:
+    MPL_initlock_unlock(&init_lock);
     return mpi_errno;
 
   fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    return mpi_errno;
-    /* --END ERROR HANDLING-- */
+    goto fn_exit;
 }
 
 /* ------------ Finalize ------------------- */
@@ -242,6 +256,12 @@ int MPIR_Finalize_impl(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = MPIR_Process.comm_world->rank;
+
+    MPL_initlock_lock(&init_lock);
+    init_counter--;
+    if (init_counter > 0) {
+        goto fn_exit;
+    }
 
     mpi_errno = MPII_finalize_async();
     MPIR_ERR_CHECK(mpi_errno);
@@ -296,6 +316,7 @@ int MPIR_Finalize_impl(void)
     MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
 
   fn_exit:
+    MPL_initlock_unlock(&init_lock);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
