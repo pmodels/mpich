@@ -219,8 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_rdma_read(void *dst,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg);
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPIR_Request * rreq);
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * msg_hdr,
                                                         void *am_hdr,
                                                         MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
@@ -245,19 +244,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
 
     MPIR_cc_incr(rreq->cc_ptr, &c);
 
-    /* FIXME: explicit check of data_sz in CH4 region of the request, will fix when adding
-     * MPIDIG_am_recv */
-    if (!lmt_msg->reg_sz) {
-        MPIDIG_REQUEST(rreq, req->target_cmpl_cb) (rreq);
-        MPID_Request_complete(rreq);
-        goto fn_exit;
-    }
+    MPIR_Assert(lmt_msg->reg_sz);
 
     MPIDI_OFI_AMREQUEST_HDR(rreq, msg_hdr) = *msg_hdr;
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
-    do_long_am_recv(lmt_msg->reg_sz, rreq, lmt_msg);
+    do_long_am_recv(rreq);
     /* completion in lmt event functions */
 
   fn_exit:
@@ -390,9 +383,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_lmt_unpack_event(MPIR_Request * rreq)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPI_Aint in_data_sz, MPIR_Request * rreq,
-                                              MPIDI_OFI_lmt_msg_payload_t * lmt_msg)
+MPL_STATIC_INLINE_PREFIX void do_long_am_recv(MPIR_Request * rreq)
 {
+    MPI_Aint in_data_sz = MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).reg_sz;
+    MPIDI_OFI_lmt_msg_payload_t *lmt_msg = &MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info);
     int num_iov = MPIDIG_get_recv_iov_count(rreq);
     if (num_iov > 1 && in_data_sz / num_iov < MPIR_CVAR_CH4_IOV_DENSITY_MIN) {
         /* noncontig data with mostly tiny segments */
