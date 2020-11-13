@@ -126,7 +126,7 @@ int MPIR_Finalize_impl(void)
 
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
-    MPL_atomic_store_int(&MPIR_mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
+    MPL_atomic_store_int(&MPIR_mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
     MPL_atomic_store_int(&MPIR_world_model_state, MPICH_WORLD_MODEL_FINALIZED);
 
   fn_exit:
