@@ -135,7 +135,7 @@ int MPIR_Err_combine_codes(int, int);
 
 int MPIR_Err_is_fatal(int);
 void MPIR_Err_init(void);
-void MPIR_Err_preOrPostInit(void);
+void MPIR_Err_Uninitialized(void);
 int MPIR_Errutil_is_initialized(void);
 
 /* This routine is called when there is a fatal error. Now public because file
@@ -1028,11 +1028,9 @@ cvars:
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_ERRTEST_INITIALIZED_ORDIE()                                \
     do {                                                                \
-        if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__PRE_INIT || \
-            MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED) \
-            {                                                           \
-                MPIR_Err_preOrPostInit();                               \
-            }                                                           \
+        if (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__UNINITIALIZED) { \
+            MPIR_Err_Uninitialized();                                   \
+        }                                                               \
     } while (0)
 #else
 #define MPIR_ERRTEST_INITIALIZED_ORDIE() do {} while (0)

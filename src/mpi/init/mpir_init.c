@@ -169,7 +169,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
      * handling routines that core services are available. */
     /**********************************************************************/
 
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__PRE_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__MPIR_INITIALIZED);
 
 
     /**********************************************************************/
@@ -183,8 +183,6 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
 #ifdef MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
 #endif
-
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__IN_INIT);
 
     mpi_errno = MPID_Init(required, &MPIR_ThreadInfo.thread_provided);
     MPIR_ERR_CHECK(mpi_errno);
@@ -221,7 +219,7 @@ int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provi
     mpi_errno = MPID_InitCompleted();
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_INIT);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__INITIALIZED);
 
 
     /**********************************************************************/
@@ -317,7 +315,7 @@ int MPIR_Finalize_impl(void)
 
     MPII_thread_mutex_destroy();
     MPIR_Typerep_finalize();
-    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__POST_FINALIZED);
+    MPL_atomic_store_int(&MPIR_Process.mpich_state, MPICH_MPI_STATE__UNINITIALIZED);
 
   fn_exit:
     MPII_world_set_finalized();
