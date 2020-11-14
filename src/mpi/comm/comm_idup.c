@@ -26,7 +26,8 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcommp, MPIR_Request ** reqp)
+int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcommp,
+                        MPIR_Request ** reqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *new_attributes = 0;
@@ -42,7 +43,7 @@ int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcommp, MPIR_Reques
         MPIR_ERR_CHECK(mpi_errno);
     }
 
-    mpi_errno = MPII_Comm_copy_data(comm_ptr, newcommp);
+    mpi_errno = MPII_Comm_copy_data(comm_ptr, info, newcommp);
     MPIR_ERR_CHECK(mpi_errno);
 
     (*newcommp)->attributes = new_attributes;
@@ -127,7 +128,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
     *request = MPI_REQUEST_NULL;
     *newcomm = MPI_COMM_NULL;
 
-    mpi_errno = MPIR_Comm_idup_impl(comm_ptr, &newcomm_ptr, &dreq);
+    mpi_errno = MPIR_Comm_idup_impl(comm_ptr, NULL, &newcomm_ptr, &dreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: this is a publication for most of the comm, but the context ID
