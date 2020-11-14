@@ -25,22 +25,6 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #undef MPI_Comm_dup_with_info
 #define MPI_Comm_dup_with_info PMPI_Comm_dup_with_info
 
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
-                                 MPIR_Comm ** newcomm_p_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* FIXME: We just ignore the info argument for now and just call
-     * Comm_dup */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, info_ptr, newcomm_p_p);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
@@ -119,7 +103,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Comm_dup_with_info_impl(comm_ptr, info_ptr, &newcomm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, info_ptr, &newcomm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
