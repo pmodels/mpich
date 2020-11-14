@@ -15,6 +15,7 @@ noinst_PROGRAMS =     \
     dup               \
     dupic             \
     dup_with_info     \
+    idup_with_info    \
     ic1               \
     ic2               \
     commname          \
