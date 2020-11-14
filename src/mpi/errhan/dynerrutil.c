@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 #include "errcodes.h"
-
+#include "uthash.h"
 #include <string.h>
 
 /*
@@ -48,8 +48,23 @@ static const char *(user_class_msgs[ERROR_MAX_NCLASS]) = {
 static const char *(user_code_msgs[ERROR_MAX_NCODE]) = {
 0};
 
-static int first_free_class = 1;        /* class 0 is reserved */
-static int first_free_code = 1; /* code 0 is reserved */
+/* a container for integer objects that can be used as a linked list
+ * or as a hashmap */
+struct intcnt {
+    int val;
+
+    struct intcnt *next;
+    struct intcnt *prev;
+
+    UT_hash_handle hh;
+};
+
+static struct {
+    int next;
+    struct intcnt *free;
+    struct intcnt *used;
+} err_class, err_code;
+
 static const char empty_error_string[1] = { 0 };
 
 /* Forward reference */
@@ -79,6 +94,13 @@ static void MPIR_Init_err_dyncodes(void)
 
     /* FIXME: Does this need a thread-safe init? */
     not_initialized = 0;
+
+    err_class.next = 1; /* class 0 is reserved */
+    err_class.free = NULL;
+    err_class.used = NULL;
+    err_code.next = 1;  /* code 0 is reserved */
+    err_code.free = NULL;
+    err_code.used = NULL;
 
     for (i = 0; i < ERROR_MAX_NCLASS; i++) {
         user_class_msgs[i] = 0;
@@ -149,8 +171,11 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
 
     /* --------------------------------------------------------------------- */
     MPL_strncpy(str, msg_string, msg_len + 1);
+
     if (errcode) {
-        if (errcode < first_free_code) {
+        struct intcnt *s;
+        HASH_FIND_INT(err_code.used, &errcode, s);
+        if (s) {
             MPL_free((void *) (user_code_msgs[errcode]));
             user_code_msgs[errcode] = (const char *) str;
         } else {
@@ -158,7 +183,9 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
             MPL_free(str);
         }
     } else {
-        if (errclass < first_free_class) {
+        struct intcnt *s;
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        if (s) {
             MPL_free((void *) (user_class_msgs[errclass]));
             user_class_msgs[errclass] = (const char *) str;
         } else {
@@ -194,8 +221,17 @@ int MPIR_Err_add_class(void)
         MPIR_Init_err_dyncodes();
 
     /* Get new class */
-    new_class = first_free_class;
-    ++first_free_class;
+    struct intcnt *s;
+    if (err_class.free) {
+        s = err_class.free;
+        DL_DELETE(err_class.free, s);
+        HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
+    } else {
+        s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
+        s->val = err_class.next++;
+        HASH_ADD_INT(err_class.used, val, s, MPL_MEM_BUFFER);
+    }
+    new_class = s->val;
 
     /* --BEGIN ERROR HANDLING-- */
     if (new_class >= ERROR_MAX_NCLASS) {
@@ -236,8 +272,17 @@ int MPIR_Err_add_code(int class)
         MPIR_Init_err_dyncodes();
 
     /* Get the new code */
-    new_code = first_free_code;
-    ++first_free_code;
+    struct intcnt *s;
+    if (err_code.free) {
+        s = err_code.free;
+        DL_DELETE(err_code.free, s);
+        HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
+    } else {
+        s = (struct intcnt *) MPL_malloc(sizeof(struct intcnt), MPL_MEM_BUFFER);
+        s->val = err_code.next++;
+        HASH_ADD_INT(err_code.used, val, s, MPL_MEM_BUFFER);
+    }
+    new_code = s->val;
 
     /* --BEGIN ERROR HANDLING-- */
     if (new_code >= ERROR_MAX_NCODE) {
@@ -287,13 +332,17 @@ static const char *get_dynerr_string(int code)
     }
 
     if (errcode) {
-        if (errcode < first_free_code) {
+        struct intcnt *s;
+        HASH_FIND_INT(err_code.used, &errcode, s);
+        if (s) {
             errstr = user_code_msgs[errcode];
             if (!errstr)
                 errstr = empty_error_string;
         }
     } else {
-        if (errclass < first_free_class) {
+        struct intcnt *s;
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        if (s) {
             errstr = user_class_msgs[errclass];
             if (!errstr)
                 errstr = empty_error_string;
@@ -306,18 +355,33 @@ static const char *get_dynerr_string(int code)
 
 static int MPIR_Dynerrcodes_finalize(void *p ATTRIBUTE((unused)))
 {
-    int i;
-
     MPL_UNREFERENCED_ARG(p);
 
     if (not_initialized == 0) {
+        struct intcnt *s, *tmp;
 
-        for (i = 0; i < first_free_class; i++) {
-            MPL_free((char *) user_class_msgs[i]);
+        HASH_ITER(hh, err_class.used, s, tmp) {
+            MPL_free((char *) user_class_msgs[s->val]);
+            HASH_DEL(err_class.used, s);
+            MPL_free(s);
         }
 
-        for (i = 0; i < first_free_code; i++) {
-            MPL_free((char *) user_code_msgs[i]);
+        DL_FOREACH_SAFE(err_class.free, s, tmp) {
+            MPL_free((char *) user_class_msgs[s->val]);
+            DL_DELETE(err_class.free, s);
+            MPL_free(s);
+        }
+
+        HASH_ITER(hh, err_code.used, s, tmp) {
+            MPL_free((char *) user_code_msgs[s->val]);
+            HASH_DEL(err_code.used, s);
+            MPL_free(s);
+        }
+
+        DL_FOREACH_SAFE(err_code.free, s, tmp) {
+            MPL_free((char *) user_code_msgs[s->val]);
+            DL_DELETE(err_code.free, s);
+            MPL_free(s);
         }
     }
     return 0;
