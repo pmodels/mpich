@@ -182,6 +182,7 @@
 /comm/ctxsplit
 /comm/dup
 /comm/dup_with_info
+/comm/idup_with_info
 /comm/dupic
 /comm/ic1
 /comm/ic2
