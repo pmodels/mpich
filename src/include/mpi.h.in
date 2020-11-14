@@ -1228,8 +1228,11 @@ int MPI_Win_sync(MPI_Win win) MPICH_API_PUBLIC;
  
 /* External Interfaces */
 int MPI_Add_error_class(int *errorclass) MPICH_API_PUBLIC;
+int MPIX_Delete_error_class(int errorclass) MPICH_API_PUBLIC;
 int MPI_Add_error_code(int errorclass, int *errorcode) MPICH_API_PUBLIC;
+int MPIX_Delete_error_code(int errorcode) MPICH_API_PUBLIC;
 int MPI_Add_error_string(int errorcode, const char *string) MPICH_API_PUBLIC;
+int MPIX_Delete_error_string(int errorcode) MPICH_API_PUBLIC;
 int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
 int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                            MPI_Comm_delete_attr_function *comm_delete_attr_fn, int *comm_keyval,
@@ -1878,8 +1881,11 @@ int PMPI_Win_sync(MPI_Win win) MPICH_API_PUBLIC;
  
 /* External Interfaces */
 int PMPI_Add_error_class(int *errorclass) MPICH_API_PUBLIC;
+int PMPIX_Delete_error_class(int errorclass) MPICH_API_PUBLIC;
 int PMPI_Add_error_code(int errorclass, int *errorcode) MPICH_API_PUBLIC;
+int PMPIX_Delete_error_code(int errorcode) MPICH_API_PUBLIC;
 int PMPI_Add_error_string(int errorcode, const char *string) MPICH_API_PUBLIC;
+int PMPIX_Delete_error_string(int errorcode) MPICH_API_PUBLIC;
 int PMPI_Comm_call_errhandler(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
 int PMPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                             MPI_Comm_delete_attr_function *comm_delete_attr_fn, int *comm_keyval,

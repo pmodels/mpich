@@ -7,6 +7,9 @@ mpi_sources +=                                            \
     src/mpi/errhan/add_error_code.c         \
     src/mpi/errhan/add_error_class.c        \
     src/mpi/errhan/add_error_string.c       \
+    src/mpi/errhan/delete_error_code.c      \
+    src/mpi/errhan/delete_error_class.c     \
+    src/mpi/errhan/delete_error_string.c    \
     src/mpi/errhan/comm_call_errhandler.c   \
     src/mpi/errhan/comm_create_errhandler.c \
     src/mpi/errhan/comm_get_errhandler.c    \

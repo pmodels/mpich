@@ -198,6 +198,51 @@ int MPIR_Err_set_msg(int code, const char *msg_string)
 }
 
 /*
+  MPIR_Err_delete_msg - Delete the string associated with an error code or class
+
+  Return value:
+  Error code.
+
+  Notes:
+  This is used to implement 'MPI_Delete_error_string'; it may also be used by a
+  device to delete device-specific error strings.
+*/
+int MPIR_Err_delete_msg(int code)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);
+    int errclass = code & ERROR_CLASS_MASK;
+
+    if (not_initialized)
+        MPIR_Init_err_dyncodes();
+
+    if (errcode) {
+        struct intcnt *s;
+        HASH_FIND_INT(err_code.used, &errcode, s);
+        if (s) {
+            MPL_free((void *) (user_code_msgs[errcode]));
+            user_code_msgs[errcode] = NULL;
+        } else {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_exit;
+        }
+    } else {
+        struct intcnt *s;
+        HASH_FIND_INT(err_class.used, &errclass, s);
+        if (s) {
+            MPL_free((void *) (user_class_msgs[errclass]));
+            user_class_msgs[errclass] = NULL;
+        } else {
+            mpi_errno = MPI_ERR_OTHER;
+            goto fn_exit;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+}
+
+/*
   MPIR_Err_add_class - Creata a new error class
 
   Return value:
@@ -245,6 +290,45 @@ int MPIR_Err_add_class(void)
     user_class_msgs[new_class] = 0;
 
     return (new_class | ERROR_DYN_MASK);
+}
+
+/*
+  MPIR_Err_delete_class - Delete an error class
+
+  Return value:
+  Error code.
+
+  Notes:
+  This is used to implement 'MPI_Delete_error_class'; it may also be used by a
+  device to delete device-specific error classes.
+
+  Predefined classes are handled directly; this routine is not used to
+  delete the predefined MPI error classes.  This is done to reduce the
+  number of steps that must be executed when starting an MPI program.
+
+  This routine should be run within a SINGLE_CS in the multithreaded case.
+*/
+int MPIR_Err_delete_class(int errclass)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (not_initialized)
+        MPIR_Init_err_dyncodes();
+
+    struct intcnt *s;
+    HASH_FIND_INT(err_class.used, &errclass, s);
+
+    if (s == NULL) {
+        mpi_errno = MPI_ERR_OTHER;
+        goto fn_exit;
+    }
+
+    HASH_DEL(err_class.used, s);
+    DL_APPEND(err_class.free, s);
+    MPL_free((char *) user_class_msgs[s->val]);
+
+  fn_exit:
+    return mpi_errno;
 }
 
 /*
@@ -297,6 +381,40 @@ int MPIR_Err_add_code(int class)
     /* FIXME: For robustness, we should make sure that the associated string
      * is initialized to null */
     return new_code;
+}
+
+/*
+  MPIR_Err_delete_code - Delete an error code
+
+  Return value:
+  Error code.
+
+  Notes:
+  This is used to implement 'MPI_Delete_error_code'; it may also be used by a
+  device to delete device-specific error codes.
+*/
+int MPIR_Err_delete_code(int code)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int errcode = (int) (((unsigned int) code & ERROR_GENERIC_MASK) >> ERROR_GENERIC_SHIFT);
+
+    if (not_initialized)
+        MPIR_Init_err_dyncodes();
+
+    struct intcnt *s;
+    HASH_FIND_INT(err_code.used, &errcode, s);
+
+    if (s == NULL) {
+        mpi_errno = MPI_ERR_OTHER;
+        goto fn_exit;
+    }
+
+    HASH_DEL(err_code.used, s);
+    DL_APPEND(err_code.free, s);
+    MPL_free((char *) user_code_msgs[s->val]);
+
+  fn_exit:
+    return mpi_errno;
 }
 
 /*

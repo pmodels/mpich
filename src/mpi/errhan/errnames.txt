@@ -39,7 +39,9 @@
 **permattr:Cannot set permanent attribute
 **keyval:Invalid keyval
 **noerrclasses:No more user-defined error classes
+**predeferrclass:Predefined error class given
 **noerrcodes:No more user-defined error codes
+**predeferrcode:Predefined error code given
 **rankdup:Duplicate ranks in rank array 
 **rankdup %d %d %d:Duplicate ranks in rank array at index %d, has value %d which is \
 also the value at index %d
@@ -1185,10 +1187,16 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_exscan %p %p %d %D %O %C:MPI_Exscan(sbuf=%p, rbuf=%p, count=%d, %D, %O, %C) failed
 **mpi_add_error_class:MPI_Add_error_class failed
 **mpi_add_error_class %p:MPI_Add_error_class(errorclass=%p) failed
+**mpi_delete_error_class:MPI_Delete_error_class failed
+**mpi_delete_error_class %d:MPI_Delete_error_class(errorclass=%d) failed
 **mpi_add_error_code:MPI_Add_error_code failed
 **mpi_add_error_code %d %p:MPI_Add_error_code(errorclass=%d, errorcode=%p) failed
+**mpi_delete_error_code:MPI_Delete_error_code failed
+**mpi_delete_error_code %d:MPI_Delete_error_code(errorcode=%d) failed
 **mpi_add_error_string:MPI_Add_error_string failed
 **mpi_add_error_string %d %s:MPI_Add_error_string(code=%d, str=\"%s\") failed
+**mpi_delete_error_string:MPI_Delete_error_string failed
+**mpi_delete_error_string %d:MPI_Delete_error_string(code=%d) failed
 **mpi_comm_call_errhandler:MPI_Comm_call_errhandler failed
 **mpi_comm_call_errhandler %C %d:MPI_Comm_call_errhandler(%C, errorcode=%d) failed
 **mpi_comm_create_keyval:MPI_Comm_create_keyval failed
