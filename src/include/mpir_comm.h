@@ -321,8 +321,6 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
                                      MPI_Errhandler * errhandler);
 int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
-                                 MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
