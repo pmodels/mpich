@@ -208,4 +208,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                      const void *data, MPI_Count count,
+                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    /* TODO: extending this to include pretending RDMA_READ as eager. In this case, we just tells
+     * the sender to not worry about the protocol and let netmod send the data. */
+    return (am_hdr_sz + data_sz)
+        <= (MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE - sizeof(MPIDI_OFI_am_header_t));
+}
+
 #endif /* OFI_AM_H_INCLUDED */

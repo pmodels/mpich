@@ -115,6 +115,13 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
     return MPIDI_NM_func->am_eager_buf_limit();
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                      const void *data, MPI_Count count,
+                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    return MPIDI_NM_func->am_check_eager(am_hdr_sz, data_sz, data, count, datatype, sreq);
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                     int *lpid_ptr, bool is_remote)
 {
