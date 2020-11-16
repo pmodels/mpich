@@ -806,26 +806,174 @@ int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
     goto fn_exit;
 }
 
+typedef enum {
+    ALLOC_MEM_BUF_TYPE__UNSET,
+    ALLOC_MEM_BUF_TYPE__DDR,
+    ALLOC_MEM_BUF_TYPE__HBM,
+    ALLOC_MEM_BUF_TYPE__NETMOD,
+    ALLOC_MEM_BUF_TYPE__SHMMOD,
+} alloc_mem_buf_type_e;
+
+typedef struct {
+    void *user_buf;
+
+    void *real_buf;
+    alloc_mem_buf_type_e buf_type;
+    size_t size;
+
+    UT_hash_handle hh;
+} alloc_mem_container_s;
+
+static alloc_mem_container_s *alloc_mem_container_list = NULL;
+
 void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
+    char val[MPI_MAX_INFO_VAL + 1];
+    MPIR_hwtopo_gid_t mem_gid = MPIR_HWTOPO_GID_ROOT;
+    alloc_mem_buf_type_e buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
+    void *user_buf = NULL;
+    void *real_buf;
+    int alignment = MAX_ALIGNMENT;
 
+    MPIR_Info *curr_info;
+    LL_FOREACH(info_ptr, curr_info) {
+        if (curr_info->key == NULL)
+            continue;
+
+        int flag = 0;
+        MPIR_Info_get_impl(info_ptr, "mpich_buf_type", MPI_MAX_INFO_VAL, val, &flag);
+
+        if (flag) {
+            if (!strcmp(val, "ddr")) {
+                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__DDR);
+                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                    buf_type = ALLOC_MEM_BUF_TYPE__UNSET;
+                } else {
+                    buf_type = ALLOC_MEM_BUF_TYPE__DDR;
+                }
+            } else if (!strcmp(val, "hbm")) {
+                mem_gid = MPIR_hwtopo_get_obj_by_type(MPIR_HWTOPO_TYPE__HBM);
+                if (mem_gid == MPIR_HWTOPO_GID_ROOT) {
+                    /* if mem_gid = MPIR_HWTOPO_GID_ROOT and mem_type
+                     * is non-default (DDR) it can mean either that
+                     * the requested memory type is not available in
+                     * the system or the requested memory type is
+                     * available but there are many devices of such
+                     * type and the process requesting memory is not
+                     * bound to any of them. Regardless the reason we
+                     * do not fall back to the default allocation and
+                     * return a NULL pointer to the upper layer
+                     * instead. */
+                    goto fn_exit;
+                } else {
+                    buf_type = ALLOC_MEM_BUF_TYPE__HBM;
+                }
+            } else if (!strcmp(val, "network")) {
+                buf_type = ALLOC_MEM_BUF_TYPE__NETMOD;
+            } else if (!strcmp(val, "shmem")) {
+                buf_type = ALLOC_MEM_BUF_TYPE__SHMMOD;
+            } else {
+                assert(0);
+            }
+        }
+
+        MPIR_Info_get_impl(info_ptr, "mpi_minimum_memory_alignment", MPI_MAX_INFO_VAL, val, &flag);
+        if (flag) {
+            alignment = atoi(val);
+        }
+    }
+
+    switch (buf_type) {
+        case ALLOC_MEM_BUF_TYPE__HBM:
+        case ALLOC_MEM_BUF_TYPE__DDR:
+            /* requested memory type is available in the system and
+             * process is bound to the corresponding device; allocate
+             * memory and bind it to device. */
+            assert(mem_gid != MPIR_HWTOPO_GID_ROOT);
+            real_buf =
+                MPL_mmap(NULL, size + alignment, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1,
+                         0, MPL_MEM_USER);
+            MPIR_hwtopo_mem_bind(real_buf, size + alignment, mem_gid);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__NETMOD:
+            real_buf = MPIDI_NM_mpi_alloc_mem(size + alignment, info_ptr);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__SHMMOD:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            real_buf = MPIDI_SHM_mpi_alloc_mem(size + alignment, info_ptr);
+#else
+            goto fn_exit;
+#endif
+            break;
+
+        default:
+            real_buf = MPIDIG_mpi_alloc_mem(size + alignment, info_ptr);
+            break;
+    }
+
+    alloc_mem_container_s *container;
+    container = (alloc_mem_container_s *) MPL_malloc(sizeof(alloc_mem_container_s), MPL_MEM_USER);
+
+    int diff = alignment - (int) ((uintptr_t) real_buf % alignment);
+    user_buf = (void *) ((uintptr_t) real_buf + diff);
+
+    container->real_buf = real_buf;
+    container->user_buf = user_buf;
+    container->buf_type = buf_type;
+    container->size = size + alignment;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    HASH_ADD_PTR(alloc_mem_container_list, user_buf, container, MPL_MEM_USER);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
-    return p;
+    return user_buf;
 }
 
-int MPID_Free_mem(void *ptr)
+int MPID_Free_mem(void *user_buf)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FREE_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FREE_MEM);
-    mpi_errno = MPIDI_NM_mpi_free_mem(ptr);
 
-    MPIR_ERR_CHECK(mpi_errno);
+    alloc_mem_container_s *container;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+    HASH_FIND_PTR(alloc_mem_container_list, &user_buf, container);
+    assert(container);
+    HASH_DEL(alloc_mem_container_list, container);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDIU_THREAD_ALLOC_MEM_MUTEX);
+
+    switch (container->buf_type) {
+        case ALLOC_MEM_BUF_TYPE__HBM:
+        case ALLOC_MEM_BUF_TYPE__DDR:
+            MPL_munmap(container->real_buf, container->size, MPL_MEM_USER);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__NETMOD:
+            mpi_errno = MPIDI_NM_mpi_free_mem(container->real_buf);
+            break;
+
+        case ALLOC_MEM_BUF_TYPE__SHMMOD:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            mpi_errno = MPIDI_SHM_mpi_free_mem(container->real_buf);
+#else
+            assert(0);
+#endif
+            break;
+
+        default:
+            MPIDIG_mpi_free_mem(container->real_buf);
+            break;
+    }
+
+    MPL_free(container);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FREE_MEM);

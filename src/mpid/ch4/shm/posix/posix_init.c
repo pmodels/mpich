@@ -291,14 +291,12 @@ int MPIDI_POSIX_get_vci_attr(int vci)
 
 void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    MPIR_Assert(0);
-    return NULL;
+    return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
 
 int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
+    return MPIDIG_mpi_free_mem(ptr);
 }
 
 int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size, char **local_upids)
