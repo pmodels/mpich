@@ -2533,5 +2533,5 @@ int QMPI_Register_function(int calling_tool_id, enum QMPI_Functions_enum functio
 int QMPI_Get_function(int calling_tool_id, enum QMPI_Functions_enum function_enum,
                       void (**function_ptr) (void), int *next_tool_id) MPICH_API_PUBLIC;
 int QMPI_Get_tool_storage(QMPI_Context context, int tool_id, void **storage) MPICH_API_PUBLIC;
-
+int QMPI_Get_calling_address(QMPI_Context context, void **address) MPICH_API_PUBLIC;
 #endif /* QMPI_H */
