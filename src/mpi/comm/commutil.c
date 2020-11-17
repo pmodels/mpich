@@ -862,11 +862,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
-#if 1
-    /* FIXME: only copy over hints for MPI 3.1 and earlier */
-    memcpy((void *) (newcomm_ptr->hints), (void *) (comm_ptr->hints), sizeof(comm_ptr->hints));
-#endif
-
     if (info) {
         MPII_Comm_set_hints(newcomm_ptr, info);
     }
