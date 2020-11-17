@@ -270,6 +270,10 @@ if (-e "cdesc.h") {
 #include <ISO_Fortran_binding.h>
 #include <mpi.h>
 
+#ifndef HAVE_ROMIO
+#define MPIO_Request MPI_Request
+#endif
+
 extern MPI_Status *MPIR_C_MPI_STATUS_IGNORE;
 extern MPI_Status *MPIR_C_MPI_STATUSES_IGNORE;
 extern char **MPIR_C_MPI_ARGV_NULL;
