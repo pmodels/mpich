@@ -85,19 +85,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_out1);
     /* Release comm_dup1 later, still using */
 
-    /* Test 2: comm_dup */
-    if (rank == 0)
-        MTestPrintfMsg(1, "Testing MPI_Comm_dup: source comm has user provided comm infohint");
-    MPI_Comm_dup(comm_dup1, &comm_dup2);
-    MPI_Comm_get_info(comm_dup2, &info_out2);
-    MPI_Comm_free(&comm_dup2);
-    /* Note: For MPICH, we currently expect MPI_Comm_dup to copy hints from source
-     * to dup comm. Such copying with not be done after we align behavior of MPICH
-     * with the new MPI standard (MPI 3.2 onwards). */
-    errors += ReadCommInfo(info_out2, query_key, val, buf, "MPI_Comm_dup");
-    MPI_Info_free(&info_out2);
-
-    /* Test 3: Comm_dup_with_info with comm=MPI_COMM_WORLD */
+    /* Test 2: Comm_dup_with_info with comm=MPI_COMM_WORLD */
     if (rank == 0)
         MTestPrintfMsg(1, "Testing MPI_Comm_dup_with_info with comm = MPI_COMM_WORLD");
     MPI_Comm_dup_with_info(MPI_COMM_WORLD, info_in1, &comm_dup3);
@@ -106,7 +94,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_out3);
     /* Release comm_dup3 later, still using in a later test */
 
-    /* Test 4: Comm_dup_with_info with comm = dup of MPI_COMM_WORLD */
+    /* Test 3: Comm_dup_with_info with comm = dup of MPI_COMM_WORLD */
     if (rank == 0)
         MTestPrintfMsg(1, "Testing MPI_Comm_dup_with_info with comm = dup of MPI_COMM_WORLD");
     /* Pick a new hint that is different from the user provided hint */
@@ -120,15 +108,12 @@ int main(int argc, char **argv)
     MPI_Comm_dup_with_info(comm_dup3, info_in4, &comm_dup4);
     MPI_Comm_get_info(comm_dup4, &info_out4);
     errors += ReadCommInfo(info_out4, new_key, "true", buf, "MPI_Comm_dup_with_info-2a");
-    /* Note: Currently we expect hints to be copied from comm. When MPICH aligns with
-     * MPI 3.2+,we do not expect such copying from comm to comm_dup4 */
-    errors += ReadCommInfo(info_out4, query_key, val, buf, "MPI_Comm_dup_with_info-2b");
     MPI_Comm_free(&comm_dup3);
     MPI_Comm_free(&comm_dup4);
     MPI_Info_free(&info_in4);
     MPI_Info_free(&info_out4);
 
-    /* Test 5: MPI_Comm_split_type */
+    /* Test 4: MPI_Comm_split_type */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info_in1, &comm_split5);
     MPI_Comm_get_info(comm_split5, &info_out5);
     errors += ReadCommInfo(info_out5, query_key, val, buf, "MPI_Comm_split_type");
