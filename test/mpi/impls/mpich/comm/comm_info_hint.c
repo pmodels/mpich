@@ -120,6 +120,19 @@ int main(int argc, char **argv)
     MPI_Comm_free(&comm_split5);
     MPI_Info_free(&info_out5);
 
+    /* Test comm_idup */
+#if MPI_VERSION >= 4
+    MPI_Request request;
+    if (rank == 0)
+        MTestPrintfMsg(1, "Testing MPIX_Comm_idup_with_info with comm = MPI_COMM_WORLD");
+    MPIX_Comm_idup_with_info(MPI_COMM_WORLD, info_in1, &comm_dup3, &request);
+    MPI_Wait(&request, MPI_STATUS_IGNORE);
+    MPI_Comm_get_info(comm_dup3, &info_out3);
+    errors += ReadCommInfo(info_out3, query_key, val, buf, "MPIX_Comm_idup_with_info");
+    MPI_Info_free(&info_out3);
+    MPI_Comm_free(&comm_dup3);
+#endif
+
     /* TODO - Test: MPI_Dist_graph_create_adjacent */
 
     /* Release remaining resources */
