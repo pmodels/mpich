@@ -284,7 +284,8 @@ int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
 
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, MPIR_Request ** reqp);
+int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm,
+                        MPIR_Request ** reqp);
 
 int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag);
@@ -321,8 +322,6 @@ int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
                                      MPI_Errhandler * errhandler);
 int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
-                                 MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
@@ -381,7 +380,7 @@ int MPII_Comm_init(MPIR_Comm *);
 int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
-int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);
+int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** outcomm_ptr);
 
 int MPII_Setup_intercomm_localcomm(MPIR_Comm *);
 

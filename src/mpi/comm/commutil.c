@@ -889,7 +889,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Info * info, MPIR_Comm *
  *
  * Used by comm_idup.
  */
-int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
+int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *newcomm_ptr = NULL;
@@ -932,6 +932,10 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+
+    if (info) {
+        MPII_Comm_set_hints(newcomm_ptr, info);
+    }
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;

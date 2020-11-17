@@ -5,69 +5,29 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPI_Comm_idup */
+/* -- Begin Profiling Symbol Block for routine MPIX_Comm_idup_with_info */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_Comm_idup = PMPI_Comm_idup
+#pragma weak MPIX_Comm_idup_with_info = PMPIX_Comm_idup_with_info
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Comm_idup  MPI_Comm_idup
+#pragma _HP_SECONDARY_DEF PMPIX_Comm_idup_with_info  MPIX_Comm_idup_with_info
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_Comm_idup as PMPI_Comm_idup
+#pragma _CRI duplicate MPIX_Comm_idup_with_info as PMPIX_Comm_idup_with_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
-    __attribute__ ((weak, alias("PMPI_Comm_idup")));
+int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPIX_Comm_idup_with_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Comm_idup
-#define MPI_Comm_idup PMPI_Comm_idup
-
-/* any non-MPI functions go here, especially non-static ones */
-
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcommp,
-                        MPIR_Request ** reqp)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *new_attributes = 0;
-
-    /* Copy attributes, executing the attribute copy functions */
-    /* This accesses the attribute dup function through the perprocess
-     * structure to prevent comm_dup from forcing the linking of the
-     * attribute functions.  The actual function is (by default)
-     * MPIR_Attr_dup_list
-     */
-    if (MPIR_Process.attr_dup) {
-        mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-    mpi_errno = MPII_Comm_copy_data(comm_ptr, info, newcommp);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*newcommp)->attributes = new_attributes;
-
-    /* We now have a mostly-valid new communicator, so begin the process of
-     * allocating a context ID to use for actual communication */
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPIR_Get_intercomm_contextid_nonblock(comm_ptr, *newcommp, reqp);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        mpi_errno = MPIR_Get_contextid_nonblock(comm_ptr, *newcommp, reqp);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
+#undef MPIX_Comm_idup_with_info
+#define MPIX_Comm_idup_with_info PMPIX_Comm_idup_with_info
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@
-MPI_Comm_idup - nonblocking communicator duplication
+MPIX_Comm_idup_with_info - nonblocking communicator duplication
 
 Input Parameters:
 . comm - communicator (handle)
@@ -82,11 +42,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm,
+                             MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPIR_Request *dreq = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
 
@@ -107,6 +69,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -128,7 +91,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
     *request = MPI_REQUEST_NULL;
     *newcomm = MPI_COMM_NULL;
 
-    mpi_errno = MPIR_Comm_idup_impl(comm_ptr, NULL, &newcomm_ptr, &dreq);
+    mpi_errno = MPIR_Comm_idup_impl(comm_ptr, info_ptr, &newcomm_ptr, &dreq);
     MPIR_ERR_CHECK(mpi_errno);
 
     /* NOTE: this is a publication for most of the comm, but the context ID
