@@ -41,6 +41,9 @@ comm_idup_comm2 6
 dup_with_info 2
 dup_with_info 4
 dup_with_info 9
+idup_with_info 2
+idup_with_info 4
+idup_with_info 8
 comm_info 6
 comm_info2 1
 comm_create_group_idup 4

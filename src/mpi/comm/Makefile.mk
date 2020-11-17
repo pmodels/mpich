@@ -15,6 +15,7 @@ mpi_sources +=                       \
     src/mpi/comm/comm_set_info.c     \
     src/mpi/comm/comm_group.c        \
     src/mpi/comm/comm_idup.c         \
+    src/mpi/comm/comm_idup_with_info.c \
     src/mpi/comm/comm_rank.c         \
     src/mpi/comm/comm_size.c         \
     src/mpi/comm/comm_remote_group.c \
