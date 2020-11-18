@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Delete_error_string as PMPIX_Delete_error_string
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Delete_error_string(int errorcode, const char *string)
+int MPIX_Delete_error_string(int errorcode)
     __attribute__ ((weak, alias("PMPIX_Delete_error_string")));
 #endif
 /* -- End Profiling Symbol Block */

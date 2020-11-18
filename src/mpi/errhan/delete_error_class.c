@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Delete_error_class as PMPIX_Delete_error_class
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Delete_error_class(int *errorclass)
+int MPIX_Delete_error_class(int errorclass)
     __attribute__ ((weak, alias("PMPIX_Delete_error_class")));
 #endif
 /* -- End Profiling Symbol Block */
