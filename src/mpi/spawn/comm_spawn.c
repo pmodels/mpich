@@ -24,8 +24,6 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_spawn
 #define MPI_Comm_spawn PMPI_Comm_spawn
-
-/* Any internal routines can go here.  Make them static if possible */
 #endif
 
 /*@

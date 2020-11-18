@@ -51,7 +51,6 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    int in_cs = FALSE;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -89,63 +88,11 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
     /* ... body of routine ...  */
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
-    in_cs = TRUE;
-
-    if (!win_ptr->errhandler || win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        mpi_errno = MPIR_Err_return_win(win_ptr, "MPI_Win_call_errhandler", errorcode);
-        goto fn_exit;
-    }
-
-    if (win_ptr->errhandler->handle == MPI_ERRORS_RETURN) {
-        /* MPI_ERRORS_RETURN should always return MPI_SUCCESS */
-        goto fn_exit;
-    }
-
-    /* Check for the special case of errors-throw-exception.  In this case
-     * return the error code; the C++ wrapper will cause an exception to
-     * be thrown.
-     */
-#ifdef HAVE_CXX_BINDING
-    if (win_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
-        mpi_errno = errorcode;
-        goto fn_exit;
-    }
-#endif
-    switch (win_ptr->errhandler->language) {
-        case MPIR_LANG__C:
-            (*win_ptr->errhandler->errfn.C_Win_Handler_function) (&win_ptr->handle, &errorcode);
-            break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            MPIR_Process.cxx_call_errfn(2, &win_ptr->handle,
-                                        &errorcode,
-                                        (void (*)(void)) win_ptr->errhandler->
-                                        errfn.C_Win_Handler_function);
-            break;
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            {
-                /* If int and MPI_Fint aren't the same size, we need to
-                 * convert.  As this is not performance critical, we
-                 * do this even if MPI_Fint and int are the same size. */
-                MPI_Fint ferr = errorcode;
-                MPI_Fint winhandle = win_ptr->handle;
-                (*win_ptr->errhandler->errfn.F77_Handler_function) (&winhandle, &ferr);
-            }
-            break;
-#endif
-    }
+    mpi_errno = MPIR_Win_call_errhandler_impl(win_ptr, errorcode);
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
-    }
-
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
     return mpi_errno;
 

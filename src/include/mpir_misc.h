@@ -56,6 +56,11 @@ extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
 extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
 extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
+int MPIR_Init(int *argc, char ***argv);
+int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided);
+int MPIR_Finalize(void);
+int MPIR_Abort_impl(MPIR_Comm * comm_ptr, int errorcode);
+
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 
@@ -86,6 +91,11 @@ int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Close_port_impl(const char *port_name);
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name);
 int MPIR_Cancel(MPIR_Request * request_ptr);
+
+int MPIR_Comm_join(int fd, MPI_Comm * intercomm);
+int MPIR_Comm_disconnect(MPIR_Comm * comm_ptr);
+int MPIR_Publish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
+int MPIR_Unpublish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
 
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);

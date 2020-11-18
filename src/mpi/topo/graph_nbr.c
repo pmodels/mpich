@@ -23,40 +23,6 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Graph_neighbors
 #define MPI_Graph_neighbors PMPI_Graph_neighbors
-
-/* any non-MPI functions go here, especially non-static ones */
-
-int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, int neighbors[])
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Topology *graph_ptr;
-    int i, is, ie;
-
-    graph_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP((!graph_ptr ||
-                         graph_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY,
-                        "**notgraphtopo");
-    MPIR_ERR_CHKANDJUMP2((rank < 0 ||
-                          rank >= graph_ptr->topo.graph.nnodes), mpi_errno, MPI_ERR_RANK, "**rank",
-                         "**rank %d %d", rank, graph_ptr->topo.graph.nnodes);
-
-    /* Get location in edges array of the neighbors of the specified rank */
-    if (rank == 0)
-        is = 0;
-    else
-        is = graph_ptr->topo.graph.index[rank - 1];
-    ie = graph_ptr->topo.graph.index[rank];
-
-    /* Get neighbors */
-    for (i = is; i < ie; i++)
-        *neighbors++ = graph_ptr->topo.graph.edges[i];
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 

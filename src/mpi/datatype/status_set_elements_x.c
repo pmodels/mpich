@@ -23,27 +23,6 @@ int MPI_Status_set_elements_x(MPI_Status * status, MPI_Datatype datatype, MPI_Co
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Status_set_elements_x
 #define MPI_Status_set_elements_x PMPI_Status_set_elements_x
-
-/* any non-MPI functions go here, especially non-static ones */
-
-int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPI_Count size_x;
-
-    MPIR_Datatype_get_size_macro(datatype, size_x);
-
-    /* overflow check, should probably be a real error check? */
-    if (count != 0) {
-        MPIR_Assert(size_x >= 0 && count > 0);
-        MPIR_Assert(count * size_x < MPIR_COUNT_MAX);
-    }
-
-    MPIR_STATUS_SET_COUNT(*status, size_x * count);
-
-    return mpi_errno;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

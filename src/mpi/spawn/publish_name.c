@@ -91,27 +91,10 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
     /* ... body of routine ...  */
 
-#ifdef HAVE_NAMEPUB_SERVICE
-    {
-        if (!MPIR_Namepub) {
-            mpi_errno = MPID_NS_Create(info_ptr, &MPIR_Namepub);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-            MPIR_Add_finalize((int (*)(void *)) MPID_NS_Free, &MPIR_Namepub, 9);
-        }
-
-        mpi_errno = MPID_NS_Publish(MPIR_Namepub, info_ptr,
-                                    (const char *) service_name, (const char *) port_name);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
-
+    mpi_errno = MPIR_Publish_name(service_name, info_ptr, port_name);
+    if (mpi_errno) {
+        goto fn_fail;
     }
-#else
-    {
-        /* No name publishing service available */
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
-    }
-#endif
 
     /* ... end of body of routine ... */
 

@@ -25,39 +25,6 @@ int MPI_Type_create_hindexed_block(int count, int blocklength,
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_create_hindexed_block
 #define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
-
-int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
-                                         const MPI_Aint array_of_displacements[],
-                                         MPI_Datatype oldtype, MPI_Datatype * newtype)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPI_Datatype new_handle;
-    MPIR_Datatype *new_dtp;
-    int ints[2];
-
-    mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 1,
-                                       oldtype, &new_handle);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    ints[0] = count;
-    ints[1] = blocklength;
-
-    MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED_BLOCK, 2,     /* ints */
-                                           count,       /* aints */
-                                           1,   /* types */
-                                           ints, array_of_displacements, &oldtype);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 /*@

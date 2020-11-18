@@ -24,32 +24,6 @@ int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_add
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_get_envelope
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
-
-void MPIR_Type_get_envelope(MPI_Datatype datatype,
-                            int *num_integers,
-                            int *num_addresses, int *num_datatypes, int *combiner)
-{
-    if (HANDLE_IS_BUILTIN(datatype) ||
-        datatype == MPI_FLOAT_INT ||
-        datatype == MPI_DOUBLE_INT ||
-        datatype == MPI_LONG_INT || datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
-        *combiner = MPI_COMBINER_NAMED;
-        *num_integers = 0;
-        *num_addresses = 0;
-        *num_datatypes = 0;
-    } else {
-        MPIR_Datatype *dtp;
-
-        MPIR_Datatype_get_ptr(datatype, dtp);
-
-        *combiner = dtp->contents->combiner;
-        *num_integers = dtp->contents->nr_ints;
-        *num_addresses = dtp->contents->nr_aints;
-        *num_datatypes = dtp->contents->nr_types;
-    }
-
-}
-
 #endif
 
 /*@

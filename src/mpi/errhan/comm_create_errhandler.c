@@ -24,29 +24,6 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function * comm_errhandler_fn
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_create_errhandler
 #define MPI_Comm_create_errhandler PMPI_Comm_create_errhandler
-
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * comm_errhandler_fn,
-                                     MPI_Errhandler * errhandler)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Errhandler *errhan_ptr;
-
-    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
-    MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
-
-    errhan_ptr->language = MPIR_LANG__C;
-    errhan_ptr->kind = MPIR_COMM;
-    MPIR_Object_set_ref(errhan_ptr, 1);
-    errhan_ptr->errfn.C_Comm_Handler_function = comm_errhandler_fn;
-
-    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-
-    goto fn_exit;
-}
-
 #endif
 
 /*@

@@ -23,40 +23,6 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm * newcomm) __attribute__ ((weak, alias(
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_dup
 #define MPI_Comm_dup PMPI_Comm_dup
-
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Attribute *new_attributes = 0;
-
-    /* Copy attributes, executing the attribute copy functions */
-    /* This accesses the attribute dup function through the perprocess
-     * structure to prevent comm_dup from forcing the linking of the
-     * attribute functions.  The actual function is (by default)
-     * MPIR_Attr_dup_list
-     */
-    if (MPIR_Process.attr_dup) {
-        mpi_errno = MPIR_Process.attr_dup(comm_ptr->handle, comm_ptr->attributes, &new_attributes);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-
-    /* Generate a new context value and a new communicator structure */
-    /* We must use the local size, because this is compared to the
-     * rank of the process in the communicator.  For intercomms,
-     * this must be the local size */
-    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, info, newcomm_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*newcomm_ptr)->attributes = new_attributes;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 /*@

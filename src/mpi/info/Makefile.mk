@@ -4,6 +4,7 @@
 ##
 
 mpi_core_sources +=   \
+    src/mpi/info/info_impl.c \
     src/mpi/info/infoutil.c
 
 mpi_sources +=                     \

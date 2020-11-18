@@ -275,8 +275,8 @@ int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm);
 
-/* implements the logic for MPI_Comm_create for intracommunicators only */
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
 int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
@@ -319,14 +319,10 @@ int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
-                                     MPI_Errhandler * errhandler);
 int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
 int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
-void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr);
-void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr);
 void MPIR_Comm_get_name_impl(MPIR_Comm * comm, char *comm_name, int *resultlen);
 int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_intracomm_ptr);
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,

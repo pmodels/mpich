@@ -18,88 +18,11 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 #endif
 /* -- End Profiling Symbol Block */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_compare_impl
-#undef FCNAME
-#define FCNAME "MPIR_Comm_compare_impl"
-int MPIR_Comm_compare_impl(MPIR_Comm * comm_ptr1, MPIR_Comm * comm_ptr2, int *result)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr1->comm_kind != comm_ptr2->comm_kind) {
-        *result = MPI_UNEQUAL;
-    } else if (comm_ptr1->handle == comm_ptr2->handle) {
-        *result = MPI_IDENT;
-    } else if (comm_ptr1->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        MPIR_Group *group_ptr1, *group_ptr2;
-
-        mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* If the groups are the same but the contexts are different, then
-         * the communicators are congruent */
-        if (*result == MPI_IDENT)
-            *result = MPI_CONGRUENT;
-        mpi_errno = MPIR_Group_free_impl(group_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_free_impl(group_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        /* INTER_COMM */
-        int lresult, rresult;
-        MPIR_Group *group_ptr1, *group_ptr2;
-        MPIR_Group *rgroup_ptr1, *rgroup_ptr2;
-
-        /* Get the groups and see what their relationship is */
-        mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, &lresult);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr1, &rgroup_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr2, &rgroup_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_compare_impl(rgroup_ptr1, rgroup_ptr2, &rresult);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        /* Choose the result that is "least" strong. This works
-         * due to the ordering of result types in mpi.h */
-        (*result) = (rresult > lresult) ? rresult : lresult;
-
-        /* They can't be identical since they're not the same
-         * handle, they are congruent instead */
-        if ((*result) == MPI_IDENT)
-            (*result) = MPI_CONGRUENT;
-
-        /* Free the groups */
-        mpi_errno = MPIR_Group_free_impl(group_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_free_impl(group_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_free_impl(rgroup_ptr1);
-        MPIR_ERR_CHECK(mpi_errno);
-        mpi_errno = MPIR_Group_free_impl(rgroup_ptr2);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_compare
 #define MPI_Comm_compare PMPI_Comm_compare
-
 #endif
 
 

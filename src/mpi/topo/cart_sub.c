@@ -53,11 +53,8 @@ process (handle)
 @*/
 int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 {
-    int mpi_errno = MPI_SUCCESS, all_false;
-    int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;
-    MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPIR_Topology *topo_ptr, *toponew_ptr;
-    MPIR_CHKPMEM_DECL(4);
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_SUB);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -96,98 +93,9 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 
     /* ... body of routine ...  */
 
-    /* Check that the communicator already has a Cartesian topology */
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP(!topo_ptr, mpi_errno, MPI_ERR_TOPOLOGY, "**notopology");
-    MPIR_ERR_CHKANDJUMP(topo_ptr->kind != MPI_CART, mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-
-    ndims = topo_ptr->topo.cart.ndims;
-
-    all_false = 1;      /* all entries in remain_dims are false */
-    for (i = 0; i < ndims; i++) {
-        if (remain_dims[i]) {
-            /* any 1 is true, set flag to 0 and break */
-            all_false = 0;
-            break;
-        }
-    }
-
-    if (all_false) {
-        /* ndims=0, or all entries in remain_dims are false.
-         * MPI 2.1 says return a 0D Cartesian topology. */
-        mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, newcomm);
-        MPIR_ERR_CHECK(mpi_errno);
-    } else {
-        /* Determine the number of remaining dimensions */
-        ndims_in_subcomm = 0;
-        nnodes_in_subcomm = 1;
-        for (i = 0; i < ndims; i++) {
-            if (remain_dims[i]) {
-                ndims_in_subcomm++;
-                nnodes_in_subcomm *= topo_ptr->topo.cart.dims[i];
-            }
-        }
-
-        /* Split this communicator.  Do this even if there are no remaining
-         * dimensions so that the topology information is attached */
-        key = 0;
-        color = 0;
-        for (i = 0; i < ndims; i++) {
-            if (remain_dims[i]) {
-                key = (key * topo_ptr->topo.cart.dims[i]) + topo_ptr->topo.cart.position[i];
-            } else {
-                color = (color * topo_ptr->topo.cart.dims[i]) + topo_ptr->topo.cart.position[i];
-            }
-        }
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, &newcomm_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        *newcomm = newcomm_ptr->handle;
-
-        /* Save the topology of this new communicator */
-        MPIR_CHKPMEM_MALLOC(toponew_ptr, MPIR_Topology *, sizeof(MPIR_Topology),
-                            mpi_errno, "toponew_ptr", MPL_MEM_COMM);
-
-        toponew_ptr->kind = MPI_CART;
-        toponew_ptr->topo.cart.ndims = ndims_in_subcomm;
-        toponew_ptr->topo.cart.nnodes = nnodes_in_subcomm;
-        if (ndims_in_subcomm) {
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.dims",
-                                MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.periodic",
-                                MPL_MEM_COMM);
-            MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position, int *,
-                                ndims_in_subcomm * sizeof(int), mpi_errno, "cart.position",
-                                MPL_MEM_COMM);
-        } else {
-            toponew_ptr->topo.cart.dims = 0;
-            toponew_ptr->topo.cart.periodic = 0;
-            toponew_ptr->topo.cart.position = 0;
-        }
-
-        j = 0;
-        for (i = 0; i < ndims; i++) {
-            if (remain_dims[i]) {
-                toponew_ptr->topo.cart.dims[j] = topo_ptr->topo.cart.dims[i];
-                toponew_ptr->topo.cart.periodic[j] = topo_ptr->topo.cart.periodic[i];
-                j++;
-            }
-        }
-
-        /* Compute the position of this process in the new communicator */
-        rank = newcomm_ptr->rank;
-        for (i = 0; i < ndims_in_subcomm; i++) {
-            nnodes_in_subcomm /= toponew_ptr->topo.cart.dims[i];
-            toponew_ptr->topo.cart.position[i] = rank / nnodes_in_subcomm;
-            rank = rank % nnodes_in_subcomm;
-        }
-
-        mpi_errno = MPIR_Topology_put(newcomm_ptr, toponew_ptr);
-        if (mpi_errno)
-            goto fn_fail;
+    mpi_errno = MPIR_Cart_sub(comm_ptr, remain_dims, newcomm);
+    if (mpi_errno) {
+        goto fn_fail;
     }
     /* ... end of body of routine ... */
 
@@ -198,7 +106,6 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm * newcomm)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIR_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =

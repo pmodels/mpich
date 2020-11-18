@@ -24,55 +24,6 @@ int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Group_excl
 #define MPI_Group_excl PMPI_Group_excl
-
-int MPIR_Group_excl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
-                         MPIR_Group ** new_group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int size, i, newi;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
-
-    size = group_ptr->size;
-
-    /* Allocate a new group and lrank_to_lpid array */
-    mpi_errno = MPIR_Group_create(size - n, new_group_ptr);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    (*new_group_ptr)->rank = MPI_UNDEFINED;
-    /* Use flag fields to mark the members to *exclude* . */
-
-    int *flags = MPL_calloc(size, sizeof(int), MPL_MEM_OTHER);
-
-    for (i = 0; i < n; i++) {
-        flags[ranks[i]] = 1;
-    }
-
-    newi = 0;
-    for (i = 0; i < size; i++) {
-        if (flags[i] == 0) {
-            (*new_group_ptr)->lrank_to_lpid[newi].lpid = group_ptr->lrank_to_lpid[i].lpid;
-            if (group_ptr->rank == i)
-                (*new_group_ptr)->rank = newi;
-            newi++;
-        }
-    }
-
-    MPL_free(flags);
-
-    (*new_group_ptr)->size = size - n;
-    (*new_group_ptr)->idx_of_first_lpid = -1;
-    /* TODO calculate is_local_dense_monotonic */
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_EXCL_IMPL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 

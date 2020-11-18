@@ -60,6 +60,7 @@ mpi_sources +=                                   \
 noinst_HEADERS += src/mpi/datatype/datatype.h
 
 mpi_core_sources +=                              \
+    src/mpi/datatype/datatype_impl.c             \
     src/mpi/datatype/typeutil.c                  \
     src/mpi/datatype/type_blockindexed.c         \
     src/mpi/datatype/type_create_pairtype.c      \

@@ -23,40 +23,6 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Get_count
 #define MPI_Get_count PMPI_Get_count
-
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
-{
-    MPI_Aint size;
-
-    MPIR_Datatype_get_size_macro(datatype, size);
-    MPIR_Assert(size >= 0 && MPIR_STATUS_GET_COUNT(*status) >= 0);
-    if (size != 0) {
-        /* MPI-3 says return MPI_UNDEFINED if too large for an int */
-        if ((MPIR_STATUS_GET_COUNT(*status) % size) != 0)
-            (*count) = MPI_UNDEFINED;
-        else
-            (*count) = (MPI_Aint) (MPIR_STATUS_GET_COUNT(*status) / size);
-    } else {
-        if (MPIR_STATUS_GET_COUNT(*status) > 0) {
-            /* --BEGIN ERROR HANDLING-- */
-
-            /* case where datatype size is 0 and count is > 0 should
-             * never occur.
-             */
-
-            (*count) = MPI_UNDEFINED;
-            /* --END ERROR HANDLING-- */
-        } else {
-            /* This is ambiguous.  However, discussions on MPI Forum
-             * reached a consensus that this is the correct return
-             * value
-             */
-            (*count) = 0;
-        }
-    }
-}
-
-
 #endif
 
 /*@

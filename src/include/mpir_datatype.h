@@ -533,6 +533,13 @@ int MPIR_Type_create_indexed_block_impl(int count,
 int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
                                          const MPI_Aint array_of_displacements[],
                                          MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_create_darray(int size, int rank, int ndims,
+                            const int array_of_gsizes[], const int array_of_distribs[],
+                            const int array_of_dargs[], const int array_of_psizes[],
+                            int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_create_subarray(int ndims, const int array_of_sizes[],
+                              const int array_of_subsizes[], const int array_of_starts[],
+                              int order, MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
 void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent);

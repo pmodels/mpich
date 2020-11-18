@@ -22,52 +22,6 @@ int MPI_Type_commit(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_T
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
-
-int MPIR_Type_commit(MPI_Datatype * datatype_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Datatype *datatype_ptr;
-
-    MPIR_Assert(!HANDLE_IS_BUILTIN(*datatype_p));
-
-    MPIR_Datatype_get_ptr(*datatype_p, datatype_ptr);
-
-    if (datatype_ptr->is_committed == 0) {
-        datatype_ptr->is_committed = 1;
-
-        MPIR_Typerep_commit(*datatype_p);
-
-        MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
-                      (int) datatype_ptr->typerep.num_contig_blocks);
-
-        MPID_Type_commit_hook(datatype_ptr);
-
-    }
-    return mpi_errno;
-}
-
-int MPIR_Type_commit_impl(MPI_Datatype * datatype)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (HANDLE_IS_BUILTIN(*datatype))
-        goto fn_exit;
-
-    /* pair types stored as real types are a special case */
-    if (*datatype == MPI_FLOAT_INT ||
-        *datatype == MPI_DOUBLE_INT ||
-        *datatype == MPI_LONG_INT || *datatype == MPI_SHORT_INT || *datatype == MPI_LONG_DOUBLE_INT)
-        goto fn_exit;
-
-    mpi_errno = MPIR_Type_commit(datatype);
-    MPIR_ERR_CHECK(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

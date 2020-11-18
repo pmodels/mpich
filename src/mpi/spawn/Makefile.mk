@@ -17,6 +17,9 @@ mpi_sources +=                          \
     src/mpi/spawn/comm_connect.c        \
     src/mpi/spawn/comm_accept.c
 
+mpi_core_sources += \
+    src/mpi/spawn/spawn_impl.c
+
 noinst_HEADERS += src/mpi/spawn/namepub.h
 
 # for namepub.h, which is included by some other dirs
