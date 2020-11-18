@@ -53,6 +53,7 @@ int MPIX_GPU_query_support(int gpu_type, int *is_supported)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_GPU_QUERY_SUPPORT);
 
+    /* ... body of routine ...  */
     *is_supported = 0;
     if (MPIR_CVAR_ENABLE_GPU) {
         MPL_gpu_type_t type;
@@ -73,6 +74,7 @@ int MPIX_GPU_query_support(int gpu_type, int *is_supported)
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**badgputype");
         }
     }
+    /* ... end of body of routine ... */
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_GPU_QUERY_SUPPORT);

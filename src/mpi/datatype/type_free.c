@@ -22,17 +22,6 @@ int MPI_Type_free(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_Typ
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_free
 #define MPI_Type_free PMPI_Type_free
-
-void MPIR_Type_free_impl(MPI_Datatype * datatype)
-{
-    MPIR_Datatype *datatype_ptr = NULL;
-
-    MPIR_Datatype_get_ptr(*datatype, datatype_ptr);
-    MPIR_Assert(datatype_ptr);
-    MPIR_Datatype_ptr_release(datatype_ptr);
-    *datatype = MPI_DATATYPE_NULL;
-}
-
 #endif
 
 /*@

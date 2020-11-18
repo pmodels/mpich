@@ -44,11 +44,6 @@ Input Parameters:
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef MPI_MODE_RDONLY
-    int in_use;
-    MPIR_Errhandler *errhan_ptr = NULL, *old_errhandler_ptr;
-    MPI_Errhandler old_errhandler;
-#endif
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -70,6 +65,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     }
 #endif /* HAVE_ERROR_CHECKING */
 
+    MPIR_Errhandler *errhan_ptr;
     MPIR_Errhandler_get_ptr(errhandler, errhan_ptr);
 
     /* Validate parameters and objects (post conversion) */
@@ -96,25 +92,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    MPIR_ROMIO_Get_file_errhand(file, &old_errhandler);
-    if (!old_errhandler) {
-        /* MPI_File objects default to the errhandler set on MPI_FILE_NULL
-         * at file open time, or MPI_ERRORS_RETURN if no errhandler is set
-         * on MPI_FILE_NULL. (MPI-2.2, sec 13.7) */
-        MPIR_Errhandler_get_ptr(MPI_ERRORS_RETURN, old_errhandler_ptr);
-    } else {
-        MPIR_Errhandler_get_ptr(old_errhandler, old_errhandler_ptr);
-    }
-
-    if (old_errhandler_ptr) {
-        MPIR_Errhandler_release_ref(old_errhandler_ptr, &in_use);
-        if (!in_use) {
-            MPIR_Errhandler_free(old_errhandler_ptr);
-        }
-    }
-
-    MPIR_Errhandler_add_ref(errhan_ptr);
-    MPIR_ROMIO_Set_file_errhand(file, errhandler);
+    MPIR_File_set_errhandler_impl(file, errhan_ptr);
 #else
     /* Dummy in case ROMIO is not defined */
     mpi_errno = MPI_ERR_INTERN;
@@ -149,48 +127,3 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #endif
     /* --END ERROR HANDLING-- */
 }
-
-#ifndef MPICH_MPI_FROM_PMPI
-/* Export this routine only once (if we need to compile this file twice
-   to get the PMPI and MPI versions without weak symbols */
-void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
-{
-    MPIR_Errhandler *e_ptr = 0;
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Convert the MPI_Errhandler into an MPIR_Errhandler */
-
-    if (!e) {
-        *c = 0;
-        *kind = 1;      /* Use errors return as the default */
-    } else {
-        MPIR_ERRTEST_ERRHANDLER(e, mpi_errno);
-        MPIR_Errhandler_get_ptr(e, e_ptr);
-        if (!e_ptr) {
-            /* FIXME: We need an error return */
-            *c = 0;
-            *kind = 1;
-            return;
-        }
-        if (e_ptr->handle == MPI_ERRORS_RETURN) {
-            *c = 0;
-            *kind = 1;
-        } else if (e_ptr->handle == MPI_ERRORS_ARE_FATAL) {
-            *c = 0;
-            *kind = 0;
-        } else {
-            *c = e_ptr->errfn.C_File_Handler_function;
-            *kind = 2;
-            /* If the language is C++, we need to use a special call
-             * interface.  This is MPIR_File_call_cxx_errhandler.
-             * See file_call_errhandler.c */
-#ifdef HAVE_CXX_BINDING
-            if (e_ptr->language == MPIR_LANG__CXX)
-                *kind = 3;
-#endif
-        }
-    }
-  fn_fail:
-    return;
-}
-#endif

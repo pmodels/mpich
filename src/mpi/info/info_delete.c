@@ -43,7 +43,7 @@ Input Parameters:
 int MPI_Info_delete(MPI_Info info, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *info_ptr = 0, *prev_ptr, *curr_ptr;
+    MPIR_Info *info_ptr = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_DELETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -91,24 +91,10 @@ int MPI_Info_delete(MPI_Info info, const char *key)
 
     /* ... body of routine ...  */
 
-    prev_ptr = info_ptr;
-    curr_ptr = info_ptr->next;
-
-    while (curr_ptr) {
-        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            MPL_free(curr_ptr->key);
-            MPL_free(curr_ptr->value);
-            prev_ptr->next = curr_ptr->next;
-            MPIR_Handle_obj_free(&MPIR_Info_mem, curr_ptr);
-            break;
-        }
-        prev_ptr = curr_ptr;
-        curr_ptr = curr_ptr->next;
+    mpi_errno = MPIR_Info_delete(info_ptr, key);
+    if (mpi_errno) {
+        goto fn_fail;
     }
-
-    /* If curr_ptr is not defined, we never found the key */
-    MPIR_ERR_CHKANDJUMP1((!curr_ptr), mpi_errno, MPI_ERR_INFO_NOKEY, "**infonokey",
-                         "**infonokey %s", key);
 
     /* ... end of body of routine ... */
 

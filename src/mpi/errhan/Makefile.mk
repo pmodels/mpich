@@ -30,6 +30,7 @@ mpi_sources +=                                            \
     src/mpi/errhan/win_set_errhandler.c
 
 mpi_core_sources +=             \
+    src/mpi/errhan/errhan_impl.c \
     src/mpi/errhan/errutil.c    \
     src/mpi/errhan/dynerrutil.c
 

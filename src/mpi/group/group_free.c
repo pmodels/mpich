@@ -22,23 +22,6 @@ int MPI_Group_free(MPI_Group * group) __attribute__ ((weak, alias("PMPI_Group_fr
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Group_free
 #define MPI_Group_free PMPI_Group_free
-
-int MPIR_Group_free_impl(MPIR_Group * group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Do not free MPI_GROUP_EMPTY */
-    if (group_ptr->handle != MPI_GROUP_EMPTY) {
-        mpi_errno = MPIR_Group_release(group_ptr);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

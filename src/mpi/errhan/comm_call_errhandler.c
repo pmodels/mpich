@@ -50,7 +50,6 @@ Input Parameters:
 int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
-    int in_cs = FALSE;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
 
@@ -71,9 +70,6 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));  /* protect access to comm_ptr->errhandler */
-    in_cs = TRUE;
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -96,63 +92,11 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 
     /* ... body of routine ...  */
 
-    /* Check for predefined error handlers */
-    if (!comm_ptr->errhandler || comm_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        mpi_errno = MPIR_Err_return_comm(comm_ptr, "MPI_Comm_call_errhandler", errorcode);
-        goto fn_exit;
-    }
-
-    if (comm_ptr->errhandler->handle == MPI_ERRORS_RETURN) {
-        /* MPI_ERRORS_RETURN should always return MPI_SUCCESS */
-        goto fn_exit;
-    }
-
-    /* Check for the special case of errors-throw-exception.  In this case
-     * return the error code; the C++ wrapper will cause an exception to
-     * be thrown.
-     */
-#ifdef HAVE_CXX_BINDING
-    if (comm_ptr->errhandler->handle == MPIR_ERRORS_THROW_EXCEPTIONS) {
-        mpi_errno = errorcode;
-        goto fn_exit;
-    }
-#endif
-
-    /* Process any user-defined error handling function */
-    switch (comm_ptr->errhandler->language) {
-        case MPIR_LANG__C:
-            (*comm_ptr->errhandler->errfn.C_Comm_Handler_function) (&comm_ptr->handle, &errorcode);
-            break;
-#ifdef HAVE_CXX_BINDING
-        case MPIR_LANG__CXX:
-            MPIR_Process.cxx_call_errfn(0, &comm_ptr->handle,
-                                        &errorcode,
-                                        (void (*)(void)) comm_ptr->errhandler->
-                                        errfn.C_Comm_Handler_function);
-            break;
-#endif
-#ifdef HAVE_FORTRAN_BINDING
-        case MPIR_LANG__FORTRAN90:
-        case MPIR_LANG__FORTRAN:
-            {
-                /* If int and MPI_Fint aren't the same size, we need to
-                 * convert.  As this is not performance critical, we
-                 * do this even if MPI_Fint and int are the same size. */
-                MPI_Fint ferr = errorcode;
-                MPI_Fint commhandle = comm_ptr->handle;
-                (*comm_ptr->errhandler->errfn.F77_Handler_function) (&commhandle, &ferr);
-            }
-            break;
-#endif
-    }
+    mpi_errno = MPIR_Comm_call_errhandler_impl(comm_ptr, errorcode);
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
-    }
-
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_CALL_ERRHANDLER);
     return mpi_errno;
 

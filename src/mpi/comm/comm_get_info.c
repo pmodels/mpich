@@ -24,24 +24,6 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_get_info
 #define MPI_Comm_get_info PMPI_Comm_get_info
-
-int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* Allocate an empty info object */
-    mpi_errno = MPIR_Info_alloc(info_p_p);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-    MPII_Comm_get_hints(comm_ptr, *info_p_p);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

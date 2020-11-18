@@ -23,45 +23,6 @@ int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[]
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Graph_map
 #define MPI_Graph_map PMPI_Graph_map
-int MPIR_Graph_map(const MPIR_Comm * comm_ptr, int nnodes,
-                   const int indx[]ATTRIBUTE((unused)),
-                   const int edges[]ATTRIBUTE((unused)), int *newrank)
-{
-    MPL_UNREFERENCED_ARG(indx);
-    MPL_UNREFERENCED_ARG(edges);
-
-    /* This is the trivial version that does not remap any processes. */
-    if (comm_ptr->rank < nnodes) {
-        *newrank = comm_ptr->rank;
-    } else {
-        *newrank = MPI_UNDEFINED;
-    }
-    return MPI_SUCCESS;
-}
-
-int MPIR_Graph_map_impl(const MPIR_Comm * comm_ptr, int nnodes,
-                        const int indx[], const int edges[], int *newrank)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->graphMap != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->graphMap(comm_ptr, nnodes,
-                                                 (const int *) indx, (const int *) edges, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Graph_map(comm_ptr, nnodes,
-                                   (const int *) indx, (const int *) edges, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

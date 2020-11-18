@@ -23,66 +23,6 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Cart_map
 #define MPI_Cart_map PMPI_Cart_map
-
-int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                  const int periodic[], int *newrank)
-{
-    int rank, nranks, i, size, mpi_errno = MPI_SUCCESS;
-
-    MPL_UNREFERENCED_ARG(periodic);
-
-    /* Determine number of processes needed for topology */
-    if (ndims == 0) {
-        nranks = 1;
-    } else {
-        nranks = dims[0];
-        for (i = 1; i < ndims; i++)
-            nranks *= dims[i];
-    }
-    size = comm_ptr->remote_size;
-
-    /* Test that the communicator is large enough */
-    MPIR_ERR_CHKANDJUMP2(size < nranks, mpi_errno, MPI_ERR_DIMS, "**topotoolarge",
-                         "**topotoolarge %d %d", size, nranks);
-
-    /* Am I in this range? */
-    rank = comm_ptr->rank;
-    if (rank < nranks)
-        /* This relies on the ranks *not* being reordered by the current
-         * Cartesian routines */
-        *newrank = rank;
-    else
-        *newrank = MPI_UNDEFINED;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                       const int periods[], int *newrank)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->topo_fns->cartMap(comm_ptr, ndims,
-                                                (const int *) dims, (const int *) periods, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-        /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Cart_map(comm_ptr, ndims,
-                                  (const int *) dims, (const int *) periods, newrank);
-        MPIR_ERR_CHECK(mpi_errno);
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

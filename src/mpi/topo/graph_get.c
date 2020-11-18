@@ -54,8 +54,6 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *topo_ptr;
-    int i, n, *vals;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GRAPH_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -95,30 +93,10 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 #endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    topo_ptr = MPIR_Topology_get(comm_ptr);
-
-    MPIR_ERR_CHKANDJUMP((!topo_ptr ||
-                         topo_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY,
-                        "**notgraphtopo");
-    MPIR_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nnodes > maxindex), mpi_errno, MPI_ERR_ARG,
-                         "**argtoosmall", "**argtoosmall %s %d %d", "maxindex", maxindex,
-                         topo_ptr->topo.graph.nnodes);
-    MPIR_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nedges > maxedges), mpi_errno, MPI_ERR_ARG,
-                         "**argtoosmall", "**argtoosmall %s %d %d", "maxedges", maxedges,
-                         topo_ptr->topo.graph.nedges);
-
-    /* Get index */
-    n = topo_ptr->topo.graph.nnodes;
-    vals = topo_ptr->topo.graph.index;
-    for (i = 0; i < n; i++)
-        *indx++ = *vals++;
-
-    /* Get edges */
-    n = topo_ptr->topo.graph.nedges;
-    vals = topo_ptr->topo.graph.edges;
-    for (i = 0; i < n; i++)
-        *edges++ = *vals++;
+    mpi_errno = MPIR_Graph_get(comm_ptr, maxindex, maxedges, indx, edges);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

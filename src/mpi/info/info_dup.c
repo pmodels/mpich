@@ -25,44 +25,6 @@ int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo) __attribute__ ((weak, alias(
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_dup
 #define MPI_Info_dup PMPI_Info_dup
-
-int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *curr_old, *curr_new;
-
-    *new_info_ptr = NULL;
-    if (!info_ptr)
-        goto fn_exit;
-
-    /* Note that this routine allocates info elements one at a time.
-     * In the multithreaded case, each allocation may need to acquire
-     * and release the allocation lock.  If that is ever a problem, we
-     * may want to add an "allocate n elements" routine and execute this
-     * it two steps: count and then allocate */
-    /* FIXME : multithreaded */
-    mpi_errno = MPIR_Info_alloc(&curr_new);
-    MPIR_ERR_CHECK(mpi_errno);
-    *new_info_ptr = curr_new;
-
-    curr_old = info_ptr->next;
-    while (curr_old) {
-        mpi_errno = MPIR_Info_alloc(&curr_new->next);
-        MPIR_ERR_CHECK(mpi_errno);
-
-        curr_new = curr_new->next;
-        curr_new->key = MPL_strdup(curr_old->key);
-        curr_new->value = MPL_strdup(curr_old->value);
-
-        curr_old = curr_old->next;
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #endif
 
 /*@

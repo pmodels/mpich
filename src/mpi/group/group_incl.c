@@ -24,45 +24,6 @@ int MPI_Group_incl(MPI_Group group, int n, const int ranks[], MPI_Group * newgro
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Group_incl
 #define MPI_Group_incl PMPI_Group_incl
-
-int MPIR_Group_incl_impl(MPIR_Group * group_ptr, int n, const int ranks[],
-                         MPIR_Group ** new_group_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_INCL_IMPL);
-
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_INCL_IMPL);
-
-    if (n == 0) {
-        *new_group_ptr = MPIR_Group_empty;
-        goto fn_exit;
-    }
-
-    /* Allocate a new group and lrank_to_lpid array */
-    mpi_errno = MPIR_Group_create(n, new_group_ptr);
-    if (mpi_errno)
-        goto fn_fail;
-
-    (*new_group_ptr)->rank = MPI_UNDEFINED;
-    for (i = 0; i < n; i++) {
-        (*new_group_ptr)->lrank_to_lpid[i].lpid = group_ptr->lrank_to_lpid[ranks[i]].lpid;
-        if (ranks[i] == group_ptr->rank)
-            (*new_group_ptr)->rank = i;
-    }
-    (*new_group_ptr)->size = n;
-    (*new_group_ptr)->idx_of_first_lpid = -1;
-    /* TODO calculate is_local_dense_monotonic */
-
-
-  fn_exit:
-    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_INCL_IMPL);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 

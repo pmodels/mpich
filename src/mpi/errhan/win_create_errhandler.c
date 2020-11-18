@@ -49,7 +49,6 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
                               MPI_Errhandler * errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errhandler *errhan_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -71,15 +70,10 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 
     /* ... body of routine ...  */
 
-    errhan_ptr = (MPIR_Errhandler *) MPIR_Handle_obj_alloc(&MPIR_Errhandler_mem);
-    MPIR_ERR_CHKANDJUMP1(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPI_Errhandler");
-    errhan_ptr->language = MPIR_LANG__C;
-    errhan_ptr->kind = MPIR_WIN;
-    MPIR_Object_set_ref(errhan_ptr, 1);
-    errhan_ptr->errfn.C_Win_Handler_function = win_errhandler_fn;
+    mpi_errno = MPIR_Win_create_errhandler_impl(win_errhandler_fn, errhandler);
+    if (mpi_errno)
+        goto fn_fail;
 
-    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

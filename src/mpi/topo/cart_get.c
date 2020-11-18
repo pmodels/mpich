@@ -57,8 +57,6 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Topology *cart_ptr;
-    int i, n, *vals;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -94,14 +92,13 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    /* ... body of routine ...  */
-
-    cart_ptr = MPIR_Topology_get(comm_ptr);
-
 #ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPIR_Topology *cart_ptr;
+            cart_ptr = MPIR_Topology_get(comm_ptr);
+
             MPIR_ERR_CHKANDJUMP((!cart_ptr ||
                                  cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY,
                                 "**notcarttopo");
@@ -119,21 +116,12 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    n = cart_ptr->topo.cart.ndims;
+    /* ... body of routine ...  */
 
-    vals = cart_ptr->topo.cart.dims;
-    for (i = 0; i < n; i++)
-        *dims++ = *vals++;
-
-    /* Get periods */
-    vals = cart_ptr->topo.cart.periodic;
-    for (i = 0; i < n; i++)
-        *periods++ = *vals++;
-
-    /* Get coords */
-    vals = cart_ptr->topo.cart.position;
-    for (i = 0; i < n; i++)
-        *coords++ = *vals++;
+    mpi_errno = MPIR_Cart_get(comm_ptr, maxdims, dims, periods, coords);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* ... end of body of routine ... */
 

@@ -23,15 +23,6 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size)
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Pack_size
 #define MPI_Pack_size PMPI_Pack_size
-
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size)
-{
-    MPI_Aint typesize;
-    MPIR_Datatype_get_size_macro(datatype, typesize);
-    *size = incount * typesize;
-}
-
-
 #endif
 
 /*@

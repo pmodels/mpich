@@ -88,35 +88,10 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
 
     /* ... body of routine ...  */
 
-    /*
-     * Since outstanding I/O bumps the reference count on the communicator,
-     * we wait until we hold the last reference count to
-     * ensure that all communication has completed.  The reference count
-     * is 1 when the communicator is created, and it is incremented
-     * only for pending communication operations (and decremented when
-     * those complete).
-     */
-    /* FIXME-MT should we be checking this? */
-    if (MPIR_Object_get_ref(comm_ptr) > 1) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (MPIR_Object_get_ref(comm_ptr) > 1) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                goto fn_fail;
-            }
-            /* --END ERROR HANDLING-- */
-        }
-        MPID_Progress_end(&progress_state);
-    }
-
-    mpi_errno = MPID_Comm_disconnect(comm_ptr);
-    if (mpi_errno != MPI_SUCCESS)
+    mpi_errno = MPIR_Comm_disconnect(comm_ptr);
+    if (mpi_errno) {
         goto fn_fail;
-
+    }
     *comm = MPI_COMM_NULL;
 
     /* ... end of body of routine ... */

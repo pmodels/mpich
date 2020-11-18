@@ -23,25 +23,6 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count 
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_get_true_extent_x
 #define MPI_Type_get_true_extent_x PMPI_Type_get_true_extent_x
-
-/* any non-MPI functions go here, especially non-static ones */
-
-void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
-                                      MPI_Count * true_extent)
-{
-    MPIR_Datatype *datatype_ptr = NULL;
-
-    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
-    if (HANDLE_IS_BUILTIN(datatype)) {
-        *true_lb = 0;
-        *true_extent = MPIR_Datatype_get_basic_size(datatype);
-    } else {
-        *true_lb = datatype_ptr->true_lb;
-        *true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
-    }
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

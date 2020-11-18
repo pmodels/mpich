@@ -25,8 +25,6 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[], char **array_o
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Comm_spawn_multiple
 #define MPI_Comm_spawn_multiple PMPI_Comm_spawn_multiple
-
-/* Any internal routines can go here.  Make them static if possible */
 #endif
 
 /*@

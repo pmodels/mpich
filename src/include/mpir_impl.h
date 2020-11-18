@@ -11,7 +11,7 @@
  * function listed here, except trivial ones.
  */
 
-/* attr */
+/* -- attr -- */
 /* MPI_Comm_free_keyval, MPI_Type_free_keyval, and MPI_Win_free_keyval can share
  * the same routine. */
 void MPIR_free_keyval(MPII_Keyval * keyval_ptr);
@@ -42,5 +42,29 @@ int MPIR_Win_get_attr_impl(MPIR_Win * win_ptr, int win_keyval, void *attribute_v
 int MPIR_Win_set_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr, void *attribute_val,
                            MPIR_Attr_type attrType);
 int MPIR_Win_delete_attr_impl(MPIR_Win * win_ptr, MPII_Keyval * keyval_ptr);
+
+/* -- errhan -- */
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
+                                     MPI_Errhandler * errhandler);
+void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPI_Errhandler * errhandler);
+void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr);
+int MPIR_Comm_call_errhandler_impl(MPIR_Comm * comm_ptr, int errorcode);
+
+int MPIR_Win_create_errhandler_impl(MPI_Win_errhandler_function * function,
+                                    MPI_Errhandler * errhandler);
+void MPIR_Win_get_errhandler_impl(MPIR_Win * win_ptr, MPI_Errhandler * errhandler);
+void MPIR_Win_set_errhandler_impl(MPIR_Win * win_ptr, MPIR_Errhandler * errhandler_ptr);
+int MPIR_Win_call_errhandler_impl(MPIR_Win * win_ptr, int errorcode);
+
+int MPIR_File_create_errhandler_impl(MPI_File_errhandler_function * function,
+                                     MPI_Errhandler * errhandler);
+/* NOTE: File is handled differently from Comm/Win due to ROMIO abstraction */
+void MPIR_File_get_errhandler_impl(MPI_File file, MPI_Errhandler * errhandler);
+void MPIR_File_set_errhandler_impl(MPI_File file, MPIR_Errhandler * errhandler_ptr);
+int MPIR_File_call_errhandler_impl(MPI_File file, int errorcode);
+
+/* -- pt2pt */
+int MPIR_Sendrecv_replace_impl(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag,
+                               int source, int recvtag, MPIR_Comm * comm_ptr, MPI_Status * status);
 
 #endif /* MPIR_IMPL_H_INCLUDED */

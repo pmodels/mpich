@@ -23,24 +23,6 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_get_extent_x
 #define MPI_Type_get_extent_x PMPI_Type_get_extent_x
-
-/* any non-MPI functions go here, especially non-static ones */
-
-void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
-{
-    MPIR_Datatype *datatype_ptr = NULL;
-
-    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-
-    if (HANDLE_IS_BUILTIN(datatype)) {
-        *lb = 0;
-        *extent = MPIR_Datatype_get_basic_size(datatype);
-    } else {
-        *lb = datatype_ptr->lb;
-        *extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
-    }
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@

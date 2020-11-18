@@ -28,58 +28,6 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Testsome
 #define MPI_Testsome PMPI_Testsome
-
-int MPIR_Testsome_state(int incount, MPIR_Request * request_ptrs[],
-                        int *outcount, int array_of_indices[], MPI_Status array_of_statuses[],
-                        MPID_Progress_state * state)
-{
-    int i;
-    int n_inactive;
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Progress_test(state);
-    /* --BEGIN ERROR HANDLING-- */
-    MPIR_ERR_CHECK(mpi_errno);
-    /* --END ERROR HANDLING-- */
-
-    n_inactive = 0;
-    *outcount = 0;
-
-    for (i = 0; i < incount; i++) {
-        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
-            mpi_errno = MPID_Progress_test(state);
-            MPIR_ERR_CHECK(mpi_errno);
-        }
-
-        if (request_ptrs[i] != NULL && MPIR_Request_has_poll_fn(request_ptrs[i])) {
-            mpi_errno = MPIR_Grequest_poll(request_ptrs[i], &array_of_statuses[i]);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-        }
-        if (!MPIR_Request_is_active(request_ptrs[i])) {
-            n_inactive += 1;
-        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
-            array_of_indices[*outcount] = i;
-            *outcount += 1;
-        }
-    }
-
-    if (n_inactive == incount)
-        *outcount = MPI_UNDEFINED;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
-                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
-{
-    return MPIR_Testsome_state(incount, request_ptrs, outcount, array_of_indices,
-                               array_of_statuses, NULL);
-}
-
 #endif
 
 /*@
