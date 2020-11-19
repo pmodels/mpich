@@ -358,12 +358,14 @@ int MPIDI_UCX_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
-        mpi_errno = init_worker(i);
+    if (MPIDI_UCX_global.num_vnis > 1) {
+        for (int i = 1; i < MPIDI_UCX_global.num_vnis; i++) {
+            mpi_errno = init_worker(i);
+            MPIR_ERR_CHECK(mpi_errno);
+        }
+        mpi_errno = all_vnis_address_exchange();
         MPIR_ERR_CHECK(mpi_errno);
     }
-    mpi_errno = all_vnis_address_exchange();
-    MPIR_ERR_CHECK(mpi_errno);
 
     /* flush all pending wireup operations or it may interfere with RMA flush_ops count */
     flush_all();
