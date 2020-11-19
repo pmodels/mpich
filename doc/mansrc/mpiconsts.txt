@@ -528,7 +528,6 @@ Error codes for MPI_T:
 . MPI_T_ERR_NOT_INITIALIZED   - Interface not initialized
 . MPI_T_ERR_CANNOT_INIT       - Interface not in the state to be initialized
 . MPI_T_ERR_INVALID_INDEX     - The index is invalid or has been deleted
-. MPI_T_ERR_INVALID_ITEM      - Item index queried is out of range
 . MPI_T_ERR_INVALID_HANDLE    - The handle is invalid
 . MPI_T_ERR_OUT_OF_HANDLES    - No more handles available
 . MPI_T_ERR_OUT_OF_SESSIONS   - No more sessions available
