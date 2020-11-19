@@ -871,7 +871,11 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
         {
             MPIR_ERRTEST_ARGNEG(nnodes, "nnodes", mpi_errno);
             MPIR_ERRTEST_ARGNEG(ndims, "ndims", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+            if (!(nnodes == 1 && ndims == 0)) {
+                /* nnodes == 1 && ndims == 0 is allowed.
+                 * When ndims is 0, dims can be NULL. */
+                MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+            }
         }
         MPID_END_ERROR_CHECKS;
     }
