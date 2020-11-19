@@ -6,21 +6,23 @@
 #include "mpidimpl.h"
 #include "ucx_impl.h"
 
-void *MPIDI_UCX_am_buf;         /* message buffer has global scope because ucx executes am_handler */
-
-void MPIDI_UCX_am_handler(void *request, ucs_status_t status, ucp_tag_recv_info_t * info)
+ucs_status_t MPIDI_UCX_am_handler(void *arg, void *data, size_t length, ucp_ep_h reply_ep,
+                                  unsigned flags)
 {
-    void *p_data;
-    void *in_data;
+    void *tmp, *p_data;
     size_t data_sz;
-    MPIDI_UCX_am_header_t *msg_hdr = (MPIDI_UCX_am_header_t *) MPIDI_UCX_am_buf;
 
-    p_data = in_data =
-        (char *) msg_hdr->payload + (info->length - msg_hdr->data_sz - sizeof(*msg_hdr));
+    /* need to copy the message data for alignment purposes */
+    tmp = MPL_malloc(length, MPL_MEM_BUFFER);
+    MPIR_Memcpy(tmp, data, length);
+    MPIDI_UCX_am_header_t *msg_hdr = tmp;
+    p_data = (char *) msg_hdr->payload + (length - msg_hdr->data_sz - sizeof(*msg_hdr));
     data_sz = msg_hdr->data_sz;
 
     /* note: setting is_local, is_async to 0, 0 */
     MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
                                                        p_data, data_sz, 0, 0, NULL);
 
+    MPL_free(tmp);
+    return UCS_OK;
 }
