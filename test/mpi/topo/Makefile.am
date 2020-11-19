@@ -16,6 +16,7 @@ noinst_PROGRAMS = \
     cartshift1    \
     cartsuball    \
     cartcreates   \
+    dims0         \
     dims1         \
     dims2         \
     dims3         \
