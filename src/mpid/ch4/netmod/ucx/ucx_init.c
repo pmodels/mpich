@@ -220,7 +220,7 @@ int MPIDI_UCX_init_local(int *tag_bits)
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
     /* For now use only the tag feature */
-    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
+    features = UCP_FEATURE_TAG | UCP_FEATURE_RMA | UCP_FEATURE_AM;
     ucp_params.features = features;
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = request_init_callback;
@@ -273,6 +273,11 @@ int MPIDI_UCX_mpi_init_hook(int rank, int size, int appnum, int *tag_bits, MPIR_
     /* initialize worker for vni 0 */
     mpi_errno = init_worker(0);
     MPIR_ERR_CHECK(mpi_errno);
+
+    ucs_status_t ucx_status =
+        ucp_worker_set_am_handler(MPIDI_UCX_global.ctx[0].worker, MPIDI_UCX_AM_HANDLER_ID,
+                                  &MPIDI_UCX_am_handler, NULL, UCP_AM_FLAG_WHOLE_MSG);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
 
     mpi_errno = initial_address_exchange(init_comm);
     MPIR_ERR_CHECK(mpi_errno);

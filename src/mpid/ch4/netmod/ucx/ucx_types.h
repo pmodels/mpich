@@ -20,7 +20,7 @@
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_AM_TAG               (1ULL << MPIR_Process.tag_bits)
+#define MPIDI_UCX_AM_HANDLER_ID        (0)
 
 typedef struct {
     ucp_worker_h worker;
