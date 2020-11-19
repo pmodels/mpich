@@ -484,10 +484,6 @@ N*/
 . MPI_T_ERR_INVALID_INDEX - Index is invalid or has been deleted.
 N*/
 
-/*N MPI_T_ERR_INVALID_ITEM
-. MPI_T_ERR_INVALID_ITEM - Item index queried is out of range.
-N*/
-
 /*N MPI_T_ERR_INVALID_NAME
 . MPI_T_ERR_INVALID_NAME - The variable or category name is invalid
 N*/
