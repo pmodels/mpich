@@ -494,9 +494,6 @@ char *mpit_errclassToStr(int err)
         case MPI_T_ERR_INVALID_INDEX:
             p = "ERR_INVALID_INDEX";
             break;
-        case MPI_T_ERR_INVALID_ITEM:
-            p = "ERR_INVALID_ITEM";
-            break;
         case MPI_T_ERR_INVALID_HANDLE:
             p = "ERR_INVALID_HANDLE";
             break;

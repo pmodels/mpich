@@ -45,7 +45,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_HANDLE
-.N MPI_T_ERR_INVALID_ITEM
+.N MPI_T_ERR_INVALID_INDEX
 @*/
 int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
 {
