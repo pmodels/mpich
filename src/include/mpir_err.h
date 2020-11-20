@@ -697,7 +697,7 @@ cvars:
     do {                                                                \
         if ((index_) < 0 || ((unsigned) index_) >= utarray_len((enum_)->items)) \
         {                                                               \
-            MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_ITEM, goto fn_fail, "**itemindex"); \
+            MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_INDEX, goto fn_fail, "**itemindex"); \
         }                                                               \
     } while (0)
 

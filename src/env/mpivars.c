@@ -536,9 +536,6 @@ const char *mpit_errclasscheck(int err)
         case MPI_T_ERR_INVALID_INDEX:
             p = "MPI_T index invalid";
             break;
-        case MPI_T_ERR_INVALID_ITEM:
-            p = "MPI_T item index out of range";
-            break;
         case MPI_T_ERR_INVALID_HANDLE:
             p = "MPI_T handle invalid";
             break;
