@@ -418,4 +418,15 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Ai
     return (am_hdr_sz + data_sz) <= (MPIDI_UCX_MAX_AM_EAGER_SZ - sizeof(MPIDI_UCX_am_header_t));
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
+    return ret;
+}
+
 #endif /* UCX_AM_H_INCLUDED */

@@ -52,6 +52,7 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .am_isendv = MPIDI_NM_am_isendv,
     .am_send_hdr_reply = MPIDI_NM_am_send_hdr_reply,
     .am_isend_reply = MPIDI_NM_am_isend_reply,
+    .am_recv = MPIDI_NM_am_recv,
     .am_hdr_max_sz = MPIDI_NM_am_hdr_max_sz,
     .am_eager_limit = MPIDI_NM_am_eager_limit,
     .am_eager_buf_limit = MPIDI_NM_am_eager_buf_limit,
