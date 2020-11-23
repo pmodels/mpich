@@ -213,6 +213,7 @@ typedef struct MPIDIG_req_t {
     int tag;
     MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
+    bool recv_ready;            /* indicating if the request is ready for data */
 } MPIDIG_req_t;
 
 /* Structure to capture arguments for pt2pt persistent communications */

@@ -257,8 +257,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_rdma_read(MPIDI_OFI_am_header_t * 
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
 
-    do_long_am_recv(lmt_msg->reg_sz, rreq, lmt_msg);
-    /* completion in lmt event functions */
+    if (MPIDIG_IS_REQUEST_READY_FOR_RECV(rreq)) {
+        do_long_am_recv(lmt_msg->reg_sz, rreq, lmt_msg);
+        /* completion in lmt event functions */
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_RDMA_READ);
