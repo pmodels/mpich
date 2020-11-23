@@ -8,27 +8,23 @@
 
 #include "ch4_impl.h"
 
-#define MPIDIG_AM_SEND_HDR_SIZE  sizeof(MPIDIG_hdr_t)
 #define MPIDIG_AM_SEND_FLAGS_NONE (0)
 #define MPIDIG_AM_SEND_FLAGS_SYNC (1)
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
 
-MPL_STATIC_INLINE_PREFIX int MPIDIG_eager_limit(int is_local)
+MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                 const void *buf, MPI_Count count,
+                                                 MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    int thresh;
 #ifdef MPIDI_CH4_DIRECT_NETMOD
-    thresh = MPIDI_NM_am_eager_limit();
+    return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
 #else
     if (is_local) {
-        thresh = MPIDI_SHM_am_eager_limit();
+        return MPIDI_SHM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
     } else {
-        thresh = MPIDI_NM_am_eager_limit();
+        return MPIDI_NM_am_check_eager(am_hdr_sz, data_sz, buf, count, datatype, sreq);
     }
 #endif
-    thresh -= MPIDIG_AM_SEND_HDR_SIZE;
-    MPIR_Assert(thresh > 0);
-
-    return thresh;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
@@ -73,7 +69,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 #endif
 
     int is_local = MPIDI_av_is_local(addr);
-    if (data_sz > MPIDIG_eager_limit(is_local)) {
+    if (MPIDIG_check_eager(is_local, sizeof(am_hdr), data_sz, buf, count, datatype, sreq)) {
+        /* EAGER send */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (is_local) {
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
+                                           count, datatype, sreq);
+        } else
+#endif
+        {
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
+                                          count, datatype, sreq);
+        }
+    } else {
         /* RNDV send */
         MPIDIG_REQUEST(sreq, req->sreq).src_buf = buf;
         MPIDIG_REQUEST(sreq, req->sreq).count = count;
@@ -91,18 +99,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_isend_impl(const void *buf, MPI_Aint count,
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr));
-        }
-    } else {
-        /* EAGER send */
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (is_local) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
-                                           count, datatype, sreq);
-        } else
-#endif
-        {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDIG_SEND, &am_hdr, sizeof(am_hdr), buf,
-                                          count, datatype, sreq);
         }
     }
     MPIR_ERR_CHECK(mpi_errno);
