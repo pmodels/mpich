@@ -138,4 +138,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_REQUEST_FINALIZE);
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                       const void *data, MPI_Count count,
+                                                       MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    /* TODO: add checking for IPC transmission */
+    return (am_hdr_sz + data_sz) <= MPIDI_POSIX_am_eager_limit();
+}
+
 #endif /* SHM_AM_H_INCLUDED */
