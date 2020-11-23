@@ -4,5 +4,5 @@
 ##
 
 mpi_core_sources += \
-    src/mpi/pt2pt/pt2pt_impl.c \
+    src/mpi/pt2pt/sendrecv.c \
     src/mpi/pt2pt/bsendutil.c
