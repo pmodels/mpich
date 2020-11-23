@@ -709,9 +709,9 @@ int QMPI_Get_calling_address(QMPI_Context context, void **address)
             const char *end_pattern = "]";
 
             char *start, *end;
-            if (start = strstr(traces[trace_entry], start_pattern)) {
+            if ((start = strstr(traces[trace_entry], start_pattern))) {
                 start += strlen(start_pattern);
-                if (end = strstr(start, end_pattern)) {
+                if ((end = strstr(start, end_pattern))) {
                     target = (char *) malloc(end - start + 1);
                     memcpy(target, start, end - start);
                     target[end - start] = '\0';
