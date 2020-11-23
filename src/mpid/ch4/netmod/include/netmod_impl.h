@@ -92,6 +92,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ZCOPY_START);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ZCOPY_START);
+
+    ret = MPIDI_NM_func->am_recv(rreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AM_ZCOPY_START);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
