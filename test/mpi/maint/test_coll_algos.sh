@@ -201,11 +201,14 @@ for algo_name in ${algo_names}; do
         echo "allred2 4 arg=-evenmemtype=host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "allred2 4 arg=-evenmemtype=reg_host arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
         echo "allred2 4 arg=-evenmemtype=device arg=-oddmemtype=device ${env}" >> ${testlist_gpu}
-        echo "allred3 10 ${env}" >> ${testlist_cvar}
-        echo "allred4 4 ${env}" >> ${testlist_cvar}
         echo "allred5 5 ${env}" >> ${testlist_cvar}
-        echo "allred6 4 ${env}" >> ${testlist_cvar}
-        echo "allred6 7 ${env}" >> ${testlist_cvar}
+        if false ; then
+            # gentran_ring algorithm doesn't work with non-commutative ops
+            echo "allred3 10 ${env}" >> ${testlist_cvar}
+            echo "allred4 4 ${env}" >> ${testlist_cvar}
+            echo "allred6 4 ${env}" >> ${testlist_cvar}
+            echo "allred6 7 ${env}" >> ${testlist_cvar}
+        fi
         env=""
     fi
 done
@@ -298,9 +301,11 @@ for algo_name in ${algo_names}; do
         echo "red_scat_block 4 ${env}" >> ${testlist_cvar}
         echo "red_scat_block 5 ${env}" >> ${testlist_cvar}
         echo "red_scat_block 8 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 4 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 5 ${env}" >> ${testlist_cvar}
-        echo "red_scat_block2 10 ${env}" >> ${testlist_cvar}
+        if ! [[ "$algo_name" =~ "gentran_recexch" ]] ; then
+            echo "red_scat_block2 4 ${env}" >> ${testlist_cvar}
+            echo "red_scat_block2 5 ${env}" >> ${testlist_cvar}
+            echo "red_scat_block2 10 ${env}" >> ${testlist_cvar}
+        fi
         echo "redscatblk3 8 ${env}" >> ${testlist_cvar}
         echo "redscatblk3 10 ${env}" >> ${testlist_cvar}
         env=""
@@ -330,9 +335,11 @@ for algo_name in ${algo_names}; do
 
         echo "redscat 4 ${env}" >> ${testlist_cvar}
         echo "redscat 6 ${env}" >> ${testlist_cvar}
-        echo "redscat2 4 ${env}" >> ${testlist_cvar}
-        echo "redscat2 5 ${env}" >> ${testlist_cvar}
-        echo "redscat2 10 ${env}" >> ${testlist_cvar}
+        if ! [[ "$algo_name" =~ "gentran_recexch" ]] ; then
+            echo "redscat2 4 ${env}" >> ${testlist_cvar}
+            echo "redscat2 5 ${env}" >> ${testlist_cvar}
+            echo "redscat2 10 ${env}" >> ${testlist_cvar}
+        fi
         echo "redscat3 8 ${env}" >> ${testlist_cvar}
         env=""
     done
@@ -508,7 +515,9 @@ for algo_name in ${algo_names}; do
                 env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name}"
                 env="${env} env=MPIR_CVAR_IALLTOALLV_SCATTERED_BATCH_SIZE=${batchsize}"
                 env="${env} env=MPIR_CVAR_IALLTOALLV_SCATTERED_OUTSTANDING_TASKS=${task}"
-                echo "alltoallv 8 ${env}" >> ${testlist_cvar}
+                if ! [[ $algo_name =~ ^gentran_(scattered) ]] ; then
+                    echo "alltoallv 8 ${env}" >> ${testlist_cvar}
+                fi
                 echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
                 env=""
             done
@@ -520,8 +529,9 @@ algo_names="gentran_blocked gentran_inplace"
 for algo_name in ${algo_names}; do
     #set the environment
     env="${testing_env} env=MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM=${algo_name}"
-
-    echo "alltoallv 10 ${env}" >> ${testlist_cvar}
+    if ! [[ $algo_name =~ ^gentran_(blocked|inplace) ]] ; then
+        echo "alltoallv 10 ${env}" >> ${testlist_cvar}
+    fi
     echo "alltoallv0 10 ${env}" >> ${testlist_cvar}
     env=""
 done
@@ -652,10 +662,12 @@ for algo_name in ${algo_names}; do
 
     echo "alltoallw1 10 ${env}" >> ${testlist_cvar}
     echo "alltoallw2 10 ${env}" >> ${testlist_cvar}
-    echo "alltoallw_zeros 1 ${env}" >> ${testlist_cvar}
-    echo "alltoallw_zeros 2 ${env}" >> ${testlist_cvar}
-    echo "alltoallw_zeros 5 ${env}" >> ${testlist_cvar}
-    echo "alltoallw_zeros 8 ${env}" >> ${testlist_cvar}
+    if ! [[ $algo_name =~ ^gentran_(blocked|inplace) ]] ; then
+        echo "alltoallw_zeros 1 ${env}" >> ${testlist_cvar}
+        echo "alltoallw_zeros 2 ${env}" >> ${testlist_cvar}
+        echo "alltoallw_zeros 5 ${env}" >> ${testlist_cvar}
+        echo "alltoallw_zeros 8 ${env}" >> ${testlist_cvar}
+    fi
     env=""
 done
 
