@@ -44,7 +44,7 @@ Output Parameters:
 
 .N SignalSafe
 
-.N Deprecated
+.N Removed
 The replacement for this routine is 'MPI_Get_address'.
 
 .N Fortran

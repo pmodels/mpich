@@ -39,7 +39,7 @@ Input Parameters:
 Output Parameters:
 . newtype - new datatype (handle)
 
-.N Deprecated
+.N Removed
 This routine is replaced by 'MPI_Type_create_hindexed'.
 
 .N ThreadSafe

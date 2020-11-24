@@ -43,7 +43,7 @@ of handles to datatype objects)
 Output Parameters:
 . newtype - new datatype (handle)
 
-.N Deprecated
+.N Removed
 The replacement for this routine is 'MPI_Type_create_struct'
 
 Notes:
