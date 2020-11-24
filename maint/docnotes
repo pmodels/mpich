@@ -156,6 +156,12 @@ Deprecated routines (see 2.6.1)
  The current MPI standard defines this routine as deprecated. The routine may
  continue to be used, but new code should use the replacement routine.
 N*/
+Removed routines (see 2.6.1)
+/*N Removed
+ Removed Function:
+ The current MPI standard defines this routine as removed. The user should use
+ the replacement routine.
+N*/
 -----------------------------------------------------------------------------
 /*N Errhandler
     Error handlers:
