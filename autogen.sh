@@ -775,6 +775,13 @@ echo_n "Building ROMIO glue code... "
 ( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
 echo "done"
 
+########################################################################
+## Building C interfaces
+########################################################################
+
+echo_n "generating MPI C functions..."
+$PYTHON maint/gen_binding_c.py
+echo "done"
 
 ########################################################################
 ## Building non-C interfaces
