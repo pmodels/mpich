@@ -1409,9 +1409,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 ## MPI-3 Mprobe routines
 **mpi_improbe: MPI_Improbe failed
-**mpi_improbe %d %d %C %p %p %p: MPI_Improbe(source=%d, tag=%d, comm=%C, flag=%p, message=%p, status=%p)
+**mpi_improbe %i %t %C %p %p %p: MPI_Improbe(source=%i, tag=%t, comm=%C, flag=%p, message=%p, status=%p)
 **mpi_mprobe: MPI_Mprobe failed
-**mpi_mprobe %d %d %C %p %p: MPI_Mprobe(source=%d, tag=%d, comm=%C, message=%p, status=%p)
+**mpi_mprobe %i %t %C %p %p: MPI_Mprobe(source=%i, tag=%t, comm=%C, message=%p, status=%p)
 **mpi_mrecv: MPI_Mrecv failed
 **mpi_mrecv %p %d %D %p %p: MPI_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
 **mpi_imrecv: MPI_Imrecv failed
