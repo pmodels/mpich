@@ -150,13 +150,11 @@ N*/
 N*/
 
 -----------------------------------------------------------------------------
-MPI-2 deprecated some routines (see 2.6.1)
+Deprecated routines (see 2.6.1)
 /*N Deprecated
  Deprecated Function:
- The MPI-2 standard deprecated a number of routines because MPI-2 provides
- better versions.  This routine is one of those that was deprecated.  The
- routine may continue to be used, but new code should use the replacement
- routine.
+ The current MPI standard defines this routine as deprecated. The routine may
+ continue to be used, but new code should use the replacement routine.
 N*/
 -----------------------------------------------------------------------------
 /*N Errhandler
