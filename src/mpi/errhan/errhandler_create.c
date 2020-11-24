@@ -45,7 +45,7 @@ freed.
 
 .N ThreadSafe
 
-.N Deprecated
+.N Removed
 The replacement routine for this function is 'MPI_Comm_create_errhandler'.
 
 .N Fortran

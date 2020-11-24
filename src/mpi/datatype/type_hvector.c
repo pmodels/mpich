@@ -38,7 +38,11 @@ Input Parameters:
 Output Parameters:
 . newtype - new datatype (handle)
 
-   Notes:
+.N Removed
+
+This routine is replaced by 'MPI_Type_create_hvector'.
+
+.N ThreadSafe
 
 .N Fortran
 
