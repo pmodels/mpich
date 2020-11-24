@@ -36,6 +36,9 @@ Output Parameters:
 . errhandler - MPI error handler currently associated with communicator
 (handle)
 
+.N Removed
+The replacement routine for this function is 'MPI_Comm_get_errhandler'.
+
 .N ThreadSafe
 
 .N Fortran
