@@ -35,7 +35,7 @@ Input Parameters:
 
 .N ThreadSafe
 
-.N Deprecated
+.N Removed
 The replacement for this routine is 'MPI_Comm_set_errhandler'.
 
 .N Fortran

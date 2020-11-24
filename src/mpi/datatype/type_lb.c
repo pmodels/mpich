@@ -35,7 +35,7 @@ Output Parameters:
 . displacement - displacement of lower bound from origin,
                              in bytes (address integer)
 
-.N Deprecated
+.N Removed
 The replacement for this routine is 'MPI_Type_Get_extent'.
 
 .N SignalSafe
