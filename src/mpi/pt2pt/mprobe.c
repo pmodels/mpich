@@ -115,7 +115,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message * message, MPI_St
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_mprobe", "**mpi_mprobe %d %d %C %p %p", source, tag, comm,
+                                 "**mpi_mprobe", "**mpi_mprobe %i %t %C %p %p", source, tag, comm,
                                  message, status);
     }
 #endif
