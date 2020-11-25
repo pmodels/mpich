@@ -81,4 +81,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
     return MPI_SUCCESS;
 }
 
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                      const void *data, MPI_Count count,
+                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    MPIR_Assert(0);
+    return false;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_RECV);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_RECV);
+    return ret;
+}
+
 #endif /* STUBNM_AM_H_INCLUDED */
