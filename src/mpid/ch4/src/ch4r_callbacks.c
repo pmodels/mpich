@@ -340,13 +340,22 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
          * set to the recv side datatype and count when it is matched */
         MPIDIG_REQUEST(rreq, datatype) = MPI_BYTE;
         MPIDIG_REQUEST(rreq, count) = hdr->data_sz;
-        if (in_data_sz) {
-            MPIR_Assert(in_data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
-            mpi_errno =
-                MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
-            MPIR_Assert(pack_buf);
-            MPIDIG_REQUEST(rreq, buffer) = pack_buf;
+        if (hdr->data_sz) {
+            if (in_data_sz) {
+                /* If there is inline data, we allocate unexpected buffer */
+                MPIR_Assert(in_data_sz <= MPIR_CVAR_CH4_AM_PACK_BUFFER_SIZE);
+                mpi_errno =
+                    MPIDU_genq_private_pool_alloc_cell(MPIDI_global.unexp_pack_buf_pool, &pack_buf);
+                MPIR_Assert(pack_buf);
+                MPIDIG_REQUEST(rreq, buffer) = pack_buf;
+            } else {
+                /* if the SEND expect to contain data, but there is no inline data, mark the recv
+                 * request as not ready. */
+                MPIDIG_REQUEST(rreq, buffer) = NULL;
+                MPIDIG_REQUEST(rreq, recv_ready) = false;
+            }
         } else {
+            /* The SEND is a zero byte messeage */
             MPIDIG_REQUEST(rreq, buffer) = NULL;
         }
         MPIDIG_REQUEST(rreq, rank) = hdr->src_rank;
@@ -361,8 +370,9 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_RTS;
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
         } else {
-            /* this is unexpected EAGER */
-            MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
+            if (MPIDIG_REQUEST(rreq, recv_ready)) {
+                MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_BUSY;
+            }
         }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         MPIDI_REQUEST(rreq, is_local) = is_local;
@@ -395,6 +405,18 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_enqueue_unexp(rreq, MPIDIG_context_id_to_uelist(hdr->context_id));
         }
         MPID_THREAD_CS_EXIT(VCI, MPIDIU_THREAD_MPIDIG_GLOBAL_MUTEX);
+
+        /* at this point, we have created and enqueued the unexpected request. If the request is
+         * ready for recv, we increase the seq_no and init the recv */
+        if (MPIDIG_REQUEST(rreq, recv_ready)) {
+            MPIDIG_REQUEST(rreq, req->seq_no) =
+                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                             MPIDIG_REQUEST(rreq, req->seq_no),
+                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+            MPIDIG_recv_type_init(hdr->data_sz, rreq);
+        }
     } else {
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "posted req %p handle=0x%x", rreq, rreq->handle));
@@ -415,6 +437,14 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
             MPIDIG_REQUEST(rreq, req->rreq.match_req) = NULL;
             MPIDIG_recv_type_init(hdr->data_sz, rreq);
             MPIDIG_do_cts(rreq);
+        } else {
+            MPIDIG_REQUEST(rreq, req->seq_no) =
+                MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                            (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
+                             MPIDIG_REQUEST(rreq, req->seq_no),
+                             MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
+            MPIDIG_recv_type_init(hdr->data_sz, rreq);
         }
     }
 
@@ -426,15 +456,6 @@ int MPIDIG_send_target_msg_cb(int handler_id, void *am_hdr, void *data, MPI_Aint
     MPIDIG_REQUEST(rreq, req->status) |= MPIDIG_REQ_IN_PROGRESS;
 
     MPIDIG_REQUEST(rreq, req->target_cmpl_cb) = recv_target_cmpl_cb;
-    if (!(hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS)) {
-        MPIDIG_REQUEST(rreq, req->seq_no) =
-            MPL_atomic_fetch_add_uint64(&MPIDI_global.nxt_seq_no, 1);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        (MPL_DBG_FDEST, "seq_no: me=%" PRIu64 " exp=%" PRIu64,
-                         MPIDIG_REQUEST(rreq, req->seq_no),
-                         MPL_atomic_load_uint64(&MPIDI_global.exp_seq_no)));
-        MPIDIG_recv_type_init(hdr->data_sz, rreq);
-    }
 
     if (is_async) {
         if (hdr->flags & MPIDIG_AM_SEND_FLAGS_RTS) {

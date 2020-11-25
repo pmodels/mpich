@@ -49,7 +49,8 @@ typedef struct {
     int conn_id;
 } MPIDI_OFI_comm_t;
 enum {
-    MPIDI_AMTYPE_SHORT_HDR = 0,
+    MPIDI_AMTYPE_NONE = 0,
+    MPIDI_AMTYPE_SHORT_HDR,
     MPIDI_AMTYPE_SHORT,
     MPIDI_AMTYPE_PIPELINE,
     MPIDI_AMTYPE_RDMA_READ
@@ -161,6 +162,8 @@ typedef struct {
     MPIDI_OFI_am_request_header_t *req_hdr;
     MPIDI_OFI_deferred_am_isend_req_t *deferred_req;    /* saving information when an AM isend is
                                                          * deferred */
+    uint8_t am_type_choice;     /* save amtype to avoid double checking */
+    MPI_Aint data_sz;           /* save data_sz to avoid double checking */
 } MPIDI_OFI_am_request_t;
 
 

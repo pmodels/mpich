@@ -92,6 +92,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * rreq)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ZCOPY_START);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ZCOPY_START);
+
+    ret = MPIDI_NM_func->am_recv(rreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AM_ZCOPY_START);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
 {
     int ret;
@@ -113,6 +126,13 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_limit(void)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_eager_buf_limit(void)
 {
     return MPIDI_NM_func->am_eager_buf_limit();
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                      const void *data, MPI_Count count,
+                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    return MPIDI_NM_func->am_check_eager(am_hdr_sz, data_sz, data, count, datatype, sreq);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,

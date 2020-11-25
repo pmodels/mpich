@@ -94,6 +94,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * rreq)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_RECV);
+
+    /* TODO: handle IPC receive here */
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_RECV);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
 {
     int ret;
@@ -136,6 +149,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
     MPIDI_POSIX_am_request_finalize(req);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_REQUEST_FINALIZE);
+}
+
+MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
+                                                       const void *data, MPI_Count count,
+                                                       MPI_Datatype datatype, MPIR_Request * sreq)
+{
+    /* TODO: add checking for IPC transmission */
+    return (am_hdr_sz + data_sz) <= MPIDI_POSIX_am_eager_limit();
 }
 
 #endif /* SHM_AM_H_INCLUDED */
