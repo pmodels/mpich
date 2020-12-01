@@ -36,8 +36,11 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                 name = RE.m.group(1)
                 stage = "MAP"
                 cur_name = name
-                cur_map = {'_name': name}
-                G.MAPS[name] = cur_map
+                if name not in G.MAPS:
+                    cur_map = {'_name': name}
+                    G.MAPS[name] = cur_map
+                else:
+                    cur_map = G.MAPS[name]
             elif RE.match(r'Default Descriptions', line):
                 stage = "default_descriptions"
                 cur_name = "Default Descriptions"
@@ -48,19 +51,33 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     cur_func[key] = val
                 elif RE.match(r'\s+(\w+):\s*(\w+)(.*)', line):
                     name, kind, t = RE.m.group(1, 2, 3)
+                    if name == 'index':
+                        # avoid -Wshadow warning
+                        name = 'indx'
                     p = {'name': name, 'kind': kind}
                     if RE.match(r'(.*),\s*\[(.*)\]\s*$', t):
                         t, p['desc'] = RE.m.group(1, 2)
                     p['t'] = t
                     cur_func['params'].append(p)
+                elif RE.match(r'{\s*-+\s*(\w+)\s*-+(.*)', line):
+                    stage = "code-"+RE.m.group(1)
+                    if stage not in cur_func:
+                        cur_func[stage] = []
+                    # "error_check" may include list of parameters checked
+                    # "handle_ptr" may include list of parameters converted
+                    cur_func[stage + "-tail"] = RE.m.group(2).strip().split(', ')
                 elif RE.match(r'{', line):
                     stage = "FUNC-body"
                     if 'body' not in cur_func:
                         cur_func['body'] = []
                 elif RE.match(r'\/\*', line):
+                    # man page notes
                     stage = "FUNC-notes"
+                    # 'notes' and 'notes2' goes before and after auto-generated notes
                     if 'notes' not in cur_func:
                         cur_func['notes'] = []
+                    else:
+                        cur_func['notes2'] = []
             elif stage == "MAP":
                 if RE.match(r'\s+\.base:\s*(\w+)', line):
                     name = RE.m.group(1)
@@ -80,10 +97,18 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                 else:
                     line = re.sub(r'^    ', '', line)
                     cur_func['body'].append(line)
+            elif RE.match(r'(code-\w+)', stage):
+                if RE.match(r'}', line):
+                    stage = "FUNC"
+                else:
+                    line = re.sub(r'^    ', '', line)
+                    cur_func[stage].append(line)
             elif stage == "FUNC-notes":
                 if RE.match(r'\*\/', line):
                     stage = "FUNC"
                 else:
                     line = re.sub(r'^    ', '', line)
-                    cur_func['notes'].append(line)
-
+                    if 'notes2' in cur_func:
+                        cur_func['notes2'].append(line)
+                    else:
+                        cur_func['notes'].append(line)
