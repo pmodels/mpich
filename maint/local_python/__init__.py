@@ -67,7 +67,7 @@ class MPI_API_Global:
         # 'KEYVAL': "",
         'REQUEST': "MPI_REQUEST_NULL",
         'MESSAGE': "MPI_MESSAGE_NULL",
-        # 'SESSION': "",
+        'SESSION': "MPI_SESSION_NULL",
         # 'GREQUEST_CLASS': "",
     }
 

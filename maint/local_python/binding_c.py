@@ -928,6 +928,9 @@ def dump_validate_handle(func, p):
     elif kind == "WINDOW":
         G.err_codes['MPI_ERR_WIN'] = 1
         G.out.append("MPIR_ERRTEST_WIN(%s, mpi_errno);" % name)
+    elif kind == "SESSION":
+        G.err_codes['MPI_ERR_SESSION'] = 1
+        G.out.append("MPIR_ERRTEST_SESSION(%s, mpi_errno);" % name)
     elif kind == "ERRHANDLER":
         G.err_codes['MPI_ERR_ARG'] = 1
         G.out.append("MPIR_ERRTEST_ERRHANDLER(%s, mpi_errno);" % name)
