@@ -38,7 +38,7 @@ LEAP_15_PR_REPOS         ?= $(shell git show -s --format=%B | sed -ne 's/^PR-rep
 EL_7_PR_REPOS            ?= $(shell git show -s --format=%B | sed -ne 's/^PR-repos-el7: *\(.*\)/\1/p')
 UBUNTU_20_04_PR_REPOS    ?= $(shell git show -s --format=%B | sed -ne 's/^PR-repos-ubuntu20: *\(.*\)/\1/p')
 
-COMMON_RPM_ARGS  := --define "%_topdir $$PWD/_topdir" $(BUILD_DEFINES)
+COMMON_RPM_ARGS  := --define "_topdir $$PWD/_topdir" $(BUILD_DEFINES)
 SPEC             := $(shell if [ -f $(NAME)-$(DISTRO_BASE).spec ]; then echo $(NAME)-$(DISTRO_BASE).spec; else echo $(NAME).spec; fi)
 VERSION           = $(eval VERSION := $(shell rpm $(COMMON_RPM_ARGS) --specfile --qf '%{version}\n' $(SPEC) | sed -n '1p'))$(VERSION)
 DEB_RVERS        := $(subst $(DOT),\$(DOT),$(VERSION))
@@ -49,9 +49,9 @@ RPMS              = $(eval RPMS := $(addsuffix .rpm,$(addprefix _topdir/RPMS/x86
 DEB_TOP          := _topdir/BUILD
 DEB_BUILD        := $(DEB_TOP)/$(NAME)-$(VERSION)
 DEB_TARBASE      := $(DEB_TOP)/$(DEB_NAME)_$(VERSION)
-SOURCE           ?= $(eval SOURCE := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) -S -l $(SPEC) | sed -e 2,\$$d -e 's/\\\#/\\\\\#/g' -e 's/.*:  *//'))$(SOURCE)
-PATCHES          ?= $(eval PATCHES := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) -l $(SPEC) | sed -ne 1d -e 's/.*:  *//' -e 's/.*\///' -e '/\.patch/p'))$(PATCHES)
-OTHER_SOURCES    := $(eval OTHER_SOURCES := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) -l $(SPEC) | sed -ne 1d -e 's/.*:  *//' -e 's/.*\///' -e '/\.patch/d' -e p))$(OTHER_SOURCES)
+SOURCE           ?= $(eval SOURCE := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) $(COMMON_RPM_ARGS) -S -l $(SPEC) | sed -e 2,\$$d -e 's/\\\#/\\\\\#/g' -e 's/.*:  *//'))$(SOURCE)
+PATCHES          ?= $(eval PATCHES := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) $(COMMON_RPM_ARGS) -l $(SPEC) | sed -ne 1d -e 's/.*:  *//' -e 's/.*\///' -e '/\.patch/p'))$(PATCHES)
+OTHER_SOURCES    := $(eval OTHER_SOURCES := $(shell CHROOT_NAME=$(CHROOT_NAME) $(SPECTOOL) $(COMMON_RPM_ARGS) -l $(SPEC) | sed -ne 1d -e 's/.*:  *//' -e 's/.*\///' -e '/\.patch/d' -e p))$(OTHER_SOURCES)
 SOURCES          := $(addprefix _topdir/SOURCES/,$(notdir $(SOURCE)) $(PATCHES) $(OTHER_SOURCES))
 ifeq ($(ID_LIKE),debian)
 DEBS             := $(addsuffix _$(VERSION)-1_amd64.deb,$(shell sed -n '/-udeb/b; s,^Package:[[:blank:]],$(DEB_TOP)/,p' $(TOPDIR)/debian/control))
@@ -378,35 +378,47 @@ test:
 	$(call install_repos,$(REPO_NAME)@$(BRANCH_NAME):$(BUILD_NUMBER))
 	yum -y install $(TEST_PACKAGES)
 
+show_spec:
+	@echo '$(SPEC)'
+
+show_build_defines:
+	@echo '$(BUILD_DEFINES)'
+
+show_common_rpm_args:
+	@echo '$(COMMON_RPM_ARGS)'
+
 show_version:
-	@echo $(VERSION)
+	@echo '$(VERSION)'
 
 show_release:
-	@echo $(RELEASE)
+	@echo '$(RELEASE)'
 
 show_rpms:
-	@echo $(RPMS)
+	@echo '$(RPMS)'
 
 show_source:
-	@echo $(SOURCE)
+	@echo '$(SOURCE)'
 
 show_patches:
-	@echo $(PATCHES)
+	@echo '$(PATCHES)'
 
 show_sources:
-	@echo $(SOURCES)
+	@echo '$(SOURCES)'
+
+show_other_sources:
+	@echo '$(OTHER_SOURCES)'
 
 show_targets:
-	@echo $(TARGETS)
+	@echo '$(TARGETS)'
 
 show_makefiles:
-	@echo $(MAKEFILE_LIST)
+	@echo '$(MAKEFILE_LIST)'
 
 show_calling_makefile:
-	@echo $(CALLING_MAKEFILE)
+	@echo '$(CALLING_MAKEFILE)'
 
 show_git_metadata:
-	@echo $(GIT_SHA1):$(GIT_SHORT):$(GIT_NUM_COMMITS)
+	@echo '$(GIT_SHA1):$(GIT_SHORT):$(GIT_NUM_COMMITS)'
 
 .PHONY: srpm rpms debs deb_detar ls chrootbuild rpmlint FORCE        \
         show_version show_release show_rpms show_source show_sources \
