@@ -602,6 +602,27 @@ else
 fi
 
 ########################################################################
+## Check for Python 3
+########################################################################
+
+echo_n "Checking for Python 3... "
+PYTHON=
+if test 3 = `python -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python
+fi
+
+if test -z "$PYTHON" -a 3 = `python3 -c 'import sys; print(sys.version_info[0])'`; then
+    PYTHON=python3
+fi
+
+if test -z "$PYTHON" ; then
+    echo "not found"
+    exit 1
+else
+    echo "$PYTHON"
+fi
+
+########################################################################
 ## Setup external packages
 ########################################################################
 
@@ -754,6 +775,13 @@ echo_n "Building ROMIO glue code... "
 ( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
 echo "done"
 
+########################################################################
+## Building C interfaces
+########################################################################
+
+echo_n "generating MPI C functions..."
+$PYTHON maint/gen_binding_c.py
+echo "done"
 
 ########################################################################
 ## Building non-C interfaces

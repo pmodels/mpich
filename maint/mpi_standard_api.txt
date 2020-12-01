@@ -1,0 +1,3432 @@
+APIs
+================
+MPI_Abort:
+    comm: COMMUNICATOR, [communicator of tasks to abort]
+    errorcode: ERROR_CODE, [error code to return to invoking environment]
+MPI_Accumulate:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in buffer]
+    origin_datatype: DATATYPE, [datatype of each entry]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    op: OPERATION, [reduce operation]
+    win: WINDOW
+MPI_Add_error_class:
+    errorclass: ERROR_CLASS, direction=out, [value for the new error class]
+MPI_Add_error_code:
+    errorclass: ERROR_CLASS
+    errorcode: ERROR_CODE, direction=out, [new error code to be associated with errorclass]
+MPI_Add_error_string:
+    errorcode: ERROR_CODE, [error code or class]
+    string: STRING, constant=True, [text corresponding to errorcode]
+MPI_Aint_add:
+    .return: LOCATION_SMALL
+    base: LOCATION_SMALL, [base address]
+    disp: DISPLACEMENT, [displacement]
+MPI_Aint_diff:
+    .return: DISPLACEMENT
+    addr1: LOCATION_SMALL, [minuend address]
+    addr2: LOCATION_SMALL, [subtrahend address]
+MPI_Allgather:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+MPI_Allgather_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Allgatherv:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+MPI_Allgatherv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Alloc_mem:
+    size: ALLOC_MEM_NUM_BYTES, [size of memory segment in bytes]
+    info: INFO
+    baseptr: C_BUFFER, direction=out, suppress=lis_paren, [pointer to beginning of memory segment allocated]
+MPI_Allreduce:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+MPI_Allreduce_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Alltoall:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each process]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+MPI_Alltoall_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each process]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Alltoallv:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length group size). Entry j specifies the displacement (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+MPI_Alltoallv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [Integer array (of length group size). Entry j specifies the displacement (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Alltoallw:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, [integer array (of length group size). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtypes: DATATYPE, constant=True, length=*, [array of datatypes (of length group size). Entry j specifies the type of data to send to process j]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, [integer array (of length group size). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from process i]
+    recvtypes: DATATYPE, constant=True, length=*, [array of datatypes (of length group size). Entry i specifies the type of data received from process i]
+    comm: COMMUNICATOR, [communicator]
+MPI_Alltoallw_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, [integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length group size). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtypes: DATATYPE, constant=True, asynchronous=True, length=*, [Array of datatypes (of length group size). Entry j specifies the type of data to send to process j]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, [integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length group size). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from process i]
+    recvtypes: DATATYPE, constant=True, length=*, asynchronous=True, [array of datatypes (of length group size). Entry i specifies the type of data received from process i]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Attr_delete:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator to which attribute is attached]
+    keyval: KEYVAL, The key value of the deleted attribute
+MPI_Attr_get:
+    comm: COMMUNICATOR, [communicator to which attribute is attached]
+    keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL_10, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, suppress=lis_paren, [true if an attribute value was extracted; false if no attribute is associated with the key]
+MPI_Attr_put:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, pointer=False, [communicator to which attribute will be attached]
+    keyval: KEYVAL, [key value, as returned by MPI_KEYVAL_CREATE]
+    attribute_val: ATTRIBUTE_VAL_10, [attribute value]
+MPI_Barrier:
+    comm: COMMUNICATOR, [communicator]
+MPI_Barrier_init:
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Bcast:
+    buffer: BUFFER, direction=inout, [starting address of buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of entries in buffer]
+    datatype: DATATYPE, [data type of buffer]
+    root: RANK, [rank of broadcast root]
+    comm: COMMUNICATOR, [communicator]
+MPI_Bcast_init:
+    buffer: BUFFER, direction=inout, suppress=f08_intent, asynchronous=True, [starting address of buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of entries in buffer]
+    datatype: DATATYPE, [data type of buffer]
+    root: RANK, [rank of broadcast root]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Bsend:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+MPI_Bsend_init:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements sent]
+    datatype: DATATYPE, [type of each element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Buffer_attach:
+    buffer: BUFFER, asynchronous=True, suppress=f08_intent, [initial buffer address]
+    size: POLYNUM_BYTES_NNI, [buffer size, in bytes]
+MPI_Buffer_detach:
+    buffer_addr: C_BUFFER2, direction=out, [initial buffer address]
+    size: POLYNUM_BYTES, direction=out, [buffer size, in bytes]
+MPI_COMM_DUP_FN:
+    oldcomm: COMMUNICATOR
+    comm_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_COMM_NULL_COPY_FN:
+    oldcomm: COMMUNICATOR
+    comm_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_COMM_NULL_DELETE_FN:
+    comm: COMMUNICATOR
+    comm_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_CONVERSION_FN_NULL:
+    userbuf: C_BUFFER3
+    datatype: DATATYPE
+    count: POLYXFER_NUM_ELEM
+    filebuf: C_BUFFER3
+    position: OFFSET
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Cancel:
+    request: REQUEST, direction=in, pointer=True
+MPI_Cart_coords:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    rank: RANK, [rank of a process within group of comm]
+    maxdims: ARRAY_LENGTH, [length of vector coords in the calling program]
+    coords: COORDINATE, length=maxdims, direction=out, [integer array (of size maxdims) containing the Cartesian coordinates of specified process]
+MPI_Cart_create:
+    comm_old: COMMUNICATOR, [input communicator]
+    ndims: NUM_DIMS, [number of dimensions of Cartesian grid]
+    dims: DIMENSION, length=ndims, constant=True, suppress=lis_paren, [integer array of size ndims specifying the number of processes in each dimension]
+    periods: LOGICAL, length=ndims, constant=True, suppress=lis_paren, [logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each dimension]
+    reorder: LOGICAL, [ranking may be reordered (true) or not (false)]
+    comm_cart: COMMUNICATOR, direction=out, [communicator with new Cartesian topology]
+MPI_Cart_get:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    maxdims: ARRAY_LENGTH, [length of vectors dims, periods, and coords in the calling program]
+    dims: DIMENSION, direction=out, length=maxdims, [number of processes for each Cartesian dimension]
+    periods: LOGICAL, direction=out, length=maxdims, [periodicity (true/false) for each Cartesian dimension]
+    coords: COORDINATE, direction=out, length=maxdims, [coordinates of calling process in Cartesian structure]
+MPI_Cart_map:
+    comm: COMMUNICATOR, [input communicator]
+    ndims: NUM_DIMS, [number of dimensions of Cartesian structure]
+    dims: DIMENSION, length=ndims, constant=True, suppress=lis_paren, [integer array of size ndims specifying the number of processes in each coordinate direction]
+    periods: LOGICAL, length=ndims, constant=True, suppress=lis_paren, [logical array of size ndims specifying the periodicity specification in each coordinate direction]
+    newrank: RANK, direction=out, [reordered rank of the calling process; MPI_UNDEFINED if calling process does not belong to grid]
+MPI_Cart_rank:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    coords: COORDINATE, length=*, constant=True, suppress=lis_paren, [integer array (of size ndims) specifying the Cartesian coordinates of a process]
+    rank: RANK, direction=out, [rank of specified process]
+MPI_Cart_shift:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    direction: INDEX, [coordinate dimension of shift]
+    disp: DIMENSION, [displacement ($> 0$: upwards shift, $< 0$: downwards shift)]
+    rank_source: RANK, direction=out, [rank of source process]
+    rank_dest: RANK, direction=out, [rank of destination process]
+MPI_Cart_sub:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    remain_dims: LOGICAL, constant=True, length=*, [the i-th entry of remain_dims specifies whether the i-th dimension is kept in the subgrid (true) or is dropped (false)]
+    newcomm: COMMUNICATOR, direction=out, [communicator containing the subgrid that includes the calling process]
+MPI_Cartdim_get:
+    comm: COMMUNICATOR, [communicator with Cartesian structure]
+    ndims: NUM_DIMS, direction=out, [number of dimensions of the Cartesian structure]
+MPI_Close_port:
+    port_name: STRING, constant=True, [a port]
+MPI_Comm_accept:
+    port_name: STRING, constant=True, root_only=True, [port name]
+    info: INFO, root_only=True, [implementation-dependent information]
+    root: RANK, [rank in comm of root node]
+    comm: COMMUNICATOR, [intra-communicator over which call is collective]
+    newcomm: COMMUNICATOR, direction=out, [inter-communicator with client as remote group]
+MPI_Comm_c2f:
+    .return: F90_COMM
+    comm: COMMUNICATOR, direction=in, pointer=False
+MPI_Comm_call_errhandler:
+    comm: COMMUNICATOR, [communicator with error handler]
+    errorcode: ERROR_CODE
+MPI_Comm_compare:
+    comm1: COMMUNICATOR, [first communicator]
+    comm2: COMMUNICATOR, [second communicator]
+    result: COMM_COMPARISON, direction=out, [result]
+MPI_Comm_connect:
+    port_name: STRING, constant=True, root_only=True, [network address]
+    info: INFO, root_only=True, [implementation-dependent information]
+    root: RANK, [rank in comm of root node]
+    comm: COMMUNICATOR, [intra-communicator over which call is collective]
+    newcomm: COMMUNICATOR, direction=out, [inter-communicator with server as remote group]
+MPI_Comm_copy_attr_function:
+    oldcomm: COMMUNICATOR
+    comm_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL, direction=out
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Comm_create:
+    comm: COMMUNICATOR, [communicator]
+    group: GROUP, [group, which is a subset of the group of comm]
+    newcomm: COMMUNICATOR, direction=out, [new communicator]
+MPI_Comm_create_errhandler:
+    comm_errhandler_fn: FUNCTION_SMALL, func_type=MPI_Comm_errhandler_function, [user defined error handling procedure]
+    errhandler: ERRHANDLER, direction=out
+MPI_Comm_create_from_group:
+    group: GROUP, group
+    stringtag: STRING, constant=True, [unique identifier for this operation]
+    info: INFO, [info object]
+    errhandler: ERRHANDLER, [error handler to be attached to new intra-communicator]
+    newcomm: COMMUNICATOR, direction=OUT, [new communicator]
+MPI_Comm_create_group:
+    comm: COMMUNICATOR, [intra-communicator]
+    group: GROUP, [group, which is a subset of the group of comm]
+    tag: TAG, [tag]
+    newcomm: COMMUNICATOR, direction=out, [new communicator]
+MPI_Comm_create_keyval:
+    comm_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Comm_copy_attr_function, [copy callback function for comm_keyval]
+    comm_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Comm_delete_attr_function, [delete callback function for comm_keyval]
+    comm_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
+MPI_Comm_delete_attr:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator from which the attribute is deleted]
+    comm_keyval: KEYVAL, [key value]
+MPI_Comm_delete_attr_function:
+    comm: COMMUNICATOR
+    comm_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL, direction=out
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Comm_disconnect:
+    comm: COMMUNICATOR, direction=inout
+MPI_Comm_dup:
+    comm: COMMUNICATOR, [communicator]
+    newcomm: COMMUNICATOR, direction=out, [copy of comm]
+MPI_Comm_dup_with_info:
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info object]
+    newcomm: COMMUNICATOR, direction=out, [copy of comm]
+MPI_Comm_errhandler_function:
+    .return: NOTHING
+    comm: COMMUNICATOR, direction=in, pointer=True
+    error_code: ERROR_CODE, direction=in, pointer=True
+    varargs: VARARGS
+MPI_Comm_f2c:
+    .return: COMMUNICATOR
+    comm: F90_COMM, direction=in, pointer=False
+MPI_Comm_free:
+    comm: COMMUNICATOR, direction=inout, [communicator to be destroyed]
+MPI_Comm_free_keyval:
+    comm_keyval: KEYVAL, direction=inout, [key value]
+MPI_Comm_get_attr:
+    comm: COMMUNICATOR, [communicator to which the attribute is attached]
+    comm_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+MPI_Comm_get_errhandler:
+    comm: COMMUNICATOR
+    errhandler: ERRHANDLER, direction=out, [error handler currently associated with communicator]
+MPI_Comm_get_info:
+    comm: COMMUNICATOR, [communicator object]
+    info_used: INFO, direction=out, [new info object]
+MPI_Comm_get_name:
+    comm: COMMUNICATOR, [communicator whose name is to be returned]
+    comm_name: STRING, direction=out, length=MPI_MAX_OBJECT_NAME, [the name previously stored on the communicator, or an empty string if no such name exists]
+    resultlen: STRING_LENGTH, direction=out, [length of returned name]
+MPI_Comm_get_parent:
+    parent: COMMUNICATOR, direction=out, [the parent communicator]
+MPI_Comm_group:
+    comm: COMMUNICATOR, [communicator]
+    group: GROUP, direction=out, [group corresponding to comm]
+MPI_Comm_idup:
+    comm: COMMUNICATOR, [communicator]
+    newcomm: COMMUNICATOR, direction=out, asynchronous=True, [copy of comm]
+    request: REQUEST, direction=out, [communication request]
+MPI_Comm_idup_with_info:
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info object]
+    newcomm: COMMUNICATOR, direction=out, asynchronous=True, [copy of comm]
+    request: REQUEST, direction=out, [communication request]
+MPI_Comm_join:
+    fd: FILE_DESCRIPTOR, suppress=lis_paren, [socket file descriptor]
+    intercomm: COMMUNICATOR, direction=out, [new inter-communicator]
+MPI_Comm_rank:
+    comm: COMMUNICATOR, [communicator]
+    rank: RANK, direction=out, [rank of the calling process in group of comm]
+MPI_Comm_remote_group:
+    comm: COMMUNICATOR, [inter-communicator]
+    group: GROUP, direction=out, [remote group corresponding to comm]
+MPI_Comm_remote_size:
+    comm: COMMUNICATOR, [inter-communicator]
+    size: COMM_SIZE, direction=out, [number of processes in the remote group of comm]
+MPI_Comm_set_attr:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator to which attribute will be attached]
+    comm_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
+MPI_Comm_set_errhandler:
+    comm: COMMUNICATOR, direction=lis:inout, param:in
+    errhandler: ERRHANDLER, [new error handler for communicator]
+MPI_Comm_set_info:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator]
+    info: INFO, [info object]
+MPI_Comm_set_name:
+    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator whose identifier is to be set]
+    comm_name: STRING, constant=True, [the character string which is remembered as the name]
+MPI_Comm_size:
+    comm: COMMUNICATOR, [communicator]
+    size: COMM_SIZE, direction=out, [number of processes in the group of comm]
+MPI_Comm_spawn:
+    command: STRING, root_only=True, constant=True, [name of program to be spawned]
+    argv: STRING_ARRAY, root_only=True, [arguments to command]
+    maxprocs: COMM_SIZE, root_only=True, [maximum number of processes to start]
+    info: INFO, root_only=True, [a set of key-value pairs telling the runtime system where and how to start the processes]
+    root: RANK, [rank of process in which previous arguments are examined]
+    comm: COMMUNICATOR, [intra-communicator containing group of spawning processes]
+    intercomm: COMMUNICATOR, direction=out, [inter-communicator between original group and the newly spawned group]
+    array_of_errcodes: ERROR_CODE, direction=out, length=, suppress=f08_intent lis_paren, [one code per process (array of integer)]
+MPI_Comm_spawn_multiple:
+    count: ARRAY_LENGTH_PI, root_only=True, [number of commands]
+    array_of_commands: STRING_ARRAY, root_only=True, [programs to be executed]
+    array_of_argv: STRING_2DARRAY, root_only=True, length=count, [arguments for commands]
+    array_of_maxprocs: COMM_SIZE, length=count, constant=True, root_only=True, array_type=hidden, [maximum number of processes to start for each command]
+    array_of_info: INFO, length=count, array_type=hidden, constant=True, root_only=True, [info objects telling the runtime system where and how to start processes]
+    root: RANK, [rank of process in which previous arguments are examined]
+    comm: COMMUNICATOR, [intra-communicator containing group of spawning processes]
+    intercomm: COMMUNICATOR, direction=out, [inter-communicator between original group and the newly spawned group]
+    array_of_errcodes: ERROR_CODE, direction=out, length=, suppress=f08_intent, [one error code per process]
+MPI_Comm_split:
+    comm: COMMUNICATOR, [communicator]
+    color: COLOR, [control of subset assignment]
+    key: KEY, [control of rank assignment]
+    newcomm: COMMUNICATOR, direction=out, [new communicator]
+MPI_Comm_split_type:
+    comm: COMMUNICATOR, [communicator]
+    split_type: SPLIT_TYPE, [type of processes to be grouped together]
+    key: KEY, [control of rank assignment]
+    info: INFO, direction=lis:inout, param:in, [info argument]
+    newcomm: COMMUNICATOR, direction=out, [new communicator]
+MPI_Comm_test_inter:
+    comm: COMMUNICATOR, [communicator]
+    flag: LOGICAL, direction=out, [true if comm is an inter-communicator]
+MPI_Compare_and_swap:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    compare_addr: BUFFER, constant=True, asynchronous=True, [initial address of compare buffer]
+    result_addr: BUFFER, direction=out, asynchronous=True, [initial address of result buffer]
+    datatype: DATATYPE, [datatype of the element in all buffers]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    win: WINDOW
+MPI_Copy_function:
+    oldcomm: COMMUNICATOR
+    keyval: KEYVAL
+    extra_state: EXTRA_STATE2
+    attribute_val_in: ATTRIBUTE_VAL_10
+    attribute_val_out: ATTRIBUTE_VAL_10, direction=out
+    flag: LOGICAL, direction=out
+    ierr: ERROR_CODE, suppress=c_parameter
+MPI_DUP_FN:
+    oldcomm: COMMUNICATOR
+    keyval: KEYVAL
+    extra_state: EXTRA_STATE2
+    attribute_val_in: ATTRIBUTE_VAL_10
+    attribute_val_out: ATTRIBUTE_VAL_10
+    flag: LOGICAL, direction=out
+    ierr: ERROR_CODE, suppress=c_parameter
+MPI_Datarep_conversion_function:
+    userbuf: C_BUFFER3, direction=inout
+    datatype: DATATYPE
+    count: POLYXFER_NUM_ELEM
+    filebuf: C_BUFFER3, direction=inout
+    position: OFFSET
+    extra_state: EXTRA_STATE, direction=inout
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Datarep_extent_function:
+    datatype: DATATYPE
+    extent: DISPOFFSET_SMALL, direction=out
+    extra_state: EXTRA_STATE, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Delete_function:
+    comm: COMMUNICATOR
+    keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL_10
+    extra_state: EXTRA_STATE2
+    ierr: ERROR_CODE, suppress=c_parameter
+MPI_Dims_create:
+    nnodes: COMM_SIZE, [number of nodes in a grid]
+    ndims: NUM_DIMS, [number of Cartesian dimensions]
+    dims: DIMENSION, length=ndims, direction=inout, suppress=lis_paren, [integer array of size ndims specifying the number of nodes in each dimension]
+MPI_Dist_graph_create:
+    comm_old: COMMUNICATOR, [input communicator]
+    n: ARRAY_LENGTH_NNI, [number of source nodes for which this process specifies edges]
+    sources: RANK_NNI, constant=True, length=n, [array containing the n source nodes for + which this process specifies edges]
+    degrees: DEGREE, length=n, constant=True, [array specifying the number of destinations for each source node in the source node array]
+    destinations: RANK_NNI, length=*, constant=True, [destination nodes for the source nodes in the source node array]
+    weights: WEIGHT, length=*, constant=True, [weights for source to destination edges]
+    info: INFO, [hints on optimization and interpretation of weights]
+    reorder: LOGICAL, [the ranks may be reordered (true) or not~(false)]
+    comm_dist_graph: COMMUNICATOR, direction=OUT, [communicator with distributed graph topology added]
+MPI_Dist_graph_create_adjacent:
+    comm_old: COMMUNICATOR, [input communicator]
+    indegree: DEGREE, [size of sources and sourceweights arrays]
+    sources: RANK_NNI, length=indegree, constant=True, [ranks of processes for which the calling process is a destination]
+    sourceweights: WEIGHT, length=*, constant=True, [weights of the edges into the calling process]
+    outdegree: DEGREE, [size of destinations and destweights arrays]
+    destinations: RANK_NNI, length=outdegree, constant=True, [ranks of processes for which the calling process is a source]
+    destweights: WEIGHT, length=*, constant=True, [weights of the edges out of the calling process]
+    info: INFO, [hints on optimization and interpretation of weights]
+    reorder: LOGICAL, [the ranks may be reordered (true) or not~(false)]
+    comm_dist_graph: COMMUNICATOR, direction=OUT, [communicator with distributed graph topology]
+MPI_Dist_graph_neighbors:
+    comm: COMMUNICATOR, [communicator with distributed graph topology]
+    maxindegree: ARRAY_LENGTH_NNI, [size of sources and sourceweights arrays]
+    sources: RANK_NNI, direction=out, length=maxindegree, [processes for which the calling process is a destination]
+    sourceweights: WEIGHT, direction=out, length=*, suppress=f08_intent, [weights of the edges into the calling process]
+    maxoutdegree: ARRAY_LENGTH_NNI, [size of destinations and destweights arrays]
+    destinations: RANK_NNI, direction=out, length=maxoutdegree, [processes for which the calling process is a source]
+    destweights: WEIGHT, direction=out, length=*, suppress=f08_intent, [weights of the edges out of the calling process]
+MPI_Dist_graph_neighbors_count:
+    comm: COMMUNICATOR, [communicator with distributed graph topology]
+    indegree: DEGREE, direction=out, [number of edges into this process]
+    outdegree: DEGREE, direction=out, [number of edges out of this process]
+    weighted: LOGICAL, direction=out, [false if MPI_UNWEIGHTED was supplied during creation, true otherwise]
+MPI_Errhandler_c2f:
+    .return: F90_ERRHANDLER
+    errhandler: ERRHANDLER, direction=in, pointer=False
+MPI_Errhandler_f2c:
+    .return: ERRHANDLER
+    errhandler: F90_ERRHANDLER, direction=in, pointer=False
+MPI_Errhandler_free:
+    errhandler: ERRHANDLER, direction=inout
+MPI_Error_class:
+    errorcode: ERROR_CODE, suppress=lis_paren, [Error code returned by an MPI routine]
+    errorclass: ERROR_CLASS, direction=out, suppress=lis_paren, [Error class associated with errorcode]
+MPI_Error_string:
+    errorcode: ERROR_CODE, suppress=lis_paren, [Error code returned by an MPI routine]
+    string: STRING, direction=out, length=MPI_MAX_ERROR_STRING, suppress=lis_paren, [Text that corresponds to the errorcode]
+    resultlen: STRING_LENGTH, direction=out, suppress=lis_paren, [Length (in printable characters) of the result returned in string]
+MPI_Exscan:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [intra-communicator]
+MPI_Exscan_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [intra-communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_F_sync_reg:
+    buf: BUFFER, direction=inout, asynchronous=True, [initial address of buffer]
+MPI_Fetch_and_op:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    result_addr: BUFFER, direction=out, asynchronous=True, [initial address of result buffer]
+    datatype: DATATYPE, [datatype of the entry in origin, result, and target buffers]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    op: OPERATION, [reduce operation]
+    win: WINDOW
+MPI_File_c2f:
+    .return: F90_FILE
+    file: FILE, direction=in, pointer=False
+MPI_File_call_errhandler:
+    fh: FILE, [file with error handler]
+    errorcode: ERROR_CODE
+MPI_File_close:
+    fh: FILE, direction=inout, [file handle]
+MPI_File_create_errhandler:
+    file_errhandler_fn: FUNCTION_SMALL, func_type=MPI_File_errhandler_function, [user defined error handling procedure]
+    errhandler: ERRHANDLER, direction=out
+MPI_File_delete:
+    filename: STRING, constant=True, [name of file to delete]
+    info: INFO, [info object]
+MPI_File_errhandler_function:
+    .return: NOTHING
+    file: FILE, direction=in, pointer=True
+    error_code: ERROR_CODE, direction=in, pointer=True
+    varargs: VARARGS
+MPI_File_f2c:
+    .return: FILE
+    file: F90_FILE, direction=in, pointer=False
+MPI_File_get_amode:
+    fh: FILE, [file handle]
+    amode: ACCESS_MODE, direction=out, [file access mode used to open the file]
+MPI_File_get_atomicity:
+    fh: FILE, [file handle]
+    flag: LOGICAL, direction=out, [true if atomic mode, false if nonatomic mode]
+MPI_File_get_byte_offset:
+    fh: FILE, [file handle]
+    offset: OFFSET, [offset]
+    disp: OFFSET, direction=out, [absolute byte position of offset]
+MPI_File_get_errhandler:
+    file: FILE
+    errhandler: ERRHANDLER, direction=out, [error handler currently associated with file]
+MPI_File_get_group:
+    fh: FILE, [file handle]
+    group: GROUP, direction=out, [group which opened the file]
+MPI_File_get_info:
+    fh: FILE, [file handle]
+    info_used: INFO, direction=out, [new info object]
+MPI_File_get_position:
+    fh: FILE, [file handle]
+    offset: OFFSET, direction=out, [offset of individual pointer]
+MPI_File_get_position_shared:
+    fh: FILE, [file handle]
+    offset: OFFSET, direction=out, [offset of shared pointer]
+MPI_File_get_size:
+    fh: FILE, [file handle]
+    size: OFFSET, direction=out, [size of the file in bytes]
+MPI_File_get_type_extent:
+    fh: FILE, [file handle]
+    datatype: DATATYPE, [datatype]
+    extent: POLYDISPOFFSET, direction=out, [datatype extent]
+MPI_File_get_view:
+    fh: FILE, [file handle]
+    disp: OFFSET, direction=out, [displacement]
+    etype: DATATYPE, direction=out, [elementary datatype]
+    filetype: DATATYPE, direction=out, [filetype]
+    datarep: STRING, direction=out, [data representation]
+MPI_File_iread:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iread_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iread_at:
+    fh: FILE, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iread_at_all:
+    fh: FILE, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iread_shared:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iwrite:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iwrite_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iwrite_at:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iwrite_at_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_iwrite_shared:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    request: REQUEST, direction=out, [request object]
+MPI_File_open:
+    comm: COMMUNICATOR, [communicator]
+    filename: STRING, constant=True, [name of file to open]
+    amode: ACCESS_MODE, [file access mode]
+    info: INFO, [info object]
+    fh: FILE, direction=out, [new file handle]
+MPI_File_preallocate:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    size: OFFSET, [size to preallocate file]
+MPI_File_read:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_all_begin:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_read_all_end:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_at:
+    fh: FILE, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_at_all:
+    fh: FILE, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_at_all_begin:
+    fh: FILE, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_read_at_all_end:
+    fh: FILE, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_ordered:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_ordered_begin:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_read_ordered_end:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_read_shared:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, direction=out, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_seek:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    whence: UPDATE_MODE, [update mode]
+MPI_File_seek_shared:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    whence: UPDATE_MODE, [update mode]
+MPI_File_set_atomicity:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    flag: LOGICAL, [true to set atomic mode, false to set nonatomic mode]
+MPI_File_set_errhandler:
+    file: FILE, direction=lis:inout, param:in
+    errhandler: ERRHANDLER, [new error handler for file]
+MPI_File_set_info:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    info: INFO, [info object]
+MPI_File_set_size:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    size: OFFSET, [size to truncate or expand file]
+MPI_File_set_view:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    disp: OFFSET, [displacement]
+    etype: DATATYPE, [elementary datatype]
+    filetype: DATATYPE, [filetype]
+    datarep: STRING, constant=True, [data representation]
+    info: INFO, [info object]
+MPI_File_sync:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+MPI_File_write:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_all_begin:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_write_all_end:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_at:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_at_all:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_at_all_begin:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    offset: OFFSET, [file offset]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_write_at_all_end:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_ordered:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_ordered_begin:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+MPI_File_write_ordered_end:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    status: STATUS, direction=out, [status object]
+MPI_File_write_shared:
+    fh: FILE, direction=lis:inout, param:in, [file handle]
+    buf: BUFFER, constant=True, [initial address of buffer]
+    count: POLYXFER_NUM_ELEM, [number of elements in buffer]
+    datatype: DATATYPE, [datatype of each buffer element]
+    status: STATUS, direction=out, [status object]
+MPI_Finalize:
+MPI_Finalized:
+    flag: LOGICAL, direction=out, [true if mpi was finalized]
+MPI_Free_mem:
+    base: BUFFER, asynchronous=True, [initial address of memory segment allocated by MPI_ALLOC_MEM]
+MPI_Gather:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, root_only=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements for any single receive]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+MPI_Gather_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements for any single receive]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Gatherv:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, root_only=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, root_only=True, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, length=*, root_only=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement relative to recvbuf at which to place the incoming data from process i]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+MPI_Gatherv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, root_only=True, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, length=*, root_only=True, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement relative to recvbuf at which to place the incoming data from process i]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Get:
+    origin_addr: BUFFER, direction=out, asynchronous=True, [initial address of origin buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from window start to the beginning of the target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    win: WINDOW, [window object used for communication]
+MPI_Get_accumulate:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    result_addr: BUFFER, direction=out, asynchronous=True, [initial address of result buffer]
+    result_count: POLYXFER_NUM_ELEM_NNI, [number of entries in result buffer]
+    result_datatype: DATATYPE, [datatype of each entry in result buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    op: OPERATION, [reduce operation]
+    win: WINDOW
+MPI_Get_address:
+    location: BUFFER, constant=True, asynchronous=True, suppress=f08_intent, [location in caller memory]
+    address: DISPLACEMENT, direction=out, [address of location]
+MPI_Get_count:
+    status: STATUS, constant=True, [return status of receive operation]
+    datatype: DATATYPE, [datatype of each receive buffer entry]
+    count: POLYXFER_NUM_ELEM, direction=out, [number of received entries]
+MPI_Get_elements:
+    status: STATUS, constant=True, [return status of receive operation]
+    datatype: DATATYPE, [datatype used by receive operation]
+    count: POLYDTYPE_NUM_ELEM, direction=out, [number of received basic elements]
+MPI_Get_elements_x:
+    status: STATUS, constant=True, [return status of receive operation]
+    datatype: DATATYPE, [datatype used by receive operation]
+    count: NUM_BYTES, direction=out, [number of received basic elements]
+MPI_Get_library_version:
+    version: STRING, length=MPI_MAX_LIBRARY_VERSION_STRING, direction=OUT, [version number]
+    resultlen: STRING_LENGTH, direction=out, [Length (in printable characters) of the result returned in version]
+MPI_Get_processor_name:
+    name: STRING, length=MPI_MAX_PROCESSOR_NAME, direction=OUT, suppress=lis_paren, [A unique specifier for the actual (as opposed to virtual) node.]
+    resultlen: STRING_LENGTH, direction=out, suppress=lis_paren, [Length (in printable characters) of the result returned in name]
+MPI_Get_version:
+    version: VERSION, direction=out, [version number]
+    subversion: VERSION, direction=out, [subversion number]
+MPI_Graph_create:
+    comm_old: COMMUNICATOR, [input communicator]
+    nnodes: COMM_SIZE, [number of nodes in graph]
+    index: INDEX, length=nnodes, constant=True, suppress=lis_paren, [array of integers describing node degrees (see below)]
+    edges: RANK, length=*, constant=True, suppress=lis_paren, [array of integers describing graph edges (see below)]
+    reorder: LOGICAL, [ranking may be reordered (true) or not (false)]
+    comm_graph: COMMUNICATOR, direction=out, [communicator with graph topology added]
+MPI_Graph_get:
+    comm: COMMUNICATOR, [communicator with graph structure]
+    maxindex: ARRAY_LENGTH, [length of vector index in the calling program]
+    maxedges: ARRAY_LENGTH, [length of vector edges in the calling program]
+    index: INDEX, length=maxindex, direction=OUT, suppress=lis_paren, [array of integers containing the graph structure (for details see the definition of MPI_GRAPH_CREATE)]
+    edges: RANK, length=maxedges, direction=OUT, suppress=lis_paren, [array of integers containing the graph structure]
+MPI_Graph_map:
+    comm: COMMUNICATOR, [input communicator]
+    nnodes: ARRAY_LENGTH, [number of graph nodes]
+    index: INDEX, constant=True, length=nnodes, suppress=lis_paren, [integer array specifying the graph structure, see MPI_GRAPH_CREATE]
+    edges: RANK, constant=True, length=*, suppress=lis_paren, [integer array specifying the graph structure]
+    newrank: RANK, direction=out, [reordered rank of the calling process; MPI_UNDEFINED if the calling process does not belong to graph]
+MPI_Graph_neighbors:
+    comm: COMMUNICATOR, [communicator with graph topology]
+    rank: RANK, [rank of process in group of comm]
+    maxneighbors: ARRAY_LENGTH, [size of array neighbors]
+    neighbors: RANK, direction=out, length=maxneighbors, [ranks of processes that are neighbors to specified process]
+MPI_Graph_neighbors_count:
+    comm: COMMUNICATOR, [communicator with graph topology]
+    rank: RANK, [rank of process in group of comm]
+    nneighbors: ARRAY_LENGTH, direction=out, [number of neighbors of specified process]
+MPI_Graphdims_get:
+    comm: COMMUNICATOR, [communicator for group with graph structure]
+    nnodes: ARRAY_LENGTH, direction=OUT, [number of nodes in graph (same as number of processes in the group)]
+    nedges: ARRAY_LENGTH, direction=OUT, [number of edges in graph]
+MPI_Grequest_cancel_function:
+    extra_state: EXTRA_STATE
+    complete: LOGICAL
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Grequest_complete:
+    request: REQUEST, direction=lis:inout, param:in, [generalized request]
+MPI_Grequest_free_function:
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Grequest_query_function:
+    extra_state: EXTRA_STATE
+    status: STATUS, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Grequest_start:
+    query_fn: FUNCTION_SMALL, func_type=MPI_Grequest_query_function, [callback function invoked when request status is queried]
+    free_fn: FUNCTION_SMALL, func_type=MPI_Grequest_free_function, [callback function invoked when request is freed]
+    cancel_fn: FUNCTION_SMALL, func_type=MPI_Grequest_cancel_function, [callback function invoked when request is cancelled]
+    extra_state: EXTRA_STATE, [extra state]
+    request: REQUEST, direction=out, [generalized request]
+MPI_Group_c2f:
+    .return: F90_GROUP
+    group: GROUP, direction=in, pointer=False
+MPI_Group_compare:
+    group1: GROUP, [first group]
+    group2: GROUP, [second group]
+    result: GROUP_COMPARISON, direction=out, [result]
+MPI_Group_difference:
+    group1: GROUP, [first group]
+    group2: GROUP, [second group]
+    newgroup: GROUP, direction=out, [difference group]
+MPI_Group_excl:
+    group: GROUP, [group]
+    n: ARRAY_LENGTH, [number of elements in array ranks]
+    ranks: RANK, length=n, constant=True, suppress=lis_paren, [array of integer ranks of processes in group not to appear in newgroup]
+    newgroup: GROUP, direction=out, [new group derived from above, preserving the order defined by group]
+MPI_Group_f2c:
+    .return: GROUP
+    group: F90_GROUP, direction=in, pointer=False
+MPI_Group_free:
+    group: GROUP, direction=inout, [group]
+MPI_Group_from_session_pset:
+    session: SESSION, [session]
+    pset_name: STRING, constant=True, [name of process set to use to create the new group]
+    newgroup: GROUP, direction=out, [new group derived from supplied session and process set]
+MPI_Group_incl:
+    group: GROUP, [group]
+    n: ARRAY_LENGTH, [number of elements in array ranks (and size of newgroup)]
+    ranks: RANK, length=n, constant=True, [ranks of processes in group to appear in newgroup]
+    newgroup: GROUP, direction=out, [new group derived from above, in the order defined by ranks]
+MPI_Group_intersection:
+    group1: GROUP, [first group]
+    group2: GROUP, [second group]
+    newgroup: GROUP, direction=out, [intersection group]
+MPI_Group_range_excl:
+    group: GROUP, [group]
+    n: ARRAY_LENGTH, [number of triplets in array ranges]
+    ranges: RANK, length=[n, 3], [a one-dimensional array of integer triplets, of the form (first rank, last rank, stride) indicating ranks in group of processes to be excluded from the output group newgroup]
+    newgroup: GROUP, direction=out, [new group derived from above, preserving the order in group]
+MPI_Group_range_incl:
+    group: GROUP, [group]
+    n: ARRAY_LENGTH, [number of triplets in array ranges]
+    ranges: RANK, length=[n, 3], suppress=lis_paren, [a one-dimensional array of integer triplets, of the form (first rank, last rank, stride) indicating ranks in group of processes to be included in newgroup]
+    newgroup: GROUP, direction=out, [new group derived from above, in the order defined by ranges]
+MPI_Group_rank:
+    group: GROUP, [group]
+    rank: RANK, direction=out, [rank of the calling process in group, or MPI_UNDEFINED if the process is not a member]
+MPI_Group_size:
+    group: GROUP, [group]
+    size: COMM_SIZE, direction=out, [number of processes in the group]
+MPI_Group_translate_ranks:
+    group1: GROUP, [group1]
+    n: ARRAY_LENGTH, [number of ranks in ranks1 and ranks2 arrays]
+    ranks1: RANK, length=n, constant=True, suppress=lis_paren, [array of zero or more valid ranks in group1]
+    group2: GROUP, [group2]
+    ranks2: RANK, length=n, direction=out, suppress=lis_paren, [array of corresponding ranks in group2, MPI_UNDEFINED when no correspondence exists.]
+MPI_Group_union:
+    group1: GROUP, [first group]
+    group2: GROUP, [second group]
+    newgroup: GROUP, direction=out, [union group]
+MPI_Iallgather:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Iallgatherv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Iallreduce:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ialltoall:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each process]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from any process]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ialltoallv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry j specifies the displacement (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from process i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ialltoallw:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, [integer array (of length group size) specifying the number of elements to send to each rank]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length group size). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for process j]
+    sendtypes: DATATYPE, constant=True, asynchronous=True, length=*, [array of datatypes (of length group size). Entry j specifies the type of data to send to process j]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, [integer array (of length group size) specifying the number of elements that can be received from each rank]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length group size). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from process i]
+    recvtypes: DATATYPE, constant=True, length=*, asynchronous=True, [array of datatypes (of length group size). Entry i specifies the type of data received from process i]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ibarrier:
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ibcast:
+    buffer: BUFFER, direction=inout, asynchronous=True, [starting address of buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of entries in buffer]
+    datatype: DATATYPE, [data type of buffer]
+    root: RANK, [rank of broadcast root]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ibsend:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Iexscan:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [intra-communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Igather:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, asynchronous=True, root_only=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements for any single receive]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Igatherv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, root_only=True, suppress=lis_paren, [non-negative integer array (of length group size) containing the number of elements that are received from each process]
+    displs: POLYDISPLACEMENT, constant=True, asynchronous=True, length=*, root_only=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement relative to recvbuf at which to place the incoming data from process i]
+    recvtype: DATATYPE, root_only=True, [data type of recv buffer elements]
+    root: RANK, [rank of receiving process]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Improbe:
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    flag: LOGICAL, direction=out, [flag]
+    message: MESSAGE, direction=out, [returned message]
+    status: STATUS, direction=out
+MPI_Imrecv:
+    buf: BUFFER, direction=out, asynchronous=True, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    message: MESSAGE, direction=inout, [message]
+    request: REQUEST, direction=out
+MPI_Ineighbor_allgather:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ineighbor_allgatherv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length indegree) containing the number of elements that are received from each neighbor]
+    displs: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ineighbor_alltoall:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ineighbor_alltoallv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length outdegree). Entry j specifies the displacement (relative to sendbuf) from which send the outgoing data to neighbor j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ineighbor_alltoallw:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: DISPLACEMENT, constant=True, asynchronous=True, length=*, [integer array (of length outdegree). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for neighbor j]
+    sendtypes: DATATYPE, constant=True, asynchronous=True, length=*, [array of datatypes (of length outdegree). Entry j specifies the type of data to send to neighbor j]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: DISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length indegree). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtypes: DATATYPE, constant=True, length=*, asynchronous=True, [array of datatypes (of length indegree). Entry i specifies the type of data received from neighbor i]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    request: REQUEST, direction=out, [communication request]
+MPI_Info_c2f:
+    .return: F90_INFO
+    info: INFO, direction=in, pointer=False
+MPI_Info_create:
+    info: INFO, direction=out, [info object created]
+MPI_Info_create_env:
+    argc: ARGUMENT_COUNT, direction=inout, pointer=False, suppress=lis_parameter f08_parameter f90_parameter
+    argv: ARGUMENT_LIST, length=argc, pointer=False, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
+    info: INFO, direction=out, [info object]
+MPI_Info_delete:
+    info: INFO, direction=lis:inout, param:in, [info object]
+    key: STRING, constant=True, [key]
+MPI_Info_dup:
+    info: INFO, [info object]
+    newinfo: INFO, direction=out, [info object]
+MPI_Info_f2c:
+    .return: INFO
+    info: F90_INFO, direction=in, pointer=False
+MPI_Info_free:
+    info: INFO, direction=inout, [info object]
+MPI_Info_get:
+    info: INFO, [info object]
+    key: STRING, constant=True, [key]
+    valuelen: INFO_VALUE_LENGTH, [length of value arg]
+    value: STRING, direction=out, length=valuelen, [value]
+    flag: LOGICAL_BOOLEAN, direction=out, [true if key defined, false if not]
+MPI_Info_get_nkeys:
+    info: INFO, [info object]
+    nkeys: KEY_INDEX, direction=out, [number of defined keys]
+MPI_Info_get_nthkey:
+    info: INFO, [info object]
+    n: KEY_INDEX, [key number]
+    key: STRING, direction=out, [key]
+MPI_Info_get_string:
+    info: INFO, [info object]
+    key: STRING, constant=True, [key]
+    buflen: INFO_VALUE_LENGTH, direction=inout, [length of buffer]
+    value: STRING, direction=out, [value]
+    flag: LOGICAL_BOOLEAN, direction=out, [true if key defined, false if not]
+MPI_Info_get_valuelen:
+    info: INFO, [info object]
+    key: STRING, constant=True, [key]
+    valuelen: INFO_VALUE_LENGTH, direction=out, [length of value arg]
+    flag: LOGICAL_BOOLEAN, direction=out, [true if key defined, false if not]
+MPI_Info_set:
+    info: INFO, direction=lis:inout, param:in, [info object]
+    key: STRING, constant=True, [key]
+    value: STRING, constant=True, [value]
+MPI_Init:
+    argc: ARGUMENT_COUNT, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
+    argv: ARGUMENT_LIST, length=argc, pointer=True, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
+MPI_Init_thread:
+    argc: ARGUMENT_COUNT, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
+    argv: ARGUMENT_LIST, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
+    required: THREAD_LEVEL, [desired level of thread support]
+    provided: THREAD_LEVEL, direction=out, [provided level of thread support]
+MPI_Initialized:
+    flag: LOGICAL, direction=out, [Flag is true if MPI_INIT has been called and false otherwise]
+MPI_Intercomm_create:
+    local_comm: COMMUNICATOR, [local intra-communicator]
+    local_leader: RANK, [rank of local group leader in local_comm]
+    peer_comm: COMMUNICATOR, [``peer communicator; significant only at the local_leader]
+    remote_leader: RANK, [rank of remote group leader in peer_comm; significant only at the local_leader]
+    tag: TAG, [tag]
+    newintercomm: COMMUNICATOR, direction=out, [new inter-communicator]
+MPI_Intercomm_create_from_groups:
+    local_group: GROUP, [local group]
+    local_leader: RANK, [rank of local group leader in local\_group]
+    remote_group: GROUP, [remote group, significant only at local\_leader]
+    remote_leader: RANK, [rank of remote group leader in remote\_group, significant only at local\_leader]
+    stringtag: STRING, constant=True, [unique idenitifier for this operation]
+    info: INFO, [info object]
+    errhandler: ERRHANDLER, [error handler to be attached to new inter-communicator]
+    newintercomm: COMMUNICATOR, direction=OUT, [new inter-communicator]
+MPI_Intercomm_merge:
+    intercomm: COMMUNICATOR, [inter-communicator]
+    high: LOGICAL, [ordering of the local and remote groups in the new intra-communicator]
+    newintracomm: COMMUNICATOR, direction=out, [new intra-communicator]
+MPI_Iprobe:
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    flag: LOGICAL, direction=out
+    status: STATUS, direction=out
+MPI_Irecv:
+    buf: BUFFER, direction=out, asynchronous=True, suppress=f08_intent, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Ireduce:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [reduce operation]
+    root: RANK, [rank of root process]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ireduce_scatter:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array specifying the number of elements in result distributed to each process. This array must be identical on all calling processes.]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Ireduce_scatter_block:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [element count per block]
+    datatype: DATATYPE, [data type of elements of send and receive buffers]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Irsend:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Is_thread_main:
+    flag: LOGICAL, direction=out, [true if calling thread is main thread, false otherwise]
+MPI_Iscan:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Iscatter:
+    sendbuf: BUFFER, constant=True, asynchronous=True, root_only=True, [address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements sent to each process]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Iscatterv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, root_only=True, [address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, root_only=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    displs: POLYDISPLACEMENT, constant=True, asynchronous=True, root_only=True, length=*, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to sendbuf) from which to take the outgoing data to process i]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+    request: REQUEST, direction=out, [communication request]
+MPI_Isend:
+    buf: BUFFER, asynchronous=True, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Isendrecv:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    sendcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send buffer]
+    sendtype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    sendtag: TAG, [send tag]
+    recvbuf: BUFFER, direction=out, asynchronous=True, suppress=f08_intent, [initial address of receive buffer]
+    recvcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in receive buffer]
+    recvtype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    recvtag: TAG, [receive tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Isendrecv_replace:
+    buf: BUFFER, direction=inout, asynchronous=True, [initial address of send and receive buffer]
+    count: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send and receive buffer]
+    datatype: DATATYPE, [type of elements in send and receive buffer]
+    dest: RANK, [rank of destination]
+    sendtag: TAG, [send message tag]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    recvtag: TAG, [receive message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Issend:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Keyval_create:
+    copy_fn: FUNCTION_SMALL, func_type=MPI_Copy_function, suppress=lis_paren, [Copy callback function for keyval]
+    delete_fn: FUNCTION_SMALL, func_type=MPI_Delete_function, suppress=lis_paren, [Delete callback function for keyval]
+    keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE2, [Extra state for callback functions]
+MPI_Keyval_free:
+    keyval: KEYVAL, direction=inout, [Frees the integer key value]
+MPI_Lookup_name:
+    service_name: STRING, constant=True, [a service name]
+    info: INFO, [implementation-specific information]
+    port_name: STRING, direction=out, length=MPI_MAX_PORT_NAME, [a port name]
+MPI_Message_c2f:
+    .return: F90_MESSAGE
+    message: MESSAGE, direction=in, pointer=False
+MPI_Message_f2c:
+    .return: MESSAGE
+    message: F90_MESSAGE, direction=in, pointer=False
+MPI_Mprobe:
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    message: MESSAGE, direction=out, [returned message]
+    status: STATUS, direction=out
+MPI_Mrecv:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    message: MESSAGE, direction=inout, [message]
+    status: STATUS, direction=out
+MPI_NULL_COPY_FN:
+    oldcomm: COMMUNICATOR
+    keyval: KEYVAL
+    extra_state: EXTRA_STATE2
+    attribute_val_in: ATTRIBUTE_VAL_10
+    attribute_val_out: ATTRIBUTE_VAL_10
+    flag: LOGICAL, direction=out
+    ierr: ERROR_CODE, suppress=c_parameter
+MPI_NULL_DELETE_FN:
+    comm: COMMUNICATOR
+    keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL_10
+    extra_state: EXTRA_STATE2
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Neighbor_allgather:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+MPI_Neighbor_allgather_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Neighbor_allgatherv:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, length=*, constant=True, suppress=lis_paren, [non-negative integer array (of length indegree) containing the number of elements that are received from each neighbor]
+    displs: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+MPI_Neighbor_allgatherv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length indegree) containing the number of elements that are received from each neighbor]
+    displs: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Neighbor_alltoall:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+MPI_Neighbor_alltoall_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, [number of elements sent to each neighbor]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements received from each neighbor]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Neighbor_alltoallv:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length outdegree). Entry j specifies the displacement (relative to sendbuf) from which to send the outgoing data to neighbor j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+MPI_Neighbor_alltoallv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length outdegree). Entry j specifies the displacement (relative to sendbuf) from which send the outgoing data to neighbor j]
+    sendtype: DATATYPE, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: POLYDISPLACEMENT, constant=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length indegree). Entry i specifies the displacement (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Neighbor_alltoallw:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: DISPLACEMENT, constant=True, length=*, [integer array (of length outdegree). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for neighbor j]
+    sendtypes: DATATYPE, constant=True, length=*, [array of datatypes (of length outdegree). Entry j specifies the type of data to send to neighbor j]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: DISPLACEMENT, constant=True, length=*, [integer array (of length indegree). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtypes: DATATYPE, constant=True, length=*, [array of datatypes (of length indegree). Entry i specifies the type of data received from neighbor i]
+    comm: COMMUNICATOR, [communicator with topology structure]
+MPI_Neighbor_alltoallw_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array (of length outdegree) specifying the number of elements to send to each neighbor]
+    sdispls: DISPLACEMENT, constant=True, asynchronous=True, length=*, [integer array (of length outdegree). Entry j specifies the displacement in bytes (relative to sendbuf) from which to take the outgoing data destined for neighbor j]
+    sendtypes: DATATYPE, constant=True, asynchronous=True, length=*, [array of datatypes (of length outdegree). Entry j specifies the type of data to send to neighbor j]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, asynchronous=True, suppress=lis_paren, [non-negative integer array (of length indegree) specifying the number of elements that are received from each neighbor]
+    rdispls: DISPLACEMENT, constant=True, length=*, asynchronous=True, [integer array (of length indegree). Entry i specifies the displacement in bytes (relative to recvbuf) at which to place the incoming data from neighbor i]
+    recvtypes: DATATYPE, constant=True, length=*, asynchronous=True, [array of datatypes (of length indegree). Entry i specifies the type of data received from neighbor i]
+    comm: COMMUNICATOR, [communicator with topology structure]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Op_c2f:
+    .return: F90_OP
+    op: OPERATION, direction=in, pointer=False
+MPI_Op_commutative:
+    op: OPERATION, [operation]
+    commute: LOGICAL, direction=out, [true if op is commutative, false otherwise]
+MPI_Op_create:
+    user_fn: POLYFUNCTION, func_type=MPI_User_function, [user defined function]
+    commute: LOGICAL, suppress=lis_paren, [true if commutative; false otherwise.]
+    op: OPERATION, direction=out, [operation]
+MPI_Op_f2c:
+    .return: OPERATION
+    op: F90_OP, direction=in, pointer=False
+MPI_Op_free:
+    op: OPERATION, direction=inout, [operation]
+MPI_Open_port:
+    info: INFO, [implementation-specific information on how to establish an address]
+    port_name: STRING, length=MPI_MAX_PORT_NAME, direction=out, [newly established port]
+MPI_Pack:
+    inbuf: BUFFER, constant=True, [input buffer start]
+    incount: POLYDTYPE_NUM_ELEM_NNI, [number of input data items]
+    datatype: DATATYPE, [datatype of each input data item]
+    outbuf: BUFFER, direction=out, [output buffer start]
+    outsize: POLYNUM_BYTES_NNI, [output buffer size, in bytes]
+    position: POLYDISPLACEMENT_COUNT, direction=inout, [current position in buffer, in bytes]
+    comm: COMMUNICATOR, [communicator for packed message]
+MPI_Pack_external:
+    datarep: STRING, constant=True, length=*, [data representation]
+    inbuf: BUFFER, constant=True, [input buffer start]
+    incount: POLYDTYPE_NUM_ELEM, [number of input data items]
+    datatype: DATATYPE, [datatype of each input data item]
+    outbuf: BUFFER, direction=out, [output buffer start]
+    outsize: POLYDTYPE_PACK_SIZE, [output buffer size, in bytes]
+    position: POLYLOCATION, direction=inout, [current position in buffer, in bytes]
+MPI_Pack_external_size:
+    datarep: STRING, constant=True, length=*, [data representation]
+    incount: POLYDTYPE_NUM_ELEM, [number of input data items]
+    datatype: DATATYPE, [datatype of each input data item]
+    size: POLYDTYPE_PACK_SIZE, direction=out, [output buffer size, in bytes]
+MPI_Pack_size:
+    incount: POLYDTYPE_NUM_ELEM_NNI, [count argument to packing call]
+    datatype: DATATYPE, [datatype argument to packing call]
+    comm: COMMUNICATOR, [communicator argument to packing call]
+    size: POLYNUM_BYTES_NNI, direction=out, [upper bound on size of packed message, in bytes]
+MPI_Parrived:
+    request: REQUEST, direction=INOUT, [partitioned communication request]
+    partition: PARTITION, direction=IN, [partition to be tested]
+    flag: LOGICAL_BOOLEAN, direction=out, [true if operation completed on the specified partition, false if not]
+MPI_Pcontrol:
+    level: PROFILE_LEVEL, constant=True, [Profiling level]
+    varargs: VARARGS
+MPI_Pready:
+    partition: PARTITION, direction=IN, [partition to mark ready for transfer]
+    request: REQUEST, direction=INOUT, [partitioned communication request]
+MPI_Pready_list:
+    length: ARRAY_LENGTH, direction=IN, [list length]
+    array_of_partitions: PARTITION, direction=INOUT, length=length, [array of partitions]
+    request: REQUEST, direction=INOUT, [partitioned communication request]
+MPI_Pready_range:
+    partition_low: PARTITION, direction=IN, [partition to mark lowest partition ready for transfer]
+    partition_high: PARTITION, direction=IN, [partition to mark highest partition ready for transfer]
+    request: REQUEST, direction=INOUT, [partitioned communication request]
+MPI_Precv_init:
+    buf: BUFFER, direction=IN, [initial address of recv buffer (choice)]
+    partitions: PARTITION, direction=IN, [number of partitions]
+    count: XFER_NUM_ELEM_NNI, direction=IN, [number of elements send per partition]
+    datatype: DATATYPE, direction=IN, [type of each element]
+    dest: RANK, direction=IN, [rank of destination]
+    tag: TAG, direction=IN, [message tag]
+    comm: COMMUNICATOR, direction=IN, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=OUT, [communication request]
+MPI_Probe:
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+MPI_Psend_init:
+    buf: BUFFER, direction=IN, [initial address of send buffer (choice)]
+    partitions: PARTITION, direction=IN, [number of partitions]
+    count: XFER_NUM_ELEM_NNI, direction=IN, [number of elements send per partition]
+    datatype: DATATYPE, direction=IN, [type of each element]
+    dest: RANK, direction=IN, [rank of destination]
+    tag: TAG, direction=IN, [message tag]
+    comm: COMMUNICATOR, direction=IN, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=OUT, [communication request]
+MPI_Publish_name:
+    service_name: STRING, constant=True, [a service name to associate with the port]
+    info: INFO, [implementation-specific information]
+    port_name: STRING, constant=True, [a port name]
+MPI_Put:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of origin buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    win: WINDOW, [window object used for communication]
+MPI_Query_thread:
+    provided: THREAD_LEVEL, direction=out, [provided level of thread support]
+MPI_Raccumulate:
+    origin_addr: BUFFER, asynchronous=True, constant=True, [initial address of buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    op: OPERATION, [reduce operation]
+    win: WINDOW
+    request: REQUEST, direction=out, [\\RMA/ request]
+MPI_Recv:
+    buf: BUFFER, direction=out, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    datatype: DATATYPE, [datatype of each receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+MPI_Recv_init:
+    buf: BUFFER, direction=out, asynchronous=True, [initial address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements received]
+    datatype: DATATYPE, [type of each element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    tag: TAG, [message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Reduce:
+    sendbuf: BUFFER, constant=True, [address of send buffer]
+    recvbuf: BUFFER, direction=out, root_only=True, [address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [reduce operation]
+    root: RANK, [rank of root process]
+    comm: COMMUNICATOR, [communicator]
+MPI_Reduce_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [data type of elements of send buffer]
+    op: OPERATION, [reduce operation]
+    root: RANK, [rank of root process]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Reduce_local:
+    inbuf: BUFFER, constant=True, [input buffer]
+    inoutbuf: BUFFER, direction=inout, [combined input and output buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in inbuf and inoutbuf buffers]
+    datatype: DATATYPE, [data type of elements of inbuf and inoutbuf buffers]
+    op: OPERATION, [operation]
+MPI_Reduce_scatter:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements of the result distributed to each process.]
+    datatype: DATATYPE, [data type of elements of send and receive buffers]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+MPI_Reduce_scatter_block:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [element count per block]
+    datatype: DATATYPE, [data type of elements of send and receive buffers]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+MPI_Reduce_scatter_block_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [element count per block]
+    datatype: DATATYPE, [data type of elements of send and receive buffers]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Reduce_scatter_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    recvcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, length=*, suppress=lis_paren, [non-negative integer array specifying the number of elements in result distributed to each process. This array must be identical on all calling processes.]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Register_datarep:
+    datarep: STRING, constant=True, [data representation identifier]
+    read_conversion_fn: POLYFUNCTION, func_type=MPI_Datarep_conversion_function, [function invoked to convert from file representation to native representation]
+    write_conversion_fn: POLYFUNCTION, func_type=MPI_Datarep_conversion_function, [function invoked to convert from native representation to file representation]
+    dtype_file_extent_fn: FUNCTION, func_type=MPI_Datarep_extent_function, [function invoked to get the extent of a datatype as represented in the file]
+    extra_state: EXTRA_STATE, [extra state]
+MPI_Request_c2f:
+    .return: F90_REQUEST
+    request: REQUEST, direction=in, pointer=False
+MPI_Request_f2c:
+    .return: REQUEST
+    request: F90_REQUEST, direction=in, pointer=False
+MPI_Request_free:
+    request: REQUEST, direction=inout
+MPI_Request_get_status:
+    request: REQUEST, [request]
+    flag: LOGICAL, direction=out, [boolean flag, same as from MPI_TEST]
+    status: STATUS, direction=out, [status object if flag is true]
+MPI_Rget:
+    origin_addr: BUFFER, direction=out, asynchronous=True, constant=False, [initial address of origin buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from window start to the beginning of the target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    win: WINDOW, [window object used for communication]
+    request: REQUEST, direction=out, [\\RMA/ request]
+MPI_Rget_accumulate:
+    origin_addr: BUFFER, asynchronous=True, constant=True, [initial address of buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    result_addr: BUFFER, direction=out, asynchronous=True, [initial address of result buffer]
+    result_count: POLYXFER_NUM_ELEM_NNI, [number of entries in result buffer]
+    result_datatype: DATATYPE, [datatype of entries in result buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to beginning of target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    op: OPERATION, [reduce operation]
+    win: WINDOW
+    request: REQUEST, direction=out, [\\RMA/ request]
+MPI_Rput:
+    origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of origin buffer]
+    origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
+    origin_datatype: DATATYPE, [datatype of each entry in origin buffer]
+    target_rank: RANK_NNI, [rank of target]
+    target_disp: RMA_DISPLACEMENT_NNI, [displacement from start of window to target buffer]
+    target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
+    target_datatype: DATATYPE, [datatype of each entry in target buffer]
+    win: WINDOW, [window object used for communication]
+    request: REQUEST, direction=out, [\\RMA/ request]
+MPI_Rsend:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+MPI_Rsend_init:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements sent]
+    datatype: DATATYPE, [type of each element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Scan:
+    sendbuf: BUFFER, constant=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+MPI_Scan_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, [starting address of send buffer]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [starting address of receive buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in input buffer]
+    datatype: DATATYPE, [data type of elements of input buffer]
+    op: OPERATION, [operation]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Scatter:
+    sendbuf: BUFFER, constant=True, root_only=True, [address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements sent to each process]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+MPI_Scatter_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, root_only=True, [address of send buffer]
+    sendcount: POLYXFER_NUM_ELEM_NNI, root_only=True, [number of elements sent to each process]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Scatterv:
+    sendbuf: BUFFER, constant=True, root_only=True, [address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, root_only=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    displs: POLYDISPLACEMENT, constant=True, root_only=True, length=*, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to sendbuf) from which to take the outgoing data to process i]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+MPI_Scatterv_init:
+    sendbuf: BUFFER, constant=True, asynchronous=True, root_only=True, [address of send buffer]
+    sendcounts: POLYXFER_NUM_ELEM_NNI, constant=True, asynchronous=True, root_only=True, length=*, suppress=lis_paren, [non-negative integer array (of length group size) specifying the number of elements to send to each rank]
+    displs: POLYDISPLACEMENT, constant=True, root_only=True, length=*, asynchronous=True, suppress=lis_paren, [integer array (of length group size). Entry i specifies the displacement (relative to sendbuf) from which to take the outgoing data to process i]
+    sendtype: DATATYPE, root_only=True, [data type of send buffer elements]
+    recvbuf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, root_only=True, [address of receive buffer]
+    recvcount: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
+    recvtype: DATATYPE, [data type of receive buffer elements]
+    root: RANK, [rank of sending process]
+    comm: COMMUNICATOR, [communicator]
+    info: INFO, [info argument]
+    request: REQUEST, direction=out, [communication request]
+MPI_Send:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+MPI_Send_init:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements sent]
+    datatype: DATATYPE, [type of each element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Sendrecv:
+    sendbuf: BUFFER, constant=True, [initial address of send buffer]
+    sendcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send buffer]
+    sendtype: DATATYPE, [type of elements in send buffer]
+    dest: RANK, [rank of destination]
+    sendtag: TAG, [send tag]
+    recvbuf: BUFFER, direction=out, [initial address of receive buffer]
+    recvcount: XFER_NUM_ELEM_NNI_SMALL, [number of elements in receive buffer]
+    recvtype: DATATYPE, [type of elements receive buffer element]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    recvtag: TAG, [receive tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+MPI_Sendrecv_replace:
+    buf: BUFFER, direction=inout, [initial address of send and receive buffer]
+    count: XFER_NUM_ELEM_NNI_SMALL, [number of elements in send and receive buffer]
+    datatype: DATATYPE, [type of elements in send and receive buffer]
+    dest: RANK, [rank of destination]
+    sendtag: TAG, [send message tag]
+    source: RANK, [rank of source or MPI_ANY_SOURCE]
+    recvtag: TAG, [receive message tag or MPI_ANY_TAG]
+    comm: COMMUNICATOR
+    status: STATUS, direction=out
+MPI_Session_c2f:
+    .return: F90_SESSION
+    session: SESSION, direction=in, pointer=False
+MPI_Session_call_errhandler:
+    session: SESSION, [session with error handler]
+    errorcode: ERROR_CODE
+MPI_Session_create_errhandler:
+    session_errhandler_fn: FUNCTION_SMALL, func_type=MPI_Session_errhandler_function, suppress=tilda, [user defined error handling procedure]
+    errhandler: ERRHANDLER, direction=out
+MPI_Session_errhandler_function:
+    .return: NOTHING
+    session: SESSION, direction=in, pointer=True
+    error_code: ERROR_CODE, direction=in, pointer=True
+    varargs: VARARGS
+MPI_Session_f2c:
+    .return: SESSION
+    session: F90_SESSION, direction=in, pointer=False
+MPI_Session_finalize:
+    session: SESSION, direction=lis:in, param:inout, [session to be finalized]
+MPI_Session_get_errhandler:
+    session: SESSION, desc = session
+    errhandler: ERRHANDLER, direction=out, [error handler currently associated with session]
+MPI_Session_get_info:
+    session: SESSION, [session]
+    info_used: INFO, direction=OUT, [see explanation below]
+MPI_Session_get_nth_pset:
+    session: SESSION, [session]
+    info: INFO, [info object]
+    n: INDEX, [index of the desired process set name]
+    pset_len: STRING_LENGTH, direction=INOUT, [length of the pset\_name argument]
+    pset_name: STRING, direction=OUT, [name of the nth process set]
+MPI_Session_get_num_psets:
+    session: SESSION, [session]
+    info: INFO, [info object]
+    npset_names: ARRAY_LENGTH_NNI, direction=OUT, [number of available process sets]
+MPI_Session_get_pset_info:
+    session: SESSION, [session]
+    pset_name: STRING, constant=True, [name of process set]
+    info: INFO, direction=OUT, [info object containing information about the given process set]
+MPI_Session_init:
+    info: INFO, [info object to specify thread support level and MPI implementation specific resources]
+    errhandler: ERRHANDLER, [error handler to invoke in the event that an error is encountered during this function call]
+    session: SESSION, direction=OUT, [new session]
+MPI_Session_set_errhandler:
+    session: SESSION, direction=lis:inout, param:in, desc = session
+    errhandler: ERRHANDLER, [new error handler for session]
+MPI_Sizeof:
+    x: BUFFER, suppress=f08_intent f90_parenthesis, [a Fortran variable of numeric intrinsic type]
+    size: NUM_BYTES_SMALL, direction=out, [size of machine representation of that type]
+MPI_Ssend:
+    buf: BUFFER, constant=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
+    datatype: DATATYPE, [datatype of each send buffer element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+MPI_Ssend_init:
+    buf: BUFFER, constant=True, asynchronous=True, [initial address of send buffer]
+    count: POLYXFER_NUM_ELEM_NNI, [number of elements sent]
+    datatype: DATATYPE, [type of each element]
+    dest: RANK, [rank of destination]
+    tag: TAG, [message tag]
+    comm: COMMUNICATOR
+    request: REQUEST, direction=out
+MPI_Start:
+    request: REQUEST, direction=inout
+MPI_Startall:
+    count: ARRAY_LENGTH_NNI, [list length]
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+MPI_Status_c2f:
+    .return: ERROR_CLASS
+    c_status: STATUS, direction=in, constant=True
+    f_status: F90_STATUS, direction=out
+MPI_Status_c2f08:
+    .return: ERROR_CLASS
+    c_status: STATUS, direction=in, constant=True
+    f08_status: F08_STATUS, direction=out
+MPI_Status_f082c:
+    .return: ERROR_CLASS
+    f08_status: F08_STATUS, direction=in, constant=True
+    c_status: STATUS, direction=out
+MPI_Status_f082f:
+    f08_status: F08_STATUS, pointer=True, constant=True, [status object declared as named type]
+    f_status: F90_STATUS, direction=out, [status object declared as array]
+MPI_Status_f2c:
+    .return: ERROR_CLASS
+    f_status: F90_STATUS, direction=in, constant=True
+    c_status: STATUS, direction=out
+MPI_Status_f2f08:
+    f_status: F90_STATUS, pointer=True, constant=True, [status object declared as array]
+    f08_status: F08_STATUS, direction=out, [status object declared as named type]
+MPI_Status_set_cancelled:
+    status: STATUS, direction=inout, [status with which to associate cancel flag]
+    flag: LOGICAL, direction=in, [if true, indicates request was cancelled]
+MPI_Status_set_elements:
+    status: STATUS, direction=inout, [status with which to associate count]
+    datatype: DATATYPE, [datatype associated with count]
+    count: XFER_NUM_ELEM_SMALL, [number of elements to associate with status]
+MPI_Status_set_elements_x:
+    status: STATUS, direction=inout, [status with which to associate count]
+    datatype: DATATYPE, [datatype associated with count]
+    count: XFER_NUM_ELEM, [number of elements to associate with status]
+MPI_TYPE_DUP_FN:
+    oldtype: DATATYPE
+    type_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_TYPE_NULL_COPY_FN:
+    oldtype: DATATYPE
+    type_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_TYPE_NULL_DELETE_FN:
+    datatype: DATATYPE
+    type_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE_SHOW_INTENT, direction=out, suppress=c_parameter
+MPI_T_category_changed:
+    stamp: TIMESTAMP, direction=out, [a virtual time stamp to indicate the last change to the categories]
+MPI_T_category_get_categories:
+    cat_index: CAT_INDEX, [index of the category to be queried, in the range $0$ and $num_cat-1$]
+    len: ARRAY_LENGTH, [the length of the indices array]
+    indices: CAT_INDEX, direction=out, length=len, [an integer array of size len, indicating category indices]
+MPI_T_category_get_cvars:
+    cat_index: CAT_INDEX, [index of the category to be queried, in the range $0$ and $num_cat-1$]
+    len: ARRAY_LENGTH, [the length of the indices array]
+    indices: CVAR_INDEX, direction=out, length=len, [an integer array of size len, indicating control variable indices]
+MPI_T_category_get_events:
+    cat_index: CAT_INDEX, [index of the category to be queried, in the range $0$ and $num_cat-1$]
+    len: ARRAY_LENGTH, [the length of the indices array]
+    indices: CAT_INDEX, direction=out, length=len, [an integer array of size len, indicating event type indices]
+MPI_T_category_get_index:
+    name: STRING, constant=True, [the name of the category]
+    cat_index: CAT_INDEX, direction=out, [the index of the category]
+MPI_T_category_get_info:
+    cat_index: CAT_INDEX, [index of the category to be queried]
+    name: STRING, direction=out, [buffer to return the string containing the name of the category]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+    desc: STRING, direction=out, [buffer to return the string containing the description of the category]
+    desc_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for desc]
+    num_cvars: CVAR_INDEX, direction=out, [number of control variables in the category]
+    num_pvars: PVAR_INDEX, direction=out, [number of performance variables in the category]
+    num_categories: CAT_INDEX, direction=out, [number of categories contained in the category]
+MPI_T_category_get_num:
+    num_cat: CAT_INDEX, direction=out, [current number of categories]
+MPI_T_category_get_num_events:
+    cat_index: CAT_INDEX, [index of the category to be queried]
+    num_events: EVENT_INDEX, direction=out, [number of event types in the category]
+MPI_T_category_get_pvars:
+    cat_index: CAT_INDEX, [index of the category to be queried, in the range $0$ and $num_cat-1$]
+    len: ARRAY_LENGTH, [the length of the indices array]
+    indices: PVAR_INDEX, direction=out, length=len, [an integer array of size len, indicating performance variable indices]
+MPI_T_cvar_get_index:
+    name: STRING, constant=True, [name of the control variable]
+    cvar_index: CVAR_INDEX, direction=out, [index of the control variable]
+MPI_T_cvar_get_info:
+    cvar_index: CVAR_INDEX, [index of the control variable to be queried, value between $0$ and $num_cvar-1$]
+    name: STRING, direction=out, [buffer to return the string containing the name of the control variable]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+    verbosity: TOOL_VAR_VERBOSITY, direction=out, [verbosity level of this variable]
+    datatype: DATATYPE, direction=out, [mpi datatype of the information stored in the control variable]
+    enumtype: TOOLS_ENUM, direction=out, [optional descriptor for enumeration information]
+    desc: STRING, direction=out, [buffer to return the string containing a description of the control variable]
+    desc_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for desc]
+    bind: BIND_TYPE, direction=out, [type of mpi object to which this variable must be bound]
+    scope: VARIABLE_SCOPE, direction=out, [scope of when changes to this variable are possible]
+MPI_T_cvar_get_num:
+    num_cvar: CVAR_INDEX, direction=out, [returns number of control variables]
+MPI_T_cvar_handle_alloc:
+    cvar_index: CVAR_INDEX_SPECIAL, [index of control variable for which handle is to be allocated]
+    obj_handle: TOOL_MPI_OBJ, [reference to a handle of the mpi object to which this variable is supposed to be bound]
+    handle: CVAR, direction=out, [allocated handle]
+    count: TOOLS_NUM_ELEM_SMALL, direction=out, [number of elements used to represent this variable]
+MPI_T_cvar_handle_free:
+    handle: CVAR, direction=inout, [handle to be freed]
+MPI_T_cvar_read:
+    handle: CVAR, [handle to the control variable to be read]
+    buf: BUFFER, direction=out, [initial address of storage location for variable value]
+MPI_T_cvar_write:
+    handle: CVAR, [handle to the control variable to be written]
+    buf: BUFFER, constant=True, [initial address of storage location for variable value]
+MPI_T_enum_get_info:
+    enumtype: TOOLS_ENUM, [enumeration to be queried]
+    num: TOOLENUM_SIZE, direction=out, [number of discrete values represented by this enumeration]
+    name: STRING, direction=out, [buffer to return the string containing the name of the enumeration item]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+MPI_T_enum_get_item:
+    enumtype: TOOLS_ENUM, [enumeration to be queried]
+    index: TOOLENUM_INDEX, [number of the value to be queried in this enumeration]
+    value: TOOL_VAR_VALUE, direction=out, [variable value]
+    name: STRING, direction=out, [buffer to return the string containing the name of the enumeration item]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+MPI_T_event_callback_get_info:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    cb_safety: CALLBACK_SAFETY, [callback safety level]
+    info_used: INFO, direction=out, [info object]
+MPI_T_event_callback_set_info:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    cb_safety: CALLBACK_SAFETY, [callback safety level]
+    info: INFO, [info object]
+MPI_T_event_copy:
+    event_instance: EVENT_INSTANCE, [event instance provided to the callback function]
+    buffer: C_BUFFER, direction=out, [user-allocated buffer for event data]
+MPI_T_event_get_index:
+    name: STRING, constant=True, [name of the event type]
+    event_index: EVENT_INDEX, direction=out, [index of the event type]
+MPI_T_event_get_info:
+    event_index: EVENT_INDEX, [index of the event type to be queried between $0$ and $num_events-1$]
+    name: STRING, direction=out, [buffer to return the string containing the name of the event type]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+    verbosity: TOOL_VAR_VERBOSITY, direction=out, [verbosity level of this event type]
+    array_of_datatypes: DATATYPE, length=num_elements, direction=out, [array of mpi basic datatypes used to encode the event data]
+    array_of_displacements: DISPLACEMENT_NNI, length=num_elements, direction=out, [array of byte displacements of the elements in the event buffer]
+    num_elements: ARRAY_LENGTH_NNI, direction=inout, [length of array\\_of\\_datatypes and array\\_of\\_displacements arrays]
+    enumtype: TOOLS_ENUM, direction=out, [optional descriptor for enumeration information]
+    info: INFO, direction=out, [optional info object]
+    desc: STRING, direction=out, [buffer to return the string containing a description of the event type]
+    desc_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for desc]
+    bind: BIND_TYPE, direction=out, [type of mpi object to which an event of this type must be bound]
+MPI_T_event_get_num:
+    num_events: EVENT_INDEX, direction=out, [returns number of event types]
+MPI_T_event_get_source:
+    event_instance: EVENT_INSTANCE, [event instance provided to the callback function]
+    source_index: SOURCE_INDEX, direction=out, [index identifying the source]
+MPI_T_event_get_timestamp:
+    event_instance: EVENT_INSTANCE, [event instance provided to the callback function]
+MPI_T_event_handle_alloc:
+    event_index: EVENT_INDEX, [index of event type for which the registration handle is to be allocated]
+    obj_handle: TOOL_MPI_OBJ, [reference to a handle of the mpi object to which this event is supposed to be bound]
+    info: INFO, [info object]
+    event_registration: EVENT_REGISTRATION, direction=out, [event registration]
+MPI_T_event_handle_free:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    user_data: EXTRA_STATE, [pointer to a user-controlled buffer]
+    free_cb_function: EVENT_FREE_CB_FUNCTION, [pointer to user-defined callback function]
+MPI_T_event_handle_get_info:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    info_used: INFO, direction=out, [info object]
+MPI_T_event_handle_set_info:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    info: INFO, [info object]
+MPI_T_event_read:
+    event_instance: EVENT_INSTANCE, [event-instance handle provided to the callback function]
+    element_index: INDEX, [index into the array of datatypes of the item to be queried]
+    buffer: C_BUFFER, direction=out, [pointer to a memory location to store the item data]
+MPI_T_event_register_callback:
+    event_registration: EVENT_REGISTRATION, [event registration]
+    cb_safety: CALLBACK_SAFETY, [maximum callback safety level]
+    info: INFO, [info object]
+    user_data: EXTRA_STATE, [pointer to a user-controlled buffer]
+    event_cb_function: EVENT_CB_FUNCTION, [pointer to user-defined callback function]
+MPI_T_event_set_dropped_handler:
+    event_registration: EVENT_REGISTRATION, [valid event registration]
+    dropped_cb_function: EVENT_DROP_CB_FUNCTION, [pointer to user-defined callback function]
+MPI_T_finalize:
+MPI_T_init_thread:
+    required: THREAD_LEVEL, [desired level of thread support]
+    provided: THREAD_LEVEL, direction=out, [provided level of thread support]
+MPI_T_pvar_get_index:
+    name: STRING, constant=True, [the name of the performance variable]
+    var_class: PVAR_CLASS, [the class of the performance variable]
+    pvar_index: PVAR_INDEX, direction=out, [the index of the performance variable]
+MPI_T_pvar_get_info:
+    pvar_index: PVAR_INDEX, [index of the performance variable to be queried between $0$ and $num_pvar-1$]
+    name: STRING, direction=out, [buffer to return the string containing the name of the performance variable]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+    verbosity: TOOL_VAR_VERBOSITY, direction=out, [verbosity level of this variable]
+    var_class: PVAR_CLASS, direction=out, [class of performance variable]
+    datatype: DATATYPE, direction=out, [mpi datatype of the information stored in the performance variable]
+    enumtype: TOOLS_ENUM, direction=out, [optional descriptor for enumeration information]
+    desc: STRING, direction=out, [buffer to return the string containing a description of the performance variable]
+    desc_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for desc]
+    bind: BIND_TYPE, direction=out, [type of mpi object to which this variable must be bound]
+    readonly: LOGICAL_OPTIONAL, direction=out, [flag indicating whether the variable can be written/reset]
+    continuous: LOGICAL_OPTIONAL, direction=out, [flag indicating whether the variable can be started and stopped or is continuously active]
+    atomic: LOGICAL_OPTIONAL, direction=out, [flag indicating whether the variable can be atomically read and reset]
+MPI_T_pvar_get_num:
+    num_pvar: PVAR_INDEX, direction=out, [returns number of performance variables]
+MPI_T_pvar_handle_alloc:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    pvar_index: PVAR_INDEX, [index of performance variable for which handle is to be allocated]
+    obj_handle: TOOL_MPI_OBJ, [reference to a handle of the mpi object to which this variable is supposed to be bound]
+    handle: PVAR, direction=out, [allocated handle]
+    count: TOOLS_NUM_ELEM_SMALL, direction=out, [number of elements used to represent this variable]
+MPI_T_pvar_handle_free:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, direction=inout, [handle to be freed]
+MPI_T_pvar_read:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+    buf: BUFFER, direction=out, [initial address of storage location for variable value]
+MPI_T_pvar_readreset:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+    buf: BUFFER, direction=out, [initial address of storage location for variable value]
+MPI_T_pvar_reset:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+MPI_T_pvar_session_create:
+    session: PVAR_SESSION, direction=out, [identifier of performance session]
+MPI_T_pvar_session_free:
+    session: PVAR_SESSION, direction=inout, [identifier of performance experiment session]
+MPI_T_pvar_start:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+MPI_T_pvar_stop:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+MPI_T_pvar_write:
+    session: PVAR_SESSION, [identifier of performance experiment session]
+    handle: PVAR, [handle of a performance variable]
+    buf: BUFFER, constant=True, [initial address of storage location for variable value]
+MPI_T_source_get_info:
+    source_index: SOURCE_INDEX, [index of the source to be queried between $0$ and $num_sources-1$]
+    name: STRING, direction=out, [buffer to return the string containing the name of the source]
+    name_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for name]
+    desc: STRING, direction=out, [buffer to return the string containing the description of the source]
+    desc_len: STRING_LENGTH, direction=inout, [length of the string and/or buffer for desc]
+    ordering: SOURCE_ORDERING, direction=out, [flag indicating chronological ordering guarantees given by the source]
+    ticks_per_second: TOOLS_TICK_COUNT, direction=out, [the number of ticks per second for the timer of this source]
+    max_ticks: TOOLS_TICK_COUNT, direction=out, [the maximum count of ticks reported by this source before overflow occurs]
+    info: INFO, optional info object, direction=out
+MPI_T_source_get_num:
+    num_sources: SOURCE_INDEX, direction=out, [returns number of event sources]
+MPI_T_source_get_timestamp:
+    source_index: SOURCE_INDEX, [index of the source]
+MPI_Test:
+    request: REQUEST, direction=inout
+    flag: LOGICAL, direction=out, [true if operation completed]
+    status: STATUS, direction=out
+MPI_Test_cancelled:
+    status: STATUS, constant=True
+    flag: LOGICAL, direction=out
+MPI_Testall:
+    count: ARRAY_LENGTH_NNI, lists length
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+    flag: LOGICAL, direction=out
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+MPI_Testany:
+    count: ARRAY_LENGTH_NNI, list length
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+    index: INDEX, direction=out, [index of operation that completed or MPI_UNDEFINED if none completed]
+    flag: LOGICAL, direction=out, [true if one of the operations is complete]
+    status: STATUS, direction=out
+MPI_Testsome:
+    incount: ARRAY_LENGTH_NNI, [length of array_of_requests]
+    array_of_requests: REQUEST, direction=inout, length=incount, [array of requests]
+    outcount: ARRAY_LENGTH, direction=out, [number of completed requests]
+    array_of_indices: INDEX, direction=out, length=*, [array of indices of operations that completed]
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects for operations that completed]
+MPI_Topo_test:
+    comm: COMMUNICATOR, [communicator]
+    status: TOPOLOGY_TYPE, direction=OUT, [topology type of communicator comm]
+MPI_Type_c2f:
+    .return: F90_DATATYPE
+    datatype: DATATYPE, direction=in, pointer=False
+MPI_Type_commit:
+    datatype: DATATYPE, direction=inout, [datatype that is committed]
+MPI_Type_contiguous:
+    count: POLYDTYPE_NUM_ELEM_NNI, [replication count]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_copy_attr_function:
+    oldtype: DATATYPE
+    type_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Type_create_darray:
+    size: COMM_SIZE_PI, [size of process group]
+    rank: RANK_NNI, [rank in process group]
+    ndims: ARRAY_LENGTH_PI, [number of array dimensions as well as process grid dimensions]
+    array_of_gsizes: POLYDTYPE_NUM_ELEM_PI, constant=True, length=ndims, [number of elements of type oldtype in each dimension of global array]
+    array_of_distribs: DISTRIB_ENUM, constant=True, length=ndims, [distribution of array in each dimension]
+    array_of_dargs: DTYPE_DISTRIBUTION, constant=True, length=ndims, [distribution argument in each dimension]
+    array_of_psizes: PROCESS_GRID_SIZE, constant=True, length=ndims, [size of process grid in each dimension]
+    order: ORDER, [array storage order flag]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_f90_complex:
+    p: MATH, [precision, in decimal digits]
+    r: MATH, [decimal exponent range]
+    newtype: DATATYPE, direction=out, [the requested MPI datatype]
+MPI_Type_create_f90_integer:
+    r: MATH, [decimal exponent range, i.e., number of decimal digits]
+    newtype: DATATYPE, direction=out, [the requested MPI datatype]
+MPI_Type_create_f90_real:
+    p: MATH, [precision, in decimal digits]
+    r: MATH, [decimal exponent range]
+    newtype: DATATYPE, direction=out, [the requested MPI datatype]
+MPI_Type_create_hindexed:
+    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
+    array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, constant=True, [number of elements in each block]
+    array_of_displacements: POLYDISPLACEMENT_AINT_COUNT, length=count, constant=True, [byte displacement of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_hindexed_block:
+    count: POLYDTYPE_NUM_ELEM_NNI, [length of array of displacements]
+    blocklength: POLYDTYPE_NUM_ELEM_NNI, [size of block]
+    array_of_displacements: POLYDISPLACEMENT_AINT_COUNT, length=count, constant=True, [byte displacement of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_hvector:
+    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks]
+    blocklength: POLYDTYPE_NUM_ELEM_NNI, [number of elements in each block]
+    stride: POLYDTYPE_STRIDE_BYTES, [number of bytes between start of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_indexed_block:
+    count: POLYDTYPE_NUM_ELEM_NNI, [length of array of displacements]
+    blocklength: POLYDTYPE_NUM_ELEM_NNI, [size of block]
+    array_of_displacements: POLYDISPLACEMENT_COUNT, length=count, constant=True, [array of displacements]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_keyval:
+    type_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Type_copy_attr_function, [copy callback function for type_keyval]
+    type_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Type_delete_attr_function, [delete callback function for type_keyval]
+    type_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
+MPI_Type_create_resized:
+    oldtype: DATATYPE, [input datatype]
+    lb: POLYDISPLACEMENT_AINT_COUNT, [new lower bound of datatype]
+    extent: POLYDISPLACEMENT_AINT_COUNT, [new extent of datatype]
+    newtype: DATATYPE, direction=out, [output datatype]
+MPI_Type_create_struct:
+    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks also number of entries in arrays array_of_types, array_of_displacements, and array_of_blocklengths]
+    array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, constant=True, [number of elements in each block]
+    array_of_displacements: POLYDISPLACEMENT_AINT_COUNT, length=count, constant=True, [byte displacement of each block]
+    array_of_types: DATATYPE, constant=True, length=count, [types of elements in each block]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_create_subarray:
+    ndims: ARRAY_LENGTH_PI, [number of array dimensions]
+    array_of_sizes: POLYDTYPE_NUM_ELEM_PI, length=ndims, constant=True, [number of elements of type oldtype in each dimension of the full array]
+    array_of_subsizes: POLYDTYPE_NUM_ELEM_PI, length=ndims, constant=True, [number of elements of type oldtype in each dimension of the subarray]
+    array_of_starts: POLYDTYPE_NUM_ELEM_NNI, length=ndims, constant=True, [starting coordinates of the subarray in each dimension]
+    order: ORDER, [array storage order flag]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_delete_attr:
+    datatype: DATATYPE, direction=lis:inout, param:in, [datatype from which the attribute is deleted]
+    type_keyval: KEYVAL, [key value]
+MPI_Type_delete_attr_function:
+    datatype: DATATYPE
+    type_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Type_dup:
+    oldtype: DATATYPE, [datatype]
+    newtype: DATATYPE, direction=out, [copy of oldtype]
+MPI_Type_f2c:
+    .return: DATATYPE
+    datatype: F90_DATATYPE, direction=in, pointer=False
+MPI_Type_free:
+    datatype: DATATYPE, direction=inout, [datatype that is freed]
+MPI_Type_free_keyval:
+    type_keyval: KEYVAL, direction=inout, [key value]
+MPI_Type_get_attr:
+    datatype: DATATYPE, [datatype to which the attribute is attached]
+    type_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+MPI_Type_get_contents:
+    datatype: DATATYPE, [datatype to access]
+    max_integers: POLYNUM_PARAM_VALUES, [number of elements in array_of_integers]
+    max_addresses: POLYNUM_PARAM_VALUES, [number of elements in array_of_addresses]
+    max_large_counts: POLYNUM_PARAM_VALUES, large_only=True, [number of elements in array_of_large_counts]
+    max_datatypes: POLYNUM_PARAM_VALUES, [number of elements in array_of_datatypes]
+    array_of_integers: GENERIC_DTYPE_INT, direction=out, length=max_integers, [contains integer arguments used in constructing datatype]
+    array_of_addresses: DISPLACEMENT, direction=out, length=max_addresses, [contains address arguments used in constructing datatype]
+    array_of_large_counts: GENERIC_DTYPE_COUNT, direction=out, length=max_large_counts, large_only=True, [contains large count arguments used in constructing datatype]
+    array_of_datatypes: DATATYPE, direction=out, length=max_datatypes, [contains datatype arguments used in constructing datatype]
+MPI_Type_get_envelope:
+    datatype: DATATYPE, [datatype to access]
+    num_integers: POLYNUM_PARAM_VALUES, direction=out, [number of input integers used in call constructing combiner]
+    num_addresses: POLYNUM_PARAM_VALUES, direction=out, [number of input addresses used in call constructing combiner]
+    num_large_counts: POLYNUM_PARAM_VALUES, direction=out, large_only=True, [number of input large counts used in call constructing combiner]
+    num_datatypes: POLYNUM_PARAM_VALUES, direction=out, [number of input datatypes used in call constructing combiner]
+    combiner: COMBINER, direction=out, [combiner]
+MPI_Type_get_extent:
+    datatype: DATATYPE, [datatype to get information on]
+    lb: POLYDISPLACEMENT_AINT_COUNT, direction=out, [lower bound of datatype]
+    extent: POLYDISPLACEMENT_AINT_COUNT, direction=out, [extent of datatype]
+MPI_Type_get_extent_x:
+    datatype: DATATYPE, [datatype to get information on]
+    lb: XFER_NUM_ELEM, direction=out, [lower bound of datatype]
+    extent: XFER_NUM_ELEM, direction=out, [extent of datatype]
+MPI_Type_get_name:
+    datatype: DATATYPE, [datatype whose name is to be returned]
+    type_name: STRING, direction=out, length=MPI_MAX_OBJECT_NAME, [the name previously stored on the datatype, or an empty string if no such name exists]
+    resultlen: STRING_LENGTH, direction=out, [length of returned name]
+MPI_Type_get_true_extent:
+    datatype: DATATYPE, [datatype to get information on]
+    true_lb: POLYDISPLACEMENT_AINT_COUNT, direction=out, [true lower bound of datatype]
+    true_extent: POLYDISPLACEMENT_AINT_COUNT, direction=out, [true size of datatype]
+MPI_Type_get_true_extent_x:
+    datatype: DATATYPE, [datatype to get information on]
+    true_lb: XFER_NUM_ELEM, direction=out, [true lower bound of datatype]
+    true_extent: XFER_NUM_ELEM, direction=out, [true size of datatype]
+MPI_Type_indexed:
+    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
+    array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, constant=True, [number of elements per block]
+    array_of_displacements: POLYDISPLACEMENT_COUNT, length=count, constant=True, [displacement for each block, in multiples of oldtype]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Type_match_size:
+    typeclass: TYPECLASS, [generic type specifier]
+    size: TYPECLASS_SIZE, [size, in bytes, of representation]
+    datatype: DATATYPE, direction=out, [datatype with correct type, size]
+MPI_Type_set_attr:
+    datatype: DATATYPE, direction=lis:inout, param:in, [datatype to which attribute will be attached]
+    type_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
+MPI_Type_set_name:
+    datatype: DATATYPE, direction=lis:inout, param:in, [datatype whose identifier is to be set]
+    type_name: STRING, constant=True, [the character string which is remembered as the name]
+MPI_Type_size:
+    datatype: DATATYPE, [datatype]
+    size: POLYXFER_NUM_ELEM, direction=out, [datatype size]
+MPI_Type_size_x:
+    datatype: DATATYPE, [datatype]
+    size: XFER_NUM_ELEM, direction=out, [datatype size]
+MPI_Type_vector:
+    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks]
+    blocklength: POLYDTYPE_NUM_ELEM_NNI, [number of elements in each block]
+    stride: POLYDTYPE_NUM_ELEM, [number of elements between start of each block]
+    oldtype: DATATYPE, [old datatype]
+    newtype: DATATYPE, direction=out, [new datatype]
+MPI_Unpack:
+    inbuf: BUFFER, constant=True, [input buffer start]
+    insize: POLYNUM_BYTES_NNI, [size of input buffer, in bytes]
+    position: POLYDISPLACEMENT_COUNT, direction=inout, [current position in bytes]
+    outbuf: BUFFER, direction=out, [output buffer start]
+    outcount: POLYDTYPE_NUM_ELEM, [number of items to be unpacked]
+    datatype: DATATYPE, [datatype of each output data item]
+    comm: COMMUNICATOR, [communicator for packed message]
+MPI_Unpack_external:
+    datarep: STRING, constant=True, length=*, pointer=False, [data representation]
+    inbuf: BUFFER, constant=True, [input buffer start]
+    insize: POLYDTYPE_PACK_SIZE, [input buffer size, in bytes]
+    position: POLYLOCATION, direction=inout, [current position in buffer, in bytes]
+    outbuf: BUFFER, direction=out, [output buffer start]
+    outcount: POLYDTYPE_NUM_ELEM, [number of output data items]
+    datatype: DATATYPE, [datatype of output data item]
+MPI_Unpublish_name:
+    service_name: STRING, constant=True, [a service name]
+    info: INFO, [implementation-specific information]
+    port_name: STRING, constant=True, [a port name]
+MPI_User_function:
+    .return: NOTHING
+    invec: C_BUFFER4, length=len
+    inoutvec: C_BUFFER4, length=len
+    len: POLYXFER_NUM_ELEM, pointer=True
+    datatype: DATATYPE, pointer=True
+MPI_WIN_DUP_FN:
+    oldwin: WINDOW
+    win_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_WIN_NULL_COPY_FN:
+    oldwin: WINDOW
+    win_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_WIN_NULL_DELETE_FN:
+    win: WINDOW
+    win_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Wait:
+    request: REQUEST, direction=inout, [request]
+    status: STATUS, direction=out
+MPI_Waitall:
+    count: ARRAY_LENGTH_NNI, [lists length]
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects]
+MPI_Waitany:
+    count: ARRAY_LENGTH_NNI, list length
+    array_of_requests: REQUEST, direction=inout, length=count, [array of requests]
+    index: INDEX, direction=out, [index of handle for operation that completed]
+    status: STATUS, direction=out
+MPI_Waitsome:
+    incount: ARRAY_LENGTH_NNI, [length of array_of_requests]
+    array_of_requests: REQUEST, direction=inout, length=incount, [array of requests]
+    outcount: ARRAY_LENGTH, direction=out, [number of completed requests]
+    array_of_indices: INDEX, direction=out, length=*, [array of indices of operations that completed]
+    array_of_statuses: STATUS, direction=out, length=*, pointer=False, [array of status objects for operations that completed]
+MPI_Win_allocate:
+    size: WINDOW_SIZE, [size of window in bytes]
+    disp_unit: POLYRMA_DISPLACEMENT, [local unit size for displacements, in bytes]
+    info: INFO
+    comm: COMMUNICATOR, [intra-communicator]
+    baseptr: C_BUFFER, direction=out, [initial address of window]
+    win: WINDOW, direction=out, [window object returned by call]
+MPI_Win_allocate_shared:
+    size: WINDOW_SIZE, [size of local window in bytes]
+    disp_unit: POLYRMA_DISPLACEMENT, [local unit size for displacements, in bytes]
+    info: INFO
+    comm: COMMUNICATOR, [intra-communicator]
+    baseptr: C_BUFFER, direction=out, [address of local allocated window segment]
+    win: WINDOW, direction=out, [window object returned by the call]
+MPI_Win_attach:
+    win: WINDOW
+    base: BUFFER, asynchronous=True, suppress=f08_intent, [initial address of memory to be attached]
+    size: WIN_ATTACH_SIZE, [size of memory to be attached in bytes]
+MPI_Win_c2f:
+    .return: F90_WIN
+    win: WINDOW, direction=in, pointer=False
+MPI_Win_call_errhandler:
+    win: WINDOW, [window with error handler]
+    errorcode: ERROR_CODE
+MPI_Win_complete:
+    win: WINDOW
+MPI_Win_copy_attr_function:
+    oldwin: WINDOW
+    win_keyval: KEYVAL
+    extra_state: EXTRA_STATE
+    attribute_val_in: ATTRIBUTE_VAL
+    attribute_val_out: ATTRIBUTE_VAL, direction=out
+    flag: LOGICAL, direction=out
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Win_create:
+    base: BUFFER, asynchronous=True, suppress=f08_intent, [initial address of window]
+    size: WINDOW_SIZE, [size of window in bytes]
+    disp_unit: POLYRMA_DISPLACEMENT, [local unit size for displacements, in bytes]
+    info: INFO
+    comm: COMMUNICATOR, [intra-communicator]
+    win: WINDOW, direction=out
+MPI_Win_create_dynamic:
+    info: INFO
+    comm: COMMUNICATOR, [intra-communicator]
+    win: WINDOW, direction=out, [window object returned by the call]
+MPI_Win_create_errhandler:
+    win_errhandler_fn: FUNCTION_SMALL, func_type=MPI_Win_errhandler_function, [user defined error handling procedure]
+    errhandler: ERRHANDLER, direction=out
+MPI_Win_create_keyval:
+    win_copy_attr_fn: FUNCTION_SMALL, func_type=MPI_Win_copy_attr_function, [copy callback function for win_keyval]
+    win_delete_attr_fn: FUNCTION_SMALL, func_type=MPI_Win_delete_attr_function, [delete callback function for win_keyval]
+    win_keyval: KEYVAL, direction=out, [key value for future access]
+    extra_state: EXTRA_STATE, [extra state for callback function]
+MPI_Win_delete_attr:
+    win: WINDOW, direction=lis:inout, param:in, [window from which the attribute is deleted]
+    win_keyval: KEYVAL, [key value]
+MPI_Win_delete_attr_function:
+    win: WINDOW
+    win_keyval: KEYVAL
+    attribute_val: ATTRIBUTE_VAL
+    extra_state: EXTRA_STATE
+    ierror: ERROR_CODE, suppress=c_parameter
+MPI_Win_detach:
+    win: WINDOW
+    base: BUFFER, constant=True, asynchronous=True, suppress=f08_intent, [initial address of memory to be detached]
+MPI_Win_errhandler_function:
+    .return: NOTHING
+    win: WINDOW, direction=in, pointer=True
+    error_code: ERROR_CODE, direction=in, pointer=True
+    varargs: VARARGS
+MPI_Win_f2c:
+    .return: WINDOW
+    win: F90_WIN, direction=in, pointer=False
+MPI_Win_fence:
+    assert: ASSERT
+    win: WINDOW
+MPI_Win_flush:
+    rank: RANK_NNI, [rank of target window]
+    win: WINDOW
+MPI_Win_flush_all:
+    win: WINDOW
+MPI_Win_flush_local:
+    rank: RANK_NNI, [rank of target window]
+    win: WINDOW
+MPI_Win_flush_local_all:
+    win: WINDOW
+MPI_Win_free:
+    win: WINDOW, direction=inout
+MPI_Win_free_keyval:
+    win_keyval: KEYVAL, direction=inout, [key value]
+MPI_Win_get_attr:
+    win: WINDOW, [window to which the attribute is attached]
+    win_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, direction=out, [attribute value, unless flag = false]
+    flag: LOGICAL, direction=out, [false if no attribute is associated with the key]
+MPI_Win_get_errhandler:
+    win: WINDOW
+    errhandler: ERRHANDLER, direction=out, [error handler currently associated with window]
+MPI_Win_get_group:
+    win: WINDOW
+    group: GROUP, direction=out, [group of processes which share access to the window]
+MPI_Win_get_info:
+    win: WINDOW
+    info_used: INFO, direction=out, [new info object]
+MPI_Win_get_name:
+    win: WINDOW, [window whose name is to be returned]
+    win_name: STRING, direction=out, length=MPI_MAX_OBJECT_NAME, [the name previously stored on the window, or an empty string if no such name exists]
+    resultlen: STRING_LENGTH, direction=out, [length of returned name]
+MPI_Win_lock:
+    lock_type: LOCK_TYPE, [either MPI_LOCK_EXCLUSIVE or MPI_LOCK_SHARED]
+    rank: RANK_NNI, [rank of locked window]
+    assert: ASSERT
+    win: WINDOW
+MPI_Win_lock_all:
+    assert: ASSERT
+    win: WINDOW
+MPI_Win_post:
+    group: GROUP, [group of origin processes]
+    assert: ASSERT
+    win: WINDOW
+MPI_Win_set_attr:
+    win: WINDOW, direction=lis:inout, param:in, [window to which attribute will be attached]
+    win_keyval: KEYVAL, [key value]
+    attribute_val: ATTRIBUTE_VAL, [attribute value]
+MPI_Win_set_errhandler:
+    win: WINDOW, direction=lis:inout, param:in
+    errhandler: ERRHANDLER, [new error handler for window]
+MPI_Win_set_info:
+    win: WINDOW, direction=lis:inout, param:in
+    info: INFO
+MPI_Win_set_name:
+    win: WINDOW, direction=lis:inout, param:in, [window whose identifier is to be set]
+    win_name: STRING, constant=True, [the character string which is remembered as the name]
+MPI_Win_shared_query:
+    win: WINDOW, [shared memory window object]
+    rank: RANK_NNI, [rank in the group of window win or MPI_PROC_NULL]
+    size: WINDOW_SIZE, direction=out, [size of the window segment]
+    disp_unit: POLYRMA_DISPLACEMENT, direction=out, [local unit size for displacements, in bytes]
+    baseptr: C_BUFFER, direction=out, [address for load/store access to window segment]
+MPI_Win_start:
+    group: GROUP, [group of target processes]
+    assert: ASSERT
+    win: WINDOW
+MPI_Win_sync:
+    win: WINDOW
+MPI_Win_test:
+    win: WINDOW
+    flag: LOGICAL, direction=out, [success flag]
+MPI_Win_unlock:
+    rank: RANK_NNI, [rank of window]
+    win: WINDOW
+MPI_Win_unlock_all:
+    win: WINDOW
+MPI_Win_wait:
+    win: WINDOW
+MPI_Wtick:
+    .return: TICK_RESOLUTION
+MPI_Wtime:
+    .return: WALL_TIME
+
+Type Mappings
+================
+LIS_KIND_MAP:
+    ACCESS_MODE: integer
+    ALLOC_MEM_NUM_BYTES: non-negative integer
+    ARGUMENT_COUNT: None
+    ARGUMENT_LIST: None
+    ARRAY_LENGTH: integer
+    ARRAY_LENGTH_NNI: non-negative integer
+    ARRAY_LENGTH_PI: positive integer
+    ASSERT: integer
+    ATTRIBUTE_VAL: None
+    ATTRIBUTE_VAL_10: None
+    BIND_TYPE: integer
+    BLOCKLENGTH: non-negative integer
+    BUFFER: choice
+    CALLBACK_SAFETY: integer
+    CAT_INDEX: integer
+    COLOR: integer
+    COMBINER: state
+    COMMUNICATOR: handle
+    COMM_COMPARISON: integer
+    COMM_SIZE: integer
+    COMM_SIZE_PI: positive integer
+    COORDINATE: integer
+    COORDINATE_NNI: non-negative integer
+    CVAR: handle
+    CVAR_INDEX: integer
+    CVAR_INDEX_SPECIAL: index
+    C_BUFFER: choice
+    C_BUFFER2: choice
+    C_BUFFER3: None
+    C_BUFFER4: None
+    DATATYPE: handle
+    DEGREE: non-negative integer
+    DIMENSION: integer
+    DISPLACEMENT: integer
+    DISPLACEMENT_AINT_COUNT: integer
+    DISPLACEMENT_AINT_COUNT_SMALL: integer
+    DISPLACEMENT_COUNT: integer
+    DISPLACEMENT_COUNT_SMALL: integer
+    DISPLACEMENT_NNI: non-negative integer
+    DISPLACEMENT_SMALL: integer
+    DISPOFFSET: integer
+    DISPOFFSET_SMALL: integer
+    DISTRIB_ENUM: state
+    DTYPE_DISTRIBUTION: positive integer
+    DTYPE_NUM_ELEM: integer
+    DTYPE_NUM_ELEM_NNI: non-negative integer
+    DTYPE_NUM_ELEM_NNI_SMALL: non-negative integer
+    DTYPE_NUM_ELEM_PI: positive integer
+    DTYPE_NUM_ELEM_PI_SMALL: positive integer
+    DTYPE_NUM_ELEM_SMALL: integer
+    DTYPE_PACK_SIZE: integer
+    DTYPE_PACK_SIZE_SMALL: integer
+    DTYPE_STRIDE_BYTES: integer
+    DTYPE_STRIDE_BYTES_SMALL: integer
+    ENUM: integer
+    ERRHANDLER: handle
+    ERROR_CLASS: integer
+    ERROR_CODE: integer
+    ERROR_CODE_SHOW_INTENT: integer
+    EVENT_CB_FUNCTION: function
+    EVENT_DROP_CB_FUNCTION: function
+    EVENT_FREE_CB_FUNCTION: function
+    EVENT_INDEX: integer
+    EVENT_INSTANCE: handle
+    EVENT_REGISTRATION: handle
+    EXTRA_STATE: None
+    EXTRA_STATE2: None
+    F08_STATUS: None
+    F90_COMM: None
+    F90_DATATYPE: None
+    F90_ERRHANDLER: None
+    F90_FILE: None
+    F90_GROUP: None
+    F90_INFO: None
+    F90_MESSAGE: None
+    F90_OP: None
+    F90_REQUEST: None
+    F90_SESSION: None
+    F90_STATUS: None
+    F90_WIN: None
+    FILE: handle
+    FILE_DESCRIPTOR: integer
+    FUNCTION: function
+    FUNCTION_SMALL: function
+    GENERIC_DTYPE_COUNT: integer
+    GENERIC_DTYPE_INT: integer
+    GROUP: handle
+    GROUP_COMPARISON: integer
+    INDEX: integer
+    INFO: handle
+    INFO_VALUE_LENGTH: integer
+    KEY: integer
+    KEYVAL: integer
+    KEY_INDEX: integer
+    LOCATION: integer
+    LOCATION_SMALL: integer
+    LOCK_TYPE: state
+    LOGICAL: logical
+    LOGICAL_BOOLEAN: boolean
+    LOGICAL_OPTIONAL: integer
+    MATH: integer
+    MESSAGE: handle
+    NOTHING: None
+    NUM_BYTES: integer
+    NUM_BYTES_NNI: non-negative integer
+    NUM_BYTES_NNI_SMALL: non-negative integer
+    NUM_BYTES_SMALL: integer
+    NUM_DIMS: integer
+    NUM_PARAM_VALUES: non-negative integer
+    NUM_PARAM_VALUES_SMALL: non-negative integer
+    OFFSET: integer
+    OPERATION: handle
+    ORDER: state
+    PACK_EXTERNAL_SIZE: integer
+    PARTITION: non-negative integer
+    POLYDISPLACEMENT: integer
+    POLYDISPLACEMENT_AINT_COUNT: integer
+    POLYDISPLACEMENT_COUNT: integer
+    POLYDISPOFFSET: integer
+    POLYDTYPE_NUM_ELEM: integer
+    POLYDTYPE_NUM_ELEM_NNI: non-negative integer
+    POLYDTYPE_NUM_ELEM_PI: positive integer
+    POLYDTYPE_PACK_SIZE: integer
+    POLYDTYPE_STRIDE_BYTES: integer
+    POLYFUNCTION: function
+    POLYLOCATION: integer
+    POLYNUM_BYTES: integer
+    POLYNUM_BYTES_NNI: non-negative integer
+    POLYNUM_PARAM_VALUES: non-negative integer
+    POLYRMA_DISPLACEMENT: positive integer
+    POLYRMA_DISPLACEMENT_NNI: non-negative integer
+    POLYTOOLS_NUM_ELEM: integer
+    POLYXFER_NUM_ELEM: integer
+    POLYXFER_NUM_ELEM_NNI: non-negative integer
+    PROCESS_GRID_SIZE: positive integer
+    PROFILE_LEVEL: integer
+    PVAR: handle
+    PVAR_CLASS: integer
+    PVAR_INDEX: integer
+    PVAR_SESSION: handle
+    RANK: integer
+    RANK_NNI: non-negative integer
+    REQUEST: handle
+    RMA_DISPLACEMENT: positive integer
+    RMA_DISPLACEMENT_NNI: non-negative integer
+    RMA_DISPLACEMENT_NNI_SMALL: non-negative integer
+    RMA_DISPLACEMENT_SMALL: positive integer
+    SESSION: handle
+    SOURCE_INDEX: integer
+    SOURCE_ORDERING: integer
+    SPLIT_TYPE: integer
+    STATUS: Status
+    STRIDE_BYTES: integer
+    STRIDE_ELEM: integer
+    STRING: string
+    STRING_2DARRAY: array of array of strings
+    STRING_ARRAY: array of strings
+    STRING_LENGTH: integer
+    TAG: integer
+    THREAD_LEVEL: integer
+    TICK_RESOLUTION: None
+    TIMESTAMP: integer
+    TOOLENUM_INDEX: integer
+    TOOLENUM_SIZE: integer
+    TOOLS_ENUM: handle
+    TOOLS_NUM_ELEM: integer
+    TOOLS_NUM_ELEM_SMALL: integer
+    TOOLS_TICK_COUNT: integer
+    TOOL_MPI_OBJ: pointer
+    TOOL_VAR_VALUE: integer
+    TOOL_VAR_VERBOSITY: integer
+    TOPOLOGY_TYPE: state
+    TYPECLASS: integer
+    TYPECLASS_SIZE: integer
+    UPDATE_MODE: state
+    VARARGS: \\ldots
+    VARIABLE_SCOPE: integer
+    VERSION: integer
+    WALL_TIME: None
+    WEIGHT: non-negative integer
+    WINDOW: handle
+    WINDOW_SIZE: non-negative integer
+    WIN_ATTACH_SIZE: non-negative integer
+    XFER_NUM_ELEM: integer
+    XFER_NUM_ELEM_NNI: non-negative integer
+    XFER_NUM_ELEM_NNI_SMALL: non-negative integer
+    XFER_NUM_ELEM_SMALL: integer
+BASE_C_KIND_MAP:
+    ACCESS_MODE: int
+    ALLOC_MEM_NUM_BYTES: MPI_Aint
+    ARGUMENT_COUNT: int
+    ARGUMENT_LIST: char
+    ARRAY_LENGTH: int
+    ARRAY_LENGTH_NNI: int
+    ARRAY_LENGTH_PI: int
+    ASSERT: int
+    ATTRIBUTE_VAL: void
+    ATTRIBUTE_VAL_10: void
+    BIND_TYPE: int
+    BLOCKLENGTH: int
+    BUFFER: void
+    CALLBACK_SAFETY: MPI_T_cb_safety
+    CAT_INDEX: int
+    COLOR: int
+    COMBINER: int
+    COMMUNICATOR: MPI_Comm
+    COMM_COMPARISON: int
+    COMM_SIZE: int
+    COMM_SIZE_PI: int
+    COORDINATE: int
+    COORDINATE_NNI: int
+    CVAR: MPI_T_cvar_handle
+    CVAR_INDEX: int
+    CVAR_INDEX_SPECIAL: int
+    C_BUFFER: void
+    C_BUFFER2: void
+    C_BUFFER3: void
+    C_BUFFER4: void
+    DATATYPE: MPI_Datatype
+    DEGREE: int
+    DIMENSION: int
+    DISPLACEMENT: MPI_Aint
+    DISPLACEMENT_AINT_COUNT: MPI_Count
+    DISPLACEMENT_AINT_COUNT_SMALL: MPI_Aint
+    DISPLACEMENT_COUNT: MPI_Count
+    DISPLACEMENT_COUNT_SMALL: int
+    DISPLACEMENT_NNI: MPI_Aint
+    DISPLACEMENT_SMALL: int
+    DISPOFFSET: MPI_Count
+    DISPOFFSET_SMALL: MPI_Aint
+    DISTRIB_ENUM: int
+    DTYPE_DISTRIBUTION: int
+    DTYPE_NUM_ELEM: MPI_Count
+    DTYPE_NUM_ELEM_NNI: MPI_Count
+    DTYPE_NUM_ELEM_NNI_SMALL: int
+    DTYPE_NUM_ELEM_PI: MPI_Count
+    DTYPE_NUM_ELEM_PI_SMALL: int
+    DTYPE_NUM_ELEM_SMALL: int
+    DTYPE_PACK_SIZE: MPI_Count
+    DTYPE_PACK_SIZE_SMALL: MPI_Aint
+    DTYPE_STRIDE_BYTES: MPI_Count
+    DTYPE_STRIDE_BYTES_SMALL: MPI_Aint
+    ENUM: int
+    ERRHANDLER: MPI_Errhandler
+    ERROR_CLASS: int
+    ERROR_CODE: int
+    ERROR_CODE_SHOW_INTENT: int
+    EVENT_CB_FUNCTION: MPI_T_event_cb_function
+    EVENT_DROP_CB_FUNCTION: MPI_T_event_dropped_cb_function
+    EVENT_FREE_CB_FUNCTION: MPI_T_event_free_cb_function
+    EVENT_INDEX: int
+    EVENT_INSTANCE: MPI_T_event_instance
+    EVENT_REGISTRATION: MPI_T_event_registration
+    EXTRA_STATE: void
+    EXTRA_STATE2: void
+    F08_STATUS: MPI_F08_status
+    F90_COMM: MPI_Fint
+    F90_DATATYPE: MPI_Fint
+    F90_ERRHANDLER: MPI_Fint
+    F90_FILE: MPI_Fint
+    F90_GROUP: MPI_Fint
+    F90_INFO: MPI_Fint
+    F90_MESSAGE: MPI_Fint
+    F90_OP: MPI_Fint
+    F90_REQUEST: MPI_Fint
+    F90_SESSION: MPI_Fint
+    F90_STATUS: MPI_Fint
+    F90_WIN: MPI_Fint
+    FILE: MPI_File
+    FILE_DESCRIPTOR: int
+    FUNCTION: None
+    FUNCTION_SMALL: None
+    GENERIC_DTYPE_COUNT: MPI_Count
+    GENERIC_DTYPE_INT: int
+    GROUP: MPI_Group
+    GROUP_COMPARISON: int
+    INDEX: int
+    INFO: MPI_Info
+    INFO_VALUE_LENGTH: int
+    KEY: int
+    KEYVAL: int
+    KEY_INDEX: int
+    LOCATION: MPI_Count
+    LOCATION_SMALL: MPI_Aint
+    LOCK_TYPE: int
+    LOGICAL: int
+    LOGICAL_BOOLEAN: int
+    LOGICAL_OPTIONAL: int
+    MATH: int
+    MESSAGE: MPI_Message
+    NOTHING: void
+    NUM_BYTES: MPI_Count
+    NUM_BYTES_NNI: MPI_Count
+    NUM_BYTES_NNI_SMALL: int
+    NUM_BYTES_SMALL: int
+    NUM_DIMS: int
+    NUM_PARAM_VALUES: MPI_Count
+    NUM_PARAM_VALUES_SMALL: int
+    OFFSET: MPI_Offset
+    OPERATION: MPI_Op
+    ORDER: int
+    PACK_EXTERNAL_SIZE: MPI_Aint
+    PARTITION: int
+    POLYDISPLACEMENT: None
+    POLYDISPLACEMENT_AINT_COUNT: None
+    POLYDISPLACEMENT_COUNT: None
+    POLYDISPOFFSET: None
+    POLYDTYPE_NUM_ELEM: None
+    POLYDTYPE_NUM_ELEM_NNI: None
+    POLYDTYPE_NUM_ELEM_PI: None
+    POLYDTYPE_PACK_SIZE: None
+    POLYDTYPE_STRIDE_BYTES: None
+    POLYFUNCTION: None
+    POLYLOCATION: None
+    POLYNUM_BYTES: None
+    POLYNUM_BYTES_NNI: None
+    POLYNUM_PARAM_VALUES: None
+    POLYRMA_DISPLACEMENT: None
+    POLYRMA_DISPLACEMENT_NNI: None
+    POLYTOOLS_NUM_ELEM: None
+    POLYXFER_NUM_ELEM: None
+    POLYXFER_NUM_ELEM_NNI: None
+    PROCESS_GRID_SIZE: int
+    PROFILE_LEVEL: int
+    PVAR: MPI_T_pvar_handle
+    PVAR_CLASS: int
+    PVAR_INDEX: int
+    PVAR_SESSION: MPI_T_pvar_session
+    RANK: int
+    RANK_NNI: int
+    REQUEST: MPI_Request
+    RMA_DISPLACEMENT: MPI_Aint
+    RMA_DISPLACEMENT_NNI: MPI_Aint
+    RMA_DISPLACEMENT_NNI_SMALL: int
+    RMA_DISPLACEMENT_SMALL: int
+    SESSION: MPI_Session
+    SOURCE_INDEX: int
+    SOURCE_ORDERING: MPI_T_source_order
+    SPLIT_TYPE: int
+    STATUS: MPI_Status
+    STRIDE_BYTES: MPI_Aint
+    STRIDE_ELEM: int
+    STRING: char
+    STRING_2DARRAY: char
+    STRING_ARRAY: char
+    STRING_LENGTH: int
+    TAG: int
+    THREAD_LEVEL: int
+    TICK_RESOLUTION: double
+    TIMESTAMP: int
+    TOOLENUM_INDEX: int
+    TOOLENUM_SIZE: int
+    TOOLS_ENUM: MPI_T_enum
+    TOOLS_NUM_ELEM: MPI_Count
+    TOOLS_NUM_ELEM_SMALL: int
+    TOOLS_TICK_COUNT: MPI_Count
+    TOOL_MPI_OBJ: void
+    TOOL_VAR_VALUE: int
+    TOOL_VAR_VERBOSITY: int
+    TOPOLOGY_TYPE: int
+    TYPECLASS: int
+    TYPECLASS_SIZE: int
+    UPDATE_MODE: int
+    VARARGS: \\ldots
+    VARIABLE_SCOPE: int
+    VERSION: int
+    WALL_TIME: double
+    WEIGHT: int
+    WINDOW: MPI_Win
+    WINDOW_SIZE: MPI_Aint
+    WIN_ATTACH_SIZE: MPI_Aint
+    XFER_NUM_ELEM: MPI_Count
+    XFER_NUM_ELEM_NNI: MPI_Count
+    XFER_NUM_ELEM_NNI_SMALL: int
+    XFER_NUM_ELEM_SMALL: int
+SMALL_C_KIND_MAP:
+    .base: BASE_C_KIND_MAP
+    POLYDISPLACEMENT: int
+    POLYDISPLACEMENT_AINT_COUNT: MPI_Aint
+    POLYDISPLACEMENT_COUNT: int
+    POLYDISPOFFSET: MPI_Aint
+    POLYDTYPE_NUM_ELEM: int
+    POLYDTYPE_NUM_ELEM_NNI: int
+    POLYDTYPE_NUM_ELEM_PI: int
+    POLYDTYPE_PACK_SIZE: MPI_Aint
+    POLYDTYPE_STRIDE_BYTES: MPI_Aint
+    POLYLOCATION: MPI_Aint
+    POLYNUM_BYTES: int
+    POLYNUM_BYTES_NNI: int
+    POLYNUM_PARAM_VALUES: int
+    POLYRMA_DISPLACEMENT: int
+    POLYRMA_DISPLACEMENT_NNI: int
+    POLYTOOLS_NUM_ELEM: int
+    POLYXFER_NUM_ELEM: int
+    POLYXFER_NUM_ELEM_NNI: int
+BIG_C_KIND_MAP:
+    .base: BASE_C_KIND_MAP
+    POLYDISPLACEMENT: MPI_Aint
+    POLYDISPLACEMENT_AINT_COUNT: MPI_Count
+    POLYDISPLACEMENT_COUNT: MPI_Count
+    POLYDISPOFFSET: MPI_Count
+    POLYDTYPE_NUM_ELEM: MPI_Count
+    POLYDTYPE_NUM_ELEM_NNI: MPI_Count
+    POLYDTYPE_NUM_ELEM_PI: MPI_Count
+    POLYDTYPE_PACK_SIZE: MPI_Count
+    POLYDTYPE_STRIDE_BYTES: MPI_Count
+    POLYLOCATION: MPI_Count
+    POLYNUM_BYTES: MPI_Count
+    POLYNUM_BYTES_NNI: MPI_Count
+    POLYNUM_PARAM_VALUES: MPI_Count
+    POLYRMA_DISPLACEMENT: MPI_Aint
+    POLYRMA_DISPLACEMENT_NNI: MPI_Aint
+    POLYTOOLS_NUM_ELEM: MPI_Count
+    POLYXFER_NUM_ELEM: MPI_Count
+    POLYXFER_NUM_ELEM_NNI: MPI_Count
+BASE_F90_KIND_MAP:
+    ACCESS_MODE: INTEGER
+    ALLOC_MEM_NUM_BYTES: INTEGER(KIND=MPI_ADDRESS_KIND)
+    ARGUMENT_COUNT: None
+    ARGUMENT_LIST: None
+    ARRAY_LENGTH: INTEGER
+    ARRAY_LENGTH_NNI: INTEGER
+    ARRAY_LENGTH_PI: INTEGER
+    ASSERT: INTEGER
+    ATTRIBUTE_VAL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    ATTRIBUTE_VAL_10: INTEGER
+    BIND_TYPE: None
+    BLOCKLENGTH: INTEGER
+    BUFFER: <type>
+    CALLBACK_SAFETY: None
+    CAT_INDEX: None
+    COLOR: INTEGER
+    COMBINER: INTEGER
+    COMMUNICATOR: INTEGER
+    COMM_COMPARISON: INTEGER
+    COMM_SIZE: INTEGER
+    COMM_SIZE_PI: INTEGER
+    COORDINATE: INTEGER
+    COORDINATE_NNI: INTEGER
+    CVAR: None
+    CVAR_INDEX: None
+    CVAR_INDEX_SPECIAL: None
+    C_BUFFER: INTEGER(KIND=MPI_ADDRESS_KIND)
+    C_BUFFER2: <type>
+    C_BUFFER3: <TYPE>
+    C_BUFFER4: <type>
+    DATATYPE: INTEGER
+    DEGREE: INTEGER
+    DIMENSION: INTEGER
+    DISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    DISPLACEMENT_AINT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    DISPLACEMENT_AINT_COUNT_SMALL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    DISPLACEMENT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    DISPLACEMENT_COUNT_SMALL: INTEGER
+    DISPLACEMENT_NNI: INTEGER(KIND=MPI_ADDRESS_KIND)
+    DISPLACEMENT_SMALL: INTEGER
+    DISPOFFSET: INTEGER(KIND=MPI_COUNT_KIND)
+    DISPOFFSET_SMALL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    DISTRIB_ENUM: INTEGER
+    DTYPE_DISTRIBUTION: INTEGER
+    DTYPE_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    DTYPE_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    DTYPE_NUM_ELEM_NNI_SMALL: INTEGER
+    DTYPE_NUM_ELEM_PI: INTEGER(KIND=MPI_COUNT_KIND)
+    DTYPE_NUM_ELEM_PI_SMALL: INTEGER
+    DTYPE_NUM_ELEM_SMALL: INTEGER
+    DTYPE_PACK_SIZE: INTEGER(KIND=MPI_COUNT_KIND)
+    DTYPE_PACK_SIZE_SMALL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    DTYPE_STRIDE_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    DTYPE_STRIDE_BYTES_SMALL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    ENUM: INTEGER
+    ERRHANDLER: INTEGER
+    ERROR_CLASS: INTEGER
+    ERROR_CODE: INTEGER
+    ERROR_CODE_SHOW_INTENT: INTEGER
+    EVENT_CB_FUNCTION: None
+    EVENT_DROP_CB_FUNCTION: None
+    EVENT_FREE_CB_FUNCTION: None
+    EVENT_INDEX: None
+    EVENT_INSTANCE: None
+    EVENT_REGISTRATION: None
+    EXTRA_STATE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    EXTRA_STATE2: INTEGER
+    F08_STATUS: TYPE(MPI_Status)
+    F90_COMM: None
+    F90_DATATYPE: None
+    F90_ERRHANDLER: None
+    F90_FILE: None
+    F90_GROUP: None
+    F90_INFO: None
+    F90_MESSAGE: None
+    F90_OP: None
+    F90_REQUEST: None
+    F90_SESSION: None
+    F90_STATUS: INTEGER
+    F90_WIN: None
+    FILE: INTEGER
+    FILE_DESCRIPTOR: INTEGER
+    FUNCTION: EXTERNAL
+    FUNCTION_SMALL: EXTERNAL
+    GENERIC_DTYPE_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    GENERIC_DTYPE_INT: INTEGER
+    GROUP: INTEGER
+    GROUP_COMPARISON: INTEGER
+    INDEX: INTEGER
+    INFO: INTEGER
+    INFO_VALUE_LENGTH: INTEGER
+    KEY: INTEGER
+    KEYVAL: INTEGER
+    KEY_INDEX: INTEGER
+    LOCATION: INTEGER(KIND=MPI_COUNT_KIND)
+    LOCATION_SMALL: INTEGER(KIND=MPI_ADDRESS_KIND)
+    LOCK_TYPE: INTEGER
+    LOGICAL: LOGICAL
+    LOGICAL_BOOLEAN: LOGICAL
+    LOGICAL_OPTIONAL: None
+    MATH: INTEGER
+    MESSAGE: INTEGER
+    NOTHING: None
+    NUM_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    NUM_BYTES_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    NUM_BYTES_NNI_SMALL: INTEGER
+    NUM_BYTES_SMALL: INTEGER
+    NUM_DIMS: INTEGER
+    NUM_PARAM_VALUES: INTEGER(KIND=MPI_COUNT_KIND)
+    NUM_PARAM_VALUES_SMALL: INTEGER
+    OFFSET: INTEGER(KIND=MPI_OFFSET_KIND)
+    OPERATION: INTEGER
+    ORDER: INTEGER
+    PACK_EXTERNAL_SIZE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    PARTITION: INTEGER
+    POLYDISPLACEMENT: None
+    POLYDISPLACEMENT_AINT_COUNT: None
+    POLYDISPLACEMENT_COUNT: None
+    POLYDISPOFFSET: None
+    POLYDTYPE_NUM_ELEM: None
+    POLYDTYPE_NUM_ELEM_NNI: None
+    POLYDTYPE_NUM_ELEM_PI: None
+    POLYDTYPE_PACK_SIZE: None
+    POLYDTYPE_STRIDE_BYTES: None
+    POLYFUNCTION: EXTERNAL
+    POLYLOCATION: None
+    POLYNUM_BYTES: None
+    POLYNUM_BYTES_NNI: None
+    POLYNUM_PARAM_VALUES: None
+    POLYRMA_DISPLACEMENT: None
+    POLYRMA_DISPLACEMENT_NNI: None
+    POLYTOOLS_NUM_ELEM: None
+    POLYXFER_NUM_ELEM: None
+    POLYXFER_NUM_ELEM_NNI: None
+    PROCESS_GRID_SIZE: INTEGER
+    PROFILE_LEVEL: INTEGER
+    PVAR: None
+    PVAR_CLASS: None
+    PVAR_INDEX: None
+    PVAR_SESSION: None
+    RANK: INTEGER
+    RANK_NNI: INTEGER
+    REQUEST: INTEGER
+    RMA_DISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    RMA_DISPLACEMENT_NNI: INTEGER(KIND=MPI_ADDRESS_KIND)
+    RMA_DISPLACEMENT_NNI_SMALL: INTEGER
+    RMA_DISPLACEMENT_SMALL: INTEGER
+    SESSION: INTEGER
+    SOURCE_INDEX: None
+    SOURCE_ORDERING: None
+    SPLIT_TYPE: INTEGER
+    STATUS: INTEGER
+    STRIDE_BYTES: INTEGER(KIND=MPI_ADDRESS_KIND)
+    STRIDE_ELEM: INTEGER
+    STRING: CHARACTER*(*)
+    STRING_2DARRAY: CHARACTER*(*)
+    STRING_ARRAY: CHARACTER*(*)
+    STRING_LENGTH: INTEGER
+    TAG: INTEGER
+    THREAD_LEVEL: INTEGER
+    TICK_RESOLUTION: DOUBLE PRECISION
+    TIMESTAMP: None
+    TOOLENUM_INDEX: None
+    TOOLENUM_SIZE: None
+    TOOLS_ENUM: None
+    TOOLS_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    TOOLS_NUM_ELEM_SMALL: INTEGER
+    TOOLS_TICK_COUNT: None
+    TOOL_MPI_OBJ: None
+    TOOL_VAR_VALUE: None
+    TOOL_VAR_VERBOSITY: None
+    TOPOLOGY_TYPE: INTEGER
+    TYPECLASS: INTEGER
+    TYPECLASS_SIZE: INTEGER
+    UPDATE_MODE: INTEGER
+    VARARGS: None
+    VARIABLE_SCOPE: None
+    VERSION: INTEGER
+    WALL_TIME: DOUBLE PRECISION
+    WEIGHT: INTEGER
+    WINDOW: INTEGER
+    WINDOW_SIZE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    WIN_ATTACH_SIZE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    XFER_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    XFER_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    XFER_NUM_ELEM_NNI_SMALL: INTEGER
+    XFER_NUM_ELEM_SMALL: INTEGER
+SMALL_F90_KIND_MAP:
+    .base: BASE_F90_KIND_MAP
+    POLYDISPLACEMENT: INTEGER
+    POLYDISPLACEMENT_AINT_COUNT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDISPLACEMENT_COUNT: INTEGER
+    POLYDISPOFFSET: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDTYPE_NUM_ELEM: INTEGER
+    POLYDTYPE_NUM_ELEM_NNI: INTEGER
+    POLYDTYPE_NUM_ELEM_PI: INTEGER
+    POLYDTYPE_PACK_SIZE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDTYPE_STRIDE_BYTES: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYLOCATION: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYNUM_BYTES: INTEGER
+    POLYNUM_BYTES_NNI: INTEGER
+    POLYNUM_PARAM_VALUES: INTEGER
+    POLYRMA_DISPLACEMENT: INTEGER
+    POLYRMA_DISPLACEMENT_NNI: INTEGER
+    POLYTOOLS_NUM_ELEM: INTEGER
+    POLYXFER_NUM_ELEM: INTEGER
+    POLYXFER_NUM_ELEM_NNI: INTEGER
+BIG_F90_KIND_MAP:
+    .base: BASE_F90_KIND_MAP
+    POLYDISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDISPLACEMENT_AINT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPLACEMENT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPOFFSET: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_PI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_PACK_SIZE: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_STRIDE_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYLOCATION: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_PARAM_VALUES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYRMA_DISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYRMA_DISPLACEMENT_NNI: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYTOOLS_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+BASE_F08_KIND_MAP:
+    .base: BASE_F90_KIND_MAP
+    BUFFER: TYPE(*), DIMENSION(..)
+    COMMUNICATOR: TYPE(MPI_Comm)
+    C_BUFFER: TYPE(C_PTR)
+    C_BUFFER2: TYPE(C_PTR)
+    C_BUFFER3: TYPE(C_PTR), VALUE
+    C_BUFFER4: TYPE(C_PTR), VALUE
+    DATATYPE: TYPE(MPI_Datatype)
+    ERRHANDLER: TYPE(MPI_Errhandler)
+    FILE: TYPE(MPI_File)
+    FUNCTION: PROCEDURE
+    FUNCTION_SMALL: PROCEDURE
+    GROUP: TYPE(MPI_Group)
+    INFO: TYPE(MPI_Info)
+    MESSAGE: TYPE(MPI_Message)
+    OPERATION: TYPE(MPI_Op)
+    POLYFUNCTION: PROCEDURE
+    REQUEST: TYPE(MPI_Request)
+    SESSION: TYPE(MPI_Session)
+    STATUS: TYPE(MPI_Status)
+    STRING: CHARACTER
+    STRING_2DARRAY: CHARACTER
+    STRING_ARRAY: CHARACTER
+    WINDOW: TYPE(MPI_Win)
+SMALL_F08_KIND_MAP:
+    .base: BASE_F08_KIND_MAP
+    POLYDISPLACEMENT: INTEGER
+    POLYDISPLACEMENT_AINT_COUNT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDISPLACEMENT_COUNT: INTEGER
+    POLYDISPOFFSET: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDTYPE_NUM_ELEM: INTEGER
+    POLYDTYPE_NUM_ELEM_NNI: INTEGER
+    POLYDTYPE_NUM_ELEM_PI: INTEGER
+    POLYDTYPE_PACK_SIZE: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDTYPE_STRIDE_BYTES: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYLOCATION: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYNUM_BYTES: INTEGER
+    POLYNUM_BYTES_NNI: INTEGER
+    POLYNUM_PARAM_VALUES: INTEGER
+    POLYRMA_DISPLACEMENT: INTEGER
+    POLYRMA_DISPLACEMENT_NNI: INTEGER
+    POLYTOOLS_NUM_ELEM: INTEGER
+    POLYXFER_NUM_ELEM: INTEGER
+    POLYXFER_NUM_ELEM_NNI: INTEGER
+BIG_F08_KIND_MAP:
+    .base: BASE_F08_KIND_MAP
+    POLYDISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYDISPLACEMENT_AINT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPLACEMENT_COUNT: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPOFFSET: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_PI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_PACK_SIZE: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_STRIDE_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYLOCATION: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_PARAM_VALUES: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYRMA_DISPLACEMENT: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYRMA_DISPLACEMENT_NNI: INTEGER(KIND=MPI_ADDRESS_KIND)
+    POLYTOOLS_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM: INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM_NNI: INTEGER(KIND=MPI_COUNT_KIND)
+OR_F08_KIND_MAP:
+    .base: BASE_F08_KIND_MAP
+    POLYDISPLACEMENT: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPLACEMENT_AINT_COUNT: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPLACEMENT_COUNT: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDISPOFFSET: INTEGER(KIND=MPI_ADDRESS_KIND \\emph{or} KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_NNI: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_NUM_ELEM_PI: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_PACK_SIZE: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYDTYPE_STRIDE_BYTES: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYLOCATION: INTEGER(KIND=MPI_ADDRESS_KIND \\emph{or} KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_BYTES_NNI: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYNUM_PARAM_VALUES: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYRMA_DISPLACEMENT: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYTOOLS_NUM_ELEM: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+    POLYXFER_NUM_ELEM_NNI: INTEGER \\emph{or} INTEGER(KIND=MPI_COUNT_KIND)
+
+Default Descriptions
+================
+ASSERT: program assertion
+COMMUNICATOR: communicator
+ERRHANDLER: MPI error handler
+ERROR_CLASS: error class
+ERROR_CODE: error code
+FILE: file
+INFO: info argument
+REQUEST: communication request
+STATUS: status object
+WINDOW: window object
