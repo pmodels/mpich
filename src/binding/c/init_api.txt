@@ -1,0 +1,106 @@
+# vim: set ft=c:
+
+MPI_Abort:
+    .desc: Terminates MPI execution environment
+    .skip: ThreadSafe, validate-ERROR_CODE
+    .extra: ignore_revoked_comm
+/*
+    Notes:
+    Terminates all MPI processes associated with the communicator 'comm'; in
+    most systems (all to date), terminates `all` processes.
+
+    .N NotThreadSafe
+    Because the 'MPI_Abort' routine is intended to ensure that an MPI
+    process (and possibly an entire job), it cannot wait for a thread to
+    release a lock or other mechanism for atomic access.
+*/
+
+MPI_Finalize:
+    .desc: Terminates MPI execution environment
+    .skip: ThreadSafe, global_cs
+
+MPI_Finalized:
+    .desc: Indicates whether 'MPI_Finalize' has been called.
+    .skip: initcheck
+    .docnotes: SignalSafe
+{
+    *flag = (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_FINALIZED);
+}
+
+MPI_Init:
+    .desc: Initialize the MPI execution environment
+    .skip: ThreadSafe, Fortran, initcheck, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+    .seealso: MPI_Init_thread, MPI_Finalize
+/*
+    Notes:
+       The MPI standard does not say what a program can do before an 'MPI_INIT' or
+       after an 'MPI_FINALIZE'.  In the MPICH implementation, you should do
+       as little as possible.  In particular, avoid anything that changes the
+       external state of the program, such as opening files, reading standard
+       input or writing to standard output.
+
+    Notes for C:
+        As of MPI-2, 'MPI_Init' will accept NULL as input parameters. Doing so
+        will impact the values stored in 'MPI_INFO_ENV'.
+
+    Notes for Fortran:
+    The Fortran binding for 'MPI_Init' has only the error return
+    .vb
+        subroutine MPI_INIT(ierr)
+        integer ierr
+    .ve
+*/
+{ -- error_check --
+    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init", __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+
+MPI_Initialized:
+    .desc: Indicates whether 'MPI_Init' has been called.
+    .skip: initcheck
+    .docnotes: SignalSafe
+{
+    *flag = (MPL_atomic_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT);
+}
+
+MPI_Init_thread:
+    .desc: Initialize the MPI execution environment
+    .skip: ThreadSafe, Fortran, initcheck, validate-THREAD_LEVEL, validate-ARGUMENT_COUNT, validate-ARGUMENT_LIST
+    .seealso: MPI_Init, MPI_Finalize
+{ -- error_check --
+    if (MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPI_Init_thread", __LINE__, MPI_ERR_OTHER, "**inittwice", 0);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+
+MPI_Is_thread_main:
+    .desc: Returns a flag indicating whether this thread called
+    .docnotes: SignalSafe
+{
+#if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
+    {
+        *flag = TRUE;
+    }
+#else
+    {
+        MPID_Thread_id_t my_thread_id;
+
+        MPID_Thread_self(&my_thread_id);
+        MPID_Thread_same(&MPIR_ThreadInfo.main_thread, &my_thread_id, flag);
+    }
+#endif
+}
+
+MPI_Query_thread:
+    .desc: Return the level of thread support provided by the MPI
+    .docnotes: SignalSafe
+{
+    *provided = MPIR_ThreadInfo.thread_provided;
+}
