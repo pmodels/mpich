@@ -57,7 +57,7 @@ cvars:
    how MPICH was configured. */
 extern const char MPII_Version_device[];
 
-int MPIR_Init(int *argc, char ***argv)
+int MPIR_Init_impl(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -79,12 +79,12 @@ int MPIR_Init(int *argc, char ***argv)
     }
 
     int provided;
-    mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
+    mpi_errno = MPIR_Init_thread_impl(argc, argv, threadLevel, &provided);
 
     return mpi_errno;
 }
 
-int MPIR_Init_thread(int *argc, char ***argv, int user_required, int *provided)
+int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int required = user_required;
