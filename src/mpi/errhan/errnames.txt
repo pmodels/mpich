@@ -1036,13 +1036,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_error_string %d %s %p:MPI_Error_string(errorcode=%d, string=%s, resultlen=%p) failed
 **mpi_error_class:MPI_Error_class failed
 **mpi_error_class %d %p:MPI_Error_class(errorcode=%d, errorclass=%p) failed
-**mpi_init:MPI_Init failed
-**mpi_init %p %p:MPI_Init(argc_p=%p, argv_p=%p) failed
-**mpi_finalize:MPI_Finalize failed
-**mpi_initialized:MPI_Initialized failed
-**mpi_initialized %p:MPI_Initialized(flag=%p) failed
-**mpi_abort:MPI_Abort failed
-**mpi_abort %C %d:MPI_Abort(%C, errorcode=%d) failed
 **mpi_close_port:MPI_Close_port failed
 **mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
 **mpi_comm_accept:MPI_Comm_accept failed
@@ -1125,12 +1118,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_grequest_start %p %p %p %p %p:MPI_Grequest_start(query_fn=%p, free_fn=%p, cancel_fn=%p, extra_state=%p, request=%p) failed
 **mpix_grequest_class_create: MPIX_Grequest_class_create failed
 **mpix_grequest_class_create %p %p %p %p %p:MPIX_Grequest_class_create(query_fn=%p, free_fn=%p, cancel_fn=%p, %poll_fn=%p, wait_fn=%p) failed
-**mpi_init_thread:MPI_Init_thread failed
-**mpi_init_thread %p %p %d %p:MPI_Init_thread(argc_p=%p, argv_p=%p, required=%d, provided=%p)
-**mpi_is_thread_main:MPI_Is_thread_main failed
-**mpi_is_thread_main %p:MPI_Is_thread_main(flag=%p) failed
-**mpi_query_thread:MPI_Query_thread failed
-**mpi_query_thread %p:MPI_Query_thread(provided=%p) failed
 **mpi_status_set_cancelled:MPI_Status_set_cancelled failed
 **mpi_status_set_cancelled %p %d:MPI_Status_set_cancelled(status=%p, flag=%d) failed
 **mpi_status_set_elements:MPI_Status_set_elements failed
@@ -1167,8 +1154,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_file_get_errhandler %F %p:MPI_File_get_errhandler(%F, errhandler=%p) failed
 **mpi_file_set_errhandler:MPI_File_set_errhandler failed
 **mpi_file_set_errhandler %F %E:MPI_File_set_errhandler(%F, %E) failed
-**mpi_finalized:MPI_Finalized failed
-**mpi_finalized %p:MPI_Finalized(flag=%p) failed
 **mpi_free_mem:MPI_Free_mem failed
 **mpi_free_mem %p:MPI_Free_mem(base=%p) failed
 **mpi_get_address:MPI_Get_address failed
