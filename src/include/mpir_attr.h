@@ -202,4 +202,6 @@ void MPID_Attr_free(MPIR_Attribute * attr_ptr);
 int MPIR_Call_attr_delete(int, MPIR_Attribute *);
 int MPIR_Call_attr_copy(int, MPIR_Attribute *, void **, int *);
 
+void MPIR_free_keyval(MPII_Keyval * keyval_ptr);
+
 #endif /* MPIR_ATTR_H_INCLUDED */
