@@ -5,7 +5,7 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Info_delete(MPIR_Info * info_ptr, const char *key)
+int MPIR_Info_delete_impl(MPIR_Info * info_ptr, const char *key)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *prev_ptr, *curr_ptr;
@@ -104,7 +104,7 @@ int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char
     return mpi_errno;
 }
 
-void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
+int MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 {
     int n;
 
@@ -117,7 +117,7 @@ void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
     }
     *nkeys = n;
 
-    return;
+    return MPI_SUCCESS;
 }
 
 int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
@@ -149,7 +149,7 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
     goto fn_exit;
 }
 
-void MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valuelen, int *flag)
+int MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valuelen, int *flag)
 {
     MPIR_Info *curr_ptr;
 
@@ -165,7 +165,7 @@ void MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *val
         curr_ptr = curr_ptr->next;
     }
 
-    return;
+    return MPI_SUCCESS;
 }
 
 int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
