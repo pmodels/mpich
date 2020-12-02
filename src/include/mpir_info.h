@@ -91,15 +91,6 @@ extern MPIR_Object_alloc_t MPIR_Info_mem;
 extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
 extern MPIR_Info MPIR_Info_direct[];
 
-int MPIR_Info_get_impl(MPIR_Info * info_ptr, const char *key, int valuelen, char *value, int *flag);
-void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys);
-int MPIR_Info_get_nthkey_impl(MPIR_Info * info, int n, char *key);
-void MPIR_Info_get_valuelen_impl(MPIR_Info * info_ptr, const char *key, int *valuelen, int *flag);
-int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value);
-int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr);
-int MPIR_Info_delete(MPIR_Info * info_ptr, const char *key);
-
-void MPIR_Info_free(MPIR_Info * info_ptr);
 int MPIR_Info_alloc(MPIR_Info ** info_p_p);
 
 #endif /* MPIR_INFO_H_INCLUDED */

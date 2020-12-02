@@ -1134,24 +1134,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_free_mem %p:MPI_Free_mem(base=%p) failed
 **mpi_get_address:MPI_Get_address failed
 **mpi_get_address %p %p:MPI_Get_address(location=%p, address=%p) failed
-**mpi_info_create:MPI_Info_create failed
-**mpi_info_create %p:MPI_Info_create(info=%p) failed
-**mpi_info_delete:MPI_Info_delete failed
-**mpi_info_delete %I %s:MPI_Info_delete(%I, key=%s) failed
-**mpi_info_dup:MPI_Info_dup failed
-**mpi_info_dup %I %p:MPI_Info_dup(%I, newinfo=%p) failed
-**mpi_info_free:MPI_Info_free failed
-**mpi_info_free %p:MPI_Info_free(info=%p) failed
-**mpi_info_get:MPI_Info_get failed
-**mpi_info_get %I %s %d %p %p:MPI_Info_get(%I, key=%s, valuelen=%d, value=%p, flag=%p) failed
-**mpi_info_get_nkeys:MPI_Info_get_nkeys failed
-**mpi_info_get_nkeys %I %p:MPI_Info_get_nkeys(%I, nkeys=%p) failed
-**mpi_info_get_nthkey:MPI_Info_get_nthkey failed
-**mpi_info_get_nthkey %I %d %p:MPI_Info_get_nthkey(%I, n=%d, key=%p) failed
-**mpi_info_get_valuelen:MPI_Info_get_valuelen failed
-**mpi_info_get_valuelen %I %s %p %p:MPI_Info_get_valuelen(%I, key=%s, valuelen=%p, flag=%p) failed
-**mpi_info_set:MPI_Info_set failed
-**mpi_info_set %I %s %s:MPI_Info_set(%I, key=%s, value=%s) failed
 **mpi_pack_external:MPI_Pack_external failed
 **mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
 **mpi_pack_external_size:MPI_Pack_external_size failed
