@@ -1157,18 +1157,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_delete_error_string %d:MPI_Delete_error_string(code=%d) failed
 **mpi_comm_call_errhandler:MPI_Comm_call_errhandler failed
 **mpi_comm_call_errhandler %C %d:MPI_Comm_call_errhandler(%C, errorcode=%d) failed
-**mpi_comm_create_keyval:MPI_Comm_create_keyval failed
-**mpi_comm_create_keyval %p %p %p %p:MPI_Comm_create_keyval(comm_copy_attr_fn=%p, comm_delete_attr_fn=%p, comm_keyval=%p, extra_state=%p) failed
-**mpi_comm_delete_attr:MPI_Comm_delete_attr failed
-**mpi_comm_delete_attr %C %d:MPI_Comm_delete_attr(%C, comm_keyval=%d) failed
-**mpi_comm_free_keyval:MPI_Comm_free_keyval failed
-**mpi_comm_free_keyval %p:MPI_Comm_free_keyval(comm_keyval=%p) failed
-**mpi_comm_get_attr:MPI_Comm_get_attr failed
-**mpi_comm_get_attr %C %d %p %p:MPI_Comm_get_attr(%C, comm_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpi_comm_get_name:MPI_Comm_get_name failed
 **mpi_comm_get_name %C %p %p:MPI_Comm_get_name(%C, comm_name=%p, resultlen=%p) failed
-**mpi_comm_set_attr:MPI_Comm_set_attr failed
-**mpi_comm_set_attr %C %d %p:MPI_Comm_set_attr(%C, comm_keyval=%d, attribute_val=%p) failed
 **mpi_comm_set_name:MPI_Comm_set_name failed
 **mpi_comm_set_name %C %s:MPI_Comm_set_name(%C, comm_name=%s) failed
 **mpi_file_call_errhandler:MPI_File_call_errhandler failed
@@ -1189,42 +1179,22 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_status_set_cancelled %p %d:MPI_Status_set_cancelled(status=%p, flag=%d) failed
 **mpi_status_set_elements:MPI_Status_set_elements failed
 **mpi_status_set_elements %p %D %d:MPI_Status_set_elements(status=%p, %D, count=%d) failed
-**mpi_type_create_keyval:MPI_Type_create_keyval failed
-**mpi_type_create_keyval %p %p %p %p:MPI_Type_create_keyval(type_copy_attr_fn=%p, type_delete_attr_fn=%p, type_keyval=%p, extra_state=%p) failed
-**mpi_type_delete_attr:MPI_Type_delete_attr failed
-**mpi_type_delete_attr %D %d:MPI_Type_delete_attr(%D, type_keyval=%d) failed
 **mpi_type_dup:MPI_Type_dup failed
 **mpi_type_dup %D %p:MPI_Type_dup(%D, newtype=%p) failed
-**mpi_type_free_keyval:MPI_Type_free_keyval failed
-**mpi_type_free_keyval %p:MPI_Type_free_keyval(type_keyval=%p) failed
-**mpi_type_get_attr:MPI_Type_get_attr failed
-**mpi_type_get_attr %D %d %p %p:MPI_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpi_type_get_contents:MPI_Type_get_contents failed
 **mpi_type_get_contents %D %d %d %d %p %p %p:MPI_Type_get_contents(%D, max_integers=%d, max_addresses=%d, max_datatypes=%d, array_of_integers=%p, array_of_addresses=%p, array_of_datatypes=%p) failed
 **mpi_type_get_envelope:MPI_Type_get_envelope failed
 **mpi_type_get_envelope %D %p %p %p %p:MPI_Type_get_envelope(%D, num_integers=%p, num_addresses=%p, num_datatypes=%p, combiner=%p) failed
 **mpi_type_get_name:MPI_Type_get_name failed
 **mpi_type_get_name %D %p %p:MPI_Type_get_name(%D, type_name=%p, resultlen=%p) failed
-**mpi_type_set_attr:MPI_Type_set_attr failed
-**mpi_type_set_attr %D %d %p:MPI_Type_set_attr(%D, type_keyval=%d, attribute_val=%p) failed
 **mpi_type_set_name:MPI_Type_set_name failed
 **mpi_type_set_name %D %s:MPI_Type_set_name(%D, type_name=%s) failed
 **mpi_type_match_size:MPI_Type_match_size failed
 **mpi_type_match_size %d %d %p:MPI_Type_match_size(typeclass=%d, size=%d, datatype=%p) failed
 **mpi_win_call_errhandler:MPI_Win_call_errhandler failed
 **mpi_win_call_errhandler %W %d:MPI_Win_call_errhandler(%W, errorcode=%d) failed
-**mpi_win_create_keyval:MPI_Win_create_keyval failed
-**mpi_win_create_keyval %p %p %p %p:MPI_Win_create_keyval(win_copy_attr_fn=%p, win_delete_attr_fn=%p, win_keyval=%p, extra_state=%p) failed
-**mpi_win_delete_attr:MPI_Win_delete_attr failed
-**mpi_win_delete_attr %W %d:MPI_Win_delete_attr(%W, win_keyval=%d) failed
-**mpi_win_free_keyval:MPI_Win_free_keyval failed
-**mpi_win_free_keyval %p:MPI_Win_free_keyval(win_keyval=%p) failed
-**mpi_win_get_attr:MPI_Win_get_attr failed
-**mpi_win_get_attr %W %d %p %p:MPI_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpi_win_get_name:MPI_Win_get_name failed
 **mpi_win_get_name %W %p %p:MPI_Win_get_name(%W, win_name=%p, resultlen=%p) failed
-**mpi_win_set_attr:MPI_Win_set_attr failed
-**mpi_win_set_attr %W %d %p:MPI_Win_set_attr(%W, win_keyval=%d, attribute_val=%p) failed
 **mpi_win_set_name:MPI_Win_set_name failed
 **mpi_win_set_name %W %s:MPI_Win_set_name(%W, win_name=%s) failed
 **mpi_alloc_mem:MPI_Alloc_mem failed
