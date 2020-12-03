@@ -77,11 +77,11 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* Dup with no info */
-    MPIX_Comm_idup_with_info(MPI_COMM_WORLD, MPI_INFO_NULL, &newcomm1, &reqs[0]);
+    MPI_Comm_idup_with_info(MPI_COMM_WORLD, MPI_INFO_NULL, &newcomm1, &reqs[0]);
     MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
     errs += run_tests(newcomm1);
 
-    MPIX_Comm_idup_with_info(MPI_COMM_WORLD, MPI_INFO_NULL, &newcomm2, &reqs[0]);
+    MPI_Comm_idup_with_info(MPI_COMM_WORLD, MPI_INFO_NULL, &newcomm2, &reqs[0]);
     MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
     errs += run_tests(newcomm2);
 
@@ -92,11 +92,11 @@ int main(int argc, char **argv)
     MPI_Info_set(info, (char *) "soft", (char *) "2:1000:4,3:1000:7");
 
     if (rank % 2 == 0) {
-        MPIX_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[0]);
-        MPIX_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[1]);
+        MPI_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[0]);
+        MPI_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[1]);
     } else {
-        MPIX_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[0]);
-        MPIX_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[1]);
+        MPI_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[0]);
+        MPI_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[1]);
     }
     MPI_Waitall(2, reqs, MPI_STATUSES_IGNORE);
 
@@ -114,11 +114,11 @@ int main(int argc, char **argv)
     MPI_Info_set(info, (char *) "soft", (char *) "2:1000:4,3:1000:7");
 
     if (rank % 2 == 0) {
-        MPIX_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[0]);
-        MPIX_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[1]);
+        MPI_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[0]);
+        MPI_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[1]);
     } else {
-        MPIX_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[0]);
-        MPIX_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[1]);
+        MPI_Comm_idup_with_info(newcomm2, info, &newcomm4, &reqs[0]);
+        MPI_Comm_idup_with_info(newcomm1, info, &newcomm3, &reqs[1]);
     }
     MPI_Info_free(&info);
     MPI_Waitall(2, reqs, MPI_STATUSES_IGNORE);

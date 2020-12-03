@@ -5,30 +5,29 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Comm_idup_with_info */
+/* -- Begin Profiling Symbol Block for routine MPI_Comm_idup_with_info */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Comm_idup_with_info = PMPIX_Comm_idup_with_info
+#pragma weak MPI_Comm_idup_with_info = PMPI_Comm_idup_with_info
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Comm_idup_with_info  MPIX_Comm_idup_with_info
+#pragma _HP_SECONDARY_DEF PMPI_Comm_idup_with_info  MPI_Comm_idup_with_info
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Comm_idup_with_info as PMPIX_Comm_idup_with_info
+#pragma _CRI duplicate MPI_Comm_idup_with_info as PMPI_Comm_idup_with_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm,
-                             MPI_Request * request)
-    __attribute__ ((weak, alias("PMPIX_Comm_idup_with_info")));
+int MPI_Comm_idup_with_info(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPI_Comm_idup_with_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Comm_idup_with_info
-#define MPIX_Comm_idup_with_info PMPIX_Comm_idup_with_info
+#undef MPI_Comm_idup_with_info
+#define MPI_Comm_idup_with_info PMPI_Comm_idup_with_info
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
 /*@
-MPIX_Comm_idup_with_info - nonblocking communicator duplication
+MPI_Comm_idup_with_info - nonblocking communicator duplication
 
 Input Parameters:
 . comm - communicator (handle)
@@ -43,8 +42,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm,
-                             MPI_Request * request)
+int MPI_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
@@ -114,7 +112,8 @@ int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_comm_idup", "**mpi_comm_idup %C %p %p", comm, newcomm,
+                                 "**mpi_comm_idup_with_info",
+                                 "**mpi_comm_idup_with_info %C %I %p %p", comm, info, newcomm,
                                  request);
     }
 #endif

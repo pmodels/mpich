@@ -611,7 +611,7 @@ function MPIR_Comm_idup_c(comm, newcomm, request) &
 end function MPIR_Comm_idup_c
 
 function MPIR_Comm_idup_with_info_c(comm, info, newcomm, request) &
-    bind(C, name="PMPIX_Comm_idup_with_info") result(ierror)
+    bind(C, name="PMPI_Comm_idup_with_info") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Comm, c_Info, c_Request
     implicit none
