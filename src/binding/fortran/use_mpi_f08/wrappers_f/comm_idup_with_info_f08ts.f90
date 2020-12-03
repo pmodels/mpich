@@ -3,7 +3,7 @@
 !     See COPYRIGHT in top-level directory
 !
 
-subroutine MPIX_Comm_idup_with_info_f08(comm, info, newcomm, request, ierror)
+subroutine MPI_Comm_idup_with_info_f08(comm, info, newcomm, request, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Comm, MPI_Info, MPI_Request
     use :: mpi_c_interface, only : c_Comm, c_Info, c_Request
@@ -35,4 +35,4 @@ subroutine MPIX_Comm_idup_with_info_f08(comm, info, newcomm, request, ierror)
 
     if (present(ierror)) ierror = ierror_c
 
-end subroutine MPIX_Comm_idup_with_info_f08
+end subroutine MPI_Comm_idup_with_info_f08

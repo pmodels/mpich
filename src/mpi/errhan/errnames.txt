@@ -1420,6 +1420,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 ## MPI-3 nonblocking comm dup
 **mpi_comm_idup: MPI_Comm_idup failed
 **mpi_comm_idup %C %p %p: MPI_Comm_idup(comm=%C, newcomm=%p, request=%p)
+**mpi_comm_idup_with_info: MPI_Comm_idup failed
+**mpi_comm_idup_with_info %C %I %p %p: MPI_Comm_idup(comm=%C, info=%I, newcomm=%p, request=%p)
 
 ## MPI-3 nonblocking collectives
 **mpi_ibarrier: MPI_Ibarrier failed
