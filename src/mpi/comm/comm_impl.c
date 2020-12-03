@@ -6,7 +6,7 @@
 #include "mpiimpl.h"
 
 
-int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
+int MPIR_Comm_agree_impl(MPIR_Comm * comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
     MPIR_Group *comm_grp = NULL, *failed_grp = NULL, *new_group_ptr = NULL, *global_failed = NULL;
@@ -536,10 +536,28 @@ int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Co
     goto fn_exit;
 }
 
+int MPIR_Comm_create_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Comm_create_intra(comm_ptr, group_ptr, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    } else {
+        MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+        mpi_errno = MPIR_Comm_create_inter(comm_ptr, group_ptr, newcomm_ptr);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
-int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
-                           MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_create_group_impl(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
+                                MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t new_context_id = 0;
@@ -623,7 +641,12 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
     goto fn_exit;
 }
 
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    return MPIR_Comm_dup_with_info_impl(comm_ptr, NULL, newcomm_ptr);
+}
+
+int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *new_attributes = 0;
@@ -677,12 +700,12 @@ int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
     goto fn_exit;
 }
 
-void MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultlen)
+int MPIR_Comm_get_name_impl(MPIR_Comm * comm_ptr, char *comm_name, int *resultlen)
 {
     /* The user must allocate a large enough section of memory */
     MPL_strncpy(comm_name, comm_ptr->name, MPI_MAX_OBJECT_NAME);
     *resultlen = (int) strlen(comm_name);
-    return;
+    return MPI_SUCCESS;
 }
 
 int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
@@ -733,8 +756,13 @@ int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr)
     goto fn_exit;
 }
 
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcommp,
-                        MPIR_Request ** reqp)
+int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcommp, MPIR_Request ** reqp)
+{
+    return MPIR_Comm_idup_with_info_impl(comm_ptr, NULL, newcommp, reqp);
+}
+
+int MPIR_Comm_idup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info,
+                                  MPIR_Comm ** newcommp, MPIR_Request ** reqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *new_attributes = 0;
@@ -827,7 +855,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
 /* comm shrink impl; assumes that standard error checking has already taken
  * place in the calling function */
-int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_shrink_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *global_failed = NULL, *comm_grp = NULL, *new_group_ptr = NULL;
@@ -852,7 +880,8 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
         if (MPIR_Group_empty != global_failed)
             MPIR_Group_release(global_failed);
 
-        mpi_errno = MPIR_Comm_create_group(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG, newcomm_ptr);
+        mpi_errno = MPIR_Comm_create_group_impl(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG,
+                                                newcomm_ptr);
         if (*newcomm_ptr == NULL) {
             errflag = MPIR_ERR_PROC_FAILED;
         } else if (mpi_errno) {
@@ -1337,7 +1366,7 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     }
 
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, newcomm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, newcomm_ptr);
 
     MPIR_ERR_CHECK(mpi_errno);
 

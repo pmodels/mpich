@@ -272,9 +272,6 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 int MPIR_Comm_release_always(MPIR_Comm * comm_ptr);
 
 int MPIR_Comm_create(MPIR_Comm **);
-int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
-                           MPIR_Comm ** newcomm);
-
 int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_create_inter(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
@@ -283,12 +280,6 @@ int MPIR_Comm_create_subcomms(MPIR_Comm * comm);
 int MPIR_Comm_commit(MPIR_Comm *);
 
 int MPIR_Comm_is_parent_comm(MPIR_Comm *);
-
-int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm,
-                        MPIR_Request ** reqp);
-
-int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag);
 
 #if defined(HAVE_ROMIO)
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
@@ -315,24 +306,6 @@ typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, int, int);     /* comm, key, va
 int MPIR_Comm_register_hint(int index, const char *hint_key, MPIR_Comm_hint_fn_t fn,
                             int type, int attr);
 
-int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
-                          MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
-                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Info * info, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
-int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
-int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
-void MPIR_Comm_get_name_impl(MPIR_Comm * comm, char *comm_name, int *resultlen);
-int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_intracomm_ptr);
-int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
-                               MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
-                               MPIR_Comm ** new_intercomm_ptr);
-int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
-int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
-int MPIR_Comm_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
-int MPIR_Comm_remote_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
-int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_by_node(MPIR_Comm * comm_ptr, int split_type, int key,
@@ -341,8 +314,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int split_type, int key
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
                          MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
-                              MPIR_Comm ** newcomm_ptr);
 
 int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
@@ -350,7 +321,6 @@ int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, con
                                          MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                       MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_compare_impl(MPIR_Comm * comm_ptr1, MPIR_Comm * comm_ptr2, int *result);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided

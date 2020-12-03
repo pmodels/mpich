@@ -1,0 +1,369 @@
+# vim: set ft=c:
+
+MPI_Comm_compare:
+    .desc: Compares two communicators
+    .skip: ThreadSafe
+    .extra: ignore_revoke
+/*
+    .N ThreadSafe
+    (To perform the communicator comparisions, this routine may need to
+    allocate some memory.  Memory allocation is not interrupt-safe, and hence
+    this routine is only thread-safe.)
+*/
+
+MPI_Comm_create:
+    .desc: Creates a new communicator
+    .seealso: MPI_Comm_free
+
+MPI_Comm_create_group:
+    .desc: Creates a new communicator
+    .seealso: MPI_Comm_free
+    .extra: errtest_comm_intra
+
+MPI_Comm_dup:
+    .desc: Duplicates an existing communicator with all its cached information
+    .seealso: MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete, MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
+/*
+    Notes:
+      This routine is used to create a new communicator that has a new
+      communication context but contains the same group of processes as
+      the input communicator.  Since all MPI communication is performed
+      within a communicator (specifies as the group of processes `plus`
+      the context), this routine provides an effective way to create a
+      private communicator for use by a software module or library.  In
+      particular, no library routine should use 'MPI_COMM_WORLD' as the
+      communicator; instead, a duplicate of a user-specified communicator
+      should always be used.  For more information, see Using MPI, 2nd
+      edition.
+
+      Because this routine essentially produces a copy of a communicator,
+      it also copies any attributes that have been defined on the input
+      communicator, using the attribute copy function specified by the
+      'copy_function' argument to 'MPI_Keyval_create'.  This is
+      particularly useful for (a) attributes that describe some property
+      of the group associated with the communicator, such as its
+      interconnection topology and (b) communicators that are given back
+      to the user; the attibutes in this case can track subsequent
+      'MPI_Comm_dup' operations on this communicator.
+*/
+
+MPI_Comm_dup_with_info:
+    .desc: Duplicates an existing communicator with all its cached information
+    .seealso: MPI_Comm_dup, MPI_Comm_free, MPI_Keyval_create, MPI_Attr_put, MPI_Attr_delete, MPI_Comm_create_keyval, MPI_Comm_set_attr, MPI_Comm_delete_attr
+/*
+    Notes:
+      MPI_Comm_dup_with_info behaves exactly as MPI_Comm_dup except that
+      the info hints associated with the communicator comm are not
+      duplicated in newcomm.  The hints provided by the argument info are
+      associated with the output communicator newcomm instead.
+*/
+
+MPI_Comm_free:
+    .desc: Marks the communicator object for deallocation
+    .extra: ignore_revoke
+/*
+    Notes:
+    This routine `frees` a communicator.  Because the communicator may still
+    be in use by other MPI routines, the actual communicator storage will not
+    be freed until all references to this communicator are removed.  For most
+    users, the effect of this routine is the same as if it was in fact freed
+    at this time of this call.
+
+    Null Handles:
+    The MPI 1.1 specification, in the section on opaque objects, explicitly
+    disallows freeing a null communicator.  The text from the standard is:
+    .vb
+     A null handle argument is an erroneous IN argument in MPI calls, unless an
+     exception is explicitly stated in the text that defines the function. Such
+     exception is allowed for handles to request objects in Wait and Test calls
+     (sections Communication Completion and Multiple Completions). Otherwise, a
+     null handle can only be passed to a function that allocates a new object and
+     returns a reference to it in the handle.
+    .ve
+*/
+{ -- error_check --
+    if (HANDLE_IS_BUILTIN(*comm)) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_COMM, "**commperm", "**commperm %s",
+                                         comm_ptr->name);
+        goto fn_fail;
+    }
+}
+
+MPI_Comm_get_info:
+    .desc: Returns a new info object containing the hints
+    .extra: ignore_revoke
+
+MPI_Comm_get_name:
+    .desc: Return the print name from the communicator
+    .extra: COMMNULL, ignore_revoke
+
+MPI_Comm_group:
+    .desc: Accesses the group associated with given communicator
+    .extra: COMMNULL, ignore_revoke
+
+MPI_Comm_idup:
+    .desc: nonblocking communicator duplication
+
+MPI_Comm_idup_with_info:
+    .desc: nonblocking communicator duplication
+
+MPI_Comm_rank:
+    .desc: Determines the rank of the calling process in the communicator
+    .extra: SignalSafe
+    .extra: ignore_revoke
+{
+    *rank = MPIR_Comm_rank(comm_ptr);
+}
+
+MPI_Comm_remote_group:
+    .desc: Accesses the remote group associated with
+    .seealso: MPI_Group_free
+    .extra: ignore_revoke
+/*
+    Notes:
+    The user is responsible for freeing the group when it is no longer needed.
+*/
+
+MPI_Comm_remote_size:
+    .desc: Determines the size of the remote group
+    .extra: SignalSafe, ignore_revoke
+{
+    *size = comm_ptr->remote_size;
+}
+
+MPI_Comm_set_info:
+    .desc: Set new values for the hints of the
+
+MPI_Comm_set_name:
+    .desc: Sets the print name for a communicator
+{
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+    MPL_strncpy(comm_ptr->name, comm_name, MPI_MAX_OBJECT_NAME);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
+}
+
+MPI_Comm_size:
+    .desc: Determines the size of the group associated with a communicator
+    .extra: NULL, SignalSafe, ignore_revoke
+{
+    *size = MPIR_Comm_size(comm_ptr);
+}
+
+MPI_Comm_split:
+    .desc: Creates new communicators based on colors and keys
+    .skip: validate-COLOR, validate-KEY
+    .seealso: MPI_Comm_free
+/*
+    Notes:
+      The 'color' must be non-negative or 'MPI_UNDEFINED'.
+*/
+/*
+    Algorithm:
+    .vb
+      1. Use MPI_Allgather to get the color and key from each process
+      2. Count the number of processes with the same color; create a
+         communicator with that many processes.  If this process has
+         'MPI_UNDEFINED' as the color, create a process with a single member.
+      3. Use key to order the ranks
+    .ve
+*/
+
+MPI_Comm_split_type:
+    .desc: Creates new communicators based on split types and keys
+    .skip: validate-SPLIT_TYPE, validate-KEY
+    .seealso: MPI_Comm_free
+/*
+    Notes:
+      The 'split_type' must be non-negative or 'MPI_UNDEFINED'.
+*/
+
+MPI_Comm_test_inter:
+    .desc: Tests to see if a comm is an inter-communicator
+    .extra: SignalSafe
+{
+    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+}
+
+MPI_Intercomm_create:
+    .desc: Creates an intercommuncator from two intracommunicators
+    .skip: validate-RANK
+    .extra: errtest_comm_intra
+    .seealso: MPI_Intercomm_merge, MPI_Comm_free, MPI_Comm_remote_group, MPI_Comm_remote_size
+/*
+    Notes:
+       'peer_comm' is significant only for the process designated the
+       'local_leader' in the 'local_comm'.
+
+      The MPI 1.1 Standard contains two mutually exclusive comments on the
+      input intercommunicators.  One says that their repective groups must be
+      disjoint; the other that the leaders can be the same process.  After
+      some discussion by the MPI Forum, it has been decided that the groups must
+      be disjoint.  Note that the `reason` given for this in the standard is
+      `not` the reason for this choice; rather, the `other` operations on
+      intercommunicators (like 'MPI_Intercomm_merge') do not make sense if the
+      groups are not disjoint.
+*/
+{ -- error_check --
+    /* Validate local_comm_ptr */
+    MPIR_Comm_valid_ptr(local_comm_ptr, mpi_errno, FALSE);
+    if (local_comm_ptr) {
+        /*  Only check if local_comm_ptr valid */
+        MPIR_ERRTEST_COMM_INTRA(local_comm_ptr, mpi_errno);
+        if ((local_leader < 0 || local_leader >= local_comm_ptr->local_size)) {
+            MPIR_ERR_SET2(mpi_errno, MPI_ERR_RANK,
+                            "**ranklocal", "**ranklocal %d %d",
+                            local_leader, local_comm_ptr->local_size - 1);
+            /* If local_comm_ptr is not valid, it will be reset to null */
+            if (mpi_errno)
+                goto fn_fail;
+        }
+        if (local_comm_ptr->rank == local_leader) {
+            MPIR_ERRTEST_COMM(peer_comm, mpi_errno);
+            MPIR_Comm_valid_ptr(peer_comm_ptr, mpi_errno, FALSE);
+            /* Note: In MPI 1.0, peer_comm was restricted to
+                * intracommunicators.  In 1.1, it may be any communicator */
+
+            /* In checking the rank of the remote leader,
+                * allow the peer_comm to be in intercommunicator
+                * by checking against the remote size */
+            if (!mpi_errno && peer_comm_ptr &&
+                (remote_leader < 0 || remote_leader >= peer_comm_ptr->remote_size)) {
+                MPIR_ERR_SET2(mpi_errno, MPI_ERR_RANK,
+                                "**rankremote", "**rankremote %d %d",
+                                remote_leader, peer_comm_ptr->remote_size - 1);
+            }
+            /* Check that the local leader and the remote leader are
+                * different processes.  This test requires looking at
+                * the lpid for the two ranks in their respective
+                * communicators.  However, an easy test is for
+                * the same ranks in an intracommunicator; we only
+                * need the lpid comparison for intercommunicators */
+            /* Here is the test.  We restrict this test to the
+                * process that is the local leader (local_comm_ptr->rank ==
+                * local_leader because we can then use peer_comm_ptr->rank
+                * to get the rank in peer_comm of the local leader. */
+            if (peer_comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+                local_comm_ptr->rank == local_leader && peer_comm_ptr->rank == remote_leader) {
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_RANK, "**ranksdistinct");
+            }
+            if (mpi_errno)
+                goto fn_fail;
+        }
+    }
+}
+
+MPI_Intercomm_merge:
+    .desc: Creates an intracommuncator from an intercommunicator
+    .skip: validate-LOGICAL
+    .extra: setup_intercomm_localcomm
+    .seealso: MPI_Intercomm_create, MPI_Comm_free
+/*
+    Notes:
+     While all processes may provide the same value for the 'high' parameter,
+     this requires the MPI implementation to determine which group of
+     processes should be ranked first.
+*/
+/*
+    Algorithm:
+    .Eb
+    .i Allocate contexts
+    .i Local and remote group leaders swap high values
+    .i Determine the high value.
+    .i Merge the two groups and make the intra-communicator
+    .Ee
+*/
+{ -- handle_ptr --
+    /* Make sure that we have a local intercommunicator */
+    if (!intercomm_ptr->local_comm) {
+        /* Manufacture the local communicator */
+        MPII_Setup_intercomm_localcomm(intercomm_ptr);
+    }
+}
+{ -- error_check --
+    int acthigh;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    /* Check for consistent valus of high in each local group.
+     * The Intel test suite checks for this; it is also an easy
+     * error to make */
+    acthigh = high ? 1 : 0;     /* Clamp high into 1 or 0 */
+    mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &acthigh, 1, MPI_INT,
+                                MPI_SUM, intercomm_ptr->local_comm, &errflag);
+    MPIR_ERR_CHECK(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    /* acthigh must either == 0 or the size of the local comm */
+    if (acthigh != 0 && acthigh != intercomm_ptr->local_size) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_ARG, "**notsame", "**notsame %s %s",
+                                         "high", "MPI_Intercomm_merge");
+        goto fn_fail;
+    }
+}
+
+MPIX_Comm_revoke:
+    comm: COMMUNICATOR, [communicator to revoke]
+    .desc: Prevent a communicator from being used in the future
+    .extra: ignore_revoke
+/*
+    Notes:
+    This function notifies all MPI processes in the groups (local and remote) associated with the communicator comm that this communicator is revoked. The revocation of a communicator by any MPIprocess completes non-local MPI operations on comm at all MPI processes by raising an error of class MPI_ERR_REVOKED (with the exception of MPIX_Comm_shrink, MPIX_Comm_agree). This function is not collective and therefore does not have a matching call on remote MPI processes. All non-failed MPIprocesses belonging to comm will be notified of the revocation despite failures.
+
+    A communicator is revoked at a given MPI process either when MPIX_Comm_revoke is locally called on it, or when any MPI operation on comm raises an error of class MPI_ERR_REVOKED at that process. Once a communicator has been revoked at an MPI process, all subsequent non-local operations on that communicator (with thesame exceptions as above), are considered local and must complete by raising an error of class MPI_ERR_REVOKED at that MPI process.
+*/
+{
+    mpi_errno = MPID_Comm_revoke(comm_ptr, 0);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+
+MPIX_Comm_shrink:
+    comm: COMMUNICATOR, [communicator]
+    newcomm: COMMUNICATOR, direction=out, [new communicator]
+    .desc: Creates a new communitor from an existing communicator while excluding failed processes
+    .extra: ignore_revoke
+/*
+    Notes:
+    This collective operation creates a new intra- or intercommunicator newcomm from the intra- or intercommunicator comm, respectively, by excluding the group of failed MPI processes as agreed upon during the operation. The groups of newcomm must include everyMPIprocess that returns from MPIX_Comm_shrink, and it must exclude every MPI process whose failure caused an operation on comm to raise an MPI error of class MPI_ERR_PROC_FAILED or MPI_ERR_PROC_FAILED_PENDING at a member of the groups of newcomm, before that member initiated MPIX_Comm_shrink. This call is semantically equivalent to an MPI_Comm_split operation that would succeed despite failures, where members of the groups of newcomm participate with the same color and a key equal to their rank incomm.
+
+    This function never raises an error of class MPI_ERR_PROC_FAILED or MPI_ERR_REVOKED. The defined semantics of MPIX_Comm_shrink are maintained when comm is revoked, or when the group of comm contains failed MPI processes
+*/
+
+
+MPIX_Comm_failure_ack:
+    comm: COMMUNICATOR, [communicator]
+    .desc: Acknowledge the current group of failed processes
+    .extra: ignore_revoke
+    .impl: mpid
+/*
+    Notes:
+    This local operation gives the users a way to acknowledge all locally notified failures on comm. After the call, unmatched MPI_ANY_SOURCE receive operations that would haveraised an error of class MPI_ERR_PROC_FAILED_PENDING due to MPI process failure proceed without further raising errors due to those acknowledged failures. Also after this call, MPIX_Comm_agree will not raise an error of class MPI_ERR_PROC_FAILED due to those acknowledged failures.
+*/
+
+MPIX_Comm_failure_get_acked:
+    comm: COMMUNICATOR, [communicator]
+    failedgrp: GROUP, direction=out, [group of failed processes]
+    .desc: Get the group of acknowledged failures.
+    .extra: ignore_revoke
+    .impl: mpid
+/*
+    Notes:
+    This local operation returns the group failedgrp of processes, from the communicatorcomm, that have been locally acknowledged as failed by preceding calls to MPIX_Comm_failure_ack. The failedgrp can be empty, that is, equal to MPI_GROUP_EMPTY.
+*/
+
+MPIX_Comm_agree:
+    comm: COMMUNICATOR, [communicator]
+    flag: LOGICAL, direction=out, [new communicator]
+    .desc: Performs agreement operation on comm
+    .extra: ignore_revoke
+/*
+    Notes:
+    The purpose of this collective communication is to agree on the integer value flag and on the group of failed processes in comm.
+
+    On completion, all non-failed MPI processes have agreed to set the output integer value of flag to the result of a bitwise AND operation over the contributed input values of flag. If comm is an intercommunicator, the value of flagis a bitwise AND operation over the values contributed by the remote group.
+
+    When an MPI process fails before contributing to the operation, the flag is computed ignoring its contribution, and MPIX_Comm_agree raises an error of class MPI_ERR_PROC_FAILED. However, if all MPI processes have acknowledged this failure priorto the call to MPIX_Comm_agree, using MPIX_Comm_failure_ack, the error related to this failure is not raised. When an error of class MPI_ERR_PROC_FAILED is raised, it is consistently raised at allMPI processes, in both the local and remote groups (if applicable).
+
+    After MPIX_Comm_agree raised an error of class MPI_ERR_PROC_FAILED, a subse-quent call to MPIX_Comm_failure_ack on comm acknowledges the failure of every MPI process that didn't contribute to the computation offlag.
+*/
