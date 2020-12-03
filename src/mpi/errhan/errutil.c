@@ -1452,6 +1452,43 @@ static const char *GetMPIOpString(MPI_Op o)
     return default_str;
 }
 
+static const char *get_keyval_string(int keyval)
+{
+    static char default_str[64];
+
+    switch (keyval) {
+        case MPI_KEYVAL_INVALID:
+            return "MPI_KEYVAL_INVALID";
+        case MPI_TAG_UB:
+            return "MPI_TAG_UB";
+        case MPI_HOST:
+            return "MPI_HOST";
+        case MPI_IO:
+            return "MPI_IO";
+        case MPI_WTIME_IS_GLOBAL:
+            return "MPI_WTIME_IS_GLOBAL";
+        case MPI_UNIVERSE_SIZE:
+            return "MPI_UNIVERSE_SIZE";
+        case MPI_LASTUSEDCODE:
+            return "MPI_LASTUSEDCODE";
+        case MPI_APPNUM:
+            return "MPI_APPNUM";
+        case MPI_WIN_BASE:
+            return "MPI_WIN_BASE";
+        case MPI_WIN_SIZE:
+            return "MPI_WIN_SIZE";
+        case MPI_WIN_DISP_UNIT:
+            return "MPI_WIN_DISP_UNIT";
+        case MPI_WIN_CREATE_FLAVOR:
+            return "MPI_WIN_CREATE_FLAVOR";
+        case MPI_WIN_MODEL:
+            return "MPI_WIN_MODEL";
+    }
+    /* FIXME: default is not thread safe */
+    MPL_snprintf(default_str, sizeof(default_str), "keyval=0x%x", keyval);
+    return default_str;
+}
+
 /* ------------------------------------------------------------------------ */
 /* This routine takes an instance-specific string with format specifiers    */
 /* This routine makes use of the above routines, along with some inlined    */
@@ -1655,6 +1692,10 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                 } else {
                     MPL_snprintf(str, maxlen, "errh=0x%x", E);
                 }
+                break;
+            case (int) 'K':
+                d = va_arg(list, int);
+                MPL_snprintf(str, maxlen, "%s", get_keyval_string(d));
                 break;
             case (int) 'c':
                 c = va_arg(list, MPI_Count);
