@@ -206,7 +206,7 @@ static int dynproc_create_intercomm(const char *port_name, int remote_size, int 
 
     MPIR_Comm_commit(tmp_comm_ptr);
 
-    mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, NULL, newcomm);
+    mpi_errno = MPIR_Comm_dup_impl(tmp_comm_ptr, newcomm);
     MPIR_ERR_CHECK(mpi_errno);
 
     tmp_comm_ptr->local_comm = NULL;    /* avoid freeing local comm with comm_release */
