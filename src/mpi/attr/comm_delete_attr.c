@@ -110,7 +110,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_comm_delete_attr", "**mpi_comm_delete_attr %C %d", comm,
+                                 "**mpi_comm_delete_attr", "**mpi_comm_delete_attr %C %K", comm,
                                  comm_keyval);
     }
 #endif

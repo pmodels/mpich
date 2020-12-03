@@ -98,7 +98,8 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                 MPI_ERR_OTHER, "**mpix_comm_agree", "**mpix_comm_agree %C", comm);
+                                 MPI_ERR_OTHER, "**mpix_comm_agree", "**mpix_comm_agree %C %p",
+                                 comm);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);

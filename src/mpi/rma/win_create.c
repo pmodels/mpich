@@ -183,7 +183,7 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_create", "**mpi_win_create %p %d %d %I %C %p", base,
+                                 "**mpi_win_create", "**mpi_win_create %p %L %d %I %C %p", base,
                                  size, disp_unit, info, comm, win);
     }
 #endif

@@ -90,7 +90,7 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_type_set_attr", "**mpi_type_set_attr %D %d %p", datatype,
+                                 "**mpi_type_set_attr", "**mpi_type_set_attr %D %K %p", datatype,
                                  type_keyval, attribute_val);
     }
 #endif

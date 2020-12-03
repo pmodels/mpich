@@ -83,7 +83,7 @@ int MPII_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *fla
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %d %p %p", win,
+                                 "**mpi_win_get_attr", "**mpi_win_get_attr %W %K %p %p", win,
                                  win_keyval, attribute_val, flag);
     }
     MPIR_Win_get_ptr(win, win_ptr);

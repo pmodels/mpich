@@ -200,7 +200,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
                                          __func__, __LINE__, MPI_ERR_OTHER,
-                                         "**mpi_reduce", "**mpi_reduce %p %p %d %D %O %d %C",
+                                         "**mpi_reduce", "**mpi_reduce %p %p %d %D %O %i %C",
                                          sendbuf, recvbuf, count, datatype, op, root, comm);
     }
 #endif

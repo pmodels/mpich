@@ -108,7 +108,7 @@ int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, int neighbors
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_graph_neighbors", "**mpi_graph_neighbors %C %d %d %p", comm,
+                                 "**mpi_graph_neighbors", "**mpi_graph_neighbors %C %i %d %p", comm,
                                  rank, maxneighbors, neighbors);
     }
 #endif

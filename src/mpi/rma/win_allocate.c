@@ -155,7 +155,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_allocate", "**mpi_win_allocate %d %d %I %C %p %p", size,
+                                 "**mpi_win_allocate", "**mpi_win_allocate %L %d %I %C %p %p", size,
                                  disp_unit, info, comm, baseptr, win);
     }
 #endif

@@ -111,7 +111,7 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_alloc_mem", "**mpi_alloc_mem %d %I %p", size, info,
+                                 "**mpi_alloc_mem", "**mpi_alloc_mem %L %I %p", size, info,
                                  baseptr);
     }
 #endif

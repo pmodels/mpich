@@ -120,7 +120,7 @@ int MPI_Pack_external(const char datarep[],
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_pack_external", "**mpi_pack_external %s %p %d %D %p %d %p",
+                                 "**mpi_pack_external", "**mpi_pack_external %s %p %d %D %p %L %p",
                                  datarep, inbuf, incount, datatype, outbuf, outsize, position);
     }
 #endif

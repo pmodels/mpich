@@ -106,7 +106,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_graph_neighbors_count",
-                                 "**mpi_graph_neighbors_count %C %d %p", comm, rank, nneighbors);
+                                 "**mpi_graph_neighbors_count %C %i %p", comm, rank, nneighbors);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);

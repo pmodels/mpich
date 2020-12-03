@@ -153,7 +153,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_compare_and_swap",
-                                 "**mpi_compare_and_swap %p %p %p %D %d %d %W", origin_addr,
+                                 "**mpi_compare_and_swap %p %p %p %D %d %L %W", origin_addr,
                                  compare_addr, result_addr, datatype, target_rank, target_disp,
                                  win);
     }

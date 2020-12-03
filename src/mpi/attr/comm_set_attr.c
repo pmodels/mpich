@@ -91,7 +91,7 @@ int MPII_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_comm_set_attr", "**mpi_comm_set_attr %C %d %p", comm,
+                                 "**mpi_comm_set_attr", "**mpi_comm_set_attr %C %K %p", comm,
                                  comm_keyval, attribute_val);
     }
 #endif

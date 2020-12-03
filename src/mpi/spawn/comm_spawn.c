@@ -133,7 +133,7 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_comm_spawn", "**mpi_comm_spawn %s %p %d %I %d %C %p %p",
+                                 "**mpi_comm_spawn", "**mpi_comm_spawn %s %p %d %I %i %C %p %p",
                                  command, argv, maxprocs, info, root, comm, intercomm,
                                  array_of_errcodes);
     }

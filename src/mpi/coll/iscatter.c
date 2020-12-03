@@ -197,7 +197,7 @@ int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_iscatter", "**mpi_iscatter %p %d %D %p %d %D %d %C %p",
+                                 "**mpi_iscatter", "**mpi_iscatter %p %d %D %p %d %D %i %C %p",
                                  sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
                                  comm, request);
     }

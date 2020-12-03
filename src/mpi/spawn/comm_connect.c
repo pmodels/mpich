@@ -113,7 +113,7 @@ int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm co
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_comm_connect", "**mpi_comm_connect %s %I %d %C %p",
+                                 "**mpi_comm_connect", "**mpi_comm_connect %s %I %i %C %p",
                                  port_name, info, root, comm, newcomm);
     }
 #endif

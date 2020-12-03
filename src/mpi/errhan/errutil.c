@@ -920,7 +920,7 @@ int MPIR_Err_create_code_valist(int lastcode, int fatal, const char fcname[],
         if (strcmp(generic_err_msgs[generic_idx].short_name, "**user") == 0) {
             use_user_error_code = 1;
             /* This is a special case.  The format is
-             * "**user", "**userxxx %d", intval
+             * "**user", "**userxxx ", intval
              * (generic, specific, parameter).  In this
              * case we must ... save the user value because
              * we store it explicitly in the ring.

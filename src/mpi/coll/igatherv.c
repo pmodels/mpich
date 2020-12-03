@@ -220,7 +220,7 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_igatherv", "**mpi_igatherv %p %d %D %p %p %p %D %d %C %p",
+                                 "**mpi_igatherv", "**mpi_igatherv %p %d %D %p %p %p %D %i %C %p",
                                  sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                  recvtype, root, comm, request);
     }

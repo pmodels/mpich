@@ -217,7 +217,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_rget_accumulate",
-                                 "**mpi_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p",
+                                 "**mpi_rget_accumulate %p %d %D %p %d %D %d %L %d %D %O %W %p",
                                  origin_addr, origin_count, origin_datatype, result_addr,
                                  result_count, result_datatype, target_rank, target_disp,
                                  target_count, target_datatype, op, win, request);

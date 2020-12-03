@@ -197,7 +197,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_intercomm_create",
-                                 "**mpi_intercomm_create %C %d %C %d %d %p", local_comm,
+                                 "**mpi_intercomm_create %C %i %C %i %t %p", local_comm,
                                  local_leader, peer_comm, remote_leader, tag, newintercomm);
     }
 #endif /* HAVE_ERROR_CHECKING */

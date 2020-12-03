@@ -181,7 +181,7 @@ int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_rput", "**mpi_rput %p %d %D %d %d %d %D %W %p", origin_addr,
+                                 "**mpi_rput", "**mpi_rput %p %d %D %d %L %d %D %W %p", origin_addr,
                                  origin_count, origin_datatype, target_rank, target_disp,
                                  target_count, target_datatype, win, request);
     }

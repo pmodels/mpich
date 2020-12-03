@@ -131,7 +131,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_bcast", "**mpi_bcast %p %d %D %d %C", buffer, count,
+                                 "**mpi_bcast", "**mpi_bcast %p %d %D %i %C", buffer, count,
                                  datatype, root, comm);
     }
 #endif

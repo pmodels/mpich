@@ -109,7 +109,7 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 
             if (assert != 0 && assert != MPI_MODE_NOCHECK) {
                 MPIR_ERR_SET1(mpi_errno, MPI_ERR_ARG,
-                              "**lockassertval", "**lockassertval %d", assert);
+                              "**lockassertval", "**lockassertval ", assert);
                 if (mpi_errno)
                     goto fn_fail;
             }

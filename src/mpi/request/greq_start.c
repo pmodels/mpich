@@ -181,8 +181,8 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpix_grequest_class_create",
-                                 "**mpix_grequest_class_create %p %p %p %p %p", query_fn, free_fn,
-                                 cancel_fn, poll_fn, wait_fn);
+                                 "**mpix_grequest_class_create %p %p %p %p %p %p", query_fn,
+                                 free_fn, cancel_fn, poll_fn, wait_fn);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);

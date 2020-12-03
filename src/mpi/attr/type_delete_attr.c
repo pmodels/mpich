@@ -110,7 +110,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_type_delete_attr", "**mpi_type_delete_attr %D %d", datatype,
+                                 "**mpi_type_delete_attr", "**mpi_type_delete_attr %D %K", datatype,
                                  type_keyval);
     }
 #endif

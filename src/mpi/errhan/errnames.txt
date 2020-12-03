@@ -290,6 +290,8 @@ be in the range 0 to %d
 **argpackbuf %d %d:Size of data to pack (%d bytes) is larger than remaining \
  space in pack buffer (%d bytes)
 **unknown:Unknown error.  Please file a bug report.
+**storageorder:Invalid storage order argument
+**storageorder %d:Invalid storage order argument (%d)
 **truncate:Message truncated
 **truncate %d %d:Message truncated; %d bytes received but buffer size is %d
 **truncate %d %d %d %d:Message from rank %d and tag %d truncated; \
@@ -411,7 +413,8 @@ be in the range 0 to %d
 **win:Invalid MPI_Win
 **winnull:Null MPI_Win
 **base:Invalid base address
-**locktype:Invalid lock type
+**locktype:Invalid lock type argument
+**locktype %d:Invalid lock type argument (%d)
 **rmaconflict:Conflicting accesses to window 
 **rmasync:Wrong synchronization of RMA calls 
 **rmasize:Invalid size argument in RMA call
@@ -426,8 +429,7 @@ be in the range 0 to %d
 **rmanoop:No RMA operation resources can be freed from the window
 **rmanotarget:No RMA target resources can be freed from the window
 **assert:Invalid assert argument
-**lockassertval:Invalid assert argument passed to MPI_Win_lock
-**lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock
+**assert %d:Invalid assert argument (%d)
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
 **nomemreq:failure occurred while allocating memory for a request object
@@ -957,15 +959,15 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_barrier:MPI_Barrier failed
 **mpi_barrier %C:MPI_Barrier(comm=%C) failed
 **mpi_bcast:MPI_Bcast failed
-**mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, comm=%C) failed
+**mpi_bcast %p %d %D %i %C:MPI_Bcast(buf=%p, count=%d, %D, root=%i, comm=%C) failed
 **mpi_gather:MPI_Gather failed
-**mpi_gather %p %d %D %p %d %D %d %C:MPI_Gather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
+**mpi_gather %p %d %D %p %d %D %i %C:MPI_Gather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%i, comm=%C) failed
 **mpi_gatherv:MPI_Gatherv failed
-**mpi_gatherv %p %d %D %p %p %p %D %d %C:MPI_Gatherv failed(sbuf=%p, scount=%d, %D, rbuf=%p, rcnts=%p, displs=%p, datatype=%D, root=%d, comm=%C) failed
+**mpi_gatherv %p %d %D %p %p %p %D %i %C:MPI_Gatherv failed(sbuf=%p, scount=%d, %D, rbuf=%p, rcnts=%p, displs=%p, datatype=%D, root=%i, comm=%C) failed
 **mpi_scatter:MPI_Scatter failed
-**mpi_scatter %p %d %D %p %d %D %d %C:MPI_Scatter(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
+**mpi_scatter %p %d %D %p %d %D %i %C:MPI_Scatter(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, %D, root=%i, comm=%C) failed
 **mpi_scatterv:MPI_Scatterv failed
-**mpi_scatterv %p %p %p %D %p %d %D %d %C:MPI_Scatterv(sbuf=%p, scnts=%p, displs=%p, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
+**mpi_scatterv %p %p %p %D %p %d %D %i %C:MPI_Scatterv(sbuf=%p, scnts=%p, displs=%p, %D, rbuf=%p, rcount=%d, %D, root=%i, comm=%C) failed
 **mpi_allgather:MPI_Allgather failed
 **mpi_allgather %p %d %D %p %d %D %C:MPI_Allgather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, datatype=%D, comm=%C) failed
 **mpi_allgatherv:MPI_Allgatherv failed
@@ -975,7 +977,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_alltoallv:MPI_Alltoallv failed
 **mpi_alltoallv %p %p %p %D %p %p %p %D %C:MPI_Alltoallv(sbuf=%p, scnts=%p, sdispls=%p, %D, rbuf=%p, rcnts=%p, rdispls=%p, datatype=%D, comm=%C) failed
 **mpi_reduce:MPI_Reduce failed
-**mpi_reduce %p %p %d %D %O %d %C:MPI_Reduce(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C) failed
+**mpi_reduce %p %p %d %D %O %i %C:MPI_Reduce(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, root=%i, comm=%C) failed
 **mpi_op_create:MPI_Op_create failed
 **mpi_op_create %p %d %p:MPI_Op_create(fn=%p, commute=%d, op=%p) failed
 **mpi_op_free:MPI_Op_free failed
@@ -1031,9 +1033,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_create:MPI_Comm_create failed
 **mpi_comm_create %C %G %p:MPI_Comm_create(%C, %G, new_comm=%p) failed
 **mpi_comm_create_group:MPI_Comm_create_group failed
-**mpi_comm_create_group %C %G %d %p:MPI_Comm_create_group(%C, %G, %d, new_comm=%p) failed
+**mpi_comm_create_group %C %G %t %p:MPI_Comm_create_group(%C, %G, %t, new_comm=%p) failed
 **mpi_comm_split:MPI_Comm_split failed
 **mpi_comm_split %C %d %d %p:MPI_Comm_split(%C, color=%d, key=%d, new_comm=%p) failed
+**mpi_comm_split_type:MPI_Comm_split_type failed
+**mpi_comm_split_type %C %d %d %I %p:MPI_Comm_split_type(%C, color=%d, key=%d, info=%I, new_comm=%p) failed
 **mpi_comm_free:MPI_Comm_free failed
 **mpi_comm_free %p:MPI_Comm_free(comm=%p) failed
 **mpi_comm_test_inter:MPI_Comm_test_inter failed
@@ -1051,11 +1055,13 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpix_comm_shrink:MPIX_Comm_shrink failed
 **mpix_comm_shrink %C %p:MPIX_Comm_shrink(%C, new_comm=%p) failed
 **mpix_comm_agree:MPIX_Comm_agree failed
-**mpix_comm_agree %C:MPIX_Comm_agree(%C) failed
+**mpix_comm_agree %C %p:MPIX_Comm_agree(%C flag=%p) failed
 **badgputype:Bad GPU type specified
 **badgputype %d:Bad GPU type (%d) specified
+**mpix_gpu_query_support:MPIX_GPU_query_support failed
+**mpix_gpu_query_support %d %p:MPIX_GPU_query_support(type=%d is_supported=%p) failed
 **mpi_intercomm_create:MPI_Intercomm_create failed
-**mpi_intercomm_create %C %d %C %d %d %p:MPI_Intercomm_create(%C, local_leader=%d, %C, remote_leader=%d, tag=%d, newintercomm=%p) failed
+**mpi_intercomm_create %C %i %C %i %t %p:MPI_Intercomm_create(%C, local_leader=%i, %C, remote_leader=%i, tag=%t, newintercomm=%p) failed
 **mpi_intercomm_merge:MPI_Intercomm_merge failed
 **mpi_intercomm_merge %C %d %p:MPI_Intercomm_merge(%C, high=%d, newintracomm=%p) failed
 **mpi_keyval_create:MPI_Keyval_create failed
@@ -1087,11 +1093,11 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_rank:MPI_Cart_rank failed
 **mpi_cart_rank %C %p %p:MPI_Cart_rank(%C, coords=%p, rank=%p) failed
 **mpi_cart_coords:MPI_Cart_coords failed
-**mpi_cart_coords %C %d %d %p:MPI_Cart_coords(%C, rank=%d, maxdims=%d, coords=%p) failed
+**mpi_cart_coords %C %i %d %p:MPI_Cart_coords(%C, rank=%i, maxdims=%d, coords=%p) failed
 **mpi_graph_neighbors_count:MPI_Graph_neighbors_count failed
-**mpi_graph_neighbors_count %C %d %p:MPI_Graph_neighbors_count(%C, rank=%d, nneighbors=%p) failed
+**mpi_graph_neighbors_count %C %i %p:MPI_Graph_neighbors_count(%C, rank=%i, nneighbors=%p) failed
 **mpi_graph_neighbors:MPI_Graph_neighbors failed
-**mpi_graph_neighbors %C %d %d %p:MPI_Graph_neighbors(%C, rank=%d, maxneighbors=%d, neighbors=%p) failed
+**mpi_graph_neighbors %C %i %d %p:MPI_Graph_neighbors(%C, rank=%i, maxneighbors=%d, neighbors=%p) failed
 **mpi_cart_shift:MPI_Cart_shift failed
 **mpi_cart_shift %C %d %d %p %p:MPI_Cart_shift(%C, direction=%d, displ=%d, source=%p, dest=%p) failed
 **mpi_cart_sub:MPI_Cart_sub failed
@@ -1115,7 +1121,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_errhandler_free:MPI_Errhandler_free failed
 **mpi_errhandler_free %p:MPI_Errhandler_free(errhandler=%p) failed
 **mpi_error_string:MPI_Error_string failed
-**mpi_error_string %d %s %p:MPI_Error_string(errorcode=%d, string=%s, resultlen=%p) failed
+**mpi_error_string %d %p %p:MPI_Error_string(errorcode=%d, string=%p, resultlen=%p) failed
 **mpi_error_class:MPI_Error_class failed
 **mpi_error_class %d %p:MPI_Error_class(errorcode=%d, errorclass=%p) failed
 **mpi_init:MPI_Init failed
@@ -1128,21 +1134,21 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_close_port:MPI_Close_port failed
 **mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
 **mpi_comm_accept:MPI_Comm_accept failed
-**mpi_comm_accept %s %I %d %C %p:MPI_Comm_accept(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
+**mpi_comm_accept %s %I %i %C %p:MPI_Comm_accept(port=\"%s\", %I, root=%i, %C, newcomm=%p) failed
 **mpi_comm_connect:MPI_Comm_connect failed
-**mpi_comm_connect %s %I %d %C %p:MPI_Comm_connect(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
+**mpi_comm_connect %s %I %i %C %p:MPI_Comm_connect(port=\"%s\", %I, root=%i, %C, newcomm=%p) failed
 **mpi_comm_disconnect:MPI_Comm_disconnect failed
-**mpi_comm_disconnect %C:MPI_Comm_disconnect(comm=%C) failed
+**mpi_comm_disconnect %p:MPI_Comm_disconnect(comm=%p) failed
 **mpi_comm_get_parent:MPI_Comm_get_parent failed
 **mpi_comm_get_parent %p:MPI_Comm_get_parent(comm=%p) failed
 **mpi_comm_join:MPI_Comm_join failed
 **mpi_comm_join %d %p:MPI_Comm_join(fd=%d, intercomm=%p) failed
 **mpi_comm_spawn:MPI_Comm_spawn failed
-**mpi_comm_spawn %s %p %d %I %d %C %p %p:MPI_Comm_spawn(cmd=\"%s\", argv=%p, maxprocs=%d, %I, root=%d, %C, intercomm=%p, errors=%p) failed
+**mpi_comm_spawn %s %p %d %I %i %C %p %p:MPI_Comm_spawn(cmd=\"%s\", argv=%p, maxprocs=%d, %I, root=%i, %C, intercomm=%p, errors=%p) failed
 **mpi_comm_spawn_multiple:MPI_Comm_spawn_multiple failed
-**mpi_comm_spawn_multiple %d %p %p %p %p %d %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%d, %C, intercomm=%p, errors=%p) failed
+**mpi_comm_spawn_multiple %d %p %p %p %p %i %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%i, %C, intercomm=%p, errors=%p) failed
 **mpi_lookup_name:MPI_Lookup_name failed
-**mpi_lookup_name %s %I:MPI_Lookup_name(service=\"%s\", %I) failed
+**mpi_lookup_name %s %I %p:MPI_Lookup_name(service=\"%s\", %I, port_name=%p) failed
 **mpi_open_port:MPI_Open_port failed
 **mpi_open_port %I %p:MPI_Open_port(%I, port=%p) failed
 **mpi_publish_name:MPI_Publish_name failed
@@ -1150,19 +1156,19 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_unpublish_name:MPI_Unpublish_name failed
 **mpi_unpublish_name %s %I %s:MPI_Unpublish_name(service=\"%s\", %I, port=\"%s\") failed
 **mpi_accumulate:MPI_Accumulate failed
-**mpi_accumulate %p %d %D %d %d %d %D %O %W:MPI_Accumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
+**mpi_accumulate %p %d %D %d %L %d %D %O %W:MPI_Accumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %O, %W) failed
 **mpi_get:MPI_Get failed
-**mpi_get %p %d %D %d %d %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
+**mpi_get %p %d %D %d %L %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W) failed
 **mpi_put:MPI_Put failed
-**mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
+**mpi_put %p %d %D %d %L %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W) failed
 **mpi_win_allocate_shared:MPI_Win_allocate_shared failed
-**mpi_win_allocate_shared %d %I %C %p %p:MPI_Win_allocate_shared(size=%d, %I, %C, baseptr=%p, win=%p) failed
+**mpi_win_allocate_shared %L %d %I %C %p %p:MPI_Win_allocate_shared(size=%L, disp_unit=%d, %I, %C, baseptr=%p, win=%p) failed
 **mpi_win_shared_query:MPI_Win_shared_query failed
-**mpi_win_shared_query %W %d %p %p:MPI_Win_shared_query(win=%W, rank=%d, size=%p, baseptr=%p) failed
+**mpi_win_shared_query %W %d %p %p %p:MPI_Win_shared_query(win=%W, rank=%d, size=%p, disp_unit=%p, baseptr=%p) failed
 **mpi_win_complete:MPI_Win_complete failed
 **mpi_win_complete %W:MPI_Win_complete(%W) failed
 **mpi_win_create:MPI_Win_create failed
-**mpi_win_create %p %d %d %I %C %p:MPI_Win_create(base=%p, size=%d, disp_unit=%d, %I, %C, win=%p) failed
+**mpi_win_create %p %L %d %I %C %p:MPI_Win_create(base=%p, size=%L, disp_unit=%d, %I, %C, win=%p) failed
 **mpi_win_fence:MPI_Win_fence failed
 **mpi_win_fence %A %W:MPI_Win_fence(%A, %W) failed
 **mpi_win_free:MPI_Win_free failed
@@ -1202,15 +1208,15 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_create_keyval:MPI_Comm_create_keyval failed
 **mpi_comm_create_keyval %p %p %p %p:MPI_Comm_create_keyval(comm_copy_attr_fn=%p, comm_delete_attr_fn=%p, comm_keyval=%p, extra_state=%p) failed
 **mpi_comm_delete_attr:MPI_Comm_delete_attr failed
-**mpi_comm_delete_attr %C %d:MPI_Comm_delete_attr(%C, comm_keyval=%d) failed
+**mpi_comm_delete_attr %C %K:MPI_Comm_delete_attr(%C, comm_keyval=%K) failed
 **mpi_comm_free_keyval:MPI_Comm_free_keyval failed
 **mpi_comm_free_keyval %p:MPI_Comm_free_keyval(comm_keyval=%p) failed
 **mpi_comm_get_attr:MPI_Comm_get_attr failed
-**mpi_comm_get_attr %C %d %p %p:MPI_Comm_get_attr(%C, comm_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpi_comm_get_attr %C %K %p %p:MPI_Comm_get_attr(%C, comm_keyval=%K, attribute_val=%p, flag=%p) failed
 **mpi_comm_get_name:MPI_Comm_get_name failed
 **mpi_comm_get_name %C %p %p:MPI_Comm_get_name(%C, comm_name=%p, resultlen=%p) failed
 **mpi_comm_set_attr:MPI_Comm_set_attr failed
-**mpi_comm_set_attr %C %d %p:MPI_Comm_set_attr(%C, comm_keyval=%d, attribute_val=%p) failed
+**mpi_comm_set_attr %C %K %p:MPI_Comm_set_attr(%C, comm_keyval=%K, attribute_val=%p) failed
 **mpi_comm_set_name:MPI_Comm_set_name failed
 **mpi_comm_set_name %C %s:MPI_Comm_set_name(%C, comm_name=%s) failed
 **mpi_file_call_errhandler:MPI_File_call_errhandler failed
@@ -1219,8 +1225,12 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_grequest_complete %R:MPI_Grequest_complete(%R) failed
 **mpi_grequest_start:MPI_Grequest_start failed
 **mpi_grequest_start %p %p %p %p %p:MPI_Grequest_start(query_fn=%p, free_fn=%p, cancel_fn=%p, extra_state=%p, request=%p) failed
+**mpix_grequest_start:MPIX_Grequest_start failed
+**mpix_grequest_start %p %p %p %p %p %p %p:MPIX_Grequest_start(query_fn=%p, free_fn=%p, cancel_fn=%p, poll_fn=%p, wait_fn=%p, extra_state=%p, request=%p) failed
 **mpix_grequest_class_create: MPIX_Grequest_class_create failed
-**mpix_grequest_class_create %p %p %p %p %p:MPIX_Grequest_class_create(query_fn=%p, free_fn=%p, cancel_fn=%p, %poll_fn=%p, wait_fn=%p) failed
+**mpix_grequest_class_create %p %p %p %p %p %p:MPIX_Grequest_class_create(query_fn=%p, free_fn=%p, cancel_fn=%p, %poll_fn=%p, wait_fn=%p, greq_class=%p) failed
+**mpix_grequest_class_allocate:MPIX_Grequest_class_allocate failed
+**mpix_grequest_class_allocate %x %p %p:MPIX_Grequest_class_allocate(greq_class=%x, extra_state=%p, request=%p) failed
 **mpi_init_thread:MPI_Init_thread failed
 **mpi_init_thread %p %p %d %p:MPI_Init_thread(argc_p=%p, argv_p=%p, required=%d, provided=%p)
 **mpi_is_thread_main:MPI_Is_thread_main failed
@@ -1234,21 +1244,23 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_create_keyval:MPI_Type_create_keyval failed
 **mpi_type_create_keyval %p %p %p %p:MPI_Type_create_keyval(type_copy_attr_fn=%p, type_delete_attr_fn=%p, type_keyval=%p, extra_state=%p) failed
 **mpi_type_delete_attr:MPI_Type_delete_attr failed
-**mpi_type_delete_attr %D %d:MPI_Type_delete_attr(%D, type_keyval=%d) failed
+**mpi_type_delete_attr %D %K:MPI_Type_delete_attr(%D, type_keyval=%K) failed
 **mpi_type_dup:MPI_Type_dup failed
 **mpi_type_dup %D %p:MPI_Type_dup(%D, newtype=%p) failed
 **mpi_type_free_keyval:MPI_Type_free_keyval failed
 **mpi_type_free_keyval %p:MPI_Type_free_keyval(type_keyval=%p) failed
 **mpi_type_get_attr:MPI_Type_get_attr failed
-**mpi_type_get_attr %D %d %p %p:MPI_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpi_type_get_attr %D %K %p %p:MPI_Type_get_attr(%D, type_keyval=%K, attribute_val=%p, flag=%p) failed
 **mpi_type_get_contents:MPI_Type_get_contents failed
 **mpi_type_get_contents %D %d %d %d %p %p %p:MPI_Type_get_contents(%D, max_integers=%d, max_addresses=%d, max_datatypes=%d, array_of_integers=%p, array_of_addresses=%p, array_of_datatypes=%p) failed
+**mpi_type_get_contents_c:MPI_Type_get_contents failed
+**mpi_type_get_contents_c %D %d %d %d %d %p %p %p %p:MPI_Type_get_contents(%D, max_integers=%d, max_addresses=%d, max_large_counts=%d, max_datatypes=%d, array_of_integers=%p, array_of_addresses=%p, array_of_large_counts=%p, array_of_datatypes=%p) failed
 **mpi_type_get_envelope:MPI_Type_get_envelope failed
 **mpi_type_get_envelope %D %p %p %p %p:MPI_Type_get_envelope(%D, num_integers=%p, num_addresses=%p, num_datatypes=%p, combiner=%p) failed
 **mpi_type_get_name:MPI_Type_get_name failed
 **mpi_type_get_name %D %p %p:MPI_Type_get_name(%D, type_name=%p, resultlen=%p) failed
 **mpi_type_set_attr:MPI_Type_set_attr failed
-**mpi_type_set_attr %D %d %p:MPI_Type_set_attr(%D, type_keyval=%d, attribute_val=%p) failed
+**mpi_type_set_attr %D %K %p:MPI_Type_set_attr(%D, type_keyval=%K, attribute_val=%p) failed
 **mpi_type_set_name:MPI_Type_set_name failed
 **mpi_type_set_name %D %s:MPI_Type_set_name(%D, type_name=%s) failed
 **mpi_type_match_size:MPI_Type_match_size failed
@@ -1258,19 +1270,19 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_win_create_keyval:MPI_Win_create_keyval failed
 **mpi_win_create_keyval %p %p %p %p:MPI_Win_create_keyval(win_copy_attr_fn=%p, win_delete_attr_fn=%p, win_keyval=%p, extra_state=%p) failed
 **mpi_win_delete_attr:MPI_Win_delete_attr failed
-**mpi_win_delete_attr %W %d:MPI_Win_delete_attr(%W, win_keyval=%d) failed
+**mpi_win_delete_attr %W %K:MPI_Win_delete_attr(%W, win_keyval=%K) failed
 **mpi_win_free_keyval:MPI_Win_free_keyval failed
 **mpi_win_free_keyval %p:MPI_Win_free_keyval(win_keyval=%p) failed
 **mpi_win_get_attr:MPI_Win_get_attr failed
-**mpi_win_get_attr %W %d %p %p:MPI_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpi_win_get_attr %W %K %p %p:MPI_Win_get_attr(%W, win_keyval=%K, attribute_val=%p, flag=%p) failed
 **mpi_win_get_name:MPI_Win_get_name failed
 **mpi_win_get_name %W %p %p:MPI_Win_get_name(%W, win_name=%p, resultlen=%p) failed
 **mpi_win_set_attr:MPI_Win_set_attr failed
-**mpi_win_set_attr %W %d %p:MPI_Win_set_attr(%W, win_keyval=%d, attribute_val=%p) failed
+**mpi_win_set_attr %W %K %p:MPI_Win_set_attr(%W, win_keyval=%K, attribute_val=%p) failed
 **mpi_win_set_name:MPI_Win_set_name failed
 **mpi_win_set_name %W %s:MPI_Win_set_name(%W, win_name=%s) failed
 **mpi_alloc_mem:MPI_Alloc_mem failed
-**mpi_alloc_mem %d %I %p:MPI_Alloc_mem(size=%d, %I, baseptr=%p) failed
+**mpi_alloc_mem %L %I %p:MPI_Alloc_mem(size=%d, %I, baseptr=%p) failed
 **mpi_comm_create_errhandler:MPI_Comm_create_errhandler failed
 **mpi_comm_create_errhandler %p %p:MPI_Comm_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_comm_get_errhandler:MPI_Comm_get_errhandler failed
@@ -1278,9 +1290,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_set_errhandler:MPI_Comm_set_errhandler failed
 **mpi_comm_set_errhandler %C %E:MPI_Comm_set_errhandler(%C, %E) failed
 **mpi_comm_get_info:MPI_Comm_get_info failed
-**mpi_comm_get_info %W %p:MPI_Comm_get_info(comm=%C, info_used=%p) failed
+**mpi_comm_get_info %C %p:MPI_Comm_get_info(comm=%C, info_used=%p) failed
 **mpi_comm_set_info:MPI_Comm_set_info failed
-**mpi_comm_set_info %W %p:MPI_Comm_set_info(comm=%C, info=%p) failed
+**mpi_comm_set_info %C %I:MPI_Comm_set_info(comm=%C, info=%I) failed
 **mpi_file_create_errhandler:MPI_File_create_errhandler failed
 **mpi_file_create_errhandler %p %p:MPI_File_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_file_get_errhandler:MPI_File_get_errhandler failed
@@ -1312,7 +1324,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_info_set:MPI_Info_set failed
 **mpi_info_set %I %s %s:MPI_Info_set(%I, key=%s, value=%s) failed
 **mpi_pack_external:MPI_Pack_external failed
-**mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
+**mpi_pack_external %s %p %d %D %p %L %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%L, position=%p) failed
 **mpi_pack_external_size:MPI_Pack_external_size failed
 **mpi_pack_external_size %s %d %D %p:MPI_Pack_external_size(datarep=%s, incount=%d, %D, size=%p) failed
 **mpi_request_get_status:MPI_Request_get_status failed
@@ -1322,7 +1334,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_create_hindexed:MPI_Type_create_hindexed failed
 **mpi_type_create_hindexed %d %p %p %D %p:MPI_Type_create_hindexed(count=%d, array_of_blocklengths=%p, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_hvector:MPI_Type_create_hvector failed
-**mpi_type_create_hvector %d %d %d %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%d, %D, newtype=%p) failed
+**mpi_type_create_hvector %d %d %L %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%L, %D, newtype=%p) failed
 **mpi_type_create_indexed_block:MPI_Type_create_indexed_block failed
 **mpi_type_create_indexed_block %d %d %p %D %p:MPI_Type_create_indexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_hindexed_block:MPI_Type_create_hindexed_block failed
@@ -1338,7 +1350,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_get_true_extent:MPI_Type_get_true_extent failed
 **mpi_type_get_true_extent %D %p %p:MPI_Type_get_true_extent(%D, lb=%p, true_extent=%p) failed
 **mpi_unpack_external:MPI_Unpack_external failed
-**mpi_unpack_external %s %p %d %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%d, position=%p, outbuf=%p, outcount=%d, %D) failed
+**mpi_unpack_external %s %p %L %p %p %d %D:MPI_Unpack_external(datarep=%s, inbuf=%p, insize=%L, position=%p, outbuf=%p, outcount=%d, %D) failed
 **mpi_win_create_errhandler:MPI_Win_create_errhandler failed
 **mpi_win_create_errhandler %p %p:MPI_Win_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_win_get_errhandler:MPI_Win_get_errhandler failed
@@ -1358,25 +1370,25 @@ is too big (> MPIU_SHMW_GHND_SZ)
 
 # MPI-3 RMA Errors
 **mpi_get_accumulate:MPI_Get_accumulate failed
-**mpi_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W:MPI_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
+**mpi_get_accumulate %p %d %D %p %d %D %d %L %d %D %O %W:MPI_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %O, %W) failed
 **mpi_fetch_and_op:MPI_Fetch_and_op failed
-**mpi_fetch_and_op %p %p %D %d %d %O %W:MPI_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %O, %W) failed
+**mpi_fetch_and_op %p %p %D %d %L %O %W:MPI_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%L, %O, %W) failed
 **mpi_compare_and_swap: MPI_Compare_and_swap failed
-**mpi_compare_and_swap %p %p %p %D %d %d %W:MPI_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %W) failed
+**mpi_compare_and_swap %p %p %p %D %d %L %W:MPI_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%L, %W) failed
 **mpi_raccumulate:MPI_Raccumulate failed
-**mpi_raccumulate %p %d %D %d %d %d %D %O %W %p:MPI_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, request=%p) failed
+**mpi_raccumulate %p %d %D %d %L %d %D %O %W %p:MPI_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %O, %W, request=%p) failed
 **mpi_rget:MPI_Rget failed
-**mpi_rget %p %d %D %d %d %d %D %W %p:MPI_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpi_rget %p %d %D %d %L %d %D %W %p:MPI_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W, request=%p) failed
 **mpi_rput:MPI_Rput failed
-**mpi_rput %p %d %D %d %d %d %D %W %p:MPI_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpi_rput %p %d %D %d %L %d %D %W %p:MPI_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %W, request=%p) failed
 **mpi_rget_accumulate:MPI_Rget_accumulate failed
-**mpi_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p:MPI_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, %p) failed
+**mpi_rget_accumulate %p %d %D %p %d %D %d %L %d %D %O %W %p:MPI_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%L, target_count=%d, %D, %O, %W, %p) failed
 **mpi_win_allocate:MPI_Win_allocate failed
-**mpi_win_allocate %d %d %I %C %p %p:MPI_Win_allocate(size=%d, disp_unit=%d, %I, %C, base=%p, win=%p) failed
+**mpi_win_allocate %L %d %I %C %p %p:MPI_Win_allocate(size=%L, disp_unit=%d, %I, %C, base=%p, win=%p) failed
 **mpi_win_create_dynamic:MPI_Win_create_dynamic failed
 **mpi_win_create_dynamic %I %C %p:MPI_Win_create_dynamic(%I, %C, win=%p) failed
 **mpi_win_attach:MPI_Win_attach failed
-**mpi_win_attach %W %p %d:MPI_Win_attach(%W, base=%p, size=%d) failed
+**mpi_win_attach %W %p %L:MPI_Win_attach(%W, base=%p, size=%L) failed
 **mpi_win_detach:MPI_Win_detach failed
 **mpi_win_detach %W %p:MPI_Win_detach(%W, base=%p) failed
 **mpi_win_lock_all:MPI_Win_lock_all failed
@@ -1398,15 +1410,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_win_set_info:MPI_Win_set_info failed
 **mpi_win_set_info %W %I:MPI_Win_set_info(win=%W, info=%I) failed
 
-# MPIR functions
-
-**mpir_comm_get_attr:MPIR_Comm_get_attr failed
-**mpir_comm_get_attr %C %d %p %p:MPIR_Comm_get_attr(%C, comm_keyval=%d, attribute_val=%p, flag=%p) failed
-**mpir_type_get_attr:MPIR_Type_get_attr failed
-**mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
-**mpir_wingetattr:MPII_Win_get_attr failed
-**mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
-
 ## MPI-3 Mprobe routines
 **mpi_improbe: MPI_Improbe failed
 **mpi_improbe %i %t %C %p %p %p: MPI_Improbe(source=%i, tag=%t, comm=%C, flag=%p, message=%p, status=%p)
@@ -1427,15 +1430,15 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_ibarrier: MPI_Ibarrier failed
 **mpi_ibarrier %C %p: MPI_Ibarrier(comm=%C, request=%p)
 **mpi_ibcast: MPI_Ibcast failed
-**mpi_ibcast %p %d %D %C %p: MPI_Ibcast(buffer=%p, count=%d, datatype=%D, comm=%C, request=%p)
+**mpi_ibcast %p %d %D %i %C %p: MPI_Ibcast(buffer=%p, count=%d, datatype=%D, root=%i, comm=%C, request=%p)
 **mpi_igather: MPI_Igather failed
-**mpi_igather %p %d %D %p %d %D %d %C %p: MPI_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpi_igather %p %d %D %p %d %D %i %C %p: MPI_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%i, comm=%C, request=%p)
 **mpi_igatherv: MPI_Igatherv failed
-**mpi_igatherv %p %d %D %p %p %p %D %d %C %p: MPI_Igatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpi_igatherv %p %d %D %p %p %p %D %i %C %p: MPI_Igatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, root=%i, comm=%C, request=%p)
 **mpi_iscatter: MPI_Iscatter failed
-**mpi_iscatter %p %d %D %p %d %D %d %C %p: MPI_Iscatter(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpi_iscatter %p %d %D %p %d %D %i %C %p: MPI_Iscatter(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%i, comm=%C, request=%p)
 **mpi_iscatterv: MPI_Iscatterv failed
-**mpi_iscatterv %p %p %p %D %p %d %D %d %C %p: MPI_Iscatterv(sendbuf=%p, sendcounts=%p, displs=%p, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpi_iscatterv %p %p %p %D %p %d %D %i %C %p: MPI_Iscatterv(sendbuf=%p, sendcounts=%p, displs=%p, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%i, comm=%C, request=%p)
 **mpi_iallgather: MPI_Iallgather failed
 **mpi_iallgather %p %d %D %p %d %D %C %p: MPI_Iallgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
 **mpi_iallgatherv: MPI_Iallgatherv failed
@@ -1447,7 +1450,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_ialltoallw: MPI_Ialltoallw failed
 **mpi_ialltoallw %p %p %p %p %p %p %p %p %C %p: MPI_Ialltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
 **mpi_ireduce: MPI_Ireduce failed
-**mpi_ireduce %p %p %d %D %O %d %C %p: MPI_Ireduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C, request=%p)
+**mpi_ireduce %p %p %d %D %O %i %C %p: MPI_Ireduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, root=%i, comm=%C, request=%p)
 **mpi_iallreduce: MPI_Iallreduce failed
 **mpi_iallreduce %p %p %d %D %O %C %p: MPI_Iallreduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
 **mpi_ireduce_scatter: MPI_Ireduce_scatter failed

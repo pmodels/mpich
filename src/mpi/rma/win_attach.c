@@ -133,7 +133,7 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_attach", "**mpi_win_attach %W %p %d", size, base, win);
+                                 "**mpi_win_attach", "**mpi_win_attach %W %p %L", size, base, win);
     }
 #endif
     mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);

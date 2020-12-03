@@ -203,7 +203,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_gather", "**mpi_gather %p %d %D %p %d %D %d %C", sendbuf,
+                                 "**mpi_gather", "**mpi_gather %p %d %D %p %d %D %i %C", sendbuf,
                                  sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm);
     }
 #endif

@@ -90,7 +90,7 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_win_set_attr", "**mpi_win_set_attr %W %d %p", win,
+                                 "**mpi_win_set_attr", "**mpi_win_set_attr %W %K %p", win,
                                  win_keyval, attribute_val);
     }
 #endif

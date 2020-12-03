@@ -223,7 +223,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_scatterv", "**mpi_scatterv %p %p %p %D %p %d %D %d %C",
+                                 "**mpi_scatterv", "**mpi_scatterv %p %p %p %D %p %d %D %i %C",
                                  sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
                                  recvtype, root, comm);
     }

@@ -165,7 +165,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
-                                 "**mpi_fetch_and_op", "**mpi_fetch_and_op %p %p %D %d %d %O %W",
+                                 "**mpi_fetch_and_op", "**mpi_fetch_and_op %p %p %D %d %L %O %W",
                                  origin_addr, result_addr, datatype, target_rank, target_disp, op,
                                  win);
     }

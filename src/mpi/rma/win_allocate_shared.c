@@ -156,7 +156,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_allocate_shared",
-                                 "**mpi_win_allocate_shared %d %I %C %p %p", size, info, comm,
+                                 "**mpi_win_allocate_shared %L %d %I %C %p %p", size, info, comm,
                                  baseptr, win);
     }
 #endif

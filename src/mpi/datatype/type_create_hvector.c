@@ -118,7 +118,7 @@ int MPI_Type_create_hvector(int count,
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**mpi_type_create_hvector",
-                                         "**mpi_type_create_hvector %d %d %d %D %p", count,
+                                         "**mpi_type_create_hvector %d %d %L %D %p", count,
                                          blocklength, stride, oldtype, newtype);
     }
 #endif
