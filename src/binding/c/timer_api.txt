@@ -1,0 +1,60 @@
+# vim: set ft=c:
+
+MPI_Wtick:
+    .desc: Returns the resolution of MPI_Wtime
+    .impl: direct
+    .skip: ThreadSafe, Fortran
+    .seealso: MPI_Wtick, MPI_Comm_get_attr, MPI_Attr_get
+/*
+  Return value:
+  Time in seconds since an arbitrary time in the past.
+
+  Notes:
+  This is intended to be a high-resolution, elapsed (or wall) clock.
+  See 'MPI_WTICK' to determine the resolution of 'MPI_WTIME'.
+  If the attribute 'MPI_WTIME_IS_GLOBAL' is defined and true, then the
+  value is synchronized across all processes in 'MPI_COMM_WORLD'.
+
+  Notes for Fortran:
+  This is a function, declared as 'DOUBLE PRECISION MPI_WTIME()' in Fortran.
+*/
+{
+    double tick;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTICK);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTICK);
+    MPL_wtick(&tick);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTICK);
+
+    return tick;
+}
+
+MPI_Wtime:
+    .desc: Returns an elapsed time on the calling processor
+    .skip: ThreadSafe, Fortran
+    .seealso: MPI_Wtime, MPI_Comm_get_attr, MPI_Attr_get
+    .impl: direct
+/*
+  Return value:
+  Time in seconds of resolution of MPI_Wtime
+
+  Notes for Fortran:
+  This is a function, declared as 'DOUBLE PRECISION MPI_WTICK()' in Fortran.
+
+*/
+{
+    double d;
+    MPL_time_t t;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTIME);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTIME);
+    MPL_wtime(&t);
+    MPL_wtime_todouble(&t, &d);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTIME);
+
+    return d;
+}
