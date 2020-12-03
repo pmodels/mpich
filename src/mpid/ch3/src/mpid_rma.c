@@ -225,7 +225,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     MPIR_ERR_CHKANDJUMP1(!(*win_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
                          "**nomem %s", "MPIR_Win_mem");
 
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIR_Object_set_ref(*win_ptr, 1);

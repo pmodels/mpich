@@ -958,8 +958,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_group_translate_ranks %G %d %p %G %p:MPI_Group_translate_ranks(%G, n=%d, ranks1=%p, %G, ranks2=%p) failed
 **mpi_group_compare:MPI_Group_compare failed
 **mpi_group_compare %G %G %p:MPI_Group_compare(%G, %G, result=%p) failed
-**mpi_comm_group:MPI_Comm_group failed
-**mpi_comm_group %C %p:MPI_Comm_group(%C, group=%p) failed
 **mpi_group_union:MPI_Group_union failed
 **mpi_group_union %G %G %p:MPI_Group_union(%G, %G, new_group=%p) failed
 **mpi_group_intersection:MPI_Group_intersection failed
@@ -976,46 +974,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_group_range_excl %G %d %p %p:MPI_Group_range_excl(%G, n=%d, ranges=%p, new_group=%p) failed
 **mpi_group_free:MPI_Group_free failed
 **mpi_group_free %p:MPI_Group_free(group=%p) failed
-**mpi_comm_size:MPI_Comm_size failed
-**mpi_comm_size %C %p:MPI_Comm_size(%C, size=%p) failed
-**mpi_comm_rank:MPI_Comm_rank failed
-**mpi_comm_rank %C %p:MPI_Comm_rank(%C, rank=%p) failed
-**mpi_comm_compare:MPI_Comm_compare failed
-**mpi_comm_compare %C %C %p:MPI_Comm_compare(%C, %C, result=%p) failed
-**mpi_comm_dup:MPI_Comm_dup failed
-**mpi_comm_dup %C %p:MPI_Comm_dup(%C, new_comm=%p) failed
-**mpi_comm_dup_with_info:MPI_Comm_dup_with_info failed
-**mpi_comm_dup_with_info %C %I %p:MPI_Comm_dup(%C, %I, new_comm=%p) failed
-**mpi_comm_create:MPI_Comm_create failed
-**mpi_comm_create %C %G %p:MPI_Comm_create(%C, %G, new_comm=%p) failed
-**mpi_comm_create_group:MPI_Comm_create_group failed
-**mpi_comm_create_group %C %G %d %p:MPI_Comm_create_group(%C, %G, %d, new_comm=%p) failed
-**mpi_comm_split:MPI_Comm_split failed
-**mpi_comm_split %C %d %d %p:MPI_Comm_split(%C, color=%d, key=%d, new_comm=%p) failed
-**mpi_comm_free:MPI_Comm_free failed
-**mpi_comm_free %p:MPI_Comm_free(comm=%p) failed
-**mpi_comm_test_inter:MPI_Comm_test_inter failed
-**mpi_comm_test_inter %C %p:MPI_Comm_test_inter(%C, flag=%p) failed
-**mpi_comm_remote_size:MPI_Comm_remote_size failed
-**mpi_comm_remote_size %C %p:MPI_Comm_remote_size(%C, size=%p) failed
-**mpi_comm_remote_group:MPI_Comm_remote_group failed
-**mpi_comm_remote_group %C %p:MPI_Comm_remote_group(%C, group=%p) failed
-**mpix_comm_failure_ack:MPIX_Comm_failure_ack failed
-**mpix_comm_failure_ack %C:MPIX_Comm_failure_ack(%C) failed
-**mpix_comm_failure_get_acked:MPIX_Comm_failure_get_acked failed
-**mpix_comm_failure_get_acked %C %p:MPIX_Comm_failure_get_acked(%C, group=%p) failed
-**mpix_comm_revoke:MPIX_Comm_revoke failed
-**mpix_comm_revoke %C:MPIX_Comm_revoke(%C) failed
-**mpix_comm_shrink:MPIX_Comm_shrink failed
-**mpix_comm_shrink %C %p:MPIX_Comm_shrink(%C, new_comm=%p) failed
-**mpix_comm_agree:MPIX_Comm_agree failed
-**mpix_comm_agree %C:MPIX_Comm_agree(%C) failed
 **badgputype:Bad GPU type specified
 **badgputype %d:Bad GPU type (%d) specified
-**mpi_intercomm_create:MPI_Intercomm_create failed
-**mpi_intercomm_create %C %d %C %d %d %p:MPI_Intercomm_create(%C, local_leader=%d, %C, remote_leader=%d, tag=%d, newintercomm=%p) failed
-**mpi_intercomm_merge:MPI_Intercomm_merge failed
-**mpi_intercomm_merge %C %d %p:MPI_Intercomm_merge(%C, high=%d, newintracomm=%p) failed
 **mpi_keyval_create:MPI_Keyval_create failed
 **mpi_keyval_create %p %p %p %p:MPI_Keyval_create(copy_fn=%p, del_fn=%p, keyval=%p, extra=%p) failed
 **mpi_keyval_free:MPI_Keyval_free failed
@@ -1157,10 +1117,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_delete_error_string %d:MPI_Delete_error_string(code=%d) failed
 **mpi_comm_call_errhandler:MPI_Comm_call_errhandler failed
 **mpi_comm_call_errhandler %C %d:MPI_Comm_call_errhandler(%C, errorcode=%d) failed
-**mpi_comm_get_name:MPI_Comm_get_name failed
-**mpi_comm_get_name %C %p %p:MPI_Comm_get_name(%C, comm_name=%p, resultlen=%p) failed
-**mpi_comm_set_name:MPI_Comm_set_name failed
-**mpi_comm_set_name %C %s:MPI_Comm_set_name(%C, comm_name=%s) failed
 **mpi_file_call_errhandler:MPI_File_call_errhandler failed
 **mpi_file_call_errhandler %F %d:MPI_File_call_errhandler(%F, errorcode=%d) failed
 **mpi_grequest_complete:MPI_Grequest_complete failed
@@ -1205,10 +1161,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_get_errhandler %C %p:MPI_Comm_get_errhandler(%C, errhandler=%p) failed
 **mpi_comm_set_errhandler:MPI_Comm_set_errhandler failed
 **mpi_comm_set_errhandler %C %E:MPI_Comm_set_errhandler(%C, %E) failed
-**mpi_comm_get_info:MPI_Comm_get_info failed
-**mpi_comm_get_info %W %p:MPI_Comm_get_info(comm=%C, info_used=%p) failed
-**mpi_comm_set_info:MPI_Comm_set_info failed
-**mpi_comm_set_info %W %p:MPI_Comm_set_info(comm=%C, info=%p) failed
 **mpi_file_create_errhandler:MPI_File_create_errhandler failed
 **mpi_file_create_errhandler %p %p:MPI_File_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_file_get_errhandler:MPI_File_get_errhandler failed
@@ -1334,12 +1286,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpir_wingetattr:MPII_Win_get_attr failed
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
-
-## MPI-3 nonblocking comm dup
-**mpi_comm_idup: MPI_Comm_idup failed
-**mpi_comm_idup %C %p %p: MPI_Comm_idup(comm=%C, newcomm=%p, request=%p)
-**mpi_comm_idup_with_info: MPI_Comm_idup failed
-**mpi_comm_idup_with_info %C %I %p %p: MPI_Comm_idup(comm=%C, info=%I, newcomm=%p, request=%p)
 
 ## MPI-3 nonblocking collectives
 **mpi_ibarrier: MPI_Ibarrier failed
