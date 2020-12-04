@@ -1384,7 +1384,7 @@ function MPIR_Add_error_string_c(errorcode, string) &
 end function MPIR_Add_error_string_c
 
 function MPIR_Delete_error_class_c(errorclass) &
-    bind(C, name="PMPIX_Delete_error_class") result(ierror)
+    bind(C, name="PMPI_Delete_error_class") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     implicit none
     integer(c_int), intent(in) :: errorclass
@@ -1392,7 +1392,7 @@ function MPIR_Delete_error_class_c(errorclass) &
 end function MPIR_Delete_error_class_c
 
 function MPIR_Delete_error_code_c(errorcode) &
-    bind(C, name="PMPIX_Delete_error_code") result(ierror)
+    bind(C, name="PMPI_Delete_error_code") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
     implicit none
@@ -1401,7 +1401,7 @@ function MPIR_Delete_error_code_c(errorcode) &
 end function MPIR_Delete_error_code_c
 
 function MPIR_Delete_error_string_c(errorcode) &
-    bind(C, name="PMPIX_Delete_error_string") result(ierror)
+    bind(C, name="PMPI_Delete_error_string") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
     implicit none

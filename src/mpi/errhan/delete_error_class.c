@@ -6,29 +6,29 @@
 #include "mpiimpl.h"
 #include "errcodes.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Delete_error_class */
+/* -- Begin Profiling Symbol Block for routine MPI_Delete_error_class */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Delete_error_class = PMPIX_Delete_error_class
+#pragma weak MPI_Delete_error_class = PMPI_Delete_error_class
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Delete_error_class  MPIX_Delete_error_class
+#pragma _HP_SECONDARY_DEF PMPI_Delete_error_class  MPI_Delete_error_class
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Delete_error_class as PMPIX_Delete_error_class
+#pragma _CRI duplicate MPI_Delete_error_class as PMPI_Delete_error_class
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Delete_error_class(int errorclass)
-    __attribute__ ((weak, alias("PMPIX_Delete_error_class")));
+int MPI_Delete_error_class(int errorclass)
+    __attribute__ ((weak, alias("PMPI_Delete_error_class")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Delete_error_class
-#define MPIX_Delete_error_class PMPIX_Delete_error_class
+#undef MPI_Delete_error_class
+#define MPI_Delete_error_class PMPI_Delete_error_class
 
 #endif
 
 /*@
-   MPIX_Delete_error_class - Delete an MPI error class to the known classes
+   MPI_Delete_error_class - Delete an MPI error class to the known classes
 
 Output Parameters:
 .  errorclass - New error class
@@ -41,7 +41,7 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPIX_Delete_error_class(int errorclass)
+int MPI_Delete_error_class(int errorclass)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DELETE_ERROR_CLASS);
