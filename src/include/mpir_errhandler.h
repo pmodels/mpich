@@ -90,6 +90,4 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
         }                                                                 \
     } while (0)
 
-void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr);
-
 #endif /* MPIR_ERRHANDLER_H_INCLUDED */

@@ -4,7 +4,6 @@
  */
 
 #include "mpiimpl.h"
-#include "errcodes.h"
 #include "uthash.h"
 #include <string.h>
 
@@ -289,7 +288,12 @@ int MPIR_Err_add_class(void)
      * a string.  */
     user_class_msgs[new_class] = 0;
 
-    return (new_class | ERROR_DYN_MASK);
+    new_class |= ERROR_DYN_MASK;
+    if (new_class > MPIR_Process.attrs.lastusedcode) {
+        MPIR_Process.attrs.lastusedcode = new_class;
+    }
+
+    return new_class;
 }
 
 /*

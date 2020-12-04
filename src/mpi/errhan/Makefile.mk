@@ -3,40 +3,13 @@
 ##     See COPYRIGHT in top-level directory
 ##
 
-mpi_sources +=                                            \
-    src/mpi/errhan/add_error_code.c         \
-    src/mpi/errhan/add_error_class.c        \
-    src/mpi/errhan/add_error_string.c       \
-    src/mpi/errhan/delete_error_code.c      \
-    src/mpi/errhan/delete_error_class.c     \
-    src/mpi/errhan/delete_error_string.c    \
-    src/mpi/errhan/comm_call_errhandler.c   \
-    src/mpi/errhan/comm_create_errhandler.c \
-    src/mpi/errhan/comm_get_errhandler.c    \
-    src/mpi/errhan/comm_set_errhandler.c    \
-    src/mpi/errhan/errhandler_create.c      \
-    src/mpi/errhan/errhandler_free.c        \
-    src/mpi/errhan/errhandler_get.c         \
-    src/mpi/errhan/errhandler_set.c         \
-    src/mpi/errhan/error_class.c            \
-    src/mpi/errhan/error_string.c           \
-    src/mpi/errhan/file_create_errhandler.c \
-    src/mpi/errhan/file_get_errhandler.c    \
-    src/mpi/errhan/file_set_errhandler.c    \
-    src/mpi/errhan/file_call_errhandler.c   \
-    src/mpi/errhan/win_create_errhandler.c  \
-    src/mpi/errhan/win_call_errhandler.c    \
-    src/mpi/errhan/win_get_errhandler.c     \
-    src/mpi/errhan/win_set_errhandler.c
-
 mpi_core_sources +=             \
     src/mpi/errhan/errhan_impl.c \
     src/mpi/errhan/errutil.c    \
     src/mpi/errhan/dynerrutil.c
 
 noinst_HEADERS +=             \
-    src/mpi/errhan/defmsg.h   \
-    src/mpi/errhan/errcodes.h
+    src/mpi/errhan/defmsg.h
 
 errnames_txt_files += src/mpi/errhan/errnames.txt
 

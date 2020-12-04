@@ -3,8 +3,8 @@
  *     See COPYRIGHT in top-level directory
  */
 
-#ifndef ERRCODES_H_INCLUDED
-#define ERRCODES_H_INCLUDED
+#ifndef MPIR_ERRCODES_H_INCLUDED
+#define MPIR_ERRCODES_H_INCLUDED
 
 /* Prototypes for internal routines for the errhandling module */
 int MPIR_Err_set_msg(int, const char *);
@@ -64,4 +64,4 @@ int MPIR_Err_delete_code(int code);
 /* These must correspond to the masks defined above */
 #define ERROR_MAX_NCLASS ERROR_CLASS_SIZE
 #define ERROR_MAX_NCODE  8192
-#endif /* ERRCODES_H_INCLUDED */
+#endif /* MPIR_ERRCODES_H_INCLUDED */

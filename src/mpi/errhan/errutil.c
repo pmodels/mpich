@@ -16,11 +16,9 @@
    is used in only a few places, here and potentially in ROMIO) */
 #define USE_ERR_CODE_VALIST
 
-/* errcodes.h contains the macros used to access fields within an error
+/* mpir_errcodes.h contains the macros used to access fields within an error
    code and a description of the bits in an error code.  A brief
    version of that description is included below */
-
-#include "errcodes.h"
 
 /* defmsg is generated automatically from the source files and contains
    all of the error messages, both the generic and specific.  Depending
@@ -151,11 +149,6 @@ MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
     MPIR_ERRHANDLER_PREALLOC,
     NULL
 };
-
-void MPIR_Errhandler_free(MPIR_Errhandler * errhan_ptr)
-{
-    MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
-}
 
 void MPIR_Err_init(void)
 {
