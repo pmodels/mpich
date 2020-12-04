@@ -77,48 +77,4 @@ int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
 
 #define MAX_CART_DIM 16
 
-/* topology impl functions */
-int MPIR_Cart_create_impl(MPIR_Comm *, int, const int[], const int[], int, MPIR_Comm **);
-int MPIR_Cart_map_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                       const int periods[], int *newrank);
-int MPIR_Cart_shift_impl(MPIR_Comm * comm_ptr, int direction, int displ, int *source, int *dest);
-
-int MPIR_Cart_rank_impl(MPIR_Comm * comm_ptr, const int *coords, int *rank);
-int MPIR_Cart_create_impl(MPIR_Comm * comm_ptr, int ndims, const int dims[],
-                          const int periods[], int reorder, MPI_Comm * comm_cart);
-int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[]);
-
-int MPIR_Graph_create_impl(MPIR_Comm *, int, const int[], const int[], int, MPIR_Comm **);
-int MPIR_Graph_map_impl(MPIR_Comm * comm_ptr, int nnodes,
-                        const int indx[], const int edges[], int *newrank);
-int MPIR_Graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int rank, int *nneighbors);
-int MPIR_Graph_neighbors_impl(MPIR_Comm * comm_ptr, int rank, int maxneighbors, int *neighbors);
-
-int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, int *outdegree,
-                                         int *weighted);
-int MPIR_Dist_graph_neighbors_impl(MPIR_Comm * comm_ptr, int maxindegree, int sources[],
-                                   int sourceweights[], int maxoutdegree, int destinations[],
-                                   int destweights[]);
-
-int MPIR_Cart_coords_impl(MPIR_Comm * comm_ptr, int rank, int maxdims, int coords[]);
-int MPIR_Cart_get_impl(MPIR_Comm * comm_ptr, int maxdims, int dims[], int periods[], int coords[]);
-int MPIR_Cart_sub_impl(MPIR_Comm * comm_ptr, const int remain_dims[], MPIR_Comm ** newcomm);
-int MPIR_Graph_get_impl(MPIR_Comm * comm_ptr, int maxindex, int maxedges, int indx[], int edges[]);
-
-int MPIR_Cartdim_get_impl(MPIR_Comm * comm_ptr, int *ndims);
-int MPIR_Graphdims_get_impl(MPIR_Comm * comm_ptr, int *nnodes, int *nedges);
-int MPIR_Topo_test_impl(MPIR_Comm * comm_ptr, int *status);
-
-int MPIR_Dist_graph_create_impl(MPIR_Comm * comm_ptr,
-                                int n, const int sources[], const int degrees[],
-                                const int destinations[], const int weights[],
-                                MPIR_Info * info_ptr, int reorder,
-                                MPIR_Comm ** p_comm_dist_graph_ptr);
-int MPIR_Dist_graph_create_adjacent_impl(MPIR_Comm comm_ptr,
-                                         int indegree, const int sources[],
-                                         const int sourceweights[], int outdegree,
-                                         const int destinations[], const int destweights[],
-                                         MPIR_Info * info_ptr, int reorder,
-                                         MPIR_Comm ** p_comm_dist_graph);
-
 #endif /* MPIR_TOPO_H_INCLUDED */
