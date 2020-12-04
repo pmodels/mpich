@@ -6,29 +6,29 @@
 #include "mpiimpl.h"
 #include "errcodes.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Delete_error_code */
+/* -- Begin Profiling Symbol Block for routine MPI_Delete_error_code */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Delete_error_code = PMPIX_Delete_error_code
+#pragma weak MPI_Delete_error_code = PMPI_Delete_error_code
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Delete_error_code  MPIX_Delete_error_code
+#pragma _HP_SECONDARY_DEF PMPI_Delete_error_code  MPI_Delete_error_code
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Delete_error_code as PMPIX_Delete_error_code
+#pragma _CRI duplicate MPI_Delete_error_code as PMPI_Delete_error_code
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Delete_error_code(int errorcode)
-    __attribute__ ((weak, alias("PMPIX_Delete_error_code")));
+int MPI_Delete_error_code(int errorcode)
+    __attribute__ ((weak, alias("PMPI_Delete_error_code")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Delete_error_code
-#define MPIX_Delete_error_code PMPIX_Delete_error_code
+#undef MPI_Delete_error_code
+#define MPI_Delete_error_code PMPI_Delete_error_code
 
 #endif
 
 /*@
-   MPIX_Delete_error_code - Delete an MPI error code
+   MPI_Delete_error_code - Delete an MPI error code
 
 Input Parameters:
 .  errorcode - Error code to be deleted.
@@ -41,7 +41,7 @@ Input Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPIX_Delete_error_code(int errorcode)
+int MPI_Delete_error_code(int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DELETE_ERROR_CODE);

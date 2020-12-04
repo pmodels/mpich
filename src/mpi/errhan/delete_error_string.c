@@ -6,36 +6,36 @@
 #include "mpiimpl.h"
 #include "errcodes.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Delete_error_string */
+/* -- Begin Profiling Symbol Block for routine MPI_Delete_error_string */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Delete_error_string = PMPIX_Delete_error_string
+#pragma weak MPI_Delete_error_string = PMPI_Delete_error_string
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Delete_error_string  MPIX_Delete_error_string
+#pragma _HP_SECONDARY_DEF PMPI_Delete_error_string  MPI_Delete_error_string
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Delete_error_string as PMPIX_Delete_error_string
+#pragma _CRI duplicate MPI_Delete_error_string as PMPI_Delete_error_string
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Delete_error_string(int errorcode)
-    __attribute__ ((weak, alias("PMPIX_Delete_error_string")));
+int MPI_Delete_error_string(int errorcode)
+    __attribute__ ((weak, alias("PMPI_Delete_error_string")));
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Delete_error_string
-#define MPIX_Delete_error_string PMPIX_Delete_error_string
+#undef MPI_Delete_error_string
+#define MPI_Delete_error_string PMPI_Delete_error_string
 
 #endif
 
 /*@
-   MPIX_Delete_error_string - Delete the error string associated with an MPI error code or
+   MPI_Delete_error_string - Delete the error string associated with an MPI error code or
    class
 
 Input Parameters:
 + errorcode - error code or class (integer)
 
    Notes:
-According to the MPI-2 standard, it is erroneous to call 'MPIX_Delete_error_string'
+According to the MPI-2 standard, it is erroneous to call 'MPI_Delete_error_string'
 for an error code or class with a value less than or equal
 to 'MPI_ERR_LASTCODE'.  Thus, you cannot replace the predefined error messages
 with this routine.
@@ -47,7 +47,7 @@ with this routine.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPIX_Delete_error_string(int errorcode)
+int MPI_Delete_error_string(int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DELETE_ERROR_STRING);

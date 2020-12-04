@@ -3,7 +3,7 @@
 !     See COPYRIGHT in top-level directory
 !
 
-subroutine MPIX_Delete_error_class_f08(errorclass, ierror)
+subroutine MPI_Delete_error_class_f08(errorclass, ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : MPIR_Delete_error_class_c
 
@@ -24,4 +24,4 @@ subroutine MPIX_Delete_error_class_f08(errorclass, ierror)
 
     if (present(ierror)) ierror = ierror_c
 
-end subroutine MPIX_Delete_error_class_f08
+end subroutine MPI_Delete_error_class_f08
