@@ -13,7 +13,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_idup_with_info as PMPIX_Comm_idup_with_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Comm * newcomm, MPI_Request * request)
+int MPIX_Comm_idup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm,
+                             MPI_Request * request)
     __attribute__ ((weak, alias("PMPIX_Comm_idup_with_info")));
 #endif
 /* -- End Profiling Symbol Block */
