@@ -994,12 +994,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
 **mpi_graph_map:MPI_Graph_map failed
 **mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
-**mpi_get_processor_name:MPI_Get_processor_name failed
-**mpi_get_processor_name %p %p:MPI_Get_processor_name(name=%p, resultlen=%p) failed
-**mpi_get_version:MPI_Get_version failed
-**mpi_get_version %p %p:MPI_Get_version(version=%p, subversion=%p) failed
-**mpi_get_library_version:MPI_Get_library_version failed
-**mpi_get_library_version %p %p:MPI_Get_library_version(version=%p, resultlen=%p) failed
 **mpi_errhandler_create:MPI_Errhandler_create failed
 **mpi_errhandler_create %p %p:MPI_Errhandler_create(function=%p, errhandler=%p) failed
 **mpi_errhandler_set:MPI_Errhandler_set failed

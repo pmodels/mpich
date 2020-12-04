@@ -1,0 +1,200 @@
+# vim: set ft=c:
+
+MPI_Aint_add:
+    .desc: Returns the sum of base and disp
+    .skip: ThreadSafe, Fortran, validate-ANY
+    .seealso: MPI_Aint_diff
+    .impl: direct
+/*
+    Notes:
+    MPI_Aint_Add produces a new MPI_Aint value that is equivalent to the sum of the
+    base and disp arguments, where base represents a base address returned by a call
+    to MPI_GET_ADDRESS and disp represents a signed integer displacement. The resulting
+    address is valid only at the process that generated base, and it must correspond
+    to a location in the same object referenced by base. The addition is performed in
+    a manner that results in the correct MPI_Aint representation of the output address,
+    as if the process that originally produced base had called\:
+    .vb
+        MPI_Get_address((char *) base + disp, &result)
+    .ve
+*/
+{
+    MPI_Aint result;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_AINT_ADD);
+    result = MPID_Aint_add(base, disp);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_AINT_ADD);
+
+    return result;
+}
+
+MPI_Aint_diff:
+    .desc: Returns the difference between addr1 and addr2
+    .skip: ThreadSafe, Fortran, validate-ANY
+    .seealso: MPI_Aint_add
+    .impl: direct
+/*
+    Notes:
+    MPI_Aint_diff produces a new MPI_Aint value that is equivalent to the difference
+    between addr1 and addr2 arguments, where addr1 and addr2 represent addresses
+    returned by calls to MPI_GET_ADDRESS. The resulting address is valid only at the
+    process that generated addr1 and addr2, and addr1 and addr2 must correspond to
+    locations in the same object in the same process. The difference is calculated
+    in a manner that results the signed difference from addr1 to addr2, as if the
+    process that originally produced the addresses had called
+    .vb
+        (char *) addr1 - (char *) addr2
+    .ve
+    on the addresses initially passed to MPI_GET_ADDRESS.
+*/
+{
+    MPI_Aint result;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_AINT_ADD);
+    result = MPID_Aint_diff(addr1, addr2);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_AINT_ADD);
+
+    return result;
+}
+
+MPI_Get_processor_name:
+    .desc: Gets the name of the processor
+    .skip: ThreadSafe, Fortran
+/*
+    .N ThreadSafe
+
+    .N Fortran
+
+     In Fortran, the character argument should be declared as a character string
+     of 'MPI_MAX_PROCESSOR_NAME' rather than an array of dimension
+     'MPI_MAX_PROCESSOR_NAME'.  That is,
+    .vb
+       character*(MPI_MAX_PROCESSOR_NAME) name
+    .ve
+     rather than
+    .vb
+       character name(MPI_MAX_PROCESSOR_NAME)
+    .ve
+     The two
+*/
+{
+    mpi_errno = MPID_Get_processor_name(name, MPI_MAX_PROCESSOR_NAME, resultlen);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+}
+
+MPI_Get_library_version:
+    .desc: Return the version number of MPI library
+    .skip: initcheck
+    .docnotes: SignalSafe
+{
+    int printed_len;
+    printed_len = MPL_snprintf(version, MPI_MAX_LIBRARY_VERSION_STRING,
+                               "MPICH Version:\t%s\n"
+                               "MPICH Release date:\t%s\n"
+                               "MPICH ABI:\t%s\n"
+                               "MPICH Device:\t%s\n"
+                               "MPICH configure:\t%s\n"
+                               "MPICH CC:\t%s\n"
+                               "MPICH CXX:\t%s\n"
+                               "MPICH F77:\t%s\n"
+                               "MPICH FC:\t%s\n",
+                               MPII_Version_string, MPII_Version_date, MPII_Version_ABI,
+                               MPII_Version_device, MPII_Version_configure, MPII_Version_CC,
+                               MPII_Version_CXX, MPII_Version_F77, MPII_Version_FC);
+    if (strlen(MPII_Version_custom) > 0)
+        MPL_snprintf(version + printed_len, MPI_MAX_LIBRARY_VERSION_STRING - printed_len,
+                     "MPICH Custom Information:\t%s\n", MPII_Version_custom);
+
+    *resultlen = (int) strlen(version);
+}
+
+MPI_Pcontrol:
+    .desc: Controls profiling
+    .skip: ThreadSafe, validate-PROFILE_LEVEL, validate-VARARGS
+    .impl: direct
+{
+    int mpi_errno = MPI_SUCCESS;
+    va_list list;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PCONTROL);
+
+    MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PCONTROL);
+
+    /* ... body of routine ...  */
+
+    /* This is a dummy routine that does nothing.  It is intended for
+     * use by the user (or a tool) with the profiling interface */
+    /* We include a reference to va_start and va_end to (a) quiet some
+     * compilers that warn when they are not present and (b) show how to
+     * access any optional arguments */
+    va_start(list, level);
+    va_end(list);
+
+    /* ... end of body of routine ... */
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PCONTROL);
+    return mpi_errno;
+    /* There should never be any fn_fail case; this suppresses warnings from
+     * compilers that object to unused labels */
+}
+
+MPI_Get_version:
+    .desc: Return the version number of MPI
+    .skip: ThreadSafe, initcheck
+/*
+    .N SignalSafe
+*/
+{
+    *version = MPI_VERSION;
+    *subversion = MPI_SUBVERSION;
+}
+
+MPIX_GPU_query_support:
+    gpu_type: GPU_TYPE, [MPIX_GPU_SUPPORT_CUDA or MPIX_GPU_SUPPORT_ZE]
+    is_supported: LOGICAL, direction=out, [true if gpu of given type is supported, false otherwise.]
+    .desc: Returns whether the specific type of GPU is supported
+    .skip: validate-GPU_TYPE
+    .docnotes: SignalSafe
+{
+    *is_supported = 0;
+    if (MPIR_CVAR_ENABLE_GPU) {
+        MPL_gpu_type_t type;
+        MPL_gpu_query_support(&type);
+
+        switch (gpu_type) {
+            case MPIX_GPU_SUPPORT_CUDA:
+                if (type == MPL_GPU_TYPE_CUDA)
+                    *is_supported = 1;
+                break;
+
+            case MPIX_GPU_SUPPORT_ZE:
+                if (type == MPL_GPU_TYPE_ZE)
+                    *is_supported = 1;
+                break;
+
+            default:
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**badgputype");
+        }
+    }
+}
+
+MPIX_Query_cuda_support:
+    .desc: Returns whether CUDA is supported
+    .impl: direct
+    .docnotes: SignalSafe
+{
+    int is_supported = 0;
+    int mpi_errno;
+
+    mpi_errno = PMPIX_GPU_query_support(MPIX_GPU_SUPPORT_CUDA, &is_supported);
+    assert(mpi_errno);
+
+    return is_supported;
+}
