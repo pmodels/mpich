@@ -1,0 +1,141 @@
+# vim: set ft=c:
+
+MPI_Cart_coords:
+    .desc: Determines process coords in cartesian topology given rank in group
+    .extra: SignalSafe, ignore_revoke
+{ -- error_check -- coords
+    if (maxdims > 0) {
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+}
+
+MPI_Cart_create:
+    .desc: Makes a new communicator to which topology information has been attached
+    .extra: errtest_comm_intra
+
+MPI_Cart_get:
+    .desc: Retrieves Cartesian topology information associated with a communicator
+    .extra: ignore_revoke
+{ -- error_check -- dims, periods, coords
+    if (maxdims > 0) {
+        MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(periods, "periods", mpi_errno);
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+}
+
+MPI_Cart_map:
+    .desc: Maps process to Cartesian topology information
+    .extra: SignalSafe, ignore_revoke
+
+MPI_Cart_rank:
+    .desc: Determines process rank in communicator given Cartesian location
+    .extra: SignalSafe, ignore_revoke
+/*
+    Notes:
+     Out-of-range coordinates are erroneous for non-periodic dimensions.
+     Versions of MPICH before 1.2.2 returned 'MPI_PROC_NULL' for the rank in this
+     case.
+*/
+{ -- error_check --
+    MPIR_Topology *cart_ptr = MPIR_Topology_get(comm_ptr);
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART),
+                        mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    int ndims = cart_ptr->topo.cart.ndims;
+    if (ndims != 0) {
+        MPIR_ERRTEST_ARGNULL(coords, "coords", mpi_errno);
+    }
+    for (int i = 0; i < ndims; i++) {
+        if (!cart_ptr->topo.cart.periodic[i]) {
+            int coord = coords[i];
+            MPIR_ERR_CHKANDJUMP3((coord < 0 || coord >= cart_ptr->topo.cart.dims[i]),
+                                  mpi_errno, MPI_ERR_ARG, "**cartcoordinvalid",
+                                  "**cartcoordinvalid %d %d %d", i, coords[i],
+                                  cart_ptr->topo.cart.dims[i] - 1);
+        }
+    }
+}
+
+MPI_Cart_shift:
+    .desc: Returns the shifted source and destination ranks, given a shift direction and amount
+    .extra: SignalSafe, ignore_revoke
+/*
+    Notes:
+    The 'direction' argument is in the range '[0,n-1]' for an n-dimensional
+    Cartesian mesh.
+*/
+{ -- error_check -- disp
+}
+
+MPI_Cart_sub:
+    .desc: Partitions a communicator into subgroups which form lower-dimensional cartesian subgrids
+
+MPI_Cartdim_get:
+    .desc: Retrieves Cartesian topology information associated with a communicator
+    .extra: SignalSafe, ignore_revoke
+
+MPI_Dims_create:
+    .desc: Creates a division of processors in a cartesian grid
+
+MPI_Dist_graph_create:
+    .desc: MPI_DIST_GRAPH_CREATE returns a handle to a new communicator to which the distributed graph topology information is attached
+    .extra: errtest_comm_intra
+
+MPI_Dist_graph_create_adjacent:
+    .desc: returns a handle to a new communicator to which the distributed graph topology information is attached
+    .skip: validate-DEGREE
+    .extra: errtest_comm_intra
+
+MPI_Dist_graph_neighbors:
+    .desc: Provides adjacency information for a distributed graph topology
+
+MPI_Dist_graph_neighbors_count:
+    .desc: Provides adjacency information for a distributed graph topology
+    .extra: ignore_revoke
+
+MPI_Graph_get:
+    .desc: Retrieves graph topology information associated with a communicator
+    .extra: SignalSafe, ignore_revoke
+
+MPI_Graph_map:
+    .desc: Maps process to graph topology information
+    .extra: SignalSafe
+{ -- early_return --
+    MPIR_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes, mpi_errno, MPI_ERR_ARG, "**graphnnodes");
+}
+
+MPI_Graph_neighbors:
+    .desc: Returns the neighbors of a node associated
+    .extra: SignalSafe
+
+MPI_Graph_create:
+    .desc: Makes a new communicator to which topology information
+    .extra: errtest_comm_intra
+/*
+    Notes:
+    Each process must provide a description of the entire graph, not just the
+    neigbors of the calling process.
+    
+    Algorithm:
+    We ignore the 'reorder' info currently.
+*/
+{ -- early_return --
+    /* Test for empty communicator */
+    if (nnodes == 0) {
+        *comm_graph = MPI_COMM_NULL;
+        goto fn_exit;
+    }
+}
+
+MPI_Graphdims_get:
+    .desc: Retrieves graph topology information associated with a communicator
+    .extra: SignalSafe, ignore_revoke
+
+MPI_Graph_neighbors_count:
+    .desc: Returns the number of neighbors of a node
+    .extra: SignalSafe, ignore_revoke
+
+MPI_Topo_test:
+    .desc: Determines the type of topology (if any) associated with a communicator
+    .extra: SignalSafe, ignore_revoke
+    .seealso: MPI_Graph_create, MPI_Cart_create
