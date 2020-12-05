@@ -595,6 +595,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     } else {
         /* ntimes=ceiling_div(end_loc - st_loc + 1, coll_bufsize) */
         ntimes = (int) ((end_loc - st_loc + coll_bufsize) / coll_bufsize);
+        agg_buf = (char *) ADIOI_Malloc(coll_bufsize);
     }
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
@@ -810,6 +811,9 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, m, buftype_extent, buf_idx);
     ADIOI_Free(curr_offlen_ptr);
+    if ((st_loc != -1) || (end_loc != -1)) {
+        ADIOI_Free(agg_buf);
+    }
 }
 
 static void ADIOI_TAM_Pack(char* buf, int* send_size, int* partial_send, ADIOI_Access * others_req, int *count, int *start_pos, int i) {
