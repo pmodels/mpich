@@ -970,30 +970,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
 **mpi_graph_map:MPI_Graph_map failed
 **mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
-**mpi_close_port:MPI_Close_port failed
-**mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
-**mpi_comm_accept:MPI_Comm_accept failed
-**mpi_comm_accept %s %I %d %C %p:MPI_Comm_accept(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
-**mpi_comm_connect:MPI_Comm_connect failed
-**mpi_comm_connect %s %I %d %C %p:MPI_Comm_connect(port=\"%s\", %I, root=%d, %C, newcomm=%p) failed
-**mpi_comm_disconnect:MPI_Comm_disconnect failed
-**mpi_comm_disconnect %C:MPI_Comm_disconnect(comm=%C) failed
-**mpi_comm_get_parent:MPI_Comm_get_parent failed
-**mpi_comm_get_parent %p:MPI_Comm_get_parent(comm=%p) failed
-**mpi_comm_join:MPI_Comm_join failed
-**mpi_comm_join %d %p:MPI_Comm_join(fd=%d, intercomm=%p) failed
-**mpi_comm_spawn:MPI_Comm_spawn failed
-**mpi_comm_spawn %s %p %d %I %d %C %p %p:MPI_Comm_spawn(cmd=\"%s\", argv=%p, maxprocs=%d, %I, root=%d, %C, intercomm=%p, errors=%p) failed
-**mpi_comm_spawn_multiple:MPI_Comm_spawn_multiple failed
-**mpi_comm_spawn_multiple %d %p %p %p %p %d %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%d, %C, intercomm=%p, errors=%p) failed
-**mpi_lookup_name:MPI_Lookup_name failed
-**mpi_lookup_name %s %I:MPI_Lookup_name(service=\"%s\", %I) failed
-**mpi_open_port:MPI_Open_port failed
-**mpi_open_port %I %p:MPI_Open_port(%I, port=%p) failed
-**mpi_publish_name:MPI_Publish_name failed
-**mpi_publish_name %s %I %s:MPI_Publish_name(service=\"%s\", %I, port=\"%s\") failed
-**mpi_unpublish_name:MPI_Unpublish_name failed
-**mpi_unpublish_name %s %I %s:MPI_Unpublish_name(service=\"%s\", %I, port=\"%s\") failed
 **mpi_alltoallw:MPI_Alltoallw failed
 **mpi_alltoallw %p %p %p %p %p %p %p %p %C:MPI_Alltoallw(sbuf=%p, scnts=%p, sdispls=%p, stypes=%p, rbuf=%p, rcnts=%p, rdispls=%p, rtypes=%p, %C) failed
 **mpi_exscan:MPI_Exscan failed
