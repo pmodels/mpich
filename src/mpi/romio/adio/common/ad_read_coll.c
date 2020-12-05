@@ -36,6 +36,19 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                   ADIOI_Access * others_req,
                                   int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx);
+static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int coll_bufsize, ADIOI_Flatlist_node
+                                  * flat_buf, ADIO_Offset * offset_list, ADIO_Offset
+                                  * len_list, int *send_size, int *recv_size,
+                                  int *count, int *start_pos,
+                                  int *partial_send,
+                                  int *recd_from_proc, int nprocs,
+                                  int myrank, int
+                                  buftype_is_contig, int contig_access_count,
+                                  ADIO_Offset min_st_offset,
+                                  ADIO_Offset fd_size,
+                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
+                                  ADIOI_Access * others_req,
+                                  int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx);
 void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **recv_buf, ADIO_Offset
                             * offset_list, ADIO_Offset * len_list,
@@ -46,6 +59,21 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             ADIO_Offset min_st_offset,
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, MPI_Aint buftype_extent);
+
+void ADIOI_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
+                       int contig_access_count, ADIO_Offset
+                       min_st_offset, ADIO_Offset * fd_start,
+                       ADIO_Offset * fd_end, ADIO_Offset fd_size,
+                       int nprocs,
+                       int *count_my_req_procs_ptr,
+                       int **count_my_req_per_proc_ptr,
+                       ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
+
+void ADIOI_TAM_Calc_others_req(ADIO_File fd, int count_my_req_procs,
+                           int *count_my_req_per_proc,
+                           ADIOI_Access * my_req,
+                           int nprocs, int myrank,
+                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
 
 #ifdef LUSTRE_RD_LOCK_AHEAD
 /* There is no ad_lustre_rdcoll.c, so stub in some basic common code here
