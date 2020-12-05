@@ -1762,7 +1762,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                error_code, segmentFirstFileOffset,
                                                segmentLastFileOffset, currentValidDataIndex,
                                                segment_stripe_start, segment_stripe_end,
-                                               &holeFoundThisRound, stripeParms);
+                                               &holeFoundThisRound, &stripeParms);
                 /* numNonZeroDataOffsets is not used in ADIOI_OneSidedWriteAggregation()? */
             } else {
                 ADIOI_OneSidedWriteAggregation(fd,
@@ -1774,7 +1774,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                                segmentFirstFileOffset, segmentLastFileOffset,
                                                currentValidDataIndex, segment_stripe_start,
                                                segment_stripe_end, &holeFoundThisRound,
-                                               stripeParms);
+                                               &stripeParms);
             }
 
             if (stripeParms.flushCB) {
