@@ -216,6 +216,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_put(const void *origin_addr,
         goto null_op_exit;
     }
 
+    /* determine preferred physical NIC number for the rank */
+    MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, rma_pref_phy_nic_put_bytes_count[nics[0].id], target_bytes);
+
     /* prepare remote addr and mr key.
      * Continue native path only when all segments are in the same registered memory region */
     bool target_mr_found;
@@ -400,6 +404,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_get(void *origin_addr,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
         goto null_op_exit;
     }
+
+    /* determine preferred physical NIC number for the rank */
+    MPIDI_OFI_nic_info_t *nics = MPIDI_OFI_global.nic_info;
+    MPIR_T_PVAR_COUNTER_INC(MULTINIC, rma_pref_phy_nic_get_bytes_count[nics[0].id], target_bytes);
 
     /* prepare remote addr and mr key.
      * Continue native path only when all segments are in the same registered memory region */

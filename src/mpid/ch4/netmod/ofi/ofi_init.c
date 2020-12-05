@@ -474,6 +474,23 @@ static int ofi_pvar_init(void)
                                                MPIR_T_PVAR_FLAG_SUM), "CH4",
                                               "number of striped bytes received through a particular NIC");
 
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              rma_pref_phy_nic_put_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of bytes sent through preferred physical NIC using RMA");
+
+    MPIR_T_PVAR_COUNTER_ARRAY_REGISTER_STATIC(MULTINIC,
+                                              MPI_UNSIGNED_LONG_LONG,
+                                              rma_pref_phy_nic_get_bytes_count,
+                                              MPI_T_VERBOSITY_USER_DETAIL,
+                                              MPI_T_BIND_NO_OBJECT,
+                                              (MPIR_T_PVAR_FLAG_READONLY |
+                                               MPIR_T_PVAR_FLAG_SUM), "CH4",
+                                              "number of bytes received through preferred physical NIC using RMA");
     return mpi_errno;
 }
 
