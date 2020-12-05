@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 1997-2001 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -487,19 +486,14 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 
     j = 0;
     for (i = 0; i < nprocs; i++) {
-        if (others_req[i].count == 0)
-            continue;
-        if (i == myrank)
-            /* send to self uses memcpy()C, here others_req[i].count == my_req[i].count */
-            memcpy(others_req[i].offsets, my_req[i].offsets,
-                   2 * my_req[i].count * sizeof(ADIO_Offset));
-        else
+        if (others_req[i].count) {
             MPI_Irecv(others_req[i].offsets, 2 * others_req[i].count,
                       ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
+        }
     }
 
     for (i = 0; i < nprocs; i++) {
-        if (my_req[i].count && i != myrank) {
+        if (my_req[i].count) {
             MPI_Isend(my_req[i].offsets, 2 * my_req[i].count,
                       ADIO_OFFSET, i, i + myrank, fd->comm, &requests[j++]);
         }
@@ -1171,8 +1165,6 @@ void ADIOI_Icalc_others_req_main(ADIOI_NBC_Request * nbc_req, int *error_code)
         nbc_req->data.wr.state = ADIOI_IWC_STATE_ICALC_OTHERS_REQ_MAIN;
     }
 }
-
-
 
 void ADIOI_Icalc_others_req_fini(ADIOI_NBC_Request * nbc_req, int *error_code)
 {
