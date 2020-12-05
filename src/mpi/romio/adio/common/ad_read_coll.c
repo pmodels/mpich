@@ -268,7 +268,8 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * let's free the memory
      */
     ADIOI_Free(count_my_req_per_proc);
-    ADIOI_Free(my_req[0].offsets);
+    //ADIOI_Free(my_req[0].offsets);
+    ADIOI_Free(fd->my_req_buf);
     ADIOI_Free(my_req);
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
