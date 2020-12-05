@@ -85,11 +85,6 @@ int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
 int MPIR_Cancel(MPIR_Request * request_ptr);
 
-int MPIR_Comm_join(int fd, MPI_Comm * intercomm);
-int MPIR_Comm_disconnect(MPIR_Comm * comm_ptr);
-int MPIR_Publish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
-int MPIR_Unpublish_name(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
-
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);
 int MPIR_Finalize_async_thread(void);
