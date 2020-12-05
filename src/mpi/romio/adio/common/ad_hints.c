@@ -1,6 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ *
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
  */
 
 #include "adio.h"
@@ -32,13 +34,8 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     }
     ad_get_env_vars(fd);
 
-    if (fd->info == MPI_INFO_NULL) {
-        if (users_info == MPI_INFO_NULL)
-            MPI_Info_create(&(fd->info));
-        else
-            /* duplicate users_info to preserve hints not used in ROMIO */
-            MPI_Info_dup(users_info, &(fd->info));
-    }
+    if (fd->info == MPI_INFO_NULL)
+        MPI_Info_create(&(fd->info));
     info = fd->info;
 
     MPI_Comm_size(fd->comm, &nprocs);
@@ -122,6 +119,8 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->ds_read = ADIOI_HINT_AUTO;
         ADIOI_Info_set(info, "romio_ds_write", "automatic");
         fd->hints->ds_write = ADIOI_HINT_AUTO;
+        ADIOI_Info_set(info, "romio_ds_wr_lb", ADIOI_DS_WR_LB_DFLT);
+        fd->hints->ds_wr_lb = atoi(ADIOI_DS_WR_LB_DFLT);
 
         /* still to do: tune this a bit for a variety of file systems. there's
          * no good default value so just leave it unset */
@@ -207,6 +206,8 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                              &(fd->hints->ds_read), myname, error_code);
         ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_ds_write",
                                              &(fd->hints->ds_write), myname, error_code);
+        ADIOI_Info_check_and_install_int(fd, users_info, "romio_ds_wr_lb",
+                                         &(fd->hints->ds_wr_lb), myname, error_code);
 
         if (ok_to_override_cb_nodes) {
             /* MPI_File_open path sets up some data structrues that don't
