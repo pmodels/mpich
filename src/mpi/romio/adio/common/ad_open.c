@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -10,9 +8,6 @@
 #include "adio_cb_config_list.h"
 
 #include "mpio.h"
-
-#define ROMIO_TOTAL_LOCAL_AGGREGATOR_DEFAULT 512
-
 static int is_aggregator(int rank, ADIO_File fd);
 static int uses_generic_read(ADIO_File fd);
 static int uses_generic_write(ADIO_File fd);
@@ -562,6 +557,7 @@ ADIO_File ADIO_Open(MPI_Comm orig_comm,
     MPI_Info dupinfo;
     int syshints_processed, can_skip;
     char *p;
+
     int *process_node_list, i, nrecvs;
     char key_val[MPI_MAX_INFO_VAL + 1];
 
@@ -641,14 +637,13 @@ ADIO_File ADIO_Open(MPI_Comm orig_comm,
     else
         syshints_processed = 1;
 
-    gather_node_information(rank, procs, &nrecvs, &process_node_list, fd->comm, orig_comm);
-
     MPI_Allreduce(&syshints_processed, &can_skip, 1, MPI_INT, MPI_MIN, fd->comm);
     if (!can_skip) {
         if (ADIOI_syshints == MPI_INFO_NULL)
             MPI_Info_create(&ADIOI_syshints);
         ADIOI_process_system_hints(fd, ADIOI_syshints);
     }
+
     /* The number of physical node is used to determine cb_nodes for lustre case */
     MPL_snprintf(key_val, MPI_MAX_INFO_VAL + 1, "%d", nrecvs);
     ADIOI_Info_set(ADIOI_syshints, "number_of_nodes", key_val);
@@ -663,9 +658,7 @@ ADIO_File ADIO_Open(MPI_Comm orig_comm,
     if (p!=NULL){
         ADIOI_Info_set(ADIOI_syshints, "cb_config_list", p);
     }
-    /* For Lustre hints related to global aggregators, we need to actually open the file before the colletive open function.
-     * We use the original access mode. If it does not work, we just forget about the hints. */
-    fd->access_mode = access_mode;
+
 
     ADIOI_incorporate_system_hints(info, ADIOI_syshints, &dupinfo);
     ADIO_SetInfo(fd, dupinfo, &err);
@@ -879,7 +872,3 @@ static int build_cb_config_list(ADIO_File fd,
     }
     return 0;
 }
-
-/*
- * vim: ts=8 sts=4 sw=4 noexpandtab
- */

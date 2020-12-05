@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -25,20 +23,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                                 min_st_offset, ADIO_Offset fd_size,
                                 ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                 MPI_Aint * buf_idx, int *error_code);
-static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int coll_bufsize, ADIOI_Flatlist_node
-                                  * flat_buf, ADIO_Offset * offset_list, ADIO_Offset
-                                  * len_list, int *send_size, int *recv_size,
-                                  int *count, int *start_pos,
-                                  int *partial_send,
-                                  int *recd_from_proc, int nprocs,
-                                  int myrank, int
-                                  buftype_is_contig, int contig_access_count,
-                                  ADIO_Offset min_st_offset,
-                                  ADIO_Offset fd_size,
-                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                  ADIOI_Access * others_req,
-                                  int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx);
-static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int coll_bufsize, ADIOI_Flatlist_node
+static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   * flat_buf, ADIO_Offset * offset_list, ADIO_Offset
                                   * len_list, int *send_size, int *recv_size,
                                   int *count, int *start_pos,
@@ -61,21 +46,6 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             ADIO_Offset min_st_offset,
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, MPI_Aint buftype_extent);
-
-void ADIOI_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * len_list,
-                       int contig_access_count, ADIO_Offset
-                       min_st_offset, ADIO_Offset * fd_start,
-                       ADIO_Offset * fd_end, ADIO_Offset fd_size,
-                       int nprocs,
-                       int *count_my_req_procs_ptr,
-                       int **count_my_req_per_proc_ptr,
-                       ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
-
-void ADIOI_TAM_Calc_others_req(ADIO_File fd, int count_my_req_procs,
-                           int *count_my_req_per_proc,
-                           ADIOI_Access * my_req,
-                           int nprocs, int myrank,
-                           int *count_others_req_procs_ptr, ADIOI_Access ** others_req_ptr);
 
 #ifdef LUSTRE_RD_LOCK_AHEAD
 /* There is no ad_lustre_rdcoll.c, so stub in some basic common code here
@@ -240,6 +210,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * buf_idx[] - array of locations into which data can be directly moved;
      *     this is only valid for contiguous buffer case
      */
+
 /*
     ADIOI_Calc_my_req(fd, offset_list, len_list, contig_access_count,
                       min_st_offset, fd_start, fd_end, fd_size,
@@ -269,8 +240,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * let's free the memory
      */
     ADIOI_Free(count_my_req_per_proc);
-    //ADIOI_Free(my_req[0].offsets);
-    ADIOI_Free(fd->my_req_buf);
+    ADIOI_Free(my_req[0].offsets);
     ADIOI_Free(my_req);
 
     /* read data in sizes of no more than ADIOI_Coll_bufsize,
@@ -291,7 +261,6 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Free(fd->other_req_mem);
     ADIOI_Free(fd->other_req_buf);
     ADIOI_Free(others_req);
-
 
     ADIOI_Free(buf_idx);
     ADIOI_Free(offset_list);
@@ -548,7 +517,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
     int i, j, m, ntimes, max_ntimes, buftype_is_contig;
     ADIO_Offset st_loc = -1, end_loc = -1, off, done, real_off, req_off;
-    char *read_buf = NULL, *tmp_buf, *agg_buf;
+    char *read_buf = NULL, *tmp_buf;
     int *curr_offlen_ptr, *count, *send_size, *recv_size;
     int *partial_send, *recd_from_proc, *start_pos;
     /* Not convinced end_loc-st_loc couldn't be > int, so make these offsets */
@@ -597,7 +566,6 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     } else {
         /* ntimes=ceiling_div(end_loc - st_loc + 1, coll_bufsize) */
         ntimes = (int) ((end_loc - st_loc + coll_bufsize) / coll_bufsize);
-        agg_buf = (char *) ADIOI_Malloc(coll_bufsize);
     }
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm);
@@ -758,7 +726,15 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
         }
 
         for_curr_iter = for_next_iter;
-
+/*
+        ADIOI_R_Exchange_data(fd, buf, flat_buf, offset_list, len_list,
+                              send_size, recv_size, count,
+                              start_pos, partial_send, recd_from_proc, nprocs,
+                              myrank,
+                              buftype_is_contig, contig_access_count,
+                              min_st_offset, fd_size, fd_start, fd_end,
+                              others_req, m, buftype_extent, buf_idx);
+*/
         ADIOI_TAM_R_Exchange_data(fd, buf, agg_buf, coll_bufsize, flat_buf, offset_list, len_list,
                               send_size, recv_size, count,
                               start_pos, partial_send, recd_from_proc, nprocs,
@@ -766,7 +742,6 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                               buftype_is_contig, contig_access_count,
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, m, buftype_extent, buf_idx);
-
 
         if (for_next_iter) {
             tmp_buf = (char *) ADIOI_Malloc(for_next_iter);
@@ -789,40 +764,23 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
         count[i] = send_size[i] = 0;
     for (m = ntimes; m < max_ntimes; m++)
 /* nothing to send, but check for recv. */
-        ADIOI_TAM_R_Exchange_data(fd, buf, agg_buf, coll_bufsize, flat_buf, offset_list, len_list,
+/*
+        ADIOI_R_Exchange_data(fd, buf, flat_buf, offset_list, len_list,
                               send_size, recv_size, count,
                               start_pos, partial_send, recd_from_proc, nprocs,
                               myrank,
                               buftype_is_contig, contig_access_count,
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, m, buftype_extent, buf_idx);
-
+*/
+        ADIOI_TAM_R_Exchange_data(fd, buf, flat_buf, offset_list, len_list,
+                              send_size, recv_size, count,
+                              start_pos, partial_send, recd_from_proc, nprocs,
+                              myrank,
+                              buftype_is_contig, contig_access_count,
+                              min_st_offset, fd_size, fd_start, fd_end,
+                              others_req, m, buftype_extent, buf_idx);
     ADIOI_Free(curr_offlen_ptr);
-    if ((st_loc != -1) || (end_loc != -1)) {
-        ADIOI_Free(agg_buf);
-    }
-}
-
-static void ADIOI_TAM_Pack(char* buf, int* send_size, int* partial_send, ADIOI_Access * others_req, int *count, int *start_pos, int i) {
-    int j, k;
-    char *from_ptr;
-    ADIO_Offset tmp;
-    if (send_size[i]) {
-        if (partial_send[i]) {
-            k = start_pos[i] + count[i] - 1;
-            tmp = others_req[i].lens[k];
-            others_req[i].lens[k] = partial_send[i];
-        }
-        for (j = 0; j < count[i]; j++) {
-            from_ptr =
-                (char *) ADIOI_AINT_CAST_TO_VOID_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
-            memcpy(buf, from_ptr, others_req[i].lens[start_pos[i] + j]);
-            buf += others_req[i].lens[start_pos[i] + j];
-        }
-        if (partial_send[i])
-            others_req[i].lens[k] = tmp;
-    }
-    return;
 }
 
 void ADIOI_TAM_Read_Kernel(ADIO_File fd, int myrank, char* read_contig_buf, char** recv_buf, char* recv_buf_start, int* send_size, int* recv_size, int nprocs_send, size_t recv_total_size, int sum_send, int coll_bufsize, int* partial_send, ADIOI_Access * others_req, int *count, int *start_pos) {
@@ -1305,8 +1263,7 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
 #endif
 }
 
-
-static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int coll_bufsize, ADIOI_Flatlist_node
+static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   * flat_buf, ADIO_Offset * offset_list, ADIO_Offset
                                   * len_list, int *send_size, int *recv_size,
                                   int *count, int *start_pos, int *partial_send,
@@ -1318,14 +1275,12 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int co
                                   ADIOI_Access * others_req,
                                   int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx)
 {
-    int i, j, k = 0, w, x, tmp = 0, nprocs_recv, nprocs_send;
-    int sum_send;
-    char **recv_buf = NULL, *contig_buf, *buf_ptr, *tmp_ptr, *recv_buf_start;
-    size_t memLen, recv_total_size;
-    MPI_Aint local_data_size;
-    /* Requests for TAM */
-    MPI_Request *req = fd->req;
-    MPI_Status *sts = fd->sts;
+    int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
+    char **recv_buf = NULL;
+    size_t memLen;
+    MPI_Request *requests;
+    MPI_Datatype send_type;
+    MPI_Status *statuses;
 
 /* exchange send_size info so that each process knows how much to
    receive from whom and how much memory to allocate. */
@@ -1335,364 +1290,52 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int co
     nprocs_recv = 0;
     nprocs_send = 0;
     memLen = 0;
-    sum_send = 0;
     for (i = 0; i < nprocs; i++) {
         memLen += recv_size[i];
-        if (recv_size[i]) {
+        if (recv_size[i])
             nprocs_recv++;
-        }
-        if (send_size[i]) {
+        if (send_size[i])
             nprocs_send++;
-            sum_send += send_size[i];
-        }
     }
-    sum_send -= send_size[myrank];
-    if (sum_send > coll_bufsize)
-        contig_buf = (char *) ADIOI_Malloc(sum_send);
-    else
-        contig_buf = agg_buf;
-
-    /* 0. This section first pack local send data into send_buf */
-    recv_total_size = 0;
-    /* Only global aggregators send data. The rest of recv_size entry must be zero. 
-     * cb_send_size is used in order to reduce the number of integer at intra-node aggregation. This is a terrible naming because we want to reuse the write variables. It should be cb_recv_size. */
-    for (i = 0; i < fd->hints->cb_nodes; ++i) {
-        recv_total_size += recv_size[fd->hints->ranklist[i]];
-        /* Skip self-send. */
-        if ( myrank != fd->hints->ranklist[i] ) {
-            fd->cb_send_size[i] = recv_size[fd->hints->ranklist[i]];
-        } else {
-            fd->cb_send_size[i] = 0;
-        }
-    }
-    if (nprocs_recv) {
-        recv_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
-        recv_buf_start = (char *) ADIOI_Malloc(memLen);
-
-        if (myrank != fd->hints->ranklist[0]) {
-            /* nprocs >=2 for this case, we are pretty safe to put recv_buf[myrank] into the end. */
-            recv_buf[fd->hints->ranklist[0]] = recv_buf_start;
-            buf_ptr = recv_buf[fd->hints->ranklist[0]] + recv_size[fd->hints->ranklist[0]];
-            for (i = 1; i < fd->hints->cb_nodes; ++i) {
-                if ( fd->hints->ranklist[i] != myrank ) {
-                    recv_buf[fd->hints->ranklist[i]] = buf_ptr;
-                    buf_ptr += recv_size[fd->hints->ranklist[i]];
-                }
-            }
-            recv_buf[myrank] = buf_ptr;
-        } else {
-           /* myrank == first global aggregator, but nprocs can be 1, need to be extra careful.
-            * We split into two cases. */
-            if (fd->hints->cb_nodes > 1) {
-                /* Must check if we have more than 1 global aggregator to enter this block*/
-                recv_buf[fd->hints->ranklist[1]] = recv_buf_start;
-                for ( i = 2; i < fd->hints->cb_nodes; ++i ) {
-                    recv_buf[fd->hints->ranklist[i]] = recv_buf[fd->hints->ranklist[i-1]] + recv_size[fd->hints->ranklist[i-1]];
-                }
-                recv_buf[fd->hints->ranklist[0]] = recv_buf[fd->hints->ranklist[fd->hints->cb_nodes - 1]] + recv_size[fd->hints->ranklist[fd->hints->cb_nodes - 1]];
-            } else {
-                /* I am the only rank 0, so I am the start of recv_buf_start */
-                recv_buf[myrank] = recv_buf_start;
-            }
-        }
-    }
-
-    /* Local message directly unpack, otherwise it has to go to a local aggregator then sent back, a waste of bandwidth */
-    if ( recv_size[myrank] ) {
-        if (partial_send[myrank]) {
-            k = start_pos[myrank] + count[myrank] - 1;
-            tmp = others_req[myrank].lens[k];
-            others_req[myrank].lens[k] = partial_send[myrank];
-        }
-
-        tmp_ptr = recv_buf[myrank];
-        for ( i = 0; i < count[myrank]; ++i ) {
-            memcpy(tmp_ptr, (char*)others_req[myrank].mem_ptrs[i + start_pos[myrank]], others_req[myrank].lens[i + start_pos[myrank]]);
-            tmp_ptr += others_req[myrank].lens[i + start_pos[myrank]];
-        }
-
-        if (partial_send[myrank])
-            others_req[myrank].lens[k] = tmp;
-    }
-
-    /* End of buffer preparation */
-    /* 1. Local aggregators receive the message size from non-local aggregators
-     * We do not want to gather the entire send_size array, since this would be each of length nprocs and does not scale as the number of processes increases.
-     * For example, 16K process would have 16K*16K*4B=1GB total data exchanged at this stage. Although this is intra-node aggregation, this is even more than most Lustre stripe size * stripe count, which can also cause a problem.
-     * send_size[i] must be 0 for i being non-global aggregators, so we only gather cb_nodes number of integers that indicate. 
-     * For example, 64 Lustre stripe count would have 16K * 64 * 4B = 4MB This is a much smaller number */
-    j = 0;
-    if (fd->is_local_aggregator) {
-        /* Array for local message size of size fd->nprocs_aggregator * cb_nodes */
-        for ( i = 0; i < fd->nprocs_aggregator; ++i ) {
-            if ( fd->aggregator_local_ranks[i] != myrank ){
-                MPI_Irecv(fd->local_send_size + fd->hints->cb_nodes * i, fd->hints->cb_nodes, MPI_INT, fd->aggregator_local_ranks[i], fd->aggregator_local_ranks[i] + myrank, fd->comm, &req[j++]);
-            } else {
-                memcpy(fd->local_send_size + fd->hints->cb_nodes * i, fd->cb_send_size, sizeof(int) * fd->hints->cb_nodes);
-            }
-        }
-    }
-    /* Send message size to local aggregators */
-    if ( fd->my_local_aggregator != myrank ){
-        MPI_Issend(fd->cb_send_size, fd->hints->cb_nodes, MPI_INT, fd->my_local_aggregator, myrank + fd->my_local_aggregator, fd->comm, &req[j++]);
-    }
-    if (j) {
-#ifdef MPI_STATUSES_IGNORE
-        MPI_Waitall(j, req, MPI_STATUSES_IGNORE);
-#else
-        MPI_Waitall(j, req, sts);
-#endif
-    }
-    /* End of gathering message size */
-
-    /* 2. Inter-node aggregation phase of data from local aggregators to global aggregators.
-     * Global aggregators know the data size from all processes in recv_size, so there is no need to exchange data size, this can boost performance. */
-    j = 0;
-    if (fd->is_local_aggregator) {
-        /* We figure out the total data size a local aggregator is going to receive */
-        local_data_size = 0;
-        for ( i = 0; i < fd->hints->cb_nodes * fd->nprocs_aggregator; ++i ){
-            local_data_size += (MPI_Aint) fd->local_send_size[i];
-            /* local_lens is converted into inclusive-prefix sum because prefix-sum allows us to compute the sum within a interval without extra looping.
-             * to avoid very large message size, we use MPI_Aint */
-            fd->local_lens[i] = local_data_size;
-        }
-
-        /* Update memory size when necessary, can also be done with realloc */
-
-        if ( fd->local_buf_size < local_data_size ){
-            if (fd->local_buf_size) {
-                ADIOI_Free(fd->local_buf);
-            }
-            fd->local_buf = (char *) ADIOI_Malloc(local_data_size);
-            fd->local_buf_size = local_data_size;
-        }
-
-        for ( i = 0; i < fd->hints->cb_nodes; ++i ) {
-            fd->new_types[i] = MPI_BYTE;
-            /* Do not do self-send */
-            if (fd->hints->ranklist[i] != myrank) {
-                local_data_size = 0;
-                /* Interleave through local buffer to wrap messages to the same destination with derived dataset. */
-                for ( k = 0; k < fd->nprocs_aggregator; ++k ) {
-                    if (k * fd->hints->cb_nodes + i) {
-                        fd->array_of_blocklengths[k] = fd->local_lens[k * fd->hints->cb_nodes + i] - fd->local_lens[k * fd->hints->cb_nodes + i - 1];
-                        MPI_Address(fd->local_buf + fd->local_lens[k * fd->hints->cb_nodes + i - 1], fd->array_of_displacements + k);
-                    } else {
-                        fd->array_of_blocklengths[0] = fd->local_lens[0];
-                        MPI_Address(fd->local_buf, fd->array_of_displacements);
-                    }
-                    local_data_size += fd->array_of_blocklengths[k];
-                }
-                /* Send derived datatype if it is not zero-sized. */
-                if (local_data_size) {
-                    MPI_Type_create_hindexed(fd->nprocs_aggregator, fd->array_of_blocklengths, fd->array_of_displacements, MPI_BYTE, fd->new_types + i);
-                    MPI_Type_commit(fd->new_types + i);
-                    //printf("rank %d is receiving %d bytes of data from rank %d\n", myrank, local_data_size, fd->hints->ranklist[i]);
-                    MPI_Irecv(MPI_BOTTOM, 1, fd->new_types[i], fd->hints->ranklist[i], myrank + fd->hints->ranklist[i], fd->comm, &req[j++]);
-                }
-            }
-        }
-    }
-
-    if (nprocs_send) {
-        /* global_recv_size is an array that indicate the sum of data size to be received from local aggregators. */
-//      memset(fd->global_recv_size, 0, sizeof(MPI_Aint) * fd->local_aggregator_size);
-        buf_ptr = contig_buf;
-        for ( i = 0; i < fd->local_aggregator_size; ++i ) {
-            fd->global_recv_size[i] = 0;
-            /* We need to count data size from local aggregators 
-             * global_recv_size is an array of local aggregator size. */
-
-            for ( k = 0; k < fd->local_aggregator_domain_size[i]; ++k ) {
-                if (send_size[fd->local_aggregator_domain[i][k]]) {
-                    /* take care if the last off-len pair is a partial send */
-                    if (partial_send[fd->local_aggregator_domain[i][k]]) {
-                        x = start_pos[fd->local_aggregator_domain[i][k]] + count[fd->local_aggregator_domain[i][k]] - 1;
-                        tmp = others_req[fd->local_aggregator_domain[i][k]].lens[x];
-                        others_req[fd->local_aggregator_domain[i][k]].lens[x] = partial_send[fd->local_aggregator_domain[i][k]];
-                    }
-                    /* I am not sending the message to myself. */
-                    if (myrank != fd->local_aggregator_domain[i][k]) {
-                        if ( fd->local_aggregators[i] == myrank ) {
-                            // I am a local/global aggregator and I am going to send to myself. Directly copy read data to the memory buffer of this local aggregator.
-                            if (k * fd->hints->cb_nodes + fd->global_aggregator_index) {
-                                tmp_ptr = fd->local_buf + fd->local_lens[k * fd->hints->cb_nodes + fd->global_aggregator_index - 1];
-                            } else {
-                                tmp_ptr = fd->local_buf;
-                            }
-                            for ( w = 0; w < count[fd->local_aggregator_domain[i][k]]; ++w ) {
-                                memcpy(tmp_ptr, (char*)others_req[fd->local_aggregator_domain[i][k]].mem_ptrs[w + start_pos[fd->local_aggregator_domain[i][k]]], others_req[fd->local_aggregator_domain[i][k]].lens[w + start_pos[fd->local_aggregator_domain[i][k]]]);
-                                tmp_ptr += others_req[fd->local_aggregator_domain[i][k]].lens[w + start_pos[fd->local_aggregator_domain[i][k]]];
-                            }
-                        
-                        } else {
-                            /*Prepare contiguous memory buffer to be sent to a remote local aggregator. The message for myself has been handled locally.*/
-                            fd->global_recv_size[i] += send_size[fd->local_aggregator_domain[i][k]];
-                            tmp_ptr = buf_ptr;
-                            for ( w = 0; w < count[fd->local_aggregator_domain[i][k]]; ++w ) {
-                                memcpy(tmp_ptr, (char*)others_req[fd->local_aggregator_domain[i][k]].mem_ptrs[w + start_pos[fd->local_aggregator_domain[i][k]]], others_req[fd->local_aggregator_domain[i][k]].lens[w + start_pos[fd->local_aggregator_domain[i][k]]]);
-                                tmp_ptr += others_req[fd->local_aggregator_domain[i][k]].lens[w + start_pos[fd->local_aggregator_domain[i][k]]];
-                            }
-                            buf_ptr = tmp_ptr;
-                        }
-                    }
-                    if (partial_send[fd->local_aggregator_domain[i][k]]) {
-                        others_req[fd->local_aggregator_domain[i][k]].lens[x] = tmp;
-                    }
-                }
-            }
-        }
-
-
-        //We are trying to wrap the non-contiguous I/O requests to a contiguous buffer per process.
-
-        /* Now we can do the Isend post from global aggregators to local aggregators
-         * send messages from contig_buf, a temporary buffer
-         * This buffer has enough size to fit all data. We unpack it to offset/length memory later. */
-        buf_ptr = contig_buf;
-        for ( i = 0; i < fd->local_aggregator_size; ++i ) {
-
-            /* Self-send is handled previously. */
-            if (fd->local_aggregators[i] != myrank) {
-                if (fd->global_recv_size[i]) {
-                    //printf("rank %d is sending %d bytes of data to rank %d\n", myrank, fd->global_recv_size[i], fd->local_aggregators[i]);
-                    MPI_Issend(buf_ptr, fd->global_recv_size[i], MPI_BYTE, fd->local_aggregators[i], fd->local_aggregators[i] + myrank, fd->comm, &req[j++]);
-                    buf_ptr += fd->global_recv_size[i];
-                }
-            }
-        }
-    }
-    
-    if (j) {
-#ifdef MPI_STATUSES_IGNORE
-        MPI_Waitall(j, req, MPI_STATUSES_IGNORE);
-#else
-        MPI_Waitall(j, req, sts);
-#endif
-    }
-    /* End of inter-node aggregation. */
-
-    /* 3. Intra-node aggregator of data from nonaggregators to local aggregators */
-    j = 0;
-    /* Recv a large contiguous array of all data at local process to my local aggregator. */
-    if ( fd->my_local_aggregator != myrank && (recv_total_size - recv_size[myrank]) ){
-        MPI_Irecv(recv_buf_start, recv_total_size - recv_size[myrank], MPI_BYTE, fd->my_local_aggregator, myrank + fd->my_local_aggregator, fd->comm, &req[j++]);
-    }
-    if (fd->is_local_aggregator) {
-        /* Local aggregators scatter data from non-local aggregators */
-        /* First local process as a special case*/
-        if (fd->local_lens[fd->hints->cb_nodes - 1]) {
-            if ( fd->aggregator_local_ranks[0] != myrank ){
-                MPI_Isend(fd->local_buf, fd->local_lens[fd->hints->cb_nodes - 1], MPI_BYTE, fd->aggregator_local_ranks[0], fd->aggregator_local_ranks[0] + myrank, fd->comm, &req[j++]);
-            } else {
-                memcpy(recv_buf_start, fd->local_buf, fd->local_lens[fd->hints->cb_nodes - 1] * sizeof(char) );
-            }
-        }
-        /* The rest of local processes*/
-        for ( i = 1; i < fd->nprocs_aggregator; ++i ) {
-            if (fd->local_lens[(i+1)*fd->hints->cb_nodes-1] == fd->local_lens[i*fd->hints->cb_nodes-1]) {
-                /* No data from this local aggregator from this local process, just jump to the next one. */
-                continue;
-            }
-            /* Shift the buffer with prefix-sum and do receive*/
-            if ( fd->aggregator_local_ranks[i] != myrank ){
-                MPI_Isend(fd->local_buf + fd->local_lens[i * fd->hints->cb_nodes - 1], fd->local_lens[(i+1)*fd->hints->cb_nodes-1] - fd->local_lens[i*fd->hints->cb_nodes-1], MPI_BYTE, fd->aggregator_local_ranks[i], fd->aggregator_local_ranks[i] + myrank, fd->comm, &req[j++]);
-            } else {
-                memcpy(recv_buf_start, fd->local_buf + fd->local_lens[i * fd->hints->cb_nodes - 1],  (fd->local_lens[(i + 1) * fd->hints->cb_nodes-1] - fd->local_lens[i * fd->hints->cb_nodes-1]) * sizeof(char) );
-            }
-        }
-    }
-    if (j) {
-#ifdef MPI_STATUSES_IGNORE
-        MPI_Waitall(j, req, MPI_STATUSES_IGNORE);
-#else
-        MPI_Waitall(j, req, sts);
-#endif
-    }
-
-    /* local aggregators free derived datatypes */
-    if ( fd->is_local_aggregator ){
-        for ( i = 0; i < fd->hints->cb_nodes; ++i){
-        /* A simple check for if we have actually created the type */
-            if (fd->new_types[i] != MPI_BYTE) {
-                MPI_Type_free(fd->new_types + i);
-            }
-        }
-    }
-    /* need to do something with data received */
-
-    if (nprocs_recv) {
-        if (buftype_is_contig) {
-            for (i = 0; i < nprocs; i++) {
-                memcpy(((char *) buf) + buf_idx[i], recv_buf[i] ,recv_size[i]);
-                buf_idx[i] += recv_size[i];
-            }
-        } else {
-            // req and sts should not be used inside this function.
-            ADIOI_Fill_user_buffer(fd, buf, flat_buf, recv_buf,
-                                   offset_list, len_list, (unsigned *) recv_size,
-                                   req, sts, recd_from_proc,
-                                   nprocs, contig_access_count,
-                                   min_st_offset, fd_size, fd_start, fd_end, buftype_extent);
-        }
-    }
-
-
-    if (sum_send > coll_bufsize) {
-        ADIOI_Free(contig_buf);
-    }
-
-
-    /* End of intra-node aggregation phase */
-    #if 1==2
-    char** recv_buf2;
-    MPI_Request *requests;
-    MPI_Datatype send_type;
-    MPI_Status *statuses;
-
-
 
     requests = (MPI_Request *)
         ADIOI_Malloc((nprocs_send + nprocs_recv + 1) * sizeof(MPI_Request));
 /* +1 to avoid a 0-size malloc */
 
 /* post recvs. if buftype_is_contig, data can be directly recd. into
-   user buf at location given by buf_idx. else use recv_buf2. */
+   user buf at location given by buf_idx. else use recv_buf. */
 
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5032, 0, NULL);
 #endif
-    if (nprocs_recv) {
-        recv_buf2 = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
-        if (buftype_is_contig) {
-            j = 0;
-            for (i = 0; i < nprocs; i++) {
-                if (recv_size[i]) {
-                    recv_buf2[i] = ((char *) buf) + buf_idx[i];
-                    MPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
-                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
-                    j++;
-                    buf_idx[i] += recv_size[i];
-                }
-            }
-        } else {
-            recv_buf2[0] = (char *) ADIOI_Malloc(memLen);
-            /* allocate memory for recv_buf2 and post receives */
-            for (i = 1; i < nprocs; i++)
-                recv_buf2[i] = recv_buf2[i - 1] + recv_size[i - 1];
 
-            j = 0;
-            for (i = 0; i < nprocs; i++) {
-                if (recv_size[i]) {
-                    MPI_Irecv(recv_buf2[i], recv_size[i], MPI_BYTE, i,
-                              myrank + i + 100 * iter, fd->comm, requests + j);
-                    j++;
+    if (buftype_is_contig) {
+        j = 0;
+        for (i = 0; i < nprocs; i++) {
+            if (recv_size[i]) {
+                MPI_Irecv(((char *) buf) + buf_idx[i], recv_size[i],
+                          MPI_BYTE, i, myrank + i + 100 * iter, fd->comm, requests + j);
+                j++;
+                buf_idx[i] += recv_size[i];
+            }
+        }
+    } else {
+        /* allocate memory for recv_buf and post receives */
+        recv_buf = (char **) ADIOI_Malloc(nprocs * sizeof(char *));
+        recv_buf[0] = (char *) ADIOI_Malloc(memLen);
+        for (i = 1; i < nprocs; i++)
+            recv_buf[i] = recv_buf[i - 1] + recv_size[i - 1];
+
+        j = 0;
+        for (i = 0; i < nprocs; i++) {
+            if (recv_size[i]) {
+                MPI_Irecv(recv_buf[i], recv_size[i], MPI_BYTE, i,
+                          myrank + i + 100 * iter, fd->comm, requests + j);
+                j++;
 #ifdef RDCOLL_DEBUG
-                    DBG_FPRINTF(stderr, "node %d, recv_size %d, tag %d \n",
-                                myrank, recv_size[i], myrank + i + 100 * iter);
+                DBG_FPRINTF(stderr, "node %d, recv_size %d, tag %d \n",
+                            myrank, recv_size[i], myrank + i + 100 * iter);
 #endif
-                }
             }
         }
     }
@@ -1741,13 +1384,12 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int co
 #endif
 
         /* if noncontiguous, to the copies from the recv buffers */
-        if (!buftype_is_contig) {
-            ADIOI_Fill_user_buffer(fd, buf, flat_buf, recv_buf2,
+        if (!buftype_is_contig)
+            ADIOI_Fill_user_buffer(fd, buf, flat_buf, recv_buf,
                                    offset_list, len_list, (unsigned *) recv_size,
                                    requests, statuses, recd_from_proc,
                                    nprocs, contig_access_count,
                                    min_st_offset, fd_size, fd_start, fd_end, buftype_extent);
-        }
     }
 
     /* wait on the sends */
@@ -1760,27 +1402,10 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, int co
 #endif
     ADIOI_Free(requests);
 
-    for ( i = 0; i < nprocs; ++i ) {
-        for ( k = 0; k < recv_size[i]; ++k ) {
-            if( recv_buf[i][k] != recv_buf2[i][k] ) {
-                printf("rank %d incorrect result from rank %d\n", myrank, i);
-                break;
-            }
-        }
-    }
-    #endif
-    if (nprocs_recv) {
-/*
-        if (!buftype_is_contig) {
-            ADIOI_Free(recv_buf2[0]);
-        }
-        ADIOI_Free(recv_buf2);
-*/
-        ADIOI_Free(recv_buf_start);
+    if (!buftype_is_contig) {
+        ADIOI_Free(recv_buf[0]);
         ADIOI_Free(recv_buf);
     }
-
-
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event(5033, 0, NULL);
 #endif
