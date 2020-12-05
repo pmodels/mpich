@@ -1,0 +1,89 @@
+# vim: set ft=c:
+
+MPI_Group_compare:
+    .desc: Compares two groups
+
+MPI_Group_difference:
+    .desc: Makes a group from the difference of two groups
+    .seealso: MPI_Group_free
+/*
+    Notes:
+    The generated group containc the members of 'group1' that are not in 'group2'.
+*/
+
+MPI_Group_excl:
+    .desc: Produces a group by reordering an existing group and taking
+    .seealso: MPI_Group_free
+{ -- error_check --
+    if (group_ptr) {
+        mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+{ -- early_return --
+    if (group_ptr->size == n) {
+        *newgroup = MPI_GROUP_EMPTY;
+        goto fn_exit;
+    }
+}
+
+MPI_Group_free:
+    .desc: Frees a group
+
+MPI_Group_incl:
+    .desc: Produces a group by reordering an existing group and taking
+    .seealso: MPI_Group_free
+{ -- error_check --
+    if (group_ptr) {
+        mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+{ -- early_return --
+    if (n == 0) {
+        *newgroup = MPI_GROUP_EMPTY;
+        goto fn_exit;
+    }
+}
+
+MPI_Group_intersection:
+    .desc: Produces a group as the intersection of two existing
+    .seealso: MPI_Group_free
+/*
+    Notes:
+    The output group contains those processes that are in both 'group1' and
+    'group2'.
+*/
+
+MPI_Group_range_excl:
+    .desc: Produces a group by excluding ranges of processes from
+    .seealso: MPI_Group_free
+
+MPI_Group_range_incl:
+    .desc: Creates a new group from ranges of ranks in an
+    .seealso: MPI_Group_free
+
+MPI_Group_rank:
+    .desc: Returns the rank of this process in the given group
+    .docnotes: SignalSafe
+{
+    *rank = group_ptr->rank;
+}
+
+MPI_Group_size:
+    .desc: Returns the size of a group
+    .docnotes: SignalSafe
+{
+    *size = group_ptr->size;
+}
+
+MPI_Group_translate_ranks:
+    .desc: Translates the ranks of processes in one group to
+
+MPI_Group_union:
+    .desc: Produces a group by combining two groups
+    .seealso: MPI_Group_free
