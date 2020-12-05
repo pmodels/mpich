@@ -801,7 +801,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                               min_st_offset, fd_size, fd_start, fd_end,
                               others_req, m, buftype_extent, buf_idx);
 */
-        ADIOI_TAM_R_Exchange_data(fd, buf, flat_buf, offset_list, len_list,
+        ADIOI_TAM_R_Exchange_data(fd, buf, agg_buf, coll_bufsize, flat_buf, offset_list, len_list,
                               send_size, recv_size, count,
                               start_pos, partial_send, recd_from_proc, nprocs,
                               myrank,
