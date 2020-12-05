@@ -83,23 +83,6 @@ int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *extern
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
-int MPIR_Close_port_impl(const char *port_name);
-int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name);
-
-int MPIR_Comm_join_impl(int fd, MPIR_Comm ** p_intercomm_ptr);
-int MPIR_Comm_disconnect_impl(MPIR_Comm * comm_ptr);
-int MPIR_Publish_name_impl(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
-int MPIR_Unpublish_name_impl(const char *service_name, MPIR_Info * info_ptr, const char *port_name);
-int MPIR_Lookup_name_impl(const char *service_name, MPIR_Info * info_ptr, char *port_name);
-
-int MPIR_Comm_spawn_impl(const char *command, char *argv[], int maxprocs, MPIR_Info * info_ptr,
-                         int root, MPIR_Comm * comm_ptr, MPIR_Comm ** p_intercomm_ptr,
-                         int array_of_errcodes[]);
-int MPIR_Comm_spawn_multiple_impl(int count, char *array_of_commands[], char **array_of_argv[],
-                                  const int array_of_maxprocs[], const MPI_Info array_of_info[],
-                                  int root, MPIR_Comm * comm_ptr, MPIR_Comm ** p_intercomm_ptr,
-                                  int array_of_errcodes[]);
-
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);
 int MPIR_Finalize_async_thread(void);
