@@ -811,6 +811,29 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     ADIOI_Free(curr_offlen_ptr);
 }
 
+static void ADIOI_TAM_Pack(char* buf, int* send_size, int* partial_send, ADIOI_Access * others_req, int *count, int *start_pos, int i) {
+    int j, k;
+    char *from_ptr;
+    ADIO_Offset tmp;
+    if (send_size[i]) {
+        if (partial_send[i]) {
+            k = start_pos[i] + count[i] - 1;
+            tmp = others_req[i].lens[k];
+            others_req[i].lens[k] = partial_send[i];
+        }
+        for (j = 0; j < count[i]; j++) {
+            from_ptr =
+                (char *) ADIOI_AINT_CAST_TO_VOID_PTR(others_req[i].mem_ptrs[start_pos[i] + j]);
+            memcpy(buf, from_ptr, others_req[i].lens[start_pos[i] + j]);
+            buf += others_req[i].lens[start_pos[i] + j];
+        }
+        if (partial_send[i])
+            others_req[i].lens[k] = tmp;
+    }
+    return;
+}
+
+
 void ADIOI_TAM_Read_Kernel(ADIO_File fd, int myrank, char* read_contig_buf, char** recv_buf, char* recv_buf_start, int* send_size, int* recv_size, int nprocs_send, size_t recv_total_size, int sum_send, int coll_bufsize, int* partial_send, ADIOI_Access * others_req, int *count, int *start_pos) {
     /* Requests for TAM */
     int i, j, k, w, x, tmp;
