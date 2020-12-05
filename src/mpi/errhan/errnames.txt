@@ -411,7 +411,6 @@ be in the range 0 to %d
 **win:Invalid MPI_Win
 **winnull:Null MPI_Win
 **base:Invalid base address
-**locktype:Invalid lock type
 **rmaconflict:Conflicting accesses to window 
 **rmasync:Wrong synchronization of RMA calls 
 **rmasize:Invalid size argument in RMA call
@@ -426,8 +425,9 @@ be in the range 0 to %d
 **rmanoop:No RMA operation resources can be freed from the window
 **rmanotarget:No RMA target resources can be freed from the window
 **assert:Invalid assert argument
-**lockassertval:Invalid assert argument passed to MPI_Win_lock
-**lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock
+**assert %d:Invalid assert argument (%d)
+**locktype:Invalid locktype argument
+**locktype %d:Invalid locktype argument (%d)
 **winunlockrank:Invalid rank argument
 **winunlockrank %d %d:Invalid rank argument %d, should be %d
 **nomemreq:failure occurred while allocating memory for a request object
@@ -1030,38 +1030,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_publish_name %s %I %s:MPI_Publish_name(service=\"%s\", %I, port=\"%s\") failed
 **mpi_unpublish_name:MPI_Unpublish_name failed
 **mpi_unpublish_name %s %I %s:MPI_Unpublish_name(service=\"%s\", %I, port=\"%s\") failed
-**mpi_accumulate:MPI_Accumulate failed
-**mpi_accumulate %p %d %D %d %d %d %D %O %W:MPI_Accumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
-**mpi_get:MPI_Get failed
-**mpi_get %p %d %D %d %d %d %D %W:MPI_Get(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
-**mpi_put:MPI_Put failed
-**mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
-**mpi_win_allocate_shared:MPI_Win_allocate_shared failed
-**mpi_win_allocate_shared %d %I %C %p %p:MPI_Win_allocate_shared(size=%d, %I, %C, baseptr=%p, win=%p) failed
-**mpi_win_shared_query:MPI_Win_shared_query failed
-**mpi_win_shared_query %W %d %p %p:MPI_Win_shared_query(win=%W, rank=%d, size=%p, baseptr=%p) failed
-**mpi_win_complete:MPI_Win_complete failed
-**mpi_win_complete %W:MPI_Win_complete(%W) failed
-**mpi_win_create:MPI_Win_create failed
-**mpi_win_create %p %d %d %I %C %p:MPI_Win_create(base=%p, size=%d, disp_unit=%d, %I, %C, win=%p) failed
-**mpi_win_fence:MPI_Win_fence failed
-**mpi_win_fence %A %W:MPI_Win_fence(%A, %W) failed
-**mpi_win_free:MPI_Win_free failed
-**mpi_win_free %p:MPI_Win_free(win=%p) failed
-**mpi_win_get_group:MPI_Win_get_group failed
-**mpi_win_get_group %W %p:MPI_Win_get_group(%W, group=%p) failed
-**mpi_win_lock:MPI_Win_lock failed
-**mpi_win_lock %d %d %A %W:MPI_Win_lock(lock_type=%d, rank=%d, %A, %W) failed
-**mpi_win_post:MPI_Win_post failed
-**mpi_win_post %G %A %W:MPI_Win_post(%G, %A, %W) failed
-**mpi_win_start:MPI_Win_start failed
-**mpi_win_start %G %A %W:MPI_Win_start(%G, %A, %W) failed
-**mpi_win_test:MPI_Win_test failed
-**mpi_win_test %W %p:MPI_Win_test(%W, flag=%p) failed
-**mpi_win_unlock:MPI_Win_unlock failed
-**mpi_win_unlock %d %W:MPI_Win_unlock(rank=%d, %W) failed
-**mpi_win_wait:MPI_Win_wait failed
-**mpi_win_wait %W:MPI_Win_wait(%W) failed
 **mpi_alltoallw:MPI_Alltoallw failed
 **mpi_alltoallw %p %p %p %p %p %p %p %p %C:MPI_Alltoallw(sbuf=%p, scnts=%p, sdispls=%p, stypes=%p, rbuf=%p, rcnts=%p, rdispls=%p, rtypes=%p, %C) failed
 **mpi_exscan:MPI_Exscan failed
@@ -1106,12 +1074,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_match_size %d %d %p:MPI_Type_match_size(typeclass=%d, size=%d, datatype=%p) failed
 **mpi_win_call_errhandler:MPI_Win_call_errhandler failed
 **mpi_win_call_errhandler %W %d:MPI_Win_call_errhandler(%W, errorcode=%d) failed
-**mpi_win_get_name:MPI_Win_get_name failed
-**mpi_win_get_name %W %p %p:MPI_Win_get_name(%W, win_name=%p, resultlen=%p) failed
-**mpi_win_set_name:MPI_Win_set_name failed
-**mpi_win_set_name %W %s:MPI_Win_set_name(%W, win_name=%s) failed
-**mpi_alloc_mem:MPI_Alloc_mem failed
-**mpi_alloc_mem %d %I %p:MPI_Alloc_mem(size=%d, %I, baseptr=%p) failed
 **mpi_comm_create_errhandler:MPI_Comm_create_errhandler failed
 **mpi_comm_create_errhandler %p %p:MPI_Comm_create_errhandler(function=%p, errhandler=%p) failed
 **mpi_comm_get_errhandler:MPI_Comm_get_errhandler failed
@@ -1124,8 +1086,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_file_get_errhandler %F %p:MPI_File_get_errhandler(%F, errhandler=%p) failed
 **mpi_file_set_errhandler:MPI_File_set_errhandler failed
 **mpi_file_set_errhandler %F %E:MPI_File_set_errhandler(%F, %E) failed
-**mpi_free_mem:MPI_Free_mem failed
-**mpi_free_mem %p:MPI_Free_mem(base=%p) failed
 **mpi_get_address:MPI_Get_address failed
 **mpi_get_address %p %p:MPI_Get_address(location=%p, address=%p) failed
 **mpi_pack_external:MPI_Pack_external failed
@@ -1172,48 +1132,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_dist_graph_neighbors_count %C %p %p %p: MPI_Dist_graph_neighbors_count(%C, indegree=%p, outdegree=%p, weighted=%p) failed
 **mpi_dist_graph_neighbors: MPI_Dist_graph_neighbors failed
 **mpi_dist_graph_neighbors %C %d %p %p %d %p %p: MPI_Dist_graph_neighbors(%C, maxindegree=%d, sources=%p, sourceweights=%p, maxoutdegree=%d, destinations=%p, destweights=%p) failed
-
-# MPI-3 RMA Errors
-**mpi_get_accumulate:MPI_Get_accumulate failed
-**mpi_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W:MPI_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
-**mpi_fetch_and_op:MPI_Fetch_and_op failed
-**mpi_fetch_and_op %p %p %D %d %d %O %W:MPI_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %O, %W) failed
-**mpi_compare_and_swap: MPI_Compare_and_swap failed
-**mpi_compare_and_swap %p %p %p %D %d %d %W:MPI_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %W) failed
-**mpi_raccumulate:MPI_Raccumulate failed
-**mpi_raccumulate %p %d %D %d %d %d %D %O %W %p:MPI_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, request=%p) failed
-**mpi_rget:MPI_Rget failed
-**mpi_rget %p %d %D %d %d %d %D %W %p:MPI_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
-**mpi_rput:MPI_Rput failed
-**mpi_rput %p %d %D %d %d %d %D %W %p:MPI_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
-**mpi_rget_accumulate:MPI_Rget_accumulate failed
-**mpi_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p:MPI_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, %p) failed
-**mpi_win_allocate:MPI_Win_allocate failed
-**mpi_win_allocate %d %d %I %C %p %p:MPI_Win_allocate(size=%d, disp_unit=%d, %I, %C, base=%p, win=%p) failed
-**mpi_win_create_dynamic:MPI_Win_create_dynamic failed
-**mpi_win_create_dynamic %I %C %p:MPI_Win_create_dynamic(%I, %C, win=%p) failed
-**mpi_win_attach:MPI_Win_attach failed
-**mpi_win_attach %W %p %d:MPI_Win_attach(%W, base=%p, size=%d) failed
-**mpi_win_detach:MPI_Win_detach failed
-**mpi_win_detach %W %p:MPI_Win_detach(%W, base=%p) failed
-**mpi_win_lock_all:MPI_Win_lock_all failed
-**mpi_win_lock_all %A %W:MPI_Win_lock_all(%A, %W) failed
-**mpi_win_unlock_all:MPI_Win_unlock_all failed
-**mpi_win_unlock_all %W:MPI_Win_unlock_all(%W) failed
-**mpi_win_flush:MPI_Win_flush failed
-**mpi_win_flush %d %W:MPI_Win_flush(target_rank=%d, %W) failed
-**mpi_win_flush_all:MPI_Win_flush_all failed
-**mpi_win_flush_all %W:MPI_Win_flush_all(%W) failed
-**mpi_win_flush_local:MPI_Win_flush_local failed
-**mpi_win_flush_local %d %W:MPI_Win_flush_local(target_rank=%d, %W) failed
-**mpi_win_flush_local_all:MPI_Win_flush_local_all failed
-**mpi_win_flush_local_all %W:MPI_Win_flush_local_all(%W) failed
-**mpi_win_sync:MPI_Win_sync failed
-**mpi_win_sync %W:MPI_Win_sync(%W) failed
-**mpi_win_get_info:MPI_Win_get_info failed
-**mpi_win_get_info %W %p:MPI_Win_get_info(win=%W, info_used=%p) failed
-**mpi_win_set_info:MPI_Win_set_info failed
-**mpi_win_set_info %W %I:MPI_Win_set_info(win=%W, info=%I) failed
 
 # MPIR functions
 
