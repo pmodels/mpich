@@ -41,6 +41,7 @@ struct ADIOI_Hints_struct {
     int cb_alltoall;
     int ds_read;
     int ds_write;
+    int ds_wr_lb;
     int no_indep_rw;
     int ind_rd_buffer_size;
     int ind_wr_buffer_size;
