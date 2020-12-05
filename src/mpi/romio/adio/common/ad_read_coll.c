@@ -1157,7 +1157,6 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
         }
     }
     ADIOI_TAM_Read_Kernel(fd, myrank, agg_buf, recv_buf, recv_buf_start, send_size, recv_size, nprocs_send, recv_total_size, sum_send, coll_bufsize, partial_send, others_req, count, start_pos);
-/*
     if (nprocs_recv) {
         if (buftype_is_contig) {
             for (i = 0; i < nprocs; i++) {
@@ -1173,10 +1172,10 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
                                    min_st_offset, fd_size, fd_start, fd_end, buftype_extent);
         }
     }
-*/
 
 
-    /* End of intra-node aggregation phase */
+#if 0
+    // We can debug using the following code. This allows us to compare every single byte exchanged between TAM and original ROMIO's implementation.
     int j, k, tmp = 0;
     char** recv_buf2;
     MPI_Request *requests;
@@ -1306,7 +1305,7 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
         }
         ADIOI_Free(recv_buf2);
     }
-
+#endif
 
     if (nprocs_recv) {
         ADIOI_Free(recv_buf_start);
