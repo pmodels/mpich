@@ -298,6 +298,9 @@ void ADIOI_LUSTRE_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     size_t memLen;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx, *ptr;
     ADIOI_Access *my_req;
+    int myrank;
+
+    MPI_Comm_rank(fd->comm, &myrank);
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
     count_my_req_per_proc = *count_my_req_per_proc_ptr;

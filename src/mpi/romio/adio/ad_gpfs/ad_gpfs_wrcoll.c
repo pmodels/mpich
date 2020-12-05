@@ -1,15 +1,10 @@
-/* ---------------------------------------------------------------- */
-/* (C)Copyright IBM Corp.  2007, 2008                               */
-/* ---------------------------------------------------------------- */
+/*
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
+ */
 /**
  * \file ad_gpfs_wrcoll.c
  * \brief ???
- */
-
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
  */
 
 #include "adio.h"
@@ -331,6 +326,13 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         noStripeParms.stripedLastFileOffset = 0;
         noStripeParms.firstStripedWriteCall = 0;
         noStripeParms.lastStripedWriteCall = 0;
+        noStripeParms.iWasUsedStripingAgg = 0;
+        noStripeParms.numStripesUsed = 0;
+        noStripeParms.amountOfStripedDataExpected = 0;
+        noStripeParms.bufTypeExtent = 0;
+        noStripeParms.lastDataTypeExtent = 0;
+        noStripeParms.lastFlatBufIndice = 0;
+        noStripeParms.lastIndiceOffset = 0;
         int holeFound = 0;
         ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count,
                                        buf, datatype, error_code, firstFileOffset, lastFileOffset,
