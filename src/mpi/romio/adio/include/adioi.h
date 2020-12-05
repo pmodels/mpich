@@ -120,6 +120,7 @@ enum {
 #define ADIOI_TYPE_DECREASE 0x00000001  /* if not monotonic nondecreasing */
 #define ADIOI_TYPE_OVERLAP  0x00000002  /* if contains overlapping regions */
 #define ADIOI_TYPE_NEGATIVE 0x00000004  /* if one of displacements is negative */
+#define ADIOI_DS_WR_LB_DFLT "65536"
 
 typedef struct ADIOI_Fl_node {
     MPI_Datatype type;
