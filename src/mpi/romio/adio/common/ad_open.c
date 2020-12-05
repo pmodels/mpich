@@ -640,6 +640,7 @@ ADIO_File ADIO_Open(MPI_Comm orig_comm,
     else
         syshints_processed = 1;
 
+    gather_node_information(rank, procs, &nrecvs, &process_node_list, fd->comm, orig_comm);
     MPI_Allreduce(&syshints_processed, &can_skip, 1, MPI_INT, MPI_MIN, fd->comm);
     if (!can_skip) {
         if (ADIOI_syshints == MPI_INFO_NULL)
