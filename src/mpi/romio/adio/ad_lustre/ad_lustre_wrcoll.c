@@ -105,7 +105,7 @@ void ADIOI_LUSTRE_TAM_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
                               int *striping_info, int nprocs,
                               int *count_my_req_procs_ptr,
                               int **count_my_req_per_proc_ptr,
-                              ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr)
+                              ADIOI_Access ** my_req_ptr, ADIO_Offset *** buf_idx_ptr);
 
 void ADIOI_TAM_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                            int *count_my_req_per_proc,
