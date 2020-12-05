@@ -1,8 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 #include "adio.h"
@@ -34,8 +32,13 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     }
     ad_get_env_vars(fd);
 
-    if (fd->info == MPI_INFO_NULL)
-        MPI_Info_create(&(fd->info));
+    if (fd->info == MPI_INFO_NULL) {
+        if (users_info == MPI_INFO_NULL)
+            MPI_Info_create(&(fd->info));
+        else
+            /* duplicate users_info to preserve hints not used in ROMIO */
+            MPI_Info_dup(users_info, &(fd->info));
+    }
     info = fd->info;
 
     MPI_Comm_size(fd->comm, &nprocs);
