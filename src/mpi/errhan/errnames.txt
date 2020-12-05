@@ -950,30 +950,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, datatype=%D, op=%O) failed
 **mpi_scan:MPI_Scan failed
 **mpi_scan %p %p %d %D %O %C:MPI_Scan(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, comm=%C) failed
-**mpi_group_size:MPI_Group_size failed
-**mpi_group_size %G %p:MPI_Group_size(%G, size=%p) failed
-**mpi_group_rank:MPI_Group_rank failed
-**mpi_group_rank %G %p:MPI_Group_rank(%G, rank=%p) failed
-**mpi_group_translate_ranks:MPI_Group_translate_ranks failed
-**mpi_group_translate_ranks %G %d %p %G %p:MPI_Group_translate_ranks(%G, n=%d, ranks1=%p, %G, ranks2=%p) failed
-**mpi_group_compare:MPI_Group_compare failed
-**mpi_group_compare %G %G %p:MPI_Group_compare(%G, %G, result=%p) failed
-**mpi_group_union:MPI_Group_union failed
-**mpi_group_union %G %G %p:MPI_Group_union(%G, %G, new_group=%p) failed
-**mpi_group_intersection:MPI_Group_intersection failed
-**mpi_group_intersection %G %G %p:MPI_Group_intersection(%G, %G, new_group=%p) failed
-**mpi_group_difference:MPI_Group_difference failed
-**mpi_group_difference %G %G %p:MPI_Group_difference(%G, %G, new_group=%p) failed
-**mpi_group_incl:MPI_Group_incl failed
-**mpi_group_incl %G %d %p %p:MPI_Group_incl(%G, n=%d, ranks=%p, new_group=%p) failed
-**mpi_group_excl:MPI_Group_excl failed
-**mpi_group_excl %G %d %p %p:MPI_Group_excl(%G, n=%d, ranks=%p, new_group=%p) failed
-**mpi_group_range_incl:MPI_Group_range_incl failed
-**mpi_group_range_incl %G %d %p %p:MPI_Group_range_incl(%G, n=%d, ranges=%p, new_group=%p) failed
-**mpi_group_range_excl:MPI_Group_range_excl failed
-**mpi_group_range_excl %G %d %p %p:MPI_Group_range_excl(%G, n=%d, ranges=%p, new_group=%p) failed
-**mpi_group_free:MPI_Group_free failed
-**mpi_group_free %p:MPI_Group_free(group=%p) failed
 **badgputype:Bad GPU type specified
 **badgputype %d:Bad GPU type (%d) specified
 **mpi_keyval_create:MPI_Keyval_create failed
