@@ -545,7 +545,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
     int i, j, m, ntimes, max_ntimes, buftype_is_contig;
     ADIO_Offset st_loc = -1, end_loc = -1, off, done, real_off, req_off;
-    char *read_buf = NULL, *tmp_buf;
+    char *read_buf = NULL, *tmp_buf, *agg_buf;
     int *curr_offlen_ptr, *count, *send_size, *recv_size;
     int *partial_send, *recd_from_proc, *start_pos;
     /* Not convinced end_loc-st_loc couldn't be > int, so make these offsets */
@@ -1147,7 +1147,7 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
     }
 
 
-    #if 0
+
     /* End of intra-node aggregation phase */
     int j, k, tmp = 0;
     char** recv_buf2;
@@ -1278,7 +1278,7 @@ static void ADIOI_TAM_R_Exchange_data(ADIO_File fd, void *buf, char* agg_buf, in
         }
         ADIOI_Free(recv_buf2);
     }
-    #endif
+
 
     if (nprocs_recv) {
         ADIOI_Free(recv_buf_start);
