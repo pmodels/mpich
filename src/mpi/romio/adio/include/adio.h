@@ -1,7 +1,6 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *   Copyright (C) 1997 University of Chicago.
- *   See COPYRIGHT notice in top-level directory.
+ * Copyright (C) by Argonne National Laboratory
+ *     See COPYRIGHT in top-level directory
  */
 
 /* main include file for ADIO.
@@ -84,6 +83,9 @@
 #define FDTYPE HANDLE
 #else
 #define FDTYPE int
+#ifdef ROMIO_QUOBYTEFS
+#include "quobyte.h"
+#endif
 #endif
 
 typedef MPI_Offset ADIO_Offset;
@@ -232,7 +234,9 @@ typedef struct ADIOI_FileD {
     MPI_Win io_buf_put_amounts_window;  /* Window over the io_buf_put_amounts */
     /* External32 */
     int is_external32;          /* bool:  0 means native view */
-
+#ifdef ROMIO_QUOBYTEFS
+    struct quobyte_fh *file_handle;     /* file handle for quobytefs */
+#endif
 
     /* Hint variables used by TAM */
     char *my_req_buf;
@@ -321,6 +325,7 @@ typedef struct {
 #define ADIO_GPFS                168
 #define ADIO_IME                 169    /* IME burst buffer */
 #define ADIO_DAOS                170
+#define ADIO_QUOBYTEFS           171    /* Quobyte FS */
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR
