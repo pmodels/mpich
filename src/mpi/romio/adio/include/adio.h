@@ -1,6 +1,7 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
  */
 
 /* main include file for ADIO.
@@ -83,9 +84,6 @@
 #define FDTYPE HANDLE
 #else
 #define FDTYPE int
-#ifdef ROMIO_QUOBYTEFS
-#include "quobyte.h"
-#endif
 #endif
 
 typedef MPI_Offset ADIO_Offset;
@@ -234,9 +232,35 @@ typedef struct ADIOI_FileD {
     MPI_Win io_buf_put_amounts_window;  /* Window over the io_buf_put_amounts */
     /* External32 */
     int is_external32;          /* bool:  0 means native view */
-#ifdef ROMIO_QUOBYTEFS
-    struct quobyte_fh *file_handle;     /* file handle for quobytefs */
-#endif
+
+
+    /* Hint variables used by TAM */
+    char *my_req_buf;
+    char *other_req_buf;
+    char *other_req_mem;
+
+    int *global_aggregators;
+
+    int nprocs_aggregator;
+    int local_aggregator_size;
+    int is_local_aggregator;
+    int *aggregator_local_ranks;
+    int *local_aggregators;
+    int my_local_aggregator;
+    MPI_Request *req;
+    MPI_Status *sts;
+    MPI_Aint *global_recv_size;
+    MPI_Aint *local_lens;
+    int *local_send_size;
+    int* array_of_blocklengths;
+    MPI_Aint* array_of_displacements;
+    MPI_Datatype* new_types;
+    char* local_buf;
+    size_t local_buf_size;
+    int *cb_send_size;
+    int **local_aggregator_domain;
+    int *local_aggregator_domain_size;
+    int global_aggregator_index;
 
     /* see file adio/common/onesided_aggregation.c for descriptions of the next 6 members */
     int romio_write_aggmethod;
@@ -297,7 +321,6 @@ typedef struct {
 #define ADIO_GPFS                168
 #define ADIO_IME                 169    /* IME burst buffer */
 #define ADIO_DAOS                170
-#define ADIO_QUOBYTEFS           171    /* Quobyte FS */
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR

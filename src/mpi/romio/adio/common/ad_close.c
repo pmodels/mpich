@@ -1,6 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ *
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
  */
 
 #include "adio.h"
@@ -13,6 +15,28 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 {
     int i, j, k, combiner, myrank, err;
     static char myname[] = "ADIO_CLOSE";
+
+    /*TAM cleanup*/
+    if (fd->is_agg){
+        ADIOI_Free(fd->local_aggregator_domain[0]);
+        ADIOI_Free(fd->local_aggregator_domain);
+        ADIOI_Free(fd->global_recv_size);
+    }
+    if (fd->is_local_aggregator) {
+        ADIOI_Free(fd->aggregator_local_ranks);
+        ADIOI_Free(fd->local_send_size);
+        ADIOI_Free(fd->local_lens);
+        ADIOI_Free(fd->new_types);
+        ADIOI_Free(fd->array_of_displacements);
+        ADIOI_Free(fd->array_of_blocklengths);
+    }
+    ADIOI_Free(fd->cb_send_size);
+    if (fd->local_buf_size) {
+        ADIOI_Free(fd->local_buf);
+    }
+    ADIOI_Free(fd->req);
+    ADIOI_Free(fd->sts);
+    ADIOI_Free(fd->local_aggregators);
 
     if (fd->async_count) {
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,

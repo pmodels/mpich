@@ -1,6 +1,11 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
+ *
+ *   Copyright (C) 2007 Oak Ridge National Laboratory
+ *
+ *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
 #include "ad_lustre.h"
@@ -17,7 +22,12 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     ADIO_Offset stripe_val[3], str_factor = -1, str_unit = 0, start_iodev = -1;
     int myrank;
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
-
+    /* These variables are for getting Lustre stripe count information */
+    int lumlen, err, number_of_nodes, stripe_count = 0;
+    FDTYPE temp_sys;
+    int perm, old_mask, amode;
+    struct lov_user_md *lum = NULL;
+    MPI_Comm_rank(fd->comm, &myrank);
 
 #ifdef HAVE_LUSTRE_LOCKAHEAD
     /* Set lock ahead default hints */
@@ -41,8 +51,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         fd->hints->fs_hints.lustre.co_ratio = 1;
         ADIOI_Info_set(fd->info, "romio_lustre_coll_threshold", "0");
         fd->hints->fs_hints.lustre.coll_threshold = 0;
-        ADIOI_Info_set(fd->info, "romio_lustre_ds_in_coll", "enable");
-        fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_ENABLE;
 
         /* has user specified striping or server buffering parameters
          * and do they have the same value on all processes? */
@@ -66,7 +74,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
                 start_iodev = atoll(value);
             }
-
 
             /* direct read and write */
             ADIOI_Info_get(users_info, "direct_read", MPI_MAX_INFO_VAL, value, &flag);
@@ -118,11 +125,81 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
             }
 #endif
         }
+        flag = 0;
+        if (users_info != MPI_INFO_NULL) {
+            ADIOI_Info_get(users_info, "number_of_nodes", MPI_MAX_INFO_VAL, value, &flag);
+        }
+        /* Must be true for all processes (done in ad_open.c) */  
+        if (flag) {
+            number_of_nodes = atoi(value);
+            /* We set global aggregators automatically for user if hints are not specified.*/
+            /* number_of_nodes is a system info set by ad_open.c, we need to perform nullity check.*/
+            /*Get Lustre file striping factor in advance. This information is not availabe until the actual open time.
+            However, we need it for determining cb_nodes and cb_config_list. Hence we open and close the file at here.
+            rank 0 does the job and broadcast to other processes.*/
+            if (myrank == 0) {
+                if (fd->perm == ADIO_PERM_NULL) {
+                    old_mask = umask(022);
+                    umask(old_mask);
+                    perm = old_mask ^ 0666;
+                } else{
+                    perm = fd->perm;
+                }
+                amode = 0;
+                if (fd->access_mode & ADIO_CREATE)
+                    amode = amode | O_CREAT;
+                if (fd->access_mode & ADIO_RDONLY)
+                    amode = amode | O_RDONLY;
+                if (fd->access_mode & ADIO_WRONLY)
+                    amode = amode | O_WRONLY;
+                if (fd->access_mode & ADIO_RDWR)
+                    amode = amode | O_RDWR;
+                if (fd->access_mode & ADIO_EXCL)
+                    amode = amode | O_EXCL;
+                temp_sys = open(fd->filename, amode, perm);
+                if (temp_sys == -1) {
+                    /* Nothing we can do if we cannot even open the file, just abort processing Lustre hints in advance. */
+                    stripe_count = 0;
+                } else {
+                    lumlen = sizeof(struct lov_user_md) + 1000 * sizeof(struct lov_user_ost_data);
+                    lum = (struct lov_user_md *) ADIOI_Calloc(1, lumlen);
+                    memset(lum, 0, lumlen);
+                    lum->lmm_magic = LOV_USER_MAGIC;
+                    err = ioctl(temp_sys, LL_IOC_LOV_GETSTRIPE, (void *) lum);
+                    if (err){
+                        /* If getting stripe count failed, we set it to zero. Hence setting hints based on stripe_count will be skipped. */
+                        stripe_count = 0;
+                    } else {
+                        stripe_count = (int) lum->lmm_stripe_count;
+                    }
+                    close(temp_sys);
+                    ADIOI_Free(lum);
+                }
+            }
+        }
+        /* Broadcast stripe count */
+        MPI_Bcast( &stripe_count, 1, MPI_INT, 0, fd->comm );
+        /* If cb_nodes has not been set by user or system, we set it to lustre striping factor
+         * For some reasons, getting stripe count can give 0 for various reasons.
+         * In that case, we do not want to cause trouble, simply jump this settings. */
 
-
-
+        if (stripe_count && users_info != MPI_INFO_NULL) {
+            ADIOI_Info_get(users_info, "cb_nodes", MPI_MAX_INFO_VAL, value, &flag);
+            if (!flag) {
+                MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "%d",stripe_count);
+                //sprintf(value,"%d",stripe_count);
+                ADIOI_Info_set(users_info, "cb_nodes", value);
+            }
+            /* If cb_config_list has not been set by user or system, we set it to dividing cb_nodes across all nodes */
+            ADIOI_Info_get(users_info, "cb_config_list", MPI_MAX_INFO_VAL, value, &flag);
+            if (!flag) {
+                /* number_of_nodes is a system info set by ad_open.c, we need to perform nullity check. */
+                MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "*:%d",(stripe_count + number_of_nodes - 1)/number_of_nodes);
+                //sprintf(value,"*:%d",(stripe_count + number_of_nodes - 1)/number_of_nodes);
+                ADIOI_Info_set(users_info, "cb_config_list", value);
+            }
+        }
         /* set striping information with ioctl */
-        MPI_Comm_rank(fd->comm, &myrank);
         if (myrank == 0) {
             stripe_val[0] = str_factor;
             stripe_val[1] = str_unit;
@@ -156,12 +233,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         ADIOI_Info_check_and_install_int(fd, users_info, "romio_lustre_coll_threshold",
                                          &(fd->hints->fs_hints.lustre.coll_threshold), myname,
                                          error_code);
-
-        /* ds_in_coll: disable data sieving in collective IO */
-        ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_lustre_ds_in_coll",
-                                             &(fd->hints->fs_hints.lustre.ds_in_coll), myname,
-                                             error_code);
-
     }
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);

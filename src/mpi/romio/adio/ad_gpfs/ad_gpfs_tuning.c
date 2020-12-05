@@ -1,11 +1,15 @@
-/*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
- */
-
+/* ---------------------------------------------------------------- */
+/* (C)Copyright IBM Corp.  2007, 2008                               */
+/* ---------------------------------------------------------------- */
 /**
  * \file ad_gpfs_tuning.c
  * \brief Defines ad_gpfs performance tuning
+ */
+
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *   Copyright (C) 2008 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
  */
 
 /*---------------------------------------------------------------------
