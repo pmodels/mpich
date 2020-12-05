@@ -8,6 +8,9 @@
 #include "adio_cb_config_list.h"
 
 #include "mpio.h"
+
+#define ROMIO_TOTAL_LOCAL_AGGREGATOR_DEFAULT 512
+
 static int is_aggregator(int rank, ADIO_File fd);
 static int uses_generic_read(ADIO_File fd);
 static int uses_generic_write(ADIO_File fd);
