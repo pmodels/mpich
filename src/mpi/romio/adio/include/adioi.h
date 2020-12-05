@@ -1,6 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) by Argonne National Laboratory
- *     See COPYRIGHT in top-level directory
+ *
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
  */
 
 
@@ -41,6 +43,7 @@ struct ADIOI_Hints_struct {
     int cb_alltoall;
     int ds_read;
     int ds_write;
+    int ds_wr_lb;
     int no_indep_rw;
     int ind_rd_buffer_size;
     int ind_wr_buffer_size;
@@ -70,7 +73,6 @@ struct ADIOI_Hints_struct {
         struct {
             int co_ratio;
             int coll_threshold;
-            int ds_in_coll;
             int lock_ahead_read;
             int lock_ahead_write;
             int lock_ahead_num_extents;
@@ -144,9 +146,6 @@ typedef struct ADIOI_Fl_node {
 #ifdef ROMIO_PVFS2
 #include <pvfs2.h>
 #endif
-#ifdef ROMIO_QUOBYTEFS
-#include "quobyte.h"
-#endif
 #ifdef ROMIO_DAOS
 #include <daos_types.h>
 #endif
@@ -159,9 +158,6 @@ typedef struct ADIOI_AIO_req_str {
     /* should probably make this a union */
 #ifdef ROMIO_HAVE_WORKING_AIO
     struct aiocb *aiocbp;
-#endif
-#ifdef ROMIO_QUOBYTEFS
-    struct quobyte_io_event *qaiocbp;
 #endif
 #ifdef ROMIO_PVFS2
     PVFS_sys_op_id op_id;
@@ -229,8 +225,6 @@ struct ADIOI_Fns_struct {
                                          MPI_Datatype datatype, int file_ptr_type,
                                          ADIO_Offset offset, ADIO_Request * request,
                                          int *error_code);
-    int (*ADIOI_xxx_SetLock) (ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
-                              ADIO_Offset len);
 };
 
 /* optypes for ADIO_RequestD */
@@ -253,7 +247,13 @@ struct ADIOI_Fns_struct {
 #define ADIOI_IND_WR_BUFFER_SIZE_DFLT     "524288"
     /* use one process per processor name by default */
 #define ADIOI_CB_CONFIG_LIST_DFLT "*:1"
-
+    /* lower bound of number of noncontiguous offset-length pairs to force data
+     * sieving write. If the number of offset-length pairs is more than hint
+     * romio_cb_wr_lb, then checking holes in the file domains is skipped.
+     * Checking holes can be expensive, as it requires to merge-sort all the
+     * offset-length pairs.
+     */
+#define ADIOI_DS_WR_LB_DFLT "65536"
 
 /* some of the ADIO functions are macro-replaced */
 
@@ -682,8 +682,9 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
                                     ADIO_Offset * end_offset,
                                     ADIO_Offset * fd_start, ADIO_Offset * fd_end);
 
-/* This data structure holds parameters related to regulating   */
-/* the one-sided aggregation algorithm. */
+/* This data structure holds parameters related to file   */
+/* striping needed by the one-sided aggregation algorithm. */
+/* A stripeSize of 0 indicates there is no striping.       */
 typedef struct ADIOI_OneSidedStripeParms {
     int stripeSize;             /* size in bytes of the striping unit - a size of 0 indicates to the */
     /* onesided algorithm that we are a non-striping file system         */
@@ -701,21 +702,6 @@ typedef struct ADIOI_OneSidedStripeParms {
     /* onesided algorithm.                                          */
     int lastStripedWriteCall;   /* whether this is the last call in the last segment of the  */
     /* onesided algorithm.                                        */
-    int iWasUsedStripingAgg;    /* whether this rank was ever a used agg for this striping segement */
-    int numStripesUsed;         /* the number of stripes packed into an aggregator */
-    /* These 2 elements are the offset and lengths in the file corresponding to the actual stripes */
-    ADIO_Offset *stripeWriteOffsets;
-    ADIO_Offset *stripeWriteLens;
-    int amountOfStripedDataExpected;    /* used to determine holes in this segment thereby requiring a rmw */
-    /* These 2 elements enable ADIOI_OneSidedWriteAggregation to be called multiple times but only */
-    /* perform the potientially computationally costly flattening of the source buffer just once */
-    MPI_Aint bufTypeExtent;
-    ADIOI_Flatlist_node *flatBuf;
-    /* These three elements track the state of the source buffer advancement through multiple calls */
-    /* to ADIOI_OneSidedWriteAggregation */
-    ADIO_Offset lastDataTypeExtent;
-    int lastFlatBufIndice;
-    ADIO_Offset lastIndiceOffset;
 } ADIOI_OneSidedStripeParms;
 
 int ADIOI_OneSidedCleanup(ADIO_File fd);
@@ -731,7 +717,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                     int numNonZeroDataOffsets,
                                     ADIO_Offset * fd_start,
                                     ADIO_Offset * fd_end,
-                                    int *hole_found, ADIOI_OneSidedStripeParms * stripe_parms);
+                                    int *hole_found, ADIOI_OneSidedStripeParms stripe_parms);
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                    ADIO_Offset * offset_list,
                                    ADIO_Offset * len_list,
@@ -759,7 +745,16 @@ int ADIOI_Type_create_hindexed_x(int count,
                                  const MPI_Count array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
                                  MPI_Datatype oldtype, MPI_Datatype * newtype);
-
+void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
+                            * flat_buf, char **send_buf, ADIO_Offset
+                            * offset_list, ADIO_Offset * len_list, int *send_size,
+                            MPI_Request * requests, int *sent_to_proc,
+                            int nprocs, int myrank,
+                            int contig_access_count,
+                            ADIO_Offset min_st_offset, ADIO_Offset fd_size,
+                            ADIO_Offset * fd_start, ADIO_Offset * fd_end,
+                            int *send_buf_idx, int *curr_to_proc,
+                            int *done_to_proc, int iter, MPI_Aint buftype_extent);
 
 int ADIOI_FAKE_IODone(ADIO_Request * request, ADIO_Status * status, int *error_code);
 void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
@@ -834,51 +829,43 @@ int MPIOI_File_iread_all(MPI_File fh,
 
 #if defined(F_SETLKW64)
 
-#define ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW64, F_WRLCK, offset, whence, len)
-#define ADIOI_READ_LOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW64, F_RDLCK, offset, whence, len)
-#define ADIOI_UNLOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLK64, F_UNLCK, offset, whence, len)
+#define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
+     ADIOI_Set_lock64((fd)->fd_sys, F_SETLKW64, F_WRLCK, offset, whence, len)
+#define ADIOI_READ_LOCK(fd, offset, whence, len) \
+     ADIOI_Set_lock64((fd)->fd_sys, F_SETLKW64, F_RDLCK, offset, whence, len)
+#define ADIOI_UNLOCK(fd, offset, whence, len) \
+     ADIOI_Set_lock64((fd)->fd_sys, F_SETLK64, F_UNLCK, offset, whence, len)
 
 #else
-
-#define ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW, F_WRLCK, offset, whence, len)
-#define ADIOI_READ_LOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLKW, F_RDLCK, offset, whence, len)
-#define ADIOI_UNLOCK_FUNC(fd, offset, whence, len) \
-        (*(fd->fns->ADIOI_xxx_SetLock))(fd, F_SETLK, F_UNLCK, offset, whence, len)
-
-#endif
-
 
 #ifdef ADIOI_MPE_LOGGING
 #define ADIOI_WRITE_LOCK(fd, offset, whence, len) do { \
         MPE_Log_event(ADIOI_MPE_writelock_a, 0, NULL); \
-        ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len); \
+        ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_WRLCK, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_writelock_b, 0, NULL); } while (0)
 #define ADIOI_READ_LOCK(fd, offset, whence, len) \
         MPE_Log_event(ADIOI_MPE_readlock_a, 0, NULL); do { \
-        ADIOI_READ_LOCK_FUNC(fd, offset, whence, len); \
+        ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_RDLCK, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_readlock_b, 0, NULL); } while (0)
 #define ADIOI_UNLOCK(fd, offset, whence, len) do { \
         MPE_Log_event(ADIOI_MPE_unlock_a, 0, NULL); \
-        ADIOI_UNLOCK_FUNC(fd, offset, whence, len); \
+        ADIOI_Set_lock((fd)->fd_sys, F_SETLK, F_UNLCK, offset, whence, len); \
         MPE_Log_event(ADIOI_MPE_unlock_b, 0, NULL); } while (0)
 #else
 #define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
-        ADIOI_WRITE_LOCK_FUNC(fd, offset, whence, len)
+          ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_WRLCK, offset, whence, len)
 #define ADIOI_READ_LOCK(fd, offset, whence, len) \
-        ADIOI_READ_LOCK_FUNC(fd, offset, whence, len)
+          ADIOI_Set_lock((fd)->fd_sys, F_SETLKW, F_RDLCK, offset, whence, len)
 #define ADIOI_UNLOCK(fd, offset, whence, len) \
-        ADIOI_UNLOCK_FUNC(fd, offset, whence, len)
+          ADIOI_Set_lock((fd)->fd_sys, F_SETLK, F_UNLCK, offset, whence, len)
 #endif
 
-int ADIOI_GEN_SetLock(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
-                      ADIO_Offset len);
-int ADIOI_GEN_SetLock64(ADIO_File fd, int cmd, int type, ADIO_Offset offset, int whence,
-                        ADIO_Offset len);
+#endif
+
+int ADIOI_Set_lock(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int whence,
+                   ADIO_Offset len);
+int ADIOI_Set_lock64(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int whence,
+                     ADIO_Offset len);
 
 #define ADIOI_Malloc(a) ADIOI_Malloc_fn(a,__LINE__,__FILE__)
 #define ADIOI_Calloc(a,b) ADIOI_Calloc_fn(a,b,__LINE__,__FILE__)
