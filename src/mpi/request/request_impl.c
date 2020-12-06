@@ -5,12 +5,7 @@
 
 #include "mpiimpl.h"
 
-#if !defined(MPIR_REQUEST_PTR_ARRAY_SIZE)
-/* use a larger default size of 64 in order to enhance SQMR performance */
-#define MPIR_REQUEST_PTR_ARRAY_SIZE 64
-#endif
-
-int MPIR_Cancel(MPIR_Request * request_ptr)
+int MPIR_Cancel_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -97,194 +92,149 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
   fn_exit:
     return mpi_errno;
   fn_fail:
-
     goto fn_exit;
 }
 
-/* -- Grequest -- */
-
-/* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
-   static; this macro expands into "static" if weak symbols are supported and
-   into nothing otherwise. */
-void MPIR_Grequest_complete(MPIR_Request * request_ptr)
-{
-    MPIR_Request_complete(request_ptr);
-}
-
-/* preallocated grequest classes */
-#ifndef MPIR_GREQ_CLASS_PREALLOC
-#define MPIR_GREQ_CLASS_PREALLOC 2
-#endif
-
-static MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC];
-
-static MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, MPIR_GREQ_CLASS,
-    sizeof(MPIR_Grequest_class),
-    MPIR_Grequest_class_direct,
-    MPIR_GREQ_CLASS_PREALLOC,
-    NULL
-};
-
-/* We jump through some minor hoops to manage the list of classes ourselves and
- * only register a single finalizer to avoid hitting limitations in the current
- * finalizer code.  If the finalizer implementation is ever revisited this code
- * is a good candidate for registering one callback per greq class and trimming
- * some of this logic. */
-static int MPIR_Grequest_registered_finalizer = 0;
-static MPIR_Grequest_class *MPIR_Grequest_class_list = NULL;
-
-/* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
-   static; this macro expands into "static" if weak symbols are supported and
-   into nothing otherwise. */
-static int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE((unused)))
+int MPIR_Request_free_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Grequest_class *last = NULL;
-    MPIR_Grequest_class *cur = MPIR_Grequest_class_list;
 
-    /* FIXME MT this function is not thread safe when using fine-grained threading */
-    MPIR_Grequest_class_list = NULL;
-    while (cur) {
-        last = cur;
-        cur = last->next;
-        MPIR_Handle_obj_free(&MPIR_Grequest_class_mem, last);
+    MPID_Progress_poke();
+    switch (request_ptr->kind) {
+        case MPIR_REQUEST_KIND__SEND:
+            MPII_SENDQ_FORGET(request_ptr);
+            break;
+        case MPIR_REQUEST_KIND__RECV:
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:
+            /* Tell the device that we are freeing a persistent request object */
+            MPID_Prequest_free_hook(request_ptr);
+            /* If this is an active persistent request, we must also
+             * release the partner request. */
+            if (request_ptr->u.persist.real_request != NULL) {
+                if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST) {
+                    /* This is needed for persistent Bsend requests */
+                    mpi_errno = MPIR_Grequest_free(request_ptr->u.persist.real_request);
+                }
+                MPIR_Request_free(request_ptr->u.persist.real_request);
+            }
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_RECV:
+            /* Tell the device that we are freeing a persistent request object */
+            MPID_Prequest_free_hook(request_ptr);
+            /* If this is an active persistent request, we must also
+             * release the partner request. */
+            if (request_ptr->u.persist.real_request != NULL) {
+                MPIR_Request_free(request_ptr->u.persist.real_request);
+            }
+            break;
+        case MPIR_REQUEST_KIND__GREQUEST:
+            mpi_errno = MPIR_Grequest_free(request_ptr);
+            break;
+        default:
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                             __func__, __LINE__, MPI_ERR_OTHER,
+                                             "**request_invalid_kind",
+                                             "**request_invalid_kind %d", request_ptr->kind);
+            goto fn_fail;
     }
 
-    return mpi_errno;
-}
+    MPIR_Request_free(request_ptr);
 
-int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
-                        MPI_Grequest_free_function * free_fn,
-                        MPI_Grequest_cancel_function * cancel_fn,
-                        void *extra_state, MPIR_Request ** request_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKPMEM_DECL(1);
-
-    /* MT FIXME this routine is not thread-safe in the non-global case */
-
-    *request_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__GREQUEST);
-    MPIR_ERR_CHKANDJUMP1(*request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                         "generalized request");
-
-    MPIR_Object_set_ref(*request_ptr, 1);
-    (*request_ptr)->cc_ptr = &(*request_ptr)->cc;
-    MPIR_cc_set((*request_ptr)->cc_ptr, 1);
-    (*request_ptr)->comm = NULL;
-    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *,
-                        sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns", MPL_MEM_GREQ);
-    (*request_ptr)->u.ureq.greq_fns->U.C.cancel_fn = cancel_fn;
-    (*request_ptr)->u.ureq.greq_fns->U.C.free_fn = free_fn;
-    (*request_ptr)->u.ureq.greq_fns->U.C.query_fn = query_fn;
-    (*request_ptr)->u.ureq.greq_fns->poll_fn = NULL;
-    (*request_ptr)->u.ureq.greq_fns->wait_fn = NULL;
-    (*request_ptr)->u.ureq.greq_fns->grequest_extra_state = extra_state;
-    (*request_ptr)->u.ureq.greq_fns->greq_lang = MPIR_LANG__C;
-
-    /* Add an additional reference to the greq.  One of them will be
-     * released when we complete the request, and the second one, when
-     * we test or wait on it. */
-    MPIR_Request_add_ref((*request_ptr));
-
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
-/* extensions for Generalized Request redesign paper */
-int MPIX_Grequest_class_create_impl(MPI_Grequest_query_function * query_fn,
-                                    MPI_Grequest_free_function * free_fn,
-                                    MPI_Grequest_cancel_function * cancel_fn,
-                                    MPIX_Grequest_poll_function * poll_fn,
-                                    MPIX_Grequest_wait_function * wait_fn,
-                                    MPIX_Grequest_class * greq_class)
+int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Grequest_class *class_ptr;
 
-    class_ptr = (MPIR_Grequest_class *)
-        MPIR_Handle_obj_alloc(&MPIR_Grequest_class_mem);
-    if (!class_ptr) {
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                         MPI_ERR_OTHER, "**nomem",
-                                         "**nomem %s", "MPIX_Grequest_class");
-        goto fn_fail;
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        /* request not complete. poke the progress engine. Req #3130 */
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
     }
 
-    class_ptr->query_fn = query_fn;
-    class_ptr->free_fn = free_fn;
-    class_ptr->cancel_fn = cancel_fn;
-    class_ptr->poll_fn = poll_fn;
-    class_ptr->wait_fn = wait_fn;
+    if (MPIR_Request_is_complete(request_ptr)) {
+        MPIR_Request *prequest_ptr;
+        int rc;
+        switch (request_ptr->kind) {
+            case MPIR_REQUEST_KIND__SEND:
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            case MPIR_REQUEST_KIND__RECV:
+                MPIR_Request_extract_status(request_ptr, status);
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+                prequest_ptr = request_ptr->u.persist.real_request;
+                if (prequest_ptr != NULL) {
+                    if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                        mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    } else {
+                        /* This is needed for persistent Bsend requests */
+                        rc = MPIR_Grequest_query(prequest_ptr);
+                        if (mpi_errno == MPI_SUCCESS) {
+                            mpi_errno = rc;
+                        }
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT
+                                                   (prequest_ptr->status));
+                        if (mpi_errno == MPI_SUCCESS) {
+                            mpi_errno = prequest_ptr->status.MPI_ERROR;
+                        }
+                    }
+                } else {
+                    if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
+                        /* if the persistent request failed to start then
+                         * make the error code available */
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                        mpi_errno = request_ptr->status.MPI_ERROR;
+                    } else {
+                        MPIR_Status_set_empty(status);
+                    }
+                }
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                prequest_ptr = request_ptr->u.persist.real_request;
+                if (prequest_ptr != NULL) {
+                    MPIR_Request_extract_status(prequest_ptr, status);
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+                } else {
+                    /* if the persistent request failed to start then
+                     * make the error code available */
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                    MPIR_Status_set_empty(status);
+                }
+                break;
+            case MPIR_REQUEST_KIND__GREQUEST:
+                rc = MPIR_Grequest_query(request_ptr);
+                if (mpi_errno == MPI_SUCCESS) {
+                    mpi_errno = rc;
+                }
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                MPIR_Request_extract_status(request_ptr, status);
+                break;
 
-    MPIR_Object_set_ref(class_ptr, 1);
+            default:
+                break;
+        }
 
-    if (MPIR_Grequest_class_list == NULL) {
-        class_ptr->next = NULL;
+        *flag = TRUE;
     } else {
-        class_ptr->next = MPIR_Grequest_class_list;
+        *flag = FALSE;
     }
-    MPIR_Grequest_class_list = class_ptr;
-    if (!MPIR_Grequest_registered_finalizer) {
-        /* must run before (w/ higher priority than) the handle check
-         * finalizer in order avoid being flagged as a leak */
-        MPIR_Add_finalize(&MPIR_Grequest_free_classes_on_finalize,
-                          NULL, MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO + 1);
-        MPIR_Grequest_registered_finalizer = 1;
-    }
-
-    MPIR_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
 
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-int MPIX_Grequest_class_allocate_impl(MPIX_Grequest_class greq_class,
-                                      void *extra_state, MPI_Request * request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *lrequest_ptr;
-    MPIR_Grequest_class *class_ptr;
-
-    *request = MPI_REQUEST_NULL;
-    MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
-    mpi_errno = MPIR_Grequest_start(class_ptr->query_fn, class_ptr->free_fn,
-                                    class_ptr->cancel_fn, extra_state, &lrequest_ptr);
-    if (mpi_errno == MPI_SUCCESS) {
-        *request = lrequest_ptr->handle;
-        lrequest_ptr->u.ureq.greq_fns->poll_fn = class_ptr->poll_fn;
-        lrequest_ptr->u.ureq.greq_fns->wait_fn = class_ptr->wait_fn;
-        lrequest_ptr->u.ureq.greq_fns->greq_class = greq_class;
-    }
-
-    return mpi_errno;
-}
-
-int MPIX_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
-                             MPI_Grequest_free_function * free_fn,
-                             MPI_Grequest_cancel_function * cancel_fn,
-                             MPIX_Grequest_poll_function * poll_fn,
-                             MPIX_Grequest_wait_function * wait_fn,
-                             void *extra_state, MPIR_Request ** request)
-{
-    int mpi_errno;
-
-    mpi_errno = MPIR_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, request);
-
-    if (mpi_errno == MPI_SUCCESS) {
-        (*request)->u.ureq.greq_fns->poll_fn = poll_fn;
-        (*request)->u.ureq.greq_fns->wait_fn = wait_fn;
-    }
-
-    return mpi_errno;
 }
 
 /* -- Test -- */
@@ -593,9 +543,7 @@ int MPIR_Testany_state(int count, MPIR_Request * request_ptrs[],
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPID_Progress_test(state);
-    /* --BEGIN ERROR HANDLING-- */
     MPIR_ERR_CHECK(mpi_errno);
-    /* --END ERROR HANDLING-- */
 
     for (i = 0; i < count; i++) {
         if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {

@@ -83,8 +83,6 @@ int MPIR_Find_external(struct MPIR_Comm *comm, int *external_size_p, int *extern
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
-int MPIR_Cancel(MPIR_Request * request_ptr);
-
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);
 int MPIR_Finalize_async_thread(void);
