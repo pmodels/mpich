@@ -337,13 +337,13 @@ int MPIR_Datatype_commit_pairtypes(void)
         if (mpi_pairtypes[i].dtype != MPI_DATATYPE_NULL) {
             int err;
 
-            err = MPIR_Type_commit(&mpi_pairtypes[i].dtype);
+            err = MPIR_Type_commit_impl(&mpi_pairtypes[i].dtype);
 
             /* --BEGIN ERROR HANDLING-- */
             if (err) {
                 return MPIR_Err_create_code(MPI_SUCCESS,
                                             MPIR_ERR_RECOVERABLE,
-                                            "MPIR_Type_commit",
+                                            "MPIR_Type_commit_impl",
                                             __LINE__, MPI_ERR_OTHER, "**nomem", 0);
             }
             /* --END ERROR HANDLING-- */
