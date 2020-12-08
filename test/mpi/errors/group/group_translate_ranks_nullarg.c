@@ -38,7 +38,6 @@ int main(int argc, char **argv)
     if (errclass != MPI_ERR_ARG)
         ++errs;
 
-    MPI_Comm_free(&comm);
     MPI_Comm_free(&newcomm);
     MPI_Group_free(&basegroup);
     MPI_Group_free(&g1);
