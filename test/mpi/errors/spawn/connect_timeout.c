@@ -102,6 +102,10 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
 
         IF_VERBOSE(intra_rank == 0, ("client: connecting to <%s> with default timeout.\n", port));
         mpi_errno1 = MPI_Comm_connect(port, MPI_INFO_NULL, 0, intra_comm, &comm);
+        if (comm != MPI_COMM_NULL) {
+            IF_VERBOSE(intra_rank == 0, ("connection matched, freeing communicator.\n"));
+            MPI_Comm_free(&comm);
+        }
         if (mpi_errno1 != MPI_SUCCESS) {
             errs += check_errno(mpi_errno1, MPI_ERR_PORT);
         }
@@ -109,6 +113,10 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
         /* At least one of the connect calls should return MPI_ERR_PORT */
         IF_VERBOSE(intra_rank == 0, ("client: connecting to <%s> again.\n", port));
         mpi_errno2 = MPI_Comm_connect(port, MPI_INFO_NULL, 0, intra_comm, &comm);
+        if (comm != MPI_COMM_NULL) {
+            IF_VERBOSE(intra_rank == 0, ("connection matched, freeing communicator.\n"));
+            MPI_Comm_free(&comm);
+        }
         if (mpi_errno1 == MPI_SUCCESS) {
             errs += check_errno(mpi_errno2, MPI_ERR_PORT);
         } else {
@@ -118,11 +126,11 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
         /* NOTE: if accept hangs, try increase MPIR_CVAR_CH3_COMM_CONN_TIMEOUT. */
         IF_VERBOSE(intra_rank == 0, ("server: accepting connection to <%s>.\n", port));
         MPI_Comm_accept(port, MPI_INFO_NULL, 0, intra_comm, &comm);
-    }
+        if (comm != MPI_COMM_NULL) {
+            IF_VERBOSE(intra_rank == 0, ("connection matched, freeing communicator.\n"));
+            MPI_Comm_free(&comm);
+        }
 
-    if (comm != MPI_COMM_NULL) {
-        IF_VERBOSE(intra_rank == 0, ("connection matched, freeing communicator.\n"));
-        MPI_Comm_free(&comm);
     }
 
     if (intra_rank == 0 && gid == SERVER_GID) {
