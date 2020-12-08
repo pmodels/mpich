@@ -46,8 +46,40 @@ MPID_MAX_ERROR_STRING=512
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
-    AC_MSG_ERROR([Netmod configuration not specified. To build ch4, you must select a netmod:
-    --with-device=ch4:ofi or --with-device=ch4:ucx])
+  AS_CASE([$host_os],
+  [linux*],[
+    dnl attempt to choose a netmod from the installed libraries
+    if test $have_ucx = "yes" -a $have_libfabric = "no" ; then
+        ch4_netmods=ucx
+    elif test $have_ucx = "no" -a $have_libfabric = "yes" ; then
+        ch4_netmods=ofi
+    else
+        dnl prompt the user to choose
+        AC_MSG_ERROR([no ch4 netmod selected
+
+  The default ch4 device could not detect a preferred network
+  library. Supported options are ofi (libfabric) and ucx:
+
+    --with-device=ch4:ofi or --with-device=ch4:ucx
+
+  Configure will use an embedded copy of libfabric or ucx if one is
+  not found in the user environment. An installation can be specified
+  by adding
+
+    --with-libfabric=<path/to/install> or --with-ucx=<path/to/install>
+
+  to the configuration.
+
+  The previous MPICH default device (ch3) is also available and
+  supported with option:
+
+    --with-device=ch3
+    ])
+    fi],
+    [
+      dnl non-linux use libfabric
+      ch4_netmods=ofi
+    ])
 else
     changequote(<<,>>)
     netmod_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://' -e 's/,/ /g'`
