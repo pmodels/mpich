@@ -27,7 +27,6 @@ int main(int argc, char **argv)
     if (errclass != MPI_ERR_ARG)
         ++errs;
 
-    MPI_Comm_free(&comm);
     MPI_Group_free(&basegroup);
     MTest_Finalize(errs);
     return 0;
