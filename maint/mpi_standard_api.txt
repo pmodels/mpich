@@ -150,7 +150,7 @@ MPI_Alltoallw_init:
     info: INFO, [info argument]
     request: REQUEST, direction=out, [communication request]
 MPI_Attr_delete:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator to which attribute is attached]
+    comm: COMMUNICATOR, direction=in, [communicator to which attribute is attached]
     keyval: KEYVAL, The key value of the deleted attribute
 MPI_Attr_get:
     comm: COMMUNICATOR, [communicator to which attribute is attached]
@@ -158,7 +158,7 @@ MPI_Attr_get:
     attribute_val: ATTRIBUTE_VAL_10, direction=out, [attribute value, unless flag = false]
     flag: LOGICAL, direction=out, suppress=lis_paren, [true if an attribute value was extracted; false if no attribute is associated with the key]
 MPI_Attr_put:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, pointer=False, [communicator to which attribute will be attached]
+    comm: COMMUNICATOR, direction=in, pointer=False, [communicator to which attribute will be attached]
     keyval: KEYVAL, [key value, as returned by MPI_KEYVAL_CREATE]
     attribute_val: ATTRIBUTE_VAL_10, [attribute value]
 MPI_Barrier:
@@ -331,7 +331,7 @@ MPI_Comm_create_keyval:
     comm_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
 MPI_Comm_delete_attr:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator from which the attribute is deleted]
+    comm: COMMUNICATOR, direction=in, [communicator from which the attribute is deleted]
     comm_keyval: KEYVAL, [key value]
 MPI_Comm_delete_attr_function:
     comm: COMMUNICATOR
@@ -402,17 +402,17 @@ MPI_Comm_remote_size:
     comm: COMMUNICATOR, [inter-communicator]
     size: COMM_SIZE, direction=out, [number of processes in the remote group of comm]
 MPI_Comm_set_attr:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator to which attribute will be attached]
+    comm: COMMUNICATOR, direction=in, [communicator to which attribute will be attached]
     comm_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
 MPI_Comm_set_errhandler:
-    comm: COMMUNICATOR, direction=lis:inout, param:in
+    comm: COMMUNICATOR, direction=in
     errhandler: ERRHANDLER, [new error handler for communicator]
 MPI_Comm_set_info:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator]
+    comm: COMMUNICATOR, direction=in, [communicator]
     info: INFO, [info object]
 MPI_Comm_set_name:
-    comm: COMMUNICATOR, direction=lis:inout, param:in, [communicator whose identifier is to be set]
+    comm: COMMUNICATOR, direction=in, [communicator whose identifier is to be set]
     comm_name: STRING, constant=True, [the character string which is remembered as the name]
 MPI_Comm_size:
     comm: COMMUNICATOR, [communicator]
@@ -445,7 +445,7 @@ MPI_Comm_split_type:
     comm: COMMUNICATOR, [communicator]
     split_type: SPLIT_TYPE, [type of processes to be grouped together]
     key: KEY, [control of rank assignment]
-    info: INFO, direction=lis:inout, param:in, [info argument]
+    info: INFO, direction=in, [info argument]
     newcomm: COMMUNICATOR, direction=out, [new communicator]
 MPI_Comm_test_inter:
     comm: COMMUNICATOR, [communicator]
@@ -633,13 +633,13 @@ MPI_File_get_view:
     filetype: DATATYPE, direction=out, [filetype]
     datarep: STRING, direction=out, [data representation]
 MPI_File_iread:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iread_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
@@ -659,39 +659,39 @@ MPI_File_iread_at_all:
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iread_shared:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iwrite:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iwrite_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iwrite_at:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iwrite_at_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     request: REQUEST, direction=out, [request object]
 MPI_File_iwrite_shared:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
@@ -703,27 +703,27 @@ MPI_File_open:
     info: INFO, [info object]
     fh: FILE, direction=out, [new file handle]
 MPI_File_preallocate:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     size: OFFSET, [size to preallocate file]
 MPI_File_read:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_read_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_read_all_begin:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
 MPI_File_read_all_end:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_read_at:
@@ -751,117 +751,117 @@ MPI_File_read_at_all_end:
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_read_ordered:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_read_ordered_begin:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
 MPI_File_read_ordered_end:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, suppress=f08_intent, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_read_shared:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, direction=out, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_seek:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     whence: UPDATE_MODE, [update mode]
 MPI_File_seek_shared:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     whence: UPDATE_MODE, [update mode]
 MPI_File_set_atomicity:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     flag: LOGICAL, [true to set atomic mode, false to set nonatomic mode]
 MPI_File_set_errhandler:
-    file: FILE, direction=lis:inout, param:in
+    file: FILE, direction=in
     errhandler: ERRHANDLER, [new error handler for file]
 MPI_File_set_info:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     info: INFO, [info object]
 MPI_File_set_size:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     size: OFFSET, [size to truncate or expand file]
 MPI_File_set_view:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     disp: OFFSET, [displacement]
     etype: DATATYPE, [elementary datatype]
     filetype: DATATYPE, [filetype]
     datarep: STRING, constant=True, [data representation]
     info: INFO, [info object]
 MPI_File_sync:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
 MPI_File_write:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_write_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_write_all_begin:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
 MPI_File_write_all_end:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_write_at:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_write_at_all:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_write_at_all_begin:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     offset: OFFSET, [file offset]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
 MPI_File_write_at_all_end:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_write_ordered:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
     status: STATUS, direction=out, [status object]
 MPI_File_write_ordered_begin:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
 MPI_File_write_ordered_end:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, asynchronous=True, [initial address of buffer]
     status: STATUS, direction=out, [status object]
 MPI_File_write_shared:
-    fh: FILE, direction=lis:inout, param:in, [file handle]
+    fh: FILE, direction=in, [file handle]
     buf: BUFFER, constant=True, [initial address of buffer]
     count: POLYXFER_NUM_ELEM, [number of elements in buffer]
     datatype: DATATYPE, [datatype of each buffer element]
@@ -996,7 +996,7 @@ MPI_Grequest_cancel_function:
     complete: LOGICAL
     ierror: ERROR_CODE, suppress=c_parameter
 MPI_Grequest_complete:
-    request: REQUEST, direction=lis:inout, param:in, [generalized request]
+    request: REQUEST, direction=in, [generalized request]
 MPI_Grequest_free_function:
     extra_state: EXTRA_STATE
     ierror: ERROR_CODE, suppress=c_parameter
@@ -1248,7 +1248,7 @@ MPI_Info_create_env:
     argv: ARGUMENT_LIST, length=argc, pointer=False, direction=inout, suppress=lis_parameter f08_parameter f90_parameter
     info: INFO, direction=out, [info object]
 MPI_Info_delete:
-    info: INFO, direction=lis:inout, param:in, [info object]
+    info: INFO, direction=in, [info object]
     key: STRING, constant=True, [key]
 MPI_Info_dup:
     info: INFO, [info object]
@@ -1283,7 +1283,7 @@ MPI_Info_get_valuelen:
     valuelen: INFO_VALUE_LENGTH, direction=out, [length of value arg]
     flag: LOGICAL_BOOLEAN, direction=out, [true if key defined, false if not]
 MPI_Info_set:
-    info: INFO, direction=lis:inout, param:in, [info object]
+    info: INFO, direction=in, [info object]
     key: STRING, constant=True, [key]
     value: STRING, constant=True, [value]
 MPI_Init:
@@ -1942,9 +1942,9 @@ MPI_Session_f2c:
     .return: SESSION
     session: F90_SESSION, direction=in, pointer=False
 MPI_Session_finalize:
-    session: SESSION, direction=lis:in, param:inout, [session to be finalized]
+    session: SESSION, direction=inout, [session to be finalized]
 MPI_Session_get_errhandler:
-    session: SESSION, desc = session
+    session: SESSION, [session]
     errhandler: ERRHANDLER, direction=out, [error handler currently associated with session]
 MPI_Session_get_info:
     session: SESSION, [session]
@@ -1968,7 +1968,7 @@ MPI_Session_init:
     errhandler: ERRHANDLER, [error handler to invoke in the event that an error is encountered during this function call]
     session: SESSION, direction=OUT, [new session]
 MPI_Session_set_errhandler:
-    session: SESSION, direction=lis:inout, param:in, desc = session
+    session: SESSION, direction=in, [session]
     errhandler: ERRHANDLER, [new error handler for session]
 MPI_Sizeof:
     x: BUFFER, suppress=f08_intent f90_parenthesis, [a Fortran variable of numeric intrinsic type]
@@ -2372,7 +2372,7 @@ MPI_Type_create_subarray:
     oldtype: DATATYPE, [old datatype]
     newtype: DATATYPE, direction=out, [new datatype]
 MPI_Type_delete_attr:
-    datatype: DATATYPE, direction=lis:inout, param:in, [datatype from which the attribute is deleted]
+    datatype: DATATYPE, direction=in, [datatype from which the attribute is deleted]
     type_keyval: KEYVAL, [key value]
 MPI_Type_delete_attr_function:
     datatype: DATATYPE
@@ -2443,11 +2443,11 @@ MPI_Type_match_size:
     size: TYPECLASS_SIZE, [size, in bytes, of representation]
     datatype: DATATYPE, direction=out, [datatype with correct type, size]
 MPI_Type_set_attr:
-    datatype: DATATYPE, direction=lis:inout, param:in, [datatype to which attribute will be attached]
+    datatype: DATATYPE, direction=in, [datatype to which attribute will be attached]
     type_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
 MPI_Type_set_name:
-    datatype: DATATYPE, direction=lis:inout, param:in, [datatype whose identifier is to be set]
+    datatype: DATATYPE, direction=in, [datatype whose identifier is to be set]
     type_name: STRING, constant=True, [the character string which is remembered as the name]
 MPI_Type_size:
     datatype: DATATYPE, [datatype]
@@ -2581,7 +2581,7 @@ MPI_Win_create_keyval:
     win_keyval: KEYVAL, direction=out, [key value for future access]
     extra_state: EXTRA_STATE, [extra state for callback function]
 MPI_Win_delete_attr:
-    win: WINDOW, direction=lis:inout, param:in, [window from which the attribute is deleted]
+    win: WINDOW, direction=in, [window from which the attribute is deleted]
     win_keyval: KEYVAL, [key value]
 MPI_Win_delete_attr_function:
     win: WINDOW
@@ -2648,17 +2648,17 @@ MPI_Win_post:
     assert: ASSERT
     win: WINDOW
 MPI_Win_set_attr:
-    win: WINDOW, direction=lis:inout, param:in, [window to which attribute will be attached]
+    win: WINDOW, direction=in, [window to which attribute will be attached]
     win_keyval: KEYVAL, [key value]
     attribute_val: ATTRIBUTE_VAL, [attribute value]
 MPI_Win_set_errhandler:
-    win: WINDOW, direction=lis:inout, param:in
+    win: WINDOW, direction=in
     errhandler: ERRHANDLER, [new error handler for window]
 MPI_Win_set_info:
-    win: WINDOW, direction=lis:inout, param:in
+    win: WINDOW, direction=in
     info: INFO
 MPI_Win_set_name:
-    win: WINDOW, direction=lis:inout, param:in, [window whose identifier is to be set]
+    win: WINDOW, direction=in, [window whose identifier is to be set]
     win_name: STRING, constant=True, [the character string which is remembered as the name]
 MPI_Win_shared_query:
     win: WINDOW, [shared memory window object]
