@@ -522,6 +522,10 @@ typedef int MPI_Info;
 #define MPI_MAX_INFO_KEY       255
 #define MPI_MAX_INFO_VAL      1024
 
+/* for session */
+typedef int MPI_Session;
+#define MPI_SESSION_NULL     ((MPI_Session)0x38000000)
+
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56
 #define MPI_ORDER_FORTRAN        57
@@ -872,10 +876,11 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
+#define MPI_ERR_SESSION             75  /* Invalid session handle */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 75     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
