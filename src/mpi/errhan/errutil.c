@@ -197,10 +197,11 @@ void MPII_Errhandler_set_fc(MPI_Errhandler errhand)
 /* Special error handler to call if we are not yet initialized, or if we
    have finalized */
 /* --BEGIN ERROR HANDLING-- */
-void MPIR_Err_preOrPostInit(void)
+void MPIR_Err_preOrPostInit(const char *funcname)
 {
     MPL_error_printf
-        ("Attempting to use an MPI routine before initializing or after finalizing MPICH\n");
+        ("Attempting to use an MPI routine (%s) before initializing or after finalizing MPICH\n",
+         funcname);
     exit(1);
 }
 
