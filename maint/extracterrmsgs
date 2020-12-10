@@ -503,6 +503,11 @@ sub AddTestCall {
 		print TESTFD "    int i$narg = MPI_KEYVAL_INVALID;\n";
 		$args[$#args+1] = "i$narg";
 	    }
+	    elsif ($type eq "S")
+	    {
+		print TESTFD "    int i$narg = MPI_SESSION_NULL;\n";
+		$args[$#args+1] = "i$narg";
+	    }
             elsif ($type eq "c")
             {
                 print TESTFD "    MPI_Count i$narg = $narg;\n";
@@ -812,7 +817,7 @@ sub ProcessFile
 		    if ($followchar ne "%") {
 			$nargs ++;
 		    }
-                    if (! ($followchar =~ /[%sdxitpcDCRWOEIGFALXK]/) ) {
+                    if (! ($followchar =~ /[%sdxitpcDCRWOEIGFALXKS]/) ) {
 			print STDERR "Warning: Unrecognized format specifier in specific message $specific_msg in $filename\n";
 		    }
 		}
