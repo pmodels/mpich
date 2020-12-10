@@ -79,6 +79,12 @@ int MPIR_Init_impl(int *argc, char ***argv)
     return mpi_errno;
 }
 
+int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
+                     MPIR_Session ** p_session_ptr)
+{
+    return MPI_SUCCESS;
+}
+
 int MPIR_Init_thread_impl(int *argc, char ***argv, int user_required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
