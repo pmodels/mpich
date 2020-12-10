@@ -1502,6 +1502,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
     MPI_Op O;
     MPI_Request R;
     MPI_Errhandler E;
+    MPI_Session S;
     char *s;
     int t, i, d, mpi_errno = MPI_SUCCESS;
     long long ll;
@@ -1681,6 +1682,14 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig, va_list
                     MPL_strncpy(str, "MPI_ERRHANDLER_NULL", maxlen);
                 } else {
                     MPL_snprintf(str, maxlen, "errh=0x%x", E);
+                }
+                break;
+            case (int) 'S':
+                S = va_arg(list, MPI_Session);
+                if (S == MPI_SESSION_NULL) {
+                    MPL_strncpy(str, "MPI_SESSION_NULL", maxlen);
+                } else {
+                    MPL_snprintf(str, maxlen, "session=0x%x", S);
                 }
                 break;
             case (int) 'K':
