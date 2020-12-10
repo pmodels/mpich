@@ -472,6 +472,10 @@ N*/
 . MPI_ERR_UNSUPPORTED_DATAREP - 
 N*/
 
+/*N MPI_ERR_SESSION
+. MPI_ERR_SESSION - Invalid session handle
+N*/
+
 /*N MPI_T_ERR_NOT_INITIALIZED
 . MPI_T_ERR_NOT_INITIALIZED - The MPI tool information interface is not initialized.
 N*/

@@ -522,6 +522,10 @@ typedef int MPI_Info;
 #define MPI_MAX_INFO_KEY       255
 #define MPI_MAX_INFO_VAL      1024
 
+/* for session */
+typedef int MPI_Session;
+#define MPI_SESSION_NULL     ((MPI_Session)0x38000000)
+
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56
 #define MPI_ORDER_FORTRAN        57
@@ -872,10 +876,11 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
 #define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
+#define MPI_ERR_SESSION 75
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-#define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 75     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
@@ -1119,6 +1124,13 @@ int MPI_Init(int *argc, char ***argv) MPICH_API_PUBLIC;
 int MPI_Finalize(void) MPICH_API_PUBLIC;
 int MPI_Initialized(int *flag) MPICH_API_PUBLIC;
 int MPI_Abort(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
+int MPI_Session_init(MPI_Info info, MPI_Errhandler errhandler, MPI_Session *session) MPICH_API_PUBLIC;
+int MPI_Session_finalize(MPI_Session *session) MPICH_API_PUBLIC;
+int MPI_Session_get_num_psets(MPI_Session session, MPI_Info info, int *pset_names) MPICH_API_PUBLIC;
+int MPI_Session_get_nth_pset(MPI_Session session, MPI_Info info, int n, int *pset_len, char *pset_name) MPICH_API_PUBLIC;
+int MPI_Session_get_info(MPI_Session session, MPI_Info *info_used) MPICH_API_PUBLIC;
+int MPI_Session_get_pset_info(MPI_Session session, const char *pset_name, MPI_Info *info) MPICH_API_PUBLIC;
+int MPI_Group_from_session_pset(MPI_Session session, const char *pset_name, MPI_Group *group) MPICH_API_PUBLIC;
 
 /* Note that we may need to define a @PCONTROL_LIST@ depending on whether
    stdargs are supported */
@@ -1502,6 +1514,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size) MPICH_API_PUBLIC;
 
 /* Noncollective communicator creation */
 int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm) MPICH_API_PUBLIC;
+int MPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 
 /* MPI_Aint addressing arithmetic */
 MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) MPICH_API_PUBLIC;
@@ -1777,6 +1790,13 @@ int PMPI_Init(int *argc, char ***argv) MPICH_API_PUBLIC;
 int PMPI_Finalize(void) MPICH_API_PUBLIC;
 int PMPI_Initialized(int *flag) MPICH_API_PUBLIC;
 int PMPI_Abort(MPI_Comm comm, int errorcode) MPICH_API_PUBLIC;
+int PMPI_Session_init(MPI_Info info, MPI_Errhandler errhandler, MPI_Session *session) MPICH_API_PUBLIC;
+int PMPI_Session_finalize(MPI_Session *session) MPICH_API_PUBLIC;
+int PMPI_Session_get_num_psets(MPI_Session session, MPI_Info info, int *pset_names) MPICH_API_PUBLIC;
+int PMPI_Session_get_nth_pset(MPI_Session session, MPI_Info info, int n, int *pset_len, char *pset_name) MPICH_API_PUBLIC;
+int PMPI_Session_get_info(MPI_Session session, MPI_Info *info_used) MPICH_API_PUBLIC;
+int PMPI_Session_get_pset_info(MPI_Session session, const char *pset_name, MPI_Info *info) MPICH_API_PUBLIC;
+int PMPI_Group_from_session_pset(MPI_Session session, const char *pset_name, MPI_Group *group) MPICH_API_PUBLIC;
 
 /* Note that we may need to define a @PCONTROL_LIST@ depending on whether
    stdargs are supported */
@@ -2153,6 +2173,7 @@ int PMPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, 
 
 /* Noncollective communicator creation */
 int PMPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm) MPICH_API_PUBLIC;
+int PMPI_Comm_create_from_group(MPI_Group group, const char *stringtag, MPI_Info info, MPI_Errhandler errhandler, MPI_Comm *newcomm) MPICH_API_PUBLIC;
 
 /* MPI-3 "large count" routines */
 int PMPI_Get_elements_x(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count) MPICH_API_PUBLIC;
