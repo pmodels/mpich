@@ -40,6 +40,10 @@ cvars:
 */
 
 /* Definitions local to src/mpi/init only */
+int MPII_Init_thread(int *argc, char ***argv, int user_required, int *provided,
+                     MPIR_Session ** p_session_ptr);
+int MPII_Finalize(MPIR_Session * session_ptr);
+
 void MPII_thread_mutex_create(void);
 void MPII_thread_mutex_destroy(void);
 
