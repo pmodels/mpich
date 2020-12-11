@@ -860,12 +860,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 **mpi_address:MPI_Address failed
 **mpi_address %p %p:MPI_Address(location=%p, address=%p) failed
-**mpi_op_create:MPI_Op_create failed
-**mpi_op_create %p %d %p:MPI_Op_create(fn=%p, commute=%d, op=%p) failed
-**mpi_op_free:MPI_Op_free failed
-**mpi_op_free %p:MPI_Op_free(op=%p) failed
-**mpi_op_commutative:MPI_Op_commutative failed
-**mpi_op_commutative %O %p:MPI_Op_commutative(op=%O, commute=%p) failed
 **badgputype:Bad GPU type specified
 **badgputype %d:Bad GPU type (%d) specified
 **mpi_keyval_create:MPI_Keyval_create failed

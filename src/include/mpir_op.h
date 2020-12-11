@@ -203,10 +203,6 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf)]
 #define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf)]
 
-int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute);
-
 int MPIR_Op_is_commutative(MPI_Op);
 
-int MPIR_Op_create_impl(MPI_User_function * user_fn, int commute, MPI_Op * op);
-void MPIR_Op_free_impl(MPI_Op * op);
 #endif /* MPIR_OP_H_INCLUDED */
