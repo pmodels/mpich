@@ -477,6 +477,7 @@ MPI_Sendrecv:
 
 MPI_Sendrecv_replace:
     .desc: Sends and receives using a single buffer
+    .decl: MPIR_Sendrecv_replace_impl
 {
 #if defined(MPID_Sendrecv_replace)
     mpi_errno = MPID_Sendrecv_replace(buf, count, datatype, dest,

@@ -46,6 +46,7 @@ def main():
             G.mpi_sources.append(file_path)
 
     dump_Makefile_mk("src/binding/c/Makefile.mk")
+    dump_mpir_impl_h("src/include/mpir_impl.h")
 
 # ---------------------------------------------------------
 if __name__ == "__main__":
