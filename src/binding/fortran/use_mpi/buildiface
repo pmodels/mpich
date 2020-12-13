@@ -110,6 +110,8 @@ my $line_limit = 80; # Max line length
          'MPI_Op*' => 'INTEGER', # Never an array of ops
          'MPI_Message' => 'INTEGER',
          'MPI_Message*' => 'INTEGER', # Never an array of messages
+         'MPI_Session' => 'INTEGER',
+         'MPI_Session*' => 'INTEGER', # Never an array of sessions
          'MPI_Status*' => 'INTEGER %name%(MPI_STATUS_SIZE)',
          'MPI_Status[]' => 'INTEGER %name%(MPI_STATUS_SIZE,*)',
          'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
