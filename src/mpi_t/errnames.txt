@@ -11,6 +11,8 @@
 **pvarhandle: Performance variable handle is invalid
 **pvarsessionnull: Performance variable session is NULL
 **pvarsession: Performance variable session is invalid
+**thread_level: Invalid thread level
+**thread_level %d: Invalid thread level (%d)
 **mpi_t_init_thread: MPI_T_init_thread failed
 **mpi_t_init_thread %d %p: MPI_T_init_thread(required=%d, provided=%p)
 **mpi_t_finalize: MPI_T_finalize failed
