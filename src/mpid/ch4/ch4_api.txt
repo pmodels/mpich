@@ -43,6 +43,9 @@ Non Native API:
   am_isend_reply : int
       NM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
      SHM*: context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data, count, datatype, sreq
+  am_recv: int
+      NM*: rreq
+     SHM*: rreq
   am_hdr_max_sz : size_t
       NM*: void
      SHM*: void
@@ -52,6 +55,9 @@ Non Native API:
   am_eager_buf_limit : size_t
       NM*: void
      SHM*: void
+  am_check_eager: bool
+      NM*: am_hdr_sz-2, data_sz, data, count, datatype, sreq
+     SHM*: am_hdr_sz-2, data_sz, data, count, datatype, sreq
   comm_get_lpid : int
       NM*: comm_ptr, idx, lpid_ptr, is_remote
      SHM*: comm_ptr, idx, lpid_ptr, is_remote
@@ -114,15 +120,6 @@ Non Native API:
      SHM*: req
 
 Native API:
-  mpi_send : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
-  send_coll : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request, errflag
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request, errflag
-  mpi_ssend : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
   mpi_isend : int
       NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
      SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, request
@@ -135,9 +132,6 @@ Native API:
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
-  mpi_recv : int
-      NM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, addr, status, request
-     SHM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, status, request
   mpi_irecv : int
       NM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, addr, request, partner
      SHM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, request
@@ -421,6 +415,7 @@ PARAM:
     addr: MPIDI_av_entry_t *
     am_hdr: const void *
     am_hdr_sz: size_t
+    am_hdr_sz-2: MPI_Aint
     am_hdrs: struct iovec *
     appnum: int
     assert: int
@@ -442,6 +437,7 @@ PARAM:
     count-2: MPI_Aint
     count-3: int
     data: const void *
+    data_sz: MPI_Aint
     datatype: MPI_Datatype
     datatype_p: MPIR_Datatype *
     disp_unit: int *
