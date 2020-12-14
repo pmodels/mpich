@@ -176,6 +176,7 @@
 /comm/comm_idup_nb
 /comm/comm_idup_overlap
 /comm/comm_info
+/comm/comm_info_hint
 /comm/commcreate1
 /comm/commname
 /comm/ctxalloc

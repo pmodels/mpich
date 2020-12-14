@@ -47,3 +47,7 @@ idup_with_info 8
 comm_info 6
 comm_info2 1
 comm_create_group_idup 4
+comm_info_hint 1 arg=-hint=mpi_assert_no_any_source arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_no_any_tag arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_allow_overtaking arg=-value=true
+comm_info_hint 1 arg=-hint=mpi_assert_exact_length arg=-value=true
