@@ -14,6 +14,7 @@ import re
 
 def dump_mpi_c(func, mapping):
     """Dumps the function's C source code to G.out array"""
+    filter_c_parameters(func)
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
     # -- "dump" accumulates output lines in G.out
@@ -127,23 +128,32 @@ def dump_errnames_txt(f):
         
 # ---- pre-processing  ----
 
+def filter_c_parameters(func):
+    c_params = []
+    for p in func['parameters']:
+        if RE.search(r'c_parameter', p['suppress']):
+            pass
+        else:
+            c_params.append(p)
+    func['c_parameters'] = c_params
+
 def check_params_with_large_only(func, mapping):
     if '_has_large_only' not in func:
         func['_has_large_only'] = 0
-        for p in func['params']:
-            if RE.search(r'large_only', p['t']):
+        for p in func['c_parameters']:
+            if p['large_only']:
                 func['_has_large_only'] += 1
         if func['_has_large_only']:
-            func['params_large'] = func['params']
+            func['params_large'] = func['c_parameters']
             func['params_small'] = []
-            for p in func['params']:
-                if not RE.search(r'large_only', p['t']):
+            for p in func['c_parameters']:
+                if not p['large_only']:
                     func['params_small'].append(p)
     if func['_has_large_only']:
         if mapping['_name'].startswith('SMALL'):
-            func['params'] = func['params_small']
+            func['c_parameters'] = func['params_small']
         else:
-            func['params'] = func['params_large']
+            func['c_parameters'] = func['params_large']
 
 def process_func_parameters(func, mapping):
     """ Scan parameters and populate a few lists to facilitate generation."""
@@ -157,14 +167,14 @@ def process_func_parameters(func, mapping):
         func['extra'] = ""
 
     func_name = func['name']
-    n = len(func['params'])
+    n = len(func['c_parameters'])
     i = 0
     while i < n:
-        p = func['params'][i]
+        p = func['c_parameters'][i]
         (group_kind, group_count) = ("", 0)
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
-            p2 = func['params'][i + 1]
-            p3 = func['params'][i + 2]
+            p2 = func['c_parameters'][i + 1]
+            p3 = func['c_parameters'][i + 2]
             if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
                 type = "inplace"
                 if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
@@ -200,7 +210,7 @@ def process_func_parameters(func, mapping):
         if group_count > 0:
             t = ''
             for j in range(group_count):
-                temp_p = func['params'][i + j]
+                temp_p = func['c_parameters'][i + j]
                 if t:
                     t += ","
                 t += temp_p['name']
@@ -223,7 +233,7 @@ def process_func_parameters(func, mapping):
         elif "code-error_check-tail" in func and name in func['code-error_check-tail']:
             # -- user bypass --
             pass
-        elif RE.search(r'direction=out', p['t'], re.IGNORECASE):
+        elif p['param_direction'] == 'out':
             # -- output parameter --
             validation_list.append({'kind': "ARGNULL", 'name': name})
             if RE.search(r'get_errhandler$', func_name):
@@ -233,7 +243,7 @@ def process_func_parameters(func, mapping):
                 pass
             elif kind in G.handle_out_do_ptrs:
                 do_handle_ptr = 2
-        elif RE.search(r'length=', p['t']):
+        elif p['length']:
             # -- array parameter --
             if kind == "REQUEST":
                 if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
@@ -251,7 +261,7 @@ def process_func_parameters(func, mapping):
             if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|get_name|lb|ub|extent)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
             else:
-                if is_pointer_type(kind, p['t']):
+                if is_pointer_type(p):
                     validation_list.append({'kind': "datatype_and_ptr", 'name': '*' + name})
                 else:
                     validation_list.append({'kind': "datatype_and_ptr", 'name': name})
@@ -264,7 +274,7 @@ def process_func_parameters(func, mapping):
                 validation_list.append({'kind': "OP_GACC", 'name': name})
             else:
                 validation_list.append({'kind': "op_and_ptr", 'name': name})
-        elif kind == "MESSAGE" and RE.search(r'direction=inout', p['t']):
+        elif kind == "MESSAGE" and p['param_direction'] == 'inout':
             do_handle_ptr = 1
         elif kind == "KEYVAL":
             if RE.search(r'_(set_attr|delete_attr|free_keyval)$', func_name):
@@ -309,18 +319,18 @@ def process_func_parameters(func, mapping):
         elif RE.match(r'(POLY)?(DTYPE_NUM_ELEM|DTYPE_STRIDE_BYTES|DISPLACEMENT_AINT_COUNT)$', kind):
             # e.g. stride in MPI_Type_vector, MPI_Type_create_resized
             pass
-        elif RE.search(r'length=', p['t']):
+        elif p['length']:
             print("Not sure how to check ARGNULL against array %s" % name, file=sys.stderr)
-        elif is_pointer_type(kind, p['t']):
+        elif is_pointer_type(p):
             validation_list.append({'kind': "ARGNULL", 'name': name})
         else:
             print("Missing error checking: %s" % kind, file=sys.stderr)
 
         if do_handle_ptr == 1:
-            if RE.search(r'direction=inout', p['t']):
+            if p['param_direction'] == 'inout':
                 # assume only one such parameter
                 func['_has_handle_inout'] = p
-            if RE.search(r'(direction=inout|pointer=True)', p['t']) and not RE.search(r'length=', p['t']):
+            if (p['param_direction'] == 'inout' or p['pointer']) and not p['length']:
                 p['_pointer'] = 1
             handle_ptr_list.append(p)
             impl_arg_list.append(name + "_ptr")
@@ -407,7 +417,7 @@ def dump_manpage(func):
     G.out.append("   %s - %s" % (func_name, func['desc']))
     G.out.append("")
     lis_map = G.MAPS['LIS_KIND_MAP']
-    for p in func['params']:
+    for p in func['c_parameters']:
         lis_type = lis_map[p['kind']]
         if 'desc' not in p:
             if p['kind'] in G.default_descriptions:
@@ -417,10 +427,10 @@ def dump_manpage(func):
         p['desc'] += " (%s)" % (lis_type)
 
     input_list, output_list, inout_list = [], [], []
-    for p in func['params']:
-        if RE.search(r'direction=out', p['t']):
+    for p in func['c_parameters']:
+        if p['param_direction'] == 'out':
             output_list.append(p)
-        elif RE.search(r'direction=inout', p['t']):
+        elif p['param_direction'] == 'inout':
             inout_list.append(p)
         else:
             input_list.append(p)
@@ -454,9 +464,9 @@ def dump_manpage(func):
         G.out.append(".N %s" % extra)
         if extra == "Fortran":
             has = {}
-            for p in func['params']:
+            for p in func['c_parameters']:
                 if p['kind'] == "status":
-                    if RE.search(r'length=', p['t']):
+                    if p['length']:
                         has['FortStatusArray'] = 1
                     else:
                         has['FortranStatus'] = 1
@@ -722,8 +732,8 @@ def dump_body_impl(func, prefix='mpir'):
             if kind in G.handle_NULLs:
                 G.out.append("*%s = %s;" % (name, G.handle_NULLs[kind]))
     elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
-        p = func['params'][-1]
-        if p['kind'] == "DATATYPE" and RE.search(r'direction=out', p['t'], re.IGNORECASE):
+        p = func['c_parameters'][-1]
+        if p['kind'] == "DATATYPE" and p['param_direction'] == 'out':
             G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
 
     if prefix == 'mpid':
@@ -808,13 +818,13 @@ def get_fn_fail_create_code(func, mapping):
 
     (fmts, args, err_fmts) = ([], [], [])
     fmt_codes = {'RANK': "i", 'TAG': "t", 'COMMUNICATOR': "C", 'ASSERT': "A", 'DATATYPE': "D", 'ERRHANDLER': "E", 'FILE': "F", 'GROUP': "G", 'INFO': "I", 'OPERATION': "O", 'REQUEST': "R", 'WINDOW': "W", 'SESSION': "S", 'KEYVAL': "K", "GREQUEST_CLASS": "x"}
-    for p in func['params']:
+    for p in func['c_parameters']:
         kind = p['kind']
         name = p['name']
         fmt = None
-        if kind == "STRING" and not RE.search(r'direction=out', p['t'], re.IGNORECASE):
+        if kind == "STRING" and p['param_direction'] != 'out':
             fmt = 's'
-        elif is_pointer_type(kind, p['t']):
+        elif is_pointer_type(p):
             fmt = 'p'
         elif kind in fmt_codes:
             fmt = fmt_codes[kind]
@@ -858,12 +868,12 @@ def check_early_returns(func):
 
 def dump_early_return_pt2pt_proc_null(func):
     check_rank, has_request, has_message, has_status, has_flag = '', '', '', '', ''
-    for p in func['params']:
+    for p in func['c_parameters']:
         kind = p['kind']
         name = p['name']
         if kind.startswith("RANK"):
             check_rank = name
-        elif RE.search(r'direction=out', p['t']):
+        elif p['param_direction'] == 'out':
             if kind == "REQUEST":
                 has_request = name
             elif kind == "MESSAGE":
@@ -901,8 +911,7 @@ def dump_early_return_pt2pt_proc_null(func):
 # -- validations (complex, sorry) ----
 def dump_handle_ptr_var(func, p):
     (kind, name) = (p['kind'], p['name'])
-    if kind == "REQUEST" and RE.search(r'length=(\w+)', p['t']):
-        count = RE.m.group(1)
+    if kind == "REQUEST" and p['length']:
         G.out.append("MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];")
         G.out.append("MPIR_Request **request_ptrs = request_ptr_array;")
     else:
@@ -933,12 +942,11 @@ def dump_validate_handle(func, p):
         G.out.append("MPIR_ERRTEST_ERRHANDLER(%s, mpi_errno);" % name)
     elif kind == "REQUEST":
         G.err_codes['MPI_ERR_REQUEST'] = 1
-        if RE.search(r'length=(\w+)', p['t']):
-            count = RE.m.group(1)
-            G.out.append("if (%s > 0) {" % count)
+        if p['length']:
+            G.out.append("if (%s > 0) {" % p['length'])
             G.out.append("INDENT")
             G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
-            G.out.append("for (int i = 0; i < %s; i++) {" % count)
+            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
             if p['_request_array'] == 'startall':
                 G.out.append("    MPIR_ERRTEST_REQUEST(%s[i], mpi_errno);" % name)
             elif p['_request_array'] == 'waitall':
@@ -984,23 +992,22 @@ def dump_convert_handle(func, p):
     if '_pointer' in p:
         name = "*" + p['name']
 
-    if kind == "REQUEST" and RE.search(r'length=(\w+)', p['t']):
-        count = RE.m.group(1)
-        G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % count)
-        G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % count)
+    if kind == "REQUEST" and p['length']:
+        G.out.append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % p['length'])
+        G.out.append("    int nbytes = %s * sizeof(MPIR_Request *);" % p['length'])
         G.out.append("    request_ptrs = (MPIR_Request **) MPL_malloc(nbytes, MPL_MEM_OBJECT);")
         G.out.append("    if (request_ptrs == NULL) {")
         G.out.append("        MPIR_CHKMEM_SETERR(mpi_errno, nbytes, \"request pointers\");")
         G.out.append("        goto fn_fail;")
         G.out.append("    }")
         G.out.append("}")
-        func['exit_routines'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (count))
+        func['exit_routines'].append("if (%s > MPIR_REQUEST_PTR_ARRAY_SIZE) {" % (p['length']))
         func['exit_routines'].append("    MPL_free(request_ptrs);")
         func['exit_routines'].append("}")
 
         if p['_request_array'] == "startall":
             G.out.append("")
-            G.out.append("for (int i = 0; i < %s; i++) {" % count)
+            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
             G.out.append("    MPIR_Request_get_ptr(%s[i], request_ptrs[i]);" % name)
             G.out.append("}")
     else:
@@ -1024,11 +1031,10 @@ def dump_validate_handle_ptr(func, p):
     if '_pointer' in p:
         name = "*" + p['name']
     mpir = G.handle_mpir_types[kind]
-    if kind == "REQUEST" and RE.search(r'length=(\w+)', p['t']):
+    if kind == "REQUEST" and p['length']:
         if p['_request_array'] == "startall":
-            count = RE.m.group(1)
             ptr = p['_ptrs_name'] + '[i]'
-            G.out.append("for (int i = 0; i < %s; i++) {" % count)
+            G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
             G.out.append("    MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr)
             dump_error_check("    ")
             if func_name == "MPI_Startall":
@@ -1209,8 +1215,8 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("if (%s > 0) {" % ct)
         G.out.append("    MPIR_ERRTEST_ALIAS_COLL(%s, %s, mpi_errno);" % (sbuf, rbuf))
         G.out.append("}")
-        G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", count, mpi_errno);" % (sbuf, sbuf))
-        G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", count, mpi_errno);" % (rbuf, rbuf))
+        G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (sbuf, sbuf, ct))
+        G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", %s, mpi_errno);" % (rbuf, rbuf, ct))
     elif RE.match(r'mpi_i?reduce$', func['name'], re.IGNORECASE):
         G.out.append("if (" + cond_intra + ") {")
         G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
@@ -1426,7 +1432,7 @@ def get_function_name(func, mapping):
 
 def get_function_args(func):
     arg_list = []
-    for p in func['params']:
+    for p in func['c_parameters']:
         arg_list.append(p['name'])
     return ', '.join(arg_list)
 
@@ -1446,9 +1452,8 @@ def get_declare_function(func, mapping):
 
 def get_C_params(func, mapping):
     param_list = []
-    for p in func['params']:
-        if not RE.search(r'suppress=c_parameter', p['t']):
-            param_list.append(get_C_param(p, mapping))
+    for p in func['c_parameters']:
+        param_list.append(get_C_param(p, mapping))
     if not len(param_list):
         return ["void"]
     else:
@@ -1462,15 +1467,13 @@ def get_C_param(param, mapping):
     want_star, want_bracket = '', ''
     param_type = mapping[kind]
 
-    if RE.search(r'func_type=(\w+)', param['t']):
-        func_type = RE.m.group(1)
-        param_type = func_type
+    if param['func_type']:
+        param_type = param['func_type']
 
     if not param_type:
         raise Exception("Type mapping [%s] %s not found!" % (mapping, kind))
     if not want_star:
-        t = param['t']
-        if is_pointer_type(kind, t):
+        if is_pointer_type(param):
             if kind == "STRING_ARRAY":
                 want_star = 1
                 want_bracket = 1
@@ -1479,15 +1482,15 @@ def get_C_param(param, mapping):
                 want_bracket = 1
             elif kind == "ARGUMENT_LIST":
                 want_star = 3
-            elif RE.search(r'pointer=False', t, re.IGNORECASE):
+            elif param['pointer'] is not None and not param['pointer']:
                 want_bracket = 1
-            elif RE.search(r'length=', t) and kind != "STRING":
+            elif param['length'] and kind != "STRING":
                 want_bracket = 1
             else:
                 want_star = 1
 
     s = ''
-    if RE.search(r'constant=True', param['t']):
+    if param['constant']:
         s += "const "
     s += param_type
 
@@ -1499,9 +1502,8 @@ def get_C_param(param, mapping):
 
     if want_bracket:
         s += "[]"
-    if RE.search(r'length=\[.*?, (\d+)\]', param['t']):
-        n = RE.m.group(1)
-        s += "[%s]" % (n)
+    if isinstance(param['length'], list):
+        s += "[%s]" % param['length'][-1]
 
     return s
 
@@ -1513,16 +1515,16 @@ def get_polymorph_param_and_arg(s):
     extra_arg = RE.m.group(3)
     return (extra_param, extra_arg)
 
-def is_pointer_type(kind, t):
-    if RE.match(r'(STRING\w*)$', kind):
+def is_pointer_type(param):
+    if RE.match(r'(STRING\w*)$', param['kind']):
         return 1
-    elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|STATUS|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', kind):
+    elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|STATUS|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', param['kind']):
         return 1
-    elif RE.search(r'direction=(in)?out', t, re.IGNORECASE):
+    elif param['param_direction'] != 'in':
         return 1
-    elif RE.search(r'length=', t):
+    elif param['length']:
         return 1
-    elif RE.search(r'pointer=True', t):
+    elif param['pointer']:
         return 1
     else:
         return 0

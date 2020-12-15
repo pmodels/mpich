@@ -9,30 +9,18 @@ from local_python import MPI_API_Global as G
 import re
 import copy
 
-# If gen_in_dir is given, all functions loaded in api_txt are candidates 
-# for binding generation. This allows fine-grain binding control.
-def load_mpi_api(api_txt, gen_in_dir=""):
-    """Load mpi standard api into global (G) lists and dictionaries."""
-    see_also_idx = 0
-    cur_func, cur_map, cur_name = '', '', ''
+def load_mpi_json(api_json):
+    import json
+    with open(api_json) as In:
+        G.FUNCS = json.load(In)
+
+def load_mpi_mapping(api_mapping_txt):
+    cur_map, cur_name = '', ''
     stage = ''
-    with open(api_txt, "r") as In:
+    with open(api_mapping_txt, "r") as In:
         for line in In:
             # -- stage header --
-            if RE.match(r'(MPI\w+):\s*(.*)', line):
-                name, attr = RE.m.group(1, 2)
-                stage = "FUNC"
-                cur_name = name
-                if name in G.FUNCS:
-                    cur_func = G.FUNCS[name]
-                    if attr:
-                        cur_func['attrs'] = attr
-                else:
-                    cur_func = {'name': name, 'params': [], 'attrs': attr, 'desc': ""}
-                    G.FUNCS[name] = cur_func
-                if gen_in_dir:
-                    cur_func['dir'] = gen_in_dir
-            elif RE.match(r'(\w+_KIND_MAP):', line):
+            if RE.match(r'(\w+_KIND_MAP):', line):
                 name = RE.m.group(1)
                 stage = "MAP"
                 cur_name = name
@@ -44,6 +32,44 @@ def load_mpi_api(api_txt, gen_in_dir=""):
             elif RE.match(r'Default Descriptions', line):
                 stage = "default_descriptions"
                 cur_name = "Default Descriptions"
+            # -- per-stage parsing --
+            elif stage == "MAP":
+                if RE.match(r'\s+\.base:\s*(\w+)', line):
+                    name = RE.m.group(1)
+                    cur_map = copy.deepcopy(G.MAPS[name])
+                    cur_map['_name'] = cur_name
+                    G.MAPS[cur_name] = cur_map
+                elif RE.match(r'\s+(\w+):\s*(.*)', line):
+                    name, param_type = RE.m.group(1, 2)
+                    cur_map[name] = param_type
+            elif stage == "default_descriptions":
+                if RE.match(r'\s*(\w+):\s*(.*)', line):
+                    key, val = RE.m.group(1, 2)
+                    G.default_descriptions[key] = val
+
+# If gen_in_dir is given, all functions loaded in api_txt are candidates 
+# for binding generation. This allows fine-grain binding control.
+def load_mpi_api(api_txt, gen_in_dir=""):
+    """Load mpi standard api into global (G) lists and dictionaries."""
+    cur_func, cur_name = '', ''
+    stage = ''
+    with open(api_txt, "r") as In:
+        for line in In:
+            # -- stage header --
+            if RE.match(r'(MPI\w+):\s*(.*)', line):
+                name, attr = RE.m.group(1, 2)
+                key = name.lower()
+                stage = "FUNC"
+                cur_name = name
+                if key in G.FUNCS:
+                    cur_func = G.FUNCS[key]
+                    if RE.search(r'not_implemented', attr):
+                        cur_func['not_implemented'] = True
+                else:
+                    cur_func = {'name': name, 'parameters': [], 'attrs': attr, 'desc': ""}
+                    G.FUNCS[key] = cur_func
+                if gen_in_dir:
+                    cur_func['dir'] = gen_in_dir
             # -- per-stage parsing --
             elif stage == "FUNC":
                 if RE.match(r'\s+\.(\w+):\s*(.*)', line):
@@ -58,7 +84,10 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     if RE.match(r'(.*),\s*\[(.*)\]\s*$', t):
                         t, p['desc'] = RE.m.group(1, 2)
                     p['t'] = t
-                    cur_func['params'].append(p)
+                    # we include all extra attributes in a 't' string for flexibity
+                    # we'll parse the common fields also to improve code readability
+                    parse_param_attributes(p)
+                    cur_func['parameters'].append(p)
                 elif RE.match(r'{\s*-+\s*(\w+)\s*-+(.*)', line):
                     stage = "code-"+RE.m.group(1)
                     if stage not in cur_func:
@@ -78,19 +107,6 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                         cur_func['notes'] = []
                     else:
                         cur_func['notes2'] = []
-            elif stage == "MAP":
-                if RE.match(r'\s+\.base:\s*(\w+)', line):
-                    name = RE.m.group(1)
-                    cur_map = copy.deepcopy(G.MAPS[name])
-                    cur_map['_name'] = cur_name
-                    G.MAPS[cur_name] = cur_map
-                elif RE.match(r'\s+(\w+):\s*(.*)', line):
-                    name, param_type = RE.m.group(1, 2)
-                    cur_map[name] = param_type
-            elif stage == "default_descriptions":
-                if RE.match(r'\s*(\w+):\s*(.*)', line):
-                    key, val = RE.m.group(1, 2)
-                    G.default_descriptions[key] = val
             elif stage == "FUNC-body":
                 if RE.match(r'}', line):
                     stage = "FUNC"
@@ -112,3 +128,48 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                         cur_func['notes2'].append(line)
                     else:
                         cur_func['notes'].append(line)
+
+def parse_param_attributes(p):
+    """Parse the parameter attribute string and populate common fields"""
+    # this filter function should result in identical results as the JSON
+    if RE.search(r'direction\s*=\s*out', p['t'], re.IGNORECASE):
+        p['param_direction'] = 'out'
+    elif RE.search(r'direction\s*=\s*inout', p['t'], re.IGNORECASE):
+        p['param_direction'] = 'inout'
+    else:
+        p['param_direction'] = 'in'
+
+    if RE.search(r'length\s*=\s*\[(.*)\]', p['t']):
+        # only the case of MPI_Group_range_{excl,incl} where length=[n, 3]
+        p['length'] = RE.m.group(1).replace(' ', '').split(',')
+    elif RE.search(r'length\s*=\s*([^,\s]+)', p['t']):
+        p['length'] = RE.m.group(1)
+    else:
+        p['length'] = None
+
+    if RE.search(r'large_only', p['t']):
+        p['large_only'] = True
+    else:
+        p['large_only'] = False
+
+    if RE.search(r'pointer\s*=\s*True', p['t']):
+        p['pointer'] = True
+    elif RE.search(r'pointer\s*=\s*False', p['t']):
+        p['pointer'] = False
+    else:
+        p['pointer'] = None
+
+    if RE.search(r'suppress=.*c_parameter', p['t']):
+        p['suppress'] = "c_parameter"
+    else:
+        p['suppress'] = ''
+
+    if RE.search(r'func_type\s*=\s*(\w+)', p['t']):
+        p['func_type'] = RE.m.group(1)
+    else:
+        p['func_type'] = ''
+
+    if RE.search(r'constant\s*=\s*True', p['t']):
+        p['constant'] = True
+    else:
+        p['constant'] = False
