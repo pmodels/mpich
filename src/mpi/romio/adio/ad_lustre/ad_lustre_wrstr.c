@@ -301,6 +301,13 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
         /* this could happen, for example, with subarray types that are
          * actually fairly contiguous */
         if (buftype_is_contig && bufsize <= fwr_size) {
+            int tsize;
+            MPI_Type_size(datatype, &tsize);
+            size_t from = offset;
+            size_t sz = tsize * count;
+            int comm_size;
+            MPI_Comm_size(fd->comm, &comm_size);
+
             req_off = start_off;
             req_len = bufsize;
             end_offset = start_off + bufsize - 1;
@@ -310,9 +317,15 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
             writebuf_len = 0;
             userbuf_off = 0;
             ADIOI_BUFFERED_WRITE_WITHOUT_READ;
+            if (fd->view_has_noncontig && comm_size > 1) {
+                ADIOI_WRITE_LOCK(fd, from, SEEK_SET, sz);
+            }
             /* write the buffer out finally */
             ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,
                              ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code);
+            if (fd->view_has_noncontig && comm_size > 1) {
+                ADIOI_UNLOCK(fd, from, SEEK_SET, sz);
+            }
 
             if (file_ptr_type == ADIO_INDIVIDUAL) {
                 /* update MPI-IO file pointer to point to the first byte

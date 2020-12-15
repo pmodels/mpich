@@ -280,8 +280,30 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
              * datatypes, instead of a count of bytes (which might overflow)
              * Other WriteContig calls in this path are operating on data
              * sieving buffer */
+
+            /* The ranks with a contiguous view need to lock in order
+             * to not step on their MPI_File_write() peers, if any peers have
+             * a non-contig view and are thus potentially in a sieving path.
+             *
+             * Note: I don't think I need to be conditional on fd->atomicity
+             * here, the peer ranks with their non-contiguous view differ in
+             * the location they take a lock depending on whether they have
+             * atomicity set, but they end up with a lock either way.
+             */
+            int tsize;
+            MPI_Type_size(datatype, &tsize);
+            size_t from = offset;
+            size_t sz = tsize * count;
+            int comm_size;
+            MPI_Comm_size(fd->comm, &comm_size);
+            if (fd->view_has_noncontig && comm_size > 1) {
+                ADIOI_WRITE_LOCK(fd, from, SEEK_SET, sz);
+            }
             ADIO_WriteContig(fd, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
+            if (fd->view_has_noncontig && comm_size > 1) {
+                ADIOI_UNLOCK(fd, from, SEEK_SET, sz);
+            }
 
             if (file_ptr_type == ADIO_INDIVIDUAL) {
                 /* update MPI-IO file pointer to point to the first byte

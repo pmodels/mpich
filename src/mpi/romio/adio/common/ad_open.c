@@ -62,6 +62,13 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->filetype = filetype;    /* MPI_BYTE by default */
     fd->etype_size = 1; /* default etype is MPI_BYTE */
 
+    /* All romio calls to ADIO_Open appear to use MPI_BYTE, so I don't
+     * really want to check the contiguousness of filetype and allreduce
+     * it here to fill in the below if it's not necessary. The main place
+     * the below gets checked and set via allreduce is in the set_view call.
+     */
+    fd->view_has_noncontig = 0;
+
     fd->file_realm_st_offs = NULL;
     fd->file_realm_types = NULL;
 

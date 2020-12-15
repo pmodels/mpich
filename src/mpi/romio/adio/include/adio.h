@@ -205,6 +205,7 @@ typedef struct ADIOI_FileD {
     ADIO_Offset disp;           /* reqd. for MPI-IO */
     MPI_Datatype etype;         /* reqd. for MPI-IO */
     MPI_Datatype filetype;      /* reqd. for MPI-IO */
+    int view_has_noncontig;     /* are any ranks set_view() noncontig */
     MPI_Count etype_size;       /* in bytes */
     ADIOI_Hints *hints;         /* structure containing fs-indep. info values */
     MPI_Info info;

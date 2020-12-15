@@ -17,6 +17,8 @@
 
 #define USE_PRE_REQ
 
+static int key_for_saving_is_contig_globally = MPI_KEYVAL_INVALID;
+
 static void Exch_data_amounts(ADIO_File fd, int nprocs,
                               ADIO_Offset * client_comm_sz_arr,
                               ADIO_Offset * agg_comm_sz_arr,
@@ -223,6 +225,28 @@ void ADIOI_IOStridedColl(ADIO_File fd, void *buf, int count, int rdwr,
         ADIOI_Build_agg_reqs(fd, rdwr, nprocs,
                              client_file_view_state_arr,
                              client_comm_dtype_arr, client_comm_sz_arr, &agg_disp, &agg_dtype);
+
+        /* Identify if agg_dtype is contiguous at all the ranks or not.  This gets
+         * used in a temporary view that's created internally
+         *
+         * I'm not positive at what points we're in a collective with the rest of
+         * fd->comm, but I see an alltoall elsewhere in this function so I think
+         * we're safely in a collective here. I'm being cautious and attaching an
+         * attribute to agg_dtype here rather than postponing the allreduce till
+         * the ADIOI_IOFiletype() call at which point I'm less sure whether we're
+         * always making that call collectively.
+         */
+        if (key_for_saving_is_contig_globally == MPI_KEYVAL_INVALID) {
+            MPI_Type_create_keyval(MPI_TYPE_NULL_COPY_FN,
+                                   MPI_TYPE_NULL_DELETE_FN,
+                                   &key_for_saving_is_contig_globally, NULL);
+        }
+        int type_is_contig, type_is_contig_globally;
+        ADIOI_Datatype_iscontig(agg_dtype, &type_is_contig);
+        MPI_Allreduce(&type_is_contig, &type_is_contig_globally, 1, MPI_INT, MPI_LAND, fd->comm);
+        MPI_Type_set_attr(agg_dtype, key_for_saving_is_contig_globally,
+                          (void *) (uintptr_t) type_is_contig_globally);
+
         buffered_io_size = 0;
         for (i = 0; i < nprocs; i++) {
             if (client_comm_sz_arr[i] > 0)
@@ -839,6 +863,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
                       int rdwr, ADIO_Status * status, int *error_code)
 {
     MPI_Datatype user_filetype;
+    int user_view_has_noncontig;
     MPI_Datatype user_etype;
     ADIO_Offset user_disp;
     int user_ind_wr_buffer_size;
@@ -861,6 +886,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
 
     /* temporarily store file view information */
     user_filetype = fd->filetype;
+    user_view_has_noncontig = fd->view_has_noncontig;
     user_etype = fd->etype;
     user_disp = fd->disp;
     user_ds_read = fd->hints->ds_read;
@@ -885,6 +911,15 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
     } else {
         fd->hints->ds_read = ADIOI_HINT_DISABLE;
         fd->hints->ds_write = ADIOI_HINT_DISABLE;
+    }
+
+    if (key_for_saving_is_contig_globally != MPI_KEYVAL_INVALID) {
+        int type_is_contig_globally, flag;
+        MPI_Type_get_attr(custom_ftype, key_for_saving_is_contig_globally,
+                          (void *) &type_is_contig_globally, &flag);
+        if (flag && !type_is_contig_globally) {
+            fd->view_has_noncontig = 1;
+        }
     }
 
     /* flatten the new filetype since the strided calls expect it to
@@ -916,6 +951,7 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
 
     /* restore the user specified file view to cover our tracks */
     fd->filetype = user_filetype;
+    fd->view_has_noncontig = user_view_has_noncontig;
     fd->etype = user_etype;
     fd->disp = user_disp;
     fd->hints->ds_read = user_ds_read;

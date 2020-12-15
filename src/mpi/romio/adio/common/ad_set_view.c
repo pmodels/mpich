@@ -120,5 +120,11 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
             }
         }
     }
+
+    int filetype_is_contig_globally;
+    MPI_Allreduce(&filetype_is_contig, &filetype_is_contig_globally,
+                  1, MPI_INT, MPI_LAND, fd->comm);
+    fd->view_has_noncontig = !filetype_is_contig_globally;
+
     *error_code = MPI_SUCCESS;
 }
