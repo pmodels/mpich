@@ -44,7 +44,7 @@ def get_func_file_path(func, root_dir):
         os.mkdir(dir_path)
     if 'file' in func:
         file_path = dir_path + '/' + func['file'] + ".c"
-    elif RE.match(r'MPIX?_(\w+)', func['name'], re.I):
+    elif RE.match(r'MPIX?_(\w+)', func['name'], re.IGNORECASE):
         name = RE.m.group(1)
         file_path = dir_path + '/' + name.lower() + ".c"
     else:
@@ -165,14 +165,14 @@ def process_func_parameters(func, mapping):
         if i + 3 <= n and RE.search(r'BUFFER', p['kind']):
             p2 = func['params'][i + 1]
             p3 = func['params'][i + 2]
-            if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.I):
+            if RE.match(r'mpi_i?(alltoall|allgather|gather|scatter)', func_name, re.IGNORECASE):
                 type = "inplace"
-                if RE.search(r'send', p['name'], re.I) and RE.search(r'scatter', func_name, re.I):
+                if RE.search(r'send', p['name'], re.IGNORECASE) and RE.search(r'scatter', func_name, re.IGNORECASE):
                     type = "noinplace"
-                elif RE.search(r'recv', p['name'], re.I) and not RE.search(r'scatter', func_name, re.I):
+                elif RE.search(r'recv', p['name'], re.IGNORECASE) and not RE.search(r'scatter', func_name, re.IGNORECASE):
                     type = "noinplace"
 
-                if RE.search(r'alltoallw', func_name, re.I):
+                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
                     group_kind = "USERBUFFER-%s-w" % (type)
                     group_count = 4
                 elif p3['kind'] == "DATATYPE":
@@ -181,8 +181,8 @@ def process_func_parameters(func, mapping):
                 else:
                     group_kind = "USERBUFFER-%s-v" % (type)
                     group_count = 4
-            elif RE.match(r'mpi_i?neighbor', func_name, re.I):
-                if RE.search(r'alltoallw', func_name, re.I):
+            elif RE.match(r'mpi_i?neighbor', func_name, re.IGNORECASE):
+                if RE.search(r'alltoallw', func_name, re.IGNORECASE):
                     group_kind = "USERBUFFER-neighbor-w"
                     group_count = 4
                 elif p3['kind'] == "DATATYPE":
@@ -191,7 +191,7 @@ def process_func_parameters(func, mapping):
                 else:
                     group_kind = "USERBUFFER-neighbor-v"
                     group_count = 4
-            elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.I):
+            elif RE.match(r'mpi_i?(allreduce|reduce|scan|exscan)', func_name, re.IGNORECASE):
                 group_kind = "USERBUFFER-reduce"
                 group_count = 5
             elif RE.search(r'XFER_NUM_ELEM', p2['kind']) and RE.search(r'DATATYPE', p3['kind']):
@@ -200,12 +200,12 @@ def process_func_parameters(func, mapping):
         if group_count > 0:
             t = ''
             for j in range(group_count):
-                pj = func['params'][i + j]
+                temp_p = func['params'][i + j]
                 if t:
                     t += ","
-                t += pj['name']
-                impl_arg_list.append(pj['name'])
-                impl_param_list.append(get_C_param(pj, mapping))
+                t += temp_p['name']
+                impl_arg_list.append(temp_p['name'])
+                impl_param_list.append(get_C_param(temp_p, mapping))
             validation_list.append({'kind': group_kind, 'name': t})
             i += group_count
             continue
@@ -223,7 +223,7 @@ def process_func_parameters(func, mapping):
         elif "code-error_check-tail" in func and name in func['code-error_check-tail']:
             # -- user bypass --
             pass
-        elif RE.search(r'direction=out', p['t'], re.I):
+        elif RE.search(r'direction=out', p['t'], re.IGNORECASE):
             # -- output parameter --
             validation_list.append({'kind': "ARGNULL", 'name': name})
             if RE.search(r'get_errhandler$', func_name):
@@ -236,10 +236,10 @@ def process_func_parameters(func, mapping):
         elif RE.search(r'length=', p['t']):
             # -- array parameter --
             if kind == "REQUEST":
-                if RE.match(r'mpi_startall', func_name, re.I):
+                if RE.match(r'mpi_startall', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
                     p['_request_array'] = 'startall'
-                elif RE.match(r'mpi_(wait|test)', func_name, re.I):
+                elif RE.match(r'mpi_(wait|test)', func_name, re.IGNORECASE):
                     do_handle_ptr = 3
                     p['_request_array'] = 'waitall'
             elif kind == "RANK":
@@ -248,7 +248,7 @@ def process_func_parameters(func, mapping):
                 # FIXME
                 pass
         elif kind == "DATATYPE":
-            if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|get_name|lb|ub|extent)', func_name, re.I):
+            if RE.match(r'mpi_type_(get|set|delete)_attr|mpi_type_(set_name|get_name|lb|ub|extent)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
             else:
                 if is_pointer_type(kind, p['t']):
@@ -256,11 +256,11 @@ def process_func_parameters(func, mapping):
                 else:
                     validation_list.append({'kind': "datatype_and_ptr", 'name': name})
         elif kind == "OPERATION":
-            if RE.match(r'mpi_op_(free|commutative)', func_name, re.I):
+            if RE.match(r'mpi_op_(free|commutative)', func_name, re.IGNORECASE):
                 do_handle_ptr = 1
-            elif RE.match(r'mpi_r?accumulate', func_name, re.I):
+            elif RE.match(r'mpi_r?accumulate', func_name, re.IGNORECASE):
                 validation_list.append({'kind': "OP_ACC", 'name': name})
-            elif RE.match(r'mpi_(r?get_accumulate|fetch_and_op)', func_name, re.I):
+            elif RE.match(r'mpi_(r?get_accumulate|fetch_and_op)', func_name, re.IGNORECASE):
                 validation_list.append({'kind': "OP_GACC", 'name': name})
             else:
                 validation_list.append({'kind': "op_and_ptr", 'name': name})
@@ -276,9 +276,9 @@ def process_func_parameters(func, mapping):
             pass
         elif kind in G.handle_mpir_types:
             do_handle_ptr = 1
-            if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.I):
+            if kind == "INFO" and not RE.match(r'mpi_(info_.*|.*_set_info)$', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_INFO_NULL"
-            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status)', func_name, re.I):
+            elif kind == "REQUEST" and RE.match(r'mpi_(wait|test|request_get_status)', func_name, re.IGNORECASE):
                 p['can_be_null'] = "MPI_REQUEST_NULL"
         elif kind == "RANK" and name == "root":
             validation_list.insert(0, {'kind': "ROOT", 'name': name})
@@ -435,7 +435,7 @@ def dump_manpage(func):
         G.out.append("")
 
     if 'replace' in func:
-        if RE.match(r'\s*(deprecated|removed)', func['replace'], re.I):
+        if RE.match(r'\s*(deprecated|removed)', func['replace'], re.IGNORECASE):
             G.out.append(".N %s" % RE.m.group(1).capitalize())
         else:
             print("Missing reasons in %s .replace" % func_name, file=sys.stderr)
@@ -638,7 +638,7 @@ def dump_function_normal(func, state_name, mapping):
     if 'body' in func:
         for l in func['body']:
             G.out.append(l)
-    elif 'impl' in func and RE.match(r'mpid', func['impl'], re.I):
+    elif 'impl' in func and RE.match(r'mpid', func['impl'], re.IGNORECASE):
         dump_body_impl(func, "mpid")
     elif func['dir'] == 'coll':
         dump_body_coll(func)
@@ -721,9 +721,9 @@ def dump_body_impl(func, prefix='mpir'):
             G.out.append("%s *%s_ptr = NULL;" % (mpir_type, name))
             if kind in G.handle_NULLs:
                 G.out.append("*%s = %s;" % (name, G.handle_NULLs[kind]))
-    elif RE.match(r'mpi_type_', func['name'], re.I):
+    elif RE.match(r'mpi_type_', func['name'], re.IGNORECASE):
         p = func['params'][-1]
-        if p['kind'] == "DATATYPE" and RE.search(r'direction=out', p['t'], re.I):
+        if p['kind'] == "DATATYPE" and RE.search(r'direction=out', p['t'], re.IGNORECASE):
             G.out.append("*%s = MPI_DATATYPE_NULL;" % p['name'])
 
     if prefix == 'mpid':
@@ -775,7 +775,7 @@ def dump_function_direct(func, state_name):
 def dump_mpi_fn_fail(func, mapping):
     G.out.append("/* --BEGIN ERROR HANDLINE-- */")
 
-    if RE.match(r'mpi_(finalized|initialized)', func['name'], re.I):
+    if RE.match(r'mpi_(finalized|initialized)', func['name'], re.IGNORECASE):
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         cond = "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT" + " && " + "MPL_atomic_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__POST_FINALIZED"
         dump_if_open(cond)
@@ -812,7 +812,7 @@ def get_fn_fail_create_code(func, mapping):
         kind = p['kind']
         name = p['name']
         fmt = None
-        if kind == "STRING" and not RE.search(r'direction=out', p['t'], re.I):
+        if kind == "STRING" and not RE.search(r'direction=out', p['t'], re.IGNORECASE):
             fmt = 's'
         elif is_pointer_type(kind, p['t']):
             fmt = 'p'
@@ -850,7 +850,7 @@ def check_early_returns(func):
     if 'earlyreturn' in func:
         early_returns = func['earlyreturn'].split(',\s*')
         for kind in early_returns:
-            if RE.search(r'pt2pt_proc_null', kind, re.I):
+            if RE.search(r'pt2pt_proc_null', kind, re.IGNORECASE):
                 dump_early_return_pt2pt_proc_null(func)
     if 'code-early_return' in func:
         for l in func['code-early_return']:
@@ -877,10 +877,10 @@ def dump_early_return_pt2pt_proc_null(func):
     G.out.append("INDENT")
     if has_request:
         request_kind = ''
-        if RE.search(r'mpi_.*(send|recv|probe)$', func['name'], re.I):
+        if RE.search(r'mpi_.*(send|recv|probe)$', func['name'], re.IGNORECASE):
             a = RE.m.group(1)
             request_kind = "MPIR_REQUEST_KIND__" + a.upper()
-        elif RE.search(r'mpi_r(put|get|accumulate|get_accumulate)$', func['name'], re.I):
+        elif RE.search(r'mpi_r(put|get|accumulate|get_accumulate)$', func['name'], re.IGNORECASE):
             request_kind = "MPIR_REQUEST_KIND__RMA"
         else:
             raise Exception("Unexpected %s for pt2pt_proc_null" % func['name'])
@@ -968,14 +968,14 @@ def dump_validate_handle(func, p):
             G.out.append("MPIR_ERRTEST_INFO(%s, mpi_errno);" % name)
     elif kind == "KEYVAL":
         G.err_codes['MPI_ERR_KEYVAL'] = 1
-        if RE.match(r'mpi_comm_', func_name, re.I):
+        if RE.match(r'mpi_comm_', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_COMM, \"communicator\", mpi_errno);" % name)
-        elif RE.match(r'mpi_type_', func_name, re.I):
+        elif RE.match(r'mpi_type_', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_DATATYPE, \"datatype\", mpi_errno);" % name)
-        elif RE.match(r'mpi_win_', func_name, re.I):
+        elif RE.match(r'mpi_win_', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_KEYVAL(%s, MPIR_WIN, \"window\", mpi_errno);" % name)
 
-        if not RE.match(r'\w+_(get_attr)', func_name, re.I):
+        if not RE.match(r'\w+_(get_attr)', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_KEYVAL_PERM(%s, mpi_errno);" % name)
 
 def dump_convert_handle(func, p):
@@ -1042,17 +1042,17 @@ def dump_validate_handle_ptr(func, p):
         G.out.append("    MPIR_ERR_CHKANDJUMP((%s->kind != MPIR_REQUEST_KIND__MPROBE)," % ptr_name)
         G.out.append("                        mpi_errno, MPI_ERR_ARG, \"**reqnotmsg\");")
         G.out.append("}")
-    elif kind == "COMMUNICATOR" and RE.match(r'mpi_intercomm_create', func_name, re.I):
+    elif kind == "COMMUNICATOR" and RE.match(r'mpi_intercomm_create', func_name, re.IGNORECASE):
         # use custom code in func['cond-error_check']
         pass
     elif kind == "COMMUNICATOR":
-        if RE.search(r'ignore_revoke', func['extra'], re.I):
+        if RE.search(r'ignore_revoke', func['extra'], re.IGNORECASE):
             G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, TRUE);" % ptr_name)
         else:
             G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, FALSE);" % ptr_name)
         dump_error_check("")
 
-        if RE.search(r'errtest_comm_intra', func['extra'], re.I):
+        if RE.search(r'errtest_comm_intra', func['extra'], re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_COMM_INTRA(%s, mpi_errno);" % ptr_name)
     else:
         if "can_be_null" in p:
@@ -1064,7 +1064,7 @@ def dump_validate_handle_ptr(func, p):
             G.out.append("%s_valid_ptr(%s, mpi_errno);" % (mpir, ptr_name))
             dump_error_check("")
 
-        if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.I):
+        if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
 
 def dump_validation(func, t):
@@ -1079,10 +1079,10 @@ def dump_validation(func, t):
         else:
             raise Exception("dump_validation RANK: missing comm_ptr in %s" % func_name)
 
-        if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.I) or name == "recvtag":
+        if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.IGNORECASE) or name == "recvtag":
             # allow MPI_ANY_SOURCE, MPI_PROC_NULL
             G.out.append("MPIR_ERRTEST_RECV_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
-        elif RE.match(r'(dest|target_rank)$', name) or RE.match(r'mpi_win_', func_name, re.I):
+        elif RE.match(r'(dest|target_rank)$', name) or RE.match(r'mpi_win_', func_name, re.IGNORECASE):
             # allow MPI_PROC_NULL
             G.out.append("MPIR_ERRTEST_SEND_RANK(%s, %s, mpi_errno);" % (comm_ptr, name))
         else:
@@ -1092,12 +1092,12 @@ def dump_validation(func, t):
         pass
     elif kind == "TAG":
         G.err_codes['MPI_ERR_TAG'] = 1
-        if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.I) or name == "recvtag":
+        if RE.match(r'mpi_(i?m?probe|i?recv|recv_init)$', func_name, re.IGNORECASE) or name == "recvtag":
             G.out.append("MPIR_ERRTEST_RECV_TAG(%s, mpi_errno);" % name)
         else:
             G.out.append("MPIR_ERRTEST_SEND_TAG(%s, mpi_errno);" % name)
     elif kind == "ROOT":
-        if RE.search(r'mpi_comm_', func_name, re.I):
+        if RE.search(r'mpi_comm_', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
         else:
             G.out.append("if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {")
@@ -1168,7 +1168,7 @@ def dump_validation(func, t):
 
 def dump_validate_userbuffer_simple(func, buf, ct, dt):
     check_no_op = False
-    if RE.match(r'mpi_r?get_accumulate', func['name'], re.I) and buf.startswith("origin_"):
+    if RE.match(r'mpi_r?get_accumulate', func['name'], re.IGNORECASE) and buf.startswith("origin_"):
         check_no_op = True
     if check_no_op:
         dump_if_open("op != MPI_NO_OP")
@@ -1203,7 +1203,7 @@ def dump_validate_userbuffer_neighbor_vw(func, kind, buf, ct, dt, disp):
 def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
     cond_intra = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM"
     cond_inter = "comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM"
-    if RE.match(r'mpi_reduce_local$', func['name'], re.I):
+    if RE.match(r'mpi_reduce_local$', func['name'], re.IGNORECASE):
         dump_validate_op(op, dt)
         dump_validate_datatype(func, dt)
         G.out.append("if (%s > 0) {" % ct)
@@ -1211,7 +1211,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         G.out.append("}")
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", count, mpi_errno);" % (sbuf, sbuf))
         G.out.append("MPIR_ERRTEST_NAMED_BUF_INPLACE(%s, \"%s\", count, mpi_errno);" % (rbuf, rbuf))
-    elif RE.match(r'mpi_i?reduce$', func['name'], re.I):
+    elif RE.match(r'mpi_i?reduce$', func['name'], re.IGNORECASE):
         G.out.append("if (" + cond_intra + ") {")
         G.out.append("    MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);")
         G.out.append("} else {")
@@ -1248,7 +1248,7 @@ def dump_validate_userbuffer_reduce(func, sbuf, rbuf, ct, dt, op):
         dump_validate_op(op, dt)
         dump_validate_datatype(func, dt)
         (sct, rct) = (ct, ct)
-        if RE.search(r'reduce_scatter$', func['name'], re.I):
+        if RE.search(r'reduce_scatter$', func['name'], re.IGNORECASE):
             dump_validate_get_comm_size(func)
             G.out.append("int sum = 0;")
             G.out.append("for (int i = 0; i < comm_size; i++) {")
@@ -1287,7 +1287,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
 
     # -- whether the buffer need be checked (or ignored)
     check_buf = None
-    if RE.search(r'_i?(gather|scatter)', func_name, re.I):
+    if RE.search(r'_i?(gather|scatter)', func_name, re.IGNORECASE):
         if inplace:
             cond_a = cond_intra + " && %s != MPI_IN_PLACE" % buf
             cond_b = cond_inter + " && root != MPI_ROOT && root != MPI_PROC_NULL"
@@ -1338,7 +1338,7 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
     if check_alias:
         G.out.append("if (%s) {" % check_alias)
         G.out.append("INDENT")
-        if RE.search(r'i?(alltoall)', func_name, re.I):
+        if RE.search(r'i?(alltoall)', func_name, re.IGNORECASE):
             cond = "sendtype == recvtype && sendcount == recvcount && sendcount != 0"
             if RE.search(r'-v$', kind):
                 cond = "sendtype == recvtype && sendcounts == recvcounts"
@@ -1347,10 +1347,10 @@ def dump_validate_userbuffer_coll(func, kind, buf, ct, dt, disp):
             G.out.append("if (%s) {" % cond)
             G.out.append("    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);")
             G.out.append("}")
-        elif RE.search(r'i?(allgather|gather|scatter)(v?)$', func_name, re.I):
+        elif RE.search(r'i?(allgather|gather|scatter)(v?)$', func_name, re.IGNORECASE):
             t1, t2 = RE.m.group(1, 2)
             (a, b) = ("send", "recv")
-            if RE.match(r'scatter', t1, re.I):
+            if RE.match(r'scatter', t1, re.IGNORECASE):
                 (a, b) = ("recv", "send")
             cond = "sendtype == recvtype && sendcount == recvcount && sendcount != 0"
             if t2 == "v":
@@ -1381,7 +1381,7 @@ def dump_validate_datatype(func, dt):
     G.out.append("    MPIR_Datatype_get_ptr(%s, datatype_ptr);" % dt)
     G.out.append("    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);")
     dump_error_check("    ")
-    if not RE.match(r'mpi_(type_|get_count|pack_external_size|status_set_elements)', func['name'], re.I):
+    if not RE.match(r'mpi_(type_|get_count|pack_external_size|status_set_elements)', func['name'], re.IGNORECASE):
         G.out.append("    MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);")
         dump_error_check("    ")
     G.out.append("}")
@@ -1400,7 +1400,7 @@ def dump_validate_op(op, dt):
 
 def dump_validate_get_comm_size(func):
     if '_got_comm_size' not in func:
-        if RE.match(r'mpi_i?reduce_scatter', func['name'], re.I):
+        if RE.match(r'mpi_i?reduce_scatter', func['name'], re.IGNORECASE):
             G.out.append("int comm_size = comm_ptr->local_size;")
         else:
             G.out.append("int comm_size;")
@@ -1479,7 +1479,7 @@ def get_C_param(param, mapping):
                 want_bracket = 1
             elif kind == "ARGUMENT_LIST":
                 want_star = 3
-            elif RE.search(r'pointer=False', t, re.I):
+            elif RE.search(r'pointer=False', t, re.IGNORECASE):
                 want_bracket = 1
             elif RE.search(r'length=', t) and kind != "STRING":
                 want_bracket = 1
@@ -1518,7 +1518,7 @@ def is_pointer_type(kind, t):
         return 1
     elif RE.match(r'(ATTRIBUTE_VAL\w*|(C_)?BUFFER\d?|STATUS|EXTRA_STATE\d*|TOOL_MPI_OBJ|(POLY)?FUNCTION\w*)$', kind):
         return 1
-    elif RE.search(r'direction=(in)?out', t, re.I):
+    elif RE.search(r'direction=(in)?out', t, re.IGNORECASE):
         return 1
     elif RE.search(r'length=', t):
         return 1
