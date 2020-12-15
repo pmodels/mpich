@@ -4,17 +4,31 @@
 ##
 
 from local_python import MPI_API_Global as G
-from local_python.mpi_api import load_mpi_api
+from local_python.mpi_api import *
 from local_python.binding_c import *
 from local_python import RE
 import glob
+import os
 
 def main():
-    # -- Loading APIs --
-    print("Loading maint/mpi_standard_api.txt ...")
-    load_mpi_api("maint/mpi_standard_api.txt")
+    binding_dir = "src/binding"
 
+    # -- Loading Standard APIs --
+    if os.path.exists("%s/apis.json" % binding_dir):
+        print("Loading %s/apis.json ..." % binding_dir)
+        load_mpi_json("%s/apis.json" % binding_dir)
+    else:
+        print("Loading %s/mpi_standard_api.txt ..." % binding_dir)
+        load_mpi_api("%s/mpi_standard_api.txt" % binding_dir)
+
+    print("Loading %s/apis_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/apis_mapping.txt" % binding_dir)
+    print("Loading %s/custom_mapping.txt ..." % binding_dir)
+    load_mpi_mapping("%s/custom_mapping.txt" % binding_dir)
+
+    # -- Loading MPICH APIs --
     binding_dir = "src/binding/c"
+
     api_files = glob.glob("%s/*_api.txt" % binding_dir)
     for f in api_files:
         if RE.match(r'.*\/(\w+)_api.txt', f):
@@ -28,7 +42,7 @@ def main():
     func_list = [f for f in G.FUNCS.values() if 'dir' in f]
     func_list.sort(key = lambda f: f['dir'])
     for func in func_list:
-        if RE.search(r'not_implemented', func['attrs']):
+        if 'not_implemented' in func:
             print("  skip %s (not_implemented)" % func['name'])
             pass
         else:
