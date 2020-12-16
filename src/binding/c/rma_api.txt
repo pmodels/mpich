@@ -533,12 +533,25 @@ MPI_Win_set_name:
 MPI_Win_shared_query:
     .desc: Query the size and base pointer for a patch of a shared memory window
     .seealso: MPI_Win_allocate_shared
-    .impl: mpid
 /*
     Notes:
     The returned baseptr points to the calling process' address space of the
     shared segment belonging to the target rank.
 */
+{
+    mpi_errno = MPID_Win_shared_query(win_ptr, rank, size, disp_unit, baseptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+}
+{ -- large_count --
+    int disp_unit_c;
+    mpi_errno = MPID_Win_shared_query(win_ptr, rank, size, &disp_unit_c, baseptr);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
+    *disp_unit = disp_unit_c;
+}
 
 MPI_Win_start:
     .desc: Start an RMA access epoch for MPI
