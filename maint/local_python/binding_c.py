@@ -14,6 +14,7 @@ import re
 
 def dump_mpi_c(func, mapping):
     """Dumps the function's C source code to G.out array"""
+    check_func_directives(func)
     filter_c_parameters(func)
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
@@ -128,6 +129,53 @@ def dump_errnames_txt(f):
         
 # ---- pre-processing  ----
 
+def check_func_directives(func):
+    # add default to ease the check later
+    if 'skip' not in func:
+        func['skip'] = ""
+    if 'extra' not in func:
+        func['extra'] = ""
+
+    if RE.search(r'ThreadSafe', func['skip']):
+        func['_skip_ThreadSafe'] = 1
+    if RE.search(r'Fortran', func['skip']):
+        func['_skip_Fortran'] = 1
+    if RE.search(r'(global_cs|initcheck)', func['skip']):
+        func['_skip_global_cs'] = 1
+    if RE.search(r'initcheck', func['skip']):
+        func['_skip_initcheck'] = 1
+
+    if RE.search(r'ignore_revoked_comm', func['extra'], re.IGNORECASE):
+        func['_comm_valid_ptr_flag'] = 'TRUE'
+    else:
+        func['_comm_valid_ptr_flag'] = 'FALSE'
+
+    if RE.search(r'errtest_comm_intra', func['extra'], re.IGNORECASE):
+        func['_errtest_comm_intra'] = 1
+
+    func['_skip_validate'] = {}
+    for a in re.findall(r'validate-(\w+)', func['extra']):
+        func['_skip_validate'][a] = 1
+
+    # additional docnotes
+    func['_docnotes'] = []
+    if 'docnotes' in func:
+        func['_docnotes'] = func['docnotes'].replace(' ', '').split(',')
+        if RE.search(r'(SignalSafe|NotThreadSafe|ThreadSafeNoUpdate)', func['docnotes']):
+            func['_skip_ThreadSafe'] = 1
+        if RE.search(r'(SignalSafe|NotThreadSafe)', func['docnotes']):
+            func['_skip_global_cs'] = 1
+
+    if not '_skip_ThreadSafe' in func:
+        func['_docnotes'].append('ThreadSafe')
+    if not '_skip_Fortran' in func:
+        func['_docnotes'].append('Fortran')
+
+    # additional error codes
+    if 'errorcodes' in func:
+        for a in func['errorcodes'].replace(' ', '').split(','):
+            G.err_codes[a] = 1
+
 def filter_c_parameters(func):
     c_params = []
     for p in func['parameters']:
@@ -159,12 +207,6 @@ def process_func_parameters(func, mapping):
     """ Scan parameters and populate a few lists to facilitate generation."""
     # Note: we'll attach the lists to func at the end
     validation_list, handle_ptr_list, impl_arg_list, impl_param_list = [], [], [], []
-
-    # add default to ease the check later
-    if 'skip' not in func:
-        func['skip'] = ""
-    if 'extra' not in func:
-        func['extra'] = ""
 
     func_name = func['name']
     n = len(func['c_parameters'])
@@ -227,7 +269,7 @@ def process_func_parameters(func, mapping):
         elif name == "win":
             func['_has_win'] = name
 
-        if RE.search("validate-(%s|ANY)" % kind, func['skip']):
+        if 'ANY' in func['_skip_validate'] or kind in func['_skip_validate'] or name in func['_skip_validate']:
             # -- user bypass --
             pass
         elif "code-error_check-tail" in func and name in func['code-error_check-tail']:
@@ -454,15 +496,9 @@ def dump_manpage(func):
             G.out.append("   The replacement for this routine is '%s'." % RE.m.group(1))
         G.out.append("")
 
-    extra_list = re.findall(r'\b(collops|NULL|SignalSafe|NotThreadSafe|ThreadSafeNoUpdate|AttrErrReturn|COMMNULL|waitstatus)\b', func['extra'])
-    if not RE.search(r'ThreadSafe', func['skip']) and not RE.search(r'(SignalSafe|NotThreadSafe|ThreadSafeNoUpdate)', func['extra']):
-        extra_list.append("ThreadSafe")
-    if not RE.search(r'Fortran', func['skip']):
-        extra_list.append("Fortran")
-
-    for extra in extra_list:
-        G.out.append(".N %s" % extra)
-        if extra == "Fortran":
+    for note in func['_docnotes']:
+        G.out.append(".N %s" % note)
+        if note == "Fortran":
             has = {}
             for p in func['c_parameters']:
                 if p['kind'] == "status":
@@ -577,20 +613,14 @@ def dump_function_normal(func, state_name, mapping):
 
     G.out.append("MPIR_FUNC_TERSE_STATE_DECL(%s);" % state_name)
 
-    need_global_cs = 1
-    if RE.search(r'initcheck', func['skip']):
-        need_global_cs = 0
-    else:
+    if not '_skip_initcheck' in func:
         G.out.append("")
         G.out.append("MPIR_ERRTEST_INITIALIZED_ORDIE();")
-    if RE.search(r'SignalSafe|NotThreadSafe', func['extra']):
-        need_global_cs = 0
-    elif RE.search(r'global_cs', func['skip']):
-        need_global_cs = 0
 
-    if need_global_cs:
+    if not '_skip_global_cs' in func:
         G.out.append("")
         G.out.append("MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+
     G.out.append("MPIR_FUNC_TERSE_ENTER(%s);" % state_name)
     if 'handle_ptr_list' in func:
         G.out.append("")
@@ -661,8 +691,10 @@ def dump_function_normal(func, state_name, mapping):
     for l in func['exit_routines']:
         G.out.append(l)
     G.out.append("MPIR_FUNC_TERSE_EXIT(%s);" % state_name)
-    if need_global_cs:
+
+    if not '_skip_global_cs' in func:
         G.out.append("MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);")
+
     G.out.append("return mpi_errno;")
     G.out.append("")
     G.out.append("fn_fail:")
@@ -1052,13 +1084,10 @@ def dump_validate_handle_ptr(func, p):
         # use custom code in func['cond-error_check']
         pass
     elif kind == "COMMUNICATOR":
-        if RE.search(r'ignore_revoke', func['extra'], re.IGNORECASE):
-            G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, TRUE);" % ptr_name)
-        else:
-            G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, FALSE);" % ptr_name)
+        G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, %s);" % (ptr_name, func['_comm_valid_ptr_flag']))
         dump_error_check("")
 
-        if RE.search(r'errtest_comm_intra', func['extra'], re.IGNORECASE):
+        if '_errtest_comm_intra' in func:
             G.out.append("MPIR_ERRTEST_COMM_INTRA(%s, mpi_errno);" % ptr_name)
     else:
         if "can_be_null" in p:
