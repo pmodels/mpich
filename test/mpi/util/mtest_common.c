@@ -491,6 +491,8 @@ void MTestCopyContent(const void *sbuf, void *dbuf, size_t size, mtest_mem_type_
             ze_memory_allocation_properties_t prop;
             ze_device_handle_t device;
         } s_attr, d_attr;
+        memset(&s_attr.prop, 0, sizeof(ze_memory_allocation_properties_t));
+        memset(&d_attr.prop, 0, sizeof(ze_memory_allocation_properties_t));
         zerr = zeMemGetAllocProperties(context, sbuf, &s_attr.prop, &s_attr.device);
         assert(zerr == ZE_RESULT_SUCCESS);
         if (s_attr.device) {

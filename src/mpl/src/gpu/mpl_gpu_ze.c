@@ -168,6 +168,7 @@ int MPL_gpu_query_pointer_attr(const void *ptr, MPL_pointer_attr_t * attr)
     ze_result_t ret;
     ze_memory_allocation_properties_t ptr_attr;
     ze_device_handle_t device;
+    memset(&ptr_attr, 0, sizeof(ze_memory_allocation_properties_t));
     ret = zeMemGetAllocProperties(global_ze_context, ptr, &ptr_attr, &device);
     ZE_ERR_CHECK(ret);
     attr->device = device;
