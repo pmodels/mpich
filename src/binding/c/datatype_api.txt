@@ -56,6 +56,7 @@ MPI_Get_address:
 MPI_Get_count:
     .desc: Gets the number of "top level" elements
     .skip: global_cs
+    .poly_impl: use_aint
 /*
     Notes:
     If the size of the datatype is zero, this routine will return a count of
@@ -64,11 +65,7 @@ MPI_Get_count:
     'MPI_UNDEFINED' is returned instead.
 */
 {
-    MPI_Aint count_x;
-    MPIR_Get_count_impl(status, datatype, &count_x);
-
-    /* clip the value if it cannot be correctly returned to the user */
-    *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
+    MPIR_Get_count_impl(status, datatype, &count_c);
 }
 
 MPI_Get_elements:
@@ -84,10 +81,19 @@ MPI_Get_elements:
     MPI_Count count_x;
     MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, &count_x);
-    MPIR_ERR_CHECK(mpi_errno);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 
     /* clip the value if it cannot be correctly returned to the user */
     *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
+}
+{ -- large_count --
+    MPI_Count byte_count = MPIR_STATUS_GET_COUNT(*status);
+    mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, count);
+    if (mpi_errno) {
+        goto fn_fail;
+    }
 }
 
 MPI_Get_elements_x:
@@ -103,6 +109,7 @@ MPI_Get_elements_x:
 MPI_Pack:
     .desc: Packs a datatype into contiguous memory
     .skip: global_cs
+    .poly_impl: use_aint
 /*
     Notes (from the specifications):
     The input value of position is the first location in the output buffer to be
@@ -113,19 +120,17 @@ MPI_Pack:
     message.
 */
 {
-    MPI_Aint position_x = *position;
     MPI_Aint actual_pack_bytes;
-    void *buf = (void *) ((char *) outbuf + position_x);
+    void *buf = (void *) ((char *) outbuf + position_c);
     mpi_errno = MPIR_Typerep_pack(inbuf, incount, datatype, 0, buf, outsize, &actual_pack_bytes);
     if (mpi_errno)
         goto fn_fail;
-    position_x += actual_pack_bytes;
-
-    MPIR_Assign_trunc(*position, position_x, int);
+    position_c += actual_pack_bytes;
 }
 
 MPI_Pack_external:
     .desc: Packs a datatype into contiguous memory, using the external32 format
+    .poly_impl: use_aint
 { -- early_return --
     if (incount == 0) {
         goto fn_exit;
@@ -133,22 +138,23 @@ MPI_Pack_external:
 }
 {
     MPI_Aint actual_pack_bytes;
-    mpi_errno = MPIR_Typerep_pack_external(inbuf, incount, datatype,
-                                           (void *) ((char *) outbuf + *position),
-                                           &actual_pack_bytes);
+    void *buf = (void *) ((char *) outbuf + position_c);
+    mpi_errno = MPIR_Typerep_pack_external(inbuf, incount, datatype, buf, &actual_pack_bytes);
     if (mpi_errno)
         goto fn_fail;
-    *position += actual_pack_bytes;
+    position_c += actual_pack_bytes;
 }
 
 MPI_Pack_external_size:
     .desc: Returns the upper bound on the amount of space needed to pack a message using MPI_Pack_external.
+    .poly_impl: use_aint
 {
-    *size = (MPI_Aint) incount *(MPI_Aint) MPIR_Typerep_size_external32(datatype);
+    size_c = (MPI_Aint) incount *(MPI_Aint) MPIR_Typerep_size_external32(datatype);
 }
 
 MPI_Pack_size:
     .desc: Returns the upper bound on the amount of space needed to pack a message
+    .poly_impl: use_aint
 /*
     Notes:
     The MPI standard document describes this in terms of 'MPI_Pack', but it
@@ -156,41 +162,38 @@ MPI_Pack_size:
     the maximum that is needed by either 'MPI_Pack' or 'MPI_Unpack'.
 */
 {
-    MPI_Aint size_x;
-    MPIR_Pack_size_impl(incount, datatype, &size_x);
-    MPIR_Assign_trunc(*size, size_x, int);
+    MPIR_Pack_size_impl(incount, datatype, &size_c);
 }
 
 MPI_Unpack:
     .desc: Unpack a buffer according to a datatype into contiguous memory
     .seealso: MPI_Pack, MPI_Pack_size
+    .poly_impl: use_aint
 {
-    MPI_Aint position_x = *position;
-
     MPI_Aint actual_unpack_bytes;
-    void *buf = (void *) ((char *) inbuf + position_x);
-    mpi_errno =
-        MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
+    void *buf = (void *) ((char *) inbuf + position_c);
+    mpi_errno = MPIR_Typerep_unpack(buf, insize, outbuf, outcount, datatype, 0, &actual_unpack_bytes);
     if (mpi_errno)
         goto fn_fail;
 
-    position_x += actual_unpack_bytes;
-    MPIR_Assign_trunc(*position, position_x, int);
+    position_c += actual_unpack_bytes;
 }
 
 MPI_Unpack_external:
     .desc: Unpack a buffer (packed with MPI_Pack_external) according to a datatype into contiguous memory
-{
+    .poly_impl: use_aint
+{ -- early_return --
     if (insize == 0) {
         goto fn_exit;
     }
-
+}
+{
     MPI_Aint actual_unpack_bytes;
-    mpi_errno = MPIR_Typerep_unpack_external((void *) ((char *) inbuf + *position),
-                                             outbuf, outcount, datatype, &actual_unpack_bytes);
+    void *buf = (void *) ((char *) inbuf + position_c);
+    mpi_errno = MPIR_Typerep_unpack_external(buf, outbuf, outcount, datatype, &actual_unpack_bytes);
     if (mpi_errno)
         goto fn_fail;
-    *position += actual_unpack_bytes;
+    position_c += actual_unpack_bytes;
 }
 
 MPI_Register_datarep: not_implemented
@@ -249,7 +252,7 @@ MPI_Type_free:
 
 MPI_Type_extent:
     datatype: DATATYPE, [datatype to get information on]
-    extent: POLYDISPLACEMENT_AINT_COUNT, direction=out, [extent of datatype]
+    extent: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [extent of datatype]
     .desc: Returns the extent of a datatype
     .skip: global_cs
     .replace: removed with MPI_Type_get_extent
@@ -259,7 +262,7 @@ MPI_Type_extent:
 
 MPI_Type_lb:
     datatype: DATATYPE, [datatype to get information on]
-    displacement: POLYDISPLACEMENT_AINT_COUNT, direction=out, [displacement of lower bound from origin, in bytes]
+    displacement: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [displacement of lower bound from origin, in bytes]
     .desc: Returns the lower-bound of a datatype
     .skip: global_cs
     .replace: removed with MPI_Type_Get_extent
@@ -269,7 +272,7 @@ MPI_Type_lb:
 
 MPI_Type_ub:
     datatype: DATATYPE, [datatype to get information on]
-    displacement: POLYDISPLACEMENT_AINT_COUNT, direction=out, [displacement of upper bound from origin, in bytes]
+    displacement: DISPLACEMENT_AINT_COUNT_SMALL, direction=out, [displacement of upper bound from origin, in bytes]
     .desc: Returns the upper bound of a datatype
     .skip: global_cs
     .replace: removed with MPI_Type_get_extent
@@ -309,6 +312,12 @@ MPI_Type_get_extent:
 {
     MPIR_Type_get_extent_impl(datatype, lb, extent);
 }
+{ -- large_count --
+    MPI_Aint lb_c, extent_c;
+    MPIR_Type_get_extent_impl(datatype, &lb_c, &extent_c);
+    *lb = lb_c;
+    *extent = extent_c;
+}
 
 MPI_Type_get_extent_x:
     .desc: Get the lower bound and extent as MPI_Count values for a datatype
@@ -323,6 +332,9 @@ MPI_Type_get_true_extent:
 {
     MPIR_Type_get_true_extent_impl(datatype, true_lb, true_extent);
 }
+{ -- large_count --
+    MPIR_Type_get_true_extent_x_impl(datatype, true_lb, true_extent);
+}
 
 MPI_Type_get_true_extent_x:
     .desc: Get the true lower bound and extent as MPI_Count values for a datatype
@@ -334,14 +346,12 @@ MPI_Type_get_true_extent_x:
 MPI_Type_size:
     .desc: Return the number of bytes occupied by entries in the datatype
     .skip: global_cs
+    .poly_impl: use_aint
 {
-    MPI_Count size_x;
-    mpi_errno = MPIR_Type_size_x_impl(datatype, &size_x);
+    mpi_errno = MPIR_Type_size_x_impl(datatype, &size_c);
     MPIR_ERR_CHECK(mpi_errno);
 
-    MPIR_Assert(size_x >= 0);
-    /* handle overflow: see MPI-3 p.104 */
-    *size = (size_x > INT_MAX) ? MPI_UNDEFINED : (int) size_x;
+    MPIR_Assert(size_c >= 0);
 }
 
 MPI_Type_size_x:
@@ -429,9 +439,9 @@ MPI_Type_dup:
     .desc: Duplicate a datatype
 
 MPI_Type_hindexed:
-    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
-    array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, [number of elements in each block]
-    array_of_displacements: POLYDISPLACEMENT_AINT_COUNT, length=count, [byte displacement of each block]
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths]
+    array_of_blocklengths: DTYPE_NUM_ELEM_NNI_SMALL, length=count, [number of elements in each block]
+    array_of_displacements: DISPLACEMENT_AINT_COUNT_SMALL, length=count, [byte displacement of each block]
     oldtype: DATATYPE, [old datatype]
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: Creates an indexed datatype with offsets in bytes
@@ -463,9 +473,9 @@ MPI_Type_hindexed:
 */
 
 MPI_Type_hvector:
-    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks]
-    blocklength: POLYDTYPE_NUM_ELEM_NNI, [number of elements in each block]
-    stride: POLYDTYPE_STRIDE_BYTES, [number of bytes between start of each block]
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks]
+    blocklength: DTYPE_NUM_ELEM_NNI_SMALL, [number of elements in each block]
+    stride: DTYPE_STRIDE_BYTES_SMALL, [number of bytes between start of each block]
     oldtype: DATATYPE, [old datatype]
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: type_hvector
@@ -500,9 +510,9 @@ MPI_Type_indexed:
 */
 
 MPI_Type_struct:
-    count: POLYDTYPE_NUM_ELEM_NNI, [number of blocks also number of entries in arrays array_of_types, array_of_displacements, and array_of_blocklengths]
-    array_of_blocklengths: POLYDTYPE_NUM_ELEM_NNI, length=count, [number of elements in each block]
-    array_of_displacements: POLYDISPLACEMENT_AINT_COUNT, length=count, [byte displacement of each block]
+    count: DTYPE_NUM_ELEM_NNI_SMALL, [number of blocks also number of entries in arrays array_of_types, array_of_displacements, and array_of_blocklengths]
+    array_of_blocklengths: DTYPE_NUM_ELEM_NNI_SMALL, length=count, [number of elements in each block]
+    array_of_displacements: DISPLACEMENT_AINT_COUNT_SMALL, length=count, [byte displacement of each block]
     array_of_types: DATATYPE, length=count, [types of elements in each block]
     newtype: DATATYPE, direction=out, [new datatype]
     .desc: Creates a struct datatype
