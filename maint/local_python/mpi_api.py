@@ -103,7 +103,9 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                     # man page notes
                     stage = "FUNC-notes"
                     # 'notes' and 'notes2' goes before and after auto-generated notes
-                    if 'notes' not in cur_func:
+                    if RE.match(r'\/\*\s*-+\s*notes-2\s*-+', line):
+                        cur_func['notes2'] = []
+                    elif 'notes' not in cur_func:
                         cur_func['notes'] = []
                     else:
                         cur_func['notes2'] = []
