@@ -850,32 +850,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 # mpi functions
 #
-**mpi_send:MPI_Send failed
-**mpi_send %p %d %D %i %t %C:MPI_Send(buf=%p, count=%d, %D, dest=%i, tag=%t, %C) failed
-**mpi_recv:MPI_Recv failed
-**mpi_recv %p %d %D %i %t %C %p:MPI_Recv(buf=%p, count=%d, %D, src=%i, tag=%t, %C, status=%p) failed
 **mpi_get_count:MPI_Get_count failed
 **mpi_get_count %p %D %p:MPI_Get_count(status=%p, %D, count=%p) failed
-**mpi_bsend:MPI_Bsend failed
-**mpi_bsend %p %d %D %i %t %C:MPI_Bsend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C) failed
-**mpi_ssend:MPI_Ssend failed
-**mpi_ssend %p %d %D %i %t %C:MPI_Ssend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C) failed
-**mpi_rsend:MPI_Rsend failed
-**mpi_rsend %p %d %D %i %t %C:MPI_Rsend(buf=%p, count=%d, %D, src=%i, tag=%t, %C) failed
-**mpi_buffer_attach:MPI_Buffer_attach failed
-**mpi_buffer_attach %p %d:MPI_Buffer_attach(buf=%p, size=%d) failed
-**mpi_buffer_detach:MPI_Buffer_detach failed
-**mpi_buffer_detach %p %p:MPI_Buffer_detach(buf=%p, size=%p) failed
-**mpi_isend:MPI_Isend failed
-**mpi_isend %p %d %D %i %t %C %p:MPI_Isend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_ibsend:MPI_Ibsend failed
-**mpi_ibsend %p %d %D %i %t %C %p:MPI_Ibsend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_issend:MPI_Issend failed
-**mpi_issend %p %d %D %i %t %C %p:MPI_Issend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_irsend:MPI_Irsend failed
-**mpi_irsend %p %d %D %i %t %C %p:MPI_Irsend(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_irecv:MPI_Irecv failed
-**mpi_irecv %p %d %D %i %t %C %p:MPI_Irecv(buf=%p, count=%d, %D, src=%i, tag=%t, %C, request=%p) failed
 **mpi_wait:MPI_Wait failed
 **mpi_wait %p %p:MPI_Wait(request=%p, status=%p) failed
 **mpi_test:MPI_Test failed
@@ -894,32 +870,14 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_waitsome %d %p %p %p %p:MPI_Waitsome(count=%d, req_array=%p, out_count=%p, indices=%p, status_array=%p) failed
 **mpi_testsome:MPI_Testsome failed
 **mpi_testsome %d %p %p %p %p:MPI_Testsome(count=%d, req_array=%p, out_count=%p, indices=%p, status_array=%p) failed
-**mpi_iprobe:MPI_Iprobe failed
-**mpi_iprobe %i %t %C %p %p:MPI_Iprobe(src=%i, tag=%t, %C, flag=%p, status=%p) failed
-**mpi_probe:MPI_Probe failed
-**mpi_probe %i %t %C %p:MPI_Probe(src=%i, tag=%t, %C, status=%p) failed
 **mpi_cancel:MPI_Cancel failed
 **mpi_cancel %p:MPI_Cancel(request=%p) failed
 **mpi_test_cancelled:MPI_Test_cancelled failed
 **mpi_test_cancelled %p %p:MPI_Test_cancelled(status=%p, flag=%p) failed
-**mpi_send_init:MPI_Send_init failed
-**mpi_send_init %p %d %D %i %t %C %p:MPI_Send_init(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_bsend_init:MPI_Bsend_init failed
-**mpi_bsend_init %p %d %D %i %t %C %p:MPI_Bsend_init(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_ssend_init:MPI_Ssend_init failed
-**mpi_ssend_init %p %d %D %i %t %C %p:MPI_Ssend_init(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_rsend_init:MPI_Rsend_init failed
-**mpi_rsend_init %p %d %D %i %t %C %p:MPI_Rsend_init(buf=%p, count=%d, %D, dest=%i, tag=%t, %C, request=%p) failed
-**mpi_recv_init:MPI_Recv_init failed
-**mpi_recv_init %p %d %D %i %t %C %p:MPI_Recv_init(buf=%p, count=%d, %D, src=%i, tag=%t, %C, request=%p) failed
 **mpi_start:MPI_Start failed
 **mpi_start %p:MPI_Start(request=%p) failed
 **mpi_startall:MPI_Start_all failed
 **mpi_startall %d %p:MPI_Startall(count=%d, req_array=%p) failed
-**mpi_sendrecv:MPI_Sendrecv failed
-**mpi_sendrecv %p %d %D %i %t %p %d %D %i %t %C %p:MPI_Sendrecv(sbuf=%p, scount=%d, %D, dest=%i, stag=%t, rbuf=%p, rcount=%d, %D, src=%i, rtag=%t, %C, status=%p) failed
-**mpi_sendrecv_replace:MPI_Sendrecv_replace failed
-**mpi_sendrecv_replace %p %d %D %i %t %i %t %C %p:MPI_Sendrecv_replace(buf=%p, count=%d, %D, dest=%i, stag=%t, src=%i, rtag=%t, %C, status=%p) failed
 **mpi_type_contiguous:MPI_Type_continuous failed
 **mpi_type_contiguous %d %D %p:MPI_Type_contiguous(count=%d, %D, new_type_p=%p) failed
 **mpi_type_vector:MPI_Type_vector failed
@@ -1406,16 +1364,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpir_wingetattr:MPII_Win_get_attr failed
 **mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
-
-## MPI-3 Mprobe routines
-**mpi_improbe: MPI_Improbe failed
-**mpi_improbe %i %t %C %p %p %p: MPI_Improbe(source=%i, tag=%t, comm=%C, flag=%p, message=%p, status=%p)
-**mpi_mprobe: MPI_Mprobe failed
-**mpi_mprobe %i %t %C %p %p: MPI_Mprobe(source=%i, tag=%t, comm=%C, message=%p, status=%p)
-**mpi_mrecv: MPI_Mrecv failed
-**mpi_mrecv %p %d %D %p %p: MPI_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
-**mpi_imrecv: MPI_Imrecv failed
-**mpi_imrecv %p %d %D %p %p: MPI_Imrecv(buf=%p, count=%d, datatype=%D, message=%p, request=%p)
 
 ## MPI-3 nonblocking comm dup
 **mpi_comm_idup: MPI_Comm_idup failed
