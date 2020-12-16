@@ -252,7 +252,6 @@ MPI_Irsend:
 
 MPI_Isend:
     .desc: Begins a nonblocking send
-    .skip: ThreadSafe
     .earlyreturn: pt2pt_proc_null
 {
     MPIR_Request *request_ptr = NULL;
