@@ -142,7 +142,7 @@ int MPI_Request_free(MPI_Request * request)
                 break;
             }
 
-        case MPIR_REQUEST_KIND__PREQUEST_BCAST:
+        case MPIR_REQUEST_KIND__PREQUEST_COLL:
             {
                 /* If this is an active persistent request, we must also
                  * release the partner request. */

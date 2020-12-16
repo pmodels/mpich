@@ -50,7 +50,7 @@ int MPIR_Bcast_init(void *buffer, int count, MPI_Datatype datatype, int root,
     MPIR_TSP_sched_t *sched;
 
     /* create a new request */
-    MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_BCAST);
+    MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__PREQUEST_COLL);
     MPIR_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     req->u.persist.real_request = NULL;

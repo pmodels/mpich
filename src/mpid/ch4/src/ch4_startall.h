@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
             continue;
 
         /* Persistent collectives support */
-        if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_BCAST) {
+        if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_COLL) {
             MPIR_TSP_sched_reset(preq->u.persist.sched);
             mpi_errno = MPIR_TSP_sched_start(preq->u.persist.sched,
                                              preq->comm, &preq->u.persist.real_request);
