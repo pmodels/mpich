@@ -18,6 +18,10 @@ def dump_mpi_c(func, mapping):
     filter_c_parameters(func)
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
+    # collect error codes additional from auto generated ones
+    if 'error' in func:
+        for a in func['error'].split(", "):
+            G.err_codes[a] = 1
     # -- "dump" accumulates output lines in G.out
     G.out.append("#include \"mpiimpl.h\"")
     G.out.append("")
