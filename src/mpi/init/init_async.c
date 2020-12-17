@@ -105,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_parse_progress_thread_affinity(int *thread_af
     char *affinity_copy = NULL;
     const char *affinity_to_parse = MPIR_CVAR_PROGRESS_THREAD_AFFINITY;
     char *proc_id_str, *tmp;
-    size_t proc_count;
+    int proc_count;
 
     if (!affinity_to_parse || strlen(affinity_to_parse) == 0) {
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**parse_thread_affinity",

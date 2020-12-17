@@ -52,8 +52,8 @@ typedef struct {
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             c_type *sbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
-                tmp = sbuf[j];                                          \
-                BASIC_convert(&tmp, &dbuf[idx], sizeof(pack_c_type));        \
+                tmp = (pack_c_type) sbuf[j];                            \
+                BASIC_convert(&tmp, &dbuf[idx], sizeof(pack_c_type));   \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -67,8 +67,8 @@ typedef struct {
         for (uintptr_t i = 0; i < max_iov_len; i++) {                   \
             c_type *dbuf = (c_type *) iov[i].iov_base;                  \
             for (size_t j = 0; j < iov[i].iov_len / sizeof(c_type); j++) { \
-                BASIC_convert(&sbuf[idx], &tmp, sizeof(pack_c_type));        \
-                dbuf[j] = tmp;                                          \
+                BASIC_convert(&sbuf[idx], &tmp, sizeof(pack_c_type));   \
+                dbuf[j] = (c_type) tmp;                                 \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -104,7 +104,7 @@ typedef struct {
             for (size_t j = 0; j < iov[i].iov_len / sizeof(long double); j++) { \
                 EXTERNAL_LONG_DOUBLE_TYPE tmp;                          \
                 BASIC_copyto(sbuf + idx * 16, &tmp, sizeof(tmp));       \
-                dbuf[j] = tmp;                                          \
+                dbuf[j] = (long double) tmp;                            \
                 idx++;                                                  \
             }                                                           \
         }                                                               \
@@ -310,7 +310,7 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
 {
     MPIR_FUNC_ENTER;
 
-    int size;
+    MPI_Aint size;
 
     assert(type != MPI_DATATYPE_NULL);
 
@@ -332,5 +332,5 @@ int MPIR_Typerep_size_external32(MPI_Datatype type)
     size *= MPII_Typerep_get_basic_size_external32(basic_type);
 
     MPIR_FUNC_EXIT;
-    return size;
+    return (int) size;
 }
