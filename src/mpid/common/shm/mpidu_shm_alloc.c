@@ -117,7 +117,7 @@ static void *generate_random_addr(size_t size)
      * This is not generic, probably only works properly on Linux
      * but it's not fatal since we bail after a fixed number of iterations
      */
-#define MAP_POINTER ((random_unsigned&((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000)))
+#define MAP_POINTER (random_unsigned&(size_t)((0x00006FFFFFFFFFFF&(~(page_sz-1)))|0x0000600000000000))
     uintptr_t map_pointer;
     char random_state[256];
     size_t page_sz = 0;

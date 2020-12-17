@@ -615,7 +615,7 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
             sprintf(seg_key, "%s-seg-%d/%d", key, i + 1, num_segs);
             mpi_errno = optimized_get(src, seg_key, val, pmi_max_val_size, is_local);
             MPIR_ERR_CHECK(mpi_errno);
-            int n = strlen(val) / 2;    /* 2-to-1 decode */
+            int n = (int) strlen(val) / 2;      /* 2-to-1 decode */
             if (i < num_segs - 1) {
                 MPIR_Assert(n == segsize);
             } else {
@@ -625,7 +625,7 @@ static int get_ex(int src, const char *key, void *buf, int *p_size, int is_local
             got_size += n;
         }
     } else {
-        int n = strlen(val) / 2;        /* 2-to-1 decode */
+        int n = (int) strlen(val) / 2;  /* 2-to-1 decode */
         decode(n, val, (char *) buf);
         got_size = n;
     }
@@ -1472,7 +1472,7 @@ static void encode(int size, const char *src, char *dest)
 static void decode(int size, const char *src, char *dest)
 {
     for (int i = 0; i < size; i++) {
-        *dest = (char) (hex(src[0]) << 4) + hex(src[1]);
+        *dest = (char) ((hex(src[0]) << 4) + hex(src[1]));
         src += 2;
         dest++;
     }

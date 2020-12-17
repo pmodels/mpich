@@ -1224,7 +1224,7 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
  */
 int MPII_compare_info_hint(const char *hint_str, MPIR_Comm * comm_ptr, int *info_args_are_equal)
 {
-    int hint_str_size = strlen(hint_str);
+    int hint_str_size = (int) strlen(hint_str);
     int hint_str_size_max;
     int hint_str_equal;
     int hint_str_equal_global = 0;
