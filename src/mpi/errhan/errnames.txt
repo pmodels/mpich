@@ -916,6 +916,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_pack_size %d %D %C %p:MPI_Pack_size(count=%d, %D, %C, size=%p) failed
 **mpi_barrier:MPI_Barrier failed
 **mpi_barrier %C:MPI_Barrier(comm=%C) failed
+**mpix_barrier_init:MPIX_Barrier_init failed
+**mpix_barrier_init %C %I %p:MPIX_Barrier_init(%C, %I, request=%p) failed
 **mpi_bcast:MPI_Bcast failed
 **mpi_bcast %p %d %D %d %C:MPI_Bcast(buf=%p, count=%d, %D, root=%d, %C) failed
 **mpix_bcast_init:MPIX_Bcast_init failed
