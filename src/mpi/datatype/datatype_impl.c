@@ -678,6 +678,13 @@ static int MPIR_Type_block(const int *array_of_gsizes,
     if (mysize == 0)
         *st_offset = 0;
 
+    MPI_Datatype type_tmp;
+    MPI_Aint ex;
+    MPIR_Datatype_get_extent_macro(type_old, ex);
+    mpi_errno = MPIR_Type_create_resized(*type_new, 0, array_of_gsizes[dim] * ex, &type_tmp);
+    MPIR_Type_free_impl(type_new);
+    *type_new = type_tmp;
+
     return MPI_SUCCESS;
 }
 
@@ -817,6 +824,12 @@ static int MPIR_Type_cyclic(const int *array_of_gsizes,
 
     if (local_size == 0)
         *st_offset = 0;
+
+    MPI_Aint ex;
+    MPIR_Datatype_get_extent_macro(type_old, ex);
+    mpi_errno = MPIR_Type_create_resized(*type_new, 0, array_of_gsizes[dim] * ex, &type_tmp);
+    MPIR_Type_free_impl(type_new);
+    *type_new = type_tmp;
 
     return MPI_SUCCESS;
 }
