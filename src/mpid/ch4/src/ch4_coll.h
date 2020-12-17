@@ -1376,4 +1376,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast_init(void *buffer, int count, MPI_Dataty
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier_init(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                               MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER_INIT);
+
+    mpi_errno = MPIR_Barrier_init(comm_ptr, info_ptr, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER_INIT);
+    return mpi_errno;
+}
+
 #endif /* CH4_COLL_H_INCLUDED */
