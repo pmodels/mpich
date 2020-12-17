@@ -16,8 +16,12 @@ def dump_mpi_c(func, mapping):
     """Dumps the function's C source code to G.out array"""
     check_func_directives(func)
     filter_c_parameters(func)
+
     check_params_with_large_only(func, mapping)
     process_func_parameters(func, mapping)
+
+    G.mpi_declares.append(get_declare_function(func, mapping, "proto"))
+
     # collect error codes additional from auto generated ones
     if 'error' in func:
         for a in func['error'].split(", "):
@@ -129,6 +133,61 @@ def dump_mpir_impl_h(f):
             print(l, file=Out)
         print("", file=Out)
         print("#endif /* MPIR_IMPL_H_INCLUDED */", file=Out)
+
+def dump_mpi_proto_h(f):
+    def dump_proto_line(l, Out):
+        if RE.match(r'(.*?\))\s+(MPICH.*)', l):
+            s, tail = RE.m.group(1,2)
+            tlist = split_line_with_break(s, tail + ';', 100)
+            for l in tlist:
+                print(l, file=Out)
+
+    # -- sort the prototypes into groups --
+    list_a = []  # prototypes the fortran needs
+    list_b = []  # tool prototypes
+    list_c = []  # large prototypes
+    for l in G.mpi_declares:
+        if re.match(r'int (MPI_T_|MPIX_Grequest_)', l):
+            list_b.append(l)
+        elif re.match(r'int MPI_\w+_c\(', l):
+            list_c.append(l)
+        else:
+            list_a.append(l)
+
+    # -- dump the file --
+    print("  --> [%s]" %f)
+    with open(f, "w") as Out:
+        for l in G.copyright_c:
+            print(l, file=Out)
+        print("#ifndef MPI_PROTO_H_INCLUDED", file=Out)
+        print("#define MPI_PROTO_H_INCLUDED", file=Out)
+        print("", file=Out)
+
+        # -- mpi prototypes --
+        print("/* Begin Prototypes */", file=Out)
+        for l in list_a:
+            dump_proto_line(l, Out)
+        print("/* End Prototypes */", file=Out)
+        print("", file=Out)
+
+        # -- tool prototypes --
+        for l in list_b:
+            dump_proto_line(l, Out)
+        print("", file=Out)
+
+        # -- large prototypes --
+        for l in list_c:
+            dump_proto_line(l, Out)
+        print("", file=Out)
+
+        # -- PMPI prototypes --
+        for l in G.mpi_declares:
+            if re.match(r'int MPI_DUP_FN', l):
+                continue
+            dump_proto_line(re.sub(' MPI', ' PMPI', l, 1), Out)
+        print("", file=Out)
+
+        print("#endif /* MPI_PROTO_H_INCLUDED */", file=Out)
 
 def dump_errnames_txt(f):
     print("  --> [%s]" % f)
@@ -1676,7 +1735,7 @@ def get_function_args(func):
         arg_list.append(p['name'])
     return ', '.join(arg_list)
 
-def get_declare_function(func, mapping):
+def get_declare_function(func, mapping, kind=""):
     name = get_function_name(func, mapping)
 
     ret = "int"
@@ -1686,6 +1745,12 @@ def get_declare_function(func, mapping):
     params = get_C_params(func, mapping)
     s_param = ', '.join(params)
     s = "%s %s(%s)" % (ret, name, s_param)
+
+    if kind == 'proto':
+        if 'pointertag_list' in func:
+            for t in func['pointertag_list']:
+                s += " MPICH_ATTR_POINTER_WITH_TYPE_TAG(%s)" % t
+        s += " MPICH_API_PUBLIC"
     return s
 
     G.out.append(s)
