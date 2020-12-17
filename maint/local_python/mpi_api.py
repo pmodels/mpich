@@ -94,7 +94,7 @@ def load_mpi_api(api_txt, gen_in_dir=""):
                         cur_func[stage] = []
                     # "error_check" may include list of parameters checked
                     # "handle_ptr" may include list of parameters converted
-                    cur_func[stage + "-tail"] = RE.m.group(2).strip().split(', ')
+                    cur_func[stage + "-tail"] = RE.m.group(2).replace(' ','').split(',')
                 elif RE.match(r'{', line):
                     stage = "FUNC-body"
                     if 'body' not in cur_func:
