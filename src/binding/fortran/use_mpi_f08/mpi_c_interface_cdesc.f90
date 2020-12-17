@@ -335,6 +335,21 @@ function MPIR_Iallgather_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount,
     integer(c_int) :: ierror
 end function MPIR_Iallgather_cdesc
 
+function MPIR_Allgather_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, info, request) &
+    bind(C, name="MPIR_Allgather_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount, recvcount
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Allgather_init_cdesc
+
 function MPIR_Allgatherv_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm) &
     bind(C, name="MPIR_Allgatherv_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -365,6 +380,23 @@ function MPIR_Iallgatherv_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount
     integer(c_int) :: ierror
 end function MPIR_Iallgatherv_cdesc
 
+function MPIR_Allgatherv_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, &
+           recvtype, comm, info, request) &
+    bind(C, name="MPIR_Allgatherv_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount
+    integer(c_int), intent(in) :: recvcounts(*), displs(*)
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Allgatherv_init_cdesc
+
 function MPIR_Allreduce_cdesc(sendbuf, recvbuf, count, datatype, op, comm) &
     bind(C, name="MPIR_Allreduce_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -394,6 +426,22 @@ function MPIR_Iallreduce_cdesc(sendbuf, recvbuf, count, datatype, op, comm, requ
     integer(c_int) :: ierror
 end function MPIR_Iallreduce_cdesc
 
+function MPIR_Allreduce_init_cdesc(sendbuf, recvbuf, count, datatype, op, comm, info, request) &
+    bind(C, name="MPIR_Allreduce_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Allreduce_init_cdesc
+
 function MPIR_Alltoall_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm) &
     bind(C, name="MPIR_Alltoall_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -420,6 +468,21 @@ function MPIR_Ialltoall_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, 
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Ialltoall_cdesc
+
+function MPIR_Alltoall_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, info, request) &
+    bind(C, name="MPIR_Ialltoall_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount, recvcount
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Alltoall_init_cdesc
 
 function MPIR_Alltoallv_cdesc(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, &
            rdispls, recvtype, comm) &
@@ -450,6 +513,22 @@ function MPIR_Ialltoallv_cdesc(sendbuf, sendcounts, sdispls, sendtype, recvbuf, 
     integer(c_int) :: ierror
 end function MPIR_Ialltoallv_cdesc
 
+function MPIR_Alltoallv_init_cdesc(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, &
+           rdispls, recvtype, comm, imfo, request) &
+    bind(C, name="MPIR_Ialltoallv_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), intent(in) :: sendcounts(*), sdispls(*), recvcounts(*), rdispls(*)
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Alltoallv_init_cdesc
+
 function MPIR_Alltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, &
            rdispls, recvtypes, comm) &
     bind(C, name="MPIR_Alltoallw_cdesc") result(ierror)
@@ -478,6 +557,22 @@ function MPIR_Ialltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes, recvbuf,
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Ialltoallw_cdesc
+
+function MPIR_Alltoallw_init_cdesc(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, &
+           rdispls, recvtypes, comm, info, request) &
+    bind(C, name="MPIR_Alltoallw_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), intent(in) :: sendcounts(*), sdispls(*), recvcounts(*), rdispls(*)
+    integer(c_Datatype), intent(in) :: sendtypes(*), recvtypes(*)
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Alltoallw_init_cdesc
 
 function MPIR_Bcast_cdesc(buffer, count, datatype, root, comm) &
     bind(C, name="MPIR_Bcast_cdesc") result(ierror)
@@ -547,6 +642,22 @@ function MPIR_Iexscan_cdesc(sendbuf, recvbuf, count, datatype, op, comm, request
     integer(c_int) :: ierror
 end function MPIR_Iexscan_cdesc
 
+function MPIR_Exscan_init_cdesc(sendbuf, recvbuf, count, datatype, op, comm, info, request) &
+    bind(C, name="MPIR_Exscan_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Exscan_init_cdesc
+
 function MPIR_Gather_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm) &
     bind(C, name="MPIR_Gather_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -574,6 +685,22 @@ function MPIR_Igather_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, re
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Igather_cdesc
+
+function MPIR_Gather_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, &
+            root, comm, info, request) &
+    bind(C, name="MPIR_Gather_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount, recvcount, root
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Gather_init_cdesc
 
 function MPIR_Gatherv_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, &
            root, comm) &
@@ -606,6 +733,23 @@ function MPIR_Igatherv_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcounts, 
     integer(c_int) :: ierror
 end function MPIR_Igatherv_cdesc
 
+function MPIR_Gatherv_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, &
+           recvtype, root, comm, info, request) &
+    bind(C, name="MPIR_Gatherv_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount, root
+    integer(c_int), intent(in) :: recvcounts(*), displs(*)
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Gatherv_init_cdesc
+
 function MPIR_Reduce_cdesc(sendbuf, recvbuf, count, datatype, op, root, comm) &
     bind(C, name="MPIR_Reduce_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -634,6 +778,22 @@ function MPIR_Ireduce_cdesc(sendbuf, recvbuf, count, datatype, op, root, comm, r
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Ireduce_cdesc
+
+function MPIR_Reduce_init_cdesc(sendbuf, recvbuf, count, datatype, op, root, comm, info, request) &
+    bind(C, name="MPIR_Reduce_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: count, root
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Reduce_init_cdesc
 
 function MPIR_Reduce_local_cdesc(inbuf, inoutbuf, count, datatype, op) &
     bind(C, name="MPIR_Reduce_local_cdesc") result(ierror)
@@ -677,6 +837,22 @@ function MPIR_Ireduce_scatter_cdesc(sendbuf, recvbuf, recvcounts, datatype, op, 
     integer(c_int) :: ierror
 end function MPIR_Ireduce_scatter_cdesc
 
+function MPIR_Reduce_scatter_init_cdesc(sendbuf, recvbuf, recvcounts, datatype, op, comm, info, request) &
+    bind(C, name="MPIR_Reduce_scatter_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), intent(in) :: recvcounts(*)
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Reduce_scatter_init_cdesc
+
 function MPIR_Reduce_scatter_block_cdesc(sendbuf, recvbuf, recvcount, datatype, op, comm) &
     bind(C, name="MPIR_Reduce_scatter_block_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -705,6 +881,22 @@ function MPIR_Ireduce_scatter_block_cdesc(sendbuf, recvbuf, recvcount, datatype,
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Ireduce_scatter_block_cdesc
+
+function MPIR_Reduce_scatter_block_init_cdesc(sendbuf, recvbuf, recvcount, datatype, op, comm, info, request) &
+    bind(C, name="MPIR_Reduce_scatter_block_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: recvcount
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Reduce_scatter_block_init_cdesc
 
 function MPIR_Scan_cdesc(sendbuf, recvbuf, count, datatype, op, comm) &
     bind(C, name="MPIR_Scan_cdesc") result(ierror)
@@ -735,6 +927,22 @@ function MPIR_Iscan_cdesc(sendbuf, recvbuf, count, datatype, op, comm, request) 
     integer(c_int) :: ierror
 end function MPIR_Iscan_cdesc
 
+function MPIR_Scan_init_cdesc(sendbuf, recvbuf, count, datatype, op, comm, info, request) &
+    bind(C, name="MPIR_Scan_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Op), value, intent(in) :: op
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Scan_init_cdesc
+
 function MPIR_Scatter_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm) &
     bind(C, name="MPIR_Scatter_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
@@ -761,6 +969,21 @@ function MPIR_Iscatter_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, r
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Iscatter_cdesc
+
+function MPIR_Scatter_init_cdesc(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, info, request) &
+    bind(C, name="MPIR_Scatter_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: sendcount, recvcount, root
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Scatter_init_cdesc
 
 function MPIR_Scatterv_cdesc(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm) &
     bind(C, name="MPIR_Scatterv_cdesc") result(ierror)
@@ -791,6 +1014,23 @@ function MPIR_Iscatterv_cdesc(sendbuf, sendcounts, displs, sendtype, recvbuf, re
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Iscatterv_cdesc
+
+function MPIR_Scatterv_cdesc(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, &
+           recvtype, root, comm, info, request) &
+    bind(C, name="MPIR_Scatterv_init_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Comm, c_Request
+    implicit none
+    type(*), dimension(..), intent(in) :: sendbuf
+    type(*), dimension(..) :: recvbuf
+    integer(c_int), value, intent(in) :: recvcount, root
+    integer(c_int), intent(in) :: sendcounts(*), displs(*)
+    integer(c_Datatype), value, intent(in) :: sendtype, recvtype
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Scatterv_init_cdesc
 
 function MPIR_Accumulate_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
            target_disp, target_count, target_datatype, op, win) &

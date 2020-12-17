@@ -43,12 +43,24 @@ EXPORTS
 	mpi_allgather__=pmpi_allgather__
 	_mpi_allgather_=pmpi_allgather__
 	mpi_allgather_=pmpi_allgather__
+	pmpi_algather_init__
+	pmpi_algather_init_=pmpi_algather_init__
+	_pmpi_algather_init_=pmpi_algather_init__
+	mpi_algather_init__=pmpi_algather_init__
+	_mpi_algather_init_=pmpi_algather_init__
+	mpi_algather_init_=pmpi_algather_init__
 	pmpi_allgatherv__
 	pmpi_allgatherv_=pmpi_allgatherv__
 	_pmpi_allgatherv_=pmpi_allgatherv__
 	mpi_allgatherv__=pmpi_allgatherv__
 	_mpi_allgatherv_=pmpi_allgatherv__
 	mpi_allgatherv_=pmpi_allgatherv__
+	pmpi_allgatherv_init__
+	pmpi_allgatherv_init_=pmpi_allgatherv_init__
+	_pmpi_allgatherv_init_=pmpi_allgatherv_init__
+	mpi_allgatherv_init__=pmpi_allgatherv_init__
+	_mpi_allgatherv_init_=pmpi_allgatherv_init__
+	mpi_allgatherv_init_=pmpi_allgatherv_init__
 	pmpi_alloc_mem__
 	pmpi_alloc_mem_=pmpi_alloc_mem__
 	_pmpi_alloc_mem_=pmpi_alloc_mem__
@@ -61,24 +73,48 @@ EXPORTS
 	mpi_allreduce__=pmpi_allreduce__
 	_mpi_allreduce_=pmpi_allreduce__
 	mpi_allreduce_=pmpi_allreduce__
+	pmpi_allreduce_init__
+	pmpi_allreduce_init_=pmpi_allreduce_init__
+	_pmpi_allreduce_init_=pmpi_allreduce_init__
+	mpi_allreduce_init__=pmpi_allreduce_init__
+	_mpi_allreduce_init_=pmpi_allreduce_init__
+	mpi_allreduce_init_=pmpi_allreduce_init__
 	pmpi_alltoall__
 	pmpi_alltoall_=pmpi_alltoall__
 	_pmpi_alltoall_=pmpi_alltoall__
 	mpi_alltoall__=pmpi_alltoall__
 	_mpi_alltoall_=pmpi_alltoall__
 	mpi_alltoall_=pmpi_alltoall__
+	pmpi_alltoall_init__
+	pmpi_alltoall_init_=pmpi_alltoall_init__
+	_pmpi_alltoall_init_=pmpi_alltoall_init__
+	mpi_alltoall_init__=pmpi_alltoall_init__
+	_mpi_alltoall_init_=pmpi_alltoall_init__
+	mpi_alltoall_init_=pmpi_alltoall_init__
 	pmpi_alltoallv__
 	pmpi_alltoallv_=pmpi_alltoallv__
 	_pmpi_alltoallv_=pmpi_alltoallv__
 	mpi_alltoallv__=pmpi_alltoallv__
 	_mpi_alltoallv_=pmpi_alltoallv__
 	mpi_alltoallv_=pmpi_alltoallv__
+	pmpi_alltoallv_init__
+	pmpi_alltoallv_init_=pmpi_alltoallv_init__
+	_pmpi_alltoallv_init_=pmpi_alltoallv_init__
+	mpi_alltoallv_init__=pmpi_alltoallv_init__
+	_mpi_alltoallv_init_=pmpi_alltoallv_init__
+	mpi_alltoallv_init_=pmpi_alltoallv_init__
 	pmpi_alltoallw__
 	pmpi_alltoallw_=pmpi_alltoallw__
 	_pmpi_alltoallw_=pmpi_alltoallw__
 	mpi_alltoallw__=pmpi_alltoallw__
 	_mpi_alltoallw_=pmpi_alltoallw__
 	mpi_alltoallw_=pmpi_alltoallw__
+	pmpi_alltoallw_init__
+	pmpi_alltoallw_init_=pmpi_alltoallw_init__
+	_pmpi_alltoallw_init_=pmpi_alltoallw_init__
+	mpi_alltoallw_init__=pmpi_alltoallw_init__
+	_mpi_alltoallw_init_=pmpi_alltoallw_init__
+	mpi_alltoallw_init_=pmpi_alltoallw_init__
 	pmpi_attr_delete__
 	pmpi_attr_delete_=pmpi_attr_delete__
 	_pmpi_attr_delete_=pmpi_attr_delete__
@@ -103,6 +139,12 @@ EXPORTS
 	mpi_barrier__=pmpi_barrier__
 	_mpi_barrier_=pmpi_barrier__
 	mpi_barrier_=pmpi_barrier__
+	pmpi_barrier_init__
+	pmpi_barrier_init_=pmpi_barrier_init__
+	_pmpi_barrier_init_=pmpi_barrier_init__
+	mpi_barrier_init__=pmpi_barrier_init__
+	_mpi_barrier_init_=pmpi_barrier_init__
+	mpi_barrier_init_=pmpi_barrier_init__
 	pmpi_bcast__
 	pmpi_bcast_=pmpi_bcast__
 	_pmpi_bcast_=pmpi_bcast__
@@ -421,6 +463,12 @@ EXPORTS
 	mpi_exscan__=pmpi_exscan__
 	_mpi_exscan_=pmpi_exscan__
 	mpi_exscan_=pmpi_exscan__
+	pmpi_exscan_init__
+	pmpi_exscan_init_=pmpi_exscan_init__
+	_pmpi_exscan_init_=pmpi_exscan_init__
+	mpi_exscan_init__=pmpi_exscan_init__
+	_mpi_exscan_init_=pmpi_exscan_init__
+	mpi_exscan_init_=pmpi_exscan_init__
 ; pmpi first versions
 	pmpi_file_call_errhandler__
 	pmpi_file_call_errhandler_=pmpi_file_call_errhandler__
@@ -896,12 +944,24 @@ EXPORTS
 	mpi_gather__=pmpi_gather__
 	_mpi_gather_=pmpi_gather__
 	mpi_gather_=pmpi_gather__
+	pmpi_gather_init__
+	pmpi_gather_init_=pmpi_gather_init__
+	_pmpi_gather_init_=pmpi_gather_init__
+	mpi_gather_init__=pmpi_gather_init__
+	_mpi_gather_init_=pmpi_gather_init__
+	mpi_gather_init_=pmpi_gather_init__
 	pmpi_gatherv__
 	pmpi_gatherv_=pmpi_gatherv__
 	_pmpi_gatherv_=pmpi_gatherv__
 	mpi_gatherv__=pmpi_gatherv__
 	_mpi_gatherv_=pmpi_gatherv__
 	mpi_gatherv_=pmpi_gatherv__
+	pmpi_gatherv_init__
+	pmpi_gatherv_init_=pmpi_gatherv_init__
+	_pmpi_gatherv_init_=pmpi_gatherv_init__
+	mpi_gatherv_init__=pmpi_gatherv_init__
+	_mpi_gatherv_init_=pmpi_gatherv_init__
+	mpi_gatherv_init_=pmpi_gatherv_init__
 	pmpi_get__
 	pmpi_get_=pmpi_get__
 	_pmpi_get_=pmpi_get__
@@ -1316,12 +1376,24 @@ EXPORTS
 	mpi_reduce__=pmpi_reduce__
 	_mpi_reduce_=pmpi_reduce__
 	mpi_reduce_=pmpi_reduce__
+	pmpi_reduce_init__
+	pmpi_reduce_init_=pmpi_reduce_init__
+	_pmpi_reduce_init_=pmpi_reduce_init__
+	mpi_reduce_init__=pmpi_reduce_init__
+	_mpi_reduce_init_=pmpi_reduce_init__
+	mpi_reduce_init_=pmpi_reduce_init__
 	pmpi_reduce_scatter__
 	pmpi_reduce_scatter_=pmpi_reduce_scatter__
 	_pmpi_reduce_scatter_=pmpi_reduce_scatter__
 	mpi_reduce_scatter__=pmpi_reduce_scatter__
 	_mpi_reduce_scatter_=pmpi_reduce_scatter__
 	mpi_reduce_scatter_=pmpi_reduce_scatter__
+	pmpi_reduce_scatter_init__
+	pmpi_reduce_scatter_init_=pmpi_reduce_scatter_init__
+	_pmpi_reduce_scatter_init_=pmpi_reduce_scatter_init__
+	mpi_reduce_scatter_init__=pmpi_reduce_scatter_init__
+	_mpi_reduce_scatter_init_=pmpi_reduce_scatter_init__
+	mpi_reduce_scatter_init_=pmpi_reduce_scatter_init__
 	pmpi_register_datarep__
 	pmpi_register_datarep_=pmpi_register_datarep__
 	_pmpi_register_datarep_=pmpi_register_datarep__
@@ -1358,18 +1430,36 @@ EXPORTS
 	mpi_scan__=pmpi_scan__
 	_mpi_scan_=pmpi_scan__
 	mpi_scan_=pmpi_scan__
+	pmpi_scan_init__
+	pmpi_scan_init_=pmpi_scan_init__
+	_pmpi_scan_init_=pmpi_scan_init__
+	mpi_scan_init__=pmpi_scan_init__
+	_mpi_scan_init_=pmpi_scan_init__
+	mpi_scan_init_=pmpi_scan_init__
 	pmpi_scatter__
 	pmpi_scatter_=pmpi_scatter__
 	_pmpi_scatter_=pmpi_scatter__
 	mpi_scatter__=pmpi_scatter__
 	_mpi_scatter_=pmpi_scatter__
 	mpi_scatter_=pmpi_scatter__
+	pmpi_scatter__
+	pmpi_scatter_init_=pmpi_scatter_init__
+	_pmpi_scatter_init_=pmpi_scatter_init__
+	mpi_scatter_init__=pmpi_scatter_init__
+	_mpi_scatter_init_=pmpi_scatter_init__
+	mpi_scatter_init_=pmpi_scatter_init__
 	pmpi_scatterv__
 	pmpi_scatterv_=pmpi_scatterv__
 	_pmpi_scatterv_=pmpi_scatterv__
 	mpi_scatterv__=pmpi_scatterv__
 	_mpi_scatterv_=pmpi_scatterv__
 	mpi_scatterv_=pmpi_scatterv__
+	pmpi_scatterv_init__
+	pmpi_scatterv_init_=pmpi_scatterv_init__
+	_pmpi_scatterv_init_=pmpi_scatterv_init__
+	mpi_scatterv_init__=pmpi_scatterv_init__
+	_mpi_scatterv_init_=pmpi_scatterv_init__
+	mpi_scatterv_init_=pmpi_scatterv_init__
 	pmpi_send__
 	pmpi_send_=pmpi_send__
 	_pmpi_send_=pmpi_send__
