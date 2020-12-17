@@ -312,14 +312,14 @@ static int typerep_do_unpack(const void *inbuf, MPI_Aint insize, void *outbuf, M
     MPI_Aint total_size = 0;
     if (HANDLE_IS_BUILTIN(datatype)) {
         is_contig = 1;
-        element_size = MPIR_Datatype_get_basic_size(datatype);
+        element_size = (int) MPIR_Datatype_get_basic_size(datatype);
         outbuf_ptr = outbuf;
         total_size = outcount * element_size;
     } else {
         MPIR_Datatype *dtp;
         MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
-        element_size = dtp->builtin_element_size;
+        element_size = (int) dtp->builtin_element_size;
         outbuf_ptr = MPIR_get_contig_ptr(outbuf, dtp->true_lb);
         total_size = outcount * dtp->size;
     }

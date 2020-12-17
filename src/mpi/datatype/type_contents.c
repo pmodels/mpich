@@ -150,9 +150,9 @@ int MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
         return mpi_errno;
     }
 
-    *num_integers = nr_ints;
-    *num_addresses = nr_aints;
-    *num_datatypes = nr_types;
+    *num_integers = (int) nr_ints;
+    *num_addresses = (int) nr_aints;
+    *num_datatypes = (int) nr_types;
 
     return mpi_errno;
 }

@@ -13,7 +13,7 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
 static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
                                     MPIR_Comm ** newcomm_ptr);
 static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_size, int min_size);
-static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, MPI_Aint min_mem_size,
                                         MPIR_Comm ** newcomm_ptr);
 static int network_split_by_torus_dimension(MPIR_Comm * comm_ptr, int key,
                                             int dimension, MPIR_Comm ** newcomm_ptr);
@@ -121,12 +121,12 @@ static int split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hi
         mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
     } else if (!strncmp(hintval, ("min_mem_size:"), strlen("min_mem_size:"))
                && *(hintval + strlen("min_mem_size:")) != '\0') {
-        long min_mem_size = atol(hintval + strlen("min_mem_size:"));
+        MPI_Aint min_mem_size = atol(hintval + strlen("min_mem_size:"));
         /* Split by minimum memory size per subcommunicator in bytes */
         mpi_errno = network_split_by_min_memsize(comm_ptr, key, min_mem_size, newcomm_ptr);
     } else if (!strncmp(hintval, ("torus_dimension:"), strlen("torus_dimension:"))
                && *(hintval + strlen("torus_dimension:")) != '\0') {
-        int dimension = atol(hintval + strlen("torus_dimension:"));
+        int dimension = (int) atol(hintval + strlen("torus_dimension:"));
         mpi_errno = network_split_by_torus_dimension(comm_ptr, key, dimension, newcomm_ptr);
     }
     return mpi_errno;
@@ -456,7 +456,7 @@ static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_m
     goto fn_exit;
 }
 
-static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_mem_size,
+static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, MPI_Aint min_mem_size,
                                         MPIR_Comm ** newcomm_ptr)
 {
 
@@ -464,10 +464,10 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
     MPIR_nettopo_type_e topo_type;
 
     /* Get available memory in the node */
-    long total_memory_size = 0;
-    int memory_per_process;
+    MPI_Aint total_memory_size = 0;
+    MPI_Aint memory_per_process;
 
-    total_memory_size = MPIR_hwtopo_get_node_mem();
+    total_memory_size = (MPI_Aint) MPIR_hwtopo_get_node_mem();
 
     topo_type = MPIR_nettopo_get_type();
 
@@ -481,8 +481,8 @@ static int network_split_by_min_memsize(MPIR_Comm * comm_ptr, int key, long min_
             num_ranks_node = 1;
         }
         memory_per_process = total_memory_size / num_ranks_node;
-        mpi_errno = network_split_by_minsize(comm_ptr, key, min_mem_size / memory_per_process,
-                                             newcomm_ptr);
+        int subcomm_min_size = (int) (min_mem_size / memory_per_process);
+        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
     }
 
     return mpi_errno;

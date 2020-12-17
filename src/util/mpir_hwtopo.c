@@ -479,7 +479,7 @@ MPIR_hwtopo_gid_t MPIR_hwtopo_get_obj_by_name(const char *name)
         int k = 0;
         for (int i = 0; i < n; i++) {
             if (hwloc_bitmap_isset(bindset, i)) {
-                buf[j] |= (1 << k);
+                buf[j] |= (unsigned char) (1 << k);
             }
             k++;
             if (k >= 8) {

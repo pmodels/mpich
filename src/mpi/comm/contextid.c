@@ -179,7 +179,8 @@ void MPIR_context_id_init(void)
    Return 0 if no bit found.  This function does _not_ alter local_mask. */
 static int locate_context_bit(uint32_t local_mask[])
 {
-    int i, j, context_id = 0;
+    int i, j;
+    MPIR_Context_id_t context_id = 0;
     for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++) {
         if (local_mask[i]) {
             /* There is a bit set in this word. */
