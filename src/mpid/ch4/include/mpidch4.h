@@ -291,6 +291,64 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iscatterv(const void *, const int *, const int
                                             void *, int, MPI_Datatype, int, MPIR_Comm *,
                                             MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
 int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
+/* MPID Level interface for MPI-4 Persistent Collective */
+MPL_STATIC_INLINE_PREFIX int MPID_Barrier_init(MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Bcast_init(void *, int, MPI_Datatype, int, MPIR_Comm *,
+                                             MPIR_Info *, MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Allreduce_init(const void *, void *, int, MPI_Datatype, MPI_Op,
+                                                 MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Allgather_init(const void *, int, MPI_Datatype, void *, int,
+                                                 MPI_Datatype, MPIR_Comm *, MPIR_Info *,
+                                                 MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv_init(const void *, int, MPI_Datatype, void *,
+                                                  const int *, const int *, MPI_Datatype,
+                                                  MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Scatter_init(const void *, int, MPI_Datatype, void *, int,
+                                               MPI_Datatype, int, MPIR_Comm *, MPIR_Info *,
+                                               MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Scatterv_init(const void *, const int *, const int *,
+                                                MPI_Datatype, void *, int, MPI_Datatype, int,
+                                                MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Gather_init(const void *, int, MPI_Datatype, void *, int,
+                                              MPI_Datatype, int, MPIR_Comm *, MPIR_Info *,
+                                              MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Gatherv_init(const void *, int, MPI_Datatype, void *, const int *,
+                                               const int *, MPI_Datatype, int, MPIR_Comm *,
+                                               MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoall_init(const void *, int, MPI_Datatype, void *, int,
+                                                MPI_Datatype, MPIR_Comm *, MPIR_Info *,
+                                                MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv_init(const void *, const int *, const int *,
+                                                 MPI_Datatype, void *, const int *, const int *,
+                                                 MPI_Datatype, MPIR_Comm *, MPIR_Info *,
+                                                 MPIR_Request **) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw_init(const void *, const int[], const int[],
+                                                 const MPI_Datatype[], void *, const int[],
+                                                 const int[], const MPI_Datatype[], MPIR_Comm *,
+                                                 MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_init(const void *, void *, int, MPI_Datatype, MPI_Op, int,
+                                              MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_init(const void *, void *, const int[],
+                                                      MPI_Datatype, MPI_Op, MPIR_Comm *,
+                                                      MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block_init(const void *, void *, int, MPI_Datatype,
+                                                            MPI_Op, MPIR_Comm *, MPIR_Info *,
+                                                            MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Scan_init(const void *, void *, int, MPI_Datatype, MPI_Op,
+                                            MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPID_Exscan_init(const void *, void *, int, MPI_Datatype, MPI_Op,
+                                              MPIR_Comm *, MPIR_Info *, MPIR_Request **)
+    MPL_STATIC_INLINE_SUFFIX;
 
 /* This function is not exposed to the upper layers but functions in a way
  * similar to the functions above. Other CH4-level functions should call this
