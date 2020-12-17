@@ -932,6 +932,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_scatterv %p %p %p %D %p %d %D %d %C:MPI_Scatterv(sbuf=%p, scnts=%p, displs=%p, %D, rbuf=%p, rcount=%d, %D, root=%d, comm=%C) failed
 **mpi_allgather:MPI_Allgather failed
 **mpi_allgather %p %d %D %p %d %D %C:MPI_Allgather(sbuf=%p, scount=%d, %D, rbuf=%p, rcount=%d, datatype=%D, comm=%C) failed
+**mpix_allgatherv_init: MPIX_Allgatherv_init failed
+**mpix_allgatherv_init %p %d %D %p %p %p %D %C %I %p: MPI_Allgatherv_init(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_allgather_init: MPI_Allgather_init failed
+**mpix_allgather_init %p %d %D %p %d %D %C %I %p: MPI_Allgather_init(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, %I, request=%p)
 **mpi_allgatherv:MPI_Allgatherv failed
 **mpi_allgatherv %p %d %D %p %p %p %D %C:MPI_Allgatherv(sbuf=%p, scount=%d, %D, rbuf=%p, rcounts=%p, displs=%p, datatype=%D, comm=%C) failed
 **mpi_alltoall:MPI_Alltoall failed
