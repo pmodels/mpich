@@ -1102,4 +1102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_iscatterv(const void *sendbuf, cons
     return mpi_errno;
 }
 
+int MPIDI_POSIX_coll_init(int rank, int size);
+int MPIDI_POSIX_coll_finalize(void);
+
 #endif /* POSIX_COLL_H_INCLUDED */
