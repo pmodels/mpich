@@ -1451,8 +1451,8 @@ interface MPI_Comm_idup
     end subroutine MPI_Comm_idup_f08
 end interface MPI_Comm_idup
 
-interface MPIX_Comm_idup_with_info
-    subroutine MPIX_Comm_idup_with_info_f08(comm, info, newcomm, request, ierror)
+interface MPI_Comm_idup_with_info
+    subroutine MPI_Comm_idup_with_info_f08(comm, info, newcomm, request, ierror)
         use :: mpi_f08_types, only : MPI_Comm, MPI_Info, MPI_Request
         implicit none
         type(MPI_Comm), intent(in) :: comm
@@ -1460,8 +1460,8 @@ interface MPIX_Comm_idup_with_info
         type(MPI_Comm), intent(out), asynchronous :: newcomm
         type(MPI_Request), intent(out) :: request
         integer, optional, intent(out) :: ierror
-    end subroutine MPIX_Comm_idup_with_info_f08
-end interface MPIX_Comm_idup_with_info
+    end subroutine MPI_Comm_idup_with_info_f08
+end interface MPI_Comm_idup_with_info
 
 interface MPI_Comm_free
     subroutine MPI_Comm_free_f08(comm, ierror)

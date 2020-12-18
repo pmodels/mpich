@@ -239,7 +239,7 @@ static int win_init(MPI_Aint length, int disp_unit, MPIR_Win ** win_ptr, MPIR_In
 
     /* Duplicate the original communicator here to avoid having collisions
      * between internal collectives */
-    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, NULL, &win_comm_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
     MPIR_ERR_CHECK(mpi_errno);
 
     MPIDIG_WIN(win, targets) = targets;

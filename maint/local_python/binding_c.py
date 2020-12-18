@@ -154,8 +154,11 @@ def check_func_directives(func):
         func['_errtest_comm_intra'] = 1
 
     func['_skip_validate'] = {}
-    for a in re.findall(r'validate-(\w+)', func['extra']):
+    for a in re.findall(r'validate-(\w+)', func['skip']):
         func['_skip_validate'][a] = 1
+    if 'code-error_check-tail' in func:
+        for a in func['code-error_check-tail']:
+            func['_skip_validate'][a] = 1
 
     # additional docnotes
     func['_docnotes'] = []
@@ -270,9 +273,6 @@ def process_func_parameters(func, mapping):
             func['_has_win'] = name
 
         if 'ANY' in func['_skip_validate'] or kind in func['_skip_validate'] or name in func['_skip_validate']:
-            # -- user bypass --
-            pass
-        elif "code-error_check-tail" in func and name in func['code-error_check-tail']:
             # -- user bypass --
             pass
         elif p['param_direction'] == 'out':
