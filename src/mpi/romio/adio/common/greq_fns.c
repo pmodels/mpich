@@ -9,7 +9,7 @@
 /* In cases where nonblocking operation will carry out blocking version,
  * instantiate and complete a generalized request  */
 
-void MPIO_Completed_request_create(MPI_File * fh, MPI_Offset bytes,
+void MPIO_Completed_request_create(ADIO_File * fh, MPI_Offset bytes,
                                    int *error_code, MPI_Request * request)
 {
     MPI_Status *status;

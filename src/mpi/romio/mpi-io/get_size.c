@@ -78,7 +78,7 @@ int MPI_File_get_size(MPI_File fh, MPI_Offset * size)
     return error_code;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    error_code = MPIO_Err_return_file(fh, error_code);
+    error_code = MPIO_Err_return_file(adio_fh, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

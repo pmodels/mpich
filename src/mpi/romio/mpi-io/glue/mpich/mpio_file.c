@@ -13,7 +13,7 @@
  * of MPI_File structures:
  * - MPIO_File_create(size)
  * - MPIO_File_resolve(mpi_fh)
- * - MPIO_File_free(mpi_fh)
+ * - MPIO_File_free(adio_fh)
  *
  */
 
@@ -27,13 +27,13 @@ MPI_File MPIO_File_create(int size)
 
 ADIO_File MPIO_File_resolve(MPI_File mpi_fh)
 {
-    return mpi_fh;
+    return (ADIO_File) mpi_fh;
 }
 
-void MPIO_File_free(MPI_File * mpi_fh)
+void MPIO_File_free(ADIO_File * adio_fh)
 {
-    ADIOI_Free(*mpi_fh);
-    *mpi_fh = MPI_FILE_NULL;
+    ADIOI_Free(*adio_fh);
+    *adio_fh = ADIO_FILE_NULL;
 }
 
 MPI_File MPIO_File_f2c(MPI_Fint fh)

@@ -15,11 +15,11 @@ static int build_cb_config_list(ADIO_File fd,
                                 MPI_Comm orig_comm, MPI_Comm comm,
                                 int rank, int procs, int *error_code);
 
-MPI_File ADIO_Open(MPI_Comm orig_comm,
-                   MPI_Comm comm, const char *filename, int file_system,
-                   ADIOI_Fns * ops,
-                   int access_mode, ADIO_Offset disp, MPI_Datatype etype,
-                   MPI_Datatype filetype, MPI_Info info, int perm, int *error_code)
+ADIO_File ADIO_Open(MPI_Comm orig_comm,
+                    MPI_Comm comm, const char *filename, int file_system,
+                    ADIOI_Fns * ops,
+                    int access_mode, ADIO_Offset disp, MPI_Datatype etype,
+                    MPI_Datatype filetype, MPI_Info info, int perm, int *error_code)
 {
     MPI_File mpi_fh;
     ADIO_File fd;
@@ -35,12 +35,11 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     /* obtain MPI_File handle */
     mpi_fh = MPIO_File_create(sizeof(struct ADIOI_FileD));
     if (mpi_fh == MPI_FILE_NULL) {
-        fd = MPI_FILE_NULL;
+        fd = ADIO_FILE_NULL;
         *error_code = MPIO_Err_create_code(*error_code,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__, MPI_ERR_OTHER, "**nomem2", 0);
         goto fn_exit;
-
     }
     fd = MPIO_File_resolve(mpi_fh);
 

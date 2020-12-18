@@ -39,7 +39,7 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
     return error_class;
 }
 
-int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
+int MPIO_Err_return_file(ADIO_File adio_fh, int error_code)
 {
     return error_code;
 }

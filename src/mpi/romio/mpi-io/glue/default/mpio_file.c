@@ -11,7 +11,7 @@
  * of MPI_File structures:
  * - MPIO_File_create(size)
  * - MPIO_File_resolve(mpi_fh)
- * - MPIO_File_free(mpi_fh)
+ * - MPIO_File_free(adio_fh)
  *
  */
 
@@ -25,13 +25,13 @@ MPI_File MPIO_File_create(int size)
 
 ADIO_File MPIO_File_resolve(MPI_File mpi_fh)
 {
-    return mpi_fh;
+    return (ADIO_File) mpi_fh;
 }
 
-void MPIO_File_free(MPI_File * mpi_fh)
+void MPIO_File_free(ADIO_File * adio_fh)
 {
-    ADIOI_Free(*mpi_fh);
-    *mpi_fh = MPI_FILE_NULL;
+    ADIOI_Free(*adio_fh);
+    *adio_fh = ADIO_FILE_NULL;
 }
 
 extern ADIO_File *ADIOI_Ftable;
@@ -54,7 +54,7 @@ MPI_File MPIO_File_f2c(MPI_Fint fh)
         /* there is no way to return an error from MPI_File_f2c */
         return MPI_FILE_NULL;
     }
-    return ADIOI_Ftable[fh];
+    return (MPI_File) ADIOI_Ftable[fh];
 #endif
 }
 
@@ -64,27 +64,28 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
     return (MPI_Fint) fh;
 #else
     int i;
+    ADIO_File adio_fh = MPIO_File_resolve(fh);
 
-    if ((fh == NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
+    if ((fh == NULL) || (adio_fh->cookie != ADIOI_FILE_COOKIE))
         return (MPI_Fint) 0;
     if (!ADIOI_Ftable) {
         ADIOI_Ftable_max = 1024;
-        ADIOI_Ftable = (MPI_File *)
-            ADIOI_Malloc(ADIOI_Ftable_max * sizeof(MPI_File));
+        ADIOI_Ftable = (ADIO_File *)
+            ADIOI_Malloc(ADIOI_Ftable_max * sizeof(ADIO_File));
         ADIOI_Ftable_ptr = 0;   /* 0 can't be used though, because
-                                 * MPI_FILE_NULL=0 */
+                                 * ADIO_FILE_NULL=0 */
         for (i = 0; i < ADIOI_Ftable_max; i++)
-            ADIOI_Ftable[i] = MPI_FILE_NULL;
+            ADIOI_Ftable[i] = ADIO_FILE_NULL;
     }
     if (ADIOI_Ftable_ptr == ADIOI_Ftable_max - 1) {
-        ADIOI_Ftable = (MPI_File *) ADIOI_Realloc(ADIOI_Ftable,
-                                                  (ADIOI_Ftable_max + 1024) * sizeof(MPI_File));
+        ADIOI_Ftable = (ADIO_File *) ADIOI_Realloc(ADIOI_Ftable,
+                                                   (ADIOI_Ftable_max + 1024) * sizeof(ADIO_File));
         for (i = ADIOI_Ftable_max; i < ADIOI_Ftable_max + 1024; i++)
-            ADIOI_Ftable[i] = MPI_FILE_NULL;
+            ADIOI_Ftable[i] = ADIO_FILE_NULL;
         ADIOI_Ftable_max += 1024;
     }
     ADIOI_Ftable_ptr++;
-    ADIOI_Ftable[ADIOI_Ftable_ptr] = fh;
+    ADIOI_Ftable[ADIOI_Ftable_ptr] = adio_fh;
     return (MPI_Fint) ADIOI_Ftable_ptr;
 #endif
 }

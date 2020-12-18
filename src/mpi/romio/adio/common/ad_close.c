@@ -55,7 +55,7 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     }
 
     if (fd->fortran_handle != -1) {
-        ADIOI_Ftable[fd->fortran_handle] = MPI_FILE_NULL;
+        ADIOI_Ftable[fd->fortran_handle] = ADIO_FILE_NULL;
     }
 
     if (fd->hints)

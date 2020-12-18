@@ -49,10 +49,10 @@ int MPI_File_sync(MPI_File fh)
     if ((adio_fh == NULL) || ((adio_fh)->cookie != ADIOI_FILE_COOKIE)) {
         error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                           myname, __LINE__, MPI_ERR_ARG, "**iobadfh", 0);
-        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        error_code = MPIO_Err_return_file(ADIO_FILE_NULL, error_code);
         goto fn_exit;
     }
-    MPIO_CHECK_WRITABLE(fh, myname, error_code);
+    MPIO_CHECK_WRITABLE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
     ADIO_Flush(adio_fh, &error_code);
