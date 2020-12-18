@@ -130,7 +130,7 @@ int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** 
 
 
 /* The memory allocation functions */
-void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPID_Alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     void *ap = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
