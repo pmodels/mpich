@@ -22,12 +22,15 @@ def main():
     dump_netmod_h("src/mpid/ch4/netmod/include/netmod.h")
     dump_shm_h("src/mpid/ch4/shm/include/shm.h")
     dump_netmod_impl_h("src/mpid/ch4/netmod/include/netmod_impl.h")
+    dump_netmod_impl_c("src/mpid/ch4/netmod/src/netmod_impl.c")
 
     for m in "ofi", "ucx", "stubnm":
         dump_func_table_c("src/mpid/ch4/netmod/%s/func_table.c" % (m), m)
 
     for m in "ofi", "ucx", "stubnm":
-        dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m)
+        dump_noinline_h("src/mpid/ch4/netmod/%s/%s_noinline.h" % (m, m), m, True)
+    dump_noinline_h("src/mpid/ch4/shm/src/shm_noinline.h", 'shm', False)
+    dump_noinline_h("src/mpid/ch4/shm/posix/posix_noinline.h", 'posix', False)
 
 # ---- subroutines --------------------------------------------
 def load_ch4_api(ch4_api_txt):
@@ -66,6 +69,9 @@ def load_ch4_api(ch4_api_txt):
                     G.name_types[k] = v
 
 def dump_netmod_h(h_file):
+    """Dumps netmod.h, which includes native and non-native api function table struct,
+    as well as prototypes for all netmod api functions"""
+    api_list = [a for a in G.apis if 'nm_params' in a]
     print("  --> [%s]" % h_file)
     with open(h_file, "w") as Out:
         dump_copyright(Out)
@@ -86,20 +92,15 @@ def dump_netmod_h(h_file):
         print("#endif", file=Out)
         print("} MPIDI_NM_Global_t;", file=Out)
         print("", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
+        for a in api_list:
             s = "typedef "
             s += a['ret']
             s += get_space_after_type(a['ret'])
             s += "(*MPIDI_NM_%s_t) (" % (a['func_name'])
-            tail = ");"
-            dump_s_param_tail(Out, s, a['nm_params'], tail)
+            dump_s_param_tail(Out, s, a['nm_params'], ");")
         print("", file=Out)
         print("typedef struct MPIDI_NM_funcs {", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
+        for a in api_list:
             if not a['native']:
                 s = "    "
                 s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
@@ -107,9 +108,7 @@ def dump_netmod_h(h_file):
         print("} MPIDI_NM_funcs_t;", file=Out)
         print("", file=Out)
         print("typedef struct MPIDI_NM_native_funcs {", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
+        for a in api_list:
             if a['native']:
                 s = "    "
                 s += "MPIDI_NM_%s_t %s;" % (a['func_name'], a['func_name'])
@@ -123,9 +122,7 @@ def dump_netmod_h(h_file):
         print("extern int MPIDI_num_netmods;", file=Out)
         print("extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];", file=Out)
         print("", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
+        for a in api_list:
             s = ''
             s += a['ret']
             s += get_space_after_type(a['ret'])
@@ -139,6 +136,7 @@ def dump_netmod_h(h_file):
         print("#endif /* %s */" % INC, file=Out)
 
 def dump_shm_h(h_file):
+    """Dumps shm.h, which includes prototypes for all shmem api functions"""
     print("  --> [%s]" % h_file)
     with open(h_file, "w") as Out:
         dump_copyright(Out)
@@ -164,6 +162,11 @@ def dump_shm_h(h_file):
         print("#endif /* %s */" % INC, file=Out)
 
 def dump_netmod_impl_h(h_file):
+    """Dumps netmod_impl.h.
+    If NETMOD_INLINE is not defined, this file defines inline wrapper functions that calls
+    function tables entries. (Non-inline wrappers are defined in netmod_impl.c).
+    If NETMOD_INLINE is defined, this file includes the inline headers."""
+    api_list = [a for a in G.apis if ('nm_params' in a) and a['nm_inline']]
     print("  --> [%s]" % h_file)
     with open(h_file, "w") as Out:
         dump_copyright(Out)
@@ -173,19 +176,11 @@ def dump_netmod_impl_h(h_file):
         print("", file=Out)
         print("#ifndef NETMOD_INLINE", file=Out)
         print("#ifndef NETMOD_DISABLE_INLINES", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
-            if not a['nm_inline']:
-                continue
-            s = ''
-            if a['nm_inline']:
-                s += "MPL_STATIC_INLINE_PREFIX "
-            s += a['ret']
-            s += get_space_after_type(a['ret'])
+        for a in api_list:
+            s = "MPL_STATIC_INLINE_PREFIX "
+            s += a['ret'] + get_space_after_type(a['ret'])
             s += "MPIDI_NM_%s(" % (a['name'])
-            tail = ")"
-            dump_s_param_tail(Out, s, a['nm_params'], tail)
+            dump_s_param_tail(Out, s, a['nm_params'], ")")
 
             print("{", file=Out)
             use_ret = ''
@@ -201,11 +196,10 @@ def dump_netmod_impl_h(h_file):
             if use_ret:
                 s += "ret = "
             if a['native']:
-                s += "MPIDI_NM_native_func->%s(" % (a['name'])
+                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
             else:
-                s += "MPIDI_NM_func->%s(" % (a['name'])
-            tail = ");"
-            dump_s_param_tail(Out, s, a['nm_params'], tail, 1)
+                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+            dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
             print("", file=Out)
 
             print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
@@ -233,7 +227,53 @@ def dump_netmod_impl_h(h_file):
         print("", file=Out)
         print("#endif /* %s */" % INC, file=Out)
 
+def dump_netmod_impl_c(c_file):
+    """Dump netmod_impl.c, which supply non-inlined wrapper functions that calls function table
+    entries"""
+    api_list = [a for a in G.apis if ('nm_params' in a) and not a['nm_inline']]
+    print("  --> [%s]" % c_file)
+    with open(c_file, "w") as Out:
+        dump_copyright(Out)
+        print("", file=Out)
+        print("#include \"mpidimpl.h\"", file=Out)
+        print("", file=Out)
+        print("#ifndef NETMOD_INLINE", file=Out)
+        for a in api_list:
+            s = a['ret'] + get_space_after_type(a['ret'])
+            s += "MPIDI_NM_%s(" % (a['name'])
+            dump_s_param_tail(Out, s, a['nm_params'], ")")
+
+            print("{", file=Out)
+            use_ret = ''
+            if re.search(r'int|size_t', a['ret']):
+                use_ret = 1
+                print("    %s ret;" % a['ret'], file=Out)
+                print("", file=Out)
+            NAME = a['name'].upper()
+            print("    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            print("", file=Out)
+            s = "    "
+            if use_ret:
+                s += "ret = "
+            if a['native']:
+                s += "MPIDI_NM_native_func->%s(" % (a['func_name'])
+            else:
+                s += "MPIDI_NM_func->%s(" % (a['func_name'])
+            dump_s_param_tail(Out, s, a['nm_params'], ");", 1)
+            print("", file=Out)
+
+            print("    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_%s);" % NAME, file=Out)
+            if use_ret:
+                print("    return ret;", file=Out)
+            print("}", file=Out)
+            print("", file=Out)
+        print("#endif /* NETMOD_INLINE */", file=Out)
+
 def dump_func_table_c(c_file, mod):
+    """Dumps func_table.c. When NETMOD_INLINE is not defined, this file defines function table
+    by filling entries. NETMOD_DISABLE_INLINES is a hack to prevent wrapers in netmod_impl.h
+    gets included"""
     MOD = mod.upper()
     print("  --> [%s]" % c_file)
     with open(c_file, "w") as Out:
@@ -269,7 +309,16 @@ def dump_func_table_c(c_file, mod):
         print("};", file=Out)
         print("#endif", file=Out)
 
-def dump_noinline_h(h_file, mod):
+def dump_noinline_h(h_file, mod, is_nm=True):
+    """Dumps noinline header files e.g. ofi_noinline.h. "noinline" header files includes
+    prototypes of non-inline functions."""
+    api_list = []
+    for a in G.apis:
+        if is_nm and ('nm_params' in a) and not a['nm_inline']:
+            api_list.append(a)
+        elif ('shm_params' in a) and not a['shm_inline']:
+            api_list.append(a)
+
     MOD = mod.upper()
     print("  --> [%s]" % h_file)
     with open(h_file, "w") as Out:
@@ -280,25 +329,25 @@ def dump_noinline_h(h_file, mod):
         print("", file=Out)
         print("#include \"%s_impl.h\"" % mod, file=Out)
         print("", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
-            if not a['nm_inline']:
-                s = ''
-                s += a['ret']
-                s += get_space_after_type(a['ret'])
-                s += "MPIDI_%s_%s(" % (MOD, a['name'])
-                tail = ");"
-                dump_s_param_tail(Out, s, a['nm_params'], tail)
+        for a in api_list:
+            s = a['ret'] + get_space_after_type(a['ret'])
+            s += "MPIDI_%s_%s(" % (MOD, a['name'])
+            if is_nm:
+                params = a['nm_params']
+            else:
+                params = a['shm_params']
+            dump_s_param_tail(Out, s, params, ");")
         print("", file=Out)
-        print("#ifdef NETMOD_INLINE", file=Out)
-        for a in G.apis:
-            if 'nm_params' not in a:
-                continue
-            if not a['nm_inline']:
+
+        if is_nm:
+            # if netmod is inlined, the api is called by `MPIDI_NM_xxx`,
+            # define macros to redirect.
+            print("#ifdef NETMOD_INLINE", file=Out)
+            for a in api_list:
                 print("#define MPIDI_NM_%s MPIDI_%s_%s" % (a['name'], MOD, a['name']), file=Out)
-        print("#endif /* NETMOD_INLINE */", file=Out)
-        print("", file=Out)
+            print("#endif /* NETMOD_INLINE */", file=Out)
+            print("", file=Out)
+
         print("#endif /* %s */" % INC, file=Out)
 
 def dump_copyright(out):
@@ -306,6 +355,8 @@ def dump_copyright(out):
     print(" * Copyright (C) by Argonne National Laboratory", file=out)
     print(" *     See COPYRIGHT in top-level directory", file=out)
     print(" */", file=out)
+    print("", file=out)
+    print("/* ** This file is auto-generated, do not edit ** */", file=out)
     print("", file=out)
 
 def get_include_guard(h_file):
@@ -320,6 +371,11 @@ def get_space_after_type(type):
         return ' '
 
 def dump_s_param_tail(out, s, params, tail, is_arg=0):
+    """Print to file out a function declaration or a function call. 
+    Essentially it will print a string as a concatenation of s, params, and tail.
+    It will expand params to the correct type depend on whether it is a declaration
+    or function call, and it will break the long line at 100 character limit.
+    """
     count = len(params)
     n_lead = len(s)
     n = n_lead
