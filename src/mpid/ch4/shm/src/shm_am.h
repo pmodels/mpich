@@ -12,7 +12,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
                                                    int handler_id, const void *am_hdr,
-                                                   size_t am_hdr_sz)
+                                                   MPI_Aint am_hdr_sz)
 {
     int ret;
 
@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
-                                                const void *am_hdr, size_t am_hdr_sz,
+                                                const void *am_hdr, MPI_Aint am_hdr_sz,
                                                 const void *data, MPI_Count count,
                                                 MPI_Datatype datatype, MPIR_Request * sreq)
 {
@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                          int src_rank, int handler_id,
-                                                         const void *am_hdr, size_t am_hdr_sz)
+                                                         const void *am_hdr, MPI_Aint am_hdr_sz)
 {
     int ret;
 
@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t conte
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id,
                                                       int src_rank, int handler_id,
-                                                      const void *am_hdr, size_t am_hdr_sz,
+                                                      const void *am_hdr, MPI_Aint am_hdr_sz,
                                                       const void *data, MPI_Count count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
 {
@@ -107,25 +107,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * rreq)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_SHM_am_hdr_max_sz(void)
 {
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
-
-    ret = MPIDI_POSIX_am_hdr_max_sz();
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
-    return ret;
+    return MPIDI_POSIX_am_hdr_max_sz();
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_limit(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_SHM_am_eager_limit(void)
 {
     return MPIDI_POSIX_am_eager_limit();
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_eager_buf_limit(void)
+MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_SHM_am_eager_buf_limit(void)
 {
     return MPIDI_POSIX_am_eager_buf_limit();
 }

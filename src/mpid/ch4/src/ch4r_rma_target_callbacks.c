@@ -234,7 +234,7 @@ static int ack_put(MPIR_Request * rreq)
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_PUT_ACK,
-                                        &ack_msg, sizeof(ack_msg));
+                                        &ack_msg, (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
@@ -242,7 +242,7 @@ static int ack_put(MPIR_Request * rreq)
             MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
                                        (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_PUT_ACK,
-                                       &ack_msg, sizeof(ack_msg));
+                                       &ack_msg, (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -275,7 +275,7 @@ static int ack_cswap(MPIR_Request * rreq)
             MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context
                                      (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &ack_msg,
-                                     sizeof(ack_msg), result_addr, 1,
+                                     (MPI_Aint) sizeof(ack_msg), result_addr, 1,
                                      MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
     else
 #endif
@@ -284,7 +284,7 @@ static int ack_cswap(MPIR_Request * rreq)
             MPIDI_NM_am_isend_reply(MPIDIG_win_to_context
                                     (MPIDIG_REQUEST(rreq, req->creq.win_ptr)),
                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_CSWAP_ACK, &ack_msg,
-                                    sizeof(ack_msg), result_addr, 1,
+                                    (MPI_Aint) sizeof(ack_msg), result_addr, 1,
                                     MPIDIG_REQUEST(rreq, req->creq.datatype), rreq);
     }
 
@@ -311,7 +311,7 @@ static int ack_acc(MPIR_Request * rreq)
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_ACK,
-                                        &ack_msg, sizeof(ack_msg));
+                                        &ack_msg, (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
@@ -319,7 +319,7 @@ static int ack_acc(MPIR_Request * rreq)
             MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
                                        (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_ACK,
-                                       &ack_msg, sizeof(ack_msg));
+                                       &ack_msg, (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -347,7 +347,7 @@ static int ack_get_acc(MPIR_Request * rreq)
             MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context
                                      (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                      MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
-                                     &ack_msg, sizeof(ack_msg),
+                                     &ack_msg, (MPI_Aint) sizeof(ack_msg),
                                      MPIDIG_REQUEST(rreq, req->areq.data),
                                      MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE,
                                      rreq);
@@ -358,7 +358,7 @@ static int ack_get_acc(MPIR_Request * rreq)
             MPIDI_NM_am_isend_reply(MPIDIG_win_to_context
                                     (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                     MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_ACK,
-                                    &ack_msg, sizeof(ack_msg),
+                                    &ack_msg, (MPI_Aint) sizeof(ack_msg),
                                     MPIDIG_REQUEST(rreq, req->areq.data),
                                     MPIDIG_REQUEST(rreq, req->areq.result_data_sz), MPI_BYTE, rreq);
     }
@@ -407,12 +407,14 @@ static int win_lock_advance(MPIR_Win * win)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_rank_is_local(lock->rank, win->comm_ptr))
             mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                                    lock->rank, handler_id, &msg, sizeof(msg));
+                                                    lock->rank, handler_id,
+                                                    &msg, (MPI_Aint) sizeof(msg));
         else
 #endif
         {
             mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context(win),
-                                                   lock->rank, handler_id, &msg, sizeof(msg));
+                                                   lock->rank, handler_id,
+                                                   &msg, (MPI_Aint) sizeof(msg));
         }
 
         MPIR_ERR_CHECK(mpi_errno);
@@ -498,13 +500,14 @@ static void win_unlock_proc(const MPIDIG_win_cntrl_msg_t * info, int is_local, M
     if (is_local)
         mpi_errno = MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context(win),
                                                 info->origin_rank,
-                                                MPIDIG_WIN_UNLOCK_ACK, &msg, sizeof(msg));
+                                                MPIDIG_WIN_UNLOCK_ACK,
+                                                &msg, (MPI_Aint) sizeof(msg));
     else
 #endif
     {
         mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context(win),
                                                info->origin_rank,
-                                               MPIDIG_WIN_UNLOCK_ACK, &msg, sizeof(msg));
+                                               MPIDIG_WIN_UNLOCK_ACK, &msg, (MPI_Aint) sizeof(msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -750,7 +753,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_REQUEST(rreq, is_local))
             mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDIG_REQUEST(rreq, rank),
-                                                 MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
+                                                 MPIDIG_GET_ACK,
+                                                 &get_ack, (MPI_Aint) sizeof(get_ack),
                                                  (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                                  MPIDIG_REQUEST(rreq, req->greq.count),
                                                  MPIDIG_REQUEST(rreq, req->greq.datatype), rreq);
@@ -758,7 +762,8 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
 #endif
         {
             mpi_errno = MPIDI_NM_am_isend_reply(context_id, MPIDIG_REQUEST(rreq, rank),
-                                                MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
+                                                MPIDIG_GET_ACK,
+                                                &get_ack, (MPI_Aint) sizeof(get_ack),
                                                 (void *) MPIDIG_REQUEST(rreq, req->greq.addr),
                                                 MPIDIG_REQUEST(rreq, req->greq.count),
                                                 MPIDIG_REQUEST(rreq, req->greq.datatype), rreq);
@@ -785,7 +790,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_REQUEST(rreq, is_local))
         mpi_errno = MPIDI_SHM_am_isend_reply(context_id, MPIDIG_REQUEST(rreq, rank),
-                                             MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
+                                             MPIDIG_GET_ACK, &get_ack, (MPI_Aint) sizeof(get_ack),
                                              MPIDIG_REQUEST(rreq, req->greq.addr),
                                              MPIDIG_REQUEST(rreq, req->greq.count), dt->handle,
                                              rreq);
@@ -793,7 +798,7 @@ static int get_target_cmpl_cb(MPIR_Request * rreq)
 #endif
     {
         mpi_errno = MPIDI_NM_am_isend_reply(context_id, MPIDIG_REQUEST(rreq, rank),
-                                            MPIDIG_GET_ACK, &get_ack, sizeof(get_ack),
+                                            MPIDIG_GET_ACK, &get_ack, (MPI_Aint) sizeof(get_ack),
                                             MPIDIG_REQUEST(rreq, req->greq.addr),
                                             MPIDIG_REQUEST(rreq, req->greq.count), dt->handle,
                                             rreq);
@@ -850,7 +855,7 @@ static int put_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_PUT_DT_ACK,
-                                        &ack_msg, sizeof(ack_msg));
+                                        &ack_msg, (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
@@ -858,7 +863,7 @@ static int put_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
                                        (MPIDIG_REQUEST(rreq, req->preq.win_ptr)),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_PUT_DT_ACK,
-                                       &ack_msg, sizeof(ack_msg));
+                                       &ack_msg, (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -887,7 +892,7 @@ static int acc_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_DT_ACK,
-                                        &ack_msg, sizeof(ack_msg));
+                                        &ack_msg, (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
@@ -895,7 +900,7 @@ static int acc_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
                                        (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_ACC_DT_ACK,
-                                       &ack_msg, sizeof(ack_msg));
+                                       &ack_msg, (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -924,7 +929,7 @@ static int get_acc_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_SHM_am_send_hdr_reply(MPIDIG_win_to_context
                                         (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                         MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_DT_ACK,
-                                        &ack_msg, sizeof(ack_msg));
+                                        &ack_msg, (MPI_Aint) sizeof(ack_msg));
     else
 #endif
     {
@@ -932,7 +937,7 @@ static int get_acc_dt_target_cmpl_cb(MPIR_Request * rreq)
             MPIDI_NM_am_send_hdr_reply(MPIDIG_win_to_context
                                        (MPIDIG_REQUEST(rreq, req->areq.win_ptr)),
                                        MPIDIG_REQUEST(rreq, rank), MPIDIG_GET_ACC_DT_ACK,
-                                       &ack_msg, sizeof(ack_msg));
+                                       &ack_msg, (MPI_Aint) sizeof(ack_msg));
     }
 
     MPIR_ERR_CHECK(mpi_errno);
@@ -1450,7 +1455,8 @@ int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     if (is_local)
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context(win),
                                              MPIDIG_REQUEST(origin_req, rank),
-                                             MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
+                                             MPIDIG_PUT_DAT_REQ,
+                                             &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
@@ -1460,7 +1466,8 @@ int MPIDIG_put_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
     {
         mpi_errno = MPIDI_NM_am_isend_reply(MPIDIG_win_to_context(win),
                                             MPIDIG_REQUEST(origin_req, rank),
-                                            MPIDIG_PUT_DAT_REQ, &dat_msg, sizeof(dat_msg),
+                                            MPIDIG_PUT_DAT_REQ,
+                                            &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->preq.origin_datatype),
@@ -1507,7 +1514,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context(win),
                                              MPIDIG_REQUEST(origin_req, rank),
                                              MPIDIG_ACC_DAT_REQ,
-                                             &dat_msg, sizeof(dat_msg),
+                                             &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
@@ -1518,7 +1525,7 @@ int MPIDIG_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data, MP
         mpi_errno = MPIDI_NM_am_isend_reply(MPIDIG_win_to_context(win),
                                             MPIDIG_REQUEST(origin_req, rank),
                                             MPIDIG_ACC_DAT_REQ,
-                                            &dat_msg, sizeof(dat_msg),
+                                            &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
@@ -1566,7 +1573,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data
         mpi_errno = MPIDI_SHM_am_isend_reply(MPIDIG_win_to_context(win),
                                              MPIDIG_REQUEST(origin_req, rank),
                                              MPIDIG_GET_ACC_DAT_REQ,
-                                             &dat_msg, sizeof(dat_msg),
+                                             &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                              MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
@@ -1577,7 +1584,7 @@ int MPIDIG_get_acc_dt_ack_target_msg_cb(int handler_id, void *am_hdr, void *data
         mpi_errno = MPIDI_NM_am_isend_reply(MPIDIG_win_to_context(win),
                                             MPIDIG_REQUEST(origin_req, rank),
                                             MPIDIG_GET_ACC_DAT_REQ,
-                                            &dat_msg, sizeof(dat_msg),
+                                            &dat_msg, (MPI_Aint) sizeof(dat_msg),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_addr),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_count),
                                             MPIDIG_REQUEST(origin_req, req->areq.origin_datatype),
