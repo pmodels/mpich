@@ -60,6 +60,6 @@ int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, c
 void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr);
 int MPIDI_POSIX_mpi_free_mem(void *ptr);
 
-int MPIDI_POSIX_progress(int blocking);
+int MPIDI_POSIX_progress(int vci, int blocking);
 
 #endif
