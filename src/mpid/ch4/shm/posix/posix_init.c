@@ -308,9 +308,3 @@ int MPIDI_POSIX_upids_to_lupids(int size, size_t * remote_upid_size, char *remot
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
-
-int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr, int size, const int lpids[])
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}

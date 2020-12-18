@@ -73,9 +73,6 @@ Non Native API:
   upids_to_lupids : int
       NM : size, remote_upid_size, remote_upids, remote_lupids
      SHM : size, remote_upid_size, remote_upids, remote_lupids
-  create_intercomm_from_lpids : int
-      NM : newcomm_ptr-2, size, lpids
-     SHM : newcomm_ptr-2, size, lpids
   mpi_comm_commit_pre_hook : int
       NM : comm
      SHM : comm
@@ -507,7 +504,6 @@ PARAM:
     message: MPIR_Request *
     message_p: MPIR_Request **
     newcomm_ptr: MPIR_Comm **
-    newcomm_ptr-2: MPIR_Comm *
     op: MPI_Op
     op_p: MPIR_Op *
     origin_addr: const void *
