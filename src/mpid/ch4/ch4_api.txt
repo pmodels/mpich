@@ -124,26 +124,26 @@ Non Native API:
 
 Native API:
   mpi_isend : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
-     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
+      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
+     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
+     MPIDIG: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
   isend_coll : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
-     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
+      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
+     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
+     MPIDIG: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p, errflag
   mpi_issend : int
-      NM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
-     SHM*: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
-     MPIDIG: buf, count-2, datatype, rank, tag, comm, context_offset, addr, req_p
+      NM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
+     SHM*: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
+     MPIDIG: buf, count, datatype, rank, tag, comm, context_offset, addr, req_p
   mpi_cancel_send : int
       NM*: sreq
      SHM*: sreq
   mpi_irecv : int
-      NM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, addr, req_p, partner
-     SHM*: buf-2, count-2, datatype, rank, tag, comm, context_offset, req_p
+      NM*: buf-2, count, datatype, rank, tag, comm, context_offset, addr, req_p, partner
+     SHM*: buf-2, count, datatype, rank, tag, comm, context_offset, req_p
   mpi_imrecv : int
-      NM*: buf-2, count-2, datatype, message
-     SHM*: buf-2, count-2, datatype, message
+      NM*: buf-2, count, datatype, message
+     SHM*: buf-2, count, datatype, message
   mpi_cancel_recv : int
       NM*: rreq
      SHM*: rreq
@@ -475,8 +475,7 @@ PARAM:
     compare_addr: const void *
     context_id: MPIR_Context_id_t
     context_offset: int
-    count: MPI_Count
-    count-2: MPI_Aint
+    count: MPI_Aint
     count-3: int
     data: const void *
     data_sz: MPI_Aint

@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend(int rank,
                                                const void *am_hdr,
                                                MPI_Aint am_hdr_sz,
                                                const void *data,
-                                               MPI_Count count, MPI_Datatype datatype,
+                                               MPI_Aint count, MPI_Datatype datatype,
                                                MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -113,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isendv(int rank,
                                                 struct iovec *am_hdr,
                                                 size_t iov_len,
                                                 const void *data,
-                                                MPI_Count count, MPI_Datatype datatype,
+                                                MPI_Aint count, MPI_Datatype datatype,
                                                 MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, is_allocated;
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_i
                                                      const void *am_hdr,
                                                      MPI_Aint am_hdr_sz,
                                                      const void *data,
-                                                     MPI_Count count,
+                                                     MPI_Aint count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -238,7 +238,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t contex
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_NM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                      const void *data, MPI_Count count,
+                                                      const void *data, MPI_Aint count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIDI_OFI_AMREQUEST(sreq, data_sz) = data_sz;
