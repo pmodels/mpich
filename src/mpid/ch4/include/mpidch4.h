@@ -149,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *, int, MPI_Datatype
                                                  MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
                                                  MPI_Op, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int, MPIR_Win *) MPL_STATIC_INLINE_SUFFIX;
-void *MPID_Alloc_mem(size_t, MPIR_Info *);
+void *MPID_Alloc_mem(MPI_Aint, MPIR_Info *);
 int MPID_Free_mem(void *);
 int MPID_Get_node_id(MPIR_Comm *, int rank, int *);
 int MPID_Get_max_node_id(MPIR_Comm *, int *);
