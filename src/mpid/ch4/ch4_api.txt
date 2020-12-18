@@ -369,8 +369,8 @@ Native API:
       NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm
      SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm
   mpi_neighbor_alltoallw : int
-      NM*: sendbuf, sendcounts, sdispls-2, sendtypes-2, recvbuf, recvcounts, rdispls-2, recvtypes-2, comm
-     SHM*: sendbuf, sendcounts, sdispls-2, sendtypes-2, recvbuf, recvcounts, rdispls-2, recvtypes-2, comm
+      NM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm
+     SHM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm
   mpi_neighbor_alltoall : int
       NM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm
      SHM*: sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm
@@ -387,8 +387,8 @@ Native API:
       NM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, req-2
      SHM*: sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, req-2
   mpi_ineighbor_alltoallw : int
-      NM*: sendbuf, sendcounts, sdispls-2, sendtypes-2, recvbuf, recvcounts, rdispls-2, recvtypes-2, comm, req-2
-     SHM*: sendbuf, sendcounts, sdispls-2, sendtypes-2, recvbuf, recvcounts, rdispls-2, recvtypes-2, comm, req-2
+      NM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm, req-2
+     SHM*: sendbuf, sendcounts, sdispls-2, sendtypes, recvbuf, recvcounts, rdispls-2, recvtypes, comm, req-2
   mpi_ibarrier : int
       NM*: comm, req-2
      SHM*: comm, req-2
@@ -529,7 +529,6 @@ PARAM:
     recvcounts: const int *
     recvtype: MPI_Datatype
     recvtypes: const MPI_Datatype[]
-    recvtypes-2: const MPI_Datatype *
     remote_lupids: int **
     remote_upid_size: size_t *
     remote_upids: char *
@@ -548,7 +547,6 @@ PARAM:
     sendcounts: const int *
     sendtype: MPI_Datatype
     sendtypes: const MPI_Datatype[]
-    sendtypes-2: const MPI_Datatype *
     size: int
     size-2: MPI_Aint
     size-4: MPI_Aint *
