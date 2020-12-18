@@ -151,9 +151,9 @@ Native API:
       NM*: rreq
      SHM*: rreq
   mpi_alloc_mem : void *
-      NM : size-3, info_ptr
-     SHM : size-3, info_ptr
-     MPIDIG: size-3, info_ptr
+      NM : size-2, info_ptr
+     SHM : size-2, info_ptr
+     MPIDIG: size-2, info_ptr
   mpi_free_mem : int
       NM : ptr
      SHM : ptr
@@ -551,7 +551,6 @@ PARAM:
     sendtypes-2: const MPI_Datatype *
     size: int
     size-2: MPI_Aint
-    size-3: size_t
     size-4: MPI_Aint *
     source: int
     src_rank: int
