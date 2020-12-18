@@ -80,7 +80,7 @@ int MPIR_Cart_create(MPIR_Comm * comm_ptr, int ndims, const int dims[],
         if (rank == 0) {
             MPIR_Comm *comm_self_ptr;
             MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
-            mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, NULL, &newcomm_ptr);
+            mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &newcomm_ptr);
             MPIR_ERR_CHECK(mpi_errno);
 
             /* Create the topology structure */
