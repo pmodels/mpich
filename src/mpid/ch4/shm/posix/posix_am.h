@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int rank,
                                                      const void *am_hdr,
                                                      MPI_Aint am_hdr_sz,
                                                      const void *data,
-                                                     MPI_Count count,
+                                                     MPI_Aint count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq,
                                                      bool issue_deferred);
 
@@ -82,7 +82,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   const void *am_hdr,
                                                   MPI_Aint am_hdr_sz,
                                                   const void *data,
-                                                  MPI_Count count,
+                                                  MPI_Aint count,
                                                   MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,7 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    struct iovec *am_hdr,
                                                    size_t iov_len,
                                                    const void *data,
-                                                   MPI_Count count,
+                                                   MPI_Aint count,
                                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
                                                         const void *am_hdr,
                                                         MPI_Aint am_hdr_sz,
                                                         const void *data,
-                                                        MPI_Count count,
+                                                        MPI_Aint count,
                                                         MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -322,7 +322,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_do_am_isend(int grank,
                                                      const void *am_hdr,
                                                      MPI_Aint am_hdr_sz,
                                                      const void *data,
-                                                     MPI_Count count,
+                                                     MPI_Aint count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq,
                                                      bool issue_deferred)
 {

@@ -13,7 +13,7 @@
 #define MPIDIG_AM_SEND_FLAGS_RTS (1 << 1)
 
 MPL_STATIC_INLINE_PREFIX bool MPIDIG_check_eager(int is_local, MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                 const void *buf, MPI_Count count,
+                                                 const void *buf, MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * sreq)
 {
 #ifdef MPIDI_CH4_DIRECT_NETMOD

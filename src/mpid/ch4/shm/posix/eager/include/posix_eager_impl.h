@@ -11,7 +11,7 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_send(int grank, MPIDI_POSIX_am_header_t * msg_hdr,
                                                     const void *am_hdr, MPI_Aint am_hdr_sz,
-                                                    const void *buf, MPI_Count count,
+                                                    const void *buf, MPI_Aint count,
                                                     MPI_Datatype datatype, MPI_Aint offset,
                                                     MPI_Aint * bytes_sent)
 {

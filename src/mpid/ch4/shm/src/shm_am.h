@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                 const void *am_hdr, MPI_Aint am_hdr_sz,
-                                                const void *data, MPI_Count count,
+                                                const void *data, MPI_Aint count,
                                                 MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
@@ -45,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                  struct iovec *am_hdrs, size_t iov_len,
-                                                 const void *data, MPI_Count count,
+                                                 const void *data, MPI_Aint count,
                                                  MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
@@ -79,7 +79,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t conte
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id,
                                                       int src_rank, int handler_id,
                                                       const void *am_hdr, MPI_Aint am_hdr_sz,
-                                                      const void *data, MPI_Count count,
+                                                      const void *data, MPI_Aint count,
                                                       MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
@@ -144,7 +144,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
 }
 
 MPL_STATIC_INLINE_PREFIX bool MPIDI_SHM_am_check_eager(MPI_Aint am_hdr_sz, MPI_Aint data_sz,
-                                                       const void *data, MPI_Count count,
+                                                       const void *data, MPI_Aint count,
                                                        MPI_Datatype datatype, MPIR_Request * sreq)
 {
     /* TODO: add checking for IPC transmission */
