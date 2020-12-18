@@ -52,18 +52,18 @@ Non Native API:
   am_recv: int
       NM*: rreq
      SHM*: rreq
-  am_hdr_max_sz : size_t
+  am_hdr_max_sz : MPI_Aint
       NM*: void
      SHM*: void
-  am_eager_limit : size_t
+  am_eager_limit : MPI_Aint
       NM*: void
      SHM*: void
-  am_eager_buf_limit : size_t
+  am_eager_buf_limit : MPI_Aint
       NM*: void
      SHM*: void
   am_check_eager: bool
-      NM*: am_hdr_sz-2, data_sz, data, count, datatype, sreq
-     SHM*: am_hdr_sz-2, data_sz, data, count, datatype, sreq
+      NM*: am_hdr_sz, data_sz, data, count, datatype, sreq
+     SHM*: am_hdr_sz, data_sz, data, count, datatype, sreq
   comm_get_lpid : int
       NM*: comm_ptr, idx, lpid_ptr, is_remote
      SHM*: comm_ptr, idx, lpid_ptr, is_remote
@@ -460,8 +460,7 @@ Native API:
 PARAM:
     addr: MPIDI_av_entry_t *
     am_hdr: const void *
-    am_hdr_sz: size_t
-    am_hdr_sz-2: MPI_Aint
+    am_hdr_sz: MPI_Aint
     am_hdrs: struct iovec *
     appnum: int
     assert: int

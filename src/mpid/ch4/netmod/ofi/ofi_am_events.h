@@ -281,7 +281,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_am_rdma_read_ack(int rank, int context
 
     ack_msg.sreq_ptr = sreq_ptr;
     mpi_errno = MPIDI_NM_am_send_hdr_reply(context_id, rank, MPIDI_OFI_AM_RDMA_READ_ACK, &ack_msg,
-                                           sizeof(ack_msg));
+                                           (MPI_Aint) sizeof(ack_msg));
     MPIR_ERR_CHECK(mpi_errno);
 
   fn_exit:
