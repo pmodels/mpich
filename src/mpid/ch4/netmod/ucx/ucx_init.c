@@ -427,7 +427,7 @@ int MPIDI_UCX_mpi_free_mem(void *ptr)
     return MPIDIG_mpi_free_mem(ptr);
 }
 
-void *MPIDI_UCX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+void *MPIDI_UCX_mpi_alloc_mem(MPI_Aint size, MPIR_Info * info_ptr)
 {
     return MPIDIG_mpi_alloc_mem(size, info_ptr);
 }
