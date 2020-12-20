@@ -334,30 +334,34 @@ static inline int flush_local_all(MPIR_Win * win_ptr)
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_FLUSH_LOCAL_ALL);
 
-    /* Set sync_flag in sync struct. */
-    for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list_head;
-        while (curr_target != NULL) {
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
-            }
-
-            curr_target = curr_target->next;
-        }
-    }
-
-    /* issue out all operations. */
-    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Wait for local completion */
     do {
+        /* Set sync_flag in sync struct. */
+        for (i = 0; i < win_ptr->num_slots; i++) {
+            curr_target = win_ptr->slots[i].target_list_head;
+            while (curr_target != NULL) {
+                if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
+                    curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+                }
+
+                curr_target = curr_target->next;
+            }
+        }
+
+        /* issue out all operations. */
+        mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Wait for local completion */
         MPIDI_CH3I_RMA_ops_win_local_completion(win_ptr, local_completed);
 
         if (!local_completed) {
             mpi_errno = wait_progress_engine();
             MPIR_ERR_CHECK(mpi_errno);
         }
+
+        /* Progress engine may yield to another thread and issue new op to the
+         * same target, thus degrade sync_flag. To ensure local completion,
+         * we have to perform flush local sync again.*/
     } while (!local_completed);
 
   fn_exit:
@@ -379,29 +383,33 @@ static inline int flush_all(MPIR_Win * win_ptr)
 
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_FLUSH_ALL);
 
-    /* Set sync_flag in sync struct. */
-    for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list_head;
-        while (curr_target != NULL) {
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-            }
-
-            curr_target = curr_target->next;
-        }
-    }
-
-    /* Issue out all operations. */
-    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
-    MPIR_ERR_CHECK(mpi_errno);
-
-    /* Wait for remote completion. */
     do {
+        /* Set sync_flag in sync struct. */
+        for (i = 0; i < win_ptr->num_slots; i++) {
+            curr_target = win_ptr->slots[i].target_list_head;
+            while (curr_target != NULL) {
+                if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
+                    curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+                }
+
+                curr_target = curr_target->next;
+            }
+        }
+
+        /* Issue out all operations. */
+        mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
+        MPIR_ERR_CHECK(mpi_errno);
+
+        /* Wait for remote completion. */
         MPIDI_CH3I_RMA_ops_win_remote_completion(win_ptr, remote_completed);
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             MPIR_ERR_CHECK(mpi_errno);
         }
+
+        /* Progress engine may yield to another thread and issue new op to the
+         * same target, thus degrade sync_flag. To ensure remote completion,
+         * we have to perform flush sync again.*/
     } while (!remote_completed);
 
   fn_exit:
