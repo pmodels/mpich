@@ -414,7 +414,7 @@ def process_func_parameters(func, mapping):
         elif is_pointer_type(p):
             validation_list.append({'kind': "ARGNULL", 'name': name})
         else:
-            print("Missing error checking: %s" % kind, file=sys.stderr)
+            print("Missing error checking: func=%s, name=%s, kind=%s" % (func_name, name, kind), file=sys.stderr)
 
         if do_handle_ptr == 1:
             if p['param_direction'] == 'inout':
