@@ -3,7 +3,7 @@
 MPI_Wtick:
     .desc: Returns the resolution of MPI_Wtime
     .impl: direct
-    .skip: ThreadSafe, Fortran
+    .skip: ThreadSafe, Fortran, Errors
     .seealso: MPI_Wtick, MPI_Comm_get_attr, MPI_Attr_get
 /*
   Return value:
@@ -33,7 +33,7 @@ MPI_Wtick:
 
 MPI_Wtime:
     .desc: Returns an elapsed time on the calling processor
-    .skip: ThreadSafe, Fortran
+    .skip: ThreadSafe, Fortran, Errors
     .seealso: MPI_Wtime, MPI_Comm_get_attr, MPI_Attr_get
     .impl: direct
 /*

@@ -2,7 +2,7 @@
 
 MPI_Aint_add:
     .desc: Returns the sum of base and disp
-    .skip: ThreadSafe, Fortran, validate-ANY
+    .skip: ThreadSafe, Fortran, Errors, validate-ANY
     .seealso: MPI_Aint_diff
     .impl: direct
 /*
@@ -13,7 +13,7 @@ MPI_Aint_add:
     address is valid only at the process that generated base, and it must correspond
     to a location in the same object referenced by base. The addition is performed in
     a manner that results in the correct MPI_Aint representation of the output address,
-    as if the process that originally produced base had called\:
+    as if the process that originally produced base had called
     .vb
         MPI_Get_address((char *) base + disp, &result)
     .ve
@@ -33,7 +33,7 @@ MPI_Aint_add:
 
 MPI_Aint_diff:
     .desc: Returns the difference between addr1 and addr2
-    .skip: ThreadSafe, Fortran, validate-ANY
+    .skip: ThreadSafe, Fortran, Errors, validate-ANY
     .seealso: MPI_Aint_add
     .impl: direct
 /*
@@ -65,12 +65,13 @@ MPI_Aint_diff:
 
 MPI_Get_processor_name:
     .desc: Gets the name of the processor
-    .skip: ThreadSafe, Fortran
 /*
-    .N ThreadSafe
-
-    .N Fortran
-
+    Notes:
+    The name returned should identify a particular piece of hardware;
+    the exact format is implementation defined.  This name may or may not
+    be the same as might be returned by 'gethostname', 'uname', or 'sysinfo'.
+*/
+/* -- notes-2 --
      In Fortran, the character argument should be declared as a character string
      of 'MPI_MAX_PROCESSOR_NAME' rather than an array of dimension
      'MPI_MAX_PROCESSOR_NAME'.  That is,
@@ -81,7 +82,8 @@ MPI_Get_processor_name:
     .vb
        character name(MPI_MAX_PROCESSOR_NAME)
     .ve
-     The two
+
+     The sizes of MPI strings in Fortran are one less than the sizes of that string in C/C++ because the C/C++ versions provide room for the trailing null character required by C/C++. For example, MPI_MAX_ERROR_STRING is mpif.h is one smaller than the same value in mpi.h. See the MPI standard, sections 2.6.2 and 4.12.9. 
 */
 {
     mpi_errno = MPID_Get_processor_name(name, MPI_MAX_PROCESSOR_NAME, resultlen);
@@ -92,7 +94,6 @@ MPI_Get_processor_name:
 MPI_Get_library_version:
     .desc: Return the version number of MPI library
     .skip: initcheck
-    .docnotes: SignalSafe
 {
     int printed_len;
     printed_len = MPL_snprintf(version, MPI_MAX_LIBRARY_VERSION_STRING,
@@ -119,6 +120,14 @@ MPI_Pcontrol:
     .desc: Controls profiling
     .skip: ThreadSafe, validate-PROFILE_LEVEL, validate-VARARGS
     .impl: direct
+/*
+    Notes:
+	This routine provides a common interface for profiling control.  The
+	interpretation of 'level' and any other arguments is left to the
+	profiling library.  The intention is that a profiling library will
+	provide a replacement for this routine and define the interpretation
+	of the parameters.
+*/
 {
     int mpi_errno = MPI_SUCCESS;
     va_list list;
@@ -147,10 +156,7 @@ MPI_Pcontrol:
 
 MPI_Get_version:
     .desc: Return the version number of MPI
-    .skip: ThreadSafe, initcheck
-/*
-    .N SignalSafe
-*/
+    .skip: initcheck
 {
     *version = MPI_VERSION;
     *subversion = MPI_SUBVERSION;
@@ -160,8 +166,7 @@ MPIX_GPU_query_support:
     gpu_type: GPU_TYPE, [MPIX_GPU_SUPPORT_CUDA or MPIX_GPU_SUPPORT_ZE]
     is_supported: LOGICAL, direction=out, [true if gpu of given type is supported, false otherwise.]
     .desc: Returns whether the specific type of GPU is supported
-    .skip: validate-GPU_TYPE
-    .docnotes: SignalSafe
+    .skip: global_cs, validate-GPU_TYPE
 {
     *is_supported = 0;
     if (MPIR_CVAR_ENABLE_GPU) {
@@ -188,7 +193,7 @@ MPIX_GPU_query_support:
 MPIX_Query_cuda_support:
     .desc: Returns whether CUDA is supported
     .impl: direct
-    .docnotes: SignalSafe
+    .skip: global_cs, Errors
 {
     int is_supported = 0;
     int mpi_errno;

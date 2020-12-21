@@ -40,10 +40,14 @@ MPI_Info_get_nthkey:
     .skip: initcheck
 
 MPI_Info_get_valuelen:
-    .desc: Retrieves the length of the value associated with
+    .desc: Retrieves the length of the value associated with a key
     .skip: initcheck
 
 MPI_Info_set:
     .desc: Adds a (key,value) pair to info
     .skip: initcheck
     .docnotes: NotThreadSafe
+{ -- error_check --
+    MPIR_ERR_CHKANDJUMP((strlen(value) > MPI_MAX_INFO_VAL), mpi_errno, MPI_ERR_INFO_VALUE,
+                        "**infovallong");
+}
