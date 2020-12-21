@@ -136,14 +136,16 @@ def check_func_directives(func):
     if 'extra' not in func:
         func['extra'] = ""
 
-    if RE.search(r'ThreadSafe', func['skip']):
+    if RE.search(r'ThreadSafe', func['skip'], re.IGNORECASE):
         func['_skip_ThreadSafe'] = 1
-    if RE.search(r'Fortran', func['skip']):
+    if RE.search(r'Fortran', func['skip'], re.IGNORECASE):
         func['_skip_Fortran'] = 1
-    if RE.search(r'(global_cs|initcheck)', func['skip']):
+    if RE.search(r'(global_cs|initcheck)', func['skip'], re.IGNORECASE):
         func['_skip_global_cs'] = 1
-    if RE.search(r'initcheck', func['skip']):
+    if RE.search(r'initcheck', func['skip'], re.IGNORECASE):
         func['_skip_initcheck'] = 1
+    if RE.search(r'Errors', func['skip'], re.IGNORECASE):
+        func['_skip_err_codes'] = 1
 
     if RE.search(r'ignore_revoked_comm', func['extra'], re.IGNORECASE):
         func['_comm_valid_ptr_flag'] = 'TRUE'
@@ -518,7 +520,8 @@ def dump_manpage(func):
             G.out.append(l)
         G.out.append("")
 
-    G.out.append("[ERR CODES]")
+    if '_skip_err_codes' not in func:
+        G.out.append("[ERR CODES]")
     G.out.append("")
     if 'seealso' in func:
         G.out.append(".seealso: %s" % func['seealso'])
