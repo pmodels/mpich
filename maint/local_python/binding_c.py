@@ -164,9 +164,12 @@ def check_func_directives(func):
     func['_docnotes'] = []
     if 'docnotes' in func:
         func['_docnotes'] = func['docnotes'].replace(' ', '').split(',')
-        if RE.search(r'(SignalSafe|NotThreadSafe|ThreadSafeNoUpdate)', func['docnotes']):
+        if RE.search(r'SignalSafe', func['docnotes'], re.IGNORECASE):
+            print("Function %s is declared \"SignalSafe\", consider switch to `.skip: global_cs`" % func['name'], file=sys.stderr)
+
+        if RE.search(r'(NotThreadSafe|ThreadSafeNoUpdate)', func['docnotes']):
             func['_skip_ThreadSafe'] = 1
-        if RE.search(r'(SignalSafe|NotThreadSafe)', func['docnotes']):
+        if RE.search(r'(NotThreadSafe)', func['docnotes']):
             func['_skip_global_cs'] = 1
 
     if not '_skip_ThreadSafe' in func:
