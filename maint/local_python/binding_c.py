@@ -828,8 +828,6 @@ def dump_mpi_fn_fail(func, mapping):
         G.out.append(s)
         G.out.append("mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);")
         dump_if_close()
-
-        G.out.append("goto fn_exit;")
         G.out.append("#endif")
     else:
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
