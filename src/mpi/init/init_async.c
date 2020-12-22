@@ -139,7 +139,7 @@ int MPIR_Finalize_async_thread(void)
     return mpi_errno;
 }
 
-/* called inside MPIR_Init_thread */
+/* called inside MPIR_Init_thread_impl */
 int MPII_init_async(void)
 {
     int mpi_errno = MPI_SUCCESS;

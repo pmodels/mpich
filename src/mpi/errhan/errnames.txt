@@ -950,30 +950,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_reduce_local %p %p %d %D %O:MPI_Reduce_local(inbuf=%p, inoutbuf=%p, count=%d, datatype=%D, op=%O) failed
 **mpi_scan:MPI_Scan failed
 **mpi_scan %p %p %d %D %O %C:MPI_Scan(sbuf=%p, rbuf=%p, count=%d, datatype=%D, op=%O, comm=%C) failed
-**mpi_group_size:MPI_Group_size failed
-**mpi_group_size %G %p:MPI_Group_size(%G, size=%p) failed
-**mpi_group_rank:MPI_Group_rank failed
-**mpi_group_rank %G %p:MPI_Group_rank(%G, rank=%p) failed
-**mpi_group_translate_ranks:MPI_Group_translate_ranks failed
-**mpi_group_translate_ranks %G %d %p %G %p:MPI_Group_translate_ranks(%G, n=%d, ranks1=%p, %G, ranks2=%p) failed
-**mpi_group_compare:MPI_Group_compare failed
-**mpi_group_compare %G %G %p:MPI_Group_compare(%G, %G, result=%p) failed
-**mpi_group_union:MPI_Group_union failed
-**mpi_group_union %G %G %p:MPI_Group_union(%G, %G, new_group=%p) failed
-**mpi_group_intersection:MPI_Group_intersection failed
-**mpi_group_intersection %G %G %p:MPI_Group_intersection(%G, %G, new_group=%p) failed
-**mpi_group_difference:MPI_Group_difference failed
-**mpi_group_difference %G %G %p:MPI_Group_difference(%G, %G, new_group=%p) failed
-**mpi_group_incl:MPI_Group_incl failed
-**mpi_group_incl %G %d %p %p:MPI_Group_incl(%G, n=%d, ranks=%p, new_group=%p) failed
-**mpi_group_excl:MPI_Group_excl failed
-**mpi_group_excl %G %d %p %p:MPI_Group_excl(%G, n=%d, ranks=%p, new_group=%p) failed
-**mpi_group_range_incl:MPI_Group_range_incl failed
-**mpi_group_range_incl %G %d %p %p:MPI_Group_range_incl(%G, n=%d, ranges=%p, new_group=%p) failed
-**mpi_group_range_excl:MPI_Group_range_excl failed
-**mpi_group_range_excl %G %d %p %p:MPI_Group_range_excl(%G, n=%d, ranges=%p, new_group=%p) failed
-**mpi_group_free:MPI_Group_free failed
-**mpi_group_free %p:MPI_Group_free(group=%p) failed
 **badgputype:Bad GPU type specified
 **badgputype %d:Bad GPU type (%d) specified
 **mpi_keyval_create:MPI_Keyval_create failed
@@ -1018,12 +994,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_cart_map %C %d %p %p %p:MPI_Cart_map(%C, ndims=%d, dims=%p, periods=%p, newrank=%p) failed
 **mpi_graph_map:MPI_Graph_map failed
 **mpi_graph_map %C %d %p %p %p:MPI_Graph_map(%C, nnodes=%d, index=%p, edges=%p, newrank=%p) failed
-**mpi_get_processor_name:MPI_Get_processor_name failed
-**mpi_get_processor_name %p %p:MPI_Get_processor_name(name=%p, resultlen=%p) failed
-**mpi_get_version:MPI_Get_version failed
-**mpi_get_version %p %p:MPI_Get_version(version=%p, subversion=%p) failed
-**mpi_get_library_version:MPI_Get_library_version failed
-**mpi_get_library_version %p %p:MPI_Get_library_version(version=%p, resultlen=%p) failed
 **mpi_errhandler_create:MPI_Errhandler_create failed
 **mpi_errhandler_create %p %p:MPI_Errhandler_create(function=%p, errhandler=%p) failed
 **mpi_errhandler_set:MPI_Errhandler_set failed
@@ -1036,13 +1006,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_error_string %d %s %p:MPI_Error_string(errorcode=%d, string=%s, resultlen=%p) failed
 **mpi_error_class:MPI_Error_class failed
 **mpi_error_class %d %p:MPI_Error_class(errorcode=%d, errorclass=%p) failed
-**mpi_init:MPI_Init failed
-**mpi_init %p %p:MPI_Init(argc_p=%p, argv_p=%p) failed
-**mpi_finalize:MPI_Finalize failed
-**mpi_initialized:MPI_Initialized failed
-**mpi_initialized %p:MPI_Initialized(flag=%p) failed
-**mpi_abort:MPI_Abort failed
-**mpi_abort %C %d:MPI_Abort(%C, errorcode=%d) failed
 **mpi_close_port:MPI_Close_port failed
 **mpi_close_port %s:MPI_Close_port(port=\"%s\") failed
 **mpi_comm_accept:MPI_Comm_accept failed
@@ -1125,12 +1088,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_grequest_start %p %p %p %p %p:MPI_Grequest_start(query_fn=%p, free_fn=%p, cancel_fn=%p, extra_state=%p, request=%p) failed
 **mpix_grequest_class_create: MPIX_Grequest_class_create failed
 **mpix_grequest_class_create %p %p %p %p %p:MPIX_Grequest_class_create(query_fn=%p, free_fn=%p, cancel_fn=%p, %poll_fn=%p, wait_fn=%p) failed
-**mpi_init_thread:MPI_Init_thread failed
-**mpi_init_thread %p %p %d %p:MPI_Init_thread(argc_p=%p, argv_p=%p, required=%d, provided=%p)
-**mpi_is_thread_main:MPI_Is_thread_main failed
-**mpi_is_thread_main %p:MPI_Is_thread_main(flag=%p) failed
-**mpi_query_thread:MPI_Query_thread failed
-**mpi_query_thread %p:MPI_Query_thread(provided=%p) failed
 **mpi_status_set_cancelled:MPI_Status_set_cancelled failed
 **mpi_status_set_cancelled %p %d:MPI_Status_set_cancelled(status=%p, flag=%d) failed
 **mpi_status_set_elements:MPI_Status_set_elements failed
@@ -1167,30 +1124,10 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_file_get_errhandler %F %p:MPI_File_get_errhandler(%F, errhandler=%p) failed
 **mpi_file_set_errhandler:MPI_File_set_errhandler failed
 **mpi_file_set_errhandler %F %E:MPI_File_set_errhandler(%F, %E) failed
-**mpi_finalized:MPI_Finalized failed
-**mpi_finalized %p:MPI_Finalized(flag=%p) failed
 **mpi_free_mem:MPI_Free_mem failed
 **mpi_free_mem %p:MPI_Free_mem(base=%p) failed
 **mpi_get_address:MPI_Get_address failed
 **mpi_get_address %p %p:MPI_Get_address(location=%p, address=%p) failed
-**mpi_info_create:MPI_Info_create failed
-**mpi_info_create %p:MPI_Info_create(info=%p) failed
-**mpi_info_delete:MPI_Info_delete failed
-**mpi_info_delete %I %s:MPI_Info_delete(%I, key=%s) failed
-**mpi_info_dup:MPI_Info_dup failed
-**mpi_info_dup %I %p:MPI_Info_dup(%I, newinfo=%p) failed
-**mpi_info_free:MPI_Info_free failed
-**mpi_info_free %p:MPI_Info_free(info=%p) failed
-**mpi_info_get:MPI_Info_get failed
-**mpi_info_get %I %s %d %p %p:MPI_Info_get(%I, key=%s, valuelen=%d, value=%p, flag=%p) failed
-**mpi_info_get_nkeys:MPI_Info_get_nkeys failed
-**mpi_info_get_nkeys %I %p:MPI_Info_get_nkeys(%I, nkeys=%p) failed
-**mpi_info_get_nthkey:MPI_Info_get_nthkey failed
-**mpi_info_get_nthkey %I %d %p:MPI_Info_get_nthkey(%I, n=%d, key=%p) failed
-**mpi_info_get_valuelen:MPI_Info_get_valuelen failed
-**mpi_info_get_valuelen %I %s %p %p:MPI_Info_get_valuelen(%I, key=%s, valuelen=%p, flag=%p) failed
-**mpi_info_set:MPI_Info_set failed
-**mpi_info_set %I %s %s:MPI_Info_set(%I, key=%s, value=%s) failed
 **mpi_pack_external:MPI_Pack_external failed
 **mpi_pack_external %s %p %d %D %p %d %p:MPI_Pack_external(datarep=%s, inbuf=%p, incount=%d, %D, outbuf=%p, outcount=%d, position=%p) failed
 **mpi_pack_external_size:MPI_Pack_external_size failed

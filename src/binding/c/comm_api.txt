@@ -112,7 +112,7 @@ MPI_Comm_idup_with_info:
 
 MPI_Comm_rank:
     .desc: Determines the rank of the calling process in the communicator
-    .docnotes: SignalSafe
+    .skip: global_cs
     .extra: ignore_revoked_comm
 {
     *rank = MPIR_Comm_rank(comm_ptr);
@@ -129,7 +129,7 @@ MPI_Comm_remote_group:
 
 MPI_Comm_remote_size:
     .desc: Determines the size of the remote group
-    .docnotes: SignalSafe
+    .skip: global_cs
     .extra: ignore_revoked_comm
 {
     *size = comm_ptr->remote_size;
@@ -155,7 +155,8 @@ MPI_Comm_set_name:
 
 MPI_Comm_size:
     .desc: Determines the size of the group associated with a communicator
-    .docnotes: NULL, SignalSafe
+    .skip: global_cs
+    .docnotes: NULL
     .extra: ignore_revoked_comm
 {
     *size = MPIR_Comm_size(comm_ptr);
@@ -191,7 +192,7 @@ MPI_Comm_split_type:
 
 MPI_Comm_test_inter:
     .desc: Tests to see if a comm is an inter-communicator
-    .docnotes: SignalSafe
+    .skip: global_cs
 {
     *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 }

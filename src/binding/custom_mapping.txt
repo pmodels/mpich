@@ -1,0 +1,6 @@
+LIS_KIND_MAP:
+    GPU_TYPE: integer
+SMALL_C_KIND_MAP:
+    GPU_TYPE: int
+BIG_C_KIND_MAP:
+    GPU_TYPE: int
