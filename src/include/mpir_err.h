@@ -416,6 +416,32 @@ cvars:
         }                                                       \
     } while (0)
 
+#define MPIR_ERRTEST_WIN_SIZE(size_, err_)                      \
+    do {                                                        \
+        if (size_ < 0) {                                        \
+	    err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
+                                        MPIR_ERR_RECOVERABLE,   \
+                                        __func__, __LINE__,     \
+                                        MPI_ERR_SIZE,           \
+                                        "**rmasize",            \
+                                        "**rmasize %d", size_); \
+            goto fn_fail;                                       \
+        }                                                       \
+    } while (0)
+
+#define MPIR_ERRTEST_WIN_DISPUNIT(dispunit_, err_)              \
+    do {                                                        \
+        if (dispunit_ <= 0) {                                   \
+	    err_ = MPIR_Err_create_code(MPI_SUCCESS,            \
+                                        MPIR_ERR_RECOVERABLE,   \
+                                        __func__, __LINE__,     \
+                                        MPI_ERR_DISP,           \
+                                        "**dispunit",           \
+                                        "**dispunit %d", dispunit_);  \
+            goto fn_fail;                                       \
+        }                                                       \
+    } while (0)
+
 #define MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf,count,err)                 \
     if (count > 0 && sendbuf == MPI_IN_PLACE) {                         \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
