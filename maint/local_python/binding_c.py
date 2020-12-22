@@ -449,7 +449,7 @@ def dump_profiling(func, mapping):
     G.out.append("#pragma _CRI duplicate %s as P%s" % (func_name, func_name))
     G.out.append("#elif defined(HAVE_WEAK_ATTRIBUTE)")
     s = get_declare_function(func, mapping)
-    G.out.append(s + " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
+    dump_line_with_break(s, " __attribute__ ((weak, alias(\"P%s\")));" % (func_name))
     G.out.append("#endif")
     G.out.append("/* -- End Profiling Symbol Block */")
 
@@ -566,7 +566,7 @@ def dump_function(func, mapping, kind):
         func['impl_arg_list'].append(RE.m.group(1))
         func['impl_param_list'].append(extra_param)
 
-    G.out.append(s)
+    dump_line_with_break(s)
     G.out.append("{")
     G.out.append("INDENT")
 
@@ -753,9 +753,9 @@ def dump_body_coll(func):
         G.out.append("MPIR_Errflag_t errflag = MPIR_ERR_NONE;")
         args = args + ", " + "&errflag"
     G.out.append("if (%s || (%s && %s)) {" % (cond_a, cond_b1, cond_b2))
-    G.out.append("    mpi_errno = MPID_%s(%s);" % (name, args))
+    dump_line_with_break("    mpi_errno = MPID_%s(%s);" % (name, args))
     G.out.append("} else {")
-    G.out.append("    mpi_errno = MPIR_%s_impl(%s);" % (name, args))
+    dump_line_with_break("    mpi_errno = MPIR_%s_impl(%s);" % (name, args))
     G.out.append("}")
     dump_error_check("")
     if name.startswith('I'):
@@ -785,7 +785,7 @@ def dump_body_impl(func, prefix='mpir'):
         impl = func['name'] + "_impl"
         impl = re.sub(r'^MPIX?_', 'MPIR_', impl)
     args = ", ".join(func['impl_arg_list'])
-    G.out.append("mpi_errno = %s(%s);" % (impl, args))
+    dump_line_with_break("mpi_errno = %s(%s);" % (impl, args))
     dump_error_check("")
 
     if '_has_handle_out' in func:
@@ -839,7 +839,7 @@ def dump_mpi_fn_fail(func, mapping):
     else:
         G.out.append("#ifdef HAVE_ERROR_CHECKING")
         s = get_fn_fail_create_code(func, mapping)
-        G.out.append(s)
+        dump_line_with_break(s)
         G.out.append("#endif")
         if '_has_comm' in func:
             G.out.append("mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);")
@@ -1584,3 +1584,52 @@ def dump_if_open(cond):
 def dump_if_close():
     G.out.append("DEDENT")
     G.out.append("}")
+
+def dump_line_with_break(s, tail=''):
+    tlist = []
+    n = 0
+
+    # by default, segments indent by additional 4 spaces
+    if RE.match(r'(\s*)', s):
+        n_lead = len(RE.m.group(1)) + 4
+
+    if len(s) < 100:
+        tlist.append(s)
+        n = len(s)
+    elif RE.match(r'(.*?\()(.*)', s):
+        # line with function pattern, match indent at openning parenthesis
+        s_lead, s_next = RE.m.group(1,2)
+        n_lead = len(s_lead)
+
+        for a in s_next.split(', '):
+            if n == 0:
+                # first line
+                tlist = [s_lead, a]
+                n = n_lead + len(a)
+            elif n + 2 + len(a) < 100:
+                # just append to tlist
+                tlist.append(', ')
+                tlist.append(a)
+                n += 2 + len(a)
+            else:
+                # break the line
+                tlist.append(',')
+                G.out.append(''.join(tlist))
+                # start new line with leading spaces
+                tlist = [' ' * n_lead, a]
+                n = n_lead + len(a)
+        # leave last segment with tail
+    else:
+        # only break long function declaration or call for now
+        tlist.append(s)
+        n = len(s)
+
+    # tail is mostly for "__attribute__ ((weak, alias(...))));"
+    if tail:
+        if n + 1 + len(tail) < 100:
+            G.out.append(''.join(tlist) + ' ' + tail)
+        else:
+            G.out.append(''.join(tlist))
+            G.out.append(' ' * n_lead + tail)
+    else:
+        G.out.append(''.join(tlist))
