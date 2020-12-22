@@ -86,7 +86,7 @@ int MPI_Cancel(MPI_Request * request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cancel(request_ptr);
+    mpi_errno = MPIR_Cancel_impl(request_ptr);
     if (mpi_errno)
         goto fn_fail;
 

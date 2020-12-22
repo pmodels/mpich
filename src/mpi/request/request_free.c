@@ -100,72 +100,10 @@ int MPI_Request_free(MPI_Request * request)
 
     /* ... body of routine ...  */
 
-    MPID_Progress_poke();
-
-    switch (request_ptr->kind) {
-        case MPIR_REQUEST_KIND__SEND:
-            {
-                MPII_SENDQ_FORGET(request_ptr);
-                break;
-            }
-        case MPIR_REQUEST_KIND__RECV:
-            {
-                break;
-            }
-
-        case MPIR_REQUEST_KIND__PREQUEST_SEND:
-            {
-                /* Tell the device that we are freeing a persistent request object */
-                MPID_Prequest_free_hook(request_ptr);
-                /* If this is an active persistent request, we must also
-                 * release the partner request. */
-                if (request_ptr->u.persist.real_request != NULL) {
-                    if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST) {
-                        /* This is needed for persistent Bsend requests */
-                        mpi_errno = MPIR_Grequest_free(request_ptr->u.persist.real_request);
-                    }
-                    MPIR_Request_free(request_ptr->u.persist.real_request);
-                }
-                break;
-            }
-
-
-        case MPIR_REQUEST_KIND__PREQUEST_RECV:
-            {
-                /* Tell the device that we are freeing a persistent request object */
-                MPID_Prequest_free_hook(request_ptr);
-                /* If this is an active persistent request, we must also
-                 * release the partner request. */
-                if (request_ptr->u.persist.real_request != NULL) {
-                    MPIR_Request_free(request_ptr->u.persist.real_request);
-                }
-                break;
-            }
-
-        case MPIR_REQUEST_KIND__GREQUEST:
-            {
-                mpi_errno = MPIR_Grequest_free(request_ptr);
-                break;
-            }
-
-            /* --BEGIN ERROR HANDLING-- */
-        default:
-            {
-                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                                 __func__, __LINE__, MPI_ERR_OTHER,
-                                                 "**request_invalid_kind",
-                                                 "**request_invalid_kind %d", request_ptr->kind);
-                break;
-            }
-            /* --END ERROR HANDLING-- */
-    }
-
-    MPIR_Request_free(request_ptr);
-    *request = MPI_REQUEST_NULL;
-
-    if (mpi_errno != MPI_SUCCESS)
+    mpi_errno = MPIR_Request_free_impl(request_ptr);
+    if (mpi_errno) {
         goto fn_fail;
-
+    }
     /* ... end of body of routine ... */
 
   fn_exit:
