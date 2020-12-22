@@ -17,7 +17,6 @@ include $(top_srcdir)/src/mpi/pt2pt/Makefile.mk
 include $(top_srcdir)/src/mpi/request/Makefile.mk
 include $(top_srcdir)/src/mpi/rma/Makefile.mk
 include $(top_srcdir)/src/mpi/spawn/Makefile.mk
-include $(top_srcdir)/src/mpi/timer/Makefile.mk
 include $(top_srcdir)/src/mpi/topo/Makefile.mk
 
 if BUILD_ROMIO

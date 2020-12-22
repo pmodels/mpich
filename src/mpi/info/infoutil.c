@@ -25,7 +25,7 @@ MPIR_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, MPIR_INFO,
 
 /* Free an info structure.  In the multithreaded case, this routine
    relies on the SINGLE_CS in the info routines (particularly MPI_Info_free) */
-void MPIR_Info_free(MPIR_Info * info_ptr)
+int MPIR_Info_free_impl(MPIR_Info * info_ptr)
 {
     MPIR_Info *curr_ptr, *last_ptr;
 
@@ -43,6 +43,7 @@ void MPIR_Info_free(MPIR_Info * info_ptr)
         curr_ptr = curr_ptr->next;
         MPIR_Handle_obj_free(&MPIR_Info_mem, last_ptr);
     }
+    return MPI_SUCCESS;
 }
 
 /* Allocate and initialize an MPIR_Info object.

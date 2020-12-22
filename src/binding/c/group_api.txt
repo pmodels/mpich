@@ -1,0 +1,145 @@
+# vim: set ft=c:
+
+MPI_Group_compare:
+    .desc: Compares two groups
+
+MPI_Group_difference:
+    .desc: Makes a group from the difference of two groups
+    .seealso: MPI_Group_free
+/*
+    Notes:
+    The generated group contains the members of 'group1' that are not in 'group2'.
+*/
+
+MPI_Group_excl:
+    .desc: Produces a group by reordering an existing group and taking only unlisted members
+    .seealso: MPI_Group_free
+/*
+    Note:
+    The MPI standard requires that each of the ranks to excluded must be
+    a valid rank in the group and all elements must be distinct or the
+    function is erroneous.
+*/
+{ -- error_check --
+    if (group_ptr) {
+        mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+{ -- early_return --
+    if (group_ptr->size == n) {
+        *newgroup = MPI_GROUP_EMPTY;
+        goto fn_exit;
+    }
+}
+
+MPI_Group_free:
+    .desc: Frees a group
+{ -- error_check --
+    /* Cannot free the predefined groups, but allow GROUP_EMPTY
+     * because otherwise many tests fail */
+    if ((HANDLE_IS_BUILTIN(*group)) && *group != MPI_GROUP_EMPTY) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                         MPI_ERR_GROUP, "**groupperm", 0);
+    }
+    if (mpi_errno) {
+	goto fn_fail;
+    }
+}
+
+MPI_Group_incl:
+    .desc: Produces a group by reordering an existing group and taking only listed members
+    .seealso: MPI_Group_free
+{ -- error_check --
+    if (group_ptr) {
+        mpi_errno = MPIR_Group_check_valid_ranks(group_ptr, ranks, n);
+        if (mpi_errno) {
+            goto fn_fail;
+        }
+    }
+}
+{ -- early_return --
+    if (n == 0) {
+        *newgroup = MPI_GROUP_EMPTY;
+        goto fn_exit;
+    }
+}
+
+MPI_Group_intersection:
+    .desc: Produces a group as the intersection of two existing groups
+    .seealso: MPI_Group_free
+/*
+    Notes:
+    The output group contains those processes that are in both 'group1' and
+    'group2'.
+*/
+
+MPI_Group_range_excl:
+    .desc: Produces a group by excluding ranges of processes from an existing group
+    .seealso: MPI_Group_free
+{ -- error_check --
+    /* Check the exclusion array.  Ensure that all ranges are
+     * valid and that the specified exclusions are unique */
+    if (group_ptr) {
+	mpi_errno = MPIR_Group_check_valid_ranges(group_ptr, ranges, n);
+    }
+    if (mpi_errno) {
+	goto fn_fail;
+    }
+}
+
+MPI_Group_range_incl:
+    .desc: Creates a new group from ranges of ranks in an existing group
+    .seealso: MPI_Group_free
+{ -- error_check --
+    if (group_ptr) {
+	mpi_errno = MPIR_Group_check_valid_ranges(group_ptr, ranges, n);
+    }
+    if (mpi_errno) {
+	goto fn_fail;
+    }
+}
+
+MPI_Group_rank:
+    .desc: Returns the rank of this process in the given group
+    .skip: global_cs
+{
+    *rank = group_ptr->rank;
+}
+
+MPI_Group_size:
+    .desc: Returns the size of a group
+    .skip: global_cs
+{
+    *size = group_ptr->size;
+}
+
+MPI_Group_translate_ranks:
+    .desc: Translates the ranks of processes in one group to those in another group
+/*
+    As a special case (see the MPI-2 errata), if the input rank is
+    'MPI_PROC_NULL', 'MPI_PROC_NULL' is given as the output rank.
+*/
+{ -- error_check --
+    if (group1_ptr) {
+	/* Check that the rank entries are valid */
+	int size1 = group1_ptr->size;
+	for (int i = 0; i < n; i++) {
+	    if ((ranks1[i] < 0 && ranks1[i] != MPI_PROC_NULL) || ranks1[i] >= size1) {
+		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+						 MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+						 MPI_ERR_RANK,
+						 "**rank", "**rank %d %d",
+						 ranks1[i], size1);
+		goto fn_fail;
+	    }
+	}
+    }
+}
+
+MPI_Group_union:
+    .desc: Produces a group by combining two groups
+    .seealso: MPI_Group_free

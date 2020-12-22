@@ -762,7 +762,7 @@ int MPIDIG_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
     return mpi_errno;
   fn_fail:
     if (*info_p_p != NULL) {
-        MPIR_Info_free(*info_p_p);
+        MPIR_Info_free_impl(*info_p_p);
         *info_p_p = NULL;
     }
     goto fn_exit;
