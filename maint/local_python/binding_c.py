@@ -792,13 +792,13 @@ def dump_body_impl(func, prefix='mpir'):
         # assuming we are creating new handle(s)
         for p in func['_has_handle_out']:
             (name, kind) = (p['name'], p['kind'])
-            G.out.append("if (%s_ptr) {" % name)
+            dump_if_open("%s_ptr" % name)
             if name == 'win':
                 G.out.append("/* Initialize a few fields that have specific defaults */")
                 G.out.append("win_ptr->name[0] = 0;")
                 G.out.append("win_ptr->errhandler = 0;")
-            G.out.append("    MPIR_OBJ_PUBLISH_HANDLE(*%s, %s_ptr->handle);" % (name, name))
-            G.out.append("}")
+            G.out.append("MPIR_OBJ_PUBLISH_HANDLE(*%s, %s_ptr->handle);" % (name, name))
+            dump_if_close()
     elif '_has_handle_inout' in func:
         # assuming we the func is free the handle
         p = func['_has_handle_inout']
@@ -841,10 +841,10 @@ def dump_mpi_fn_fail(func, mapping):
         s = get_fn_fail_create_code(func, mapping)
         G.out.append(s)
         G.out.append("#endif")
-        if '_has_win' in func:
-            G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
-        elif '_has_comm' in func:
+        if '_has_comm' in func:
             G.out.append("mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);")
+        elif '_has_win' in func:
+            G.out.append("mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);")
         else:
             G.out.append("mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);")
 
