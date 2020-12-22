@@ -168,6 +168,18 @@ MPI_T_cvar_read:
 
 MPI_T_cvar_write:
     .desc: Write a control variable
+    .error: MPI_T_ERR_CVAR_SET_NEVER, MPI_T_ERR_CVAR_SET_NOT_NOW
+{ -- error_check --
+    MPIR_T_cvar_handle_t *hnd = handle;
+
+    if (hnd->scope == MPI_T_SCOPE_CONSTANT) {
+        mpi_errno = MPI_T_ERR_CVAR_SET_NEVER;
+        goto fn_fail;
+    } else if (hnd->scope == MPI_T_SCOPE_READONLY) {
+        mpi_errno = MPI_T_ERR_CVAR_SET_NOT_NOW;
+        goto fn_fail;
+    }
+}
 
 MPI_T_enum_get_info:
     .desc: Get the information about an enumeration

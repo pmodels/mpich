@@ -153,14 +153,6 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
     void *addr;
     MPIR_T_cvar_handle_t *hnd = handle;
 
-    if (hnd->scope == MPI_T_SCOPE_CONSTANT) {
-        mpi_errno = MPI_T_ERR_CVAR_SET_NEVER;
-        goto fn_fail;
-    } else if (hnd->scope == MPI_T_SCOPE_READONLY) {
-        mpi_errno = MPI_T_ERR_CVAR_SET_NOT_NOW;
-        goto fn_fail;
-    }
-
     count = hnd->count;
     addr = hnd->addr;
     MPIT_Assert(addr != NULL);
