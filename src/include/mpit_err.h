@@ -37,6 +37,12 @@
         goto fn_fail; \
     }
 
+#define MPIT_ERRTEST_ARGNEG(arg) \
+    if (arg < 0) { \
+        mpi_errno = MPI_T_ERR_INVALID; \
+        goto fn_fail; \
+    }
+
 #define MPIT_ERRTEST_MPIT_INITIALIZED() \
     if (!MPIR_T_is_initialized()) { \
         mpi_errno = MPI_T_ERR_NOT_INITIALIZED; \

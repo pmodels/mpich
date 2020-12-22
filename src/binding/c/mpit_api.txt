@@ -85,6 +85,7 @@ MPI_T_category_get_num:
 
 MPI_T_category_get_pvars:
     .desc: Get performance variables in a category
+    .error: MPI_T_ERR_INVALID
 { -- error_check -- indices
     if (len != 0) {
         MPIT_ERRTEST_ARGNULL(indices);

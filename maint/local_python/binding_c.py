@@ -1236,8 +1236,12 @@ def dump_validation(func, t):
             G.err_codes['MPI_ERR_ARG'] = 1
             G.out.append("MPIR_ERRTEST_ARGNULL(%s, \"%s\", mpi_errno);" % (name, name))
     elif RE.match(r'(ARGNEG)$', kind):
-        G.err_codes['MPI_ERR_ARG'] = 1
-        G.out.append("MPIR_ERRTEST_ARGNEG(%s, \"%s\", mpi_errno);" % (name, name))
+        if func['dir'] == 'mpit':
+            G.err_codes['MPI_T_ERR_INVALID'] = 1
+            G.out.append("MPIT_ERRTEST_ARGNEG(%s);" % name)
+        else:
+            G.err_codes['MPI_ERR_ARG'] = 1
+            G.out.append("MPIR_ERRTEST_ARGNEG(%s, \"%s\", mpi_errno);" % (name, name))
     elif RE.match(r'(ARGNONPOS)$', kind):
         G.err_codes['MPI_ERR_ARG'] = 1
         G.out.append("MPIR_ERRTEST_ARGNONPOS(%s, \"%s\", mpi_errno, MPI_ERR_ARG);" % (name, name))
