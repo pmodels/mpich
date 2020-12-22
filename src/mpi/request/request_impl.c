@@ -5,12 +5,7 @@
 
 #include "mpiimpl.h"
 
-#if !defined(MPIR_REQUEST_PTR_ARRAY_SIZE)
-/* use a larger default size of 64 in order to enhance SQMR performance */
-#define MPIR_REQUEST_PTR_ARRAY_SIZE 64
-#endif
-
-int MPIR_Cancel(MPIR_Request * request_ptr)
+int MPIR_Cancel_impl(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -98,6 +93,148 @@ int MPIR_Cancel(MPIR_Request * request_ptr)
     return mpi_errno;
   fn_fail:
 
+    goto fn_exit;
+}
+
+int MPIR_Request_free_impl(MPIR_Request * request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_Progress_poke();
+    switch (request_ptr->kind) {
+        case MPIR_REQUEST_KIND__SEND:
+            MPII_SENDQ_FORGET(request_ptr);
+            break;
+        case MPIR_REQUEST_KIND__RECV:
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:
+            /* Tell the device that we are freeing a persistent request object */
+            MPID_Prequest_free_hook(request_ptr);
+            /* If this is an active persistent request, we must also
+             * release the partner request. */
+            if (request_ptr->u.persist.real_request != NULL) {
+                if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST) {
+                    /* This is needed for persistent Bsend requests */
+                    mpi_errno = MPIR_Grequest_free(request_ptr->u.persist.real_request);
+                }
+                MPIR_Request_free(request_ptr->u.persist.real_request);
+            }
+            break;
+        case MPIR_REQUEST_KIND__PREQUEST_RECV:
+            /* Tell the device that we are freeing a persistent request object */
+            MPID_Prequest_free_hook(request_ptr);
+            /* If this is an active persistent request, we must also
+             * release the partner request. */
+            if (request_ptr->u.persist.real_request != NULL) {
+                MPIR_Request_free(request_ptr->u.persist.real_request);
+            }
+            break;
+        case MPIR_REQUEST_KIND__GREQUEST:
+            mpi_errno = MPIR_Grequest_free(request_ptr);
+            break;
+        default:
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                             __func__, __LINE__, MPI_ERR_OTHER,
+                                             "**request_invalid_kind",
+                                             "**request_invalid_kind %d", request_ptr->kind);
+            goto fn_fail;
+    }
+
+    MPIR_Request_free(request_ptr);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (!MPIR_Request_is_complete(request_ptr)) {
+        /* request not complete. poke the progress engine. Req #3130 */
+        mpi_errno = MPID_Progress_test(NULL);
+        MPIR_ERR_CHECK(mpi_errno);
+    }
+
+    if (MPIR_Request_is_complete(request_ptr)) {
+        MPIR_Request *prequest_ptr;
+        int rc;
+        switch (request_ptr->kind) {
+            case MPIR_REQUEST_KIND__SEND:
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            case MPIR_REQUEST_KIND__RECV:
+                MPIR_Request_extract_status(request_ptr, status);
+                mpi_errno = request_ptr->status.MPI_ERROR;
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+                prequest_ptr = request_ptr->u.persist.real_request;
+                if (prequest_ptr != NULL) {
+                    if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                        mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    } else {
+                        /* This is needed for persistent Bsend requests */
+                        rc = MPIR_Grequest_query(prequest_ptr);
+                        if (mpi_errno == MPI_SUCCESS) {
+                            mpi_errno = rc;
+                        }
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT
+                                                   (prequest_ptr->status));
+                        if (mpi_errno == MPI_SUCCESS) {
+                            mpi_errno = prequest_ptr->status.MPI_ERROR;
+                        }
+                    }
+                } else {
+                    if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
+                        /* if the persistent request failed to start then
+                         * make the error code available */
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                        mpi_errno = request_ptr->status.MPI_ERROR;
+                    } else {
+                        MPIR_Status_set_empty(status);
+                    }
+                }
+                break;
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                prequest_ptr = request_ptr->u.persist.real_request;
+                if (prequest_ptr != NULL) {
+                    MPIR_Request_extract_status(prequest_ptr, status);
+                    mpi_errno = prequest_ptr->status.MPI_ERROR;
+                } else {
+                    /* if the persistent request failed to start then
+                     * make the error code available */
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                    MPIR_Status_set_empty(status);
+                }
+                break;
+            case MPIR_REQUEST_KIND__GREQUEST:
+                rc = MPIR_Grequest_query(request_ptr);
+                if (mpi_errno == MPI_SUCCESS) {
+                    mpi_errno = rc;
+                }
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                MPIR_Request_extract_status(request_ptr, status);
+                break;
+
+            default:
+                break;
+        }
+
+        *flag = TRUE;
+    } else {
+        *flag = FALSE;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 

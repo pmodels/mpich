@@ -617,6 +617,12 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_
     return mpi_errno;
 }
 
+/* local reuqest array size in MPI_Start_all and MPI_{Test,Wait}{all,any,some} */
+#define MPIR_REQUEST_PTR_ARRAY_SIZE 64
+
+int MPIR_Request_free_impl(MPIR_Request * request_ptr);
+int MPIR_Request_get_status_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status);
+
 int MPIR_Test_state(MPIR_Request * request, int *flag, MPI_Status * status,
                     MPID_Progress_state * state);
 int MPIR_Testall_state(int count, MPIR_Request * request_ptrs[], int *flag,
