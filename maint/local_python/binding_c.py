@@ -143,6 +143,9 @@ def check_func_directives(func):
     if 'extra' not in func:
         func['extra'] = ""
 
+    if func['dir'] == "mpit":
+        func['_skip_Fortran'] = 1
+
     if RE.search(r'ThreadSafe', func['skip'], re.IGNORECASE):
         func['_skip_ThreadSafe'] = 1
     if RE.search(r'Fortran', func['skip'], re.IGNORECASE):
