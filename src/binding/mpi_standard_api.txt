@@ -1688,7 +1688,7 @@ MPI_Raccumulate:
     target_datatype: DATATYPE, [datatype of each entry in target buffer]
     op: OPERATION, [reduce operation]
     win: WINDOW
-    request: REQUEST, direction=out, [\\RMA/ request]
+    request: REQUEST, direction=out, [RMA request]
 MPI_Recv:
     buf: BUFFER, direction=out, [initial address of receive buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in receive buffer]
@@ -1788,7 +1788,7 @@ MPI_Rget:
     target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
     target_datatype: DATATYPE, [datatype of each entry in target buffer]
     win: WINDOW, [window object used for communication]
-    request: REQUEST, direction=out, [\\RMA/ request]
+    request: REQUEST, direction=out, [RMA request]
 MPI_Rget_accumulate:
     origin_addr: BUFFER, asynchronous=True, constant=True, [initial address of buffer]
     origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
@@ -1802,7 +1802,7 @@ MPI_Rget_accumulate:
     target_datatype: DATATYPE, [datatype of each entry in target buffer]
     op: OPERATION, [reduce operation]
     win: WINDOW
-    request: REQUEST, direction=out, [\\RMA/ request]
+    request: REQUEST, direction=out, [RMA request]
 MPI_Rput:
     origin_addr: BUFFER, constant=True, asynchronous=True, [initial address of origin buffer]
     origin_count: POLYXFER_NUM_ELEM_NNI, [number of entries in origin buffer]
@@ -1812,7 +1812,7 @@ MPI_Rput:
     target_count: POLYXFER_NUM_ELEM_NNI, [number of entries in target buffer]
     target_datatype: DATATYPE, [datatype of each entry in target buffer]
     win: WINDOW, [window object used for communication]
-    request: REQUEST, direction=out, [\\RMA/ request]
+    request: REQUEST, direction=out, [RMA request]
 MPI_Rsend:
     buf: BUFFER, constant=True, [initial address of send buffer]
     count: POLYXFER_NUM_ELEM_NNI, [number of elements in send buffer]
