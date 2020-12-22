@@ -62,13 +62,15 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_cvar_handle_t *hnd;
 
-    MPIR_CHKPMEM_DECL(1);
-
     cvar_table_entry_t *cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
     /* Allocate handle memory */
-    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t *, sizeof(*hnd), mpi_errno,
-                        "control variable handle", MPL_MEM_MPIT);
+    hnd = MPL_malloc(sizeof(MPIR_T_cvar_handle_t), MPL_MEM_MPIT);
+    if (!hnd) {
+        *handle = MPI_T_CVAR_HANDLE_NULL;
+        mpi_errno = MPI_T_ERR_OUT_OF_HANDLES;
+        goto fn_fail;
+    }
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_CVAR_HANDLE;
 #endif
@@ -92,11 +94,9 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
 
     *handle = hnd;
 
-    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
