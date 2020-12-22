@@ -1072,6 +1072,7 @@ def dump_validate_handle_ptr(func, p):
         name = "*" + p['name']
     mpir = G.handle_mpir_types[kind]
     if kind == "REQUEST" and p['length']:
+        G.err_codes['MPI_ERR_REQUEST'] = 1
         if p['_request_array'] == "startall":
             ptr = p['_ptrs_name'] + '[i]'
             G.out.append("for (int i = 0; i < %s; i++) {" % p['length'])
@@ -1082,6 +1083,7 @@ def dump_validate_handle_ptr(func, p):
                 G.out.append("    MPIR_ERRTEST_PERSISTENT_ACTIVE(%s, mpi_errno);" % ptr)
             G.out.append("}")
     elif p['kind'] == "MESSAGE":
+        G.err_codes['MPI_ERR_REQUEST'] = 1
         G.out.append("if (%s != MPI_MESSAGE_NO_PROC) {" % name)
         G.out.append("    MPIR_Request_valid_ptr(%s, mpi_errno);" % ptr_name)
         dump_error_check("    ")
@@ -1092,6 +1094,7 @@ def dump_validate_handle_ptr(func, p):
         # use custom code in func['cond-error_check']
         pass
     elif kind == "COMMUNICATOR":
+        G.err_codes['MPI_ERR_COMM'] = 1
         G.out.append("MPIR_Comm_valid_ptr(%s, mpi_errno, %s);" % (ptr_name, func['_comm_valid_ptr_flag']))
         dump_error_check("")
 
@@ -1109,6 +1112,9 @@ def dump_validate_handle_ptr(func, p):
 
         if kind == "WINDOW" and RE.match(r'mpi_win_shared_query', func_name, re.IGNORECASE):
             G.out.append("MPIR_ERRTEST_WIN_FLAVOR(win_ptr, MPI_WIN_FLAVOR_SHARED, mpi_errno);")
+
+        if G.handle_error_codes[kind]:
+            G.err_codes[G.handle_error_codes[kind]] = 1
 
 def dump_validation(func, t):
     func_name = func['name']
